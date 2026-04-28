@@ -33,7 +33,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
-    OTEL_PYTHON_SDK_METRICS_ENABLED,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
@@ -111,7 +111,7 @@ class SimpleSpanProcessor(SpanProcessor):
             OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
             meter_provider or get_meter_provider(),
             disabled=not parse_boolean_environment_variable(
-                OTEL_PYTHON_SDK_METRICS_ENABLED
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
             ),
         )
 
@@ -209,7 +209,7 @@ class BatchSpanProcessor(SpanProcessor):
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
                 disabled=not parse_boolean_environment_variable(
-                    OTEL_PYTHON_SDK_METRICS_ENABLED
+                    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
                 ),
             ),
         )

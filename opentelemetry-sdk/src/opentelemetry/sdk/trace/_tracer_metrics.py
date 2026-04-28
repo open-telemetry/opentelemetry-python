@@ -18,7 +18,7 @@ from collections.abc import Callable
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_SDK_METRICS_ENABLED,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
@@ -43,7 +43,7 @@ class TracerMetrics:
         self._started_spans = create_otel_sdk_span_started(meter)
         self._live_spans = create_otel_sdk_span_live(meter)
         self._disabled = not parse_boolean_environment_variable(
-            OTEL_PYTHON_SDK_METRICS_ENABLED
+            OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
         )
 
     def start_span(

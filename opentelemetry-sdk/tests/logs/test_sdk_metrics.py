@@ -17,13 +17,13 @@ from unittest.mock import patch
 
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_SDK_METRICS_ENABLED,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
 
-@patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
+@patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
 class TestLoggerProviderMetrics(TestCase):
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()

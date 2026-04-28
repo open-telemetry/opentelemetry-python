@@ -17,7 +17,7 @@ from unittest.mock import patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_SDK_METRICS_ENABLED,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
@@ -31,7 +31,7 @@ from opentelemetry.sdk.trace.sampling import (
 from opentelemetry.trace.span import SpanContext
 
 
-@patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
+@patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
 class TestTracerProviderMetrics(TestCase):
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()

@@ -2,7 +2,7 @@ from collections import Counter
 
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_SDK_METRICS_ENABLED,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
@@ -36,7 +36,7 @@ class MetricReaderMetrics:
             create_otel_sdk_metric_reader_collection_duration(meter)
         )
         self._disabled = not parse_boolean_environment_variable(
-            OTEL_PYTHON_SDK_METRICS_ENABLED
+            OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
         )
 
     def record_collection(self, duration: float) -> None:

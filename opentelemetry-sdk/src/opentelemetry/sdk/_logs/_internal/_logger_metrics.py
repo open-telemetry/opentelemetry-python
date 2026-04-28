@@ -14,7 +14,7 @@
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_SDK_METRICS_ENABLED,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
@@ -29,7 +29,7 @@ class LoggerMetrics:
         meter = meter_provider.get_meter("opentelemetry-sdk")
         self._created_logs = create_otel_sdk_log_created(meter)
         self._disabled = not parse_boolean_environment_variable(
-            OTEL_PYTHON_SDK_METRICS_ENABLED
+            OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
         )
 
     def emit_log(self) -> None:

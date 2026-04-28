@@ -58,7 +58,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_PYTHON_SDK_METRICS_ENABLED,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
@@ -468,7 +468,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             LogRecordExportResult.SUCCESS,
         )
 
-    @patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     @patch.object(Session, "post")
     def test_retry_timeout(self, mock_post):
         exporter = OTLPLogExporter(
@@ -557,7 +559,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 warning.records[0].message,
             )
 
-    @patch.dict("os.environ", {OTEL_PYTHON_SDK_METRICS_ENABLED: "true"})
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     @patch.object(Session, "post")
     def test_export_no_collector_available(self, mock_post):
         exporter = OTLPLogExporter(
