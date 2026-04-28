@@ -1320,16 +1320,23 @@ class TestOTLPMetricExporter(TestCase):
     @unittest.skipUnless(
         hasattr(os, "register_at_fork"), "fork session reset not available"
     )
-    def test_metric_exporter_register_at_fork_resets_session(self):
+    def test_register_at_fork_resets_session(self):
         initial_session = MagicMock(spec=requests.Session)
-        initial_session.headers = {"preexisting": "yes"}
+        initial_session.headers = {}
 
         new_session = MagicMock(spec=requests.Session)
         new_session.headers = {}
 
-        with patch("os.register_at_fork") as mock_register_at_fork, patch(
-            "opentelemetry.exporter.otlp.proto.http.metric_exporter.requests.Session",
-            return_value=new_session,
+        with (
+            patch("os.register_at_fork") as mock_register_at_fork,
+            patch(
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter._load_session_from_envvar",
+                return_value=None,
+            ) as mock_load,
+            patch(
+               "opentelemetry.exporter.otlp.proto.http.metric_exporter.requests.Session",
+                return_value=new_session,
+            ),
         ):
             exporter = OTLPMetricExporter(
                 session=initial_session, headers={"x-test": "1"}
@@ -1340,6 +1347,7 @@ class TestOTLPMetricExporter(TestCase):
             after_in_child()
 
         initial_session.close.assert_called_once()
+        mock_load.assert_called()
         self.assertEqual(exporter._session, new_session)
         self.assertEqual(exporter._session.headers.get("x-test"), "1")
         self.assertEqual(
@@ -1347,6 +1355,42 @@ class TestOTLPMetricExporter(TestCase):
             "application/x-protobuf",
         )
         self.assertEqual(exporter._session.headers.get("preexisting"), "yes")
+
+    @unittest.skipUnless(
+        hasattr(os, "register_at_fork"), "fork session reset not available"
+    )
+    def test_register_at_fork_uses_credential_provider(self):
+        initial_session = MagicMock(spec=requests.Session)
+        initial_session.headers = {}
+
+        cred_session = MagicMock(spec=requests.Session)
+        cred_session.headers = {}
+
+        with (
+            patch("os.register_at_fork") as mock_register_at_fork,
+            patch(
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter._load_session_from_envvar",
+                return_value=cred_session,
+            ) as mock_load,
+        ):
+            exporter = OTLPMetricExporter(
+                session=initial_session, headers={"x-test": "1"}
+            )
+            after_in_child = mock_register_at_fork.call_args.kwargs[
+                "after_in_child"
+            ]
+            after_in_child()
+
+        initial_session.close.assert_called_once()
+        mock_load.assert_called_with(
+            "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER"
+        )
+        self.assertEqual(exporter._session, cred_session)
+        self.assertEqual(exporter._session.headers.get("x-test"), "1")
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
 
 def _resource_metrics(
     index: int, scope_metrics: List[pb2.ScopeMetrics]

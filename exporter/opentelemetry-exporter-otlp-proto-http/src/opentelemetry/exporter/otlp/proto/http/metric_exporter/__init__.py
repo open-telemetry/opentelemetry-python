@@ -183,11 +183,12 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             )
         )
         self._compression = compression or _compression_from_env()
+        self._cred_envvar = (
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER
+        )
         self._session = (
             session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER
-            )
+            or _load_session_from_envvar(self._cred_envvar)
             or requests.Session()
         )
         self._session.headers.update(self._headers)
@@ -212,15 +213,23 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         Reset exporter session in the child process after fork.
 
         We close the existing session to avoid finalizer warnings if file
-        descriptors were already closed, then create a new session with the same
-        headers to prevent reusing the parent's connection state.
+        descriptors were already closed, then recreate the session using the
+        same creation logic as __init__ to preserve credential provider config.
         """
         try:
-            headers = self._session.headers.copy()
             self._session.close()
 
-            self._session = requests.Session()
-            self._session.headers.update(headers)
+            self._session = (
+                _load_session_from_envvar(self._cred_envvar)
+                or requests.Session()
+            )
+            self._session.headers.update(self._headers)
+            self._session.headers.update(_OTLP_HTTP_HEADERS)
+            self._session.headers.update(self._headers)
+            if self._compression is not Compression.NoCompression:
+                self._session.headers.update(
+                    {"Content-Encoding": self._compression.value}
+                )
         except Exception:
             _logger.debug(
                 "Exception occurred while resetting exporter session",
