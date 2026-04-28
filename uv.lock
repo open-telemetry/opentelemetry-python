@@ -1114,6 +1114,7 @@ dependencies = [
     { name = "asgiref" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-sdk" },
+    { name = "requests" },
 ]
 
 [package.metadata]
@@ -1121,6 +1122,7 @@ requires-dist = [
     { name = "asgiref", specifier = "~=3.0" },
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+    { name = "requests", specifier = "~=2.28" },
 ]
 
 [[package]]
