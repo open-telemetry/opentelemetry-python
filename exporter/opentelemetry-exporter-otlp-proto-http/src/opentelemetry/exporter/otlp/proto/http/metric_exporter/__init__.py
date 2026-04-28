@@ -116,6 +116,7 @@ DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
 DEFAULT_TIMEOUT = 10  # in seconds
 _MAX_RETRYS = 6
+_MAX_LOGGED_BODY_CHARS = 1024
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
@@ -292,16 +293,21 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     export_error = error
                     retryable = isinstance(error, ConnectionError)
                     status_code = None
+                    body = None
                 else:
                     reason = resp.reason
                     retryable = _is_retryable(resp)
                     status_code = resp.status_code
+                    body = (resp.text or None) if not resp.ok else None
+                    if body is not None and len(body) > _MAX_LOGGED_BODY_CHARS:
+                        body = body[:_MAX_LOGGED_BODY_CHARS] + "...[truncated]"
 
                 if not retryable:
                     _logger.error(
-                        "Failed to export metrics batch code: %s, reason: %s",
+                        "Failed to export metrics batch code: %s, reason: %s, body: %s",
                         status_code,
                         reason,
+                        body,
                     )
                     error_attrs = (
                         {HTTP_RESPONSE_STATUS_CODE: status_code}
@@ -318,7 +324,8 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 ):
                     _logger.error(
                         "Failed to export metrics batch due to timeout, "
-                        "max retries or shutdown."
+                        "max retries or shutdown. last response body: %s",
+                        body,
                     )
                     error_attrs = (
                         {HTTP_RESPONSE_STATUS_CODE: status_code}
