@@ -1,7 +1,7 @@
 [project]
 name = "opentelemetry-python"
 version = "0.0.0" # This is not used.
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
   "opentelemetry-api",
   "opentelemetry-sdk",
@@ -65,7 +65,7 @@ log_cli = true
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
-target-version = "py39"
+target-version = "py310"
 line-length = 79
 extend-exclude = [
   "*_pb2*.py*",
@@ -114,7 +114,7 @@ known-first-party = ["opentelemetry", "opentelemetry_example_app"]
 
 [tool.pyright]
 typeCheckingMode = "standard"
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 
 include = [
   "opentelemetry-semantic-conventions",
@@ -130,10 +130,8 @@ exclude = [
   "opentelemetry-sdk/tests",
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/__init__.py",
-  "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/_view_instrument_match.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/exemplar/exemplar_reservoir.py",
-  "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/exponential_histogram/",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/export/",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/instrument.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/measurement_consumer.py",
@@ -161,8 +159,10 @@ formatters = ["ruff-format", "ruff-check"]
 use-standard-collections = true
 use-schema-description = true
 use-title-as-name = true
-use-union-operator = false # set to true when Python 3.9 support is dropped
+use-union-operator = true
 target-python-version = "3.10"
+custom-template-dir = "opentelemetry-sdk/codegen"
+additional-imports = "typing.ClassVar,opentelemetry.sdk._configuration._common._additional_properties"
 
 [dependency-groups]
 dev = [

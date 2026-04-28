@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import replace
 from logging import getLogger
 from os import environ
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 from typing import Sequence as TypingSequence
 
 from grpc import ChannelCredentials, Compression
@@ -32,6 +32,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     environ_to_compression,
     get_resource_data,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -72,6 +73,9 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     Histogram as HistogramType,
 )
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
 _logger = getLogger(__name__)
 
@@ -109,6 +113,8 @@ class OTLPMetricExporter(
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         channel_options: Tuple[Tuple[str, str]] | None = None,
+        *,
+        meter_provider: Optional[MeterProvider] = None,
     ):
         insecure_metrics = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
         if insecure is None and insecure_metrics is not None:
@@ -153,6 +159,9 @@ class OTLPMetricExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
+            component_type=OtelComponentTypeValues.OTLP_GRPC_METRIC_EXPORTER,
+            signal="metrics",
+            meter_provider=meter_provider,
         )
 
         self._max_export_batch_size: int | None = max_export_batch_size
@@ -161,6 +170,16 @@ class OTLPMetricExporter(
         self, data: MetricsData
     ) -> ExportMetricsServiceRequest:
         return encode_metrics(data)
+
+    def _count_data(self, data: MetricsData):
+        num_items = 0
+
+        for resource_metrics in data.resource_metrics:
+            for scope_metrics in resource_metrics.scope_metrics:
+                for metric in scope_metrics.metrics:
+                    num_items += len(metric.data.data_points)
+
+        return num_items
 
     def export(
         self,
@@ -267,6 +286,9 @@ class OTLPMetricExporter(
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)
+
+    def set_meter_provider(self, meter_provider: MeterProvider):
+        return self._set_meter_provider(meter_provider)
 
     @property
     def _exporting(self) -> str:
