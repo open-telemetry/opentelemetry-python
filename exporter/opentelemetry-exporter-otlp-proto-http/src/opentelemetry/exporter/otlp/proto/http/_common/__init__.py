@@ -69,7 +69,9 @@ def _parse_response_body(resp: requests.Response) -> str:
             return resp.text or resp.reason
         if isinstance(body, dict):
             # OTLP partial_success uses camelCase in JSON
-            if error_message := body.get("partialSuccess", {}).get("errorMessage", ""):
+            if error_message := body.get("partialSuccess", {}).get(
+                "errorMessage", ""
+            ):
                 return error_message
             # google.rpc.Status uses "message"
             if rpc_message := body.get("message", ""):
