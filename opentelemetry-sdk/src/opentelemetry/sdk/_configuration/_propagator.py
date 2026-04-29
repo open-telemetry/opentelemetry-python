@@ -24,6 +24,9 @@ from opentelemetry.sdk._configuration._common import load_entry_point
 from opentelemetry.sdk._configuration.models import (
     Propagator as PropagatorConfig,
 )
+from opentelemetry.sdk._configuration.models import (
+    TextMapPropagator as TextMapPropagatorConfig,
+)
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
@@ -36,21 +39,29 @@ _PROPAGATOR_REGISTRY: dict = {
 
 
 def _propagators_from_textmap_config(
-    config: dict,
+    config: TextMapPropagatorConfig,
 ) -> list[TextMapPropagator]:
-    """Resolve a TextMapPropagator config dict to a list of propagators.
+    """Resolve a TextMapPropagator config to a list of propagators.
 
-    Each key in the dict names a propagator. Known names (tracecontext, baggage)
-    are bootstrapped directly. All other names — including b3, b3multi, and
-    custom plugin propagators — are loaded via the ``opentelemetry_propagator``
-    entry point group, matching the spec's PluginComponentProvider mechanism.
+    Known names (tracecontext, baggage) are bootstrapped directly via
+    _PROPAGATOR_REGISTRY. Known schema fields not in the registry (b3, b3multi)
+    and unknown plugin names from additional_properties are loaded via the
+    ``opentelemetry_propagator`` entry point group.
     """
     result: list[TextMapPropagator] = []
-    for name, prop_config in config.items():
-        if name in _PROPAGATOR_REGISTRY:
-            result.append(_PROPAGATOR_REGISTRY[name](prop_config))
-        else:
+    for name in _PROPAGATOR_REGISTRY:
+        if getattr(config, name, None) is not None:
+            result.append(_PROPAGATOR_REGISTRY[name](getattr(config, name)))
+
+    # Known schema fields not in registry (b3, b3multi) — loaded via entry point
+    for name in ("b3", "b3multi"):
+        if getattr(config, name, None) is not None:
             result.append(load_entry_point("opentelemetry_propagator", name)())
+
+    # Plugin propagators from additional_properties
+    for name in config.additional_properties:
+        result.append(load_entry_point("opentelemetry_propagator", name)())
+
     return result
 
 
