@@ -109,12 +109,6 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
         baggage_entries = split(_DELIMITER_PATTERN, header)
 
-        if len(baggage_entries) > self._MAX_PAIRS:
-            _logger.warning(
-                "Baggage header `%s` exceeded the maximum number of list-members",
-                header,
-            )
-
         for entry in _apply_baggage_limits(
             baggage_entries,
             max_pairs=self._MAX_PAIRS,
