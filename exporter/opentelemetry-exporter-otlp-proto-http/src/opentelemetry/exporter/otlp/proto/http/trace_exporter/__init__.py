@@ -30,6 +30,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _compression_from_env,
     _export_with_retries,
     setup_session,
     DEFAULT_ENDPOINT,
@@ -41,7 +42,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
-    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
@@ -117,7 +117,9 @@ class OTLPSpanExporter(SpanExporter):
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
             )
         )
-        self._compression = compression or _compression_from_env()
+        self._compression = compression or _compression_from_env(
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
+        )
         self._session = setup_session(
             session,
             _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
@@ -165,18 +167,6 @@ class OTLPSpanExporter(SpanExporter):
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
         return True
-
-
-def _compression_from_env() -> Compression:
-    compression = (
-        environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
-            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
-        )
-        .lower()
-        .strip()
-    )
-    return Compression(compression)
 
 
 def _append_trace_path(endpoint: str) -> str:

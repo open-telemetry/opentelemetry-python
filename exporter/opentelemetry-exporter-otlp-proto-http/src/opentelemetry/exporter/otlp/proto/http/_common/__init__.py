@@ -27,6 +27,7 @@ from requests.exceptions import ConnectionError
 
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
+    OTEL_EXPORTER_OTLP_COMPRESSION,
 )
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
@@ -235,3 +236,21 @@ def _export_with_retries(
             _logger.warning("Shutdown in progress, aborting retry.")
             break
     return False
+
+
+def _compression_from_env(
+    signal_compression_envvar: Literal[
+        "OTEL_EXPORTER_OTLP_LOGS_COMPRESSION",
+        "OTEL_EXPORTER_OTLP_METRICS_COMPRESSION",
+        "OTEL_EXPORTER_OTLP_TRACES_COMPRESSION",
+    ],
+) -> Compression:
+    compression = (
+        environ.get(
+            signal_compression_envvar,
+            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
+        )
+        .lower()
+        .strip()
+    )
+    return Compression(compression)

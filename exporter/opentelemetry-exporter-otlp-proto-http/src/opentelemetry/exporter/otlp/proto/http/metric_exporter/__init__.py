@@ -44,6 +44,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _compression_from_env,
     _export_with_retries,
     setup_session,
     DEFAULT_ENDPOINT,
@@ -70,7 +71,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
-    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
@@ -182,7 +182,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
             )
         )
-        self._compression = compression or _compression_from_env()
+        self._compression = compression or _compression_from_env(
+            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
+        )
         self._session = setup_session(
             session,
             _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
@@ -592,18 +594,6 @@ def get_resource_data(
     name: str,
 ) -> List[PB2Resource]:
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
-
-
-def _compression_from_env() -> Compression:
-    compression = (
-        environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
-            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
-        )
-        .lower()
-        .strip()
-    )
-    return Compression(compression)
 
 
 def _append_metrics_path(endpoint: str) -> str:

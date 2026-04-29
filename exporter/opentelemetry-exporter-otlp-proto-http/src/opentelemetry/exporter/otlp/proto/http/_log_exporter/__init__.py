@@ -28,6 +28,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _compression_from_env,
     _export_with_retries,
     setup_session,
     DEFAULT_ENDPOINT,
@@ -45,7 +46,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
-    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
@@ -84,7 +84,7 @@ class OTLPLogExporter(LogRecordExporter):
         *,
         meter_provider: Optional[MeterProvider] = None,
     ):
-        self._shutdown_is_occuring = threading.Event()
+        self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             _append_logs_path(
@@ -122,7 +122,9 @@ class OTLPLogExporter(LogRecordExporter):
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
             )
         )
-        self._compression = compression or _compression_from_env()
+        self._compression = compression or _compression_from_env(
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
+        )
         self._session = setup_session(
             session,
             _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
@@ -155,7 +157,7 @@ class OTLPLogExporter(LogRecordExporter):
                 self._certificate_file,
                 self._client_cert,
                 self._timeout,
-                self._shutdown_is_occuring,
+                self._shutdown_in_progress,
                 result,
                 "logs",
             )
@@ -170,20 +172,8 @@ class OTLPLogExporter(LogRecordExporter):
             _logger.warning("Exporter already shutdown, ignoring call")
             return
         self._shutdown = True
-        self._shutdown_is_occuring.set()
+        self._shutdown_in_progress.set()
         self._session.close()
-
-
-def _compression_from_env() -> Compression:
-    compression = (
-        environ.get(
-            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
-            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
-        )
-        .lower()
-        .strip()
-    )
-    return Compression(compression)
 
 
 def _append_logs_path(endpoint: str) -> str:
