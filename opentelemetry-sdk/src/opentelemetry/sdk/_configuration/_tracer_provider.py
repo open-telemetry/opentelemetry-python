@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 from opentelemetry import trace
 from opentelemetry.sdk._configuration._common import (
@@ -28,6 +28,12 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ParentBasedSampler as ParentBasedSamplerConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    Sampler as SamplerConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     SpanExporter as SpanExporterConfig,
@@ -180,46 +186,54 @@ def _create_span_processor(
     )
 
 
-_SAMPLER_REGISTRY: dict[str, Any] = {
-    "always_on": lambda _: ALWAYS_ON,
-    "always_off": lambda _: ALWAYS_OFF,
-    "trace_id_ratio_based": lambda c: TraceIdRatioBased(
-        (c or {}).get("ratio", 1.0)
-    ),
-    "parent_based": lambda c: _create_parent_based_sampler(c or {}),
-}
+def _create_sampler(config: SamplerConfig) -> Sampler:
+    """Create a sampler from config.
 
-
-def _create_sampler(config: dict) -> Sampler:
-    """Create a sampler from a config dict with a single key naming the sampler type.
-
-    Known names (always_on, always_off, trace_id_ratio_based, parent_based) are
-    bootstrapped directly. Unknown names are looked up via the
-    ``opentelemetry_sampler`` entry point group, matching the spec's
-    PluginComponentProvider mechanism.
+    Known sampler types are checked via typed fields on the Sampler
+    dataclass. Unknown sampler names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_sampler`` entry point group.
     """
-    if len(config) != 1:
-        raise ConfigurationError(
-            f"Sampler config must have exactly one key, got: {list(config.keys())}"
-        )
-    name, sampler_config = next(iter(config.items()))
-    if name in _SAMPLER_REGISTRY:
-        return _SAMPLER_REGISTRY[name](sampler_config)
-    return load_entry_point("opentelemetry_sampler", name)()
+    if config.always_on is not None:
+        return ALWAYS_ON
+    if config.always_off is not None:
+        return ALWAYS_OFF
+    if config.trace_id_ratio_based is not None:
+        ratio = config.trace_id_ratio_based.ratio
+        return TraceIdRatioBased(ratio if ratio is not None else 1.0)
+    if config.parent_based is not None:
+        return _create_parent_based_sampler(config.parent_based)
+    if config.additional_properties:
+        name = next(iter(config.additional_properties))
+        return load_entry_point("opentelemetry_sampler", name)()
+    raise ConfigurationError(
+        f"Unknown or unsupported sampler type in config: {config!r}. "
+        "Supported types: always_on, always_off, trace_id_ratio_based, parent_based."
+    )
 
 
-def _create_parent_based_sampler(config: dict) -> Sampler:
-    """Create a ParentBased sampler from a config dict, applying SDK defaults for absent delegates."""
-    root = _create_sampler(config["root"]) if "root" in config else ALWAYS_ON
+def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
+    """Create a ParentBased sampler from config, applying SDK defaults for absent delegates."""
+    root = (
+        _create_sampler(config.root) if config.root is not None else ALWAYS_ON
+    )
     kwargs: dict = {"root": root}
-    for key in (
-        "remote_parent_sampled",
-        "remote_parent_not_sampled",
-        "local_parent_sampled",
-        "local_parent_not_sampled",
-    ):
-        if key in config:
-            kwargs[key] = _create_sampler(config[key])
+    if config.remote_parent_sampled is not None:
+        kwargs["remote_parent_sampled"] = _create_sampler(
+            config.remote_parent_sampled
+        )
+    if config.remote_parent_not_sampled is not None:
+        kwargs["remote_parent_not_sampled"] = _create_sampler(
+            config.remote_parent_not_sampled
+        )
+    if config.local_parent_sampled is not None:
+        kwargs["local_parent_sampled"] = _create_sampler(
+            config.local_parent_sampled
+        )
+    if config.local_parent_not_sampled is not None:
+        kwargs["local_parent_not_sampled"] = _create_sampler(
+            config.local_parent_not_sampled
+        )
     return ParentBased(**kwargs)
 
 

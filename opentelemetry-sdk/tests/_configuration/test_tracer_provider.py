@@ -35,6 +35,12 @@ from opentelemetry.sdk._configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    ParentBasedSampler as ParentBasedSamplerConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    Sampler as SamplerConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     SimpleSpanProcessor as SimpleSpanProcessorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -45,6 +51,9 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     SpanProcessor as SpanProcessorConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    TraceIdRatioBasedSampler as TraceIdRatioBasedConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     TracerProvider as TracerProviderConfig,
@@ -150,47 +159,57 @@ class TestCreateSampler(unittest.TestCase):
         )
 
     def test_always_on(self):
-        provider = self._make_provider({"always_on": {}})
+        provider = self._make_provider(SamplerConfig(always_on={}))
         self.assertIs(provider.sampler, ALWAYS_ON)
 
     def test_always_off(self):
-        provider = self._make_provider({"always_off": {}})
+        provider = self._make_provider(SamplerConfig(always_off={}))
         self.assertIs(provider.sampler, ALWAYS_OFF)
 
     def test_trace_id_ratio_based(self):
         provider = self._make_provider(
-            {"trace_id_ratio_based": {"ratio": 0.5}}
+            SamplerConfig(
+                trace_id_ratio_based=TraceIdRatioBasedConfig(ratio=0.5)
+            )
         )
         self.assertIsInstance(provider.sampler, TraceIdRatioBased)
         self.assertAlmostEqual(provider.sampler._rate, 0.5)
 
     def test_trace_id_ratio_based_none_ratio_defaults_to_1(self):
-        provider = self._make_provider({"trace_id_ratio_based": {}})
+        provider = self._make_provider(
+            SamplerConfig(trace_id_ratio_based=TraceIdRatioBasedConfig())
+        )
         self.assertIsInstance(provider.sampler, TraceIdRatioBased)
         self.assertAlmostEqual(provider.sampler._rate, 1.0)
 
     def test_parent_based_with_root(self):
         provider = self._make_provider(
-            {"parent_based": {"root": {"always_on": {}}}}
+            SamplerConfig(
+                parent_based=ParentBasedSamplerConfig(
+                    root=SamplerConfig(always_on={})
+                )
+            )
         )
         self.assertIsInstance(provider.sampler, ParentBased)
 
     def test_parent_based_no_root_defaults_to_always_on(self):
-        provider = self._make_provider({"parent_based": {}})
+        provider = self._make_provider(
+            SamplerConfig(parent_based=ParentBasedSamplerConfig())
+        )
         self.assertIsInstance(provider.sampler, ParentBased)
         self.assertIs(provider.sampler._root, ALWAYS_ON)
 
     def test_parent_based_with_delegate_samplers(self):
         provider = self._make_provider(
-            {
-                "parent_based": {
-                    "root": {"always_on": {}},
-                    "remote_parent_sampled": {"always_on": {}},
-                    "remote_parent_not_sampled": {"always_off": {}},
-                    "local_parent_sampled": {"always_on": {}},
-                    "local_parent_not_sampled": {"always_off": {}},
-                }
-            }
+            SamplerConfig(
+                parent_based=ParentBasedSamplerConfig(
+                    root=SamplerConfig(always_on={}),
+                    remote_parent_sampled=SamplerConfig(always_on={}),
+                    remote_parent_not_sampled=SamplerConfig(always_off={}),
+                    local_parent_sampled=SamplerConfig(always_on={}),
+                    local_parent_not_sampled=SamplerConfig(always_off={}),
+                )
+            )
         )
         sampler = provider.sampler
         self.assertIsInstance(sampler, ParentBased)
@@ -199,9 +218,9 @@ class TestCreateSampler(unittest.TestCase):
         self.assertIs(sampler._local_parent_sampled, ALWAYS_ON)
         self.assertIs(sampler._local_parent_not_sampled, ALWAYS_OFF)
 
-    def test_multiple_keys_raises_configuration_error(self):
+    def test_unknown_sampler_raises_configuration_error(self):
         with self.assertRaises(ConfigurationError):
-            self._make_provider({"always_on": {}, "always_off": {}})
+            self._make_provider(SamplerConfig())
 
     def test_plugin_sampler_loaded_via_entry_point(self):
         mock_sampler = MagicMock(spec=Sampler)
@@ -210,7 +229,8 @@ class TestCreateSampler(unittest.TestCase):
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
-            provider = self._make_provider({"my_custom_sampler": {}})
+            # pylint: disable=unexpected-keyword-arg
+            provider = self._make_provider(SamplerConfig(my_custom_sampler={}))
         self.assertIs(provider.sampler, mock_sampler)
 
     def test_unknown_plugin_raises_configuration_error(self):
@@ -219,7 +239,8 @@ class TestCreateSampler(unittest.TestCase):
             return_value=[],
         ):
             with self.assertRaises(ConfigurationError):
-                self._make_provider({"no_such_sampler": {}})
+                # pylint: disable=unexpected-keyword-arg
+                self._make_provider(SamplerConfig(no_such_sampler={}))
 
 
 class TestCreateSpanExporterAndProcessor(unittest.TestCase):
