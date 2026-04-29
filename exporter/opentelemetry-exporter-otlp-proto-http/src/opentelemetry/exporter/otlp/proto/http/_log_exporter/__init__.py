@@ -30,9 +30,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._common import (
     _compression_from_env,
     _export_with_retries,
-    setup_session,
-    DEFAULT_ENDPOINT,
-    DEFAULT_TIMEOUT,
+    _setup_session,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import ReadableLogRecord
@@ -67,6 +65,9 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
 
 
+DEFAULT_COMPRESSION = Compression.NoCompression
+DEFAULT_ENDPOINT = "http://localhost:4318/"
+DEFAULT_TIMEOUT = 10  # in seconds
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 
 
@@ -125,7 +126,7 @@ class OTLPLogExporter(LogRecordExporter):
         self._compression = compression or _compression_from_env(
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
         )
-        self._session = setup_session(
+        self._session = _setup_session(
             session,
             _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
             self._headers,

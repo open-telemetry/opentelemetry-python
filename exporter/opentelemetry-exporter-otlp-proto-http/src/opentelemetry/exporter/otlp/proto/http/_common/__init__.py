@@ -40,10 +40,7 @@ from opentelemetry.util._importlib_metadata import entry_points
 
 _logger = logging.getLogger(__name__)
 
-DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/"
-DEFAULT_TIMEOUT = 10  # in seconds
-_MAX_RETRYS = 6
+_MAX_RETRIES = 6
 
 
 def _is_retryable(resp: requests.Response) -> bool:
@@ -89,7 +86,7 @@ def _load_session_from_envvar(
     return None
 
 
-def setup_session(
+def _setup_session(
     session: Optional[requests.Session],
     cred_envvar: Literal[
         "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER",
@@ -169,7 +166,7 @@ def _export_with_retries(
     batch_name: str,
 ) -> bool:
     deadline_sec = time() + timeout
-    for retry_num in range(_MAX_RETRYS):
+    for retry_num in range(_MAX_RETRIES):
         # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
         backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
         export_error: Optional[Exception] = None
@@ -213,7 +210,7 @@ def _export_with_retries(
             return False
 
         if (
-            retry_num + 1 == _MAX_RETRYS
+            retry_num + 1 == _MAX_RETRIES
             or backoff_seconds > (deadline_sec - time())
             or shutdown_event.is_set()
         ):
