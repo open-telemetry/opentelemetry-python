@@ -13,10 +13,8 @@
 from __future__ import annotations
 
 import logging
-import random
 import threading
 from os import environ
-from time import time
 from typing import (  # noqa: F401
     Any,
     Callable,
@@ -28,7 +26,6 @@ from typing import (  # noqa: F401
 from urllib.parse import urlparse
 
 import requests
-from requests.exceptions import ConnectionError
 from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
@@ -47,8 +44,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
-    _export,
-    _is_retryable,
+    _export_with_retries,
     setup_session,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
@@ -102,16 +98,12 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
-from opentelemetry.semconv.attributes.http_attributes import (
-    HTTP_RESPONSE_STATUS_CODE,
-)
 from opentelemetry.util.re import parse_env_headers
 
 _logger = logging.getLogger(__name__)
 
 
 DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
-_MAX_RETRYS = 6
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
@@ -211,93 +203,6 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             meter_provider,
         )
 
-    def _export_with_retries(
-        self,
-        export_request: ExportMetricsServiceRequest,
-        deadline_sec: float,
-        num_items: int,
-    ) -> MetricExportResult:
-        """Export serialized data with retry logic until success, non-transient error, or exponential backoff maxed out.
-
-        Args:
-            export_request: ExportMetricsServiceRequest object containing metrics data to export
-            deadline_sec: timestamp deadline for the export
-
-        Returns:
-            MetricExportResult: SUCCESS if export succeeded, FAILURE otherwise
-        """
-        with self._metrics.export_operation(num_items) as result:
-            serialized_data = export_request.SerializeToString()
-            deadline_sec = time() + self._timeout
-            for retry_num in range(_MAX_RETRYS):
-                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Optional[Exception] = None
-                try:
-                    resp = _export(
-                        self._session,
-                        self._endpoint,
-                        serialized_data,
-                        self._compression,
-                        self._certificate_file,
-                        self._client_cert,
-                        deadline_sec - time() if deadline_sec - time() != None else self._timeout,
-                    )
-                    if resp.ok:
-                        return MetricExportResult.SUCCESS
-                except requests.exceptions.RequestException as error:
-                    reason = error
-                    export_error = error
-                    retryable = isinstance(error, ConnectionError)
-                    status_code = None
-                else:
-                    reason = resp.reason
-                    retryable = _is_retryable(resp)
-                    status_code = resp.status_code
-
-                if not retryable:
-                    _logger.error(
-                        "Failed to export metrics batch code: %s, reason: %s",
-                        status_code,
-                        reason,
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
-                    result.error = export_error
-                    result.error_attrs = error_attrs
-                    return MetricExportResult.FAILURE
-                if (
-                    retry_num + 1 == _MAX_RETRYS
-                    or backoff_seconds > (deadline_sec - time())
-                    or self._shutdown
-                ):
-                    _logger.error(
-                        "Failed to export metrics batch due to timeout, "
-                        "max retries or shutdown."
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
-                    result.error = export_error
-                    result.error_attrs = error_attrs
-                    return MetricExportResult.FAILURE
-
-                _logger.warning(
-                    "Transient error %s encountered while exporting metrics batch, retrying in %.2fs.",
-                    reason,
-                    backoff_seconds,
-                )
-                shutdown = self._shutdown_in_progress.wait(backoff_seconds)
-                if shutdown:
-                    _logger.warning("Shutdown in progress, aborting retry.")
-                    break
-            return MetricExportResult.FAILURE
-
     def export(
         self,
         metrics_data: MetricsData,
@@ -315,26 +220,30 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     num_items += len(metric.data.data_points)
 
         export_request = encode_metrics(metrics_data)
-        deadline_sec = time() + self._timeout
+
+        def _do_export(request: ExportMetricsServiceRequest) -> bool:
+            serialized_data = request.SerializeToString()
+            with self._metrics.export_operation(num_items) as result:
+                return _export_with_retries(
+                    self._session,
+                    self._endpoint,
+                    serialized_data,
+                    self._compression,
+                    self._certificate_file,
+                    self._client_cert,
+                    self._timeout,
+                    self._shutdown_in_progress,
+                    result,
+                    "metrics",
+                )
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:
-            return self._export_with_retries(
-                export_request, deadline_sec, num_items
-            )
+            return MetricExportResult.SUCCESS if _do_export(export_request) else MetricExportResult.FAILURE
 
         # Else, export in batches of configured size
-        batched_export_requests = _split_metrics_data(
-            export_request, self._max_export_batch_size
-        )
-
-        for split_metrics_data in batched_export_requests:
-            export_result = self._export_with_retries(
-                split_metrics_data,
-                deadline_sec,
-                num_items,
-            )
-            if export_result != MetricExportResult.SUCCESS:
+        for split_request in _split_metrics_data(export_request, self._max_export_batch_size):
+            if not _do_export(split_request):
                 return MetricExportResult.FAILURE
 
         # Only returns SUCCESS if all batches succeeded

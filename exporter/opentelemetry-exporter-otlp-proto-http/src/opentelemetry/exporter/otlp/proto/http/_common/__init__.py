@@ -13,10 +13,14 @@
 # limitations under the License.
 
 import gzip
+import logging
+import random
+import threading
 import zlib
 from io import BytesIO
 from os import environ
-from typing import Dict, Literal, Optional, Tuple, Union
+from time import time
+from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import requests
 from requests.exceptions import ConnectionError
@@ -28,11 +32,17 @@ from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
+from opentelemetry.semconv.attributes.http_attributes import (
+    HTTP_RESPONSE_STATUS_CODE,
+)
 from opentelemetry.util._importlib_metadata import entry_points
+
+_logger = logging.getLogger(__name__)
 
 DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_TIMEOUT = 10  # in seconds
+_MAX_RETRYS = 6
 
 
 def _is_retryable(resp: requests.Response) -> bool:
@@ -143,3 +153,85 @@ def _export(
             cert=client_cert,
         )
     return resp
+
+
+def _export_with_retries(
+    session: requests.Session,
+    endpoint: str,
+    serialized_data: bytes,
+    compression: Compression,
+    certificate_file: Union[str, bool],
+    client_cert: Optional[Union[str, Tuple[str, str]]],
+    timeout: float,
+    shutdown_event: threading.Event,
+    result: Any,
+    batch_name: str,
+) -> bool:
+    deadline_sec = time() + timeout
+    for retry_num in range(_MAX_RETRYS):
+        # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+        backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+        export_error: Optional[Exception] = None
+        try:
+            resp = _export(
+                session,
+                endpoint,
+                serialized_data,
+                compression,
+                certificate_file,
+                client_cert,
+                deadline_sec - time(),
+            )
+            if resp.ok:
+                return True
+        except requests.exceptions.RequestException as error:
+            reason = error
+            export_error = error
+            retryable = isinstance(error, ConnectionError)
+            status_code = None
+        else:
+            reason = resp.reason
+            retryable = _is_retryable(resp)
+            status_code = resp.status_code
+
+        error_attrs = (
+            {HTTP_RESPONSE_STATUS_CODE: status_code}
+            if status_code is not None
+            else None
+        )
+
+        if not retryable:
+            _logger.error(
+                "Failed to export %s batch code: %s, reason: %s",
+                batch_name,
+                status_code,
+                reason,
+            )
+            result.error = export_error
+            result.error_attrs = error_attrs
+            return False
+
+        if (
+            retry_num + 1 == _MAX_RETRYS
+            or backoff_seconds > (deadline_sec - time())
+            or shutdown_event.is_set()
+        ):
+            _logger.error(
+                "Failed to export %s batch due to timeout, "
+                "max retries or shutdown.",
+                batch_name,
+            )
+            result.error = export_error
+            result.error_attrs = error_attrs
+            return False
+
+        _logger.warning(
+            "Transient error %s encountered while exporting %s batch, retrying in %.2fs.",
+            reason,
+            batch_name,
+            backoff_seconds,
+        )
+        if shutdown_event.wait(backoff_seconds):
+            _logger.warning("Shutdown in progress, aborting retry.")
+            break
+    return False

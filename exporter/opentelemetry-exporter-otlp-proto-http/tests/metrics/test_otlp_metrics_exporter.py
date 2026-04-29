@@ -1267,7 +1267,7 @@ class TestOTLPMetricExporter(TestCase):
                 ExplicitBucketHistogramAggregation,
             )
 
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter._export", return_value=Mock(ok=True))
+    @patch("opentelemetry.exporter.otlp.proto.http._common._export", return_value=Mock(ok=True))
     def test_2xx_status_code(self, mock_otlp_metric_exporter):
         """
         Test that any HTTP 2XX code returns a successful result
