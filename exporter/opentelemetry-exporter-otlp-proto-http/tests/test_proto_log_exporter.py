@@ -24,6 +24,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import requests
 from google.protobuf.json_format import MessageToDict
+from google.rpc.status_pb2 import Status
 from requests import Session
 from requests.exceptions import ConnectionError
 from requests.models import Response
@@ -39,9 +40,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
-    ExportLogsPartialSuccess,
     ExportLogsServiceRequest,
-    ExportLogsServiceResponse,
 )
 from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogRecordExportResult
@@ -671,16 +670,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
     @patch.object(Session, "post")
     def test_error_response_with_protobuf_body(self, mock_post):
-        proto_response = ExportLogsServiceResponse(
-            partial_success=ExportLogsPartialSuccess(
-                rejected_log_records=2,
-                error_message="invalid log data",
-            )
-        )
+        status = Status(code=3, message="invalid log data")
         resp = Response()
         resp.status_code = 400
         resp.reason = "Bad Request"
-        resp._content = proto_response.SerializeToString()  # pylint: disable=protected-access
+        resp._content = status.SerializeToString()  # pylint: disable=protected-access
         resp.headers["Content-Type"] = "application/x-protobuf"
         mock_post.return_value = resp
 

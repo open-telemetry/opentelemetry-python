@@ -39,9 +39,6 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _load_session_from_envvar,
     _parse_response_body,
 )
-from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
-    ExportLogsServiceResponse,
-)
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
@@ -224,7 +221,7 @@ class OTLPLogExporter(LogRecordExporter):
                     retryable = isinstance(error, ConnectionError)
                     status_code = None
                 else:
-                    reason = _parse_response_body(resp, ExportLogsServiceResponse)
+                    reason = _parse_response_body(resp)
                     retryable = _is_retryable(resp)
                     status_code = resp.status_code
 

@@ -295,7 +295,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     retryable = isinstance(error, ConnectionError)
                     status_code = None
                 else:
-                    reason = _parse_response_body(resp, ExportMetricsServiceResponse)
+                    reason = _parse_response_body(resp)
                     retryable = _is_retryable(resp)
                     status_code = resp.status_code
 

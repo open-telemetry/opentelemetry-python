@@ -41,9 +41,6 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _load_session_from_envvar,
     _parse_response_body,
 )
-from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
-    ExportTraceServiceResponse,
-)
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
@@ -217,7 +214,7 @@ class OTLPSpanExporter(SpanExporter):
                     retryable = isinstance(error, ConnectionError)
                     status_code = None
                 else:
-                    reason = _parse_response_body(resp, ExportTraceServiceResponse)
+                    reason = _parse_response_body(resp)
                     retryable = _is_retryable(resp)
                     status_code = resp.status_code
 

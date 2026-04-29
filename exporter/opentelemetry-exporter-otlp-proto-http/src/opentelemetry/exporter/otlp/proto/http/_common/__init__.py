@@ -14,10 +14,10 @@
 
 import logging
 from os import environ
-from typing import Literal, Optional, Type
+from typing import Literal, Optional
 
 import requests
-from google.protobuf.message import Message
+from google.rpc.status_pb2 import Status
 
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
@@ -30,15 +30,14 @@ _CONTENT_TYPE_PROTOBUF = "application/x-protobuf"
 _CONTENT_TYPE_JSON = "application/json"
 
 
-def _parse_response_body(
-    resp: requests.Response, response_class: Type[Message]
-) -> str:
+def _parse_response_body(resp: requests.Response) -> str:
     """Parse an HTTP response body based on its Content-Type header.
+
+    Per the OTLP spec, error responses (4xx/5xx) use ``google.rpc.Status``
+    for protobuf bodies and the equivalent JSON representation.
 
     Args:
         resp: The HTTP response from the OTLP endpoint.
-        response_class: The protobuf message class to use for deserialization
-            when the response content-type is ``application/x-protobuf``.
 
     Returns:
         A human-readable string describing the response body error details,
@@ -50,16 +49,16 @@ def _parse_response_body(
     content_type = resp.headers.get("Content-Type", "")
 
     if content_type.startswith(_CONTENT_TYPE_PROTOBUF):
-        message = response_class()
+        status = Status()
         try:
-            message.ParseFromString(resp.content)
+            status.ParseFromString(resp.content)
         except Exception:  # pylint: disable=broad-except
             _logger.debug(
                 "Failed to parse protobuf response body", exc_info=True
             )
             return resp.reason
-        if error_message := message.partial_success.error_message:
-            return error_message
+        if status.message:
+            return status.message
         return resp.reason
 
     if content_type.startswith(_CONTENT_TYPE_JSON):

@@ -15,17 +15,10 @@
 import json
 import unittest
 
+from google.rpc.status_pb2 import Status
 from requests.models import Response
 
 from opentelemetry.exporter.otlp.proto.http._common import _parse_response_body
-from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
-    ExportLogsPartialSuccess,
-    ExportLogsServiceResponse,
-)
-from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
-    ExportTracePartialSuccess,
-    ExportTraceServiceResponse,
-)
 
 
 def _make_response(
@@ -44,47 +37,36 @@ def _make_response(
 
 class TestParseResponseBody(unittest.TestCase):
     def test_protobuf_content_type_with_error_message(self):
-        proto_response = ExportTraceServiceResponse(
-            partial_success=ExportTracePartialSuccess(
-                rejected_spans=3,
-                error_message="invalid span data",
-            )
-        )
+        status = Status(code=8, message="quota exceeded for project")
         resp = _make_response(
-            content=proto_response.SerializeToString(),
+            content=status.SerializeToString(),
             content_type="application/x-protobuf",
         )
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
-            "invalid span data",
+            _parse_response_body(resp),
+            "quota exceeded for project",
         )
 
-    def test_protobuf_content_type_without_error_message_falls_back_to_reason(
-        self,
-    ):
-        proto_response = ExportTraceServiceResponse()
+    def test_protobuf_content_type_without_message_falls_back_to_reason(self):
+        status = Status(code=2)
         resp = _make_response(
-            content=proto_response.SerializeToString(),
+            content=status.SerializeToString(),
             content_type="application/x-protobuf",
             reason="Bad Request",
         )
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "Bad Request",
         )
 
     def test_protobuf_content_type_with_charset_parameter(self):
-        proto_response = ExportTraceServiceResponse(
-            partial_success=ExportTracePartialSuccess(
-                error_message="quota exceeded"
-            )
-        )
+        status = Status(code=8, message="quota exceeded")
         resp = _make_response(
-            content=proto_response.SerializeToString(),
+            content=status.SerializeToString(),
             content_type="application/x-protobuf; charset=utf-8",
         )
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "quota exceeded",
         )
 
@@ -94,7 +76,7 @@ class TestParseResponseBody(unittest.TestCase):
         ).encode()
         resp = _make_response(content=body, content_type="application/json")
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "rate limit exceeded",
         )
 
@@ -102,7 +84,7 @@ class TestParseResponseBody(unittest.TestCase):
         body = json.dumps({"message": "permission denied"}).encode()
         resp = _make_response(content=body, content_type="application/json")
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "permission denied",
         )
 
@@ -112,7 +94,7 @@ class TestParseResponseBody(unittest.TestCase):
             content=body, content_type="application/json; charset=utf-8"
         )
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "not authorized",
         )
 
@@ -122,7 +104,7 @@ class TestParseResponseBody(unittest.TestCase):
             content_type="text/plain",
         )
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "something went wrong",
         )
 
@@ -133,7 +115,7 @@ class TestParseResponseBody(unittest.TestCase):
             reason="Service Unavailable",
         )
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "Service Unavailable",
         )
 
@@ -144,7 +126,7 @@ class TestParseResponseBody(unittest.TestCase):
             reason="Bad Request",
         )
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "Bad Request",
         )
 
@@ -155,24 +137,8 @@ class TestParseResponseBody(unittest.TestCase):
             reason="Bad Request",
         )
         self.assertEqual(
-            _parse_response_body(resp, ExportTraceServiceResponse),
+            _parse_response_body(resp),
             "not valid json {{{",
-        )
-
-    def test_works_with_logs_response_class(self):
-        proto_response = ExportLogsServiceResponse(
-            partial_success=ExportLogsPartialSuccess(
-                rejected_log_records=2,
-                error_message="log quota exceeded",
-            )
-        )
-        resp = _make_response(
-            content=proto_response.SerializeToString(),
-            content_type="application/x-protobuf",
-        )
-        self.assertEqual(
-            _parse_response_body(resp, ExportLogsServiceResponse),
-            "log quota exceeded",
         )
 
 

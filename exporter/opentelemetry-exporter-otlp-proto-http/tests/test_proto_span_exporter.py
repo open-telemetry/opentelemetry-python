@@ -20,6 +20,7 @@ from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
 import requests
+from google.rpc.status_pb2 import Status
 from requests import Session
 from requests.exceptions import ConnectionError
 from requests.models import Response
@@ -52,10 +53,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
-from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
-    ExportTracePartialSuccess,
-    ExportTraceServiceResponse,
-)
 from opentelemetry.sdk.trace import _Span
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.test.mock_test_classes import IterEntryPoint
@@ -486,16 +483,11 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     @patch.object(Session, "post")
     def test_error_response_with_protobuf_body(self, mock_post):
-        proto_response = ExportTraceServiceResponse(
-            partial_success=ExportTracePartialSuccess(
-                rejected_spans=1,
-                error_message="invalid span data",
-            )
-        )
+        status = Status(code=3, message="invalid span data")
         resp = Response()
         resp.status_code = 400
         resp.reason = "Bad Request"
-        resp._content = proto_response.SerializeToString()  # pylint: disable=protected-access
+        resp._content = status.SerializeToString()  # pylint: disable=protected-access
         resp.headers["Content-Type"] = "application/x-protobuf"
         mock_post.return_value = resp
 
