@@ -24,6 +24,7 @@ from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
     ExperimentalResourceDetection,
+    ExperimentalResourceDetector,
     IncludeExclude,
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
@@ -313,7 +314,7 @@ class TestServiceResourceDetector(unittest.TestCase):
     def _config_with_service() -> ResourceConfig:
         return ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"service": {}}]
+                detectors=[ExperimentalResourceDetector(service={})]
             )
         )
 
@@ -346,7 +347,7 @@ class TestServiceResourceDetector(unittest.TestCase):
                 AttributeNameValue(name="service.name", value="explicit-svc")
             ],
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"service": {}}]
+                detectors=[ExperimentalResourceDetector(service={})]
             ),
         )
         with patch.dict(os.environ, {"OTEL_SERVICE_NAME": "env-svc"}):
@@ -369,7 +370,7 @@ class TestServiceResourceDetector(unittest.TestCase):
     def test_included_filter_limits_service_attributes(self):
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"service": {}}],
+                detectors=[ExperimentalResourceDetector(service={})],
                 attributes=IncludeExclude(included=["service.instance.id"]),
             )
         )
@@ -386,7 +387,7 @@ class TestHostResourceDetector(unittest.TestCase):
     def _config_with_host() -> ResourceConfig:
         return ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"host": {}}]
+                detectors=[ExperimentalResourceDetector(host={})]
             )
         )
 
@@ -423,7 +424,7 @@ class TestHostResourceDetector(unittest.TestCase):
                 AttributeNameValue(name="host.name", value="custom-host")
             ],
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"host": {}}]
+                detectors=[ExperimentalResourceDetector(host={})]
             ),
         )
         resource = create_resource(config)
@@ -432,7 +433,7 @@ class TestHostResourceDetector(unittest.TestCase):
     def test_included_filter_limits_host_attributes(self):
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"host": {}}],
+                detectors=[ExperimentalResourceDetector(host={})],
                 attributes=IncludeExclude(included=["host.name"]),
             )
         )
@@ -443,7 +444,7 @@ class TestHostResourceDetector(unittest.TestCase):
     def test_excluded_filter_removes_host_attributes(self):
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"host": {}}],
+                detectors=[ExperimentalResourceDetector(host={})],
                 attributes=IncludeExclude(excluded=["host.name"]),
             )
         )
@@ -457,7 +458,7 @@ class TestContainerResourceDetector(unittest.TestCase):
     def _config_with_container() -> ResourceConfig:
         return ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"container": {}}]
+                detectors=[ExperimentalResourceDetector(container={})]
             )
         )
 
@@ -516,7 +517,7 @@ class TestContainerResourceDetector(unittest.TestCase):
                 AttributeNameValue(name="container.id", value="explicit-id")
             ],
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"container": {}}]
+                detectors=[ExperimentalResourceDetector(container={})]
             ),
         )
         with patch(
@@ -533,7 +534,7 @@ class TestProcessResourceDetector(unittest.TestCase):
     def _config_with_process() -> ResourceConfig:
         return ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"process": {}}]
+                detectors=[ExperimentalResourceDetector(process={})]
             )
         )
 
@@ -575,7 +576,7 @@ class TestProcessResourceDetector(unittest.TestCase):
                 )
             ],
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"process": {}}]
+                detectors=[ExperimentalResourceDetector(process={})]
             ),
         )
         resource = create_resource(config)
@@ -586,8 +587,8 @@ class TestProcessResourceDetector(unittest.TestCase):
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
                 detectors=[
-                    {"process": {}},
-                    {"process": {}},
+                    ExperimentalResourceDetector(process={}),
+                    ExperimentalResourceDetector(process={}),
                 ]
             )
         )
@@ -605,7 +606,8 @@ class TestPluginResourceDetector(unittest.TestCase):
 
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"my_custom_detector": {}}]
+                # pylint: disable=unexpected-keyword-arg
+                detectors=[ExperimentalResourceDetector(my_custom_detector={})]
             )
         )
         with patch(
@@ -619,7 +621,8 @@ class TestPluginResourceDetector(unittest.TestCase):
     def test_unknown_detector_raises_configuration_error(self):
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
-                detectors=[{"no_such_detector": {}}]
+                # pylint: disable=unexpected-keyword-arg
+                detectors=[ExperimentalResourceDetector(no_such_detector={})]
             )
         )
         with patch(

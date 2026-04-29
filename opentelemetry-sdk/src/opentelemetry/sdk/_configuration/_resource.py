@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import fnmatch
 import logging
 import os
@@ -25,6 +26,7 @@ from opentelemetry.sdk._configuration._common import load_entry_point
 from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
+    ExperimentalResourceDetector,
     IncludeExclude,
 )
 from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
@@ -164,25 +166,37 @@ _RESOURCE_DETECTOR_REGISTRY: dict = {
 
 
 def _run_detectors(
-    detector_config: dict,
+    detector_config: ExperimentalResourceDetector,
     detected_attrs: dict[str, object],
 ) -> None:
     """Run detectors present in a single detector config entry.
 
-    Each key in the dict names a detector. Known names (service, host, process)
-    are bootstrapped directly. Unknown names — including container and custom
-    plugin detectors — are loaded via the ``opentelemetry_resource_detector``
-    entry point group, matching the spec's PluginComponentProvider mechanism.
+    Known detectors (service, host, process) are handled directly via
+    _RESOURCE_DETECTOR_REGISTRY. All other detectors — including known
+    schema fields like container that require contrib packages, and
+    unknown plugin detectors captured in additional_properties — are
+    loaded via the ``opentelemetry_resource_detector`` entry point group.
 
     The detected_attrs dict is updated in-place; later detectors overwrite
     earlier ones for the same key.
     """
-    for name, config in detector_config.items():
-        if name in _RESOURCE_DETECTOR_REGISTRY:
-            detected_attrs.update(_RESOURCE_DETECTOR_REGISTRY[name](config))
+    for name in dataclasses.fields(detector_config):
+        value = getattr(detector_config, name.name, None)
+        if value is None:
+            continue
+        if name.name in _RESOURCE_DETECTOR_REGISTRY:
+            detected_attrs.update(
+                _RESOURCE_DETECTOR_REGISTRY[name.name](value)
+            )
         else:
-            cls = load_entry_point("opentelemetry_resource_detector", name)
+            cls = load_entry_point(
+                "opentelemetry_resource_detector", name.name
+            )
             detected_attrs.update(cls().detect().attributes)
+
+    for name in detector_config.additional_properties:
+        cls = load_entry_point("opentelemetry_resource_detector", name)
+        detected_attrs.update(cls().detect().attributes)
 
 
 def _filter_attributes(
