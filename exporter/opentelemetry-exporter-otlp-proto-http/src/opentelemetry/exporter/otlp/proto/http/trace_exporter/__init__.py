@@ -155,7 +155,9 @@ class OTLPSpanExporter(SpanExporter):
                 result,
                 "span",
             )
-        return SpanExportResult.SUCCESS if success else SpanExportResult.FAILURE
+        return (
+            SpanExportResult.SUCCESS if success else SpanExportResult.FAILURE
+        )
 
     def shutdown(self):
         if self._shutdown:

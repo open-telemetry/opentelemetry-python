@@ -242,10 +242,16 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:
-            return MetricExportResult.SUCCESS if _do_export(export_request) else MetricExportResult.FAILURE
+            return (
+                MetricExportResult.SUCCESS
+                if _do_export(export_request)
+                else MetricExportResult.FAILURE
+            )
 
         # Else, export in batches of configured size
-        for split_request in _split_metrics_data(export_request, self._max_export_batch_size):
+        for split_request in _split_metrics_data(
+            export_request, self._max_export_batch_size
+        ):
             if not _do_export(split_request):
                 return MetricExportResult.FAILURE
 

@@ -25,13 +25,13 @@ from typing import Any, Dict, Literal, Optional, Tuple, Union
 import requests
 from requests.exceptions import ConnectionError
 
-from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
-    OTEL_EXPORTER_OTLP_COMPRESSION,
-)
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
+)
+from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
+    OTEL_EXPORTER_OTLP_COMPRESSION,
 )
 from opentelemetry.semconv.attributes.http_attributes import (
     HTTP_RESPONSE_STATUS_CODE,
@@ -97,9 +97,7 @@ def _setup_session(
     compression: Compression,
 ) -> requests.Session:
     configured_session = (
-        session
-        or _load_session_from_envvar(cred_envvar)
-        or requests.Session()
+        session or _load_session_from_envvar(cred_envvar) or requests.Session()
     )
     configured_session.headers.update(headers)
     configured_session.headers.update(_OTLP_HTTP_HEADERS)
