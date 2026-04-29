@@ -407,5 +407,5 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             "opentelemetry.sdk.metrics._internal.export.detach"
         ) as mock_detach:
             pmr.force_flush(timeout_millis=5_000)
+            pmr.shutdown()
             self.assertTrue(mock_detach.called)
-        pmr.shutdown()
