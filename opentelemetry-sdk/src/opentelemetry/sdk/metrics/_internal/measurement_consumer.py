@@ -58,7 +58,7 @@ class MeasurementConsumer(ABC):
 class SynchronousMeasurementConsumer(MeasurementConsumer):
     def __init__(
         self,
-        sdk_config: "opentelemetry.sdk.metrics._internal.SdkConfiguration",
+        sdk_config: "opentelemetry.sdk.metrics._internal.sdk_configuration.SdkConfiguration",
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
