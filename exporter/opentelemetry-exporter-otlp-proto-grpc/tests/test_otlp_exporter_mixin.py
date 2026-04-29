@@ -582,9 +582,7 @@ class TestOTLPExporterMixin(TestCase):
     )
     def test_timeout_set_correctly(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
-            StatusCode.UNAVAILABLE,
-            optional_export_sleep=0.25,
-            optional_error_details="Could not finish in time.",
+            StatusCode.UNAVAILABLE, optional_export_sleep=0.25
         )
         add_TraceServiceServicer_to_server(
             mock_trace_service,
