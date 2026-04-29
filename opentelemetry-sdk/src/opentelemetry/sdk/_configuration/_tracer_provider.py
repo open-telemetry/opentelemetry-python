@@ -36,6 +36,9 @@ from opentelemetry.sdk._configuration.models import (
     Sampler as SamplerConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    SpanExporter as SpanExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     SpanLimits as SpanLimitsConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -153,21 +156,25 @@ _SPAN_EXPORTER_REGISTRY: dict = {
 }
 
 
-def _create_span_exporter(config: dict) -> SpanExporter:
-    """Create a span exporter from a config dict with a single key naming the exporter type.
+def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
+    """Create a span exporter from config.
 
-    Known names (otlp_http, otlp_grpc, console) are bootstrapped directly.
-    Unknown names are loaded via the ``opentelemetry_traces_exporter`` entry
-    point group, matching the spec's PluginComponentProvider mechanism.
+    Known exporter types are checked via typed fields on the SpanExporter
+    dataclass. Unknown exporter names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_traces_exporter`` entry point group.
     """
-    if len(config) != 1:
-        raise ConfigurationError(
-            f"Span exporter config must have exactly one key, got: {list(config.keys())}"
-        )
-    name, exporter_config = next(iter(config.items()))
-    if name in _SPAN_EXPORTER_REGISTRY:
-        return _SPAN_EXPORTER_REGISTRY[name](exporter_config)
-    return load_entry_point("opentelemetry_traces_exporter", name)()
+    for name, factory in _SPAN_EXPORTER_REGISTRY.items():
+        value = getattr(config, name, None)
+        if value is not None:
+            return factory(value)
+    if config.additional_properties:
+        name = next(iter(config.additional_properties))
+        return load_entry_point("opentelemetry_traces_exporter", name)()
+    raise ConfigurationError(
+        "No exporter type specified in span exporter config. "
+        "Supported types: otlp_http, otlp_grpc, console."
+    )
 
 
 def _create_span_processor(

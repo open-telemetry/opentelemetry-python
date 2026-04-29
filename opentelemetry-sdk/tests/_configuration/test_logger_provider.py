@@ -40,6 +40,9 @@ from opentelemetry.sdk._configuration.models import (
     LoggerProvider as LoggerProviderConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    LogRecordExporter as LogRecordExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     LogRecordLimits as LogRecordLimitsConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -97,7 +100,7 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         max_export_batch_size=None,
     ):
         if exporter_config is None:
-            exporter_config = {"console": {}}
+            exporter_config = LogRecordExporterConfig(console={})
         return BatchLogRecordProcessorConfig(
             exporter=exporter_config,
             schedule_delay=schedule_delay,
@@ -181,7 +184,9 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         )
 
     def test_simple_processor_uses_console_exporter(self):
-        config = SimpleLogRecordProcessorConfig(exporter={"console": {}})
+        config = SimpleLogRecordProcessorConfig(
+            exporter=LogRecordExporterConfig(console={})
+        )
         processor = _create_simple_log_record_processor(config)
         self.assertIsInstance(processor, SimpleLogRecordProcessor)
         self.assertIsInstance(processor._exporter, ConsoleLogRecordExporter)
@@ -193,7 +198,9 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
 
     def test_simple_processor_dispatched_from_processor_config(self):
         config = LogRecordProcessorConfig(
-            simple=SimpleLogRecordProcessorConfig(exporter={"console": {}})
+            simple=SimpleLogRecordProcessorConfig(
+                exporter=LogRecordExporterConfig(console={})
+            )
         )
         processor = _create_log_record_processor(config)
         self.assertIsInstance(processor, SimpleLogRecordProcessor)
@@ -217,12 +224,12 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
 
 class TestCreateLogRecordExporters(unittest.TestCase):
     def test_console_exporter(self):
-        config = {"console": {}}
+        config = LogRecordExporterConfig(console={})
         exporter = _create_log_record_exporter(config)
         self.assertIsInstance(exporter, ConsoleLogRecordExporter)
 
     def test_no_exporter_type_raises(self):
-        config = {}
+        config = LogRecordExporterConfig()
         with self.assertRaises(ConfigurationError):
             _create_log_record_exporter(config)
 
@@ -233,7 +240,10 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
-            result = _create_log_record_exporter({"my_custom_exporter": {}})
+            # pylint: disable=unexpected-keyword-arg
+            result = _create_log_record_exporter(
+                LogRecordExporterConfig(my_custom_exporter={})
+            )
         self.assertIs(result, mock_exporter)
 
     def test_unknown_log_exporter_raises_configuration_error(self):
@@ -242,14 +252,15 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             return_value=[],
         ):
             with self.assertRaises(ConfigurationError):
-                _create_log_record_exporter({"no_such_exporter": {}})
+                # pylint: disable=unexpected-keyword-arg
+                _create_log_record_exporter(
+                    LogRecordExporterConfig(no_such_exporter={})
+                )
 
     def test_otlp_http_missing_package_raises(self):
-        config = {
-            "otlp_http": OtlpHttpExporterConfig(
-                endpoint="http://localhost:4318"
-            )
-        }
+        config = LogRecordExporterConfig(
+            otlp_http=OtlpHttpExporterConfig(endpoint="http://localhost:4318")
+        )
         with patch.dict(
             sys.modules,
             {
@@ -261,11 +272,9 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 _create_log_record_exporter(config)
 
     def test_otlp_grpc_missing_package_raises(self):
-        config = {
-            "otlp_grpc": OtlpGrpcExporterConfig(
-                endpoint="http://localhost:4317"
-            )
-        }
+        config = LogRecordExporterConfig(
+            otlp_grpc=OtlpGrpcExporterConfig(endpoint="http://localhost:4317")
+        )
         with patch.dict(
             sys.modules,
             {
@@ -293,12 +302,12 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
             },
         ):
-            config = {
-                "otlp_http": OtlpHttpExporterConfig(
+            config = LogRecordExporterConfig(
+                otlp_http=OtlpHttpExporterConfig(
                     endpoint="http://collector:4318",
                     timeout=5000,
                 )
-            }
+            )
             _create_log_record_exporter(config)
 
         mock_exporter_cls.assert_called_once()
@@ -321,13 +330,13 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
             },
         ):
-            config = {
-                "otlp_http": OtlpHttpExporterConfig(
+            config = LogRecordExporterConfig(
+                otlp_http=OtlpHttpExporterConfig(
                     headers=[
                         NameStringValuePair(name="x-api-key", value="secret")
                     ]
                 )
-            }
+            )
             _create_log_record_exporter(config)
 
         call_kwargs = mock_exporter_cls.call_args.kwargs
@@ -347,12 +356,12 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_grpc_log_module,
             },
         ):
-            config = {
-                "otlp_grpc": OtlpGrpcExporterConfig(
+            config = LogRecordExporterConfig(
+                otlp_grpc=OtlpGrpcExporterConfig(
                     endpoint="http://collector:4317",
                     timeout=10000,
                 )
-            }
+            )
             _create_log_record_exporter(config)
 
         mock_exporter_cls.assert_called_once()

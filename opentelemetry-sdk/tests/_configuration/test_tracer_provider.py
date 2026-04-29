@@ -44,6 +44,9 @@ from opentelemetry.sdk._configuration.models import (
     SimpleSpanProcessor as SimpleSpanProcessorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    SpanExporter as SpanExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     SpanLimits as SpanLimitsConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -245,7 +248,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         )
 
     def test_console_exporter_batch(self):
-        config = self._make_batch_config({"console": {}})
+        config = self._make_batch_config(SpanExporterConfig(console={}))
         provider = create_tracer_provider(config)
         procs = provider._active_span_processor._span_processors
         self.assertEqual(len(procs), 1)
@@ -253,7 +256,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
 
     def test_console_exporter_simple(self):
-        config = self._make_simple_config({"console": {}})
+        config = self._make_simple_config(SpanExporterConfig(console={}))
         provider = create_tracer_provider(config)
         procs = provider._active_span_processor._span_processors
         self.assertIsInstance(procs[0], SimpleSpanProcessor)
@@ -261,7 +264,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_otlp_http_missing_package_raises(self):
         config = self._make_batch_config(
-            {"otlp_http": OtlpHttpExporterConfig()}
+            SpanExporterConfig(otlp_http=OtlpHttpExporterConfig())
         )
         with patch.dict(
             sys.modules,
@@ -291,11 +294,11 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             },
         ):
             config = self._make_batch_config(
-                {
-                    "otlp_http": OtlpHttpExporterConfig(
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(
                         endpoint="http://localhost:4318"
                     )
-                }
+                )
             )
             create_tracer_provider(config)
 
@@ -320,11 +323,11 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             },
         ):
             config = self._make_batch_config(
-                {
-                    "otlp_http": OtlpHttpExporterConfig(
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(
                         headers_list="x-api-key=secret,env=prod"
                     )
-                }
+                )
             )
             create_tracer_provider(config)
 
@@ -335,7 +338,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_batch_config(
-            {"otlp_grpc": OtlpGrpcExporterConfig()}
+            SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig())
         )
         with patch.dict(
             sys.modules,
@@ -354,7 +357,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             create_tracer_provider(config)
 
     def test_no_exporter_type_raises(self):
-        config = self._make_batch_config({})
+        config = self._make_batch_config(SpanExporterConfig())
         with self.assertRaises(ConfigurationError):
             create_tracer_provider(config)
 
@@ -365,7 +368,10 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
-            config = self._make_batch_config({"my_custom_exporter": {}})
+            config = self._make_batch_config(
+                # pylint: disable=unexpected-keyword-arg
+                SpanExporterConfig(my_custom_exporter={})
+            )
             provider = create_tracer_provider(config)
         self.assertEqual(
             len(provider._active_span_processor._span_processors), 1
@@ -376,7 +382,10 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],
         ):
-            config = self._make_batch_config({"no_such_exporter": {}})
+            config = self._make_batch_config(
+                # pylint: disable=unexpected-keyword-arg
+                SpanExporterConfig(no_such_exporter={})
+            )
             with self.assertRaises(ConfigurationError):
                 create_tracer_provider(config)
 

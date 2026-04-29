@@ -53,6 +53,9 @@ from opentelemetry.sdk._configuration.models import (
     PeriodicMetricReader as PeriodicMetricReaderConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    PushMetricExporter as PushMetricExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     View as ViewConfig,
 )
 from opentelemetry.sdk.metrics import (
@@ -356,21 +359,27 @@ _METRIC_EXPORTER_REGISTRY: dict = {
 }
 
 
-def _create_push_metric_exporter(config: dict) -> MetricExporter:
-    """Create a push metric exporter from a config dict with a single key naming the exporter type.
+def _create_push_metric_exporter(
+    config: PushMetricExporterConfig,
+) -> MetricExporter:
+    """Create a push metric exporter from config.
 
-    Known names (otlp_http, otlp_grpc, console) are bootstrapped directly.
-    Unknown names are loaded via the ``opentelemetry_metrics_exporter`` entry
-    point group, matching the spec's PluginComponentProvider mechanism.
+    Known exporter types are checked via typed fields on the PushMetricExporter
+    dataclass. Unknown exporter names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_metrics_exporter`` entry point group.
     """
-    if len(config) != 1:
-        raise ConfigurationError(
-            f"Metric exporter config must have exactly one key, got: {list(config.keys())}"
-        )
-    name, exporter_config = next(iter(config.items()))
-    if name in _METRIC_EXPORTER_REGISTRY:
-        return _METRIC_EXPORTER_REGISTRY[name](exporter_config)
-    return load_entry_point("opentelemetry_metrics_exporter", name)()
+    for name, factory in _METRIC_EXPORTER_REGISTRY.items():
+        value = getattr(config, name, None)
+        if value is not None:
+            return factory(value)
+    if config.additional_properties:
+        name = next(iter(config.additional_properties))
+        return load_entry_point("opentelemetry_metrics_exporter", name)()
+    raise ConfigurationError(
+        "No exporter type specified in push metric exporter config. "
+        "Supported types: console, otlp_http, otlp_grpc."
+    )
 
 
 def _create_periodic_metric_reader(

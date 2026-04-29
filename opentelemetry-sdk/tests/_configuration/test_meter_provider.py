@@ -64,6 +64,9 @@ from opentelemetry.sdk._configuration.models import (
     PeriodicMetricReader as PeriodicMetricReaderConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    PushMetricExporter as PushMetricExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     View as ViewConfig,
 )
 from opentelemetry.sdk.metrics import (
@@ -129,7 +132,9 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
             readers=[
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter={"console": ConsoleMetricExporterConfig()}
+                        exporter=PushMetricExporterConfig(
+                            console=ConsoleMetricExporterConfig()
+                        )
                     )
                 )
             ]
@@ -183,7 +188,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_console_exporter(self):
         config = self._make_periodic_config(
-            {"console": ConsoleMetricExporterConfig()}
+            PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
         )
         provider = create_meter_provider(config)
         reader = provider._sdk_config.metric_readers[0]
@@ -192,7 +197,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_periodic_reader_default_interval(self):
         config = self._make_periodic_config(
-            {"console": ConsoleMetricExporterConfig()}
+            PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
         )
         provider = create_meter_provider(config)
         reader = provider._sdk_config.metric_readers[0]
@@ -200,7 +205,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_periodic_reader_default_timeout(self):
         config = self._make_periodic_config(
-            {"console": ConsoleMetricExporterConfig()}
+            PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
         )
         provider = create_meter_provider(config)
         reader = provider._sdk_config.metric_readers[0]
@@ -208,7 +213,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_periodic_reader_explicit_interval(self):
         config = self._make_periodic_config(
-            {"console": ConsoleMetricExporterConfig()},
+            PushMetricExporterConfig(console=ConsoleMetricExporterConfig()),
             interval=5000,
         )
         provider = create_meter_provider(config)
@@ -217,7 +222,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_periodic_reader_explicit_timeout(self):
         config = self._make_periodic_config(
-            {"console": ConsoleMetricExporterConfig()},
+            PushMetricExporterConfig(console=ConsoleMetricExporterConfig()),
             timeout=10000,
         )
         provider = create_meter_provider(config)
@@ -226,7 +231,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_otlp_http_missing_package_raises(self):
         config = self._make_periodic_config(
-            {"otlp_http": OtlpHttpMetricExporterConfig()}
+            PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig())
         )
         with patch.dict(
             sys.modules,
@@ -255,11 +260,11 @@ class TestCreateMetricReaders(unittest.TestCase):
             },
         ):
             config = self._make_periodic_config(
-                {
-                    "otlp_http": OtlpHttpMetricExporterConfig(
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(
                         endpoint="http://localhost:4318"
                     )
-                }
+                )
             )
             create_meter_provider(config)
 
@@ -271,7 +276,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_periodic_config(
-            {"otlp_grpc": OtlpGrpcMetricExporterConfig()}
+            PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig())
         )
         with patch.dict(
             sys.modules,
@@ -297,7 +302,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             create_meter_provider(config)
 
     def test_no_exporter_type_raises(self):
-        config = self._make_periodic_config({})
+        config = self._make_periodic_config(PushMetricExporterConfig())
         with self.assertRaises(ConfigurationError):
             create_meter_provider(config)
 
@@ -308,7 +313,10 @@ class TestCreateMetricReaders(unittest.TestCase):
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
-            config = self._make_periodic_config({"my_custom_exporter": {}})
+            # pylint: disable=unexpected-keyword-arg
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(my_custom_exporter={})
+            )
             provider = create_meter_provider(config)
         self.assertEqual(len(provider._sdk_config.metric_readers), 1)
 
@@ -317,7 +325,10 @@ class TestCreateMetricReaders(unittest.TestCase):
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],
         ):
-            config = self._make_periodic_config({"no_such_exporter": {}})
+            # pylint: disable=unexpected-keyword-arg
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(no_such_exporter={})
+            )
             with self.assertRaises(ConfigurationError):
                 create_meter_provider(config)
 
@@ -326,12 +337,16 @@ class TestCreateMetricReaders(unittest.TestCase):
             readers=[
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter={"console": ConsoleMetricExporterConfig()}
+                        exporter=PushMetricExporterConfig(
+                            console=ConsoleMetricExporterConfig()
+                        )
                     )
                 ),
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter={"console": ConsoleMetricExporterConfig()}
+                        exporter=PushMetricExporterConfig(
+                            console=ConsoleMetricExporterConfig()
+                        )
                     )
                 ),
             ]
@@ -347,12 +362,12 @@ class TestTemporalityAndAggregation(unittest.TestCase):
             readers=[
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter={
-                            "console": ConsoleMetricExporterConfig(
+                        exporter=PushMetricExporterConfig(
+                            console=ConsoleMetricExporterConfig(
                                 temporality_preference=temporality,
                                 default_histogram_aggregation=histogram_agg,
                             )
-                        }
+                        )
                     )
                 )
             ]
