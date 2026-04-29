@@ -50,36 +50,31 @@ def _parse_response_body(
     content_type = resp.headers.get("Content-Type", "")
 
     if content_type.startswith(_CONTENT_TYPE_PROTOBUF):
+        message = response_class()
         try:
-            message = response_class()
             message.ParseFromString(resp.content)
-            partial_success = getattr(message, "partial_success", None)
-            if partial_success is not None:
-                error_message = getattr(partial_success, "error_message", "")
-                if error_message:
-                    return error_message
         except Exception:  # pylint: disable=broad-except
             _logger.debug(
                 "Failed to parse protobuf response body", exc_info=True
             )
+            return resp.reason
+        if error_message := message.partial_success.error_message:
+            return error_message
         return resp.reason
 
     if content_type.startswith(_CONTENT_TYPE_JSON):
         try:
             body = resp.json()
-            if isinstance(body, dict):
-                # OTLP partial_success uses camelCase in JSON
-                partial = body.get("partialSuccess", {})
-                error_message = partial.get("errorMessage", "")
-                if error_message:
-                    return error_message
-                # google.rpc.Status uses "message"
-                rpc_message = body.get("message", "")
-                if rpc_message:
-                    return rpc_message
         except Exception:  # pylint: disable=broad-except
             _logger.debug("Failed to parse JSON response body", exc_info=True)
-        return resp.text or resp.reason
+            return resp.text or resp.reason
+        if isinstance(body, dict):
+            # OTLP partial_success uses camelCase in JSON
+            if error_message := body.get("partialSuccess", {}).get("errorMessage", ""):
+                return error_message
+            # google.rpc.Status uses "message"
+            if rpc_message := body.get("message", ""):
+                return rpc_message
 
     return resp.text or resp.reason
 

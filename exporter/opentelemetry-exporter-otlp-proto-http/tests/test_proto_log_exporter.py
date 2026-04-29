@@ -92,9 +92,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         log_exporter_logger = logging.getLogger(
             "opentelemetry.exporter.otlp.proto.http._log_exporter"
         )
-        for log_filter in log_exporter_logger.filters:
-            if hasattr(log_filter, "last_log"):
-                del log_filter.last_log
+        log_exporter_logger.filters.clear()
 
     def test_constructor_default(self):
         exporter = OTLPLogExporter()
