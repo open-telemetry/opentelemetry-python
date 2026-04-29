@@ -273,8 +273,8 @@ class TestW3CBaggagePropagator(TestCase):
             for i in range(self.propagator._MAX_PAIRS + 10)
         }
         ctx = get_current()
-        for k, v in values.items():
-            ctx = set_baggage(k, v, context=ctx)
+        for key, val in values.items():
+            ctx = set_baggage(key, val, context=ctx)
         output = {}
         with self.assertLogs(level=WARNING) as warning:
             self.propagator.inject(output, context=ctx)
@@ -288,8 +288,8 @@ class TestW3CBaggagePropagator(TestCase):
         long_value = "x" * self.propagator._MAX_PAIR_LENGTH
         values = {"key1": "val1", "big": long_value, "key3": "val3"}
         ctx = get_current()
-        for k, v in values.items():
-            ctx = set_baggage(k, v, context=ctx)
+        for key, val in values.items():
+            ctx = set_baggage(key, val, context=ctx)
         output = {}
         with self.assertLogs(level=WARNING) as warning:
             self.propagator.inject(output, context=ctx)
@@ -309,8 +309,8 @@ class TestW3CBaggagePropagator(TestCase):
         value = "v" * 200
         values = {f"k{i:03d}": value for i in range(50)}
         ctx = get_current()
-        for k, v in values.items():
-            ctx = set_baggage(k, v, context=ctx)
+        for key, val in values.items():
+            ctx = set_baggage(key, val, context=ctx)
         output = {}
         with self.assertLogs(level=WARNING) as warning:
             self.propagator.inject(output, context=ctx)
@@ -328,8 +328,8 @@ class TestW3CBaggagePropagator(TestCase):
         long_value = "x" * self.propagator._MAX_PAIR_LENGTH
         values = {"big1": long_value, "big2": long_value}
         ctx = get_current()
-        for k, v in values.items():
-            ctx = set_baggage(k, v, context=ctx)
+        for key, val in values.items():
+            ctx = set_baggage(key, val, context=ctx)
         output = {}
         self.propagator.inject(output, context=ctx)
         self.assertNotIn("baggage", output)
