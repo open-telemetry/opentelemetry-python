@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-api`: Enforce W3C Baggage size limits on outbound propagation in `W3CBaggagePropagator.inject()`. Previously only inbound extraction enforced limits; now inject also caps entries at 180, individual pairs at 4096 bytes, and total header at 8192 bytes per the W3C Baggage spec. The extract path max_pairs limit now counts all size-valid entries rather than only successfully parsed ones.
+  ([#5163](https://github.com/open-telemetry/opentelemetry-python/pull/5163))
 - `opentelemetry-sdk`: add `additional_properties` support to generated config models via custom `datamodel-codegen` template, enabling plugin/custom component names to flow through typed dataclasses
   ([#5131](https://github.com/open-telemetry/opentelemetry-python/pull/5131))
 - Fix incorrect code example in `create_tracer()` docstring
