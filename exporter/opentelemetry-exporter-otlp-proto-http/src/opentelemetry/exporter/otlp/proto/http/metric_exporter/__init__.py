@@ -13,7 +13,6 @@
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import (  # noqa: F401
     Any,
     Callable,
@@ -43,6 +42,9 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    DEFAULT_COMPRESSION,
+    DEFAULT_ENDPOINT,
+    DEFAULT_TIMEOUT,
     OTLPHttpClient,
     _SignalConfig,
     _export_with_retries,
@@ -559,22 +561,3 @@ def get_resource_data(
     name: str,
 ) -> List[PB2Resource]:
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
-
-
-_DEPRECATED_CONSTANTS = {
-    "DEFAULT_COMPRESSION": Compression.NoCompression,
-    "DEFAULT_ENDPOINT": "http://localhost:4318/",
-    "DEFAULT_TIMEOUT": 10,
-}
-
-
-def __getattr__(name: str) -> object:
-    if name in _DEPRECATED_CONSTANTS:
-        warnings.warn(
-            f"{name} is deprecated. Use the constant from "
-            f"opentelemetry.exporter.otlp.proto.http._common instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return _DEPRECATED_CONSTANTS[name]
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

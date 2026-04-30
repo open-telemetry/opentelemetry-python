@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-import warnings
 from typing import Dict, Optional, Sequence
 
 import requests
@@ -23,6 +22,9 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    DEFAULT_COMPRESSION,
+    DEFAULT_ENDPOINT,
+    DEFAULT_TIMEOUT,
     OTLPHttpClient,
     _SignalConfig,
     _export_with_retries,
@@ -135,22 +137,3 @@ class OTLPLogExporter(OTLPHttpClient, LogRecordExporter):
         self._shutdown = True
         self._shutdown_in_progress.set()
         self._session.close()
-
-
-_DEPRECATED_CONSTANTS = {
-    "DEFAULT_COMPRESSION": Compression.NoCompression,
-    "DEFAULT_ENDPOINT": "http://localhost:4318/",
-    "DEFAULT_TIMEOUT": 10,
-}
-
-
-def __getattr__(name: str) -> object:
-    if name in _DEPRECATED_CONSTANTS:
-        warnings.warn(
-            f"{name} is deprecated. Use the constant from "
-            f"opentelemetry.exporter.otlp.proto.http._common instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return _DEPRECATED_CONSTANTS[name]
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
