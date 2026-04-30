@@ -14,6 +14,7 @@
 
 import gzip
 import logging
+import os
 import random
 import threading
 import zlib
@@ -135,11 +136,12 @@ class OTLPLogExporter(LogRecordExporter):
             )
         )
         self._compression = compression or _compression_from_env()
+        self._cred_envvar = (
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
+        )
         self._session = (
             session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
-            )
+            or _load_session_from_envvar(self._cred_envvar)
             or requests.Session()
         )
         self._session.headers.update(self._headers)
@@ -151,6 +153,35 @@ class OTLPLogExporter(LogRecordExporter):
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
+        if hasattr(os, "register_at_fork"):
+            os.register_at_fork(after_in_child=self._reset_session_after_fork)
+
+    def _reset_session_after_fork(self) -> None:
+        """
+        Reset exporter session in the child process after fork.
+
+        We close the existing session to avoid finalizer warnings if file
+        descriptors were already closed, then recreate the session using the
+        same creation logic as __init__ to preserve credential provider config.
+        """
+        try:
+            self._session.close()
+            self._session = (
+                _load_session_from_envvar(self._cred_envvar)
+                or requests.Session()
+            )
+            self._session.headers.update(self._headers)
+            self._session.headers.update(_OTLP_HTTP_HEADERS)
+            self._session.headers.update(self._headers)
+            if self._compression is not Compression.NoCompression:
+                self._session.headers.update(
+                    {"Content-Encoding": self._compression.value}
+                )
+        except Exception:
+            _logger.debug(
+                "Exception occurred while resetting exporter session",
+                exc_info=True,
+            )
 
         self._metrics = ExporterMetrics(
             OtelComponentTypeValues.OTLP_HTTP_LOG_EXPORTER,

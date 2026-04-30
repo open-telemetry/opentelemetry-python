@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
+import os
 import threading
 import time
+import unittest
 from logging import WARNING
 from os import environ
 from typing import List
@@ -1444,6 +1445,80 @@ class TestOTLPMetricExporter(TestCase):
 
             assert after - before < 0.2
 
+    @unittest.skipUnless(
+        hasattr(os, "register_at_fork"), "fork session reset not available"
+    )
+    def test_register_at_fork_resets_session(self):
+        initial_session = MagicMock(spec=requests.Session)
+        initial_session.headers = {}
+
+        new_session = MagicMock(spec=requests.Session)
+        new_session.headers = {}
+
+        with (
+            patch("os.register_at_fork") as mock_register_at_fork,
+            patch(
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter._load_session_from_envvar",
+                return_value=None,
+            ) as mock_load,
+            patch(
+               "opentelemetry.exporter.otlp.proto.http.metric_exporter.requests.Session",
+                return_value=new_session,
+            ),
+        ):
+            exporter = OTLPMetricExporter(
+                session=initial_session, headers={"x-test": "1"}
+            )
+            after_in_child = mock_register_at_fork.call_args.kwargs[
+                "after_in_child"
+            ]
+            after_in_child()
+
+        initial_session.close.assert_called_once()
+        mock_load.assert_called()
+        self.assertEqual(exporter._session, new_session)
+        self.assertEqual(exporter._session.headers.get("x-test"), "1")
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
+        self.assertEqual(exporter._session.headers.get("preexisting"), "yes")
+
+    @unittest.skipUnless(
+        hasattr(os, "register_at_fork"), "fork session reset not available"
+    )
+    def test_register_at_fork_uses_credential_provider(self):
+        initial_session = MagicMock(spec=requests.Session)
+        initial_session.headers = {}
+
+        cred_session = MagicMock(spec=requests.Session)
+        cred_session.headers = {}
+
+        with (
+            patch("os.register_at_fork") as mock_register_at_fork,
+            patch(
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter._load_session_from_envvar",
+                return_value=cred_session,
+            ) as mock_load,
+        ):
+            exporter = OTLPMetricExporter(
+                session=initial_session, headers={"x-test": "1"}
+            )
+            after_in_child = mock_register_at_fork.call_args.kwargs[
+                "after_in_child"
+            ]
+            after_in_child()
+
+        initial_session.close.assert_called_once()
+        mock_load.assert_called_with(
+            "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER"
+        )
+        self.assertEqual(exporter._session, cred_session)
+        self.assertEqual(exporter._session.headers.get("x-test"), "1")
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(
             attributes["otel.component.type"], "otlp_http_metric_exporter"
