@@ -14,7 +14,7 @@
 #
 from logging import getLogger
 from re import split
-from typing import Generator, Iterable, Iterator, Mapping, Optional, Set
+from typing import Iterable, Iterator, Mapping, Optional, Set
 from urllib.parse import quote_plus, unquote_plus
 
 from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
@@ -180,13 +180,9 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         return {self._BAGGAGE_HEADER_NAME}
 
 
-def _format_baggage(baggage_entries: Mapping[str, object]) -> str:
-    return ",".join(_encode_baggage_pairs(baggage_entries))
-
-
 def _encode_baggage_pairs(
     baggage_entries: Mapping[str, object],
-) -> Generator[str, None, None]:
+) -> Iterator[str]:
     """Yield URL-encoded 'key=value' pairs from baggage entries."""
     for key, value in baggage_entries.items():
         yield quote_plus(str(key)) + "=" + quote_plus(str(value))
