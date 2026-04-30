@@ -45,6 +45,7 @@ class ProcessorMetrics:
         meter_provider: MeterProvider,
         *,
         capacity: int | None = None,
+        disabled: bool = False,
     ) -> None:
         self._signal = signal
         meter = meter_provider.get_meter("opentelemetry-sdk")
@@ -75,12 +76,17 @@ class ProcessorMetrics:
             )
 
         self._processed = create_processed(meter)
+        self._disabled = disabled
 
         if capacity is not None:
             self._queue_capacity = create_queue_capacity(meter)
-            self._queue_capacity.add(capacity, self._standard_attrs)
+            if not self._disabled:
+                self._queue_capacity.add(capacity, self._standard_attrs)
 
     def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
+        if self._disabled:
+            return
+
         def record_queue_size(
             _options: CallbackOptions,
         ) -> tuple[Observation]:
@@ -103,9 +109,13 @@ class ProcessorMetrics:
         )
 
     def drop_items(self, count: int) -> None:
+        if self._disabled:
+            return
         self._processed.add(count, self._dropped_attrs)
 
     def finish_items(self, count: int, error: Exception | None) -> None:
+        if self._disabled:
+            return
         if not error:
             self._processed.add(count, self._standard_attrs)
             return

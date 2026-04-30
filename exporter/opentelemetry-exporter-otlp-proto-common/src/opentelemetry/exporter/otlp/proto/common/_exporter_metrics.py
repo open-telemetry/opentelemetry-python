@@ -63,6 +63,8 @@ class ExporterMetrics:
         signal: Literal["traces", "metrics", "logs"],
         endpoint: UrlParseResult,
         meter_provider: MeterProvider | None,
+        *,
+        disabled: bool = False,
     ) -> None:
         if signal == "traces":
             create_exported = create_otel_sdk_exporter_span_exported
@@ -104,9 +106,14 @@ class ExporterMetrics:
         self._inflight = create_inflight(meter)
         self._exported = create_exported(meter)
         self._duration = create_otel_sdk_exporter_operation_duration(meter)
+        self._disabled = disabled
 
     @contextmanager
     def export_operation(self, num_items: int) -> Iterator[ExportResult]:
+        if self._disabled:
+            yield ExportResult()
+            return
+
         start_time = perf_counter()
         self._inflight.add(num_items, self._standard_attrs)
 

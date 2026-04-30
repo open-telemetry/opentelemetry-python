@@ -845,3 +845,14 @@ Default: opentelemetry.sdk._logs._internal._default_logger_configurator
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
 """
+
+OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED = (
+    "OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED"
+)
+"""
+.. envvar:: OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+
+The :envvar:`OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED` environment variable enables
+metrics emitted by the SDK about its own internal state.
+Default: "false"
+"""

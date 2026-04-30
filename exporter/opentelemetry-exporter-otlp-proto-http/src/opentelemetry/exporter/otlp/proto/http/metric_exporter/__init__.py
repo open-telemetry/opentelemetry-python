@@ -86,6 +86,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
@@ -222,6 +226,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
+            disabled=not parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
         )
 
     def _export(
@@ -404,6 +411,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
+            disabled=not parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
         )
 
 
