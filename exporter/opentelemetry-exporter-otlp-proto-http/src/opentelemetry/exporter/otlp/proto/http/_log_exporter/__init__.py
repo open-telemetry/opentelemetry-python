@@ -23,6 +23,8 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     DEFAULT_COMPRESSION,
+    DEFAULT_ENDPOINT,
+    DEFAULT_TIMEOUT,
     OTLPHttpClient,
     _SignalConfig,
 )
