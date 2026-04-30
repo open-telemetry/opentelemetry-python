@@ -6,7 +6,7 @@ packaging==24.0
 pluggy==1.6.0
 psutil==7.2.2
 py-cpuinfo==9.0.0
-pytest==7.4.4
+pytest==9.0.3
 jsonschema==4.25.1
 rpds-py==0.23.1; python_version == "3.10"
 rpds-py==0.30.0; python_version >= "3.11"
