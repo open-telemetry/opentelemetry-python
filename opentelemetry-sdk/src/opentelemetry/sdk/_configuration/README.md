@@ -5,7 +5,7 @@ This package implements [OpenTelemetry file-based configuration](https://opentel
 ## Files
 
 - `schema.json` — vendored copy of the [OpenTelemetry configuration JSON schema](https://github.com/open-telemetry/opentelemetry-configuration)
-- `models.py` — Python dataclasses generated from `schema.json` by [datamodel-code-generator](https://github.com/koxudaxi/datamodel-code-generator)
+- `models.py` — Python dataclasses generated from `schema.json` by [datamodel-code-generator](https://github.com/koxudaxi/datamodel-code-generator), using a custom template from `opentelemetry-sdk/codegen/` (see that directory's README for details)
 
 ## Updating the schema
 
