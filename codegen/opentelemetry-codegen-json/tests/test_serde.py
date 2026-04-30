@@ -17,13 +17,13 @@
 
 import json
 import math
-from typing import Any, Type
+from typing import Any
 
 import pytest  # type: ignore
 
 
 @pytest.fixture
-def test_v1_types() -> tuple[Type[Any], Type[Any]]:
+def test_v1_types() -> tuple[type[Any], type[Any]]:
     from otel_test_json.test.v1.test import (  # type: ignore
         SubMessage,
         TestMessage,
@@ -33,7 +33,7 @@ def test_v1_types() -> tuple[Type[Any], Type[Any]]:
 
 
 @pytest.fixture
-def common_v1_types() -> Type[Any]:
+def common_v1_types() -> type[Any]:
     from otel_test_json.common.v1.common import (  # type: ignore
         InstrumentationScope,  # type: ignore
     )
@@ -42,7 +42,7 @@ def common_v1_types() -> Type[Any]:
 
 
 @pytest.fixture
-def trace_v1_types() -> Type[Any]:
+def trace_v1_types() -> type[Any]:
     from otel_test_json.trace.v1.trace import Span  # type: ignore
 
     return Span
@@ -50,7 +50,7 @@ def trace_v1_types() -> Type[Any]:
 
 @pytest.fixture
 def complex_v1_types() -> tuple[
-    Type[Any], Type[Any], Type[Any], Type[Any], Type[Any]
+    type[Any], type[Any], type[Any], type[Any], type[Any]
 ]:
     from otel_test_json.test.v1.complex import (  # type: ignore
         DeeplyNested,
@@ -70,7 +70,7 @@ def complex_v1_types() -> tuple[
 
 
 def test_generated_message_roundtrip(
-    test_v1_types: tuple[Type[Any], Type[Any]],
+    test_v1_types: tuple[type[Any], type[Any]],
 ) -> None:
     TestMessage, SubMessage = test_v1_types
 

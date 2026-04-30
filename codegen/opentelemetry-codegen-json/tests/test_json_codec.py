@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import math
-from typing import Optional, Union
 
 import pytest  # type: ignore
 
@@ -40,7 +39,7 @@ from opentelemetry.codegen.json.runtime.json_codec import (
         (None, ""),
     ],
 )
-def test_encode_hex(value: Optional[bytes], expected: str) -> None:
+def test_encode_hex(value: bytes | None, expected: str) -> None:
     assert encode_hex(value) == expected
 
 
@@ -52,7 +51,7 @@ def test_encode_hex(value: Optional[bytes], expected: str) -> None:
         (None, b""),
     ],
 )
-def test_decode_hex(value: Optional[str], expected: bytes) -> None:
+def test_decode_hex(value: str | None, expected: bytes) -> None:
     assert decode_hex(value, "field") == expected
 
 
@@ -71,7 +70,7 @@ def test_decode_hex_errors() -> None:
         (None, ""),
     ],
 )
-def test_encode_base64(value: Optional[bytes], expected: str) -> None:
+def test_encode_base64(value: bytes | None, expected: str) -> None:
     assert encode_base64(value) == expected
 
 
@@ -83,7 +82,7 @@ def test_encode_base64(value: Optional[bytes], expected: str) -> None:
         (None, b""),
     ],
 )
-def test_decode_base64(value: Optional[str], expected: bytes) -> None:
+def test_decode_base64(value: str | None, expected: bytes) -> None:
     assert decode_base64(value, "field") == expected
 
 
@@ -112,7 +111,7 @@ def test_encode_int64(value: int, expected: str) -> None:
         (None, 0),
     ],
 )
-def test_decode_int64(value: Optional[Union[int, str]], expected: int) -> None:
+def test_decode_int64(value: int | str | None, expected: int) -> None:
     assert decode_int64(value, "field") == expected
 
 
@@ -132,7 +131,7 @@ def test_decode_int64_errors() -> None:
         (float("-inf"), "-Infinity"),
     ],
 )
-def test_encode_float(value: float, expected: Union[float, str]) -> None:
+def test_encode_float(value: float, expected: float | str) -> None:
     result = encode_float(value)
     if isinstance(expected, float) and math.isnan(expected):
         assert math.isnan(result)  # type: ignore
@@ -153,7 +152,7 @@ def test_encode_float(value: float, expected: Union[float, str]) -> None:
     ],
 )
 def test_decode_float(
-    value: Optional[Union[float, int, str]], expected: float
+    value: float | int | str | None, expected: float
 ) -> None:
     result = decode_float(value, "field")
     if math.isnan(expected):

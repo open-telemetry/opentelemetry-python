@@ -14,7 +14,6 @@
 
 from functools import lru_cache
 from logging import getLogger
-from typing import Optional
 
 from opencensus.trace.span_context import SpanContext
 from opencensus.trace.tracer import Tracer
@@ -28,7 +27,7 @@ _logger = getLogger(__name__)
 
 
 def install_shim(
-    tracer_provider: Optional[trace.TracerProvider] = None,
+    tracer_provider: trace.TracerProvider | None = None,
 ) -> None:
     otel_tracer = trace.get_tracer(
         "opentelemetry-opencensus-shim",

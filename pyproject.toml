@@ -77,20 +77,16 @@ output-format = "concise"
 # https://docs.astral.sh/ruff/linter/#rule-selection
 # pylint: https://github.com/astral-sh/ruff/issues/970
 select = [
-  "I",   # isort
-  "F",   # pyflakes
-  "E",   # pycodestyle errors
-  "W",   # pycodestyle warnings
-  "PLC", # pylint convention
-  "PLE", # pylint error
-  "Q",   # flake8-quotes
+  "I",   # https://docs.astral.sh/ruff/rules/#isort-i
+  "F",   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+  "E",   # https://docs.astral.sh/ruff/rules/#error-e
+  "W",   # https://docs.astral.sh/ruff/rules/#warning-w
+  "PLC", # https://docs.astral.sh/ruff/rules/#convention-plc
+  "PLE", # https://docs.astral.sh/ruff/rules/#error-ple
+  "Q",   # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
-  "TID", # flake8-tidy-imports
-  "UP011", # lru-cache-without-parameters
-  "UP015", # redundant-open-modes
-  "UP032", # f-string
-  "UP034", # extraneous-parentheses
-  "UP037", # quoted-annotation
+  "TID", # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
+  "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up
 ]
 
 ignore = [

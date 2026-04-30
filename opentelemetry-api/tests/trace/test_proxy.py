@@ -13,7 +13,6 @@
 # limitations under the License.
 
 # pylint: disable=W0212,W0222,W0221
-import typing
 import unittest
 
 from opentelemetry import trace
@@ -31,9 +30,9 @@ class TestProvider(trace.NoOpTracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: Attributes | None = None,
     ) -> trace.Tracer:
         return TestTracer()
 

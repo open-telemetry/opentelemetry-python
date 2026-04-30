@@ -15,11 +15,11 @@
 # pylint: disable=protected-access,no-self-use,too-many-lines
 
 import weakref
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Sequence
 from logging import WARNING
 from threading import Lock
 from time import sleep
-from typing import Any, Iterable, Sequence
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.attributes import BoundedAttributes

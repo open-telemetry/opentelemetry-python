@@ -14,7 +14,6 @@
 
 import contextlib
 import sys
-import typing
 import unittest
 
 from opentelemetry import context as context_api
@@ -67,7 +66,7 @@ class TestSamplingResult(unittest.TestCase):
 class TestSampler(unittest.TestCase):
     def _create_parent(
         self, trace_flags: trace.TraceFlags, is_remote=False, trace_state=None
-    ) -> typing.Optional[context_api.Context]:
+    ) -> context_api.Context | None:
         if trace_flags is None:
             return None
         return trace.set_span_in_context(

@@ -19,7 +19,6 @@
 
 # pylint: disable=useless-parent-delegation,arguments-differ
 
-from typing import Optional
 
 from opentelemetry.metrics import (
     Asynchronous,
@@ -41,8 +40,8 @@ class MeterProviderImplTest(MeterProvider):
     def get_meter(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
     ) -> Meter:
         return super().get_meter(name, version, schema_url)
 

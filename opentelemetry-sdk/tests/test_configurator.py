@@ -18,9 +18,9 @@ from __future__ import annotations
 
 import logging
 import logging.config
+from collections.abc import Iterable, Sequence
 from logging import WARNING, getLogger
 from os import environ
-from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
@@ -273,7 +273,7 @@ class CustomSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional[Context],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind = None,

@@ -38,7 +38,7 @@ class CompositePropagator(textmap.TextMapPropagator):
     def extract(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
     ) -> Context:
         """Run each of the configured propagators with the given context and carrier.
@@ -55,7 +55,7 @@ class CompositePropagator(textmap.TextMapPropagator):
     def inject(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
     ) -> None:
         """Run each of the configured propagators with the given context and carrier.
@@ -69,7 +69,7 @@ class CompositePropagator(textmap.TextMapPropagator):
             propagator.inject(carrier, context, setter=setter)
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         """Returns a set with the fields set in `inject`.
 
         See

@@ -14,7 +14,7 @@
 
 import logging
 from collections import defaultdict
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -59,7 +59,7 @@ def encode_spans(
 
 def _encode_resource_spans(
     sdk_spans: Sequence[ReadableSpan],
-) -> List[PB2ResourceSpans]:
+) -> list[PB2ResourceSpans]:
     # We need to inspect the spans and group + structure them as:
     #
     #   Resource
@@ -105,7 +105,7 @@ def _encode_resource_spans(
     return pb2_resource_spans
 
 
-def _span_flags(parent_span_context: Optional[SpanContext]) -> int:
+def _span_flags(parent_span_context: SpanContext | None) -> int:
     flags = PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
     if parent_span_context and parent_span_context.is_remote:
         flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
@@ -136,7 +136,7 @@ def _encode_span(sdk_span: ReadableSpan) -> PB2SPan:
 
 def _encode_events(
     events: Sequence[Event],
-) -> Optional[List[PB2SPan.Event]]:
+) -> list[PB2SPan.Event] | None:
     pb2_events = None
     if events:
         pb2_events = []
@@ -167,7 +167,7 @@ def _encode_links(links: Sequence[Link]) -> Sequence[PB2SPan.Link]:
     return pb2_links
 
 
-def _encode_status(status: Status) -> Optional[PB2Status]:
+def _encode_status(status: Status) -> PB2Status | None:
     pb2_status = None
     if status is not None:
         pb2_status = PB2Status(
@@ -177,7 +177,7 @@ def _encode_status(status: Status) -> Optional[PB2Status]:
     return pb2_status
 
 
-def _encode_trace_state(trace_state: TraceState) -> Optional[str]:
+def _encode_trace_state(trace_state: TraceState) -> str | None:
     pb2_trace_state = None
     if trace_state is not None:
         pb2_trace_state = ",".join(
@@ -186,7 +186,7 @@ def _encode_trace_state(trace_state: TraceState) -> Optional[str]:
     return pb2_trace_state
 
 
-def _encode_parent_id(context: Optional[SpanContext]) -> Optional[bytes]:
+def _encode_parent_id(context: SpanContext | None) -> bytes | None:
     if context:
         return _encode_span_id(context.span_id)
     return None

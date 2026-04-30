@@ -19,10 +19,10 @@ import sys
 import threading
 import time
 import unittest
+from collections.abc import Sequence
 from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
 )
-from typing import Sequence
 from unittest import mock
 from unittest.mock import Mock, patch
 

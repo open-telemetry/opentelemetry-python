@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Union
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -35,7 +34,7 @@ class ExemplarFilter(ABC):
     @abstractmethod
     def should_sample(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -62,7 +61,7 @@ class AlwaysOnExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -89,7 +88,7 @@ class AlwaysOffExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -115,7 +114,7 @@ class TraceBasedExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,

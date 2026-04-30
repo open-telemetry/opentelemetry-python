@@ -24,7 +24,6 @@ from importlib import reload
 from logging import ERROR, WARNING
 from random import randint
 from time import time_ns
-from typing import Optional
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -1572,7 +1571,7 @@ class MySpanProcessor(trace.SpanProcessor):
         self.span_list = span_list
 
     def on_start(
-        self, span: "trace.Span", parent_context: Optional[Context] = None
+        self, span: "trace.Span", parent_context: Context | None = None
     ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 

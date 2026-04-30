@@ -18,7 +18,6 @@ import threading
 import time
 import unittest
 from logging import WARNING
-from typing import List
 from unittest.mock import MagicMock, Mock, patch
 
 import requests
@@ -358,7 +357,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     @staticmethod
-    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
+    def _get_sdk_log_data() -> list[ReadWriteLogRecord]:
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(

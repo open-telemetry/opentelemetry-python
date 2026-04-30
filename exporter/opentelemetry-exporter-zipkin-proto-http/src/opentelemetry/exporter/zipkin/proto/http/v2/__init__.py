@@ -17,7 +17,7 @@
 API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin.proto
 """
 
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
 
 from opentelemetry.exporter.zipkin.encoder import Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
@@ -90,8 +90,8 @@ class ProtobufEncoder(Encoder):
         return encoded_span
 
     def _encode_annotations(
-        self, span_events: Optional[List[Event]]
-    ) -> Optional[List]:
+        self, span_events: list[Event] | None
+    ) -> list | None:
         annotations = self._extract_annotations_from_events(span_events)
         if annotations is None:
             encoded_annotations = None

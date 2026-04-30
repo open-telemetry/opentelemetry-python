@@ -15,7 +15,6 @@
 # pylint: disable=protected-access
 
 import unittest
-from typing import List, Tuple
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_span_id,
@@ -63,7 +62,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertEqual(encode_spans(otel_spans), expected_encoding)
 
     @staticmethod
-    def get_exhaustive_otel_span_list() -> List[SDKSpan]:
+    def get_exhaustive_otel_span_list() -> list[SDKSpan]:
         trace_id = 0x3E0C63257DE34C926F9EFCD03927272E
 
         base_time = 683647322 * 10**9  # in ns
@@ -194,7 +193,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
 
     def get_exhaustive_test_spans(
         self,
-    ) -> Tuple[List[SDKSpan], PB2ExportTraceServiceRequest]:
+    ) -> tuple[list[SDKSpan], PB2ExportTraceServiceRequest]:
         otel_spans = self.get_exhaustive_otel_span_list()
         trace_id = _encode_trace_id(otel_spans[0].context.trace_id)
         span_kind = _SPAN_KIND_MAP[SDKSpanKind.INTERNAL]

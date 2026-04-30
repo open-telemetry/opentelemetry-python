@@ -15,12 +15,11 @@
 """Zipkin Exporter Endpoints"""
 
 import ipaddress
-from typing import Optional, Union
 
 from opentelemetry import trace
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
-IpInput = Union[str, int, None]
+IpInput = str | int | None
 
 
 class NodeEndpoint:
@@ -37,7 +36,7 @@ class NodeEndpoint:
         self,
         ipv4: IpInput = None,
         ipv6: IpInput = None,
-        port: Optional[int] = None,
+        port: int | None = None,
     ):
         self.ipv4 = ipv4
         self.ipv6 = ipv6
@@ -53,7 +52,7 @@ class NodeEndpoint:
         self.service_name = resource.attributes[SERVICE_NAME]
 
     @property
-    def ipv4(self) -> Optional[ipaddress.IPv4Address]:
+    def ipv4(self) -> ipaddress.IPv4Address | None:
         return self._ipv4
 
     @ipv4.setter
@@ -69,7 +68,7 @@ class NodeEndpoint:
             self._ipv4 = ipv4_address
 
     @property
-    def ipv6(self) -> Optional[ipaddress.IPv6Address]:
+    def ipv6(self) -> ipaddress.IPv6Address | None:
         return self._ipv6
 
     @ipv6.setter

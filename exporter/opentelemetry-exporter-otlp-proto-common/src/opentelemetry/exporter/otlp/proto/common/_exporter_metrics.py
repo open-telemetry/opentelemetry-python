@@ -15,10 +15,11 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from time import perf_counter
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (

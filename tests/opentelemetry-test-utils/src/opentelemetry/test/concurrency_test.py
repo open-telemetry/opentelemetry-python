@@ -15,8 +15,9 @@
 import sys
 import threading
 import unittest
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, List, Optional, TypeVar
+from typing import TypeVar
 from unittest.mock import Mock
 
 ReturnT = TypeVar("ReturnT")
@@ -66,11 +67,11 @@ class ConcurrencyTestBase(unittest.TestCase):
     def run_with_many_threads(
         func_to_test: Callable[[], ReturnT],
         num_threads: int = 100,
-    ) -> List[ReturnT]:
+    ) -> list[ReturnT]:
         """Util to run ``func_to_test`` in ``num_threads`` concurrently"""
 
         barrier = threading.Barrier(num_threads)
-        results: List[Optional[ReturnT]] = [None] * num_threads
+        results: list[ReturnT | None] = [None] * num_threads
 
         def thread_start(idx: int) -> None:
             nonlocal results

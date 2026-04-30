@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import fnmatch
+from collections.abc import Callable
 from json import dumps
-from typing import Callable, Optional
 
 from typing_extensions import deprecated
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.util.types import Attributes, _ExtendedAttributes
+from opentelemetry.util.types import (  # TODO: see if we can remove F401 when using new sphinx version # noqa: F401 # pylint: disable=unused-import
+    AnyValue,
+    Attributes,
+    _ExtendedAttributes,
+)
 
 
 class InstrumentationInfo:
@@ -36,8 +40,8 @@ class InstrumentationInfo:
     def __init__(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
     ):
         self._name = name
         self._version = version
@@ -68,11 +72,11 @@ class InstrumentationInfo:
         )
 
     @property
-    def schema_url(self) -> Optional[str]:
+    def schema_url(self) -> str | None:
         return self._schema_url
 
     @property
-    def version(self) -> Optional[str]:
+    def version(self) -> str | None:
         return self._version
 
     @property
@@ -93,9 +97,9 @@ class InstrumentationScope:
     def __init__(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> None:
         self._name = name
         self._version = version
@@ -141,11 +145,11 @@ class InstrumentationScope:
         )
 
     @property
-    def schema_url(self) -> Optional[str]:
+    def schema_url(self) -> str | None:
         return self._schema_url
 
     @property
-    def version(self) -> Optional[str]:
+    def version(self) -> str | None:
         return self._version
 
     @property
@@ -156,7 +160,7 @@ class InstrumentationScope:
     def attributes(self) -> Attributes:
         return self._attributes
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "name": self._name,
