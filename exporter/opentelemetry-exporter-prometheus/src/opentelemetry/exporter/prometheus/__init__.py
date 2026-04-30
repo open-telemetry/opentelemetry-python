@@ -63,6 +63,7 @@ API
 """
 
 from collections import deque
+from enum import Enum
 from itertools import chain
 from json import dumps
 from logging import getLogger
@@ -76,6 +77,7 @@ from prometheus_client.core import (
     GaugeMetricFamily,
     HistogramMetricFamily,
     InfoMetricFamily,
+    UnknownMetricFamily,
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
@@ -116,6 +118,17 @@ _TARGET_INFO_NAME = "target"
 _TARGET_INFO_DESCRIPTION = "Target metadata"
 
 
+class TranslationStrategy(Enum):
+    """Controls how OpenTelemetry metric names are translated to Prometheus conventions."""
+
+    UNDERSCORE_ESCAPING_WITH_SUFFIXES = "underscore_escaping_with_suffixes"
+    UNDERSCORE_ESCAPING_WITHOUT_SUFFIXES = (
+        "underscore_escaping_without_suffixes"
+    )
+    NO_UTF8_ESCAPING_WITH_SUFFIXES = "no_utf8_escaping_with_suffixes"
+    NO_TRANSLATION = "no_translation"
+
+
 def _convert_buckets(
     bucket_counts: Sequence[int], explicit_bounds: Sequence[float]
 ) -> Sequence[Tuple[str, int]]:
@@ -135,7 +148,10 @@ class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
     def __init__(
-        self, disable_target_info: bool = False, prefix: str = ""
+        self,
+        disable_target_info: bool = False,
+        prefix: str = "",
+        translation_strategy: TranslationStrategy = TranslationStrategy.UNDERSCORE_ESCAPING_WITH_SUFFIXES,
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -149,7 +165,9 @@ class PrometheusMetricReader(MetricReader):
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(
-            disable_target_info=disable_target_info, prefix=prefix
+            disable_target_info=disable_target_info,
+            prefix=prefix,
+            translation_strategy=translation_strategy,
         )
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
@@ -176,12 +194,18 @@ class _CustomCollector:
     https://github.com/prometheus/client_python#custom-collectors
     """
 
-    def __init__(self, disable_target_info: bool = False, prefix: str = ""):
+    def __init__(
+        self,
+        disable_target_info: bool = False,
+        prefix: str = "",
+        translation_strategy: TranslationStrategy = TranslationStrategy.UNDERSCORE_ESCAPING_WITH_SUFFIXES,
+    ):
         self._callback = None
         self._metrics_datas: Deque[MetricsData] = deque()
         self._disable_target_info = disable_target_info
         self._target_info = None
         self._prefix = prefix
+        self._translation_strategy = translation_strategy
 
     def add_metrics_data(self, metrics_data: MetricsData) -> None:
         """Add metrics to Prometheus data"""
@@ -220,7 +244,7 @@ class _CustomCollector:
             if metric_family_id_metric_family:
                 yield from metric_family_id_metric_family.values()
 
-    # pylint: disable=too-many-locals,too-many-branches
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     def _translate_to_prometheus(
         self,
         metrics_data: MetricsData,
@@ -233,16 +257,30 @@ class _CustomCollector:
                 for metric in scope_metrics.metrics:
                     metrics.append(metric)
 
+        _add_suffixes = self._translation_strategy in (
+            TranslationStrategy.UNDERSCORE_ESCAPING_WITH_SUFFIXES,
+            TranslationStrategy.NO_UTF8_ESCAPING_WITH_SUFFIXES,
+        )
+        _escape_names = self._translation_strategy in (
+            TranslationStrategy.UNDERSCORE_ESCAPING_WITH_SUFFIXES,
+            TranslationStrategy.UNDERSCORE_ESCAPING_WITHOUT_SUFFIXES,
+        )
+
         for metric in metrics:
             label_values_data_points = []
             values = []
 
             metric_name = metric.name
-            if self._prefix:
+            if (
+                self._translation_strategy
+                != TranslationStrategy.NO_TRANSLATION
+                and self._prefix
+            ):
                 metric_name = self._prefix + "_" + metric_name
-            metric_name = sanitize_full_name(metric_name)
+            if _escape_names:
+                metric_name = sanitize_full_name(metric_name)
             metric_description = metric.description or ""
-            metric_unit = map_unit(metric.unit)
+            metric_unit = map_unit(metric.unit) if _add_suffixes else ""
 
             # First pass: collect all unique label keys across all data points
             all_label_keys_set = set()
@@ -306,17 +344,25 @@ class _CustomCollector:
                 isinstance(metric.data, Sum)
                 and not should_convert_sum_to_gauge
             ):
+                family_kwargs = {}
+                if _add_suffixes:
+                    family_class = CounterMetricFamily
+                    family_kwargs["unit"] = metric_unit
+                else:
+                    # The CounterMetricFamily always adds the "_total" suffix to
+                    # metric names. To avoid adding this suffix for Sums, we must
+                    # use the untyped (unknown) metric family.
+                    family_class = UnknownMetricFamily
                 metric_family_id = "|".join(
-                    [per_metric_family_id, CounterMetricFamily.__name__]
+                    [per_metric_family_id, family_class.__name__]
                 )
-
                 if metric_family_id not in metric_family_id_metric_family:
                     metric_family_id_metric_family[metric_family_id] = (
-                        CounterMetricFamily(
+                        family_class(
                             name=metric_name,
                             documentation=metric_description,
                             labels=all_label_keys,
-                            unit=metric_unit,
+                            **family_kwargs,
                         )
                     )
                 for label_values, value in zip(
