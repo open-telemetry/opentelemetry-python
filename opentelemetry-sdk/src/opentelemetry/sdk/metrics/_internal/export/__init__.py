@@ -23,7 +23,7 @@ from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
-from typing import IO, Callable, Iterable, Optional
+from typing import IO, Callable, Iterable
 
 from typing_extensions import final
 
@@ -336,7 +336,7 @@ class MetricReader(ABC):
         )
 
     @final
-    def collect(self, timeout_millis: float = 10_000) -> None:
+    def collect(self, timeout_millis: float = 10_000) -> bool | None:
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
 
@@ -352,7 +352,7 @@ class MetricReader(ABC):
             _logger.warning(
                 "Cannot call collect on a MetricReader until it is registered on a MeterProvider"
             )
-            return
+            return None
 
         start_time = perf_counter()
         try:
@@ -361,10 +361,11 @@ class MetricReader(ABC):
             self._metrics.record_collection(perf_counter() - start_time)
 
         if metrics is not None:
-            self._receive_metrics(
+            return self._receive_metrics(
                 metrics,
                 timeout_millis=timeout_millis,
             )
+        return None
 
     @final
     def _set_collect_callback(
@@ -386,8 +387,16 @@ class MetricReader(ABC):
         metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
-    ) -> None:
-        """Called by `MetricReader.collect` when it receives a batch of metrics"""
+    ) -> bool | None:
+        """Called by `MetricReader.collect` when it receives a batch of metrics.
+
+        Subclasses should return ``True`` on success and ``False`` on failure.
+
+        .. note::
+            Existing subclasses that return ``None`` (the old implicit default)
+            will be treated as vacuous success by ``force_flush``, preserving
+            backward-compatible behaviour.
+        """
 
     def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
         self._metrics = MetricReaderMetrics(
@@ -395,8 +404,8 @@ class MetricReader(ABC):
         )
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
-        self.collect(timeout_millis=timeout_millis)
-        return True
+        result = self.collect(timeout_millis=timeout_millis)
+        return result is not False
 
     @abstractmethod
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
@@ -436,7 +445,7 @@ class InMemoryMetricReader(MetricReader):
 
     def get_metrics_data(
         self,
-    ) -> Optional[MetricsData]:
+    ) -> MetricsData | None:
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -449,9 +458,10 @@ class InMemoryMetricReader(MetricReader):
         metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
-    ) -> None:
+    ) -> bool:
         with self._lock:
             self._metrics_data = metrics_data
+        return True
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
@@ -470,8 +480,8 @@ class PeriodicExportingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        export_interval_millis: Optional[float] = None,
-        export_timeout_millis: Optional[float] = None,
+        export_interval_millis: float | None = None,
+        export_timeout_millis: float | None = None,
     ) -> None:
         # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
@@ -567,17 +577,19 @@ class PeriodicExportingMetricReader(MetricReader):
         metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
-    ) -> None:
+    ) -> bool:
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        # pylint: disable=broad-exception-caught,invalid-name
         try:
             with self._export_lock:
-                self._exporter.export(
+                result = self._exporter.export(
                     metrics_data, timeout_millis=timeout_millis
                 )
-        except Exception:
+                return result is MetricExportResult.SUCCESS
+        except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting metrics")
-        detach(token)
+            return False
+        finally:
+            detach(token)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         deadline_ns = time_ns() + timeout_millis * 10**6
@@ -596,6 +608,6 @@ class PeriodicExportingMetricReader(MetricReader):
         self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
-        super().force_flush(timeout_millis=timeout_millis)
-        self._exporter.force_flush(timeout_millis=timeout_millis)
-        return True
+        if not super().force_flush(timeout_millis=timeout_millis):
+            return False
+        return self._exporter.force_flush(timeout_millis=timeout_millis)
