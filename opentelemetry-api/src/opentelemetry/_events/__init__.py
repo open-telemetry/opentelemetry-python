@@ -15,7 +15,7 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
-from typing import Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from typing_extensions import deprecated
 
@@ -24,10 +24,12 @@ from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import (
     _OTEL_PYTHON_EVENT_LOGGER_PROVIDER,
 )
-from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+
+if TYPE_CHECKING:
+    from opentelemetry.trace.span import TraceFlags
 
 _logger = getLogger(__name__)
 

@@ -21,6 +21,7 @@ from io import BytesIO
 from os import environ
 from time import time
 from typing import (  # noqa: F401
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -67,9 +68,6 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 )
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
-from opentelemetry.proto.resource.v1.resource_pb2 import (
-    Resource as PB2Resource,
-)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -87,7 +85,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
-from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     AggregationTemporality,
     Gauge,
@@ -107,6 +104,13 @@ from opentelemetry.semconv.attributes.http_attributes import (
     HTTP_RESPONSE_STATUS_CODE,
 )
 from opentelemetry.util.re import parse_env_headers
+
+if TYPE_CHECKING:
+    from opentelemetry.proto.resource.v1.resource_pb2 import (
+        Resource as PB2Resource,
+    )
+    from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
+    from opentelemetry.sdk.resources import Resource as SDKResource
 
 _logger = logging.getLogger(__name__)
 

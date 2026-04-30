@@ -15,9 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
-
-from opentelemetry.trace import TraceState
+from typing import TYPE_CHECKING, Sequence
 
 from ._util import (
     INVALID_RANDOM_VALUE,
@@ -26,6 +24,9 @@ from ._util import (
     is_valid_random_value,
     is_valid_threshold,
 )
+
+if TYPE_CHECKING:
+    from opentelemetry.trace import TraceState
 
 OTEL_TRACE_STATE_KEY = "ot"
 

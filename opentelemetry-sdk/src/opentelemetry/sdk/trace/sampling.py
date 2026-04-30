@@ -137,7 +137,7 @@ import enum
 import os
 from logging import getLogger
 from types import MappingProxyType
-from typing import Optional, Sequence
+from typing import TYPE_CHECKING, Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
@@ -146,8 +146,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.trace import Link, SpanKind, get_current_span
-from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    from opentelemetry.trace.span import TraceState
 
 _logger = getLogger(__name__)
 

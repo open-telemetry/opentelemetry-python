@@ -23,6 +23,7 @@ from random import Random, randrange
 from sys import float_info, maxsize
 from time import time_ns
 from types import MethodType
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, patch
 
 from opentelemetry.context import Context
@@ -44,14 +45,16 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm
     LogarithmMapping,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
-from opentelemetry.sdk.metrics._internal.point import (
-    ExponentialHistogramDataPoint,
-)
 from opentelemetry.sdk.metrics._internal.view import _default_reservoir_factory
 from opentelemetry.sdk.metrics.view import (
     ExponentialBucketHistogramAggregation,
 )
 from opentelemetry.test import TestCase
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.metrics._internal.point import (
+        ExponentialHistogramDataPoint,
+    )
 
 
 def get_counts(buckets: Buckets) -> int:

@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 import typing
-from contextvars import Token
 from os import environ
 from uuid import uuid4
 
@@ -24,6 +23,9 @@ from uuid import uuid4
 from opentelemetry.context.context import Context, _RuntimeContext  # noqa
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 from opentelemetry.util._importlib_metadata import entry_points
+
+if typing.TYPE_CHECKING:
+    from contextvars import Token
 
 logger = logging.getLogger(__name__)
 

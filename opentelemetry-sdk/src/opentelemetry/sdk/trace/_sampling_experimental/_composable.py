@@ -15,11 +15,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Protocol, Sequence
+from typing import TYPE_CHECKING, Callable, Protocol, Sequence
 
-from opentelemetry.context import Context
-from opentelemetry.trace import Link, SpanKind, TraceState
-from opentelemetry.util.types import Attributes
+if TYPE_CHECKING:
+    from opentelemetry.context import Context
+    from opentelemetry.trace import Link, SpanKind, TraceState
+    from opentelemetry.util.types import Attributes
 
 
 @dataclass(frozen=True)

@@ -15,11 +15,13 @@
 # pylint: disable=unused-import
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
-import opentelemetry.sdk.resources
+
+if TYPE_CHECKING:
+    import opentelemetry.sdk.resources
 
 
 @dataclass

@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import typing
 from abc import ABC, abstractmethod
-from contextvars import Token
+
+if typing.TYPE_CHECKING:
+    from contextvars import Token
 
 
 class Context(typing.Dict[str, object]):

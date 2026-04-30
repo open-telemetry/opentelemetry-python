@@ -17,12 +17,11 @@
 from abc import ABC, abstractmethod
 from threading import Lock
 from time import time_ns
-from typing import List, Mapping, Optional
+from typing import TYPE_CHECKING, List, Mapping, Optional
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
 import opentelemetry.sdk.metrics._internal.instrument
-import opentelemetry.sdk.metrics._internal.sdk_configuration
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
@@ -30,6 +29,9 @@ from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
 from opentelemetry.sdk.metrics._internal.point import MetricsData
+
+if TYPE_CHECKING:
+    import opentelemetry.sdk.metrics._internal.sdk_configuration
 
 
 class MeasurementConsumer(ABC):

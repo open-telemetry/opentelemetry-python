@@ -18,9 +18,8 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Callable, Final, Optional, Set
+from typing import TYPE_CHECKING, Callable, Final, Optional, Set
 
 from google.protobuf import descriptor_pb2 as descriptor
 from google.protobuf.compiler import plugin_pb2 as plugin
@@ -36,6 +35,9 @@ from opentelemetry.codegen.json.types import (
 )
 from opentelemetry.codegen.json.version import __version__ as GENERATOR_VERSION
 from opentelemetry.codegen.json.writer import CodeWriter
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 _logger = logging.getLogger(__name__)
 

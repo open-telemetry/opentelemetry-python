@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Set, Type
+from typing import TYPE_CHECKING, Optional, Set, Type
 
 from opentelemetry import metrics
 from opentelemetry.sdk._configuration._common import _parse_headers
@@ -85,7 +85,9 @@ from opentelemetry.sdk.metrics.view import (
     SumAggregation,
     View,
 )
-from opentelemetry.sdk.resources import Resource
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.resources import Resource
 
 _logger = logging.getLogger(__name__)
 

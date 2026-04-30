@@ -37,7 +37,7 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._shared_internal._processor_metrics import (
-    ProcessorMetrics,
+    ProcessorMetrics,  # noqa: TC001
 )
 from opentelemetry.util._once import Once
 

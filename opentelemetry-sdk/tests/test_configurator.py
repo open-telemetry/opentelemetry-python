@@ -20,14 +20,13 @@ import logging
 import logging.config
 from logging import WARNING, getLogger
 from os import environ
-from typing import Iterable, Optional, Sequence
+from typing import TYPE_CHECKING, Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
 from pytest import raises
 
 from opentelemetry import trace
-from opentelemetry.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
@@ -77,7 +76,6 @@ from opentelemetry.sdk.metrics.export import (
     MetricExporter,
     MetricReader,
 )
-from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import SpanProcessor, _RuleBasedTracerConfigurator
 from opentelemetry.sdk.trace.export import (
@@ -94,9 +92,13 @@ from opentelemetry.sdk.trace.sampling import (
     TraceIdRatioBased,
 )
 from opentelemetry.test.mock_test_classes import IterEntryPoint
-from opentelemetry.trace import Link, SpanKind
-from opentelemetry.trace.span import TraceState
-from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    from opentelemetry.context import Context
+    from opentelemetry.sdk.metrics.view import Aggregation
+    from opentelemetry.trace import Link, SpanKind
+    from opentelemetry.trace.span import TraceState
+    from opentelemetry.util.types import Attributes
 
 
 class Provider:

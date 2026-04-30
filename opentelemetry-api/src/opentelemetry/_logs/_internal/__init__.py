@@ -33,13 +33,11 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 .. versionadded:: 1.15.0
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Optional, cast, overload
+from typing import TYPE_CHECKING, Optional, cast, overload
 
 from typing_extensions import deprecated
 
@@ -48,10 +46,12 @@ from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace import get_current_span
-from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+
+if TYPE_CHECKING:
+    from opentelemetry.trace.span import TraceFlags
 
 _logger = getLogger(__name__)
 
@@ -90,7 +90,7 @@ class LogRecord(ABC):
         observed_timestamp: Optional[int] = None,
         trace_id: Optional[int] = None,
         span_id: Optional[int] = None,
-        trace_flags: Optional[TraceFlags] = None,
+        trace_flags: Optional["TraceFlags"] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
@@ -105,7 +105,7 @@ class LogRecord(ABC):
         context: Optional[Context] = None,
         trace_id: Optional[int] = None,
         span_id: Optional[int] = None,
-        trace_flags: Optional[TraceFlags] = None,
+        trace_flags: Optional["TraceFlags"] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
         body: AnyValue = None,
@@ -155,9 +155,9 @@ class Logger(ABC):
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_number: SeverityNumber | None = None,
+        severity_number: "SeverityNumber | None" = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: "AnyValue | None" = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -177,9 +177,9 @@ class Logger(ABC):
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_number: SeverityNumber | None = None,
+        severity_number: "SeverityNumber | None" = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: "AnyValue | None" = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -200,9 +200,9 @@ class NoOpLogger(Logger):
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_number: SeverityNumber | None = None,
+        severity_number: "SeverityNumber | None" = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: "AnyValue | None" = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -221,9 +221,9 @@ class NoOpLogger(Logger):
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_number: SeverityNumber | None = None,
+        severity_number: "SeverityNumber | None" = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: "AnyValue | None" = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -268,9 +268,9 @@ class ProxyLogger(Logger):
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_number: SeverityNumber | None = None,
+        severity_number: "SeverityNumber | None" = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: "AnyValue | None" = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -289,9 +289,9 @@ class ProxyLogger(Logger):
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_number: SeverityNumber | None = None,
+        severity_number: "SeverityNumber | None" = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: "AnyValue | None" = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
         exception: BaseException | None = None,

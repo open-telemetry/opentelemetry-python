@@ -15,8 +15,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from opentelemetry.metrics import CallbackOptions, MeterProvider, Observation
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -33,6 +32,9 @@ from opentelemetry.semconv._incubating.metrics.otel_metrics import (
     create_otel_sdk_processor_span_queue_capacity,
 )
 from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _component_counter = Counter()
 

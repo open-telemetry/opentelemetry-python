@@ -25,7 +25,16 @@ import os
 import warnings
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Any, Callable, Mapping, Protocol, Sequence, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Mapping,
+    Protocol,
+    Sequence,
+    Type,
+    Union,
+)
 
 from typing_extensions import Literal
 
@@ -42,7 +51,6 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecordProcessor,
 )
-from opentelemetry.sdk._logs._internal import _LoggerConfiguratorT
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     LogRecordExporter,
@@ -60,7 +68,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics._internal import _MeterConfiguratorT
 from opentelemetry.sdk.metrics.export import (
     MetricExporter,
     MetricReader,
@@ -78,6 +85,11 @@ from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
 from opentelemetry.util._importlib_metadata import entry_points
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk._logs._internal import _LoggerConfiguratorT
+    from opentelemetry.sdk.metrics._internal import _MeterConfiguratorT
+
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"

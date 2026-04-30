@@ -886,7 +886,7 @@ class Span(trace_api.Span, ReadableSpan):
         return BoundedList.from_seq(self._limits.max_links, valid_links)
 
     def get_span_context(self) -> trace_api.SpanContext:
-        return typing.cast(trace_api.SpanContext, self._context)
+        return typing.cast("trace_api.SpanContext", self._context)
 
     def set_attributes(
         self, attributes: Mapping[str, types.AttributeValue]
