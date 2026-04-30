@@ -236,6 +236,40 @@ class TestCreatePropagator(unittest.TestCase):
             with self.assertRaises(ConfigurationError):
                 create_propagator(config)
 
+    def test_plugin_propagator_via_entry_point(self):
+        mock_propagator = MagicMock()
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = lambda: mock_propagator
+
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[mock_ep],
+        ):
+            config = PropagatorConfig(
+                composite=[
+                    # pylint: disable=unexpected-keyword-arg
+                    TextMapPropagatorConfig(my_custom_propagator={})
+                ]
+            )
+            result = create_propagator(config)
+
+        self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
+        self.assertIs(result._propagators[0], mock_propagator)  # type: ignore[attr-defined]
+
+    def test_unknown_composite_propagator_raises(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            config = PropagatorConfig(
+                composite=[
+                    # pylint: disable=unexpected-keyword-arg
+                    TextMapPropagatorConfig(nonexistent={})
+                ]
+            )
+            with self.assertRaises(ConfigurationError):
+                create_propagator(config)
+
 
 class TestConfigurePropagator(unittest.TestCase):
     def test_configure_propagator_calls_set_global_textmap(self):
