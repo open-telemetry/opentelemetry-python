@@ -59,9 +59,7 @@ def _parse_response_body(resp: requests.Response) -> str:
                 "Failed to parse protobuf response body", exc_info=True
             )
             return resp.reason
-        if status.message:
-            return status.message
-        return resp.reason
+        return status.message or resp.reason
 
     if content_type == _CONTENT_TYPE_JSON:
         try:
