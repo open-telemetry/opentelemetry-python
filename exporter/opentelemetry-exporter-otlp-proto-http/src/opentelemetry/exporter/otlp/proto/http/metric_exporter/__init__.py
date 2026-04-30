@@ -13,8 +13,7 @@
 from __future__ import annotations
 
 import logging
-import threading
-from os import environ
+import warnings
 from typing import (  # noqa: F401
     Any,
     Callable,
@@ -44,9 +43,9 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
-    _compression_from_env,
+    OTLPHttpClient,
+    _SignalConfig,
     _export_with_retries,
-    _setup_session,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
@@ -66,11 +65,6 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
-    OTEL_EXPORTER_OTLP_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_KEY,
-    OTEL_EXPORTER_OTLP_ENDPOINT,
-    OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
@@ -78,7 +72,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
-    OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
@@ -96,18 +89,27 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
-from opentelemetry.util.re import parse_env_headers
 
 _logger = logging.getLogger(__name__)
 
-
-DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/"
-DEFAULT_TIMEOUT = 10  # in seconds
 DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
 
+_METRICS_CONFIG = _SignalConfig(
+    endpoint_envvar=OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+    certificate_envvar=OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    client_key_envvar=OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
+    client_certificate_envvar=OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+    headers_envvar=OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+    timeout_envvar=OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
+    compression_envvar=OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
+    credential_envvar=_OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
+    default_export_path=DEFAULT_METRICS_EXPORT_PATH,
+    component_type=OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
+    signal_name="metrics",
+)
 
-class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
+
+class OTLPMetricExporter(OTLPHttpClient, MetricExporter, OTLPMetricExporterMixin):
     def __init__(
         self,
         endpoint: str | None = None,
@@ -146,65 +148,21 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 If not set there is no limit to the number of data points in a request.
                 If it is set and the number of data points exceeds the max, the request will be split.
         """
-        self._shutdown_in_progress = threading.Event()
-        self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
-            _append_metrics_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
+        OTLPHttpClient.__init__(
+            self,
+            endpoint=endpoint,
+            certificate_file=certificate_file,
+            client_key_file=client_key_file,
+            client_certificate_file=client_certificate_file,
+            headers=headers,
+            timeout=timeout,
+            compression=compression,
+            session=session,
+            meter_provider=meter_provider,
+            signal_config=_METRICS_CONFIG,
         )
-        self._certificate_file = certificate_file or environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
-        )
-        self._client_key_file = client_key_file or environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
-            environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
-        )
-        self._client_certificate_file = client_certificate_file or environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
-        )
-        self._client_cert = (
-            (self._client_certificate_file, self._client_key_file)
-            if self._client_certificate_file and self._client_key_file
-            else self._client_certificate_file
-        )
-        headers_string = environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_HEADERS,
-            environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
-        )
-        self._headers = headers or parse_env_headers(
-            headers_string, liberal=True
-        )
-        self._timeout = timeout or float(
-            environ.get(
-                OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
-                environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
-            )
-        )
-        self._compression = compression or _compression_from_env(
-            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
-        )
-        self._session = _setup_session(
-            session,
-            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
-            self._headers,
-            self._compression,
-        )
-
-        self._common_configuration(
-            preferred_temporality, preferred_aggregation
-        )
+        self._common_configuration(preferred_temporality, preferred_aggregation)
         self._max_export_batch_size: int | None = max_export_batch_size
-        self._shutdown = False
-
-        self._metrics = ExporterMetrics(
-            OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
-            "metrics",
-            urlparse(self._endpoint),
-            meter_provider,
-        )
 
     def export(
         self,
@@ -603,7 +561,20 @@ def get_resource_data(
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
-def _append_metrics_path(endpoint: str) -> str:
-    if endpoint.endswith("/"):
-        return endpoint + DEFAULT_METRICS_EXPORT_PATH
-    return endpoint + f"/{DEFAULT_METRICS_EXPORT_PATH}"
+_DEPRECATED_CONSTANTS = {
+    "DEFAULT_COMPRESSION": Compression.NoCompression,
+    "DEFAULT_ENDPOINT": "http://localhost:4318/",
+    "DEFAULT_TIMEOUT": 10,
+}
+
+
+def __getattr__(name: str) -> object:
+    if name in _DEPRECATED_CONSTANTS:
+        warnings.warn(
+            f"{name} is deprecated. Use the constant from "
+            f"opentelemetry.exporter.otlp.proto.http._common instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _DEPRECATED_CONSTANTS[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

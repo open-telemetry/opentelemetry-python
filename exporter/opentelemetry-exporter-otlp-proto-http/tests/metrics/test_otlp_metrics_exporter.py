@@ -30,11 +30,13 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+from opentelemetry.exporter.otlp.proto.http._common import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
-    DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
+)
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+    DEFAULT_METRICS_EXPORT_PATH,
     OTLPMetricExporter,
     _get_split_resource_metrics_pb2,
     _split_metrics_data,

@@ -13,16 +13,11 @@
 # limitations under the License.
 
 import logging
-import threading
-from os import environ
+import warnings
 from typing import Dict, Optional, Sequence
-from urllib.parse import urlparse
 
 import requests
 
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
-)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -30,19 +25,13 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
-    _compression_from_env,
+    OTLPHttpClient,
+    _SignalConfig,
     _export_with_retries,
-    _setup_session,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
-    OTEL_EXPORTER_OTLP_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_KEY,
-    OTEL_EXPORTER_OTLP_ENDPOINT,
-    OTEL_EXPORTER_OTLP_HEADERS,
-    OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
@@ -56,18 +45,27 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
-from opentelemetry.util.re import parse_env_headers
 
 _logger = logging.getLogger(__name__)
 
-
-DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/"
-DEFAULT_TIMEOUT = 10  # in seconds
 DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 
+_TRACES_CONFIG = _SignalConfig(
+    endpoint_envvar=OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    certificate_envvar=OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+    client_key_envvar=OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+    client_certificate_envvar=OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+    headers_envvar=OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    timeout_envvar=OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
+    compression_envvar=OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
+    credential_envvar=_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
+    default_export_path=DEFAULT_TRACES_EXPORT_PATH,
+    component_type=OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+    signal_name="traces",
+)
 
-class OTLPSpanExporter(SpanExporter):
+
+class OTLPSpanExporter(OTLPHttpClient, SpanExporter):
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -81,59 +79,18 @@ class OTLPSpanExporter(SpanExporter):
         *,
         meter_provider: Optional[MeterProvider] = None,
     ):
-        self._shutdown_in_progress = threading.Event()
-        self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
-            _append_trace_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
-        )
-        self._certificate_file = certificate_file or environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
-        )
-        self._client_key_file = client_key_file or environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
-            environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
-        )
-        self._client_certificate_file = client_certificate_file or environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
-        )
-        self._client_cert = (
-            (self._client_certificate_file, self._client_key_file)
-            if self._client_certificate_file and self._client_key_file
-            else self._client_certificate_file
-        )
-        headers_string = environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_HEADERS,
-            environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
-        )
-        self._headers = headers or parse_env_headers(
-            headers_string, liberal=True
-        )
-        self._timeout = timeout or float(
-            environ.get(
-                OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
-                environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
-            )
-        )
-        self._compression = compression or _compression_from_env(
-            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
-        )
-        self._session = _setup_session(
-            session,
-            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
-            self._headers,
-            self._compression,
-        )
-        self._shutdown = False
-
-        self._metrics = ExporterMetrics(
-            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
-            "traces",
-            urlparse(self._endpoint),
-            meter_provider,
+        OTLPHttpClient.__init__(
+            self,
+            endpoint=endpoint,
+            certificate_file=certificate_file,
+            client_key_file=client_key_file,
+            client_certificate_file=client_certificate_file,
+            headers=headers,
+            timeout=timeout,
+            compression=compression,
+            session=session,
+            meter_provider=meter_provider,
+            signal_config=_TRACES_CONFIG,
         )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
@@ -172,7 +129,20 @@ class OTLPSpanExporter(SpanExporter):
         return True
 
 
-def _append_trace_path(endpoint: str) -> str:
-    if endpoint.endswith("/"):
-        return endpoint + DEFAULT_TRACES_EXPORT_PATH
-    return endpoint + f"/{DEFAULT_TRACES_EXPORT_PATH}"
+_DEPRECATED_CONSTANTS = {
+    "DEFAULT_COMPRESSION": Compression.NoCompression,
+    "DEFAULT_ENDPOINT": "http://localhost:4318/",
+    "DEFAULT_TIMEOUT": 10,
+}
+
+
+def __getattr__(name: str) -> object:
+    if name in _DEPRECATED_CONSTANTS:
+        warnings.warn(
+            f"{name} is deprecated. Use the constant from "
+            f"opentelemetry.exporter.otlp.proto.http._common instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _DEPRECATED_CONSTANTS[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
