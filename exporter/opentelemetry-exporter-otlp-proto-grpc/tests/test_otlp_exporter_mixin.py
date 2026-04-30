@@ -188,11 +188,7 @@ class TestOTLPExporterMixin(TestCase):
         self.span = _Span(
             "a",
             context=Mock(
-                **{
-                    "trace_state": {"a": "b", "c": "d"},
-                    "span_id": 10217189687419569865,
-                    "trace_id": 67545097771067222548457157018666467027,
-                }
+                trace_state={"a": "b", "c": "d"}, span_id=10217189687419569865, trace_id=67545097771067222548457157018666467027
             ),
         )
 

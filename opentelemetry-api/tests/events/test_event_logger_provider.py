@@ -53,7 +53,7 @@ class TestGlobals(EventsGlobalsTest, unittest.TestCase):
             with patch("opentelemetry._events._load_provider", Mock()):
                 with patch(
                     "opentelemetry._events.cast",
-                    Mock(**{"return_value": "test_event_logger_provider"}),
+                    Mock(return_value="test_event_logger_provider"),
                 ):
                     self.assertEqual(
                         get_event_logger_provider(),

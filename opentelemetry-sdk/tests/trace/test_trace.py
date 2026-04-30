@@ -687,7 +687,7 @@ class TestSpanCreation(unittest.TestCase):
         max_links = trace.SpanLimits().max_links
         links = [
             trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False))
-            for idx in range(0, 16 + max_links)
+            for idx in range(16 + max_links)
         ]
         tracer = new_tracer()
         with tracer.start_as_current_span("span", links=links) as root:
@@ -696,7 +696,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_attributes(self):
         # pylint: disable=protected-access
         max_attrs = trace.SpanLimits().max_span_attributes
-        attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
+        attributes = {str(idx): idx for idx in range(16 + max_attrs)}
         tracer = new_tracer()
         with tracer.start_as_current_span(
             "span", attributes=attributes
