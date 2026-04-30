@@ -22,6 +22,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    DEFAULT_COMPRESSION,
     OTLPHttpClient,
     _SignalConfig,
 )
