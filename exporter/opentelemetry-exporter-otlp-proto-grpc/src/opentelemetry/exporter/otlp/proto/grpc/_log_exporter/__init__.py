@@ -10,12 +10,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from collections.abc import Iterable
 from os import environ
 from typing import Dict, Literal, Optional, Sequence, Tuple, Union
 from typing import Sequence as TypingSequence
 
-from grpc import ChannelCredentials, Compression
+from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
@@ -70,6 +70,9 @@ class OTLPLogExporter(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        retryable_error_codes: Optional[
+            Union[Iterable[StatusCode], str]
+        ] = None,
         *,
         meter_provider: Optional[MeterProvider] = None,
     ):
@@ -111,6 +114,7 @@ class OTLPLogExporter(
             stub=LogsServiceStub,
             result=LogRecordExportResult,
             channel_options=channel_options,
+            retryable_error_codes=retryable_error_codes,
             component_type=OtelComponentTypeValues.OTLP_GRPC_LOG_EXPORTER,
             signal="logs",
             meter_provider=meter_provider,

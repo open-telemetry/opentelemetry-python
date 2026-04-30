@@ -14,11 +14,12 @@
 """OTLP Span Exporter"""
 
 import logging
+from collections.abc import Iterable
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Union
 from typing import Sequence as TypingSequence
 
-from grpc import ChannelCredentials, Compression
+from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -99,6 +100,9 @@ class OTLPSpanExporter(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        retryable_error_codes: Optional[
+            Union[Iterable[StatusCode], str]
+        ] = None,
         *,
         meter_provider: Optional[MeterProvider] = None,
     ):
@@ -141,6 +145,7 @@ class OTLPSpanExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
+            retryable_error_codes=retryable_error_codes,
             component_type=OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER,
             signal="traces",
             meter_provider=meter_provider,

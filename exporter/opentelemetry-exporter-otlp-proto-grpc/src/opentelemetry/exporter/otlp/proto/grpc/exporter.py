@@ -20,10 +20,11 @@ logic to handle transient collector outages.
 
 """
 
+import os
 import random
 import threading
 from abc import ABC, abstractmethod
-from collections.abc import Sequence  # noqa: F401
+from collections.abc import Iterable, Sequence  # noqa: F401
 from logging import getLogger
 from os import environ
 from time import time
@@ -95,6 +96,7 @@ from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -307,6 +309,9 @@ class OTLPExporterMixin(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        retryable_error_codes: Optional[
+            Union[Iterable[StatusCode], str]
+        ] = None,
         *,
         component_type: Union[OtelComponentTypeValues, None] = None,
         signal: Literal["traces", "metrics", "logs"] = "traces",
@@ -368,6 +373,22 @@ class OTLPExporterMixin(
             if compression is None
             else compression
         ) or Compression.NoCompression
+
+        self._retryable_error_codes = retryable_error_codes or os.environ.get(
+            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES
+        )
+        if isinstance(self._retryable_error_codes, str):
+            self._retryable_error_codes = frozenset(
+                StatusCode[code.strip().upper()]
+                for code in self._retryable_error_codes.split(",")
+                if code.strip()
+            )
+        elif self._retryable_error_codes is not None:
+            self._retryable_error_codes = frozenset(
+                self._retryable_error_codes
+            )
+        else:
+            self._retryable_error_codes = _RETRYABLE_ERROR_CODES
 
         self._channel = None
         self._client = None
@@ -493,7 +514,7 @@ class OTLPExporterMixin(
                         self._initialize_channel_and_stub()
 
                     if (
-                        error.code() not in _RETRYABLE_ERROR_CODES  # type: ignore [reportAttributeAccessIssue]
+                        error.code() not in self._retryable_error_codes  # type: ignore [reportAttributeAccessIssue]
                         or retry_num + 1 == _MAX_RETRYS
                         or backoff_seconds > (deadline_sec - time())
                         or self._shutdown

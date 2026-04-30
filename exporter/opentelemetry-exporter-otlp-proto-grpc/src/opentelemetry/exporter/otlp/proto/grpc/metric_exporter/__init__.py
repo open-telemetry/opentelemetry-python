@@ -19,7 +19,7 @@ from os import environ
 from typing import Iterable, List, Optional, Tuple, Union
 from typing import Sequence as TypingSequence
 
-from grpc import ChannelCredentials, Compression
+from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
 )
@@ -113,6 +113,7 @@ class OTLPMetricExporter(
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         channel_options: Tuple[Tuple[str, str]] | None = None,
+        retryable_error_codes: Union[Iterable[StatusCode], str] | None = None,
         *,
         meter_provider: Optional[MeterProvider] = None,
     ):
@@ -159,6 +160,7 @@ class OTLPMetricExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
+            retryable_error_codes=retryable_error_codes,
             component_type=OtelComponentTypeValues.OTLP_GRPC_METRIC_EXPORTER,
             signal="metrics",
             meter_provider=meter_provider,
