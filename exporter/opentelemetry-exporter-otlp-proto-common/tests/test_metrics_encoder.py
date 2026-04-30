@@ -37,6 +37,7 @@ from opentelemetry.sdk.metrics import Exemplar
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Buckets,
+    DataPointFlags,
     ExponentialHistogramDataPoint,
     HistogramDataPoint,
     Metric,
@@ -91,6 +92,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     explicit_bounds=[10.0, 20.0],
                     min=8,
                     max=18,
+                    flags=DataPointFlags.get_default(),
                 )
             ],
             aggregation_temporality=AggregationTemporality.DELTA,
@@ -112,7 +114,13 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                 version="first_version",
                                 schema_url="instrumentation_scope_schema_url",
                             ),
-                            metrics=[_generate_sum("sum_int", 33)],
+                            metrics=[
+                                _generate_sum(
+                                    "sum_int",
+                                    33,
+                                    flags=DataPointFlags.get_default(),
+                                )
+                            ],
                             schema_url="instrumentation_scope_schema_url",
                         )
                     ],
@@ -163,6 +171,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 start_time_unix_nano=1641946015139533244,
                                                 time_unix_nano=1641946016139533244,
                                                 as_int=33,
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.CUMULATIVE,
@@ -515,6 +526,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -646,6 +660,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -708,6 +725,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -778,6 +798,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -848,6 +871,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 ],
                                                 max=18.0,
                                                 min=8.0,
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -879,7 +905,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                         zero_count=5,
                         positive=Buckets(offset=6, bucket_counts=[7, 8]),
                         negative=Buckets(offset=9, bucket_counts=[10, 11]),
-                        flags=12,
+                        flags=DataPointFlags.get_default(),
                         min=13.0,
                         max=14.0,
                     )
@@ -964,7 +990,9 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                     offset=9,
                                                     bucket_counts=[10, 11],
                                                 ),
-                                                flags=12,
+                                                flags=int(
+                                                    DataPointFlags.get_default()
+                                                ),
                                                 exemplars=[],
                                                 min=13.0,
                                                 max=14.0,

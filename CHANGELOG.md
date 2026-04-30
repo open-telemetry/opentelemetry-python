@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5088](https://github.com/open-telemetry/opentelemetry-python/pull/5088))
 - ci: wait for tracecontext server readiness instead of a fixed sleep in `scripts/tracecontext-integration-test.sh`
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
+- [BREAKING] `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-common`: Add support for metric data-point flags
+  ([#4916](https://github.com/open-telemetry/opentelemetry-python/pull/4916))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
@@ -607,6 +609,8 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
   - The exporter's API is not changed
 - Add parameters for Distros and configurators to configure autoinstrumentation in addition to existing environment variables.
   ([#3864](https://github.com/open-telemetry/opentelemetry-python/pull/3864))
+- [BREAKING] `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-common`: Add support for metric data-point flags
+  ([#4916](https://github.com/open-telemetry/opentelemetry-python/pull/4916))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
 
