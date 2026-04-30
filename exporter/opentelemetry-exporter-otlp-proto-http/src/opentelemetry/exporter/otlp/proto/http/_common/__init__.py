@@ -46,9 +46,11 @@ def _parse_response_body(resp: requests.Response) -> str:
     if not resp.content:
         return resp.reason
 
-    content_type = resp.headers.get("Content-Type", "")
+    content_type = (
+        resp.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+    )
 
-    if content_type.startswith(_CONTENT_TYPE_PROTOBUF):
+    if content_type == _CONTENT_TYPE_PROTOBUF:
         status = Status()
         try:
             status.ParseFromString(resp.content)
@@ -61,23 +63,23 @@ def _parse_response_body(resp: requests.Response) -> str:
             return status.message
         return resp.reason
 
-    if content_type.startswith(_CONTENT_TYPE_JSON):
+    if content_type == _CONTENT_TYPE_JSON:
         try:
             body = resp.json()
         except Exception:  # pylint: disable=broad-except
             _logger.debug("Failed to parse JSON response body", exc_info=True)
             return resp.text or resp.reason
         if isinstance(body, dict):
-            # OTLP partial_success uses camelCase in JSON
-            if error_message := body.get("partialSuccess", {}).get(
-                "errorMessage", ""
+            partial = body.get("partialSuccess")
+            if isinstance(partial, dict) and (
+                error_message := partial.get("errorMessage", "")
             ):
                 return error_message
             # google.rpc.Status uses "message"
             if rpc_message := body.get("message", ""):
                 return rpc_message
 
-    return resp.text or resp.reason
+    return resp.text.strip() or resp.reason
 
 
 def _is_retryable(resp: requests.Response) -> bool:

@@ -98,6 +98,22 @@ class TestParseResponseBody(unittest.TestCase):
             "not authorized",
         )
 
+    def test_json_partial_success_null_falls_through(self):
+        body = json.dumps({"partialSuccess": None}).encode()
+        resp = _make_response(content=body, content_type="application/json")
+        self.assertEqual(
+            _parse_response_body(resp),
+            '{"partialSuccess": null}',
+        )
+
+    def test_json_partial_success_non_dict_falls_through(self):
+        body = json.dumps({"partialSuccess": "x"}).encode()
+        resp = _make_response(content=body, content_type="application/json")
+        self.assertEqual(
+            _parse_response_body(resp),
+            '{"partialSuccess": "x"}',
+        )
+
     def test_unknown_content_type_returns_text(self):
         resp = _make_response(
             content=b"something went wrong",
