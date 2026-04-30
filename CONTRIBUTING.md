@@ -234,7 +234,14 @@ git commit
 git push fork feature
 ```
 
-Open a pull request against the main `opentelemetry-python` repo.
+Open a pull request (PR) against the main `opentelemetry-python` repo.
+
+A descriptive PR title will help the community better triage and review your changes. Make sure to prefix with the name(s) of the package/subdirectory/domain that your PR updates. Following any of these examples will help:
+
+* "opentelemetry-sdk: make test_force_flush_late_by_timeout less flaky on pypy/windows"
+* "opentelemetry-exporter-otlp-proto-http: enable typechecking"
+* "docs: replace TODO placeholders with API and SDK overview descriptions"
+* "feat(config): Add TracerProvider support for declarative config"
 
 Pull requests are also tested for their compatibility with packages distributed
 by OpenTelemetry in the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git).
@@ -247,12 +254,12 @@ Follow these steps:
 1. Open Core repo PR (Contrib Tests will fail)
 2. Open Contrib repo PR and modify its `CORE_REPO_SHA` in `.github/workflows/test_x.yml`
 to equal the commit SHA of the Core repo PR to pass tests
-3. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test_x.yml` to
+1. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test_x.yml` to
 equal the commit SHA of the Contrib repo PR to pass Contrib repo tests (a sanity
 check for the Maintainers & Approvers)
-4. Merge the Contrib repo
-5. Restore the Core repo PR `CONTRIB_REPO_SHA` to point to `main`
-6. Merge the Core repo PR
+1. Merge the Contrib repo
+2. Restore the Core repo PR `CONTRIB_REPO_SHA` to point to `main`
+3. Merge the Core repo PR
 
 ### How to Receive Comments
 
