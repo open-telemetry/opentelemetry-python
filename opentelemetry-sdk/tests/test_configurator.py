@@ -1573,3 +1573,67 @@ class TestClearLoggingHandlers(TestCase):
         self.assertEqual(logging.config.dictConfig.__name__, "dictConfig")
         self.assertEqual(logging.basicConfig.__name__, "basicConfig")
         self.assertEqual(logging.config.fileConfig.__name__, "fileConfig")
+
+
+class TestOpAMPInit(TestCase):
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch("opentelemetry.sdk._configuration.Resource")
+    def test_init_function_found(self, mock_resource, mock_entry_points):
+        init_function = mock.Mock()
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint("pre_sdk_init_function", init_function)
+            ]
+        )
+
+        _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
+        )
+        init_function.assert_called_once_with(
+            mock_resource.create.return_value
+        )
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_init_function_load_failure(self, mock_entry_points):
+        entry_point_mock = mock.Mock()
+        entry_point_mock.load.side_effect = AttributeError(
+            "module 'foo' has no attribute 'OpampInit'"
+        )
+        mock_entry_points.configure_mock(
+            return_value=[entry_point_mock],
+        )
+        entry_point_mock.__str__ = lambda x: "<EntryPoint>"
+
+        with self.assertLogs(level="WARNING") as cm:
+            _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
+        )
+
+        self.assertIn(
+            "WARNING:opentelemetry.sdk._configuration:Failed to load OpAMP init function from entry point,"
+            " <EntryPoint>: module 'foo' has no attribute 'OpampInit'",
+            cm.output,
+        )
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_init_function_not_found(self, mock_entry_points):
+        mock_entry_points.configure_mock(return_value=[])
+
+        with self.assertLogs(level="DEBUG") as cm:
+            _initialize_components(id_generator=1)
+        self.assertIn(
+            "DEBUG:opentelemetry.sdk._configuration:No OpAMP init function found",
+            cm.output,
+        )
