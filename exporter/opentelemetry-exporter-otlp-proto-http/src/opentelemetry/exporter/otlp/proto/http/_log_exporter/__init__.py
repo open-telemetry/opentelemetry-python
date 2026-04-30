@@ -104,7 +104,9 @@ class OTLPLogExporter(OTLPHttpClient, LogRecordExporter):
 
         serialized_data = encode_logs(batch).SerializeToString()
         with self._metrics.export_operation(len(batch)) as result:
-            success = self._export_with_retries(serialized_data, result, "logs")
+            success = self._export_with_retries(
+                serialized_data, result, "logs"
+            )
         return (
             LogRecordExportResult.SUCCESS
             if success
@@ -114,11 +116,3 @@ class OTLPLogExporter(OTLPHttpClient, LogRecordExporter):
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
         return True
-
-    def shutdown(self):
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring call")
-            return
-        self._shutdown = True
-        self._shutdown_in_progress.set()
-        self._session.close()

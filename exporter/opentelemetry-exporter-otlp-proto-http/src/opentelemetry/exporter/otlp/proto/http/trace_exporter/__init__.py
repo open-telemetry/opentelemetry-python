@@ -98,18 +98,12 @@ class OTLPSpanExporter(OTLPHttpClient, SpanExporter):
 
         serialized_data = encode_spans(spans).SerializePartialToString()
         with self._metrics.export_operation(len(spans)) as result:
-            success = self._export_with_retries(serialized_data, result, "span")
+            success = self._export_with_retries(
+                serialized_data, result, "span"
+            )
         return (
             SpanExportResult.SUCCESS if success else SpanExportResult.FAILURE
         )
-
-    def shutdown(self):
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring call")
-            return
-        self._shutdown = True
-        self._shutdown_in_progress.set()
-        self._session.close()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

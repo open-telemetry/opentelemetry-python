@@ -187,7 +187,9 @@ class OTLPMetricExporter(
         def _do_export(request: ExportMetricsServiceRequest) -> bool:
             serialized_data = request.SerializeToString()
             with self._metrics.export_operation(num_items) as result:
-                return self._export_with_retries(serialized_data, result, "metrics")
+                return self._export_with_retries(
+                    serialized_data, result, "metrics"
+                )
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:
@@ -206,14 +208,6 @@ class OTLPMetricExporter(
 
         # Only returns SUCCESS if all batches succeeded
         return MetricExportResult.SUCCESS
-
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring call")
-            return
-        self._shutdown = True
-        self._shutdown_in_progress.set()
-        self._session.close()
 
     @property
     def _exporting(self) -> str:

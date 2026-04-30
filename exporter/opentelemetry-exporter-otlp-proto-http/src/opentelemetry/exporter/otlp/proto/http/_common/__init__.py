@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from io import BytesIO
 from os import environ
 from time import time
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -102,153 +102,10 @@ def _load_session_from_envvar(
     return None
 
 
-def _setup_session(
-    session: Optional[requests.Session],
-    cred_envvar: str,
-    headers: Dict[str, str],
-    compression: Compression,
-) -> requests.Session:
-    configured_session = (
-        session or _load_session_from_envvar(cred_envvar) or requests.Session()
-    )
-    configured_session.headers.update(headers)
-    configured_session.headers.update(_OTLP_HTTP_HEADERS)
-    # let users override our defaults
-    configured_session.headers.update(headers)
-    if compression is not Compression.NoCompression:
-        configured_session.headers.update(
-            {"Content-Encoding": compression.value}
-        )
-    return configured_session
-
-
-def _export(
-    session: requests.Session,
-    endpoint: str,
-    serialized_data: bytes,
-    compression: Compression,
-    certificate_file: Union[str, bool],
-    client_cert: Optional[Union[str, Tuple[str, str]]],
-    timeout_sec: float,
-) -> requests.Response:
-    data = serialized_data
-    if compression == Compression.Gzip:
-        gzip_data = BytesIO()
-        with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-            gzip_stream.write(serialized_data)
-        data = gzip_data.getvalue()
-    elif compression == Compression.Deflate:
-        data = zlib.compress(serialized_data)
-
-    # By default, keep-alive is enabled in Session's request
-    # headers. Backends may choose to close the connection
-    # while a post happens which causes an unhandled
-    # exception. This try/except will retry the post on such exceptions
-    try:
-        resp = session.post(
-            url=endpoint,
-            data=data,
-            verify=certificate_file,
-            timeout=timeout_sec,
-            cert=client_cert,
-        )
-    except ConnectionError:
-        resp = session.post(
-            url=endpoint,
-            data=data,
-            verify=certificate_file,
-            timeout=timeout_sec,
-            cert=client_cert,
-        )
-    return resp
-
-
-def _export_with_retries(
-    session: requests.Session,
-    endpoint: str,
-    serialized_data: bytes,
-    compression: Compression,
-    certificate_file: Union[str, bool],
-    client_cert: Optional[Union[str, Tuple[str, str]]],
-    timeout: float,
-    shutdown_event: threading.Event,
-    result: Any,
-    batch_name: str,
-) -> bool:
-    deadline_sec = time() + timeout
-    for retry_num in range(_MAX_RETRIES):
-        # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-        backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-        export_error: Optional[Exception] = None
-        try:
-            resp = _export(
-                session,
-                endpoint,
-                serialized_data,
-                compression,
-                certificate_file,
-                client_cert,
-                deadline_sec - time(),
-            )
-            if resp.ok:
-                return True
-        except requests.exceptions.RequestException as error:
-            reason = error
-            export_error = error
-            retryable = isinstance(error, ConnectionError)
-            status_code = None
-        else:
-            reason = resp.reason
-            retryable = _is_retryable(resp)
-            status_code = resp.status_code
-
-        error_attrs = (
-            {HTTP_RESPONSE_STATUS_CODE: status_code}
-            if status_code is not None
-            else None
-        )
-
-        if not retryable:
-            _logger.error(
-                "Failed to export %s batch code: %s, reason: %s",
-                batch_name,
-                status_code,
-                reason,
-            )
-            result.error = export_error
-            result.error_attrs = error_attrs
-            return False
-
-        if (
-            retry_num + 1 == _MAX_RETRIES
-            or backoff_seconds > (deadline_sec - time())
-            or shutdown_event.is_set()
-        ):
-            _logger.error(
-                "Failed to export %s batch due to timeout, "
-                "max retries or shutdown.",
-                batch_name,
-            )
-            result.error = export_error
-            result.error_attrs = error_attrs
-            return False
-
-        _logger.warning(
-            "Transient error %s encountered while exporting %s batch, retrying in %.2fs.",
-            reason,
-            batch_name,
-            backoff_seconds,
-        )
-        if shutdown_event.wait(backoff_seconds):
-            _logger.warning("Shutdown in progress, aborting retry.")
-            break
-    return False
-
-
-def _compression_from_env(signal_compression_envvar: str) -> Compression:
+def _compression_from_env(compression_envvar: str) -> Compression:
     compression = (
         environ.get(
-            signal_compression_envvar,
+            compression_envvar,
             environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
         )
         .lower()
@@ -333,11 +190,8 @@ class OTLPHttpClient:
         self._compression = compression or _compression_from_env(
             signal_config.compression_envvar
         )
-        self._session = _setup_session(
-            session,
-            signal_config.credential_envvar,
-            self._headers,
-            self._compression,
+        self._session = self._setup_session(
+            session, signal_config.credential_envvar
         )
         self._shutdown = False
         self._metrics = ExporterMetrics(
@@ -346,3 +200,132 @@ class OTLPHttpClient:
             urlparse(self._endpoint),
             meter_provider,
         )
+
+    def _setup_session(
+        self,
+        session: Optional[requests.Session],
+        cred_envvar: str,
+    ) -> requests.Session:
+        configured_session = (
+            session
+            or _load_session_from_envvar(cred_envvar)
+            or requests.Session()
+        )
+        configured_session.headers.update(self._headers)
+        configured_session.headers.update(_OTLP_HTTP_HEADERS)
+        # let users override our defaults
+        configured_session.headers.update(self._headers)
+        if self._compression is not Compression.NoCompression:
+            configured_session.headers.update(
+                {"Content-Encoding": self._compression.value}
+            )
+        return configured_session
+
+    def _export(
+        self, serialized_data: bytes, timeout_sec: float
+    ) -> requests.Response:
+        data = serialized_data
+        if self._compression == Compression.Gzip:
+            gzip_data = BytesIO()
+            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
+                gzip_stream.write(serialized_data)
+            data = gzip_data.getvalue()
+        elif self._compression == Compression.Deflate:
+            data = zlib.compress(serialized_data)
+
+        # By default, keep-alive is enabled in Session's request
+        # headers. Backends may choose to close the connection
+        # while a post happens which causes an unhandled
+        # exception. This try/except will retry the post on such exceptions
+        try:
+            resp = self._session.post(
+                url=self._endpoint,
+                data=data,
+                verify=self._certificate_file,
+                timeout=timeout_sec,
+                cert=self._client_cert,
+            )
+        except ConnectionError:
+            resp = self._session.post(
+                url=self._endpoint,
+                data=data,
+                verify=self._certificate_file,
+                timeout=timeout_sec,
+                cert=self._client_cert,
+            )
+        return resp
+
+    def _export_with_retries(
+        self,
+        serialized_data: bytes,
+        result: Any,
+        batch_name: str,
+    ) -> bool:
+        deadline_sec = time() + self._timeout
+        for retry_num in range(_MAX_RETRIES):
+            # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+            export_error: Optional[Exception] = None
+            try:
+                resp = self._export(serialized_data, deadline_sec - time())
+                if resp.ok:
+                    return True
+            except requests.exceptions.RequestException as error:
+                reason = error
+                export_error = error
+                retryable = isinstance(error, ConnectionError)
+                status_code = None
+            else:
+                reason = resp.reason
+                retryable = _is_retryable(resp)
+                status_code = resp.status_code
+
+            error_attrs = (
+                {HTTP_RESPONSE_STATUS_CODE: status_code}
+                if status_code is not None
+                else None
+            )
+
+            if not retryable:
+                _logger.error(
+                    "Failed to export %s batch code: %s, reason: %s",
+                    batch_name,
+                    status_code,
+                    reason,
+                )
+                result.error = export_error
+                result.error_attrs = error_attrs
+                return False
+
+            if (
+                retry_num + 1 == _MAX_RETRIES
+                or backoff_seconds > (deadline_sec - time())
+                or self._shutdown_in_progress.is_set()
+            ):
+                _logger.error(
+                    "Failed to export %s batch due to timeout, "
+                    "max retries or shutdown.",
+                    batch_name,
+                )
+                result.error = export_error
+                result.error_attrs = error_attrs
+                return False
+
+            _logger.warning(
+                "Transient error %s encountered while exporting %s batch, retrying in %.2fs.",
+                reason,
+                batch_name,
+                backoff_seconds,
+            )
+            if self._shutdown_in_progress.wait(backoff_seconds):
+                _logger.warning("Shutdown in progress, aborting retry.")
+                break
+        return False
+
+    def shutdown(self, timeout_millis: Optional[float] = None) -> None:
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self._shutdown = True
+        self._shutdown_in_progress.set()
+        self._session.close()
