@@ -30,6 +30,18 @@ class TestTraceContextFormat(unittest.TestCase):
     TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
     SPAN_ID = int("1234567890123456", 16)  # type:int
 
+    def _traceparent(self):
+        return (
+            f"00-{format(self.TRACE_ID, '032x')}-"
+            f"{format(self.SPAN_ID, '016x')}-00"
+        )
+
+    def _carrier(self, tracestate_value="foo=1,bar=2"):
+        return {
+            "traceparent": [self._traceparent()],
+            "tracestate": [tracestate_value],
+        }
+
     def test_no_traceparent_header(self):
         """When tracecontext headers are not present, a new SpanContext
         should be created.
@@ -318,3 +330,109 @@ class TestTraceContextFormat(unittest.TestCase):
 
                 ctx = FORMAT.extract(carrier)
                 self.assertDictEqual(Context(), ctx)
+
+    def test_rule_based_continue_policy_sets_current_span(self):
+        propagator = tracecontext.RuleBasedTraceContextTextMapPropagator(
+            [
+                (
+                    tracecontext.OnKeyPresence("foo"),
+                    tracecontext.PropagatorTracePolicy.CONTINUE,
+                )
+            ]
+        )
+
+        ctx = propagator.extract(self._carrier())
+        span_context = trace.get_current_span(ctx).get_span_context()
+
+        self.assertEqual(span_context.trace_id, self.TRACE_ID)
+        self.assertEqual(span_context.span_id, self.SPAN_ID)
+        self.assertEqual(span_context.trace_state, {"foo": "1", "bar": "2"})
+        self.assertIsNone(trace.get_current_link(ctx))
+
+    def test_rule_based_restart_with_link_sets_current_link(self):
+        propagator = tracecontext.RuleBasedTraceContextTextMapPropagator(
+            [
+                (
+                    tracecontext.OnKeyValue("foo", "1"),
+                    tracecontext.PropagatorTracePolicy.RESTART_WITH_LINK,
+                )
+            ]
+        )
+
+        ctx = propagator.extract(self._carrier())
+        link = trace.get_current_link(ctx)
+
+        self.assertEqual(
+            trace.get_current_span(ctx).get_span_context(),
+            trace.INVALID_SPAN_CONTEXT,
+        )
+        self.assertIsNotNone(link)
+        self.assertEqual(link.context.trace_id, self.TRACE_ID)
+        self.assertEqual(link.context.span_id, self.SPAN_ID)
+        self.assertEqual(link.context.trace_state, {"foo": "1", "bar": "2"})
+
+    def test_rule_based_restart_without_link_keeps_context_empty(self):
+        propagator = tracecontext.RuleBasedTraceContextTextMapPropagator(
+            [
+                (
+                    tracecontext.AlwaysPredicate(),
+                    tracecontext.PropagatorTracePolicy.RESTART_WITHOUT_LINK,
+                )
+            ]
+        )
+
+        ctx = propagator.extract(self._carrier())
+
+        self.assertEqual(
+            trace.get_current_span(ctx).get_span_context(),
+            trace.INVALID_SPAN_CONTEXT,
+        )
+        self.assertIsNone(trace.get_current_link(ctx))
+
+    def test_rule_based_propagator_uses_first_matching_rule(self):
+        propagator = tracecontext.RuleBasedTraceContextTextMapPropagator(
+            [
+                (
+                    tracecontext.AlwaysPredicate(),
+                    tracecontext.PropagatorTracePolicy.RESTART_WITHOUT_LINK,
+                ),
+                (
+                    tracecontext.OnKeyValue("foo", "1"),
+                    tracecontext.PropagatorTracePolicy.CONTINUE,
+                ),
+            ]
+        )
+
+        ctx = propagator.extract(self._carrier())
+
+        self.assertEqual(
+            trace.get_current_span(ctx).get_span_context(),
+            trace.INVALID_SPAN_CONTEXT,
+        )
+        self.assertIsNone(trace.get_current_link(ctx))
+
+    def test_rule_based_propagator_injects_tracecontext_fields(self):
+        propagator = tracecontext.RuleBasedTraceContextTextMapPropagator(
+            [
+                (
+                    tracecontext.AlwaysPredicate(),
+                    tracecontext.PropagatorTracePolicy.CONTINUE,
+                )
+            ]
+        )
+        span_context = trace.SpanContext(
+            self.TRACE_ID,
+            self.SPAN_ID,
+            is_remote=False,
+            trace_state=TraceState([("foo", "1")]),
+        )
+        ctx = trace.set_span_in_context(trace.NonRecordingSpan(span_context))
+        carrier: typing.Dict[str, str] = {}
+
+        propagator.inject(carrier, context=ctx)
+
+        self.assertEqual(
+            carrier["traceparent"],
+            self._traceparent(),
+        )
+        self.assertEqual(propagator.fields, FORMAT.fields)

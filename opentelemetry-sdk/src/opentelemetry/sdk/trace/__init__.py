@@ -1188,7 +1188,7 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-        links = links or ()
+        links = tuple(links) if links else ()
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()
@@ -1206,6 +1206,11 @@ class Tracer(trace_api.Tracer):
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
             parent_span_context = None
+            # Propagators may request a restarted root span with a link to the
+            # incoming remote context. Child spans must not inherit that link.
+            current_link = trace_api.get_current_link(context)
+            if current_link is not None:
+                links += (current_link,)
             trace_id = self.id_generator.generate_trace_id()
         else:
             trace_id = parent_span_context.trace_id
