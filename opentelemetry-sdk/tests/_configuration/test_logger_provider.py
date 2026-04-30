@@ -228,15 +228,34 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         exporter = _create_log_record_exporter(config)
         self.assertIsInstance(exporter, ConsoleLogRecordExporter)
 
-    def test_otlp_file_development_raises(self):
-        config = LogRecordExporterConfig(otlp_file_development={})
-        with self.assertRaises(ConfigurationError):
-            _create_log_record_exporter(config)
-
     def test_no_exporter_type_raises(self):
         config = LogRecordExporterConfig()
         with self.assertRaises(ConfigurationError):
             _create_log_record_exporter(config)
+
+    def test_plugin_log_exporter_loaded_via_entry_point(self):
+        mock_exporter = MagicMock()
+        mock_class = MagicMock(return_value=mock_exporter)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            result = _create_log_record_exporter(
+                LogRecordExporterConfig(my_custom_exporter={})
+            )
+        self.assertIs(result, mock_exporter)
+
+    def test_unknown_log_exporter_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            with self.assertRaises(ConfigurationError):
+                # pylint: disable=unexpected-keyword-arg
+                _create_log_record_exporter(
+                    LogRecordExporterConfig(no_such_exporter={})
+                )
 
     def test_otlp_http_missing_package_raises(self):
         config = LogRecordExporterConfig(

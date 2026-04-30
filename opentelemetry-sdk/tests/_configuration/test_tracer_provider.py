@@ -361,6 +361,34 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         with self.assertRaises(ConfigurationError):
             create_tracer_provider(config)
 
+    def test_plugin_span_exporter_loaded_via_entry_point(self):
+        mock_exporter = MagicMock()
+        mock_class = MagicMock(return_value=mock_exporter)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            config = self._make_batch_config(
+                # pylint: disable=unexpected-keyword-arg
+                SpanExporterConfig(my_custom_exporter={})
+            )
+            provider = create_tracer_provider(config)
+        self.assertEqual(
+            len(provider._active_span_processor._span_processors), 1
+        )
+
+    def test_unknown_span_exporter_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            config = self._make_batch_config(
+                # pylint: disable=unexpected-keyword-arg
+                SpanExporterConfig(no_such_exporter={})
+            )
+            with self.assertRaises(ConfigurationError):
+                create_tracer_provider(config)
+
 
 class TestCreateSpanLimits(unittest.TestCase):
     # pylint: disable=no-self-use

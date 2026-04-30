@@ -109,5 +109,8 @@ def _parse_headers(
                 )
     if headers:
         for pair in headers:
-            result[pair.name] = pair.value or ""
+            if isinstance(pair, dict):
+                result[pair["name"]] = pair.get("value") or ""
+            else:
+                result[pair.name] = pair.value or ""
     return result
