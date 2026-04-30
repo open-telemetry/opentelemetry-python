@@ -632,7 +632,7 @@ name = "importlib-metadata"
 version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107 }
 wheels = [
@@ -816,13 +816,13 @@ wheels = [
 name = "opentelemetry-api"
 source = { editable = "opentelemetry-api" }
 dependencies = [
-    { name = "importlib-metadata" },
+    { name = "importlib-metadata", marker = "python_full_version < '3.12'" },
     { name = "typing-extensions" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "importlib-metadata", specifier = ">=6.0,<8.8.0" },
+    { name = "importlib-metadata", marker = "python_full_version < '3.12'", specifier = ">=6.0,<8.8.0" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
 

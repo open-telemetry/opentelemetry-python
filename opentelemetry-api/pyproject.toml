@@ -26,9 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "typing-extensions >= 4.5.0",
-    # FIXME This should be able to be removed after 3.12 is released if there is a reliable API
-    # in importlib.metadata.
-    "importlib-metadata >= 6.0, < 8.8.0",
+    "importlib-metadata >= 6.0, < 8.8.0; python_version < '3.12'",
 ]
 dynamic = [
     "version",
