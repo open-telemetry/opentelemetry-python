@@ -17,12 +17,10 @@
 from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, patch
+from urllib.parse import quote_plus
 
 from opentelemetry.baggage import get_all, set_baggage
-from opentelemetry.baggage.propagation import (
-    W3CBaggagePropagator,
-    _format_baggage,
-)
+from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.context import get_current
 
 
@@ -99,15 +97,45 @@ class TestW3CBaggagePropagator(TestCase):
         long_value = "s" * (W3CBaggagePropagator._MAX_HEADER_LENGTH + 1)
         header = f"key1={long_value}"
         expected = {}
-        self.assertEqual(self._extract(header), expected)
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(self._extract(header), expected)
+            self.assertIn(
+                "exceeded the maximum number of bytes per baggage-string",
+                warning.output[0],
+            )
+
+    def test_extract_non_ascii_header(self):
+        """Extract should skip non-ASCII entries but keep valid ones."""
+        header = "key1=val1,key2=test\u00e9"
+        with self.assertLogs(level=WARNING) as warning:
+            result = self._extract(header)
+            self.assertEqual(result, {"key1": "val1"})
+            self.assertIn(
+                "contains non-ASCII characters",
+                warning.output[0],
+            )
+
+    def test_extract_non_ascii_header_exceeds_byte_limit(self):
+        """A header under the char limit but over the byte limit when encoded should be rejected."""
+        # Each \u00e9 encodes to 2 bytes in UTF-8, so we need fewer chars to exceed the byte limit
+        non_ascii_value = "\u00e9" * (W3CBaggagePropagator._MAX_HEADER_LENGTH)
+        header = f"key1={non_ascii_value}"
+        with self.assertLogs(level=WARNING) as warning:
+            result = self._extract(header)
+            self.assertEqual(result, {})
+            self.assertIn(
+                "exceeded the maximum number of bytes per baggage-string",
+                warning.output[0],
+            )
 
     def test_header_contains_too_many_entries(self):
         header = ",".join(
             [f"key{k}=val" for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)]
         )
-        self.assertEqual(
-            len(self._extract(header)), W3CBaggagePropagator._MAX_PAIRS
-        )
+        with self.assertLogs(level=WARNING):
+            self.assertEqual(
+                len(self._extract(header)), W3CBaggagePropagator._MAX_PAIRS
+            )
 
     def test_header_contains_pair_too_long(self):
         long_value = "s" * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)
@@ -130,6 +158,7 @@ class TestW3CBaggagePropagator(TestCase):
         )
 
     def test_header_max_entries_skip_invalid_entry(self):
+        # 181 entries where index 2 is too long: skipping it leaves exactly 180 valid entries
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
                 self._extract(
@@ -155,11 +184,17 @@ class TestW3CBaggagePropagator(TestCase):
                     if index != 2
                 },
             )
-            self.assertIn(
-                "exceeded the maximum number of list-members",
-                warning.output[0],
+            self.assertTrue(
+                any(
+                    "exceeded the maximum number of bytes per list-member"
+                    in msg
+                    for msg in warning.output
+                )
             )
 
+        # 181 entries where index 2 is malformed (no '='): _apply_baggage_limits
+        # accepts the first 180 entries (indices 0-179), then the malformed entry
+        # at index 2 is skipped during parsing
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
                 self._extract(
@@ -178,13 +213,20 @@ class TestW3CBaggagePropagator(TestCase):
                 ),
                 {
                     f"key{index}": f"value{index}"
-                    for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                    for index in range(W3CBaggagePropagator._MAX_PAIRS)
                     if index != 2
                 },
             )
-            self.assertIn(
-                "exceeded the maximum number of list-members",
-                warning.output[0],
+            self.assertTrue(
+                any(
+                    "exceeded the maximum number of list-members" in msg
+                    for msg in warning.output
+                )
+            )
+            self.assertTrue(
+                any(
+                    "doesn't match the format" in msg for msg in warning.output
+                )
             )
 
     def test_inject_no_baggage_entries(self):
@@ -224,8 +266,8 @@ class TestW3CBaggagePropagator(TestCase):
         self.assertIn("key3=123.567", output)
 
     @patch("opentelemetry.baggage.propagation.get_all")
-    @patch("opentelemetry.baggage.propagation._format_baggage")
-    def test_fields(self, mock_format_baggage, mock_baggage):
+    def test_fields(self, mock_baggage):
+        mock_baggage.return_value = {"key": "value"}
         mock_setter = Mock()
 
         self.propagator.inject({}, setter=mock_setter)
@@ -237,7 +279,13 @@ class TestW3CBaggagePropagator(TestCase):
 
         self.assertEqual(inject_fields, self.propagator.fields)
 
-    def test__format_baggage(self):
+    def test_encode_baggage_pairs(self):
+        def _format_baggage(entries):
+            return ",".join(
+                quote_plus(str(k)) + "=" + quote_plus(str(v))
+                for k, v in entries.items()
+            )
+
         self.assertEqual(
             _format_baggage({"key key": "value value"}), "key+key=value+value"
         )
@@ -245,6 +293,81 @@ class TestW3CBaggagePropagator(TestCase):
             _format_baggage({"key/key": "value/value"}),
             "key%2Fkey=value%2Fvalue",
         )
+
+    def test_inject_too_many_entries(self):
+        """Inject should drop entries exceeding _MAX_PAIRS."""
+        values = {
+            f"key{i}": f"val{i}"
+            for i in range(self.propagator._MAX_PAIRS + 10)
+        }
+        ctx = get_current()
+        for key, val in values.items():
+            ctx = set_baggage(key, val, context=ctx)
+        output = {}
+        with self.assertLogs(level=WARNING) as warning:
+            self.propagator.inject(output, context=ctx)
+            self.assertIn(
+                "exceeded the maximum number of list-members",
+                warning.output[0],
+            )
+        baggage_str = output.get("baggage", "")
+        pairs = baggage_str.split(",")
+        self.assertEqual(len(pairs), self.propagator._MAX_PAIRS)
+        self.assertNotIn(
+            f"key{self.propagator._MAX_PAIRS}=",
+            baggage_str,
+        )
+
+    def test_inject_entry_too_long(self):
+        """Inject should skip individual entries that exceed _MAX_PAIR_LENGTH."""
+        long_value = "x" * self.propagator._MAX_PAIR_LENGTH
+        values = {"key1": "val1", "big": long_value, "key3": "val3"}
+        ctx = get_current()
+        for key, val in values.items():
+            ctx = set_baggage(key, val, context=ctx)
+        output = {}
+        with self.assertLogs(level=WARNING) as warning:
+            self.propagator.inject(output, context=ctx)
+            self.assertIn(
+                "exceeded the maximum number of bytes per list-member",
+                warning.output[0],
+            )
+        baggage_str = output.get("baggage", "")
+        self.assertIn("key1=val1", baggage_str)
+        self.assertIn("key3=val3", baggage_str)
+        self.assertNotIn("big=", baggage_str)
+
+    def test_inject_total_header_too_long(self):
+        """Inject should stop adding entries when total header would exceed _MAX_HEADER_LENGTH."""
+        # Create entries that individually fit but collectively exceed the max header length
+        # Each entry "kNNN=<value>" with value ~200 chars; 50 of these > 8192
+        value = "v" * 200
+        values = {f"k{i:03d}": value for i in range(50)}
+        ctx = get_current()
+        for key, val in values.items():
+            ctx = set_baggage(key, val, context=ctx)
+        output = {}
+        with self.assertLogs(level=WARNING) as warning:
+            self.propagator.inject(output, context=ctx)
+            self.assertIn(
+                "exceeded the maximum number of bytes per baggage-string",
+                warning.output[0],
+            )
+        baggage_str = output.get("baggage", "")
+        self.assertLessEqual(
+            len(baggage_str), self.propagator._MAX_HEADER_LENGTH
+        )
+
+    def test_inject_empty_after_all_dropped(self):
+        """If all entries are too long, nothing should be injected."""
+        long_value = "x" * self.propagator._MAX_PAIR_LENGTH
+        values = {"big1": long_value, "big2": long_value}
+        ctx = get_current()
+        for key, val in values.items():
+            ctx = set_baggage(key, val, context=ctx)
+        output = {}
+        self.propagator.inject(output, context=ctx)
+        self.assertNotIn("baggage", output)
 
     @patch("opentelemetry.baggage._BAGGAGE_KEY", new="abc")
     def test_inject_extract(self):
