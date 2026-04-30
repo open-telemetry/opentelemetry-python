@@ -11,6 +11,7 @@ dependencies = [
   "opentelemetry-test-utils",
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
+  "opentelemetry-exporter-otlp-proto-http-light",
   "opentelemetry-exporter-otlp-proto-common",
   "opentelemetry-exporter-zipkin-json",
   "opentelemetry-exporter-prometheus",
@@ -33,6 +34,7 @@ opentelemetry-semantic-conventions = { workspace = true }
 opentelemetry-test-utils = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
 opentelemetry-exporter-otlp-proto-http = { workspace = true }
+opentelemetry-exporter-otlp-proto-http-light = { workspace = true }
 opentelemetry-exporter-otlp-proto-common = { workspace = true }
 opentelemetry-exporter-zipkin-json = { workspace = true }
 opentelemetry-exporter-prometheus = {workspace = true }
@@ -123,6 +125,7 @@ include = [
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
+  "exporter/opentelemetry-exporter-otlp-proto-http-light",
   "codegen/opentelemetry-codegen-json"
 ]
 
@@ -140,6 +143,7 @@ exclude = [
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
+  "exporter/opentelemetry-exporter-otlp-proto-http-light/tests",
 ]
 
 # When packages are correct typed add them to the strict list

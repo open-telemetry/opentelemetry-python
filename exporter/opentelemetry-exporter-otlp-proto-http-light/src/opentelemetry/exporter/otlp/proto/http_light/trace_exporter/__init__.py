@@ -1,0 +1,101 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import logging
+from typing import Dict, Optional, Sequence
+
+from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
+    encode_spans,
+)
+from opentelemetry.exporter.otlp.proto.http_light import Compression
+from opentelemetry.exporter.otlp.proto.http_light._common import (
+    _OTLPHTTPExporterBase,
+    _SignalConfig,
+)
+from opentelemetry.metrics import MeterProvider
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+    OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
+)
+from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
+
+_logger = logging.getLogger(__name__)
+
+DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
+
+_TRACES_SIGNAL_CONFIG = _SignalConfig(
+    endpoint_env_var=OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    certificate_env_var=OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+    client_key_env_var=OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+    client_certificate_env_var=OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+    headers_env_var=OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    timeout_env_var=OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
+    compression_env_var=OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
+    default_path=DEFAULT_TRACES_EXPORT_PATH,
+    metrics_component_type=OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+    metrics_signal="traces",
+)
+
+
+class OTLPSpanExporter(SpanExporter, _OTLPHTTPExporterBase):
+    def __init__(
+        self,
+        endpoint: Optional[str] = None,
+        certificate_file: Optional[str] = None,
+        client_key_file: Optional[str] = None,
+        client_certificate_file: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+        timeout: Optional[float] = None,
+        compression: Optional[Compression] = None,
+        *,
+        meter_provider: Optional[MeterProvider] = None,
+    ):
+        _OTLPHTTPExporterBase.__init__(
+            self,
+            endpoint=endpoint,
+            certificate_file=certificate_file,
+            client_key_file=client_key_file,
+            client_certificate_file=client_certificate_file,
+            headers=headers,
+            timeout=timeout,
+            compression=compression,
+            meter_provider=meter_provider,
+            signal_config=_TRACES_SIGNAL_CONFIG,
+        )
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring batch")
+            return SpanExportResult.FAILURE
+        serialized_data = encode_spans(spans).SerializePartialToString()
+        success = self._export_with_retry(serialized_data, len(spans), "span")
+        return (
+            SpanExportResult.SUCCESS if success else SpanExportResult.FAILURE
+        )
+
+    def shutdown(self):
+        self._do_shutdown()
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Nothing is buffered in this exporter, so this method does nothing."""
+        return True
