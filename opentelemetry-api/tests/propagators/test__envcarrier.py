@@ -25,10 +25,33 @@ from opentelemetry.context import Context, get_current
 from opentelemetry.propagators._envcarrier import (
     EnvironmentGetter,
     EnvironmentSetter,
+    _normalize_key,
 )
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
+
+
+class TestNormalizeKey(unittest.TestCase):
+    """Unit tests for _normalize_key."""
+
+    def test_lowercase(self):
+        self.assertEqual(_normalize_key("traceparent"), "TRACEPARENT")
+
+    def test_hyphen_replaced(self):
+        self.assertEqual(_normalize_key("trace-parent"), "TRACE_PARENT")
+
+    def test_non_ascii_replaced(self):
+        self.assertEqual(_normalize_key("héllo"), "H_LLO")
+
+    def test_leading_digit_prefixed(self):
+        self.assertEqual(_normalize_key("1abc"), "_1ABC")
+
+    def test_already_valid(self):
+        self.assertEqual(_normalize_key("ALREADY_VALID"), "ALREADY_VALID")
+
+    def test_empty_string(self):
+        self.assertEqual(_normalize_key(""), "")
 
 
 class TestEnvironmentGetter(unittest.TestCase):
@@ -78,7 +101,7 @@ class TestEnvironmentGetter(unittest.TestCase):
         with patch.dict(os.environ, test_env, clear=True):
             getter = EnvironmentGetter()
             keys = getter.keys({})
-            expected_keys = {"key1", "key2", "key3"}
+            expected_keys = {"KEY1", "KEY2", "KEY3"}
             self.assertEqual(set(keys), expected_keys)
 
     def test_keys_empty_environment(self):
