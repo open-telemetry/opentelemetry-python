@@ -688,7 +688,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock"}, clear=True
     )
     @patch(
-        "opentelemetry.sdk.resources.entry_points",
+        "opentelemetry.util._importlib_metadata.entry_points",
         Mock(
             return_value=[
                 Mock(
@@ -827,7 +827,8 @@ class TestOTELResourceDetector(unittest.TestCase):
             )
 
         with patch(
-            "opentelemetry.sdk.resources.entry_points", side_effect=side_effect
+            "opentelemetry.util._importlib_metadata.entry_points",
+            side_effect=side_effect,
         ):
             resource = Resource({}).create()
 
@@ -851,7 +852,8 @@ class TestOTELResourceDetector(unittest.TestCase):
             return real_entry_points(*args, **kwargs)
 
         with patch(
-            "opentelemetry.sdk.resources.entry_points", side_effect=side_effect
+            "opentelemetry.util._importlib_metadata.entry_points",
+            side_effect=side_effect,
         ):
             resource = Resource({}).create()
 
