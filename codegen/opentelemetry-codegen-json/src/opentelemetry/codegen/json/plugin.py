@@ -22,7 +22,6 @@ from contextlib import contextmanager
 from google.protobuf.compiler import plugin_pb2 as plugin
 
 from opentelemetry.codegen.json.generator import generate_plugin_response
-from opentelemetry.codegen.json.version import __version__
 
 _logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ def code_generation() -> Iterator[
     Context manager for handling the code generation process.
     """
     if len(sys.argv) > 1 and sys.argv[1] in ("-V", "--version"):
-        print("opentelemetry-codegen-json " + __version__)
+        print("opentelemetry-codegen-json 0.0.0")
         sys.exit(0)
 
     data = sys.stdin.buffer.read()

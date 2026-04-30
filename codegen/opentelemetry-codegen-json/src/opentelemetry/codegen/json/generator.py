@@ -34,7 +34,6 @@ from opentelemetry.codegen.json.types import (
     is_int64_type,
     to_json_field_name,
 )
-from opentelemetry.codegen.json.version import __version__ as GENERATOR_VERSION
 from opentelemetry.codegen.json.writer import CodeWriter
 
 _logger = logging.getLogger(__name__)
@@ -1057,9 +1056,7 @@ def generate_code(
     Returns:
         Dictionary mapping output file paths to generated code
     """
-    generator = OtlpJsonGenerator(
-        request, package_transform, version=GENERATOR_VERSION
-    )
+    generator = OtlpJsonGenerator(request, package_transform, version="0.0.0")
     return generator.generate_all()
 
 
