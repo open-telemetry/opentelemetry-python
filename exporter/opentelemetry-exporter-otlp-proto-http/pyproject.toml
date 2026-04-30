@@ -31,7 +31,7 @@ dependencies = [
   "opentelemetry-proto == 1.42.0.dev",
   "opentelemetry-sdk ~= 1.42.0.dev",
   "opentelemetry-exporter-otlp-proto-common == 1.42.0.dev",
-  "requests ~= 2.7",
+  "urllib3 >= 2.0, < 3.0",
   "typing-extensions >= 4.5.0",
 ]
 
