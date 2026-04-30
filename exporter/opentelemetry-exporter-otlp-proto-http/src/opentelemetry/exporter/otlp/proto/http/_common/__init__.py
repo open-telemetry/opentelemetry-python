@@ -267,8 +267,11 @@ class OTLPHttpClient:
             backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
             export_error: Optional[Exception] = None
             try:
-                resp = self._export(serialized_data, deadline_sec - time())
-                if resp.ok:
+                if (
+                    resp := self._export(
+                        serialized_data, deadline_sec - time()
+                    )
+                ).ok:
                     return True
             except requests.exceptions.RequestException as error:
                 reason = error
