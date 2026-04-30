@@ -18,7 +18,10 @@ import logging
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _parse_headers,
+    load_entry_point,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -184,7 +187,13 @@ def _create_span_processor(
 
 
 def _create_sampler(config: SamplerConfig) -> Sampler:
-    """Create a sampler from config."""
+    """Create a sampler from config.
+
+    Known sampler types are checked via typed fields on the Sampler
+    dataclass. Unknown sampler names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_sampler`` entry point group.
+    """
     if config.always_on is not None:
         return ALWAYS_ON
     if config.always_off is not None:
@@ -194,6 +203,9 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
         return TraceIdRatioBased(ratio if ratio is not None else 1.0)
     if config.parent_based is not None:
         return _create_parent_based_sampler(config.parent_based)
+    if config.additional_properties:
+        name = next(iter(config.additional_properties))
+        return load_entry_point("opentelemetry_sampler", name)()
     raise ConfigurationError(
         f"Unknown or unsupported sampler type in config: {config!r}. "
         "Supported types: always_on, always_off, trace_id_ratio_based, parent_based."

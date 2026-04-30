@@ -69,6 +69,7 @@ from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
     ParentBased,
+    Sampler,
     TraceIdRatioBased,
 )
 
@@ -219,9 +220,27 @@ class TestCreateSampler(unittest.TestCase):
 
     def test_unknown_sampler_raises_configuration_error(self):
         with self.assertRaises(ConfigurationError):
-            create_tracer_provider(
-                TracerProviderConfig(processors=[], sampler=SamplerConfig())
-            )
+            self._make_provider(SamplerConfig())
+
+    def test_plugin_sampler_loaded_via_entry_point(self):
+        mock_sampler = MagicMock(spec=Sampler)
+        mock_class = MagicMock(return_value=mock_sampler)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            provider = self._make_provider(SamplerConfig(my_custom_sampler={}))
+        self.assertIs(provider.sampler, mock_sampler)
+
+    def test_unknown_plugin_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            with self.assertRaises(ConfigurationError):
+                # pylint: disable=unexpected-keyword-arg
+                self._make_provider(SamplerConfig(no_such_sampler={}))
 
 
 class TestCreateSpanExporterAndProcessor(unittest.TestCase):
