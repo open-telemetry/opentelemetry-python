@@ -108,7 +108,7 @@ class TestW3CBaggagePropagator(TestCase):
 
     def test_extract_non_ascii_header(self):
         """Extract should skip non-ASCII entries but keep valid ones."""
-        header = "key1=val1,key2=caf\u00e9"
+        header = "key1=val1,key2=test\u00e9"
         with self.assertLogs(level=WARNING) as warning:
             result = self._extract(header)
             self.assertEqual(result, {"key1": "val1"})
