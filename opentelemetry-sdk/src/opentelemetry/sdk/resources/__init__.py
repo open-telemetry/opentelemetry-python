@@ -67,6 +67,7 @@ import platform
 import socket
 import sys
 import typing
+from collections.abc import Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
@@ -517,7 +518,7 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
 
 
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"],
+    detectors: Sequence["ResourceDetector"],
     initial_resource: typing.Optional[Resource] = None,
     timeout: int = 5,
 ) -> "Resource":
