@@ -106,6 +106,30 @@ class TestW3CBaggagePropagator(TestCase):
                 warning.output[0],
             )
 
+    def test_extract_non_ascii_header(self):
+        """Extract should skip non-ASCII entries but keep valid ones."""
+        header = "key1=val1,key2=caf\u00e9"
+        with self.assertLogs(level=WARNING) as warning:
+            result = self._extract(header)
+            self.assertEqual(result, {"key1": "val1"})
+            self.assertIn(
+                "contains non-ASCII characters",
+                warning.output[0],
+            )
+
+    def test_extract_non_ascii_header_exceeds_byte_limit(self):
+        """A header under the char limit but over the byte limit when encoded should be rejected."""
+        # Each \u00e9 encodes to 2 bytes in UTF-8, so we need fewer chars to exceed the byte limit
+        non_ascii_value = "\u00e9" * (W3CBaggagePropagator._MAX_HEADER_LENGTH)
+        header = f"key1={non_ascii_value}"
+        with self.assertLogs(level=WARNING) as warning:
+            result = self._extract(header)
+            self.assertEqual(result, {})
+            self.assertIn(
+                "exceeded the maximum number of bytes per baggage-string",
+                warning.output[0],
+            )
+
     def test_header_contains_too_many_entries(self):
         header = ",".join(
             [f"key{k}=val" for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)]
@@ -282,6 +306,13 @@ class TestW3CBaggagePropagator(TestCase):
                 "exceeded the maximum number of list-members",
                 warning.output[0],
             )
+        baggage_str = output.get("baggage", "")
+        pairs = baggage_str.split(",")
+        self.assertEqual(len(pairs), self.propagator._MAX_PAIRS)
+        self.assertNotIn(
+            f"key{self.propagator._MAX_PAIRS}=",
+            baggage_str,
+        )
 
     def test_inject_entry_too_long(self):
         """Inject should skip individual entries that exceed _MAX_PAIR_LENGTH."""

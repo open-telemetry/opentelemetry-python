@@ -14,7 +14,7 @@
 #
 from logging import getLogger
 from re import split
-from typing import Generator, Iterable, Mapping, Optional, Set
+from typing import Generator, Iterable, Iterator, Mapping, Optional, Set
 from urllib.parse import quote_plus, unquote_plus
 
 from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
@@ -24,6 +24,29 @@ from opentelemetry.propagators import textmap
 from opentelemetry.util.re import _DELIMITER_PATTERN
 
 _logger = getLogger(__name__)
+
+
+def _filter_valid_entries(
+    entries: Iterable[str],
+    max_pair_length: int,
+) -> Iterator[str]:
+    for entry in entries:
+        if not entry:
+            continue
+        if not entry.isascii():
+            _logger.warning(
+                "Baggage entry with key `%s` contains non-ASCII characters",
+                entry.split("=", 1)[0],
+            )
+            continue
+        if len(entry) > max_pair_length:
+            _logger.warning(
+                "Baggage entry with key `%s` exceeded the maximum number of bytes per list-member with length %d",
+                entry.split("=", 1)[0],
+                len(entry),
+            )
+            continue
+        yield entry
 
 
 def _apply_baggage_limits(
@@ -37,36 +60,22 @@ def _apply_baggage_limits(
     Yields entries that fit within the W3C specification limits.
     Logs warnings when entries are dropped.
     """
-    count = 0
-    total_length = 0
-
-    for entry in entries:
-        if not entry:
-            continue
-
-        if len(entry) > max_pair_length:
+    length = 0
+    for index, entry in enumerate(
+        _filter_valid_entries(entries, max_pair_length)
+    ):
+        if index >= max_pairs:
             _logger.warning(
-                "Baggage entry `%s` exceeded the maximum number of bytes per list-member",
-                entry,
+                "Baggage exceeded the maximum number of list-members"
             )
-            continue
+            return
 
-        if count >= max_pairs:
+        length += (1 if index > 0 else 0) + len(entry)
+        if length > max_header_length:
             _logger.warning(
-                "Baggage exceeded the maximum number of list-members",
+                "Baggage exceeded the maximum number of bytes per baggage-string"
             )
-            break
-
-        # Account for comma separator between entries
-        added_length = len(entry) + (1 if count > 0 else 0)
-        if total_length + added_length > max_header_length:
-            _logger.warning(
-                "Baggage exceeded the maximum number of bytes per baggage-string",
-            )
-            break
-
-        count += 1
-        total_length += added_length
+            return
         yield entry
 
 
@@ -100,7 +109,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         if not header:
             return context
 
-        if len(header) > self._MAX_HEADER_LENGTH:
+        if len(header.encode()) > self._MAX_HEADER_LENGTH:
             _logger.warning(
                 "Baggage header `%s` exceeded the maximum number of bytes per baggage-string",
                 header,
