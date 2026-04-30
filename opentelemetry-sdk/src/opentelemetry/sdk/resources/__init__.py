@@ -507,15 +507,14 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     )
 
     if "*" in detector_names:
-        registered = sorted(
+        registered = set(
             name
             for name in entry_points(
                 group="opentelemetry_resource_detector"
             ).names  # type: ignore[reportUnknownArgumentType]
             if name != "otel"
         )
-        existing = set(detector_names) - {"*"}
-        expansion = [n for n in registered if n not in existing]
+        expansion = sorted(registered - set(detector_names))
         idx = detector_names.index("*")
         detector_names = (
             detector_names[:idx] + expansion + detector_names[idx + 1 :]
