@@ -15,15 +15,15 @@
 from __future__ import annotations
 
 import logging
+import os
 import typing
 from contextvars import Token
-from os import environ
 from uuid import uuid4
 
 # pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context, _RuntimeContext  # noqa
+from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
-from opentelemetry.util._importlib_metadata import entry_points
 
 logger = logging.getLogger(__name__)
 
@@ -34,37 +34,29 @@ def _load_runtime_context() -> _RuntimeContext:
     Returns:
         An instance of RuntimeContext.
     """
+    configured_context = os.environ.get(OTEL_PYTHON_CONTEXT)
+    if not configured_context:
+        return ContextVarsRuntimeContext()
 
-    # FIXME use a better implementation of a configuration manager
-    # to avoid having to get configuration values straight from
-    # environment variables
-    default_context = "contextvars_context"
-
-    configured_context = environ.get(OTEL_PYTHON_CONTEXT, default_context)  # type: str
+    # pylint: disable=import-outside-toplevel,no-name-in-module
+    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+        entry_points,
+    )
 
     try:
-        return next(  # type: ignore
-            iter(  # type: ignore
-                entry_points(  # type: ignore
-                    group="opentelemetry_context",
-                    name=configured_context,
+        return next(
+            iter(
+                entry_points(
+                    group="opentelemetry_context", name=configured_context
                 )
             )
         ).load()()
     except Exception:  # pylint: disable=broad-exception-caught
         logger.exception(
-            "Failed to load context: %s, fallback to %s",
+            "Failed to load context: %s, falling back to contextvars_context",
             configured_context,
-            default_context,
         )
-        return next(  # type: ignore
-            iter(  # type: ignore
-                entry_points(  # type: ignore
-                    group="opentelemetry_context",
-                    name=default_context,
-                )
-            )
-        ).load()()
+        return ContextVarsRuntimeContext()
 
 
 _RUNTIME_CONTEXT = _load_runtime_context()
