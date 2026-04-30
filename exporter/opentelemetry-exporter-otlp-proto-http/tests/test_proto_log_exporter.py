@@ -459,7 +459,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         return [log1, log2, log3, log4]
 
     @patch(
-        "opentelemetry.exporter.otlp.proto.http._common._export",
+        "opentelemetry.exporter.otlp.proto.http._common.OTLPHttpClient._export",
         return_value=Mock(ok=True),
     )
     def test_2xx_status_code(self, mock_otlp_metric_exporter):

@@ -25,7 +25,6 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     OTLPHttpClient,
-    _export_with_retries,
     _SignalConfig,
 )
 from opentelemetry.metrics import MeterProvider
@@ -99,18 +98,7 @@ class OTLPSpanExporter(OTLPHttpClient, SpanExporter):
 
         serialized_data = encode_spans(spans).SerializePartialToString()
         with self._metrics.export_operation(len(spans)) as result:
-            success = _export_with_retries(
-                self._session,
-                self._endpoint,
-                serialized_data,
-                self._compression,
-                self._certificate_file,
-                self._client_cert,
-                self._timeout,
-                self._shutdown_in_progress,
-                result,
-                "span",
-            )
+            success = self._export_with_retries(serialized_data, result, "span")
         return (
             SpanExportResult.SUCCESS if success else SpanExportResult.FAILURE
         )

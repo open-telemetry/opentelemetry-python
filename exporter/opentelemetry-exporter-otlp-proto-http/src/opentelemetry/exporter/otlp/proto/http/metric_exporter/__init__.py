@@ -43,7 +43,6 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     OTLPHttpClient,
-    _export_with_retries,
     _SignalConfig,
 )
 from opentelemetry.metrics import MeterProvider
@@ -188,18 +187,7 @@ class OTLPMetricExporter(
         def _do_export(request: ExportMetricsServiceRequest) -> bool:
             serialized_data = request.SerializeToString()
             with self._metrics.export_operation(num_items) as result:
-                return _export_with_retries(
-                    self._session,
-                    self._endpoint,
-                    serialized_data,
-                    self._compression,
-                    self._certificate_file,
-                    self._client_cert,
-                    self._timeout,
-                    self._shutdown_in_progress,
-                    result,
-                    "metrics",
-                )
+                return self._export_with_retries(serialized_data, result, "metrics")
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:

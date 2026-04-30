@@ -23,7 +23,6 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
     OTLPHttpClient,
-    _export_with_retries,
     _SignalConfig,
 )
 from opentelemetry.metrics import MeterProvider
@@ -105,18 +104,7 @@ class OTLPLogExporter(OTLPHttpClient, LogRecordExporter):
 
         serialized_data = encode_logs(batch).SerializeToString()
         with self._metrics.export_operation(len(batch)) as result:
-            success = _export_with_retries(
-                self._session,
-                self._endpoint,
-                serialized_data,
-                self._compression,
-                self._certificate_file,
-                self._client_cert,
-                self._timeout,
-                self._shutdown_in_progress,
-                result,
-                "logs",
-            )
+            success = self._export_with_retries(serialized_data, result, "logs")
         return (
             LogRecordExportResult.SUCCESS
             if success
