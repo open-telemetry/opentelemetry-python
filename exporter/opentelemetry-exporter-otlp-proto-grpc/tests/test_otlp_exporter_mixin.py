@@ -117,11 +117,13 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         export_result: StatusCode,
         optional_retry_nanos: Optional[int] = None,
         optional_export_sleep: Optional[float] = None,
+        optional_error_details: Optional[str] = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
         self.optional_retry_nanos = optional_retry_nanos
         self.num_requests = 0
+        self.optional_error_details = optional_error_details
 
     # pylint: disable=invalid-name,unused-argument
     def Export(self, request, context):
@@ -142,6 +144,8 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
                 )
             )
         context.set_code(self.export_result)
+        if self.optional_error_details:
+            context.set_details(self.optional_error_details)
 
         return ExportTraceServiceResponse()
 
@@ -598,7 +602,7 @@ class TestOTLPExporterMixin(TestCase):
                 )
             after = time.time()
             self.assertEqual(
-                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED",
+                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED, error details: Deadline Exceeded",
                 warning.records[-1].message,
             )
             self.assertEqual(mock_trace_service.num_requests, 2)
@@ -626,7 +630,8 @@ class TestOTLPExporterMixin(TestCase):
         with self.assertLogs(level=WARNING) as warning:
             add_TraceServiceServicer_to_server(
                 TraceServiceServicerWithExportParams(
-                    StatusCode.ALREADY_EXISTS
+                    StatusCode.ALREADY_EXISTS,
+                    optional_error_details="This already exists.",
                 ),
                 self.server,
             )
@@ -635,7 +640,7 @@ class TestOTLPExporterMixin(TestCase):
             )
             self.assertEqual(
                 warning.records[-1].message,
-                "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS",
+                "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS, error details: This already exists.",
             )
 
         metrics_data = self.metric_reader.get_metrics_data()

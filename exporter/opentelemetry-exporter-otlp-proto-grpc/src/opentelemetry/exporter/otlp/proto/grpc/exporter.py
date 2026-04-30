@@ -499,10 +499,11 @@ class OTLPExporterMixin(
                         or self._shutdown
                     ):
                         logger.error(
-                            "Failed to export %s to %s, error code: %s",
+                            "Failed to export %s to %s, error code: %s, error details: %s",
                             self._exporting,
                             self._endpoint,
                             error.code(),  # type: ignore [reportAttributeAccessIssue]
+                            error.details(),
                             exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
                         )
                         result.error = error
@@ -511,11 +512,12 @@ class OTLPExporterMixin(
                         }
                         return self._result.FAILURE  # type: ignore [reportReturnType]
                     logger.warning(
-                        "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
+                        "Transient error %s encountered while exporting %s to %s, retrying in %.2fs. Error details: %s",
                         error.code(),  # type: ignore [reportAttributeAccessIssue]
                         self._exporting,
                         self._endpoint,
                         backoff_seconds,
+                        error.details(),
                     )
                 shutdown = self._shutdown_in_progress.wait(backoff_seconds)
                 if shutdown:
