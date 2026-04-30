@@ -31,7 +31,7 @@ def _apply_baggage_limits(
     max_pairs: int,
     max_pair_length: int,
     max_header_length: int,
-) -> Generator[str, None, None]:
+) -> Iterator[str]:
     """Apply W3C Baggage size limits to a sequence of baggage entries.
 
     Yields entries that fit within the W3C specification limits.
