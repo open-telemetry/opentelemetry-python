@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-opencensus-shim`: Fix `test_install_shim_affects_existing_tracers` assuming wrong default tracer type in tests
+  ([#5047](https://github.com/open-telemetry/opentelemetry-python/pull/5047))
 - `opentelemetry-sdk`: add `additional_properties` support to generated config models via custom `datamodel-codegen` template, enabling plugin/custom component names to flow through typed dataclasses
   ([#5131](https://github.com/open-telemetry/opentelemetry-python/pull/5131))
 - Fix incorrect code example in `create_tracer()` docstring
