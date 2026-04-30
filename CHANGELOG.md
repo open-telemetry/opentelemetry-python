@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-otlp-proto-http`: include the response body (truncated to 1024 chars) in the metric exporter error log so collector-side rejection reasons are visible to users
+  ([#XXXX](https://github.com/open-telemetry/opentelemetry-python/pull/XXXX))
 - `opentelemetry-sdk`: add `additional_properties` support to generated config models via custom `datamodel-codegen` template, enabling plugin/custom component names to flow through typed dataclasses
   ([#5131](https://github.com/open-telemetry/opentelemetry-python/pull/5131))
 - Fix incorrect code example in `create_tracer()` docstring

@@ -434,6 +434,52 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @patch.object(Session, "post")
+    def test_failure_logs_response_body(self, mock_post):
+        resp = Response()
+        resp.status_code = 400
+        resp.reason = "Bad Request"
+        resp._content = b"resource_metrics: data points exceed message size"
+        mock_post.return_value = resp
+
+        exporter = OTLPMetricExporter()
+
+        with self.assertLogs(level="ERROR") as logs:
+            self.assertEqual(
+                exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+
+        self.assertTrue(
+            any(
+                "resource_metrics: data points exceed message size"
+                in record.getMessage()
+                for record in logs.records
+            ),
+            "Expected response body to appear in error log, "
+            f"got: {[r.getMessage() for r in logs.records]}",
+        )
+
+    @patch.object(Session, "post")
+    def test_failure_logs_truncates_long_response_body(self, mock_post):
+        resp = Response()
+        resp.status_code = 400
+        resp.reason = "Bad Request"
+        resp._content = b"x" * 5000
+        mock_post.return_value = resp
+
+        exporter = OTLPMetricExporter()
+
+        with self.assertLogs(level="ERROR") as logs:
+            self.assertEqual(
+                exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+
+        joined = " ".join(record.getMessage() for record in logs.records)
+        self.assertIn("...[truncated]", joined)
+        self.assertNotIn("x" * 5000, joined)
+
+    @patch.object(Session, "post")
     def test_serialization(self, mock_post):
         resp = Response()
         resp.status_code = 200
