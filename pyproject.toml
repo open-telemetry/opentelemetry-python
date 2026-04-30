@@ -91,6 +91,7 @@ select = [
   "UP032", # f-string
   "UP034", # extraneous-parentheses
   "UP037", # quoted-annotation
+  "T20", # flake8-print
 ]
 
 ignore = [
@@ -101,6 +102,12 @@ ignore = [
 "docs/**/*.*" = ["PLE"]
 "opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
 "shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
+"scripts/*" = ["T20"]
+"opentelemetry-sdk/tests/*" = ["T20"]
+"opentelemetry-api/tests/*" = ["T20"]
+"docs/getting_started/*" = ["T20"]
+"docs/examples/*" = ["T20"]
+"codegen/*" = ["T20"]
 
 [tool.ruff.lint.isort]
 known-third-party = [
