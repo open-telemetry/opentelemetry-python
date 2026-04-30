@@ -1,0 +1,28 @@
+name: Add PR to project board
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  add-to-project:
+    name: add to project board
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      # NOTE: do NOT add an actions/checkout step here. This workflow uses
+      # pull_request_target (which has access to secrets) but must never
+      # execute code from the fork branch. See PR #4955 for context.
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/orgs/open-telemetry/projects/88
+          github-token: ${{ steps.otelbot-token.outputs.token }}
