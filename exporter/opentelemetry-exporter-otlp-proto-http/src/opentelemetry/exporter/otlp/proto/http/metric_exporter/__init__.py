@@ -42,12 +42,9 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
-    DEFAULT_COMPRESSION,
-    DEFAULT_ENDPOINT,
-    DEFAULT_TIMEOUT,
     OTLPHttpClient,
-    _SignalConfig,
     _export_with_retries,
+    _SignalConfig,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
@@ -111,7 +108,9 @@ _METRICS_CONFIG = _SignalConfig(
 )
 
 
-class OTLPMetricExporter(OTLPHttpClient, MetricExporter, OTLPMetricExporterMixin):
+class OTLPMetricExporter(
+    OTLPHttpClient, MetricExporter, OTLPMetricExporterMixin
+):
     def __init__(
         self,
         endpoint: str | None = None,
@@ -163,7 +162,9 @@ class OTLPMetricExporter(OTLPHttpClient, MetricExporter, OTLPMetricExporterMixin
             meter_provider=meter_provider,
             signal_config=_METRICS_CONFIG,
         )
-        self._common_configuration(preferred_temporality, preferred_aggregation)
+        self._common_configuration(
+            preferred_temporality, preferred_aggregation
+        )
         self._max_export_batch_size: int | None = max_export_batch_size
 
     def export(

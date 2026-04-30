@@ -22,12 +22,9 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
-    DEFAULT_COMPRESSION,
-    DEFAULT_ENDPOINT,
-    DEFAULT_TIMEOUT,
     OTLPHttpClient,
-    _SignalConfig,
     _export_with_retries,
+    _SignalConfig,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import ReadableLogRecord
