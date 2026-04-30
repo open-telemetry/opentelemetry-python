@@ -30,11 +30,13 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+from opentelemetry.exporter.otlp.proto.http._common import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
-    DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
+)
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+    DEFAULT_METRICS_EXPORT_PATH,
     OTLPMetricExporter,
     _get_split_resource_metrics_pb2,
     _split_metrics_data,
@@ -1265,7 +1267,10 @@ class TestOTLPMetricExporter(TestCase):
                 ExplicitBucketHistogramAggregation,
             )
 
-    @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._common.OTLPHttpClient._export",
+        return_value=Mock(ok=True),
+    )
     def test_2xx_status_code(self, mock_otlp_metric_exporter):
         """
         Test that any HTTP 2XX code returns a successful result

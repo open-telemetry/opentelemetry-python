@@ -24,10 +24,12 @@ from requests.exceptions import ConnectionError
 from requests.models import Response
 
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+from opentelemetry.exporter.otlp.proto.http._common import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
+)
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_TRACES_EXPORT_PATH,
     OTLPSpanExporter,
 )
@@ -277,7 +279,10 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 ),
             )
 
-    @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._common.OTLPHttpClient._export",
+        return_value=Mock(ok=True),
+    )
     def test_2xx_status_code(self, mock_otlp_metric_exporter):
         """
         Test that any HTTP 2XX code returns a successful result

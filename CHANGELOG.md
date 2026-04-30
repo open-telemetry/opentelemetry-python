@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-otlp-proto-http`: refactor shared HTTP exporter logic into common module, extract `_setup_session`, `_export`,
+  `_export_with_retries`, and `_compression_from_env` from trace/log/metric exporters into `_common`
+    ([#2990](https://github.com/open-telemetry/opentelemetry-python/pull/5160))
 - `opentelemetry-sdk`: add `additional_properties` support to generated config models via custom `datamodel-codegen` template, enabling plugin/custom component names to flow through typed dataclasses
   ([#5131](https://github.com/open-telemetry/opentelemetry-python/pull/5131))
 - Fix incorrect code example in `create_tracer()` docstring
