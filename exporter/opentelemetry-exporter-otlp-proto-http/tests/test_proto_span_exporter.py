@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import threading
 import time
 import unittest
@@ -19,6 +20,7 @@ from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
 import requests
+from google.rpc.status_pb2 import Status
 from requests import Session
 from requests.exceptions import ConnectionError
 from requests.models import Response
@@ -478,6 +480,44 @@ class TestOTLPSpanExporter(unittest.TestCase):
             )
 
             assert after - before < 0.2
+
+    @patch.object(Session, "post")
+    def test_error_response_with_protobuf_body(self, mock_post):
+        status = Status(code=3, message="invalid span data")
+        resp = Response()
+        resp.status_code = 400
+        resp.reason = "Bad Request"
+        resp._content = status.SerializeToString()  # pylint: disable=protected-access
+        resp.headers["Content-Type"] = "application/x-protobuf"
+        mock_post.return_value = resp
+
+        exporter = OTLPSpanExporter()
+        with self.assertLogs(level="ERROR") as logs:
+            result = exporter.export([BASIC_SPAN])
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertTrue(
+            any("invalid span data" in r.message for r in logs.records)
+        )
+
+    @patch.object(Session, "post")
+    def test_error_response_with_json_body(self, mock_post):
+        body = json.dumps({"message": "quota limit reached"}).encode()
+        resp = Response()
+        resp.status_code = 400
+        resp.reason = "Bad Request"
+        resp._content = body  # pylint: disable=protected-access
+        resp.headers["Content-Type"] = "application/json"
+        mock_post.return_value = resp
+
+        exporter = OTLPSpanExporter()
+        with self.assertLogs(level="ERROR") as logs:
+            result = exporter.export([BASIC_SPAN])
+
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertTrue(
+            any("quota limit reached" in r.message for r in logs.records)
+        )
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(

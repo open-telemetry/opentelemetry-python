@@ -12,15 +12,72 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from os import environ
 from typing import Literal, Optional
 
 import requests
+from google.rpc.status_pb2 import Status
 
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.util._importlib_metadata import entry_points
+
+_logger = logging.getLogger(__name__)
+
+_CONTENT_TYPE_PROTOBUF = "application/x-protobuf"
+_CONTENT_TYPE_JSON = "application/json"
+
+
+def _parse_response_body(resp: requests.Response) -> str:
+    """Parse an HTTP response body based on its Content-Type header.
+
+    Per the OTLP spec, error responses (4xx/5xx) use ``google.rpc.Status``
+    for protobuf bodies and the equivalent JSON representation.
+
+    Args:
+        resp: The HTTP response from the OTLP endpoint.
+
+    Returns:
+        A human-readable string describing the response body error details,
+        or ``resp.reason`` if the body is empty or cannot be parsed.
+    """
+    if not resp.content:
+        return resp.reason
+
+    content_type = (
+        resp.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+    )
+
+    if content_type == _CONTENT_TYPE_PROTOBUF:
+        status = Status()
+        try:
+            status.ParseFromString(resp.content)
+        except Exception:  # pylint: disable=broad-except
+            _logger.debug(
+                "Failed to parse protobuf response body", exc_info=True
+            )
+            return resp.reason
+        return status.message or resp.reason
+
+    if content_type == _CONTENT_TYPE_JSON:
+        try:
+            body = resp.json()
+        except Exception:  # pylint: disable=broad-except
+            _logger.debug("Failed to parse JSON response body", exc_info=True)
+            return resp.text or resp.reason
+        if isinstance(body, dict):
+            partial = body.get("partialSuccess")
+            if isinstance(partial, dict) and (
+                error_message := partial.get("errorMessage", "")
+            ):
+                return error_message
+            # google.rpc.Status uses "message"
+            if rpc_message := body.get("message", ""):
+                return rpc_message
+
+    return resp.text.strip() or resp.reason
 
 
 def _is_retryable(resp: requests.Response) -> bool:

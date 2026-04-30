@@ -14,6 +14,7 @@
 
 # pylint: disable=protected-access
 
+import logging
 import threading
 import time
 import unittest
@@ -23,6 +24,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import requests
 from google.protobuf.json_format import MessageToDict
+from google.rpc.status_pb2 import Status
 from requests import Session
 from requests.exceptions import ConnectionError
 from requests.models import Response
@@ -85,6 +87,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.meter_provider = MeterProvider(
             metric_readers=[self.metric_reader]
         )
+        # Reset DuplicateFilter state between tests so each test can log freely.
+        log_exporter_logger = logging.getLogger(
+            "opentelemetry.exporter.otlp.proto.http._log_exporter"
+        )
+        log_exporter_logger.filters.clear()
 
     def test_constructor_default(self):
         exporter = OTLPLogExporter()
@@ -660,6 +667,25 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             )
 
             assert after - before < 0.2
+
+    @patch.object(Session, "post")
+    def test_error_response_with_protobuf_body(self, mock_post):
+        status = Status(code=3, message="invalid log data")
+        resp = Response()
+        resp.status_code = 400
+        resp.reason = "Bad Request"
+        resp._content = status.SerializeToString()  # pylint: disable=protected-access
+        resp.headers["Content-Type"] = "application/x-protobuf"
+        mock_post.return_value = resp
+
+        exporter = OTLPLogExporter()
+        with self.assertLogs(level="ERROR") as logs:
+            result = exporter.export(self._get_sdk_log_data())
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertTrue(
+            any("invalid log data" in r.message for r in logs.records)
+        )
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(

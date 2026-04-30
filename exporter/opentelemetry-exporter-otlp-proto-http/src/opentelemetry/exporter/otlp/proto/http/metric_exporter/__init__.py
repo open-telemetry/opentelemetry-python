@@ -53,10 +53,12 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
+    _parse_response_body,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
+    ExportMetricsServiceResponse,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
@@ -293,7 +295,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     retryable = isinstance(error, ConnectionError)
                     status_code = None
                 else:
-                    reason = resp.reason
+                    reason = _parse_response_body(resp)
                     retryable = _is_retryable(resp)
                     status_code = resp.status_code
 
