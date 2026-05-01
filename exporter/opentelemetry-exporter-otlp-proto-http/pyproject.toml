@@ -31,8 +31,13 @@ dependencies = [
   "opentelemetry-proto == 1.42.0.dev",
   "opentelemetry-sdk ~= 1.42.0.dev",
   "opentelemetry-exporter-otlp-proto-common == 1.42.0.dev",
-  "requests ~= 2.7",
   "typing-extensions >= 4.5.0",
+  "urllib3 >= 1.11"
+]
+
+[project.optional-dependencies]
+requests = [
+  "requests ~= 2.7",
 ]
 
 [project.entry-points.opentelemetry_traces_exporter]

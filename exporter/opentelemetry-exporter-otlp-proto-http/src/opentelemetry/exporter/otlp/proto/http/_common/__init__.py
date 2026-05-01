@@ -23,10 +23,12 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.util._importlib_metadata import entry_points
 
 
-def _is_retryable(resp: requests.Response) -> bool:
-    if resp.status_code == 408:
+def _is_retryable(status_code: int | None) -> bool:
+    if status_code is None:
+        return False
+    if status_code == 408:
         return True
-    if resp.status_code >= 500 and resp.status_code <= 599:
+    if 500 <= status_code <= 599:
         return True
     return False
 

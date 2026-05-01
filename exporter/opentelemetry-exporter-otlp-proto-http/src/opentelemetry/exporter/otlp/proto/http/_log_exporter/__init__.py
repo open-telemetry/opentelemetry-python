@@ -12,19 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gzip
 import logging
-import random
 import threading
-import zlib
-from io import BytesIO
 from os import environ
-from time import time
 from typing import Dict, Optional, Sequence
 from urllib.parse import urlparse
 
 import requests
-from requests.exceptions import ConnectionError
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
     ExporterMetrics,
@@ -35,8 +29,19 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
-    _is_retryable,
     _load_session_from_envvar,
+)
+from opentelemetry.exporter.otlp.proto.http._otlp_client import (
+    OTLPHTTPClient,
+)
+from opentelemetry.exporter.otlp.proto.http._transport import (
+    BaseHTTPTransport,
+)
+from opentelemetry.exporter.otlp.proto.http._transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.otlp.proto.http._transport._urllib3 import (
+    Urllib3HTTPTransport,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import ReadableLogRecord
@@ -79,7 +84,6 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 DEFAULT_TIMEOUT = 10  # in seconds
-_MAX_RETRYS = 6
 
 
 class OTLPLogExporter(LogRecordExporter):
@@ -95,6 +99,7 @@ class OTLPLogExporter(LogRecordExporter):
         session: Optional[requests.Session] = None,
         *,
         meter_provider: Optional[MeterProvider] = None,
+        _transport: Optional[BaseHTTPTransport] = None,
     ):
         self._shutdown_is_occuring = threading.Event()
         self._endpoint = endpoint or environ.get(
@@ -135,21 +140,41 @@ class OTLPLogExporter(LogRecordExporter):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = (
-            session
-            or _load_session_from_envvar(
+
+        if _transport is not None:
+            transport: BaseHTTPTransport = _transport
+        else:
+            legacy_session = session or _load_session_from_envvar(
                 _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
             )
-            or requests.Session()
-        )
-        self._session.headers.update(self._headers)
-        self._session.headers.update(_OTLP_HTTP_HEADERS)
-        # let users override our defaults
-        self._session.headers.update(self._headers)
+            if legacy_session is not None:
+                transport = RequestsHTTPTransport(
+                    verify=self._certificate_file,
+                    cert=self._client_cert,
+                    session=legacy_session,
+                )
+            else:
+                transport = Urllib3HTTPTransport(
+                    verify=self._certificate_file,
+                    cert=self._client_cert,
+                )
+
+        client_headers: Dict[str, str] = {
+            **_OTLP_HTTP_HEADERS,
+            **self._headers,
+        }
         if self._compression is not Compression.NoCompression:
-            self._session.headers.update(
-                {"Content-Encoding": self._compression.value}
-            )
+            client_headers["Content-Encoding"] = self._compression.value
+
+        self._client = OTLPHTTPClient(
+            transport=transport,
+            endpoint=self._endpoint,
+            timeout=self._timeout,
+            compression=self._compression,
+            shutdown_event=self._shutdown_is_occuring,
+            headers=client_headers,
+            kind="logs",
+        )
         self._shutdown = False
 
         self._metrics = ExporterMetrics(
@@ -158,43 +183,6 @@ class OTLPLogExporter(LogRecordExporter):
             urlparse(self._endpoint),
             meter_provider,
         )
-
-    def _export(
-        self, serialized_data: bytes, timeout_sec: Optional[float] = None
-    ):
-        data = serialized_data
-        if self._compression == Compression.Gzip:
-            gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-                gzip_stream.write(serialized_data)
-            data = gzip_data.getvalue()
-        elif self._compression == Compression.Deflate:
-            data = zlib.compress(serialized_data)
-
-        if timeout_sec is None:
-            timeout_sec = self._timeout
-
-        # By default, keep-alive is enabled in Session's request
-        # headers. Backends may choose to close the connection
-        # while a post happens which causes an unhandled
-        # exception. This try/except will retry the post on such exceptions
-        try:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        except ConnectionError:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        return resp
 
     def export(
         self, batch: Sequence[ReadableLogRecord]
@@ -205,66 +193,15 @@ class OTLPLogExporter(LogRecordExporter):
 
         with self._metrics.export_operation(len(batch)) as result:
             serialized_data = encode_logs(batch).SerializeToString()
-            deadline_sec = time() + self._timeout
-            for retry_num in range(_MAX_RETRYS):
-                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Optional[Exception] = None
-                try:
-                    resp = self._export(serialized_data, deadline_sec - time())
-                    if resp.ok:
-                        return LogRecordExportResult.SUCCESS
-                except requests.exceptions.RequestException as error:
-                    reason = error
-                    export_error = error
-                    retryable = isinstance(error, ConnectionError)
-                    status_code = None
-                else:
-                    reason = resp.reason
-                    retryable = _is_retryable(resp)
-                    status_code = resp.status_code
+            export_result = self._client.export(serialized_data)
+            if export_result.success:
+                return LogRecordExportResult.SUCCESS
 
-                if not retryable:
-                    _logger.error(
-                        "Failed to export logs batch code: %s, reason: %s",
-                        status_code,
-                        reason,
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
-                    result.error = export_error
-                    result.error_attrs = error_attrs
-                    return LogRecordExportResult.FAILURE
-
-                if (
-                    retry_num + 1 == _MAX_RETRYS
-                    or backoff_seconds > (deadline_sec - time())
-                    or self._shutdown
-                ):
-                    _logger.error(
-                        "Failed to export logs batch due to timeout, "
-                        "max retries or shutdown."
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
-                    result.error = export_error
-                    result.error_attrs = error_attrs
-                    return LogRecordExportResult.FAILURE
-                _logger.warning(
-                    "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
-                    reason,
-                    backoff_seconds,
-                )
-                shutdown = self._shutdown_is_occuring.wait(backoff_seconds)
-                if shutdown:
-                    _logger.warning("Shutdown in progress, aborting retry.")
-                    break
+            result.error = export_result.error
+            if export_result.status_code is not None:
+                result.error_attrs = {
+                    HTTP_RESPONSE_STATUS_CODE: export_result.status_code
+                }
             return LogRecordExportResult.FAILURE
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
@@ -277,7 +214,7 @@ class OTLPLogExporter(LogRecordExporter):
             return
         self._shutdown = True
         self._shutdown_is_occuring.set()
-        self._session.close()
+        self._client.close()
 
 
 def _compression_from_env() -> Compression:
