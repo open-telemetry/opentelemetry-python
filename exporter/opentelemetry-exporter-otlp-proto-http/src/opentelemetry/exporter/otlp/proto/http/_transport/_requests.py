@@ -1,5 +1,5 @@
-import warnings
 import functools
+import warnings
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
