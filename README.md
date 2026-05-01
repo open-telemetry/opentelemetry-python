@@ -113,13 +113,10 @@ For more information about the maintainer role, see the [community repository](h
 - [Dylan Russell](https://github.com/dylanrussell), Google
 - [Emídio Neto](https://github.com/emdneto), Independent
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
-- [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
 - [Lukas Hering](https://github.com/herin049), Oracle
 - [Mike Goldsmith](https://github.com/MikeGoldsmith), Honeycomb
-- [Owais Lone](https://github.com/owais), Splunk
 - [Pablo Collins](https://github.com/pmcollins), Splunk
-- [Shalev Roda](https://github.com/shalevr), Cisco
 - [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
 - [Tammy Baylis](https://github.com/tammy-baylis-swi), SolarWinds
 
@@ -133,12 +130,15 @@ For more information about the approver role, see the [community repository](htt
 - [Chris Kleinknecht](https://github.com/c24t), Maintainer
 - [Christian Neumüller](https://github.com/Oberon00), Approver
 - [Diego Hurtado](https://github.com/ocelotl), Maintainer
+- [Jeremy Voss](https://github.com/jeremydvoss), Approver
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Approver
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), Approver
 - [Nikolay Sokolik](https://github.com/oxeye-nikolay), Approver
 - [Owais Lone](https://github.com/owais), Maintainer
+- [Owais Lone](https://github.com/owais), Approver
 - [Reiley Yang](https://github.com/reyang), Maintainer
 - [Sanket Mehta](https://github.com/sanketmehta28), Approver
+- [Shalev Roda](https://github.com/shalevr), Approver
 - [Srikanth Chekuri](https://github.com/srikanthccv), Maintainer
 - [Tahir H. Butt](https://github.com/majorgreys), Approver
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Maintainer
