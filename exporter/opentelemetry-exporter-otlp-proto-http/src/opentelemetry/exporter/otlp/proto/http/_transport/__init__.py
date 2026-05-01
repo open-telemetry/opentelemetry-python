@@ -15,13 +15,13 @@ class BaseHTTPResult(ABC):
 class BaseHTTPTransport(ABC):
     @abstractmethod
     def request(
-            self,
-            method: str,
-            url: str,
-            *,
-            headers: dict[str, str] | None = None,
-            timeout: float | None = None,
-            data: bytes | None = None,
+        self,
+        method: str,
+        url: str,
+        *,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+        data: bytes | None = None,
     ) -> BaseHTTPResult: ...
 
     @abstractmethod

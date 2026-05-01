@@ -35,10 +35,8 @@ dependencies = [
   "urllib3 >= 1.11"
 ]
 
-[project.optional-dependencies]
-requests = [
-  "requests ~= 2.7",
-]
+[optional-dependencies]
+requests = ["requests ~= 2.7"]
 
 [project.entry-points.opentelemetry_traces_exporter]
 otlp_proto_http = "opentelemetry.exporter.otlp.proto.http.trace_exporter:OTLPSpanExporter"

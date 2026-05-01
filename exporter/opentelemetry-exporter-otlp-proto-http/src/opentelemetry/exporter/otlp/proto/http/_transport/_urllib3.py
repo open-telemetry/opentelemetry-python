@@ -21,7 +21,9 @@ def _get_connection_error_types() -> tuple[type[Exception], ...]:
     ]
 
     # NameResolutionError was added in urllib3 2.0
-    name_resolution_error = getattr(urllib3.exceptions, "NameResolutionError", None)
+    name_resolution_error = getattr(
+        urllib3.exceptions, "NameResolutionError", None
+    )
     if name_resolution_error is not None:
         types.append(name_resolution_error)
 

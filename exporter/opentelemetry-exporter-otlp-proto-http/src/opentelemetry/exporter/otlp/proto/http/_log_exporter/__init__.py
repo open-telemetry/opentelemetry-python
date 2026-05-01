@@ -159,7 +159,7 @@ class OTLPLogExporter(LogRecordExporter):
                     cert=self._client_cert,
                 )
 
-        client_headers: Dict[str, str] = {
+        client_headers: dict[str, str] = {
             **_OTLP_HTTP_HEADERS,
             **self._headers,
         }
