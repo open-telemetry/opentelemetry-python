@@ -486,17 +486,14 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS is respected.
     """
     detector_names: list[str] = list(
-        dict.fromkeys(
+        dict.fromkeys([
             name.strip()
             for name in environ.get(
                 OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
             ).split(",")
-            if name.strip()
+            if name.strip()] + ["otel"]
         )
     )
-
-    if "otel" not in detector_names:
-        detector_names.append("otel")
 
     # Fast path: only the built-in "otel" detector — no entry_points scan needed.
     if detector_names == ["otel"]:
