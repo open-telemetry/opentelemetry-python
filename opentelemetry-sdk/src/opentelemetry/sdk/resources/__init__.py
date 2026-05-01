@@ -486,12 +486,15 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS is respected.
     """
     detector_names: list[str] = list(
-        dict.fromkeys([
-            name.strip()
-            for name in environ.get(
-                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-            ).split(",")
-            if name.strip()] + ["otel"]
+        dict.fromkeys(
+            [
+                name.strip()
+                for name in environ.get(
+                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+                ).split(",")
+                if name.strip()
+            ]
+            + ["otel"]
         )
     )
 
