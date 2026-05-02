@@ -9,7 +9,6 @@ from io import BytesIO
 from typing import Final, Literal, Mapping
 
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http._common import _is_retryable
 from opentelemetry.exporter.otlp.proto.http._transport import (
     BaseHTTPResult,
     BaseHTTPTransport,
@@ -18,6 +17,16 @@ from opentelemetry.exporter.otlp.proto.http._transport import (
 _logger = logging.getLogger(__name__)
 
 _MAX_RETRIES: Final[int] = 6
+
+
+def _is_retryable(status_code: int | None) -> bool:
+    if status_code is None:
+        return False
+    if status_code == 408:
+        return True
+    if 500 <= status_code <= 599:
+        return True
+    return False
 
 
 @dataclass(slots=True, frozen=True)
@@ -37,7 +46,8 @@ class OTLPHTTPClient:
         compression: Compression,
         shutdown_event: threading.Event,
         headers: Mapping[str, str],
-        kind: Literal["span", "logs", "metrics"],
+        kind: Literal["span", "log", "metric"],
+        jitter: float = 0.2,
     ) -> None:
         self._transport = transport
         self._endpoint = endpoint
@@ -46,6 +56,10 @@ class OTLPHTTPClient:
         self._shutdown_event = shutdown_event
         self._headers = dict(headers)
         self._kind = kind
+        self._jitter = min(max(jitter, 0.0), 1.0)
+
+    def _compute_backoff(self, retry: int) -> float:
+        return 2**retry * random.uniform(1 - self._jitter, 1 + self._jitter)
 
     def _compress(self, serialized_data: bytes) -> bytes:
         if self._compression is Compression.Gzip:
@@ -87,8 +101,8 @@ class OTLPHTTPClient:
         data = self._compress(data)
         deadline = time.time() + self._timeout
 
-        for retry_num in range(_MAX_RETRIES):
-            backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+        for retry in range(_MAX_RETRIES):
+            backoff = self._compute_backoff(retry)
             export_error: Exception | None
             retryable: bool
             status_code: int | None = None
@@ -126,8 +140,8 @@ class OTLPHTTPClient:
                 return ExportResult(False, status_code, reason, export_error)
 
             if (
-                retry_num + 1 == _MAX_RETRIES
-                or backoff_seconds > (deadline - time.time())
+                retry + 1 == _MAX_RETRIES
+                or backoff > (deadline - time.time())
                 or self._shutdown_event.is_set()
             ):
                 _logger.error(
@@ -141,9 +155,9 @@ class OTLPHTTPClient:
                 "Transient error %s encountered while exporting %s batch, retrying in %.2fs.",
                 reason,
                 self._kind,
-                backoff_seconds,
+                backoff,
             )
-            shutdown = self._shutdown_event.wait(backoff_seconds)
+            shutdown = self._shutdown_event.wait(backoff)
             if shutdown:
                 _logger.warning("Shutdown in progress, aborting retry.")
                 break
