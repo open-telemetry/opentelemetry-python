@@ -97,6 +97,8 @@ def _session_from_env(
                 f"Requested component '{_credential_env}' not found in "
                 f"entry point 'opentelemetry_otlp_credential_provider'"
             )
+        import requests  # noqa: PLC0415
+
         if isinstance(maybe_session, requests.Session):
             return maybe_session
         else:

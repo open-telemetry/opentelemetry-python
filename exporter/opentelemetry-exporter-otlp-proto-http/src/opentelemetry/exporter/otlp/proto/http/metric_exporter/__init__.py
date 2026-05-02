@@ -118,8 +118,10 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
+DEFAULT_ENDPOINT: Final[str] = "http://localhost:4318/"
 DEFAULT_TIMEOUT: Final[int] = 10  # in seconds
-DEFAULT_EXPORT_PATH: Final[str] = "v1/metrics"
+DEFAULT_METRICS_EXPORT_PATH: Final[str] = "v1/metrics"
+DEFAULT_COMPRESSION: Final[Compression] = Compression.NoCompression
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
@@ -202,7 +204,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         """
         self._shutdown_event = threading.Event()
         self._endpoint = endpoint or _endpoint_from_env(
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT, DEFAULT_EXPORT_PATH
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT, DEFAULT_METRICS_EXPORT_PATH
         )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,

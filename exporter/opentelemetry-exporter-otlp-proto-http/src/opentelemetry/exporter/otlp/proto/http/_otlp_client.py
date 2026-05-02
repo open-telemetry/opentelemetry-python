@@ -162,7 +162,7 @@ class OTLPHTTPClient:
 
             _logger.warning(
                 "Transient error %s encountered while exporting %s batch, retrying in %.2fs.",
-                reason,
+                reason or export_error,
                 self._kind,
                 backoff,
             )

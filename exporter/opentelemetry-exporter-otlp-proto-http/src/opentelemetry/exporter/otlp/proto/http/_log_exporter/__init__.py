@@ -79,8 +79,10 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
 
 
+DEFAULT_ENDPOINT: Final[str] = "http://localhost:4318/"
 DEFAULT_TIMEOUT: Final[int] = 10  # in seconds
-DEFAULT_EXPORT_PATH: Final[str] = "v1/logs"
+DEFAULT_LOGS_EXPORT_PATH: Final[str] = "v1/logs"
+DEFAULT_COMPRESSION: Final[Compression] = Compression.NoCompression
 
 
 class OTLPLogExporter(LogRecordExporter):
@@ -132,7 +134,7 @@ class OTLPLogExporter(LogRecordExporter):
     ):
         self._shutdown_event = threading.Event()
         self._endpoint = endpoint or _endpoint_from_env(
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, DEFAULT_EXPORT_PATH
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, DEFAULT_LOGS_EXPORT_PATH
         )
         # Keeping these as instance variables because they are used in tests
         self._certificate_file = certificate_file or environ.get(
