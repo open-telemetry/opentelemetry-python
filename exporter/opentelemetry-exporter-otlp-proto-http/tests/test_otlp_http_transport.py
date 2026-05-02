@@ -88,30 +88,26 @@ class TestRequestsHTTPTransport(unittest.TestCase):
         self.assertIs(result.error, error)
 
     def test_result_identifies_connection_errors(self):
-        connection_errors = (
-            requests.exceptions.ConnectionError("connection"),
-            requests.exceptions.ConnectTimeout("connect timeout"),
-            requests.exceptions.ReadTimeout("read timeout"),
-            requests.exceptions.Timeout("timeout"),
-            requests.exceptions.SSLError("ssl"),
-            requests.exceptions.ProxyError("proxy"),
+        cases = (
+            (requests.exceptions.ConnectionError("connection"), True),
+            (requests.exceptions.ConnectTimeout("connect timeout"), True),
+            (requests.exceptions.ReadTimeout("read timeout"), True),
+            (requests.exceptions.Timeout("timeout"), True),
+            (requests.exceptions.SSLError("ssl"), True),
+            (requests.exceptions.ProxyError("proxy"), True),
+            (requests.exceptions.RequestException("request"), False),
+            (None, False),
         )
 
-        for error in connection_errors:
-            with self.subTest(error=type(error).__name__):
-                self.assertTrue(
-                    RequestsHTTPResult(error=error).is_connection_error()
+        for error, expected in cases:
+            with self.subTest(
+                error=type(error).__name__ if error else None,
+                expected=expected,
+            ):
+                self.assertEqual(
+                    RequestsHTTPResult(error=error).is_connection_error(),
+                    expected,
                 )
-
-        with self.subTest(error="RequestException"):
-            self.assertFalse(
-                RequestsHTTPResult(
-                    error=requests.exceptions.RequestException("request")
-                ).is_connection_error()
-            )
-
-        with self.subTest(error=None):
-            self.assertFalse(RequestsHTTPResult().is_connection_error())
 
     def test_close_closes_session(self):
         session = Mock(spec=requests.Session)
@@ -234,33 +230,38 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
         self.assertIs(result.error, error)
 
     def test_result_identifies_connection_errors(self):
-        connection_errors = (
-            urllib3.exceptions.ConnectionError("connection"),
-            urllib3.exceptions.NewConnectionError(None, "new connection"),
-            urllib3.exceptions.ConnectTimeoutError(
-                None, "http://example.test", "connect timeout"
+        cases = (
+            (urllib3.exceptions.ConnectionError("connection"), True),
+            (
+                urllib3.exceptions.NewConnectionError(None, "new connection"),
+                True,
             ),
-            urllib3.exceptions.MaxRetryError(
-                None, "http://example.test", "max retry"
+            (
+                urllib3.exceptions.ConnectTimeoutError(
+                    None, "http://example.test", "connect timeout"
+                ),
+                True,
             ),
-            urllib3.exceptions.ProtocolError("protocol"),
+            (
+                urllib3.exceptions.MaxRetryError(
+                    None, "http://example.test", "max retry"
+                ),
+                True,
+            ),
+            (urllib3.exceptions.ProtocolError("protocol"), True),
+            (urllib3.exceptions.HTTPError("request"), False),
+            (None, False),
         )
 
-        for error in connection_errors:
-            with self.subTest(error=type(error).__name__):
-                self.assertTrue(
-                    Urllib3HTTPResult(error=error).is_connection_error()
+        for error, expected in cases:
+            with self.subTest(
+                error=type(error).__name__ if error else None,
+                expected=expected,
+            ):
+                self.assertEqual(
+                    Urllib3HTTPResult(error=error).is_connection_error(),
+                    expected,
                 )
-
-        with self.subTest(error="HTTPError"):
-            self.assertFalse(
-                Urllib3HTTPResult(
-                    error=urllib3.exceptions.HTTPError("request")
-                ).is_connection_error()
-            )
-
-        with self.subTest(error=None):
-            self.assertFalse(Urllib3HTTPResult().is_connection_error())
 
     @patch("urllib3.PoolManager")
     def test_close_clears_pool(self, mock_pool_manager):

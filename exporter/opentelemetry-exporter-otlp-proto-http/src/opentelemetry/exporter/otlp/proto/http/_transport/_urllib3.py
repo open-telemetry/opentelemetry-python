@@ -66,7 +66,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         elif isinstance(cert, str):
             pool_kwargs["cert_file"] = cert
 
-        self._pool = urllib3.PoolManager(**pool_kwargs) # type: ignore
+        self._pool = urllib3.PoolManager(**pool_kwargs)  # type: ignore
 
     def request(
         self,
