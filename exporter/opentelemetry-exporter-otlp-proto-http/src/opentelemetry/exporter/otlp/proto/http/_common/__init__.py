@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     import requests
 
 _DEFAULT_ENDPOINT: Final[str] = "http://localhost:4318"
+DEFAULT_COMPRESSION: Final[Compression] = Compression.NoCompression
 
 
 def _compression_from_env(
@@ -47,7 +48,9 @@ def _compression_from_env(
     compression = (
         environ.get(
             signal_compression_envvar,
-            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
+            environ.get(
+                OTEL_EXPORTER_OTLP_COMPRESSION, DEFAULT_COMPRESSION.value
+            ),
         )
         .lower()
         .strip()

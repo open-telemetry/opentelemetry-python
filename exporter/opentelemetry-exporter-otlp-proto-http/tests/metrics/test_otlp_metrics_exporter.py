@@ -19,7 +19,7 @@ from logging import WARNING
 from os import environ
 from typing import List
 from unittest import TestCase
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import requests
 from requests import Session
@@ -30,13 +30,15 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_ENDPOINT,
+    DEFAULT_COMPRESSION,
+)
 from opentelemetry.exporter.otlp.proto.http._otlp_client import (
     ExportResult,
     OTLPHTTPClient,
 )
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
-    DEFAULT_COMPRESSION,
-    DEFAULT_ENDPOINT,
     DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPMetricExporter,
@@ -147,7 +149,8 @@ class TestOTLPMetricExporter(TestCase):
         exporter = OTLPMetricExporter()
 
         self.assertEqual(
-            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_METRICS_EXPORT_PATH
+            exporter._endpoint,
+            f"{_DEFAULT_ENDPOINT}/{DEFAULT_METRICS_EXPORT_PATH}",
         )
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)
@@ -968,7 +971,9 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = (
             TestOTLPMetricExporter._create_metrics_data_multiple_data_points(2)
         )
-        exporter = OTLPMetricExporter(session=Session(), max_export_batch_size=3)
+        exporter = OTLPMetricExporter(
+            session=Session(), max_export_batch_size=3
+        )
         result = exporter.export(metrics_data)
 
         self.assertEqual(result, MetricExportResult.SUCCESS)
@@ -999,7 +1004,9 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = (
             TestOTLPMetricExporter._create_metrics_data_multiple_data_points(3)
         )
-        exporter = OTLPMetricExporter(session=Session(), max_export_batch_size=2)
+        exporter = OTLPMetricExporter(
+            session=Session(), max_export_batch_size=2
+        )
         result = exporter.export(metrics_data)
 
         self.assertEqual(result, MetricExportResult.SUCCESS)
@@ -1049,7 +1056,9 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = (
             TestOTLPMetricExporter._create_metrics_data_multiple_data_points(3)
         )
-        exporter = OTLPMetricExporter(session=Session(), max_export_batch_size=2)
+        exporter = OTLPMetricExporter(
+            session=Session(), max_export_batch_size=2
+        )
 
         # Export should fail when second batch fails
         result = exporter.export(metrics_data)
@@ -1087,7 +1096,9 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = (
             TestOTLPMetricExporter._create_metrics_data_multiple_data_points(3)
         )
-        exporter = OTLPMetricExporter(session=Session(), max_export_batch_size=2, timeout=2.0)
+        exporter = OTLPMetricExporter(
+            session=Session(), max_export_batch_size=2, timeout=2.0
+        )
 
         # Export should eventually succeed after retry
         result = exporter.export(metrics_data)

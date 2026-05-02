@@ -19,7 +19,7 @@ import time
 import unittest
 from logging import WARNING
 from typing import List
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import requests
 from google.protobuf.json_format import MessageToDict
@@ -29,9 +29,11 @@ from requests.models import Response
 
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_ENDPOINT,
     DEFAULT_COMPRESSION,
-    DEFAULT_ENDPOINT,
+)
+from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
@@ -94,7 +96,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         exporter = OTLPLogExporter()
 
         self.assertEqual(
-            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
+            exporter._endpoint,
+            f"{_DEFAULT_ENDPOINT}/{DEFAULT_LOGS_EXPORT_PATH}",
         )
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)
@@ -270,7 +273,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
     def export_log_and_deserialize(log):
         resp = Response()
         resp.status_code = 200
-        with patch("requests.Session.request", return_value=resp) as mock_request:
+        with patch(
+            "requests.Session.request", return_value=resp
+        ) as mock_request:
             exporter = OTLPLogExporter(session=Session())
             exporter.export([log])
             request_body = mock_request.call_args[1]["data"]

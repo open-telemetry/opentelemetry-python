@@ -79,10 +79,8 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
 
 
-DEFAULT_ENDPOINT: Final[str] = "http://localhost:4318/"
 DEFAULT_TIMEOUT: Final[int] = 10  # in seconds
 DEFAULT_LOGS_EXPORT_PATH: Final[str] = "v1/logs"
-DEFAULT_COMPRESSION: Final[Compression] = Compression.NoCompression
 
 
 class OTLPLogExporter(LogRecordExporter):

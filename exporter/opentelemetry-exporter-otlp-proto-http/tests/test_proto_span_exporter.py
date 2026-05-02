@@ -24,13 +24,15 @@ from requests.exceptions import ConnectionError
 from requests.models import Response
 
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_ENDPOINT,
+    DEFAULT_COMPRESSION,
+)
 from opentelemetry.exporter.otlp.proto.http._otlp_client import (
     ExportResult,
     OTLPHTTPClient,
 )
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    DEFAULT_COMPRESSION,
-    DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
     DEFAULT_TRACES_EXPORT_PATH,
     OTLPSpanExporter,
@@ -89,7 +91,8 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter()
 
         self.assertEqual(
-            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH
+            exporter._endpoint,
+            f"{_DEFAULT_ENDPOINT}/{DEFAULT_TRACES_EXPORT_PATH}",
         )
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)

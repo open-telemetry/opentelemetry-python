@@ -75,10 +75,8 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-DEFAULT_ENDPOINT: Final[str] = "http://localhost:4318/"
 DEFAULT_TIMEOUT: Final[int] = 10  # in seconds
 DEFAULT_TRACES_EXPORT_PATH: Final[str] = "v1/traces"
-DEFAULT_COMPRESSION: Final[Compression] = Compression.NoCompression
 
 
 class OTLPSpanExporter(SpanExporter):

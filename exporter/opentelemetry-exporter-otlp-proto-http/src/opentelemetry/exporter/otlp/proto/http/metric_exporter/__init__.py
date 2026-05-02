@@ -118,10 +118,8 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 
-DEFAULT_ENDPOINT: Final[str] = "http://localhost:4318/"
 DEFAULT_TIMEOUT: Final[int] = 10  # in seconds
 DEFAULT_METRICS_EXPORT_PATH: Final[str] = "v1/metrics"
-DEFAULT_COMPRESSION: Final[Compression] = Compression.NoCompression
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
