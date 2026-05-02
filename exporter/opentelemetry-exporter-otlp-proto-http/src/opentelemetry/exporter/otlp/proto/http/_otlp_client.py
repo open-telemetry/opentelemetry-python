@@ -5,6 +5,7 @@ import threading
 import time
 import zlib
 from dataclasses import dataclass
+from http import HTTPStatus
 from io import BytesIO
 from typing import Final, Literal, Mapping
 
@@ -22,7 +23,7 @@ _MAX_RETRIES: Final[int] = 6
 def _is_retryable(status_code: int | None) -> bool:
     if status_code is None:
         return False
-    if status_code == 408:
+    if status_code == HTTPStatus.REQUEST_TIMEOUT.value:
         return True
     if 500 <= status_code <= 599:
         return True
@@ -31,6 +32,8 @@ def _is_retryable(status_code: int | None) -> bool:
 
 @dataclass(slots=True, frozen=True)
 class ExportResult:
+    """Outcome of an OTLP export attempt, including retry exhaustion."""
+
     success: bool
     status_code: int | None
     reason: str | None
@@ -38,6 +41,12 @@ class ExportResult:
 
 
 class OTLPHTTPClient:
+    """Sends serialized OTLP payloads over HTTP with retry logic.
+
+    Compression, backoff, and connection-error recovery are handled internally.
+    Callers interact through the :meth:`export` and :meth:`close` methods.
+    """
+
     def __init__(
         self,
         transport: BaseHTTPTransport,
@@ -46,7 +55,7 @@ class OTLPHTTPClient:
         compression: Compression,
         shutdown_event: threading.Event,
         headers: Mapping[str, str],
-        kind: Literal["span", "log", "metric"],
+        kind: Literal["spans", "logs", "metrics"],
         jitter: float = 0.2,
     ) -> None:
         self._transport = transport
@@ -85,9 +94,9 @@ class OTLPHTTPClient:
             and result.is_connection_error()
             and (remaining := deadline - time.time()) > 0
         ):
-            # Backends may close keep-alive connections mid-flight; one
-            # retry covers the common stale-connection case before
-            # falling through to the outer backoff.
+            # Immediately retry connection errors once without backoff. These
+            # usually indicate a stale pooled connection that the transport will
+            # reestablish on the next attempt.
             result = self._transport.request(
                 "POST",
                 self._endpoint,
@@ -98,15 +107,20 @@ class OTLPHTTPClient:
         return result
 
     def export(self, data: bytes) -> ExportResult:
+        """Export a serialized payload, retrying on transient failures.
+
+        :param data: Serialized bytes to send.
+        :returns: An :class:`ExportResult` indicating success or the reason for failure.
+        """
         data = self._compress(data)
         deadline = time.time() + self._timeout
 
         for retry in range(_MAX_RETRIES):
             backoff = self._compute_backoff(retry)
-            export_error: Exception | None
-            retryable: bool
             status_code: int | None = None
             reason: str | None = None
+            export_error: Exception | None
+            retryable: bool
 
             try:
                 result = self._submit(data, max(deadline - time.time(), 0.0))
@@ -114,21 +128,16 @@ class OTLPHTTPClient:
                 export_error = error
                 retryable = False
             else:
-                if (
-                    result.status_code is not None
-                    and 200 <= result.status_code < 400
-                ):
-                    return ExportResult(
-                        True, result.status_code, result.reason, None
-                    )
+                status_code = result.status_code
+                reason = result.reason
+                if status_code is not None and 200 <= status_code < 400:
+                    return ExportResult(True, status_code, reason, None)
                 export_error = result.error
                 retryable = (
                     _is_retryable(status_code)
                     if status_code
                     else result.is_connection_error()
                 )
-                status_code = result.status_code
-                reason = result.reason
 
             if not retryable:
                 _logger.error(
@@ -165,4 +174,5 @@ class OTLPHTTPClient:
         return ExportResult(False, None, None, None)
 
     def close(self) -> None:
+        """Close the underlying transport and release its resources."""
         self._transport.close()

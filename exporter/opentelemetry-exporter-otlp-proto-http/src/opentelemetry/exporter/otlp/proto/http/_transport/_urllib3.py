@@ -10,7 +10,7 @@ from opentelemetry.exporter.otlp.proto.http._transport import (
 
 @functools.cache
 def _get_connection_error_types() -> tuple[type[Exception], ...]:
-    import urllib3.exceptions
+    import urllib3.exceptions  # noqa: PLC0415
 
     types: list[type[Exception]] = [
         urllib3.exceptions.ConnectionError,
@@ -45,7 +45,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         verify: bool | str = True,
         cert: str | tuple[str, str] | None = None,
     ) -> None:
-        import urllib3
+        import urllib3  # noqa: PLC0415
 
         pool_kwargs: dict[str, object] = {
             "retries": urllib3.Retry(0, redirect=False),
@@ -77,7 +77,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         timeout: float | None = None,
         data: bytes | None = None,
     ) -> BaseHTTPResult:
-        import urllib3
+        import urllib3  # noqa: PLC0415
 
         try:
             response = self._pool.request(

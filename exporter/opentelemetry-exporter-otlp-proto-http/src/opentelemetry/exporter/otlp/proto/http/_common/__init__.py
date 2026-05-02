@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from os import environ
-from typing import TYPE_CHECKING, Final, Literal, Optional
+from typing import TYPE_CHECKING, Final, Literal
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._transport import BaseHTTPTransport

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 @functools.cache
 def _get_connection_error_types() -> tuple[type[Exception], ...]:
-    import requests.exceptions
+    import requests.exceptions  # noqa: PLC0415
 
     return (
         requests.exceptions.ConnectionError,
@@ -42,7 +42,7 @@ class RequestsHTTPTransport(BaseHTTPTransport):
         cert: str | tuple[str, str] | None = None,
         session: requests.Session | None = None,
     ) -> None:
-        import requests
+        import requests  # noqa: PLC0415
 
         self._session = session if session is not None else requests.Session()
         self._session.verify = verify
@@ -50,7 +50,9 @@ class RequestsHTTPTransport(BaseHTTPTransport):
             self._session.cert = cert
 
         if verify is False:
-            from urllib3.exceptions import InsecureRequestWarning
+            from urllib3.exceptions import (  # noqa: PLC0415
+                InsecureRequestWarning,
+            )
 
             warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 

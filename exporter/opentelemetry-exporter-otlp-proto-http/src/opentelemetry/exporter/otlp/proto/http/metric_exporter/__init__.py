@@ -43,6 +43,7 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.http import (
+    _CONTENT_ENCODING_HEADER,
     _OTLP_HTTP_HEADERS,
     Compression,
 )
@@ -118,6 +119,7 @@ _logger = logging.getLogger(__name__)
 
 
 DEFAULT_TIMEOUT: Final[int] = 10  # in seconds
+DEFAULT_EXPORT_PATH: Final[str] = "v1/metrics"
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
@@ -200,7 +202,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         """
         self._shutdown_event = threading.Event()
         self._endpoint = endpoint or _endpoint_from_env(
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT, "v1/metrics"
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT, DEFAULT_EXPORT_PATH
         )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
@@ -250,7 +252,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             **self._headers,
         }
         if self._compression is not Compression.NoCompression:
-            client_headers["Content-Encoding"] = self._compression.value
+            client_headers[_CONTENT_ENCODING_HEADER] = self._compression.value
 
         self._client = OTLPHTTPClient(
             transport=transport,
@@ -259,7 +261,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             compression=self._compression,
             shutdown_event=self._shutdown_event,
             headers=client_headers,
-            kind="metric",
+            kind="metrics",
         )
 
         self._common_configuration(

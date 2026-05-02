@@ -71,10 +71,13 @@ API
 """
 
 import enum
+from typing import Final
 
 from .version import __version__
 
-_OTLP_HTTP_HEADERS = {
+_CONTENT_ENCODING_HEADER: Final[str] = "Content-Encoding"
+
+_OTLP_HTTP_HEADERS: Final[dict[str, str]] = {
     "Content-Type": "application/x-protobuf",
     "User-Agent": "OTel-OTLP-Exporter-Python/" + __version__,
 }
