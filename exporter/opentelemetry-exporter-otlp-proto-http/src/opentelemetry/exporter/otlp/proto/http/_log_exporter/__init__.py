@@ -17,7 +17,15 @@ from __future__ import annotations
 import logging
 import threading
 from os import environ
-from typing import TYPE_CHECKING, Dict, Final, Optional, Sequence, overload
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Final,
+    Literal,
+    Optional,
+    Sequence,
+    overload,
+)
 from urllib.parse import urlparse
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
@@ -80,7 +88,7 @@ _logger.addFilter(DuplicateFilter())
 
 
 DEFAULT_TIMEOUT: Final[int] = 10  # in seconds
-DEFAULT_LOGS_EXPORT_PATH: Final[str] = "v1/logs"
+DEFAULT_LOGS_EXPORT_PATH: Final[Literal["v1/logs"]] = "v1/logs"
 
 
 class OTLPLogExporter(LogRecordExporter):

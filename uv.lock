@@ -928,6 +928,9 @@ dependencies = [
 gcp-auth = [
     { name = "opentelemetry-exporter-credential-provider-gcp" },
 ]
+requests = [
+    { name = "requests" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -937,10 +940,11 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+    { name = "requests", marker = "extra == 'requests'", specifier = "~=2.7" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
     { name = "urllib3", specifier = ">=1.11" },
 ]
-provides-extras = ["gcp-auth"]
+provides-extras = ["gcp-auth", "requests"]
 
 [[package]]
 name = "opentelemetry-exporter-prometheus"
@@ -1021,7 +1025,7 @@ dependencies = [
     { name = "opentelemetry-codegen-json" },
     { name = "opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
+    { name = "opentelemetry-exporter-otlp-proto-http", extra = ["requests"] },
     { name = "opentelemetry-exporter-prometheus" },
     { name = "opentelemetry-exporter-zipkin-json" },
     { name = "opentelemetry-propagator-b3" },
@@ -1047,7 +1051,7 @@ requires-dist = [
     { name = "opentelemetry-codegen-json", editable = "codegen/opentelemetry-codegen-json" },
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", editable = "exporter/opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "opentelemetry-exporter-otlp-proto-http", editable = "exporter/opentelemetry-exporter-otlp-proto-http" },
+    { name = "opentelemetry-exporter-otlp-proto-http", extras = ["requests"], editable = "exporter/opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-exporter-prometheus", editable = "exporter/opentelemetry-exporter-prometheus" },
     { name = "opentelemetry-exporter-zipkin-json", editable = "exporter/opentelemetry-exporter-zipkin-json" },
     { name = "opentelemetry-propagator-b3", editable = "propagator/opentelemetry-propagator-b3" },

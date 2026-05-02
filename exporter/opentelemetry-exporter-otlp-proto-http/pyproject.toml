@@ -35,9 +35,6 @@ dependencies = [
   "urllib3 >= 1.11"
 ]
 
-[optional-dependencies]
-requests = ["requests ~= 2.7"]
-
 [project.entry-points.opentelemetry_traces_exporter]
 otlp_proto_http = "opentelemetry.exporter.otlp.proto.http.trace_exporter:OTLPSpanExporter"
 
@@ -54,6 +51,9 @@ Repository = "https://github.com/open-telemetry/opentelemetry-python"
 [project.optional-dependencies]
 gcp-auth = [
   "opentelemetry-exporter-credential-provider-gcp >= 0.59b0",
+]
+requests = [
+  "requests ~= 2.7"
 ]
 
 [tool.hatch.version]

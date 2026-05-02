@@ -23,6 +23,7 @@ from typing import (  # noqa: F401
     Final,
     Iterable,
     List,
+    Literal,
     Optional,
     overload,
 )
@@ -119,7 +120,7 @@ _logger = logging.getLogger(__name__)
 
 
 DEFAULT_TIMEOUT: Final[int] = 10  # in seconds
-DEFAULT_METRICS_EXPORT_PATH: Final[str] = "v1/metrics"
+DEFAULT_METRICS_EXPORT_PATH: Final[Literal["v1/metrics"]] = "v1/metrics"
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
