@@ -407,13 +407,13 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
     def set_meter_provider(self, meter_provider: MeterProvider) -> None:
         self._metrics = create_exporter_metrics(
+            OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
             parse_boolean_environment_variable(
                 OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
             ),
-            component_type=OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
         )
 
 
