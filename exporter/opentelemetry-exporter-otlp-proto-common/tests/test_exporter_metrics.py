@@ -68,7 +68,3 @@ class TestExporterMetrics(unittest.TestCase):
             result.error = RuntimeError("error")
 
         self.assertIsInstance(result.error, RuntimeError)
-
-
-if __name__ == "__main__":
-    unittest.main()
