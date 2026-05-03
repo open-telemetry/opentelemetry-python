@@ -13,12 +13,19 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
+from threading import Lock
 
 
 class Mapping(ABC):
     """
     Parent class for `LogarithmMapping` and `ExponentialMapping`.
     """
+
+    _mappings: dict[int, "Mapping"]
+    _mappings_lock: Lock
+
+    _min_scale: int
+    _max_scale: int
 
     # pylint: disable=no-member
     def __new__(cls, scale: int):

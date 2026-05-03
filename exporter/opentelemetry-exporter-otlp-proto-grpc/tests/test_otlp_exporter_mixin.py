@@ -55,10 +55,15 @@ from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
 )
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.trace import ReadableSpan, _Span
 from opentelemetry.sdk.trace.export import (
     SpanExporter,
     SpanExportResult,
+)
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
 )
 from opentelemetry.test.mock_test_classes import IterEntryPoint
 
@@ -78,12 +83,22 @@ class OTLPSpanExporterForTesting(
     ],
 ):
     def __init__(self, **kwargs):
-        super().__init__(TraceServiceStub, SpanExportResult, **kwargs)
+        super().__init__(
+            TraceServiceStub,
+            SpanExportResult,
+            component_type=OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER,
+            signal="traces",
+            meter_provider=kwargs.pop("meter_provider", None),
+            **kwargs,
+        )
 
     def _translate_data(
         self, data: Sequence[ReadableSpan]
     ) -> ExportTraceServiceRequest:
         return encode_spans(data)
+
+    def _count_data(self, data: Sequence[ReadableSpan]) -> int:
+        return len(data)
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
@@ -154,6 +169,7 @@ class ThreadWithReturnValue(threading.Thread):
         return self._return
 
 
+# pylint: disable=too-many-public-methods
 class TestOTLPExporterMixin(TestCase):
     def setUp(self):
         self.server = server(ThreadPoolExecutor(max_workers=10))
@@ -161,7 +177,14 @@ class TestOTLPExporterMixin(TestCase):
         self.server.add_insecure_port("127.0.0.1:4317")
 
         self.server.start()
-        self.exporter = OTLPSpanExporterForTesting(insecure=True)
+
+        self.metric_reader = InMemoryMetricReader()
+        self.meter_provider = MeterProvider(
+            metric_readers=[self.metric_reader]
+        )
+        self.exporter = OTLPSpanExporterForTesting(
+            insecure=True, meter_provider=self.meter_provider
+        )
         self.span = _Span(
             "a",
             context=Mock(
@@ -372,6 +395,26 @@ class TestOTLPExporterMixin(TestCase):
         self.assertEqual(
             self.exporter.export([self.span]), SpanExportResult.SUCCESS
         )
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        self.assertEqual(
+            metrics[0].name, "otel.sdk.exporter.operation.duration"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[0].data.data_points[0].attributes
+        )
+        self.assertEqual(metrics[1].name, "otel.sdk.exporter.span.exported")
+        self.assert_standard_metric_attrs(
+            metrics[1].data.data_points[0].attributes
+        )
+        self.assertEqual(metrics[2].name, "otel.sdk.exporter.span.inflight")
+        self.assert_standard_metric_attrs(
+            metrics[2].data.data_points[0].attributes
+        )
+
         self.exporter.shutdown()
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
@@ -446,7 +489,9 @@ class TestOTLPExporterMixin(TestCase):
             mock_trace_service,
             self.server,
         )
-        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=10)
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, timeout=10, meter_provider=self.meter_provider
+        )
         before = time.time()
         self.assertEqual(
             exporter.export([self.span]),
@@ -456,6 +501,51 @@ class TestOTLPExporterMixin(TestCase):
         self.assertEqual(mock_trace_service.num_requests, 6)
         # 1 second plus wiggle room so the test passes consistently.
         self.assertAlmostEqual(after - before, 1, 1)
+
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        self.assertEqual(
+            metrics[0].name, "otel.sdk.exporter.operation.duration"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[0].data.data_points[0].attributes
+        )
+        self.assertEqual(
+            metrics[0].data.data_points[0].attributes["error.type"],
+            "_InactiveRpcError",
+        )
+        self.assertEqual(
+            metrics[0]
+            .data.data_points[0]
+            .attributes["rpc.response.status_code"],
+            "UNAVAILABLE",
+        )
+        self.assertEqual(metrics[1].name, "otel.sdk.exporter.span.exported")
+        self.assert_standard_metric_attrs(
+            metrics[1].data.data_points[0].attributes
+        )
+        self.assertEqual(
+            metrics[1].data.data_points[0].attributes["error.type"],
+            "_InactiveRpcError",
+        )
+        self.assertNotIn(
+            "rpc.response.status_code",
+            metrics[1].data.data_points[0].attributes,
+        )
+        self.assertEqual(metrics[2].name, "otel.sdk.exporter.span.inflight")
+        self.assert_standard_metric_attrs(
+            metrics[2].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "error.type", metrics[2].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "rpc.response.status_code",
+            metrics[2].data.data_points[0].attributes,
+        )
 
     @unittest.skipIf(
         system() == "Windows",
@@ -548,6 +638,51 @@ class TestOTLPExporterMixin(TestCase):
                 "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS",
             )
 
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        self.assertEqual(
+            metrics[0].name, "otel.sdk.exporter.operation.duration"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[0].data.data_points[0].attributes
+        )
+        self.assertEqual(
+            metrics[0].data.data_points[0].attributes["error.type"],
+            "_InactiveRpcError",
+        )
+        self.assertEqual(
+            metrics[0]
+            .data.data_points[0]
+            .attributes["rpc.response.status_code"],
+            "ALREADY_EXISTS",
+        )
+        self.assertEqual(metrics[1].name, "otel.sdk.exporter.span.exported")
+        self.assert_standard_metric_attrs(
+            metrics[1].data.data_points[0].attributes
+        )
+        self.assertEqual(
+            metrics[1].data.data_points[0].attributes["error.type"],
+            "_InactiveRpcError",
+        )
+        self.assertNotIn(
+            "rpc.response.status_code",
+            metrics[1].data.data_points[0].attributes,
+        )
+        self.assertEqual(metrics[2].name, "otel.sdk.exporter.span.inflight")
+        self.assert_standard_metric_attrs(
+            metrics[2].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "error.type", metrics[2].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "rpc.response.status_code",
+            metrics[2].data.data_points[0].attributes,
+        )
+
     def test_unavailable_reconnects(self):
         """Test that the exporter reconnects on UNAVAILABLE error"""
         add_TraceServiceServicer_to_server(
@@ -571,3 +706,15 @@ class TestOTLPExporterMixin(TestCase):
         # must be from the reconnection logic.
         self.assertTrue(mock_insecure_channel.called)
         # Verify that reconnection enabled flag is set
+
+    def assert_standard_metric_attrs(self, attributes):
+        self.assertEqual(
+            attributes["otel.component.type"], "otlp_grpc_span_exporter"
+        )
+        self.assertTrue(
+            attributes["otel.component.name"].startswith(
+                "otlp_grpc_span_exporter/"
+            )
+        )
+        self.assertEqual(attributes["server.address"], "localhost")
+        self.assertEqual(attributes["server.port"], 4317)

@@ -17,11 +17,21 @@ from __future__ import annotations
 
 from logging import getLogger
 from time import time_ns
-from typing import TYPE_CHECKING, Generator, Iterable, List, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Generator,
+    Iterable,
+    List,
+    Protocol,
+    Sequence,
+    Union,
+    cast,
+    runtime_checkable,
+)
 
 # This kind of import is needed to avoid Sphinx errors.
 from opentelemetry.context import Context, get_current
-from opentelemetry.metrics import CallbackT
+from opentelemetry.metrics import Asynchronous, CallbackT, Synchronous
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
@@ -55,7 +65,15 @@ _ERROR_MESSAGE = (
 )
 
 
-class _Synchronous:
+@runtime_checkable
+class _Instrument(Protocol):
+    name: str
+    unit: str
+    description: str
+    instrumentation_scope: InstrumentationScope
+
+
+class _Synchronous(_Instrument, Synchronous):
     def __init__(
         self,
         name: str,
@@ -79,7 +97,7 @@ class _Synchronous:
 
         name = result["name"]
         unit = result["unit"]
-        description = result["description"]
+        description = cast(str, result["description"])
 
         self.name = name.lower()
         self.unit = unit
@@ -93,13 +111,13 @@ class _Synchronous:
         return self._meter_config is None or self._meter_config.is_enabled
 
 
-class _Asynchronous:
+class _Asynchronous(_Instrument, Asynchronous):
     def __init__(
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
-        callbacks: Iterable[CallbackT] | None = None,
+        callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
         *,
@@ -118,7 +136,7 @@ class _Asynchronous:
 
         name = result["name"]
         unit = result["unit"]
-        description = result["description"]
+        description = cast(str, result["description"])
 
         self.name = name.lower()
         self.unit = unit
