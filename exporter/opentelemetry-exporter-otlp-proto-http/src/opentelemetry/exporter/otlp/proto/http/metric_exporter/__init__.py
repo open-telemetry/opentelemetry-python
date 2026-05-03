@@ -35,7 +35,7 @@ from requests.exceptions import ConnectionError
 from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
+    create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
@@ -221,14 +221,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._max_export_batch_size: int | None = max_export_batch_size
         self._shutdown = False
 
-        self._metrics = ExporterMetrics(
-            OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
+        self._metrics = create_exporter_metrics(
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
-            disabled=not parse_boolean_environment_variable(
+            parse_boolean_environment_variable(
                 OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
             ),
+            component_type=OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
         )
 
     def _export(
@@ -406,14 +406,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         return True
 
     def set_meter_provider(self, meter_provider: MeterProvider) -> None:
-        self._metrics = ExporterMetrics(
-            OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
+        self._metrics = create_exporter_metrics(
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
-            disabled=not parse_boolean_environment_variable(
+            parse_boolean_environment_variable(
                 OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
             ),
+            component_type=OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
         )
 
 

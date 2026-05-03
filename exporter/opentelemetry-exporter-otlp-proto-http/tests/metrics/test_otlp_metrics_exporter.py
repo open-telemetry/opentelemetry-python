@@ -1283,6 +1283,21 @@ class TestOTLPMetricExporter(TestCase):
             MetricExportResult.SUCCESS,
         )
 
+    @patch.dict("os.environ", {}, clear=True)
+    @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
+    def test_exporter_metrics_disabled_after_set_meter_provider(
+        self, _mock_export
+    ):
+        exporter = OTLPMetricExporter()
+        exporter.set_meter_provider(self.meter_provider)
+
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.SUCCESS,
+        )
+
+        self.assertIsNone(self.metric_reader.get_metrics_data())
+
     def test_preferred_aggregation_override(self):
         histogram_aggregation = ExplicitBucketHistogramAggregation(
             boundaries=[0.05, 0.1, 0.5, 1, 5, 10],

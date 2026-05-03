@@ -27,7 +27,7 @@ import requests
 from requests.exceptions import ConnectionError
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
+    create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -151,14 +151,14 @@ class OTLPSpanExporter(SpanExporter):
             )
         self._shutdown = False
 
-        self._metrics = ExporterMetrics(
-            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+        self._metrics = create_exporter_metrics(
             "traces",
             urlparse(self._endpoint),
             meter_provider,
-            disabled=not parse_boolean_environment_variable(
+            parse_boolean_environment_variable(
                 OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
             ),
+            component_type=OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
         )
 
     def _export(
