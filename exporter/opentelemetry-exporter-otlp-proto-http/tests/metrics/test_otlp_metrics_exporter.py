@@ -38,6 +38,12 @@ from opentelemetry.exporter.otlp.proto.http._otlp_client import (
     ExportResult,
     OTLPHTTPClient,
 )
+from opentelemetry.exporter.otlp.proto.http._transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.otlp.proto.http._transport._urllib3 import (
+    Urllib3HTTPTransport,
+)
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
@@ -167,6 +173,9 @@ class TestOTLPMetricExporter(TestCase):
             exporter._client._headers.get("User-Agent"),
             "OTel-OTLP-Exporter-Python/" + __version__,
         )
+        self.assertIsInstance(
+            exporter._client._transport, Urllib3HTTPTransport
+        )
 
     @patch.dict(
         "os.environ",
@@ -217,6 +226,10 @@ class TestOTLPMetricExporter(TestCase):
                 "user-agent": "metrics-user-agent",
             },
         )
+        self.assertIsInstance(
+            exporter._client._transport, RequestsHTTPTransport
+        )
+        self.assertIs(exporter._client._transport._session, credential)
         self.assertIsInstance(exporter._client._transport._session, Session)
         self.assertEqual(
             exporter._client._headers.get("user-agent"),
@@ -241,6 +254,7 @@ class TestOTLPMetricExporter(TestCase):
         },
     )
     def test_exporter_constructor_take_priority(self):
+        session = Session()
         exporter = OTLPMetricExporter(
             endpoint="example.com/1234",
             certificate_file="path/to/service.crt",
@@ -249,7 +263,7 @@ class TestOTLPMetricExporter(TestCase):
             headers={"testHeader1": "value1", "testHeader2": "value2"},
             timeout=20,
             compression=Compression.NoCompression,
-            session=Session(),
+            session=session,
         )
 
         self.assertEqual(exporter._endpoint, "example.com/1234")
@@ -264,6 +278,10 @@ class TestOTLPMetricExporter(TestCase):
             exporter._headers,
             {"testHeader1": "value1", "testHeader2": "value2"},
         )
+        self.assertIsInstance(
+            exporter._client._transport, RequestsHTTPTransport
+        )
+        self.assertIs(exporter._client._transport._session, session)
         self.assertIsInstance(exporter._client._transport._session, Session)
 
     @patch.dict(
