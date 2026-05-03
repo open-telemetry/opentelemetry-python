@@ -39,7 +39,9 @@ from opentelemetry.sdk._logs import (
 from opentelemetry.sdk._shared_internal import (
     BatchProcessor,
     DuplicateFilter,
-    ProcessorMetrics,
+)
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    create_processor_metrics,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
@@ -190,11 +192,11 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
     ):
         self._exporter = exporter
         self._shutdown = False
-        self._metrics = ProcessorMetrics(
+        self._metrics = create_processor_metrics(
             "logs",
             OtelComponentTypeValues.SIMPLE_LOG_PROCESSOR,
             meter_provider or get_meter_provider(),
-            disabled=not parse_boolean_environment_variable(
+            enabled=parse_boolean_environment_variable(
                 OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
             ),
         )
@@ -306,12 +308,12 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             export_timeout_millis,
             max_queue_size,
             "Log",
-            ProcessorMetrics(
+            create_processor_metrics(
                 "logs",
                 OtelComponentTypeValues.BATCHING_LOG_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
-                disabled=not parse_boolean_environment_variable(
+                enabled=parse_boolean_environment_variable(
                     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
                 ),
             ),

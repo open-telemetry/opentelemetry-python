@@ -59,8 +59,7 @@ class ExportResult:
 class ExporterMetricsT(Protocol):
     def export_operation(
         self, num_items: int
-    ) -> AbstractContextManager[ExportResult]:
-        ...
+    ) -> AbstractContextManager[ExportResult]: ...
 
 
 class NoOpExporterMetrics:
@@ -99,9 +98,7 @@ class ExporterMetrics:
                 port = 80
 
         component_type_value = (
-            component_type.value
-            if component_type
-            else "unknown_otlp_exporter"
+            component_type.value if component_type else "unknown_otlp_exporter"
         )
         count = _component_counter[component_type_value]
         _component_counter[component_type_value] = count + 1

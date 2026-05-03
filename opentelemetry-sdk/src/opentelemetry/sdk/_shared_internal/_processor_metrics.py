@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Callable
-from typing import Literal
+from typing import Literal, Protocol
 
 from opentelemetry.metrics import CallbackOptions, MeterProvider, Observation
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -37,6 +37,27 @@ from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
 _component_counter = Counter()
 
 
+class ProcessorMetricsT(Protocol):
+    def register_queue_size(
+        self, get_queue_size: Callable[[], int]
+    ) -> None: ...
+
+    def drop_items(self, count: int) -> None: ...
+
+    def finish_items(self, count: int, error: Exception | None) -> None: ...
+
+
+class NoOpProcessorMetrics:
+    def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
+        pass
+
+    def drop_items(self, count: int) -> None:
+        pass
+
+    def finish_items(self, count: int, error: Exception | None) -> None:
+        pass
+
+
 class ProcessorMetrics:
     def __init__(
         self,
@@ -45,7 +66,6 @@ class ProcessorMetrics:
         meter_provider: MeterProvider,
         *,
         capacity: int | None = None,
-        disabled: bool = False,
     ) -> None:
         self._signal = signal
         meter = meter_provider.get_meter("opentelemetry-sdk")
@@ -76,17 +96,12 @@ class ProcessorMetrics:
             )
 
         self._processed = create_processed(meter)
-        self._disabled = disabled
 
         if capacity is not None:
             self._queue_capacity = create_queue_capacity(meter)
-            if not self._disabled:
-                self._queue_capacity.add(capacity, self._standard_attrs)
+            self._queue_capacity.add(capacity, self._standard_attrs)
 
     def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
-        if self._disabled:
-            return
-
         def record_queue_size(
             _options: CallbackOptions,
         ) -> tuple[Observation]:
@@ -109,13 +124,9 @@ class ProcessorMetrics:
         )
 
     def drop_items(self, count: int) -> None:
-        if self._disabled:
-            return
         self._processed.add(count, self._dropped_attrs)
 
     def finish_items(self, count: int, error: Exception | None) -> None:
-        if self._disabled:
-            return
         if not error:
             self._processed.add(count, self._standard_attrs)
             return
@@ -124,3 +135,22 @@ class ProcessorMetrics:
             ERROR_TYPE: type(error).__name__,
         }
         self._processed.add(count, attrs)
+
+
+def create_processor_metrics(
+    signal: Literal["traces", "logs"],
+    component_type: OtelComponentTypeValues,
+    meter_provider: MeterProvider,
+    *,
+    capacity: int | None = None,
+    enabled: bool,
+) -> ProcessorMetricsT:
+    if not enabled:
+        return NoOpProcessorMetrics()
+
+    return ProcessorMetrics(
+        signal,
+        component_type,
+        meter_provider,
+        capacity=capacity,
+    )

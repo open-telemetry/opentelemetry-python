@@ -15,14 +15,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Protocol
 
 from opentelemetry import metrics as metrics_api
-from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
-)
-from opentelemetry.sdk.environment_variables._internal import (
-    parse_boolean_environment_variable,
-)
 from opentelemetry.sdk.trace.sampling import Decision
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_SPAN_PARENT_ORIGIN,
@@ -36,24 +31,36 @@ from opentelemetry.semconv._incubating.metrics.otel_metrics import (
 from opentelemetry.trace.span import SpanContext
 
 
+class TracerMetricsT(Protocol):
+    def start_span(
+        self,
+        parent_span_context: SpanContext | None,
+        sampling_decision: Decision,
+    ) -> Callable[[], None]: ...
+
+
+# pylint: disable=no-self-use
+class NoOpTracerMetrics:
+    def start_span(
+        self,
+        parent_span_context: SpanContext | None,
+        sampling_decision: Decision,
+    ) -> Callable[[], None]:
+        return noop
+
+
 class TracerMetrics:
     def __init__(self, meter_provider: metrics_api.MeterProvider) -> None:
         meter = meter_provider.get_meter("opentelemetry-sdk")
 
         self._started_spans = create_otel_sdk_span_started(meter)
         self._live_spans = create_otel_sdk_span_live(meter)
-        self._disabled = not parse_boolean_environment_variable(
-            OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-        )
 
     def start_span(
         self,
         parent_span_context: SpanContext | None,
         sampling_decision: Decision,
     ) -> Callable[[], None]:
-        if self._disabled:
-            return noop
-
         sampling_result_value = sampling_result(sampling_decision)
         self._started_spans.add(
             1,
@@ -72,11 +79,19 @@ class TracerMetrics:
         self._live_spans.add(1, live_span_attrs)
 
         def end_span() -> None:
-            if self._disabled:
-                return
             self._live_spans.add(-1, live_span_attrs)
 
         return end_span
+
+
+def create_tracer_metrics(
+    meter_provider: metrics_api.MeterProvider,
+    enabled: bool,
+) -> TracerMetricsT:
+    if not enabled:
+        return NoOpTracerMetrics()
+
+    return TracerMetrics(meter_provider)
 
 
 def noop() -> None:

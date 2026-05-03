@@ -1,12 +1,7 @@
 from collections import Counter
+from typing import Protocol
 
 from opentelemetry.metrics import MeterProvider
-from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
-)
-from opentelemetry.sdk.environment_variables._internal import (
-    parse_boolean_environment_variable,
-)
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_COMPONENT_NAME,
     OTEL_COMPONENT_TYPE,
@@ -16,6 +11,15 @@ from opentelemetry.semconv._incubating.metrics.otel_metrics import (
 )
 
 _component_counter = Counter()
+
+
+class MetricReaderMetricsT(Protocol):
+    def record_collection(self, duration: float) -> None: ...
+
+
+class NoOpMetricReaderMetrics:
+    def record_collection(self, duration: float) -> None:
+        pass
 
 
 class MetricReaderMetrics:
@@ -35,11 +39,17 @@ class MetricReaderMetrics:
         self._collection_duration = (
             create_otel_sdk_metric_reader_collection_duration(meter)
         )
-        self._disabled = not parse_boolean_environment_variable(
-            OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-        )
 
     def record_collection(self, duration: float) -> None:
-        if self._disabled:
-            return
         self._collection_duration.record(duration, self._standard_attrs)
+
+
+def create_metric_reader_metrics(
+    component_type: str,
+    meter_provider: MeterProvider,
+    enabled: bool,
+) -> MetricReaderMetricsT:
+    if not enabled:
+        return NoOpMetricReaderMetrics()
+
+    return MetricReaderMetrics(component_type, meter_provider)

@@ -20,7 +20,6 @@ from unittest.mock import Mock, patch
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
-from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk._logs import (
     Logger,
     LoggerProvider,
@@ -28,12 +27,12 @@ from opentelemetry.sdk._logs import (
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
-    LoggerMetrics,
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
     _disable_logger_configurator,
     _LoggerConfig,
     _RuleBasedLoggerConfigurator,
+    create_logger_metrics,
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
@@ -289,7 +288,7 @@ class TestLogger(unittest.TestCase):
                 "schema_url",
                 {"an": "attribute"},
             ),
-            logger_metrics=LoggerMetrics(NoOpMeterProvider()),
+            logger_metrics=create_logger_metrics(Mock(), False),
             _logger_config=_LoggerConfig.default(),
         )
         return logger, log_record_processor_mock
