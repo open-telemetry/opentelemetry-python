@@ -35,11 +35,11 @@ class TestExporterMetrics(unittest.TestCase):
             "_exporter_metrics.get_meter_provider"
         ) as get_meter_provider:
             metrics = create_exporter_metrics(
+                OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
                 "traces",
                 urlparse("http://localhost:4318/v1/traces"),
                 meter_provider,
                 False,
-                component_type=OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
             )
 
         self.assertIsInstance(metrics, NoOpExporterMetrics)
@@ -51,11 +51,11 @@ class TestExporterMetrics(unittest.TestCase):
         meter_provider.get_meter.return_value = Mock()
 
         metrics = create_exporter_metrics(
+            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
             "traces",
             urlparse("http://localhost:4318/v1/traces"),
             meter_provider,
             True,
-            component_type=OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
         )
 
         self.assertIsInstance(metrics, ExporterMetrics)
