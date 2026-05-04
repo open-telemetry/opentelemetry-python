@@ -1570,13 +1570,14 @@ class TestClearLoggingHandlers(TestCase):
 class TestOpAMPInit(TestCase):
     @patch("opentelemetry.sdk._configuration.entry_points")
     @patch("opentelemetry.sdk._configuration.Resource")
-    def test_init_function_found(self, mock_resource, mock_entry_points):
+    def test_pre_sdk_init_function_found(
+        self, mock_resource, mock_entry_points
+    ):
         init_function = mock.Mock()
-        mock_entry_points.configure_mock(
-            return_value=[
-                IterEntryPoint("pre_sdk_init_function", init_function)
-            ]
-        )
+        mock_entry_points.side_effect = [
+            [IterEntryPoint("pre_sdk_init_function", init_function)],
+            [],
+        ]
 
         _initialize_components(id_generator=1)
 
@@ -1584,6 +1585,30 @@ class TestOpAMPInit(TestCase):
             [
                 mock.call(
                     group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
+        )
+        init_function.assert_called_once_with(
+            mock_resource.create.return_value
+        )
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch("opentelemetry.sdk._configuration.Resource")
+    def test_post_sdk_init_function_found(
+        self, mock_resource, mock_entry_points
+    ):
+        init_function = mock.Mock()
+        mock_entry_points.side_effect = [
+            [],
+            [IterEntryPoint("post_sdk_init_function", init_function)],
+        ]
+
+        _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="post_sdk_init_function"
                 )
             ]
         )

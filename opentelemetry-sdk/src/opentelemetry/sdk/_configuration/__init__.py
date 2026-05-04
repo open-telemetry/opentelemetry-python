@@ -538,7 +538,9 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _import_opamp() -> Callable[[Resource], None] | None:
+def _import_opamp(
+    name: Literal["pre_sdk_init_function", "post_sdk_init_function"],
+) -> Callable[[Resource], None] | None:
     # this in development, at the moment we are looking for a callable that takes
     # the resource and instantiate an OpAMP agent.
     # Since configuration is not specified every implementers may have its own.
@@ -546,11 +548,7 @@ def _import_opamp() -> Callable[[Resource], None] | None:
     entry_point = None
     try:
         entry_point = next(
-            iter(
-                entry_points(
-                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
-                )
-            )
+            iter(entry_points(group="_opentelemetry_opamp", name=name))
         )
         return entry_point.load()
     except StopIteration:
@@ -631,10 +629,11 @@ def _initialize_components(
 
     # OpAMP is a system created to configure OpenTelemetry SDKs with a remote config.
     # This is different than other init helpers because setting up OpAMP requires distro
-    # provided code as it's not strictly specified. We call OpAMP init before other code
-    # because people may want to have it blocking to get an updated config before setting
-    # up the rest of the SDK.
-    _init_opamp = _import_opamp()
+    # provided code as it's not strictly specified. We have two entry points for OpAMP:
+    # one called before other for people that want it blocking to get an updated config
+    # before setting up the rest of the SDK and the other after for people that want the
+    # SDK already setup.
+    _init_opamp = _import_opamp("pre_sdk_init_function")
     if _init_opamp is not None:
         _init_opamp(resource)
 
@@ -672,6 +671,10 @@ def _initialize_components(
         export_log_record_processor=export_log_record_processor,
         logger_configurator=logger_configurator,
     )
+
+    _init_opamp = _import_opamp("post_sdk_init_function")
+    if _init_opamp is not None:
+        _init_opamp(resource)
 
 
 class _BaseConfigurator(ABC):
