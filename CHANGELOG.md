@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5120](https://github.com/open-telemetry/opentelemetry-python/pull/5120))
 - Add WeaverLiveCheck test util
   ([#5088](https://github.com/open-telemetry/opentelemetry-python/pull/5088))
+- Fix incorrect type annotation on `detectors` parameter of `get_aggregated_resources`
+  ([#5135](https://github.com/open-telemetry/opentelemetry-python/pull/5135))
 - ci: wait for tracecontext server readiness instead of a fixed sleep in `scripts/tracecontext-integration-test.sh`
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
 
