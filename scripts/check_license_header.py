@@ -38,7 +38,7 @@ def should_skip(relpath):
 
 
 def check_file(path):
-    with open(path, "r") as f:
+    with open(path) as f:
         lines = f.readlines()
 
     # Skip empty files (e.g. namespace __init__.py)
