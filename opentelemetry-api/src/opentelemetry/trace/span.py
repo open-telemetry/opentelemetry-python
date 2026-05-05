@@ -21,7 +21,7 @@ from opentelemetry.util import types
 
 _KEY_FORMAT = (
     r"[a-z][_0-9a-z\-\*\/]{0,255}|"
-    r"[a-z0-9][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}"
+    r"[a-z0-9][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,14}"
 )
 _KEY_PATTERN = re.compile(_KEY_FORMAT)
 
