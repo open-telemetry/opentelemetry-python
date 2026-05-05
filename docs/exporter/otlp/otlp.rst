@@ -16,6 +16,11 @@ opentelemetry.exporter.otlp.proto.http
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: opentelemetry.exporter.otlp.proto.http._common
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: opentelemetry.exporter.otlp.proto.http.trace_exporter
     :members:
     :undoc-members:
@@ -38,6 +43,11 @@ opentelemetry.exporter.otlp.proto.grpc
     :maxdepth: 1
 
 .. automodule:: opentelemetry.exporter.otlp.proto.grpc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.otlp.proto.grpc._common
     :members:
     :undoc-members:
     :show-inheritance:
