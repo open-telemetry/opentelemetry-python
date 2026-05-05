@@ -33,6 +33,7 @@ from opentelemetry.sdk.resources import (
     HOST_NAME,
     PROCESS_PID,
     PROCESS_RUNTIME_NAME,
+    SERVICE_INSTANCE_ID,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
@@ -305,6 +306,79 @@ class TestCreateResourceAttributesList(unittest.TestCase):
         self.assertEqual(resource.attributes["foo"], "bar")
         self.assertNotIn("no-equals", resource.attributes)
         self.assertTrue(any("no-equals" in msg for msg in cm.output))
+
+
+class TestServiceResourceDetector(unittest.TestCase):
+    @staticmethod
+    def _config_with_service() -> ResourceConfig:
+        return ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(service={})]
+            )
+        )
+
+    def test_service_detector_adds_instance_id(self):
+        resource = create_resource(self._config_with_service())
+        self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
+
+    def test_service_instance_id_is_unique_per_call(self):
+        r1 = create_resource(self._config_with_service())
+        r2 = create_resource(self._config_with_service())
+        self.assertNotEqual(
+            r1.attributes[SERVICE_INSTANCE_ID],
+            r2.attributes[SERVICE_INSTANCE_ID],
+        )
+
+    def test_service_detector_reads_otel_service_name_env_var(self):
+        with patch.dict(os.environ, {"OTEL_SERVICE_NAME": "my-service"}):
+            resource = create_resource(self._config_with_service())
+        self.assertEqual(resource.attributes[SERVICE_NAME], "my-service")
+
+    def test_service_detector_no_env_var_leaves_default_service_name(self):
+        with patch.dict(os.environ, {}, clear=True):
+            resource = create_resource(self._config_with_service())
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+
+    def test_explicit_service_name_overrides_env_var(self):
+        """Config attributes win over the service detector's env-var value."""
+        config = ResourceConfig(
+            attributes=[
+                AttributeNameValue(name="service.name", value="explicit-svc")
+            ],
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(service={})]
+            ),
+        )
+        with patch.dict(os.environ, {"OTEL_SERVICE_NAME": "env-svc"}):
+            resource = create_resource(config)
+        self.assertEqual(resource.attributes[SERVICE_NAME], "explicit-svc")
+
+    def test_service_detector_not_run_when_absent(self):
+        resource = create_resource(ResourceConfig())
+        self.assertNotIn(SERVICE_INSTANCE_ID, resource.attributes)
+
+    def test_service_detector_not_run_when_detection_development_is_none(self):
+        resource = create_resource(ResourceConfig(detection_development=None))
+        self.assertNotIn(SERVICE_INSTANCE_ID, resource.attributes)
+
+    def test_service_detector_also_includes_sdk_defaults(self):
+        resource = create_resource(self._config_with_service())
+        self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
+        self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
+
+    def test_included_filter_limits_service_attributes(self):
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[ExperimentalResourceDetector(service={})],
+                attributes=IncludeExclude(included=["service.instance.id"]),
+            )
+        )
+        with patch.dict(os.environ, {"OTEL_SERVICE_NAME": "my-service"}):
+            resource = create_resource(config)
+        self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
+        # service.name comes from the filter-excluded detector output, but the
+        # default "unknown_service" is still added by create_resource directly
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
 
 
 class TestHostResourceDetector(unittest.TestCase):

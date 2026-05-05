@@ -13,15 +13,8 @@
 # limitations under the License.
 
 
-from typing import (
-    Callable,
-    Final,
-    Generator,
-    Iterable,
-    Optional,
-    Sequence,
-    Union,
-)
+from collections.abc import Callable, Generator, Iterable, Sequence
+from typing import Final
 
 from opentelemetry.metrics import (
     CallbackOptions,
@@ -33,10 +26,10 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = Union[
-    Callable[[CallbackOptions], Iterable[Observation]],
-    Generator[Iterable[Observation], CallbackOptions, None],
-]
+CallbackT = (
+    Callable[[CallbackOptions], Iterable[Observation]]
+    | Generator[Iterable[Observation], CallbackOptions, None]
+)
 
 K8S_CONTAINER_CPU_LIMIT: Final = "k8s.container.cpu.limit"
 """
@@ -68,7 +61,7 @@ Note: The value range is [0.0,1.0]. A value of 1.0 means the container is using 
 
 
 def create_k8s_container_cpu_limit_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The ratio of container CPU usage to its CPU limit"""
     return meter.create_observable_gauge(
@@ -108,7 +101,7 @@ Unit: 1
 
 
 def create_k8s_container_cpu_request_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The ratio of container CPU usage to its CPU request"""
     return meter.create_observable_gauge(
@@ -624,7 +617,7 @@ the `k8s.container.name` attribute MUST be set to identify the specific containe
 
 
 def create_k8s_hpa_metric_target_cpu_average_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Target average utilization, in percentage, for CPU resource in HPA config"""
     return meter.create_observable_gauge(
@@ -650,7 +643,7 @@ the `k8s.container.name` attribute MUST be set to identify the specific containe
 
 
 def create_k8s_hpa_metric_target_cpu_average_value(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Target average value for CPU resource in HPA config"""
     return meter.create_observable_gauge(
@@ -674,7 +667,7 @@ the `k8s.container.name` attribute MUST be set to identify the specific containe
 
 
 def create_k8s_hpa_metric_target_cpu_value(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Target value for CPU resource in HPA config"""
     return meter.create_observable_gauge(
@@ -1090,7 +1083,7 @@ Note: CPU usage of the specific Node on all available CPU cores, averaged over t
 
 
 def create_k8s_node_cpu_usage(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Node's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
@@ -1271,7 +1264,7 @@ Note: Total memory usage of the Node.
 
 
 def create_k8s_node_memory_usage(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Memory usage of the Node"""
     return meter.create_observable_gauge(
@@ -1363,7 +1356,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 
 
 def create_k8s_node_uptime(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The time the Node has been running"""
     return meter.create_observable_gauge(
@@ -1402,7 +1395,7 @@ Note: CPU usage of the specific Pod on all available CPU cores, averaged over th
 
 
 def create_k8s_pod_cpu_usage(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Pod's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
@@ -1545,7 +1538,7 @@ Note: Total memory usage of the Pod.
 
 
 def create_k8s_pod_memory_usage(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Memory usage of the Pod"""
     return meter.create_observable_gauge(
@@ -1658,7 +1651,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 
 
 def create_k8s_pod_uptime(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The time the Pod has been running"""
     return meter.create_observable_gauge(
@@ -2508,7 +2501,7 @@ The `k8s.service.publish_not_ready_addresses` resource attribute indicates this 
 
 
 def create_k8s_service_endpoint_count(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Number of endpoints for a service by condition and address type"""
     return meter.create_observable_gauge(
@@ -2542,7 +2535,7 @@ guarantee that the load balancer is healthy.
 
 
 def create_k8s_service_load_balancer_ingress_count(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Number of load balancer ingress points (external IPs/hostnames) assigned to the service"""
     return meter.create_observable_gauge(

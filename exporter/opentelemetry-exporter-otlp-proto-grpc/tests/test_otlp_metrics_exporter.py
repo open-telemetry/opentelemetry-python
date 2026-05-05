@@ -590,6 +590,69 @@ class TestOTLPMetricExporter(TestCase):
             split_metrics_data,
         )
 
+    def test_count_metrics_data(self):
+        # GIVEN
+        metrics_data = MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                    ],
+                                ),
+                                _gauge(
+                                    index=2,
+                                    data_points=[
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                        _scope_metrics(
+                            index=2,
+                            metrics=[
+                                _gauge(
+                                    index=3,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                _resource_metrics(
+                    index=2,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=3,
+                            metrics=[
+                                _gauge(
+                                    index=4,
+                                    data_points=[
+                                        _number_data_point(14),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        # WHEN
+        # pylint: disable=protected-access
+        count = OTLPMetricExporter(max_export_batch_size=2)._count_data(
+            metrics_data,
+        )
+        # THEN
+        self.assertEqual(count, 4)
+
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_insecure_https_endpoint(self, mock_secure_channel):
         OTLPMetricExporter(endpoint="https://ab.c:123", insecure=True)

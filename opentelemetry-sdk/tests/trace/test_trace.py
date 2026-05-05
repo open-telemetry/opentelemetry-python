@@ -2231,6 +2231,7 @@ class TestParentChildSpanException(unittest.TestCase):
         exception_type = exception.__class__.__name__
         exception_message = exception.args[0]
 
+        child_span = None
         try:
             with tracer.start_as_current_span(
                 "parent",
@@ -2244,6 +2245,8 @@ class TestParentChildSpanException(unittest.TestCase):
 
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+
+        self.assertIsNotNone(child_span)
 
         self.assertTrue(child_span.status.is_ok)
         self.assertIsNone(child_span.status.description)
@@ -2275,6 +2278,7 @@ class TestParentChildSpanException(unittest.TestCase):
 
         exception = Exception("exception")
 
+        child_span = None
         try:
             with tracer.start_as_current_span(
                 "parent",
@@ -2289,6 +2293,8 @@ class TestParentChildSpanException(unittest.TestCase):
 
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+
+        self.assertIsNotNone(child_span)
 
         self.assertTrue(child_span.status.is_ok)
         self.assertIsNone(child_span.status.description)

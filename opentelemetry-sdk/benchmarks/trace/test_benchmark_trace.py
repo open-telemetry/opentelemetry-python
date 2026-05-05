@@ -80,7 +80,7 @@ def test_simple_start_span_with_tracer_configurator_rules(
                 for i in range(num_tracer_configurator_rules)
             ],
             default_config=_TracerConfig(is_enabled=True),
-        )(tracer_scope=tracer_scope)
+        )(tracer_scope)
 
     tracer_provider._set_tracer_configurator(
         tracer_configurator=tracer_configurator

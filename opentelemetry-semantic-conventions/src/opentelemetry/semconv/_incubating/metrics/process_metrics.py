@@ -13,15 +13,8 @@
 # limitations under the License.
 
 
-from typing import (
-    Callable,
-    Final,
-    Generator,
-    Iterable,
-    Optional,
-    Sequence,
-    Union,
-)
+from collections.abc import Callable, Generator, Iterable, Sequence
+from typing import Final
 
 from opentelemetry.metrics import (
     CallbackOptions,
@@ -33,10 +26,10 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = Union[
-    Callable[[CallbackOptions], Iterable[Observation]],
-    Generator[Iterable[Observation], CallbackOptions, None],
-]
+CallbackT = (
+    Callable[[CallbackOptions], Iterable[Observation]]
+    | Generator[Iterable[Observation], CallbackOptions, None]
+)
 
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
@@ -81,7 +74,7 @@ Unit: 1
 
 
 def create_process_cpu_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process"""
     return meter.create_observable_gauge(
@@ -241,7 +234,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 
 
 def create_process_uptime(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The time the process has been running"""
     return meter.create_observable_gauge(
