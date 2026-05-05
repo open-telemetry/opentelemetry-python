@@ -30,7 +30,7 @@ from unittest.mock import Mock, patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.context import Context
+from opentelemetry.context import Context, attach, detach
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
@@ -363,6 +363,58 @@ class TestSpanCreation(unittest.TestCase):
         new_span = tracer.start_span("root", context=parent_context)
         self.assertTrue(new_span.context.is_valid)
         self.assertIsNone(new_span.parent)
+
+    def test_start_span_appends_link_from_context(self):
+        tracer = new_tracer()
+        explicit_context = trace_api.SpanContext(
+            trace_id=0x10000000000000000000000000000001,
+            span_id=0x1000000000000001,
+            is_remote=True,
+        )
+        propagated_context = trace_api.SpanContext(
+            trace_id=0x20000000000000000000000000000002,
+            span_id=0x2000000000000002,
+            is_remote=True,
+        )
+        ctx = trace_api.set_link_in_context(trace_api.Link(propagated_context))
+
+        root = tracer.start_span(
+            "root",
+            context=ctx,
+            links=[trace_api.Link(explicit_context)],
+        )
+
+        self.assertIsNone(root.parent)
+        self.assertEqual(len(root.links), 2)
+        self.assertEqual(
+            root.links[0].context.trace_id, explicit_context.trace_id
+        )
+        self.assertEqual(
+            root.links[1].context.trace_id,
+            propagated_context.trace_id,
+        )
+
+    def test_child_span_does_not_inherit_link_from_context(self):
+        tracer = new_tracer()
+        propagated_context = trace_api.SpanContext(
+            trace_id=0x20000000000000000000000000000002,
+            span_id=0x2000000000000002,
+            is_remote=True,
+        )
+        parent_context = trace_api.set_link_in_context(
+            trace_api.Link(propagated_context)
+        )
+        root = tracer.start_span("root", context=parent_context)
+        token = attach(trace_api.set_span_in_context(root, parent_context))
+
+        try:
+            child = tracer.start_span("child")
+        finally:
+            detach(token)
+
+        self.assertEqual(len(root.links), 1)
+        self.assertEqual(child.parent, root.get_span_context())
+        self.assertEqual(len(child.links), 0)
 
     def test_instrumentation_info(self):
         tracer_provider = trace.TracerProvider()
