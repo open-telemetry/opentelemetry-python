@@ -273,7 +273,7 @@ class TestW3CBaggagePropagator(TestCase):
 
 class TestRuleBasedW3CBaggagePropagator(TestCase):
     def _extract(self, rules, header_value):
-        propagator = RuleBasedW3CBaggagePropagator(rules)
+        propagator = RuleBasedW3CBaggagePropagator(extract_rules=rules)
         header = {"baggage": [header_value]}
         return get_all(propagator.extract(header))
 
@@ -314,4 +314,52 @@ class TestRuleBasedW3CBaggagePropagator(TestCase):
                 "key1=val1,key2=val2",
             ),
             {},
+        )
+
+    def _inject(self, rules, values):
+        ctx = get_current()
+        for k, v in values.items():  # pylint: disable=invalid-name
+            ctx = set_baggage(k, v, context=ctx)
+        output = {}
+        propagator = RuleBasedW3CBaggagePropagator(inject_rules=rules)
+        propagator.inject(output, context=ctx)
+        return output.get("baggage")
+
+    def test_inject_skips_entry_when_key_matches(self):
+        self.assertEqual(
+            self._inject(
+                [(OnKeyPresence("key1"), True)],
+                {"key1": "val1", "key2": "val2"},
+            ),
+            "key2=val2",
+        )
+
+    def test_inject_skips_entry_when_key_value_matches(self):
+        self.assertEqual(
+            self._inject(
+                [(OnKeyValue("key1", "val1"), True)],
+                {"key1": "val1", "key2": "val2"},
+            ),
+            "key2=val2",
+        )
+
+    def test_inject_uses_first_matching_rule(self):
+        self.assertEqual(
+            self._inject(
+                [
+                    (OnKeyPresence("key1"), False),
+                    (OnKeyValue("key1", "val1"), True),
+                ],
+                {"key1": "val1", "key2": "val2"},
+            ),
+            "key1=val1,key2=val2",
+        )
+
+    def test_inject_always_predicate_can_skip_all_entries(self):
+        self.assertEqual(
+            self._inject(
+                [(AlwaysPredicate(), True)],
+                {"key1": "val1", "key2": "val2"},
+            ),
+            "",
         )

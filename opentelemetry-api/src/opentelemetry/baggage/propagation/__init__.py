@@ -212,8 +212,13 @@ class RuleBasedW3CBaggagePropagator(textmap.TextMapPropagator):
     _MAX_PAIRS = 180
     _BAGGAGE_HEADER_NAME = "baggage"
 
-    def __init__(self, rules: RulesT):
-        self._rules = rules
+    def __init__(
+        self,
+        extract_rules: RulesT | None = None,
+        inject_rules: RulesT | None = None,
+    ):
+        self._extract_rules = extract_rules or []
+        self._inject_rules = inject_rules or []
 
     def extract(
         self,
@@ -278,7 +283,7 @@ class RuleBasedW3CBaggagePropagator(textmap.TextMapPropagator):
             value = unquote_plus(value).strip()
 
             skip_entry = False
-            for predicate, outcome in self._rules:
+            for predicate, outcome in self._extract_rules:
                 if predicate(name, value):
                     skip_entry = outcome
                     break
@@ -308,9 +313,22 @@ class RuleBasedW3CBaggagePropagator(textmap.TextMapPropagator):
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
-        baggage_entries = get_all(context=context)
-        if not baggage_entries:
+        all_baggage_entries = get_all(context=context)
+        if not all_baggage_entries:
             return
+
+        baggage_entries = {}
+        for name, value in all_baggage_entries.items():
+            skip_entry = False
+            for predicate, outcome in self._inject_rules:
+                if predicate(name, value):
+                    skip_entry = outcome
+                    break
+
+            if skip_entry:
+                continue
+
+            baggage_entries[name] = value
 
         baggage_string = _format_baggage(baggage_entries)
         setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
