@@ -17,7 +17,15 @@
 
 ## Preparing a new patch release
 
-* Backport pull request(s) to the release branch.
+### Backporting
+	
+Creating manual backports of pull request(s) requires the `backport` label to be added in order to have a green CI. Even if there where
+no changes on a repo the patch release preparation workflow requires an empty `## Unreleased` header in `CHANGELOG.md`.
+
+Backport of pull request(s) can be automated by a workflow only if there where no changes that will create conflicts in the release
+branch, unfortunately every `CHANGELOG.md` change will create one.
+
+To use the workflow to backport pull request(s) to the release branch:
   * Run the [Backport workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/backport.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, then enter the pull request number that you want to backport,
@@ -27,6 +35,9 @@
   * Review and merge the backport pull request that it generates.
 * Merge a pull request to the release branch updating the `CHANGELOG.md`.
   * The heading for the unreleased entries should be `## Unreleased`.
+
+### Preparing a patch release
+
 * Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/prepare-patch-release.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
