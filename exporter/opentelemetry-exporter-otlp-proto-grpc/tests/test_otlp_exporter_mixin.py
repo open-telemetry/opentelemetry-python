@@ -108,10 +108,12 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         export_result: StatusCode,
         optional_retry_nanos: int | None = None,
         optional_export_sleep: float | None = None,
+        optional_details: str | None = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
         self.optional_retry_nanos = optional_retry_nanos
+        self.optional_details = optional_details
         self.num_requests = 0
 
     # pylint: disable=invalid-name,unused-argument
@@ -132,6 +134,8 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
                     ),
                 )
             )
+        if self.optional_details:
+            context.set_details(self.optional_details)
         context.set_code(self.export_result)
 
         return ExportTraceServiceResponse()
@@ -762,6 +766,43 @@ class TestOTLPExporterMixin(TestCase):
             SpanExportResult.FAILURE,
         )
         self.assertEqual(mock_trace_service.num_requests, 1)
+
+    def test_error_details_logged_on_permanent_failure(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerWithExportParams(
+                StatusCode.INVALID_ARGUMENT,
+                optional_details="field 'resource' is missing",
+            ),
+            self.server,
+        )
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                self.exporter.export([self.span]), SpanExportResult.FAILURE
+            )
+            self.assertIn(
+                "field 'resource' is missing",
+                warning.records[-1].message,
+            )
+
+    def test_error_details_logged_on_transient_failure(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerWithExportParams(
+                StatusCode.UNAVAILABLE,
+                optional_retry_nanos=100000000,  # .1 seconds
+                optional_details="collector is restarting",
+            ),
+            self.server,
+        )
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, timeout=10, meter_provider=self.meter_provider
+        )
+        with self.assertLogs(level=WARNING) as warning:
+            exporter.export([self.span])
+        transient_warnings = [
+            r for r in warning.records if "Transient" in r.message
+        ]
+        self.assertTrue(len(transient_warnings) > 0)
+        self.assertIn("collector is restarting", transient_warnings[0].message)
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(
