@@ -21,10 +21,10 @@ from opentelemetry.sdk.trace import (
     TracerProvider,
     _default_tracer_configurator,
     _RuleBasedTracerConfigurator,
-    _scope_name_matches_glob,
     _TracerConfig,
     sampling,
 )
+from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
 tracer_provider = TracerProvider(
     sampler=sampling.DEFAULT_ON,
@@ -80,7 +80,7 @@ def test_simple_start_span_with_tracer_configurator_rules(
                 for i in range(num_tracer_configurator_rules)
             ],
             default_config=_TracerConfig(is_enabled=True),
-        )(tracer_scope=tracer_scope)
+        )(tracer_scope)
 
     tracer_provider._set_tracer_configurator(
         tracer_configurator=tracer_configurator

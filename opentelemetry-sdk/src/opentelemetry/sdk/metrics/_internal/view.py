@@ -30,6 +30,7 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
     ExemplarReservoirBuilder,
     SimpleFixedSizeExemplarReservoir,
 )
+from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 
 _logger = getLogger(__name__)
 
@@ -164,7 +165,7 @@ class View:
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
-    def _match(self, instrument: Instrument) -> bool:
+    def _match(self, instrument: _Instrument) -> bool:
         if self._instrument_type is not None:
             if not isinstance(instrument, self._instrument_type):
                 return False

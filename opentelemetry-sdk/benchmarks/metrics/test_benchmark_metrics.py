@@ -14,10 +14,17 @@
 import pytest
 
 from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics._internal import (
+    _default_meter_configurator,
+    _disable_meter_configurator,
+    _MeterConfig,
+    _RuleBasedMeterConfigurator,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
 )
+from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
 reader_cumulative = InMemoryMetricReader()
 reader_delta = InMemoryMetricReader(
@@ -77,3 +84,43 @@ def test_up_down_counter_add(benchmark, num_labels):
         udcounter.add(1, labels)
 
     benchmark(benchmark_up_down_counter_add)
+
+
+@pytest.fixture(params=[None, 0, 1, 10, 50])
+def num_meter_configurator_rules(request):
+    return request.param
+
+
+# pylint: disable=protected-access,redefined-outer-name
+def test_counter_add_with_meter_configurator_rules(
+    benchmark, num_meter_configurator_rules
+):
+    def benchmark_counter_add():
+        counter_cumulative.add(1, {})
+
+    if num_meter_configurator_rules is None:
+        provider_reader_cumulative._set_meter_configurator(
+            meter_configurator=_disable_meter_configurator
+        )
+    else:
+
+        def meter_configurator(meter_scope):
+            return _RuleBasedMeterConfigurator(
+                rules=[
+                    (
+                        _scope_name_matches_glob(glob_pattern=str(i)),
+                        _MeterConfig(is_enabled=True),
+                    )
+                    for i in range(num_meter_configurator_rules)
+                ],
+                default_config=_MeterConfig(is_enabled=True),
+            )(meter_scope)
+
+        provider_reader_cumulative._set_meter_configurator(
+            meter_configurator=meter_configurator
+        )
+
+    benchmark(benchmark_counter_add)
+    provider_reader_cumulative._set_meter_configurator(
+        meter_configurator=_default_meter_configurator
+    )

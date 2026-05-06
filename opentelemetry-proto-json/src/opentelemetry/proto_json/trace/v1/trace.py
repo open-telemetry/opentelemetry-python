@@ -21,13 +21,9 @@ import builtins
 import dataclasses
 import enum
 import functools
-import sys
 import typing
 
-if sys.version_info >= (3, 10):
-    _dataclass = functools.partial(dataclasses.dataclass, slots=True)
-else:
-    _dataclass = dataclasses.dataclass
+_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common

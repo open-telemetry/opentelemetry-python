@@ -49,7 +49,6 @@ from opentelemetry.sdk.trace import (
     Resource,
     TracerProvider,
     _RuleBasedTracerConfigurator,
-    _scope_name_matches_glob,
     _TracerConfig,
 )
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
@@ -61,7 +60,10 @@ from opentelemetry.sdk.trace.sampling import (
     StaticSampler,
 )
 from opentelemetry.sdk.util import BoundedDict, BoundedList, ns_to_iso_str
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import (
+    InstrumentationInfo,
+    _scope_name_matches_glob,
+)
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
     new_tracer,
@@ -2229,6 +2231,7 @@ class TestParentChildSpanException(unittest.TestCase):
         exception_type = exception.__class__.__name__
         exception_message = exception.args[0]
 
+        child_span = None
         try:
             with tracer.start_as_current_span(
                 "parent",
@@ -2242,6 +2245,8 @@ class TestParentChildSpanException(unittest.TestCase):
 
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+
+        self.assertIsNotNone(child_span)
 
         self.assertTrue(child_span.status.is_ok)
         self.assertIsNone(child_span.status.description)
@@ -2273,6 +2278,7 @@ class TestParentChildSpanException(unittest.TestCase):
 
         exception = Exception("exception")
 
+        child_span = None
         try:
             with tracer.start_as_current_span(
                 "parent",
@@ -2287,6 +2293,8 @@ class TestParentChildSpanException(unittest.TestCase):
 
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+
+        self.assertIsNotNone(child_span)
 
         self.assertTrue(child_span.status.is_ok)
         self.assertIsNone(child_span.status.description)

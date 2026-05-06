@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import fnmatch
 from json import dumps
-from typing import Optional
+from typing import Callable, Optional
 
 from typing_extensions import deprecated
 
@@ -167,3 +168,15 @@ class InstrumentationScope:
             },
             indent=indent,
         )
+
+
+_InstrumentationScopePredicateT = Callable[[InstrumentationScope], bool]
+
+
+def _scope_name_matches_glob(
+    glob_pattern: str,
+) -> _InstrumentationScopePredicateT:
+    def inner(scope: InstrumentationScope) -> bool:
+        return fnmatch.fnmatch(scope.name, glob_pattern)
+
+    return inner

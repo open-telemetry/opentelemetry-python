@@ -476,6 +476,19 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             ),
         )
 
+    def test_create_aggregation_on_instrument_without_boundaries(self):
+        """ExplicitBucketHistogramAggregation should not crash when applied
+        to a non-Histogram instrument without explicit boundaries.
+        """
+        aggregation = ExplicitBucketHistogramAggregation()
+        result = aggregation._create_aggregation(
+            _Counter("test.counter", Mock(), Mock()),
+            Mock(),
+            _default_reservoir_factory,
+            0,
+        )
+        self.assertIsInstance(result, _ExplicitBucketHistogramAggregation)
+
 
 class TestAggregationFactory(TestCase):
     def test_sum_factory(self):

@@ -20,13 +20,9 @@ from __future__ import annotations
 import builtins
 import dataclasses
 import functools
-import sys
 import typing
 
-if sys.version_info >= (3, 10):
-    _dataclass = functools.partial(dataclasses.dataclass, slots=True)
-else:
-    _dataclass = dataclasses.dataclass
+_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 

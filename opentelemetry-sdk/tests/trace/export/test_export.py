@@ -21,6 +21,7 @@ from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
+from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
@@ -28,6 +29,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
 )
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export import logger
 
@@ -142,6 +145,71 @@ class TestSimpleSpanProcessor(unittest.TestCase):
                     pass
 
         self.assertListEqual([], spans_names_list)
+
+    def test_metrics(self):
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+        num_exports = 0
+
+        def export_spans(_spans):
+            nonlocal num_exports
+            num_exports += 1
+            if num_exports == 3:
+                raise RuntimeError("Export failed")
+            return export.SpanExportResult.SUCCESS
+
+        exporter = mock.MagicMock()
+        exporter.export.side_effect = export_spans
+        span_processor = export.SimpleSpanProcessor(
+            exporter, meter_provider=meter_provider
+        )
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
+        tracer_provider.add_span_processor(span_processor)
+
+        with tracer.start_as_current_span("foo"):
+            with tracer.start_span("bar"):
+                pass
+            with tracer.start_span("baz"):
+                pass
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 1)
+        self.assertEqual(metrics[0].name, "otel.sdk.processor.span.processed")
+        processed_data_points = sorted(
+            metrics[0].data.data_points,
+            key=lambda dp: dp.attributes.get("error.type", ""),
+        )
+        self.assertEqual(len(processed_data_points), 2)
+        processed_data_point0 = processed_data_points[0]
+        self.assertEqual(processed_data_point0.value, 2)
+        self.assertEqual(
+            processed_data_point0.attributes["otel.component.type"],
+            "simple_span_processor",
+        )
+        self.assertTrue(
+            processed_data_point0.attributes["otel.component.name"].startswith(
+                "simple_span_processor/"
+            )
+        )
+        self.assertIsNone(processed_data_point0.attributes.get("error.type"))
+        processed_data_point1 = processed_data_points[1]
+        self.assertEqual(processed_data_point1.value, 1)
+        self.assertEqual(
+            processed_data_point1.attributes["otel.component.type"],
+            "simple_span_processor",
+        )
+        self.assertTrue(
+            processed_data_point1.attributes["otel.component.name"].startswith(
+                "simple_span_processor/"
+            )
+        )
+        self.assertEqual(
+            processed_data_point1.attributes["error.type"], "RuntimeError"
+        )
 
 
 # Many more test cases for the BatchSpanProcessor exist under
@@ -328,6 +396,191 @@ class TestBatchSpanProcessor(unittest.TestCase):
             max_queue_size=256,
             max_export_batch_size=512,
         )
+
+    def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+        metric_reader._set_meter_provider(NoOpMeterProvider())
+        num_exports = 0
+        first_export_event = threading.Event()
+        last_export_event = threading.Event()
+        run_exports = threading.Event()
+
+        def export_spans(_spans):
+            first_export_event.set()
+            run_exports.wait()
+            nonlocal num_exports
+            num_exports += 1
+            if num_exports == 3:
+                last_export_event.set()
+                raise ValueError("Export failed")
+            return export.SpanExportResult.SUCCESS
+
+        exporter = mock.MagicMock()
+        exporter.export.side_effect = export_spans
+        span_processor = export.BatchSpanProcessor(
+            exporter,
+            meter_provider=meter_provider,
+            max_queue_size=1,
+            max_export_batch_size=1,
+            schedule_delay_millis=1_000_000_000,  # Manually flush
+        )
+        provider = trace.TracerProvider()
+        tracer = provider.get_tracer(__name__)
+        provider.add_span_processor(span_processor)
+
+        with tracer.start_as_current_span("foo"):
+            pass
+        # Wait for span to be sent to exporter
+        first_export_event.wait()
+
+        # Queue empty, export in progress, this span is queued
+        with tracer.start_as_current_span("bar"):
+            pass
+        # Queue full, this span is dropped
+        with tracer.start_as_current_span("baz"):
+            pass
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        self.assertEqual(metrics[0].name, "otel.sdk.processor.span.processed")
+        processed_data_points = sorted(
+            metrics[0].data.data_points,
+            key=lambda dp: dp.attributes.get("error.type", ""),
+        )
+        self.assertEqual(len(processed_data_points), 1)
+        processed_data_point0 = processed_data_points[0]
+        self.assertEqual(processed_data_point0.value, 1)
+        self.assertEqual(
+            processed_data_point0.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(
+            processed_data_point0.attributes["otel.component.name"].startswith(
+                "batching_span_processor/"
+            )
+        )
+        self.assertEqual(
+            processed_data_point0.attributes.get("error.type"), "queue_full"
+        )
+        self.assertEqual(
+            metrics[1].name, "otel.sdk.processor.span.queue.capacity"
+        )
+        queue_capacity_data_point = metrics[1].data.data_points[0]
+        self.assertEqual(queue_capacity_data_point.value, 1)
+        self.assertEqual(
+            queue_capacity_data_point.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(
+            queue_capacity_data_point.attributes[
+                "otel.component.name"
+            ].startswith("batching_span_processor/")
+        )
+        self.assertEqual(metrics[2].name, "otel.sdk.processor.span.queue.size")
+        queue_size_data_point = metrics[2].data.data_points[0]
+        self.assertEqual(queue_size_data_point.value, 1)
+        self.assertEqual(
+            queue_size_data_point.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(
+            queue_size_data_point.attributes["otel.component.name"].startswith(
+                "batching_span_processor/"
+            )
+        )
+
+        run_exports.set()
+        provider.force_flush()
+
+        # This span is processed and exporter returns an error
+        with tracer.start_as_current_span("failed"):
+            pass
+        provider.force_flush()
+        last_export_event.wait()
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        self.assertEqual(metrics[0].name, "otel.sdk.processor.span.processed")
+        processed_data_points = sorted(
+            metrics[0].data.data_points,
+            key=lambda dp: dp.attributes.get("error.type", ""),
+        )
+        self.assertEqual(len(processed_data_points), 3)
+        processed_data_point0 = processed_data_points[0]
+        self.assertEqual(processed_data_point0.value, 2)
+        self.assertEqual(
+            processed_data_point0.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(
+            processed_data_point0.attributes["otel.component.name"].startswith(
+                "batching_span_processor/"
+            )
+        )
+        self.assertIsNone(processed_data_point0.attributes.get("error.type"))
+        processed_data_point1 = processed_data_points[1]
+        self.assertEqual(processed_data_point1.value, 1)
+        self.assertEqual(
+            processed_data_point1.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(
+            processed_data_point1.attributes["otel.component.name"].startswith(
+                "batching_span_processor/"
+            )
+        )
+        self.assertEqual(
+            processed_data_point1.attributes.get("error.type"), "ValueError"
+        )
+        processed_data_point2 = processed_data_points[2]
+        self.assertEqual(processed_data_point2.value, 1)
+        self.assertEqual(
+            processed_data_point2.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(
+            processed_data_point2.attributes["otel.component.name"].startswith(
+                "batching_span_processor/"
+            )
+        )
+        self.assertEqual(
+            processed_data_point2.attributes.get("error.type"), "queue_full"
+        )
+        self.assertEqual(
+            metrics[1].name, "otel.sdk.processor.span.queue.capacity"
+        )
+        queue_capacity_data_point = metrics[1].data.data_points[0]
+        self.assertEqual(queue_capacity_data_point.value, 1)
+        self.assertEqual(
+            queue_capacity_data_point.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(
+            queue_capacity_data_point.attributes[
+                "otel.component.name"
+            ].startswith("batching_span_processor/")
+        )
+        self.assertEqual(metrics[2].name, "otel.sdk.processor.span.queue.size")
+        queue_size_data_point = metrics[2].data.data_points[0]
+        self.assertEqual(queue_size_data_point.value, 0)
+        self.assertEqual(
+            queue_size_data_point.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(
+            queue_size_data_point.attributes["otel.component.name"].startswith(
+                "batching_span_processor/"
+            )
+        )
+
+        provider.shutdown()
 
 
 class TestConsoleSpanExporter(unittest.TestCase):

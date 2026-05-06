@@ -81,6 +81,23 @@ def substitute_env_vars(text: str) -> str:
                 f"Environment variable '{var_name}' not found and no default provided"
             )
 
+        # Per spec: "It MUST NOT be possible to inject YAML structures by
+        # environment variables." Newlines are the primary injection vector —
+        # a value like "legit\nmalicious_key: val" would create extra YAML
+        # keys if substituted verbatim. Wrap such values in a YAML
+        # double-quoted scalar so the newline is treated as literal text.
+        # Simple values (no newlines) are returned as-is so that YAML type
+        # coercion still applies per spec ("Node types MUST be interpreted
+        # after environment variable substitution takes place").
+        if "\n" in value or "\r" in value:
+            escaped = (
+                value.replace("\\", "\\\\")
+                .replace('"', '\\"')
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+            )
+            return f'"{escaped}"'
         return value
 
     return re.sub(pattern, replace_var, text)
