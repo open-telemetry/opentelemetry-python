@@ -32,15 +32,11 @@ Example:
 
 This is the same model used by :mod:`opentelemetry.baggage`.
 
-Submodules
-----------
-
-.. toctree::
-
-   context.context
-
 Module contents
 ---------------
 
 .. automodule:: opentelemetry.context
 
+   :members:
+   :undoc-members:
+   :show-inheritance:

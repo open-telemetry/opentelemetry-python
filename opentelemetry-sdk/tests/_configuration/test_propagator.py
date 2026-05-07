@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import unittest
 from os import environ
@@ -89,7 +78,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_propagator
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -106,7 +95,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_propagator
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -118,7 +107,7 @@ class TestCreatePropagator(unittest.TestCase):
 
     def test_b3_not_installed_raises_configuration_error(self):
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],
         ):
             config = PropagatorConfig(
@@ -135,7 +124,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             result = create_propagator(config)
@@ -158,7 +147,7 @@ class TestCreatePropagator(unittest.TestCase):
             return []
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             side_effect=fake_entry_points,
         ):
             config = PropagatorConfig(composite_list="tracecontext,baggage")
@@ -182,7 +171,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(composite_list=" tracecontext ")
@@ -195,7 +184,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.side_effect = RuntimeError("package broken")
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(composite_list="broken-prop")
@@ -210,7 +199,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -229,7 +218,7 @@ class TestCreatePropagator(unittest.TestCase):
 
     def test_unknown_composite_list_propagator_raises(self):
         with patch(
-            "opentelemetry.sdk._configuration._propagator.entry_points",
+            "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],
         ):
             config = PropagatorConfig(composite_list="nonexistent")

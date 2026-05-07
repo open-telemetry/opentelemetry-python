@@ -1,27 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
-from typing import (
-    Callable,
-    Final,
-    Generator,
-    Iterable,
-    Optional,
-    Sequence,
-    Union,
-)
+from collections.abc import Callable, Generator, Iterable, Sequence
+from typing import Final
 
 from opentelemetry.metrics import (
     CallbackOptions,
@@ -33,10 +15,10 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = Union[
-    Callable[[CallbackOptions], Iterable[Observation]],
-    Generator[Iterable[Observation], CallbackOptions, None],
-]
+CallbackT = (
+    Callable[[CallbackOptions], Iterable[Observation]]
+    | Generator[Iterable[Observation], CallbackOptions, None]
+)
 
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
@@ -81,7 +63,7 @@ Unit: 1
 
 
 def create_process_cpu_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process"""
     return meter.create_observable_gauge(
@@ -241,7 +223,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 
 
 def create_process_uptime(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The time the process has been running"""
     return meter.create_observable_gauge(

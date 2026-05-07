@@ -1,31 +1,15 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import abc
 import gc
 import multiprocessing
 import os
 import time
-import typing
 import unittest
 import weakref
-from platform import python_implementation, system
 from threading import Event
-from typing import Optional
 from unittest import mock
-
-from pytest import mark
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -54,7 +38,7 @@ class MySpanProcessor(trace.SpanProcessor):
         self.span_list = span_list
 
     def on_start(
-        self, span: "trace.Span", parent_context: Optional[Context] = None
+        self, span: "trace.Span", parent_context: Context | None = None
     ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
@@ -276,9 +260,10 @@ class MultiSpanProcessorTestBase(abc.ABC):
     @abc.abstractmethod
     def create_multi_span_processor(
         self,
-    ) -> typing.Union[
-        trace.SynchronousMultiSpanProcessor, trace.ConcurrentMultiSpanProcessor
-    ]:
+    ) -> (
+        trace.SynchronousMultiSpanProcessor
+        | trace.ConcurrentMultiSpanProcessor
+    ):
         pass
 
     @staticmethod
@@ -449,10 +434,6 @@ class TestConcurrentMultiSpanProcessor(
     ) -> trace.ConcurrentMultiSpanProcessor:
         return trace.ConcurrentMultiSpanProcessor(3)
 
-    @mark.skipif(
-        python_implementation() == "PyPy" and system() == "Windows",
-        reason="This test randomly fails in Windows with PyPy",
-    )
     def test_force_flush_late_by_timeout(self):
         multi_processor = trace.ConcurrentMultiSpanProcessor(5)
         wait_event = Event()
@@ -468,7 +449,7 @@ class TestConcurrentMultiSpanProcessor(
         for mock_processor in mocks:
             multi_processor.add_span_processor(mock_processor)
 
-        flushed = multi_processor.force_flush(timeout_millis=10)
+        flushed = multi_processor.force_flush(timeout_millis=25)
         # let the thread executing the late_mock continue
         wait_event.set()
 

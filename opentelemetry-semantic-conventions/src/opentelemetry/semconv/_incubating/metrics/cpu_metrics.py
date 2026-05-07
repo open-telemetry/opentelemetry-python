@@ -1,27 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
-from typing import (
-    Callable,
-    Final,
-    Generator,
-    Iterable,
-    Optional,
-    Sequence,
-    Union,
-)
+from collections.abc import Callable, Generator, Iterable, Sequence
+from typing import Final
 
 from opentelemetry.metrics import (
     CallbackOptions,
@@ -32,10 +14,10 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = Union[
-    Callable[[CallbackOptions], Iterable[Observation]],
-    Generator[Iterable[Observation], CallbackOptions, None],
-]
+CallbackT = (
+    Callable[[CallbackOptions], Iterable[Observation]]
+    | Generator[Iterable[Observation], CallbackOptions, None]
+)
 
 CPU_FREQUENCY: Final = "cpu.frequency"
 """
@@ -44,7 +26,7 @@ Deprecated: Replaced by `system.cpu.frequency`.
 
 
 def create_cpu_frequency(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Deprecated. Use `system.cpu.frequency` instead"""
     return meter.create_observable_gauge(
@@ -77,7 +59,7 @@ Deprecated: Replaced by `system.cpu.utilization`.
 
 
 def create_cpu_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Deprecated. Use `system.cpu.utilization` instead"""
     return meter.create_observable_gauge(

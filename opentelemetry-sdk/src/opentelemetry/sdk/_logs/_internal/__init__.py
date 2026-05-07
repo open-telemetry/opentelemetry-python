@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import abc
@@ -52,6 +41,11 @@ from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
+from opentelemetry.sdk._logs._internal._exceptions import (
+    _copy_log_record_with_exception,
+    _create_log_record_with_exception,
+    _set_log_record_exception_attributes,
+)
 from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
@@ -664,10 +658,8 @@ class Logger(APILogger):
     def __init__(
         self,
         resource: Resource,
-        multi_log_record_processor: Union[
-            SynchronousMultiLogRecordProcessor,
-            ConcurrentMultiLogRecordProcessor,
-        ],
+        multi_log_record_processor: SynchronousMultiLogRecordProcessor
+        | ConcurrentMultiLogRecordProcessor,
         instrumentation_scope: InstrumentationScope,
         *,
         logger_metrics: LoggerMetrics,
@@ -712,6 +704,7 @@ class Logger(APILogger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
@@ -721,6 +714,8 @@ class Logger(APILogger):
         # If a record is provided, use it directly
         if record is not None:
             if not isinstance(record, ReadWriteLogRecord):
+                if record.exception is not None:
+                    record = _copy_log_record_with_exception(record)
                 # pylint:disable=protected-access
                 writable_record = ReadWriteLogRecord._from_api_log_record(
                     record=record,
@@ -728,10 +723,11 @@ class Logger(APILogger):
                     instrumentation_scope=self._instrumentation_scope,
                 )
             else:
+                _set_log_record_exception_attributes(record.log_record)
                 writable_record = record
         else:
             # Create a record from individual parameters
-            log_record = LogRecord(
+            log_record = _create_log_record_with_exception(
                 timestamp=timestamp,
                 observed_timestamp=observed_timestamp,
                 context=context,
@@ -740,6 +736,7 @@ class Logger(APILogger):
                 body=body,
                 attributes=attributes,
                 event_name=event_name,
+                exception=exception,
             )
             # pylint:disable=protected-access
             writable_record = ReadWriteLogRecord._from_api_log_record(
