@@ -1,20 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access
 
-from typing import Dict, Iterable
+from collections.abc import Iterable
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -54,8 +43,8 @@ _expected_keys = [
 class DummyMetricReader(MetricReader):
     def __init__(
         self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[type, Aggregation] = None,
+        preferred_temporality: dict[type, AggregationTemporality] = None,
+        preferred_aggregation: dict[type, Aggregation] = None,
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,
