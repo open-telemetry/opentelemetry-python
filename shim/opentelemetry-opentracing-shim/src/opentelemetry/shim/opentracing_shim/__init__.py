@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """
 The OpenTelemetry OpenTracing shim is a library which allows an easy migration
@@ -35,11 +24,11 @@ following example::
     # Define which OpenTelemetry Tracer provider implementation to use.
     trace.set_tracer_provider(TracerProvider())
 
-    # Create an OpenTelemetry Tracer.
-    otel_tracer = trace.get_tracer(__name__)
+    # Get the OpenTelemetry TracerProvider.
+    tracer_provider = trace.get_tracer_provider()
 
     # Create an OpenTracing shim.
-    shim = create_tracer(otel_tracer)
+    shim = create_tracer(tracer_provider)
 
     with shim.start_active_span("ProcessHTTPRequest"):
         print("Processing HTTP request")
@@ -88,7 +77,7 @@ from __future__ import annotations
 
 import logging
 from types import TracebackType
-from typing import Type, TypeVar
+from typing import TypeVar
 
 from opentracing import (
     Format,
@@ -425,7 +414,7 @@ class ScopeShim(Scope):
 
     def _end_span_scope(
         self,
-        exc_type: Type[BaseException] | None,
+        exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:

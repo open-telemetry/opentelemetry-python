@@ -1,23 +1,12 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=unused-import
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from threading import Lock
 from time import time_ns
-from typing import List, Mapping, Optional
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -51,14 +40,14 @@ class MeasurementConsumer(ABC):
         self,
         metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Optional[MetricsData]:
+    ) -> MetricsData | None:
         pass
 
 
 class SynchronousMeasurementConsumer(MeasurementConsumer):
     def __init__(
         self,
-        sdk_config: "opentelemetry.sdk.metrics._internal.SdkConfiguration",
+        sdk_config: "opentelemetry.sdk.metrics._internal.sdk_configuration.SdkConfiguration",
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
@@ -73,7 +62,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             )
             for reader in sdk_config.metric_readers
         }
-        self._async_instruments: List[
+        self._async_instruments: list[
             opentelemetry.sdk.metrics._internal.instrument._Asynchronous
         ] = []
 
@@ -104,7 +93,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self,
         metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Optional[MetricsData]:
+    ) -> MetricsData | None:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults

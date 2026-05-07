@@ -13,6 +13,8 @@ Before you can contribute, you will need to sign the [Contributor License Agreem
 
 Please also read the [OpenTelemetry Contributor Guide](https://github.com/open-telemetry/community/blob/main/guides/contributor/README.md).
 
+If you are using AI agents to assist with contributions, please read [AGENTS.md](AGENTS.md) for guidance on how to use them responsibly in this project.
+
 # Find your right repo
 
 This is the main repo for OpenTelemetry Python. Nevertheless, there are other repos that are related to this project.
@@ -144,7 +146,7 @@ CONTRIB_REPO_SHA=dde62cebffe519c35875af6d06fae053b3be65ec tox
 ```
 
 The continuation integration overrides that environment variable with as per the configuration
-[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test_0.yml#L14).
+[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test.yml#L14).
 
 ### Benchmarks
 
@@ -328,6 +330,16 @@ Register this module with the `opentelemetry_environment_variables` entry point 
 automatically load as options for the `opentelemetry-instrument` command.
 
 ## Style Guide
+
+* All Python files must include the following SPDX license header as the first
+  two lines (or immediately after a shebang line):
+
+  ```python
+  # Copyright The OpenTelemetry Authors
+  # SPDX-License-Identifier: Apache-2.0
+  ```
+
+  This is enforced by CI via `tox -e lint-license-header-check`.
 
 * docstrings should adhere to the [Google Python Style
   Guide](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)

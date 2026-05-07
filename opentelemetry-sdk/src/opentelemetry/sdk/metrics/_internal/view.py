@@ -1,21 +1,10 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
+from collections.abc import Callable
 from fnmatch import fnmatch
 from logging import getLogger
-from typing import Callable, Optional, Set, Type
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -30,12 +19,13 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
     ExemplarReservoirBuilder,
     SimpleFixedSizeExemplarReservoir,
 )
+from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 
 _logger = getLogger(__name__)
 
 
 def _default_reservoir_factory(
-    aggregation_type: Type[_Aggregation],
+    aggregation_type: type[_Aggregation],
 ) -> ExemplarReservoirBuilder:
     """Default reservoir factory per aggregation."""
     if issubclass(aggregation_type, _ExplicitBucketHistogramAggregation):
@@ -105,19 +95,20 @@ class View:
 
     def __init__(
         self,
-        instrument_type: Optional[Type[Instrument]] = None,
-        instrument_name: Optional[str] = None,
-        meter_name: Optional[str] = None,
-        meter_version: Optional[str] = None,
-        meter_schema_url: Optional[str] = None,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        attribute_keys: Optional[Set[str]] = None,
-        aggregation: Optional[Aggregation] = None,
-        exemplar_reservoir_factory: Optional[
-            Callable[[Type[_Aggregation]], ExemplarReservoirBuilder]
-        ] = None,
-        instrument_unit: Optional[str] = None,
+        instrument_type: type[Instrument] | None = None,
+        instrument_name: str | None = None,
+        meter_name: str | None = None,
+        meter_version: str | None = None,
+        meter_schema_url: str | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        attribute_keys: set[str] | None = None,
+        aggregation: Aggregation | None = None,
+        exemplar_reservoir_factory: Callable[
+            [type[_Aggregation]], ExemplarReservoirBuilder
+        ]
+        | None = None,
+        instrument_unit: str | None = None,
     ):
         if (
             instrument_type
@@ -164,7 +155,7 @@ class View:
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
-    def _match(self, instrument: Instrument) -> bool:
+    def _match(self, instrument: _Instrument) -> bool:
         if self._instrument_type is not None:
             if not isinstance(instrument, self._instrument_type):
                 return False
