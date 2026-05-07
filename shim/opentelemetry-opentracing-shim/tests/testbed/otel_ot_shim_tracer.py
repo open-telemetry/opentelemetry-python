@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 import opentelemetry.shim.opentracing_shim as opentracingshim
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
