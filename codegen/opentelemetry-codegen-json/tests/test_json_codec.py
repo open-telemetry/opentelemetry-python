@@ -1,19 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import math
-from typing import Optional, Union
 
 import pytest  # type: ignore
 
@@ -40,7 +28,7 @@ from opentelemetry.codegen.json.runtime.json_codec import (
         (None, ""),
     ],
 )
-def test_encode_hex(value: Optional[bytes], expected: str) -> None:
+def test_encode_hex(value: bytes | None, expected: str) -> None:
     assert encode_hex(value) == expected
 
 
@@ -52,7 +40,7 @@ def test_encode_hex(value: Optional[bytes], expected: str) -> None:
         (None, b""),
     ],
 )
-def test_decode_hex(value: Optional[str], expected: bytes) -> None:
+def test_decode_hex(value: str | None, expected: bytes) -> None:
     assert decode_hex(value, "field") == expected
 
 
@@ -71,7 +59,7 @@ def test_decode_hex_errors() -> None:
         (None, ""),
     ],
 )
-def test_encode_base64(value: Optional[bytes], expected: str) -> None:
+def test_encode_base64(value: bytes | None, expected: str) -> None:
     assert encode_base64(value) == expected
 
 
@@ -83,7 +71,7 @@ def test_encode_base64(value: Optional[bytes], expected: str) -> None:
         (None, b""),
     ],
 )
-def test_decode_base64(value: Optional[str], expected: bytes) -> None:
+def test_decode_base64(value: str | None, expected: bytes) -> None:
     assert decode_base64(value, "field") == expected
 
 
@@ -112,7 +100,7 @@ def test_encode_int64(value: int, expected: str) -> None:
         (None, 0),
     ],
 )
-def test_decode_int64(value: Optional[Union[int, str]], expected: int) -> None:
+def test_decode_int64(value: int | str | None, expected: int) -> None:
     assert decode_int64(value, "field") == expected
 
 
@@ -132,7 +120,7 @@ def test_decode_int64_errors() -> None:
         (float("-inf"), "-Infinity"),
     ],
 )
-def test_encode_float(value: float, expected: Union[float, str]) -> None:
+def test_encode_float(value: float, expected: float | str) -> None:
     result = encode_float(value)
     if isinstance(expected, float) and math.isnan(expected):
         assert math.isnan(result)  # type: ignore
@@ -153,7 +141,7 @@ def test_encode_float(value: float, expected: Union[float, str]) -> None:
     ],
 )
 def test_decode_float(
-    value: Optional[Union[float, int, str]], expected: float
+    value: float | int | str | None, expected: float
 ) -> None:
     result = decode_float(value, "field")
     if math.isnan(expected):
