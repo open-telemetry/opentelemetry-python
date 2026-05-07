@@ -13,10 +13,9 @@ import logging.config
 import os
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Mapping, Sequence
 from os import environ
-from typing import Any, Callable, Mapping, Protocol, Sequence, Type, Union
-
-from typing_extensions import Literal
+from typing import Any, Literal, Protocol
 
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
@@ -97,12 +96,10 @@ _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 _logger = logging.getLogger(__name__)
 
 ExporterArgsMap = Mapping[
-    Union[
-        Type[SpanExporter],
-        Type[MetricExporter],
-        Type[MetricReader],
-        Type[LogRecordExporter],
-    ],
+    type[SpanExporter]
+    | type[MetricExporter]
+    | type[MetricReader]
+    | type[LogRecordExporter],
     Mapping[str, Any],
 ]
 
@@ -121,7 +118,7 @@ class _ConfigurationExporterLogRecordProcessorT(Protocol):
 
 def _import_config_components(
     selected_components: Sequence[str], entry_point_name: str
-) -> list[tuple[str, Type]]:
+) -> list[tuple[str, type]]:
     component_implementations = []
 
     for selected_component in selected_components:
@@ -231,7 +228,7 @@ def _get_exporter_names(
 
 
 def _init_tracing(
-    exporters: dict[str, Type[SpanExporter]],
+    exporters: dict[str, type[SpanExporter]],
     id_generator: IdGenerator | None = None,
     sampler: Sampler | None = None,
     resource: Resource | None = None,
@@ -263,9 +260,7 @@ def _init_tracing(
 
 
 def _init_metrics(
-    exporters_or_readers: dict[
-        str, Union[Type[MetricExporter], Type[MetricReader]]
-    ],
+    exporters_or_readers: dict[str, type[MetricExporter] | type[MetricReader]],
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     meter_configurator: _MeterConfiguratorT | None = None,
@@ -294,7 +289,7 @@ def _init_metrics(
 
 # pylint: disable-next=too-many-locals
 def _init_logging(
-    exporters: dict[str, Type[LogRecordExporter]],
+    exporters: dict[str, type[LogRecordExporter]],
     resource: Resource | None = None,
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
@@ -444,9 +439,9 @@ def _import_exporters(
     metric_exporter_names: Sequence[str],
     log_exporter_names: Sequence[str],
 ) -> tuple[
-    dict[str, Type[SpanExporter]],
-    dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
-    dict[str, Type[LogRecordExporter]],
+    dict[str, type[SpanExporter]],
+    dict[str, type[MetricExporter] | type[MetricReader]],
+    dict[str, type[LogRecordExporter]],
 ]:
     trace_exporters = {}
     metric_exporters = {}

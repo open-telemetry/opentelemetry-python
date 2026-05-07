@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from opentelemetry import trace
 from opentelemetry.sdk._configuration._common import _parse_headers
@@ -94,8 +93,8 @@ def _create_otlp_http_span_exporter(
 
 
 def _map_compression(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
+    value: str | None, compression_enum: type
+) -> object | None:
     """Map a compression string to the given Compression enum value."""
     if value is None or value.lower() == "none":
         return None
@@ -251,8 +250,8 @@ def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
 
 
 def create_tracer_provider(
-    config: Optional[TracerProviderConfig],
-    resource: Optional[Resource] = None,
+    config: TracerProviderConfig | None,
+    resource: Resource | None = None,
 ) -> TracerProvider:
     """Create an SDK TracerProvider from declarative config.
 
@@ -298,8 +297,8 @@ def create_tracer_provider(
 
 
 def configure_tracer_provider(
-    config: Optional[TracerProviderConfig],
-    resource: Optional[Resource] = None,
+    config: TracerProviderConfig | None,
+    resource: Resource | None = None,
 ) -> None:
     """Configure the global TracerProvider from declarative config.
 

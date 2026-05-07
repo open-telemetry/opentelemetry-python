@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 import re
-import typing
 
 from opentelemetry import trace
 from opentelemetry.context.context import Context
@@ -25,7 +24,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
     def extract(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
     ) -> Context:
         """Extracts SpanContext from the carrier.
@@ -78,7 +77,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
     def inject(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
     ) -> None:
         """Injects SpanContext into the carrier.
@@ -98,7 +97,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             )
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         """Returns a set with the fields set in `inject`.
 
         See

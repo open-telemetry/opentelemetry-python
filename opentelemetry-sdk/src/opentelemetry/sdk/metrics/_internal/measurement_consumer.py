@@ -4,9 +4,9 @@
 # pylint: disable=unused-import
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from threading import Lock
 from time import time_ns
-from typing import List, Mapping, Optional
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -40,7 +40,7 @@ class MeasurementConsumer(ABC):
         self,
         metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Optional[MetricsData]:
+    ) -> MetricsData | None:
         pass
 
 
@@ -62,7 +62,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             )
             for reader in sdk_config.metric_readers
         }
-        self._async_instruments: List[
+        self._async_instruments: list[
             opentelemetry.sdk.metrics._internal.instrument._Asynchronous
         ] = []
 
@@ -93,7 +93,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self,
         metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Optional[MetricsData]:
+    ) -> MetricsData | None:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults

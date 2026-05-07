@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from typing import Optional
-
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -97,8 +95,8 @@ def _generate_unsupported_metric(
 def _generate_histogram(
     name: str,
     attributes: Attributes = None,
-    description: Optional[str] = None,
-    unit: Optional[str] = None,
+    description: str | None = None,
+    unit: str | None = None,
 ) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})

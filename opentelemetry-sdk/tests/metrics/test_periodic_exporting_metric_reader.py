@@ -8,7 +8,7 @@ import math
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
-from typing import Optional, cast
+from typing import cast
 from unittest.mock import Mock
 
 import pytest
@@ -80,8 +80,8 @@ class ExceptionAtCollectionPeriodicExportingMetricReader(
         self,
         exporter: MetricExporter,
         exception: Exception,
-        export_interval_millis: Optional[float] = None,
-        export_timeout_millis: Optional[float] = None,
+        export_interval_millis: float | None = None,
+        export_timeout_millis: float | None = None,
     ) -> None:
         super().__init__(
             exporter, export_interval_millis, export_timeout_millis

@@ -5,7 +5,6 @@
 
 from math import inf
 from time import sleep, time_ns
-from typing import Union
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -44,7 +43,7 @@ from opentelemetry.util.types import Attributes
 
 
 def measurement(
-    value: Union[int, float], attributes: Attributes = None
+    value: int | float, attributes: Attributes = None
 ) -> Measurement:
     return Measurement(
         value,

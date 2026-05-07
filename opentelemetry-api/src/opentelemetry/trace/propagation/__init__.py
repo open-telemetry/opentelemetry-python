@@ -1,6 +1,5 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
-from typing import Optional
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
@@ -10,9 +9,7 @@ SPAN_KEY = "current-span"
 _SPAN_KEY = create_key("current-span")
 
 
-def set_span_in_context(
-    span: Span, context: Optional[Context] = None
-) -> Context:
+def set_span_in_context(span: Span, context: Context | None = None) -> Context:
     """Set the span in the given context.
 
     Args:
@@ -24,7 +21,7 @@ def set_span_in_context(
     return ctx
 
 
-def get_current_span(context: Optional[Context] = None) -> Span:
+def get_current_span(context: Context | None = None) -> Span:
     """Retrieve the current span.
 
     Args:
