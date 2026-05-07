@@ -389,7 +389,7 @@ class TestOTLPExporterMixin(TestCase):
         )
 
     @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
     )
     def test_shutdown(self):
         add_TraceServiceServicer_to_server(

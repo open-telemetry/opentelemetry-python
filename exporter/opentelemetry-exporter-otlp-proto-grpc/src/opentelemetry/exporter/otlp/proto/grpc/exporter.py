@@ -20,6 +20,7 @@ logic to handle transient collector outages.
 
 """
 
+import os
 import random
 import threading
 from abc import ABC, abstractmethod
@@ -104,9 +105,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
-)
-from opentelemetry.sdk.environment_variables._internal import (
-    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -396,9 +394,10 @@ class OTLPExporterMixin(
             signal,
             parsed_url,
             meter_provider,
-            parse_boolean_environment_variable(
-                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-            ),
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
         self._initialize_channel_and_stub()
@@ -561,7 +560,8 @@ class OTLPExporterMixin(
             self._signal,
             self._parsed_url,
             meter_provider,
-            parse_boolean_environment_variable(
-                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-            ),
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )

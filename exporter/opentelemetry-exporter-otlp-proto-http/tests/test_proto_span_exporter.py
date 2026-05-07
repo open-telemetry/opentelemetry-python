@@ -300,7 +300,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertIsNone(self.metric_reader.get_metrics_data())
 
     @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
     )
     @patch.object(Session, "post")
     def test_retry_timeout(self, mock_post):

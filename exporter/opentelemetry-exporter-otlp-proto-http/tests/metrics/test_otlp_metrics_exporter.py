@@ -336,7 +336,7 @@ class TestOTLPMetricExporter(TestCase):
             )
 
     @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
     )
     @patch.object(Session, "post")
     def test_success(self, mock_post):

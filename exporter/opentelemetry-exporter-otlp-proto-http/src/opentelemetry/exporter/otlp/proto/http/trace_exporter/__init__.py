@@ -14,6 +14,7 @@
 
 import gzip
 import logging
+import os
 import random
 import threading
 import zlib
@@ -58,9 +59,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
-)
-from opentelemetry.sdk.environment_variables._internal import (
-    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -156,9 +154,10 @@ class OTLPSpanExporter(SpanExporter):
             "traces",
             urlparse(self._endpoint),
             meter_provider,
-            parse_boolean_environment_variable(
-                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-            ),
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
     def _export(
