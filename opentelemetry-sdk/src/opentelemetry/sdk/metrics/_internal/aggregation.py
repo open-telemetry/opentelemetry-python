@@ -876,7 +876,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         ),
                         min=min_,
                         max=max_,
-                        # FIXME: Find the right value for flags
                         flags=DataPointFlags.get_default(),
                     )
 
@@ -1052,7 +1051,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     ),
                     min=self._previous_min,
                     max=self._previous_max,
-                    # FIXME: Find the right value for flags
                     flags=DataPointFlags.get_default(),
                 )
 
