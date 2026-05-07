@@ -81,7 +81,7 @@ class TestPrometheusMetricReader(TestCase):
         )
 
         collector = _CustomCollector(
-            disable_target_info=True, without_scope_info=True, prefix=prefix
+            disable_target_info=True, scope_info_enabled=False, prefix=prefix
         )
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
@@ -167,7 +167,7 @@ class TestPrometheusMetricReader(TestCase):
         )
 
         collector = _CustomCollector(
-            disable_target_info=True, without_scope_info=True
+            disable_target_info=True, scope_info_enabled=False
         )
         collector.add_metrics_data(metrics_data)
 
@@ -215,7 +215,7 @@ class TestPrometheusMetricReader(TestCase):
         )
 
         collector = _CustomCollector(
-            disable_target_info=True, without_scope_info=True
+            disable_target_info=True, scope_info_enabled=False
         )
         collector.add_metrics_data(metrics_data)
 
@@ -262,7 +262,7 @@ class TestPrometheusMetricReader(TestCase):
         )
 
         collector = _CustomCollector(
-            disable_target_info=True, without_scope_info=True
+            disable_target_info=True, scope_info_enabled=False
         )
         collector.add_metrics_data(metrics_data)
 
@@ -316,7 +316,7 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
         collector = _CustomCollector(
-            disable_target_info=True, without_scope_info=True
+            disable_target_info=True, scope_info_enabled=False
         )
         collector.add_metrics_data(metrics_data)
 
@@ -748,7 +748,7 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
         collector = _CustomCollector(
-            disable_target_info=True, without_scope_info=True
+            disable_target_info=True, scope_info_enabled=False
         )
         collector.add_metrics_data(metrics_data)
 

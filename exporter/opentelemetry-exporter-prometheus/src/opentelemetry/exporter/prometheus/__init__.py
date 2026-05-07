@@ -268,7 +268,7 @@ class PrometheusMetricReader(MetricReader):
 
     Args:
         disable_target_info: Whether to disable the ``target_info`` metric.
-        without_scope_info: Whether to omit instrumentation scope labels from
+        scope_info_enabled: Whether to omit instrumentation scope labels from
             exported metrics. Scope labels are exported by default.
         prefix: Prefix added to exported Prometheus metric names.
     """
@@ -276,7 +276,7 @@ class PrometheusMetricReader(MetricReader):
     def __init__(
         self,
         disable_target_info: bool = False,
-        without_scope_info: bool = False,
+        scope_info_enabled: bool = True,
         prefix: str = "",
     ) -> None:
         super().__init__(
@@ -292,7 +292,7 @@ class PrometheusMetricReader(MetricReader):
         )
         self._collector = _CustomCollector(
             disable_target_info=disable_target_info,
-            without_scope_info=without_scope_info,
+            scope_info_enabled=scope_info_enabled,
             prefix=prefix,
         )
         REGISTRY.register(self._collector)
@@ -323,13 +323,13 @@ class _CustomCollector:
     def __init__(
         self,
         disable_target_info: bool = False,
-        without_scope_info: bool = False,
+        scope_info_enabled: bool = True,
         prefix: str = "",
     ):
         self._callback = None
         self._metrics_datas: Deque[MetricsData] = deque()
         self._disable_target_info = disable_target_info
-        self._without_scope_info = without_scope_info
+        self._scope_info_enabled = scope_info_enabled
         self._target_info = None
         self._prefix = prefix
 
@@ -440,7 +440,7 @@ class _CustomCollector:
     def _build_scope_attrs(
         self, scope: InstrumentationScope
     ) -> dict[str, AttributeValue]:
-        if self._without_scope_info:
+        if not self._scope_info_enabled:
             return {}
         attrs: dict[str, AttributeValue] = {}
         if scope.attributes:
