@@ -28,6 +28,7 @@ from opentelemetry.exporter.prometheus import (
     _CustomCollector,
 )
 from opentelemetry.metrics import NoOpMeterProvider
+from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -38,6 +39,7 @@ from opentelemetry.sdk.metrics.export import (
     ResourceMetrics,
     ScopeMetrics,
 )
+from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
@@ -47,6 +49,7 @@ from opentelemetry.test.metrictestutil import (
 )
 
 
+# pylint: disable=too-many-public-methods
 class TestPrometheusMetricReader(TestCase):
     def setUp(self):
         self._mock_registry_register = Mock()
@@ -719,3 +722,30 @@ class TestPrometheusMetricReader(TestCase):
                 """
             ),
         )
+
+    def test_preferred_aggregation(self):
+        """Test that preferred_aggregation parameter is passed to MetricReader."""
+        custom_aggregation = {
+            HistogramInstrument: ExplicitBucketHistogramAggregation(
+                boundaries=[1.0, 5.0, 10.0]
+            )
+        }
+        reader = PrometheusMetricReader(
+            preferred_aggregation=custom_aggregation
+        )
+        provider = MeterProvider(metric_readers=[reader])
+        meter = provider.get_meter("test")
+        histogram = meter.create_histogram("test_histogram")
+        histogram.record(5)
+        result = list(reader._collector.collect())
+        self.assertTrue(len(result) > 0)
+        prometheus_metric = result[1]
+        bucket_bounds = [
+            sample.labels["le"]
+            for sample in prometheus_metric.samples
+            if "le" in sample.labels
+        ]
+        self.assertIn("1.0", bucket_bounds)
+        self.assertIn("5.0", bucket_bounds)
+        self.assertIn("10.0", bucket_bounds)
+        reader.shutdown()
