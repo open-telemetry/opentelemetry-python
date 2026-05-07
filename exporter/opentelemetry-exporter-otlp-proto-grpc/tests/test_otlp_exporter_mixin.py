@@ -1,26 +1,16 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import threading
 import time
 import unittest
+from collections.abc import Sequence
 from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
 )
 from logging import WARNING, getLogger
 from platform import system
-from typing import Any, Optional, Sequence
+from typing import Any
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -116,8 +106,8 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
         export_result: StatusCode,
-        optional_retry_nanos: Optional[int] = None,
-        optional_export_sleep: Optional[float] = None,
+        optional_retry_nanos: int | None = None,
+        optional_export_sleep: float | None = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
@@ -165,7 +155,7 @@ class ThreadWithReturnValue(threading.Thread):
             # an argument that has a member that points to the thread.
             del self._target, self._args, self._kwargs  # type: ignore
 
-    def join(self, timeout: Optional[float] = None) -> Any:
+    def join(self, timeout: float | None = None) -> Any:
         super().join(timeout=timeout)
         return self._return
 

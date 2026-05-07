@@ -1,20 +1,8 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from time import time_ns
-from typing import Optional
 
 from typing_extensions import deprecated
 
@@ -43,9 +31,9 @@ class EventLogger(APIEventLogger):
         self,
         logger_provider: LoggerProvider,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ):
         super().__init__(
             name=name,
@@ -82,15 +70,15 @@ class EventLogger(APIEventLogger):
     "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class EventLoggerProvider(APIEventLoggerProvider):
-    def __init__(self, logger_provider: Optional[LoggerProvider] = None):
+    def __init__(self, logger_provider: LoggerProvider | None = None):
         self._logger_provider = logger_provider or get_logger_provider()
 
     def get_event_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> EventLogger:
         if not name:
             _logger.warning("EventLogger created with invalid name: %s", name)

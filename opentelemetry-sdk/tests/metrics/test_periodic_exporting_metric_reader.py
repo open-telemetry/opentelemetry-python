@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access,invalid-name,no-self-use
 
@@ -19,7 +8,7 @@ import math
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
-from typing import Optional, cast
+from typing import cast
 from unittest.mock import Mock
 
 import pytest
@@ -91,8 +80,8 @@ class ExceptionAtCollectionPeriodicExportingMetricReader(
         self,
         exporter: MetricExporter,
         exception: Exception,
-        export_interval_millis: Optional[float] = None,
-        export_timeout_millis: Optional[float] = None,
+        export_interval_millis: float | None = None,
+        export_timeout_millis: float | None = None,
     ) -> None:
         super().__init__(
             exporter, export_interval_millis, export_timeout_millis
