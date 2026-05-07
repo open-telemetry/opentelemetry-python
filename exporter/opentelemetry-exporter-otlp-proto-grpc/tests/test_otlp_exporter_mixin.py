@@ -788,7 +788,7 @@ class TestOTLPExporterMixin(TestCase):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(
                 StatusCode.UNAVAILABLE,
-                optional_retry_nanos=100000000,  # .1 seconds
+                optional_retry_nanos=200000000,
                 optional_details="collector is restarting",
             ),
             self.server,
@@ -798,11 +798,9 @@ class TestOTLPExporterMixin(TestCase):
         )
         with self.assertLogs(level=WARNING) as warning:
             exporter.export([self.span])
-        transient_warnings = [
-            r for r in warning.records if "Transient" in r.message
-        ]
-        self.assertTrue(len(transient_warnings) > 0)
-        self.assertIn("collector is restarting", transient_warnings[0].message)
+        warning_logs = [r for r in warning.records if "Transient" in r.message]
+        self.assertTrue(len(warning_logs) > 0)
+        self.assertIn("collector is restarting", warning_logs[0].message)
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(

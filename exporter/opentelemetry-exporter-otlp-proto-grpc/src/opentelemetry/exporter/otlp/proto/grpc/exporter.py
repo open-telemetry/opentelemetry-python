@@ -511,7 +511,9 @@ class OTLPExporterMixin(
                             self._exporting,
                             self._endpoint,
                             error.code(),  # type: ignore [reportAttributeAccessIssue]
-                            f", details: {error.details()}" if error.details() else "",  # type: ignore [reportAttributeAccessIssue]
+                            f", details: {error.details()}"
+                            if error.details()
+                            else "",
                             exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
                         )
                         result.error = error
@@ -525,7 +527,9 @@ class OTLPExporterMixin(
                         self._exporting,
                         self._endpoint,
                         backoff_seconds,
-                        f" Details: {error.details()}" if error.details() else "",  # type: ignore [reportAttributeAccessIssue]
+                        f" Details: {error.details()}"
+                        if error.details()
+                        else "",
                     )
                 shutdown = self._shutdown_in_progress.wait(backoff_seconds)
                 if shutdown:
