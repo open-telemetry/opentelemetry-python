@@ -15,7 +15,8 @@ import threading
 from abc import ABC, abstractmethod
 from collections.abc import (
     Callable,
-    Sequence, Iterable,  # noqa: F401
+    Iterable,
+    Sequence,  # noqa: F401
 )
 from collections.abc import Sequence as TypingSequence
 from logging import getLogger
@@ -83,6 +84,7 @@ from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -90,7 +92,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
-    OTEL_EXPORTER_OTLP_TIMEOUT, _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource

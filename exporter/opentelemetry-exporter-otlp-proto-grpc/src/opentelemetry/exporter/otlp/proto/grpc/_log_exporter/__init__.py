@@ -1,10 +1,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from collections.abc import Sequence as TypingSequence
 from os import environ
-from typing import Literal, Iterable
+from typing import Literal
 
 from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs

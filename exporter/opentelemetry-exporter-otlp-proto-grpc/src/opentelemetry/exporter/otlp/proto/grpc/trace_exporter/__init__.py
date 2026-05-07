@@ -4,7 +4,7 @@
 """OTLP Span Exporter"""
 
 import logging
-from collections.abc import Sequence, Iterable
+from collections.abc import Iterable, Sequence
 from collections.abc import Sequence as TypingSequence
 from os import environ
 
