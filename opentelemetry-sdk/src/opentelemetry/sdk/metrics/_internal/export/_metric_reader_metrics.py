@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 from collections import Counter
 
 from opentelemetry.metrics import MeterProvider

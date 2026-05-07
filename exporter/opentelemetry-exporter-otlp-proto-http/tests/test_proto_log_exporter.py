@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access
 
@@ -18,7 +7,6 @@ import threading
 import time
 import unittest
 from logging import WARNING
-from typing import List
 from unittest.mock import MagicMock, Mock, patch
 
 import requests
@@ -358,7 +346,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.fail("No log records found")
 
     @staticmethod
-    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
+    def _get_sdk_log_data() -> list[ReadWriteLogRecord]:
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(

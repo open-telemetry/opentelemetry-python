@@ -1,23 +1,11 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-lines
 import threading
 import time
 from logging import WARNING
 from os import environ
-from typing import List
 from unittest import TestCase
 from unittest.mock import ANY, MagicMock, Mock, patch
 
@@ -478,7 +466,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        split_metrics_data: List[ExportMetricsServiceRequest] = list(
+        split_metrics_data: list[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -557,7 +545,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
-        split_metrics_data: List[ExportMetricsServiceRequest] = list(
+        split_metrics_data: list[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -649,7 +637,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
-        split_metrics_data: List[ExportMetricsServiceRequest] = list(
+        split_metrics_data: list[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -1458,7 +1446,7 @@ class TestOTLPMetricExporter(TestCase):
 
 
 def _resource_metrics(
-    index: int, scope_metrics: List[pb2.ScopeMetrics]
+    index: int, scope_metrics: list[pb2.ScopeMetrics]
 ) -> pb2.ResourceMetrics:
     return pb2.ResourceMetrics(
         resource={
@@ -1469,7 +1457,7 @@ def _resource_metrics(
     )
 
 
-def _scope_metrics(index: int, metrics: List[pb2.Metric]) -> pb2.ScopeMetrics:
+def _scope_metrics(index: int, metrics: list[pb2.Metric]) -> pb2.ScopeMetrics:
     return pb2.ScopeMetrics(
         scope=InstrumentationScope(name=f"scope_{index}"),
         schema_url=f"scope_url_{index}",
@@ -1477,7 +1465,7 @@ def _scope_metrics(index: int, metrics: List[pb2.Metric]) -> pb2.ScopeMetrics:
     )
 
 
-def _gauge(index: int, data_points: List[pb2.NumberDataPoint]) -> pb2.Metric:
+def _gauge(index: int, data_points: list[pb2.NumberDataPoint]) -> pb2.Metric:
     return pb2.Metric(
         name=f"gauge_{index}",
         description="description",
