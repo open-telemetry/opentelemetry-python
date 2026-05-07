@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # type:ignore
 import unittest
 from unittest.mock import Mock, patch

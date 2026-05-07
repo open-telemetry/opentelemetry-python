@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """
 OpenTelemetry Zipkin JSON Exporter
@@ -73,8 +62,8 @@ API
 """
 
 import logging
+from collections.abc import Sequence
 from os import environ
-from typing import Optional, Sequence
 
 import requests
 
@@ -100,13 +89,13 @@ class ZipkinExporter(SpanExporter):
     def __init__(
         self,
         version: Protocol = Protocol.V2,
-        endpoint: Optional[str] = None,
+        endpoint: str | None = None,
         local_node_ipv4: IpInput = None,
         local_node_ipv6: IpInput = None,
-        local_node_port: Optional[int] = None,
-        max_tag_value_length: Optional[int] = None,
-        timeout: Optional[int] = None,
-        session: Optional[requests.Session] = None,
+        local_node_port: int | None = None,
+        max_tag_value_length: int | None = None,
+        timeout: int | None = None,
+        session: requests.Session | None = None,
     ):
         """Zipkin exporter.
 
