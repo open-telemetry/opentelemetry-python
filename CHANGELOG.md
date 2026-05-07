@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
 
 ## Unreleased
+- `opentelemetry-sdk`: Add Sphinx documentation for `opentelemetry.sdk.util` package (`BoundedList`, `BoundedDict`, `ns_to_iso_str`, `get_dict_as_key`), move `util.instrumentation` toctree entry from `trace` to `util` ([#2573](https://github.com/open-telemetry/opentelemetry-python/issues/2573))
 
 - Switch to SPDX license headers and add CI enforcement
   ([#5177](https://github.com/open-telemetry/opentelemetry-python/pull/5177))
