@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-exporter-prometheus`: Add `preferred_aggregation` parameter to `PrometheusMetricReader` to allow configuring default aggregation per instrument kind
   ([#5117](https://github.com/open-telemetry/opentelemetry-python/pull/5117))
+- `opentelemetry-api`: Enforce W3C Baggage size limits on outbound propagation in `W3CBaggagePropagator.inject()`. Previously only inbound extraction enforced limits; now inject also caps entries at 180, individual pairs at 4096 bytes, and total header at 8192 bytes per the W3C Baggage spec. The extract path max_pairs limit now counts all size-valid entries rather than only successfully parsed ones.
+  ([#5163](https://github.com/open-telemetry/opentelemetry-python/pull/5163))
+- `opentelemetry-sdk`: add `additional_properties` support to generated config models via custom `datamodel-codegen` template, enabling plugin/custom component names to flow through typed dataclasses
+  ([#5131](https://github.com/open-telemetry/opentelemetry-python/pull/5131))
 - Fix incorrect code example in `create_tracer()` docstring
   ([#5072](https://github.com/open-telemetry/opentelemetry-python/issues/5072))
 - `opentelemetry-sdk`: add `load_entry_point` shared utility to declarative file configuration for loading plugins via entry points; refactor propagator loading to use it
@@ -30,8 +34,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5076](https://github.com/open-telemetry/opentelemetry-python/pull/5076))
 - `opentelemetry-semantic-conventions`: use `X | Y` union annotation
   ([#5096](https://github.com/open-telemetry/opentelemetry-python/pull/5096))
+- `opentelemetry-sdk`: Fix `ProcessResourceDetector` to use `sys.orig_argv` so that `process.command`, `process.command_line`, and `process.command_args` reflect the original invocation for `python -m <module>` runs (where `sys.argv[0]` is rewritten to the module path)
+  ([#5083](https://github.com/open-telemetry/opentelemetry-python/pull/5083))
+- `opentelemetry-sdk`: make resource detector ordering deterministic
+  ([#5120](https://github.com/open-telemetry/opentelemetry-python/pull/5120))
 - Add WeaverLiveCheck test util
   ([#5088](https://github.com/open-telemetry/opentelemetry-python/pull/5088))
+- Fix incorrect type annotation on `detectors` parameter of `get_aggregated_resources`
+  ([#5135](https://github.com/open-telemetry/opentelemetry-python/pull/5135))
+- ci: wait for tracecontext server readiness instead of a fixed sleep in `scripts/tracecontext-integration-test.sh`
+  ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
