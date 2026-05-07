@@ -63,11 +63,11 @@ either implicit or explicit context propagation consistently throughout.
 """
 
 import os
-import typing
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Sequence
 from enum import Enum
 from logging import getLogger
-from typing import Iterator, Optional, Sequence, cast
+from typing import cast
 
 from typing_extensions import deprecated
 
@@ -145,7 +145,7 @@ class Link(_LinkBase):
         return 0
 
 
-_Links = Optional[Sequence[Link]]
+_Links = Sequence[Link] | None
 
 
 class SpanKind(Enum):
@@ -182,9 +182,9 @@ class TracerProvider(ABC):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -225,9 +225,9 @@ class NoOpTracerProvider(TracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
         return NoOpTracer()
@@ -247,9 +247,9 @@ class ProxyTracerProvider(TracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ) -> "Tracer":
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
@@ -277,11 +277,11 @@ class Tracer(ABC):
     def start_span(
         self,
         name: str,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: Optional[int] = None,
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
@@ -332,11 +332,11 @@ class Tracer(ABC):
     def start_as_current_span(
         self,
         name: str,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: Optional[int] = None,
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
@@ -408,15 +408,15 @@ class ProxyTracer(Tracer):
     def __init__(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ):
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
         self._schema_url = schema_url
         self._attributes = attributes
-        self._real_tracer: Optional[Tracer] = None
+        self._real_tracer: Tracer | None = None
         self._noop_tracer = NoOpTracer()
 
     @property
@@ -452,11 +452,11 @@ class NoOpTracer(Tracer):
     def start_span(
         self,
         name: str,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: Optional[int] = None,
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
@@ -480,11 +480,11 @@ class NoOpTracer(Tracer):
     def start_as_current_span(
         self,
         name: str,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: Optional[int] = None,
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
@@ -517,16 +517,16 @@ class _DefaultTracer(NoOpTracer):
 
 
 _TRACER_PROVIDER_SET_ONCE = Once()
-_TRACER_PROVIDER: Optional[TracerProvider] = None
+_TRACER_PROVIDER: TracerProvider | None = None
 _PROXY_TRACER_PROVIDER = ProxyTracerProvider()
 
 
 def get_tracer(
     instrumenting_module_name: str,
-    instrumenting_library_version: typing.Optional[str] = None,
-    tracer_provider: Optional[TracerProvider] = None,
-    schema_url: typing.Optional[str] = None,
-    attributes: typing.Optional[types.Attributes] = None,
+    instrumenting_library_version: str | None = None,
+    tracer_provider: TracerProvider | None = None,
+    schema_url: str | None = None,
+    attributes: types.Attributes | None = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 

@@ -3,7 +3,6 @@
 
 import random
 import time
-from typing import Type
 
 from opentelemetry import trace
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
@@ -28,7 +27,7 @@ from opentelemetry.sdk.trace import TracerProvider
 
 # Create a custom reservoir factory with specified parameters
 def custom_reservoir_factory(
-    aggregationType: Type[_Aggregation],
+    aggregationType: type[_Aggregation],
 ) -> ExemplarReservoirBuilder:
     if issubclass(aggregationType, _ExplicitBucketHistogramAggregation):
         return AlignedHistogramBucketExemplarReservoir

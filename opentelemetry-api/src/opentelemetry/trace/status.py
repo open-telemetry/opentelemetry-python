@@ -3,7 +3,6 @@
 
 import enum
 import logging
-import typing
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class Status:
     def __init__(
         self,
         status_code: StatusCode = StatusCode.UNSET,
-        description: typing.Optional[str] = None,
+        description: str | None = None,
     ):
         self._status_code = status_code
         self._description = None
@@ -56,7 +55,7 @@ class Status:
         return self._status_code
 
     @property
-    def description(self) -> typing.Optional[str]:
+    def description(self) -> str | None:
         """Status description"""
         return self._description
 

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from os import environ
-from typing import Literal, Optional
+from typing import Literal
 
 import requests
 
@@ -26,7 +26,7 @@ def _load_session_from_envvar(
         "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER",
         "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER",
     ],
-) -> Optional[requests.Session]:
+) -> requests.Session | None:
     _credential_env = environ.get(
         _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
     ) or environ.get(cred_envvar)

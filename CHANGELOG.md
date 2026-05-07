@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Apply fixes for `UP` ruff rule
+  ([#5133](https://github.com/open-telemetry/opentelemetry-python/pull/5133))
 - Switch to SPDX license headers and add CI enforcement
   ([#5177](https://github.com/open-telemetry/opentelemetry-python/pull/5177))
 - `opentelemetry-api`: Enforce W3C Baggage size limits on outbound propagation in `W3CBaggagePropagator.inject()`. Previously only inbound extraction enforced limits; now inject also caps entries at 180, individual pairs at 4096 bytes, and total header at 8192 bytes per the W3C Baggage spec. The extract path max_pairs limit now counts all size-valid entries rather than only successfully parsed ones.
@@ -44,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5135](https://github.com/open-telemetry/opentelemetry-python/pull/5135))
 - ci: wait for tracecontext server readiness instead of a fixed sleep in `scripts/tracecontext-integration-test.sh`
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
+- `opentelemetry-sdk`: only load entrypoints for resource detectors if they are configured via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
+  ([#5145](https://github.com/open-telemetry/opentelemetry-python/pull/5145))
 - [BREAKING] `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-common`: Add support for metric data-point flags
   ([#4916](https://github.com/open-telemetry/opentelemetry-python/pull/4916))
 
@@ -615,8 +619,6 @@ can cause a deadlock to occur over `logging._lock` in some cases ([#4636](https:
   - The exporter's API is not changed
 - Add parameters for Distros and configurators to configure autoinstrumentation in addition to existing environment variables.
   ([#3864](https://github.com/open-telemetry/opentelemetry-python/pull/3864))
-- [BREAKING] `opentelemetry-sdk`, `opentelemetry-exporter-otlp-proto-common`: Add support for metric data-point flags
-  ([#4916](https://github.com/open-telemetry/opentelemetry-python/pull/4916))
 
 ## Version 1.24.0/0.45b0 (2024-03-28)
 

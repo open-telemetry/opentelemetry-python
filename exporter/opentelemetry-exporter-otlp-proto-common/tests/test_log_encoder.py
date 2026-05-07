@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-from typing import List, Tuple
 
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -76,7 +75,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
     @staticmethod
-    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
+    def _get_sdk_log_data() -> list[ReadWriteLogRecord]:
         # pylint:disable=too-many-locals
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
@@ -319,7 +318,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
     def get_test_logs(
         self,
-    ) -> Tuple[List[ReadWriteLogRecord], ExportLogsServiceRequest]:
+    ) -> tuple[list[ReadWriteLogRecord], ExportLogsServiceRequest]:
         sdk_logs = self._get_sdk_log_data()
 
         pb2_service_request = ExportLogsServiceRequest(
@@ -635,7 +634,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         return sdk_logs, pb2_service_request
 
     @staticmethod
-    def _get_test_logs_dropped_attributes() -> List[ReadWriteLogRecord]:
+    def _get_test_logs_dropped_attributes() -> list[ReadWriteLogRecord]:
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(

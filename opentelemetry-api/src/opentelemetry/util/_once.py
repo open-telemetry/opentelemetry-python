@@ -1,8 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Callable
 from threading import Lock
-from typing import Callable
 
 
 class Once:

@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 from collections import defaultdict
-from typing import List, Sequence
+from collections.abc import Sequence
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -61,7 +61,7 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
 
 def _encode_resource_logs(
     batch: Sequence[ReadableLogRecord],
-) -> List[ResourceLogs]:
+) -> list[ResourceLogs]:
     sdk_resource_logs = defaultdict(lambda: defaultdict(list))
 
     for readable_log in batch:

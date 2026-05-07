@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.sdk._configuration._common import _parse_headers
@@ -49,8 +48,8 @@ _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 
 
 def _map_compression(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
+    value: str | None, compression_enum: type
+) -> object | None:
     """Map a compression string to the given Compression enum value."""
     if value is None or value.lower() == "none":
         return None
@@ -205,8 +204,8 @@ def _create_log_record_processor(
 
 
 def create_logger_provider(
-    config: Optional[LoggerProviderConfig],
-    resource: Optional[Resource] = None,
+    config: LoggerProviderConfig | None,
+    resource: Resource | None = None,
 ) -> LoggerProvider:
     """Create an SDK LoggerProvider from declarative config.
 
@@ -240,8 +239,8 @@ def create_logger_provider(
 
 
 def configure_logger_provider(
-    config: Optional[LoggerProviderConfig],
-    resource: Optional[Resource] = None,
+    config: LoggerProviderConfig | None,
+    resource: Resource | None = None,
 ) -> None:
     """Configure the global LoggerProvider from declarative config.
 

@@ -3,7 +3,6 @@
 
 import logging
 from time import time_ns
-from typing import Optional
 
 from typing_extensions import deprecated
 
@@ -32,9 +31,9 @@ class EventLogger(APIEventLogger):
         self,
         logger_provider: LoggerProvider,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ):
         super().__init__(
             name=name,
@@ -71,15 +70,15 @@ class EventLogger(APIEventLogger):
     "Deprecated since version 1.39.0 and will be removed in a future release."
 )
 class EventLoggerProvider(APIEventLoggerProvider):
-    def __init__(self, logger_provider: Optional[LoggerProvider] = None):
+    def __init__(self, logger_provider: LoggerProvider | None = None):
         self._logger_provider = logger_provider or get_logger_provider()
 
     def get_event_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> EventLogger:
         if not name:
             _logger.warning("EventLogger created with invalid name: %s", name)

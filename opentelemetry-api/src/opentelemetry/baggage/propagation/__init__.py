@@ -1,9 +1,9 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 #
+from collections.abc import Iterable, Iterator, Mapping
 from logging import getLogger
 from re import split
-from typing import Iterable, Iterator, Mapping, Optional, Set
 from urllib.parse import quote_plus, unquote_plus
 
 from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
@@ -79,7 +79,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
     def extract(
         self,
         carrier: textmap.CarrierT,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
     ) -> Context:
         """Extract Baggage from the carrier.
@@ -139,7 +139,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
     def inject(
         self,
         carrier: textmap.CarrierT,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
@@ -164,7 +164,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
     @property
-    def fields(self) -> Set[str]:
+    def fields(self) -> set[str]:
         """Returns a set with the fields set in `inject`."""
         return {self._BAGGAGE_HEADER_NAME}
 
@@ -178,8 +178,8 @@ def _encode_baggage_pairs(
 
 
 def _extract_first_element(
-    items: Optional[Iterable[textmap.CarrierT]],
-) -> Optional[textmap.CarrierT]:
+    items: Iterable[textmap.CarrierT] | None,
+) -> textmap.CarrierT | None:
     if items is None:
         return None
     return next(iter(items), None)
