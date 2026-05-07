@@ -422,3 +422,22 @@ jobs:
 
       - name: Run tests
         run: tox -e lint-opentelemetry-test-utils
+
+  lint-license-header-check:
+    name: license-header-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e lint-license-header-check
