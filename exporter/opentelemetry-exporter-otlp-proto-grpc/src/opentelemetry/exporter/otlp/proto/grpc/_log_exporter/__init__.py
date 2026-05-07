@@ -1,15 +1,5 @@
 # Copyright The OpenTelemetry Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from os import environ
 from typing import Dict, Literal, Optional, Sequence, Tuple, Union
@@ -22,6 +12,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     _get_credentials,
     environ_to_compression,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
@@ -43,6 +34,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_INSECURE,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+)
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
 )
 
 
@@ -66,6 +60,8 @@ class OTLPLogExporter(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        *,
+        meter_provider: Optional[MeterProvider] = None,
     ):
         insecure_logs = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
         if insecure is None and insecure_logs is not None:
@@ -105,12 +101,18 @@ class OTLPLogExporter(
             stub=LogsServiceStub,
             result=LogRecordExportResult,
             channel_options=channel_options,
+            component_type=OtelComponentTypeValues.OTLP_GRPC_LOG_EXPORTER,
+            signal="logs",
+            meter_provider=meter_provider,
         )
 
     def _translate_data(
         self, data: Sequence[ReadableLogRecord]
     ) -> ExportLogsServiceRequest:
         return encode_logs(data)
+
+    def _count_data(self, data: Sequence[ReadableLogRecord]):
+        return len(data)
 
     def export(  # type: ignore [reportIncompatibleMethodOverride]
         self,

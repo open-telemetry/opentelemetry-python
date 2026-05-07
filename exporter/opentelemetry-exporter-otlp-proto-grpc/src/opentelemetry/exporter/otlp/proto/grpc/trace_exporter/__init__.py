@@ -1,15 +1,5 @@
 # Copyright The OpenTelemetry Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """OTLP Span Exporter"""
 
@@ -28,6 +18,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     environ_to_compression,
     get_resource_data,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
 )
@@ -58,6 +49,9 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +89,8 @@ class OTLPSpanExporter(
         timeout: Optional[float] = None,
         compression: Optional[Compression] = None,
         channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        *,
+        meter_provider: Optional[MeterProvider] = None,
     ):
         insecure_spans = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
         if insecure is None and insecure_spans is not None:
@@ -135,12 +131,18 @@ class OTLPSpanExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
+            component_type=OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER,
+            signal="traces",
+            meter_provider=meter_provider,
         )
 
     def _translate_data(
         self, data: Sequence[ReadableSpan]
     ) -> ExportTraceServiceRequest:
         return encode_spans(data)
+
+    def _count_data(self, data: Sequence[ReadableSpan]):
+        return len(data)
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)

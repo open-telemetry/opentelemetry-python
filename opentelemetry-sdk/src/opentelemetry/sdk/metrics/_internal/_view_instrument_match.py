@@ -1,31 +1,20 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
 from logging import getLogger
 from threading import Lock
 from time import time_ns
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, cast
 
-from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
+    AggregationTemporality,
     DefaultAggregation,
     _Aggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
+from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
@@ -37,7 +26,7 @@ class _ViewInstrumentMatch:
     def __init__(
         self,
         view: View,
-        instrument: Instrument,
+        instrument: _Instrument,
         instrument_class_aggregation: Dict[type, Aggregation],
     ):
         self._view = view
@@ -76,10 +65,16 @@ class _ViewInstrumentMatch:
             # type since they are functionally equivalent.
             and self._aggregation.__class__ == other._aggregation.__class__
         )
+        if not result:
+            return result
+
         if isinstance(self._aggregation, _SumAggregation):
+            # if result is True the two aggregation are of the same type
+            self._aggregation = cast(_SumAggregation, self._aggregation)
+            other._aggregation = cast(_SumAggregation, other._aggregation)
+
             result = (
-                result
-                and self._aggregation._instrument_is_monotonic
+                self._aggregation._instrument_is_monotonic
                 == other._aggregation._instrument_is_monotonic
                 and self._aggregation._instrument_aggregation_temporality
                 == other._aggregation._instrument_aggregation_temporality

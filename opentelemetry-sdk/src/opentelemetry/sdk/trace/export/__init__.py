@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import logging
@@ -26,7 +15,8 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor
+from opentelemetry.metrics import MeterProvider, get_meter_provider
+from opentelemetry.sdk._shared_internal import BatchProcessor, ProcessorMetrics
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
@@ -34,6 +24,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
@@ -61,9 +54,7 @@ class SpanExporter:
     `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
-    def export(
-        self, spans: typing.Sequence[ReadableSpan]
-    ) -> "SpanExportResult":  # pyright: ignore[reportReturnType]
+    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:  # pyright: ignore[reportReturnType]
         """Exports a batch of telemetry data.
 
         Args:
@@ -93,8 +84,18 @@ class SimpleSpanProcessor(SpanProcessor):
     passes ended spans directly to the configured `SpanExporter`.
     """
 
-    def __init__(self, span_exporter: SpanExporter):
+    def __init__(
+        self,
+        span_exporter: SpanExporter,
+        *,
+        meter_provider: MeterProvider | None = None,
+    ):
         self.span_exporter = span_exporter
+        self._metrics = ProcessorMetrics(
+            "traces",
+            OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
+            meter_provider or get_meter_provider(),
+        )
 
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None
@@ -108,11 +109,15 @@ class SimpleSpanProcessor(SpanProcessor):
         if not (span.context and span.context.trace_flags.sampled):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        error: Exception | None = None
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught
-        except Exception:
+        except Exception as err:
+            error = err
             logger.exception("Exception while exporting Span.")
+        finally:
+            self._metrics.finish_items(1, error)
         detach(token)
 
     def shutdown(self) -> None:
@@ -147,6 +152,8 @@ class BatchSpanProcessor(SpanProcessor):
         schedule_delay_millis: float | None = None,
         max_export_batch_size: int | None = None,
         export_timeout_millis: float | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchSpanProcessor._default_max_queue_size()
@@ -178,6 +185,12 @@ class BatchSpanProcessor(SpanProcessor):
             export_timeout_millis,
             max_queue_size,
             "Span",
+            ProcessorMetrics(
+                "traces",
+                OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR,
+                meter_provider or get_meter_provider(),
+                capacity=max_queue_size,
+            ),
         )
 
     # Added for backward compatibility. Not recommended to directly access/use underlying exporter.

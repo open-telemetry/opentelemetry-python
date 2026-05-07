@@ -1,0 +1,27 @@
+# this is a test registry, used to save up time on weaver loading semconv from GH repo
+# and preventing flaky tests resulting from unpredictable network/performance in CI
+groups:
+  - id: registry.test
+    type: attribute_group
+    brief: Minimal registry for WeaverLiveCheck self-tests.
+    attributes:
+      - id: service.name
+        type: string
+        brief: The name of the service.
+        stability: stable
+        examples: ["test-service"]
+      - id: telemetry.sdk.language
+        type: string
+        brief: The language of the telemetry SDK.
+        stability: stable
+        examples: ["python"]
+      - id: telemetry.sdk.name
+        type: string
+        brief: The name of the telemetry SDK.
+        stability: stable
+        examples: ["opentelemetry"]
+      - id: telemetry.sdk.version
+        type: string
+        brief: The version string of the telemetry SDK.
+        stability: stable
+        examples: ["1.0.0"]

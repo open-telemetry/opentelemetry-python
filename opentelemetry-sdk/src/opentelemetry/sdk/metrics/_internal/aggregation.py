@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-lines
 
@@ -29,13 +18,13 @@ from typing import (
     Sequence,
     Type,
     TypeVar,
+    cast,
 )
 
 from opentelemetry.metrics import (
     Asynchronous,
     Counter,
     Histogram,
-    Instrument,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
@@ -59,6 +48,7 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.exponent_
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm_mapping import (
     LogarithmMapping,
 )
+from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
@@ -968,6 +958,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 if scale is None and self._previous_scale is not None:
                     scale = self._previous_scale
 
+                # here self._previous_value_negative and self._previous_value_positive are not Optional anymore
+                self._previous_value_negative = cast(
+                    Buckets, self._previous_value_negative
+                )
+                self._previous_value_positive = cast(
+                    Buckets, self._previous_value_positive
+                )
+
                 min_scale = min(self._previous_scale, scale)
 
                 low_positive, high_positive = (
@@ -1200,7 +1198,7 @@ class Aggregation(ABC):
     @abstractmethod
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1231,7 +1229,7 @@ class DefaultAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1323,7 +1321,7 @@ class ExponentialBucketHistogramAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1372,7 +1370,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1390,7 +1388,13 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         if self._boundaries is not None:
             boundaries = self._boundaries
         else:
-            boundaries = instrument._advisory.explicit_bucket_boundaries
+            # guard for usage with instruments without advisory
+            advisory = getattr(instrument, "_advisory", None)
+            boundaries = (
+                advisory.explicit_bucket_boundaries
+                if advisory is not None
+                else None
+            )
 
         return _ExplicitBucketHistogramAggregation(
             attributes,
@@ -1410,7 +1414,7 @@ class SumAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1444,7 +1448,7 @@ class LastValueAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder
@@ -1462,7 +1466,7 @@ class DropAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
             [Type[_Aggregation]], ExemplarReservoirBuilder

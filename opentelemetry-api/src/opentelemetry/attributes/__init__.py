@@ -1,17 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
+import copy
 import logging
 import threading
 from collections import OrderedDict
@@ -34,6 +24,13 @@ _VALID_ANY_VALUE_TYPES = (
     Sequence,
     Mapping,
 )
+
+
+# TODO: Remove this workaround and revert to the simpler implementation
+# once Python 3.9 support is dropped (planned around May 2026).
+# This exists only to avoid issues caused by deprecated behavior in 3.9.
+def _type_name(t):
+    return getattr(t, "__name__", getattr(t, "_name", repr(t)))
 
 
 _logger = logging.getLogger(__name__)
@@ -190,7 +187,7 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
     except Exception:
         raise TypeError(
             f"Invalid type {type(value).__name__} for attribute value. "
-            f"Expected one of {[valid_type.__name__ for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
+            f"Expected one of {[_type_name(valid_type) for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
             "sequence of those types",
         )
 
@@ -317,6 +314,21 @@ class BoundedAttributes(MutableMapping):  # type: ignore
 
     def __len__(self) -> int:
         return len(self._dict)
+
+    def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
+        copy_ = BoundedAttributes(
+            maxlen=self.maxlen,
+            immutable=self._immutable,
+            max_value_len=self.max_value_len,
+            extended_attributes=self._extended_attributes,
+        )
+        memo[id(self)] = copy_
+        with self._lock:
+            # Assign _dict directly to avoid re-cleaning already clean values
+            # and to bypass the immutability guard in __setitem__
+            copy_._dict = copy.deepcopy(self._dict, memo)
+            copy_.dropped = self.dropped
+        return copy_
 
     def copy(self):  # type: ignore
         return self._dict.copy()  # type: ignore

@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "OpenTelemetry Collector Protobuf over HTTP Exporter"
 readme = "README.rst"
 license = "Apache-2.0"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
 ]
@@ -19,7 +19,6 @@ classifiers = [
   "Intended Audience :: Developers",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -29,9 +28,9 @@ classifiers = [
 dependencies = [
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-proto == 1.41.0.dev",
-  "opentelemetry-sdk ~= 1.41.0.dev",
-  "opentelemetry-exporter-otlp-proto-common == 1.41.0.dev",
+  "opentelemetry-proto == 1.42.0.dev",
+  "opentelemetry-sdk ~= 1.42.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.42.0.dev",
   "requests ~= 2.7",
   "typing-extensions >= 4.5.0",
 ]

@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access,invalid-name,no-self-use
 
@@ -19,14 +8,19 @@ import math
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
-from typing import Optional
+from typing import Optional, cast
 from unittest.mock import Mock
 
 import pytest
 
-from opentelemetry.sdk.metrics import Counter, MetricsTimeoutError
+from opentelemetry.sdk.metrics import (
+    Counter,
+    MeterProvider,
+    MetricsTimeoutError,
+)
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics._internal.point import (
+    HistogramDataPoint,
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
@@ -309,3 +303,49 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             weak_ref(),
             "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
         )
+
+    def test_metric_reader_metrics(self):
+        exporter = FakeMetricsExporter()
+        pmr = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=100000
+        )
+        mp = MeterProvider(metric_readers=[pmr])
+
+        counter = mp.get_meter("test").create_counter("test_counter")
+        counter.add(1)
+
+        mp.force_flush()
+        self.assertEqual(len(exporter.metrics), 1)
+        # Need a second collection to get the metric we recorded during first collection
+        exporter.metrics.clear()
+        mp.force_flush()
+        self.assertEqual(len(exporter.metrics), 1)
+        metric_data = exporter.metrics[0]
+
+        scope_metrics = [
+            sm
+            for sm in metric_data.resource_metrics[0].scope_metrics
+            if sm.scope.name == "opentelemetry-sdk"
+        ]
+        self.assertEqual(len(scope_metrics), 1)
+        reader_metrics = [
+            m
+            for m in scope_metrics[0].metrics
+            if m.name == "otel.sdk.metric_reader.collection.duration"
+        ]
+        self.assertEqual(len(reader_metrics), 1)
+        metric = reader_metrics[0]
+
+        point = metric.data.data_points[0]
+        histogram = cast(HistogramDataPoint, point)
+        self.assertEqual(histogram.count, 1)
+        attrs = histogram.attributes
+        assert attrs is not None
+        self.assertEqual(
+            attrs["otel.component.type"], "periodic_metric_reader"
+        )
+        name = attrs["otel.component.name"]
+        assert isinstance(name, str)
+        self.assertTrue(name.startswith("periodic_metric_reader/"))
+
+        mp.shutdown()

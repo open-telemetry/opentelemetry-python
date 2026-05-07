@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # type: ignore
 # pylint: skip-file
@@ -35,11 +24,15 @@ from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP_PROTO_HTTP,
     _get_exporter_names,
     _get_id_generator,
+    _get_logger_configurator,
+    _get_meter_configurator,
     _get_sampler,
     _get_tracer_configurator,
     _import_config_components,
     _import_exporters,
     _import_id_generator,
+    _import_logger_configurator,
+    _import_meter_configurator,
     _import_sampler,
     _import_tracer_configurator,
     _init_logging,
@@ -49,16 +42,23 @@ from opentelemetry.sdk._configuration import (
     _OTelSDKConfigurator,
 )
 from opentelemetry.sdk._logs import LoggingHandler, LogRecordProcessor
+from opentelemetry.sdk._logs._internal import _RuleBasedLoggerConfigurator
 from opentelemetry.sdk._logs._internal.export import LogRecordExporter
 from opentelemetry.sdk._logs.export import (
     ConsoleLogRecordExporter,
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_LOGGER_CONFIGURATOR,
+    OTEL_PYTHON_METER_CONFIGURATOR,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics._internal import (
+    _default_meter_configurator,
+    _RuleBasedMeterConfigurator,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     ConsoleMetricExporter,
@@ -108,9 +108,10 @@ class Provider:
 
 
 class DummyLoggerProvider:
-    def __init__(self, resource=None):
+    def __init__(self, resource=None, *, _logger_configurator=None):
         self.resource = resource
         self.processors = []
+        self._logger_configurator = _logger_configurator
 
     def add_log_record_processor(self, processor):
         self.processors.append(processor)
@@ -261,14 +262,14 @@ class CustomSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Optional[Context],
         trace_id: int,
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence[Link] = None,
         trace_state: TraceState = None,
-    ) -> "SamplingResult":
+    ) -> SamplingResult:
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,
             None,
@@ -290,14 +291,14 @@ class CustomRatioSampler(TraceIdRatioBased):
 
     def should_sample(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
-    ) -> "SamplingResult":
+    ) -> SamplingResult:
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,
             None,
@@ -663,9 +664,7 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
         def custom_tracer_configurator(tracer_scope):
-            return mock.Mock(spec=_RuleBasedTracerConfigurator)(
-                tracer_scope=tracer_scope
-            )
+            return mock.Mock(spec=_RuleBasedTracerConfigurator)(tracer_scope)
 
         mock_entry_points.configure_mock(
             return_value=[
@@ -875,6 +874,7 @@ class TestLoggingInit(TestCase):
             exporter_args_map=None,
             log_record_processors=None,
             export_log_record_processor=None,
+            logger_configurator=None,
         )
 
     @patch.dict(
@@ -896,6 +896,7 @@ class TestLoggingInit(TestCase):
             exporter_args_map=None,
             log_record_processors=None,
             export_log_record_processor=None,
+            logger_configurator=None,
         )
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -922,7 +923,7 @@ class TestLoggingInit(TestCase):
         _, _, kwargs = tracing_mock.mock_calls[0]
         tracing_resource = kwargs["resource"]
         _, args, _ = metrics_mock.mock_calls[0]
-        metrics_resource = args[1]
+        metrics_resource = kwargs["resource"]
         self.assertEqual(logging_resource, tracing_resource)
         self.assertEqual(logging_resource, metrics_resource)
         self.assertEqual(tracing_resource, metrics_resource)
@@ -985,6 +986,7 @@ class TestLoggingInit(TestCase):
             "log_record_processors": [],
             "span_processors": [],
             "tracer_configurator": "tracer_configurator_test",
+            "meter_configurator": "meter_configurator_test",
         }
         _initialize_components(**kwargs)
 
@@ -1024,9 +1026,10 @@ class TestLoggingInit(TestCase):
             tracer_configurator="tracer_configurator_test",
         )
         metrics_mock.assert_called_once_with(
-            "TEST_METRICS_EXPORTERS_DICT",
-            "TEST_RESOURCE",
+            exporters_or_readers="TEST_METRICS_EXPORTERS_DICT",
+            resource="TEST_RESOURCE",
             exporter_args_map={1: {"compression": "gzip"}},
+            meter_configurator="meter_configurator_test",
         )
         logging_mock.assert_called_once_with(
             "TEST_LOG_EXPORTERS_DICT",
@@ -1035,6 +1038,7 @@ class TestLoggingInit(TestCase):
             exporter_args_map={1: {"compression": "gzip"}},
             log_record_processors=[],
             export_log_record_processor=SimpleLogRecordProcessor,
+            logger_configurator=None,
         )
 
     def test_basicConfig_works_with_otel_handler(self):
@@ -1133,6 +1137,67 @@ class TestLoggingInit(TestCase):
                 "Should still have exactly one OpenTelemetry LoggingHandler",
             )
 
+    def test_logging_init_logger_configurator_none_by_default(self):
+        with ResetGlobalLoggingState():
+            _init_logging({})
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertIsNone(provider._logger_configurator)
+
+    def test_logging_init_logger_configurator_passed_directly(self):
+        mock_configurator = Mock()
+        with ResetGlobalLoggingState():
+            _init_logging({}, logger_configurator=mock_configurator)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertEqual(provider._logger_configurator, mock_configurator)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_LOGGER_CONFIGURATOR: "non_existent_entry_point"},
+    )
+    def test_logging_init_custom_logger_configurator_with_env_non_existent_entry_point(
+        self,
+    ):
+        logger_configurator_name = _get_logger_configurator()
+        with self.assertLogs(level=WARNING):
+            logger_configurator = _import_logger_configurator(
+                logger_configurator_name
+            )
+        with ResetGlobalLoggingState():
+            _init_logging({}, logger_configurator=logger_configurator)
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_LOGGER_CONFIGURATOR: "custom_logger_configurator"},
+    )
+    def test_logging_init_custom_logger_configurator_with_env(
+        self, mock_entry_points
+    ):
+        def custom_logger_configurator(logger_scope):
+            return mock.Mock(spec=_RuleBasedLoggerConfigurator)(logger_scope)
+
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_logger_configurator",
+                    custom_logger_configurator,
+                )
+            ]
+        )
+
+        logger_configurator_name = _get_logger_configurator()
+        logger_configurator = _import_logger_configurator(
+            logger_configurator_name
+        )
+        with ResetGlobalLoggingState():
+            _init_logging({}, logger_configurator=logger_configurator)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertEqual(
+                provider._logger_configurator, custom_logger_configurator
+            )
+
 
 class TestMetricsInit(TestCase):
     def setUp(self):
@@ -1219,6 +1284,65 @@ class TestMetricsInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         reader = provider._sdk_config.metric_readers[0]
         self.assertEqual(reader.exporter.compression, "gzip")
+
+    def test_metrics_init_meter_configurator_none_by_default(self):
+        _init_metrics({})
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyMeterProvider)
+        self.assertEqual(
+            provider._meter_configurator, _default_meter_configurator
+        )
+
+    def test_metrics_init_meter_configurator_passed_directly(self):
+        mock_configurator = Mock()
+        _init_metrics({}, meter_configurator=mock_configurator)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyMeterProvider)
+        self.assertEqual(provider._meter_configurator, mock_configurator)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_METER_CONFIGURATOR: "non_existent_entry_point"},
+    )
+    def test_metrics_init_custom_meter_configurator_with_env_non_existent_entry_point(
+        self,
+    ):
+        meter_configurator_name = _get_meter_configurator()
+        with self.assertLogs(level=WARNING):
+            meter_configurator = _import_meter_configurator(
+                meter_configurator_name
+            )
+        _init_metrics({}, meter_configurator=meter_configurator)
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_METER_CONFIGURATOR: "custom_meter_configurator"},
+    )
+    def test_metrics_init_custom_meter_configurator_with_env(
+        self, mock_entry_points
+    ):
+        def custom_meter_configurator(meter_scope):
+            return mock.Mock(spec=_RuleBasedMeterConfigurator)(meter_scope)
+
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_meter_configurator",
+                    custom_meter_configurator,
+                )
+            ]
+        )
+
+        meter_configurator_name = _get_meter_configurator()
+        meter_configurator = _import_meter_configurator(
+            meter_configurator_name
+        )
+        _init_metrics({}, meter_configurator=meter_configurator)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertEqual(
+            provider._meter_configurator, custom_meter_configurator
+        )
 
 
 class TestExporterNames(TestCase):

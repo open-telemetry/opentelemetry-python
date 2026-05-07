@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import abc
@@ -30,12 +19,17 @@ from opentelemetry.context import (
     get_value,
     set_value,
 )
+from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._logs import (
     LogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
+from opentelemetry.sdk._shared_internal import (
+    BatchProcessor,
+    DuplicateFilter,
+    ProcessorMetrics,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
@@ -43,8 +37,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
-_DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
+_DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
@@ -170,9 +167,19 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
     propagating to the application.
     """
 
-    def __init__(self, exporter: LogRecordExporter):
+    def __init__(
+        self,
+        exporter: LogRecordExporter,
+        *,
+        meter_provider: MeterProvider | None = None,
+    ):
         self._exporter = exporter
         self._shutdown = False
+        self._metrics = ProcessorMetrics(
+            "logs",
+            OtelComponentTypeValues.SIMPLE_LOG_PROCESSOR,
+            meter_provider or get_meter_provider(),
+        )
 
     def on_emit(self, log_record: ReadWriteLogRecord):
         # Prevent entering a recursive loop.
@@ -193,6 +200,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),  # pyright: ignore[reportOperatorIssue]
             )
         )
+        error: Exception | None = None
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
@@ -211,9 +219,11 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 limits=log_record.limits,
             )
             self._exporter.export((readable_log_record,))
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            error = err
             _logger.exception("Exception while exporting logs.")
         finally:
+            self._metrics.finish_items(1, error)
             detach(token)
 
     def shutdown(self):
@@ -246,6 +256,8 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         max_export_batch_size: int | None = None,
         export_timeout_millis: float | None = None,
         max_queue_size: int | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchLogRecordProcessor._default_max_queue_size()
@@ -276,6 +288,12 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             export_timeout_millis,
             max_queue_size,
             "Log",
+            ProcessorMetrics(
+                "logs",
+                OtelComponentTypeValues.BATCHING_LOG_PROCESSOR,
+                meter_provider or get_meter_provider(),
+                capacity=max_queue_size,
+            ),
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:

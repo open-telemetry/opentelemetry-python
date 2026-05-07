@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access
 
@@ -475,6 +464,19 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 10000.0,
             ),
         )
+
+    def test_create_aggregation_on_instrument_without_boundaries(self):
+        """ExplicitBucketHistogramAggregation should not crash when applied
+        to a non-Histogram instrument without explicit boundaries.
+        """
+        aggregation = ExplicitBucketHistogramAggregation()
+        result = aggregation._create_aggregation(
+            _Counter("test.counter", Mock(), Mock()),
+            Mock(),
+            _default_reservoir_factory,
+            0,
+        )
+        self.assertIsInstance(result, _ExplicitBucketHistogramAggregation)
 
 
 class TestAggregationFactory(TestCase):

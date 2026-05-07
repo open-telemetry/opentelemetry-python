@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from functools import lru_cache
 
@@ -21,12 +10,12 @@ from opentelemetry.sdk.trace import (
     TracerProvider,
     _default_tracer_configurator,
     _RuleBasedTracerConfigurator,
-    _scope_name_matches_glob,
     _TracerConfig,
     sampling,
 )
+from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
-tracer = TracerProvider(
+tracer_provider = TracerProvider(
     sampler=sampling.DEFAULT_ON,
     resource=Resource(
         {
@@ -35,10 +24,11 @@ tracer = TracerProvider(
             "service.instance.id": "123ab456-a123-12ab-12ab-12340a1abc12",
         }
     ),
-).get_tracer("sdk_tracer_provider")
+)
+tracer = tracer_provider.get_tracer("sdk_tracer_provider")
 
 
-@pytest.fixture(params=[None, 0, 1, 10, 50])
+@pytest.fixture(params=[0, 1, 10, 50])
 def num_tracer_configurator_rules(request):
     return request.param
 
@@ -79,20 +69,15 @@ def test_simple_start_span_with_tracer_configurator_rules(
                 for i in range(num_tracer_configurator_rules)
             ],
             default_config=_TracerConfig(is_enabled=True),
-        )(tracer_scope=tracer_scope)
+        )(tracer_scope)
 
-    tracer_provider = tracer._tracer_provider
     tracer_provider._set_tracer_configurator(
         tracer_configurator=tracer_configurator
     )
-    if num_tracer_configurator_rules is None:
-        tracer._tracer_provider = None
     benchmark(benchmark_start_span)
     tracer_provider._set_tracer_configurator(
         tracer_configurator=_default_tracer_configurator
     )
-    if num_tracer_configurator_rules is None:
-        tracer._tracer_provider = tracer_provider
 
 
 def test_simple_start_as_current_span(benchmark):

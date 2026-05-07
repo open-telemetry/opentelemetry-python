@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """
 This library allows export of metrics data to `Prometheus <https://prometheus.io/>`_.
@@ -38,7 +27,7 @@ metrics to `Prometheus`_.
 
     # Exporter to export metrics to Prometheus
     prefix = "MyAppPrefix"
-    reader = PrometheusMetricReader(prefix)
+    reader = PrometheusMetricReader(prefix=prefix)
 
     # Meter is responsible for creating and recording metrics
     set_meter_provider(MeterProvider(metric_readers=[reader]))
@@ -105,6 +94,9 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
@@ -131,7 +123,9 @@ def _convert_buckets(
 class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
-    def __init__(self, disable_target_info: bool = False) -> None:
+    def __init__(
+        self, disable_target_info: bool = False, prefix: str = ""
+    ) -> None:
         super().__init__(
             preferred_temporality={
                 Counter: AggregationTemporality.CUMULATIVE,
@@ -140,11 +134,15 @@ class PrometheusMetricReader(MetricReader):
                 ObservableCounter: AggregationTemporality.CUMULATIVE,
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
+            },
+            otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
-        self._collector = _CustomCollector(disable_target_info)
+        self._collector = _CustomCollector(
+            disable_target_info=disable_target_info, prefix=prefix
+        )
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
+        self._prefix = prefix
 
     def _receive_metrics(
         self,
@@ -167,11 +165,12 @@ class _CustomCollector:
     https://github.com/prometheus/client_python#custom-collectors
     """
 
-    def __init__(self, disable_target_info: bool = False):
+    def __init__(self, disable_target_info: bool = False, prefix: str = ""):
         self._callback = None
         self._metrics_datas: Deque[MetricsData] = deque()
         self._disable_target_info = disable_target_info
         self._target_info = None
+        self._prefix = prefix
 
     def add_metrics_data(self, metrics_data: MetricsData) -> None:
         """Add metrics to Prometheus data"""
@@ -227,7 +226,10 @@ class _CustomCollector:
             label_values_data_points = []
             values = []
 
-            metric_name = sanitize_full_name(metric.name)
+            metric_name = metric.name
+            if self._prefix:
+                metric_name = self._prefix + "_" + metric_name
+            metric_name = sanitize_full_name(metric_name)
             metric_description = metric.description or ""
             metric_unit = map_unit(metric.unit)
 
