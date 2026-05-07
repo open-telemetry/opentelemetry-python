@@ -470,9 +470,9 @@ class TestEnvironmentCarrierWithBaggage(unittest.TestCase):
         self.assertEqual(baggage1, baggage2)
 
     @patch("opentelemetry.baggage.propagation.get_all")
-    @patch("opentelemetry.baggage.propagation._format_baggage")
-    def test_fields(self, mock_format_baggage, mock_get_all):
+    def test_fields(self, mock_get_all):
         """Test that propagator.fields matches injected keys."""
+        mock_get_all.return_value = {"key": "value"}
         mock_setter = Mock()
         self.propagator.inject({}, setter=mock_setter)
 
