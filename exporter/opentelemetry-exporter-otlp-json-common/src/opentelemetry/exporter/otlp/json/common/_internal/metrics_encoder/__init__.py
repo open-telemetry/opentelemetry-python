@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pyright: reportCallIssue=false
 
@@ -18,6 +7,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Collection
+from typing import TYPE_CHECKING
 
 from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_attributes,
@@ -76,6 +66,9 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+
+if TYPE_CHECKING:
+    from typing_extensions import assert_never
 
 _logger = logging.getLogger(__name__)
 
@@ -147,6 +140,8 @@ def _encode_metric(metric: Metric) -> JSONMetric:
             aggregation_temporality=metric.data.aggregation_temporality,
         )
     else:
+        if TYPE_CHECKING:
+            assert_never(metric.data)
         _logger.warning(
             "unsupported data type %s",
             metric.data.__class__.__name__,
@@ -267,6 +262,8 @@ def _encode_exemplars(
         elif isinstance(sdk_exemplar.value, int):
             json_exemplar.as_int = sdk_exemplar.value
         else:
+            if TYPE_CHECKING:
+                assert_never(sdk_exemplar.value)
             raise ValueError("Exemplar value must be an int or float")
         json_exemplars.append(json_exemplar)
 
