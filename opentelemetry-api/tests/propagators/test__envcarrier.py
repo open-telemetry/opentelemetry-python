@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # type: ignore
 
@@ -470,9 +459,9 @@ class TestEnvironmentCarrierWithBaggage(unittest.TestCase):
         self.assertEqual(baggage1, baggage2)
 
     @patch("opentelemetry.baggage.propagation.get_all")
-    @patch("opentelemetry.baggage.propagation._format_baggage")
-    def test_fields(self, mock_format_baggage, mock_get_all):
+    def test_fields(self, mock_get_all):
         """Test that propagator.fields matches injected keys."""
+        mock_get_all.return_value = {"key": "value"}
         mock_setter = Mock()
         self.propagator.inject({}, setter=mock_setter)
 
