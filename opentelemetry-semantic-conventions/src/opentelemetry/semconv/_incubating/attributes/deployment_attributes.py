@@ -4,6 +4,8 @@
 from enum import Enum
 from typing import Final
 
+from typing_extensions import deprecated
+
 DEPLOYMENT_ENVIRONMENT: Final = "deployment.environment"
 """
 Deprecated: Replaced by `deployment.environment.name`.
@@ -11,14 +13,7 @@ Deprecated: Replaced by `deployment.environment.name`.
 
 DEPLOYMENT_ENVIRONMENT_NAME: Final = "deployment.environment.name"
 """
-Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
-Note: `deployment.environment.name` does not affect the uniqueness constraints defined through
-the `service.namespace`, `service.name` and `service.instance.id` resource attributes.
-This implies that resources carrying the following attribute combinations MUST be
-considered to be identifying the same service:
-
-- `service.name=frontend`, `deployment.environment.name=production`
-- `service.name=frontend`, `deployment.environment.name=staging`.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.deployment_attributes.DEPLOYMENT_ENVIRONMENT_NAME`.
 """
 
 DEPLOYMENT_ID: Final = "deployment.id"
@@ -35,6 +30,20 @@ DEPLOYMENT_STATUS: Final = "deployment.status"
 """
 The status of the deployment.
 """
+
+
+@deprecated(
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.deployment_attributes.DeploymentEnvironmentNameValues`."
+)
+class DeploymentEnvironmentNameValues(Enum):
+    PRODUCTION = "production"
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.deployment_attributes.DeploymentEnvironmentNameValues.PRODUCTION`."""
+    STAGING = "staging"
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.deployment_attributes.DeploymentEnvironmentNameValues.STAGING`."""
+    TEST = "test"
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.deployment_attributes.DeploymentEnvironmentNameValues.TEST`."""
+    DEVELOPMENT = "development"
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.deployment_attributes.DeploymentEnvironmentNameValues.DEVELOPMENT`."""
 
 
 class DeploymentStatusValues(Enum):

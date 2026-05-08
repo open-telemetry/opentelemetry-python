@@ -91,7 +91,7 @@ Deprecated: Replaced by `container.runtime.name`.
 
 CONTAINER_RUNTIME_DESCRIPTION: Final = "container.runtime.description"
 """
-A description about the runtime which could include, for example details about the CRI/API version being used or other customisations.
+A description about the runtime which could include, for example details about the CRI/API version being used or other customizations.
 """
 
 CONTAINER_RUNTIME_NAME: Final = "container.runtime.name"
