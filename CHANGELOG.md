@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > We are working on stabilizing the Log signal that would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for sdk developers.
 
 ## Unreleased
-
+- `opentelemetry-exporter-otlp-proto-grpc`: add detailed error message to the otlp grpc exporter
+  ([#5184](https://github.com/open-telemetry/opentelemetry-python/pull/5184))
 - Apply fixes for `UP` ruff rule
   ([#5133](https://github.com/open-telemetry/opentelemetry-python/pull/5133))
 - Switch to SPDX license headers and add CI enforcement
