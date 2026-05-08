@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """
 API for propagation of context.
@@ -70,7 +59,6 @@ Example::
 
 from logging import getLogger
 from os import environ
-from typing import List, Optional
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
@@ -82,7 +70,7 @@ logger = getLogger(__name__)
 
 def extract(
     carrier: textmap.CarrierT,
-    context: Optional[Context] = None,
+    context: Context | None = None,
     getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
@@ -103,7 +91,7 @@ def extract(
 
 def inject(
     carrier: textmap.CarrierT,
-    context: Optional[Context] = None,
+    context: Context | None = None,
     setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
@@ -121,7 +109,7 @@ def inject(
     get_global_textmap().inject(carrier, context=context, setter=setter)
 
 
-propagators: List[textmap.TextMapPropagator] = []
+propagators: list[textmap.TextMapPropagator] = []
 
 # Single use variable here to hack black and make lint pass
 environ_propagators = environ.get(

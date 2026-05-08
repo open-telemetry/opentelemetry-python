@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
@@ -19,7 +8,8 @@ import fnmatch
 import logging
 import os
 import uuid
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any, Optional
 from urllib import parse
 
 from opentelemetry.sdk._configuration._common import load_entry_point
@@ -95,7 +85,7 @@ def _parse_attributes_list(attributes_list: str) -> dict[str, str]:
     return result
 
 
-def create_resource(config: Optional[ResourceConfig]) -> Resource:
+def create_resource(config: ResourceConfig | None) -> Resource:
     """Create an SDK Resource from declarative config.
 
     Does NOT read OTEL_RESOURCE_ATTRIBUTES. Resource detectors are only run
@@ -202,7 +192,7 @@ def _run_detectors(
 
 
 def _filter_attributes(
-    attrs: dict[str, object], filter_config: Optional[IncludeExclude]
+    attrs: dict[str, object], filter_config: IncludeExclude | None
 ) -> dict[str, object]:
     """Filter detected attribute keys using include/exclude glob patterns.
 

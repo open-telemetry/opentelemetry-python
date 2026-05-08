@@ -1,18 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from collections import defaultdict
-from typing import List, Sequence
+from collections.abc import Sequence
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -72,7 +61,7 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
 
 def _encode_resource_logs(
     batch: Sequence[ReadableLogRecord],
-) -> List[ResourceLogs]:
+) -> list[ResourceLogs]:
     sdk_resource_logs = defaultdict(lambda: defaultdict(list))
 
     for readable_log in batch:
