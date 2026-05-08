@@ -64,16 +64,10 @@ def main():
     print("⚠ No changelog fragment found on this branch.")
     print()
     print("Create one with:")
-    print(
-        '  tox -e new-changelog -- PR_NUMBER TYPE "Description"'
-    )
-    print(
-        "  where TYPE is one of: added, changed, deprecated, removed, fixed"
-    )
+    print('  tox -e new-changelog -- PR_NUMBER TYPE "Description"')
+    print("  where TYPE is one of: added, changed, deprecated, removed, fixed")
     print()
-    print(
-        "Or skip this check with: SKIP=changelog tox -e precommit"
-    )
+    print("Or skip this check with: SKIP=changelog tox -e precommit")
     return 1
 
 
