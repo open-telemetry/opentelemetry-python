@@ -1,25 +1,10 @@
 # Copyright The OpenTelemetry Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import logging
 from typing import (  # noqa: F401
     Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
 )
 from urllib.parse import urlparse
 
@@ -125,7 +110,7 @@ class OTLPMetricExporter(
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         *,
-        meter_provider: Optional[MeterProvider] = None,
+        meter_provider: MeterProvider | None = None,
     ):
         """OTLP HTTP metrics exporter
 
@@ -169,7 +154,7 @@ class OTLPMetricExporter(
     def export(
         self,
         metrics_data: MetricsData,
-        timeout_millis: Optional[float] = 10000,
+        timeout_millis: float | None = 10000,
         **kwargs,
     ) -> MetricExportResult:
         if self._shutdown:
@@ -378,8 +363,8 @@ def _split_metrics_data(
 
 
 def _get_split_resource_metrics_pb2(
-    split_resource_metrics: List[Dict],
-) -> List[pb2.ResourceMetrics]:
+    split_resource_metrics: list[dict],
+) -> list[pb2.ResourceMetrics]:
     """Helper that returns a list of pb2.ResourceMetrics objects based on split_resource_metrics.
     Example input:
 
@@ -539,8 +524,8 @@ def _get_split_resource_metrics_pb2(
     "Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead. Deprecated since version 1.18.0.",
 )
 def get_resource_data(
-    sdk_resource_scope_data: Dict[SDKResource, Any],  # ResourceDataT?
+    sdk_resource_scope_data: dict[SDKResource, Any],  # ResourceDataT?
     resource_class: Callable[..., PB2Resource],
     name: str,
-) -> List[PB2Resource]:
+) -> list[PB2Resource]:
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
