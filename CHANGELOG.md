@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.42.0/0.63b0 (2026-05-08)
+
 - Apply fixes for `UP` ruff rule
   ([#5133](https://github.com/open-telemetry/opentelemetry-python/pull/5133))
 - Switch to SPDX license headers and add CI enforcement
