@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5135](https://github.com/open-telemetry/opentelemetry-python/pull/5135))
 - ci: wait for tracecontext server readiness instead of a fixed sleep in `scripts/tracecontext-integration-test.sh`
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
+- `opentelemetry-api`: update `EnvironmentGetter` and `EnvironmentSetter` to use normalized environment variable names
+  ([#5119](https://github.com/open-telemetry/opentelemetry-python/pull/5119))
 - `opentelemetry-sdk`: only load entrypoints for resource detectors if they are configured via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#5145](https://github.com/open-telemetry/opentelemetry-python/pull/5145))
 - `opentelemetry-exporter-otlp-json-common`: add 'opentelemetry-exporter-otlp-json-common' package for OTLP JSON exporters
