@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "opentelemetry-codegen-json"
-dynamic = ["version"]
+version = "0.0.0" # Not published to PyPI
 description = "Protobuf plugin to generate JSON serializers and deserializers for OpenTelemetry protobuf messages"
 readme = "README.rst"
 license = "Apache-2.0"

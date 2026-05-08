@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """
 This is an example of a library written to work with opentracing-python. It
 provides a simple caching decorator backed by Redis, and uses the OpenTracing
