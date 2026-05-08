@@ -48,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
 - `opentelemetry-sdk`: only load entrypoints for resource detectors if they are configured via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#5145](https://github.com/open-telemetry/opentelemetry-python/pull/5145))
+- `opentelemetry-exporter-otlp-json-common`: add 'opentelemetry-exporter-otlp-json-common' package for OTLP JSON exporters
+  ([#4996](https://github.com/open-telemetry/opentelemetry-python/pull/4996))
+- `opentelemetry-exporter-otlp-proto-grpc`: make retryable gRPC error codes configurable for gRPC exporters
+  ([#4917](https://github.com/open-telemetry/opentelemetry-python/pull/4917))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
