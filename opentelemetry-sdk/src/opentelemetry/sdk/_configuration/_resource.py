@@ -19,7 +19,7 @@ import fnmatch
 import logging
 import os
 import uuid
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 from urllib import parse
 
 from opentelemetry.sdk._configuration._common import load_entry_point
@@ -39,6 +39,7 @@ from opentelemetry.sdk.resources import (
     Resource,
     _HostResourceDetector,
 )
+from opentelemetry.util.types import AttributeValue
 
 _logger = logging.getLogger(__name__)
 
@@ -147,18 +148,19 @@ def create_resource(config: Optional[ResourceConfig]) -> Resource:
     return result.merge(config_resource)
 
 
-def _detect_service(_config) -> dict[str, object]:
+def _detect_service(_config: Any) -> dict[str, AttributeValue]:
     """Service detector: generates instance ID and reads OTEL_SERVICE_NAME."""
-    attrs: dict[str, object] = {
+    attrs: dict[str, AttributeValue] = {
         SERVICE_INSTANCE_ID: str(uuid.uuid4()),
     }
-    service_name = os.environ.get(OTEL_SERVICE_NAME)
-    if service_name:
+    if service_name := os.environ.get(OTEL_SERVICE_NAME):
         attrs[SERVICE_NAME] = service_name
     return attrs
 
 
-_RESOURCE_DETECTOR_REGISTRY: dict = {
+_RESOURCE_DETECTOR_REGISTRY: dict[
+    str, Callable[[Any], dict[str, AttributeValue]]
+] = {
     "service": _detect_service,
     "host": lambda _: dict(_HostResourceDetector().detect().attributes),
     "process": lambda _: dict(ProcessResourceDetector().detect().attributes),
