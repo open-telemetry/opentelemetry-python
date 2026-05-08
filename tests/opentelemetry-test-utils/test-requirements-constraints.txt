@@ -1,5 +1,0 @@
-# these are required for weaver integration tests, we're running that only on linux / CPython
-# because of lack of support for gRPC on Windows in some cases.
-opentelemetry-proto ; sys_platform != 'win32' and platform_python_implementation != 'PyPy'
-opentelemetry-exporter-otlp-proto-common ; sys_platform != 'win32' and platform_python_implementation != 'PyPy'
-opentelemetry-exporter-otlp-proto-grpc ; sys_platform != 'win32' and platform_python_implementation != 'PyPy'

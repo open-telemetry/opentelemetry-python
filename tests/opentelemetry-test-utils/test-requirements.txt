@@ -14,7 +14,7 @@ zipp==3.19.2
 -e opentelemetry-semantic-conventions
 -e tests/opentelemetry-test-utils
 # these are required for weaver integration tests, we're running that only on linux / CPython
-# because of lack of support for gRPC on Windows in some cases.
-./opentelemetry-proto
-./exporter/opentelemetry-exporter-otlp-proto-common
-./exporter/opentelemetry-exporter-otlp-proto-grpc
+# because of lack of support for gRPC wheels on some platforms
+./opentelemetry-proto ; platform_python_implementation != 'PyPy'
+./exporter/opentelemetry-exporter-otlp-proto-common ; platform_python_implementation != 'PyPy'
+./exporter/opentelemetry-exporter-otlp-proto-grpc ; platform_python_implementation != 'PyPy'
