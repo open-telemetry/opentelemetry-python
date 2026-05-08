@@ -35,15 +35,7 @@ from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
 )
-from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
-    AnyValue,
-    ArrayValue,
-    InstrumentationScope,
-    KeyValue,
-    KeyValueList,
-)
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
@@ -60,14 +52,9 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     AggregationTemporality,
-    Gauge,
     MetricExporter,
     MetricExportResult,
     MetricsData,
-    Sum,
-)
-from opentelemetry.sdk.metrics.export import (  # noqa: F401
-    Histogram as HistogramType,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
