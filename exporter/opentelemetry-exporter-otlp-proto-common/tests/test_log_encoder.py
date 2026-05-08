@@ -1,19 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import unittest
-from typing import List, Tuple
 
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -87,7 +75,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
     @staticmethod
-    def _get_sdk_log_data() -> List[ReadWriteLogRecord]:
+    def _get_sdk_log_data() -> list[ReadWriteLogRecord]:
         # pylint:disable=too-many-locals
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
@@ -330,7 +318,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
     def get_test_logs(
         self,
-    ) -> Tuple[List[ReadWriteLogRecord], ExportLogsServiceRequest]:
+    ) -> tuple[list[ReadWriteLogRecord], ExportLogsServiceRequest]:
         sdk_logs = self._get_sdk_log_data()
 
         pb2_service_request = ExportLogsServiceRequest(
@@ -646,7 +634,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         return sdk_logs, pb2_service_request
 
     @staticmethod
-    def _get_test_logs_dropped_attributes() -> List[ReadWriteLogRecord]:
+    def _get_test_logs_dropped_attributes() -> list[ReadWriteLogRecord]:
         ctx_log1 = set_span_in_context(
             NonRecordingSpan(
                 SpanContext(
