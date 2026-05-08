@@ -22,11 +22,6 @@ jobs:
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
-          if [[ $GITHUB_REF_NAME != main ]]; then
-            echo this workflow should only be run against main
-            exit 1
-          fi
-
           if ! grep --quiet "^## Unreleased$" CHANGELOG.md; then
             echo the change log is missing an \"Unreleased\" section
             exit 1
@@ -48,7 +43,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: prereqs
     steps:
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+
       - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.otelbot-token.outputs.token }}
 
       - name: Install toml
         run: pip install toml
@@ -93,14 +99,13 @@ jobs:
           date=$(date "+%Y-%m-%d")
           sed -Ei "s/^## Unreleased$/## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
 
+      - name: Update contrib workflow ref
+        run: |
+          sed -Ei "s#open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@main#open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@${STABLE_VERSION}#" .github/workflows/ci.yml
+          grep -Fq "core_contrib_test.yml@${STABLE_VERSION}" .github/workflows/ci.yml
+
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
-
-      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
-        id: otelbot-token
-        with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request against the release branch
         id: create_release_branch_pr
