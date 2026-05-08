@@ -46,8 +46,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5135](https://github.com/open-telemetry/opentelemetry-python/pull/5135))
 - ci: wait for tracecontext server readiness instead of a fixed sleep in `scripts/tracecontext-integration-test.sh`
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
+- `opentelemetry-api`: update `EnvironmentGetter` and `EnvironmentSetter` to use normalized environment variable names
+  ([#5119](https://github.com/open-telemetry/opentelemetry-python/pull/5119))
 - `opentelemetry-sdk`: only load entrypoints for resource detectors if they are configured via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#5145](https://github.com/open-telemetry/opentelemetry-python/pull/5145))
+- `opentelemetry-exporter-otlp-json-common`: add 'opentelemetry-exporter-otlp-json-common' package for OTLP JSON exporters
+  ([#4996](https://github.com/open-telemetry/opentelemetry-python/pull/4996))
+- `opentelemetry-exporter-otlp-proto-grpc`: make retryable gRPC error codes configurable for gRPC exporters
+  ([#4917](https://github.com/open-telemetry/opentelemetry-python/pull/4917))
 - `opentelemetry-api`, `opentelemetry-sdk`: add support for 'random-trace-id' flags in W3C traceparent header trace flags. Implementations of `IdGenerator` that do randomly generate the 56 least significant bits, should also implement a `is_trace_id_random` methods that returns `True`.
   ([#4854](https://github.com/open-telemetry/opentelemetry-python/pull/4854))
 
