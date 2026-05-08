@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: Fix `ProcessResourceDetector` to use `sys.orig_argv`

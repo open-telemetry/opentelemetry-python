@@ -1,1 +1,0 @@
-ci: wait for tracecontext server readiness instead of a fixed sleep
