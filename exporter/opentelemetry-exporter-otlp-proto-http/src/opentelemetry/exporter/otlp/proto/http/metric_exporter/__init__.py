@@ -7,6 +7,7 @@ from typing import (  # noqa: F401
     Any,
 )
 from urllib.parse import urlparse
+from collections.abc import Callable, Iterable
 
 import requests
 from typing_extensions import deprecated

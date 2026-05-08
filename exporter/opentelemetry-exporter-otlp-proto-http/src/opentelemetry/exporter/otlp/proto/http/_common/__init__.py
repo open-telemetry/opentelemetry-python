@@ -123,10 +123,14 @@ class _SignalConfig:
     headers_envvar: str
     timeout_envvar: str
     compression_envvar: str
-    credential_envvar: str
+    credential_envvar: Literal[
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER",
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER",
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER",
+    ]
     default_export_path: str
     component_type: OtelComponentTypeValues
-    signal_name: str
+    signal_name: Literal["traces", "metrics", "logs"]
 
 
 class OTLPHttpClient:
@@ -198,7 +202,11 @@ class OTLPHttpClient:
     def _setup_session(
         self,
         session: Optional[requests.Session],
-        cred_envvar: str,
+        cred_envvar: Literal[
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER",
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER",
+        "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER",
+    ],
     ) -> requests.Session:
         configured_session = (
             session
@@ -319,7 +327,7 @@ class OTLPHttpClient:
                 break
         return False
 
-    def shutdown(self, timeout_millis: Optional[float] = None) -> None:
+    def shutdown(self, timeout_millis: float = 30000, **kwargs) -> None:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
