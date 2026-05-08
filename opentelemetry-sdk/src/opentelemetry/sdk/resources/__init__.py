@@ -60,7 +60,7 @@ from collections.abc import Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import Optional, cast
+from typing import cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -75,7 +75,7 @@ from opentelemetry.sdk.version import (
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.util.types import AttributeValue
 
-psutil: Optional[ModuleType] = None
+psutil: ModuleType | None = None
 
 try:
     import psutil as psutil_module
@@ -154,9 +154,7 @@ class Resource:
     _attributes: BoundedAttributes
     _schema_url: str
 
-    def __init__(
-        self, attributes: Attributes, schema_url: typing.Optional[str] = None
-    ):
+    def __init__(self, attributes: Attributes, schema_url: str | None = None):
         self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
             schema_url = ""
@@ -164,8 +162,8 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: typing.Optional[Attributes] = None,
-        schema_url: typing.Optional[str] = None,
+        attributes: Attributes | None = None,
+        schema_url: str | None = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -189,7 +187,7 @@ class Resource:
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = cast(
-                Optional[str],
+                str | None,
                 resource.attributes.get(PROCESS_EXECUTABLE_NAME, None),
             )
             if process_executable_name:
@@ -259,7 +257,7 @@ class Resource:
             f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "attributes": dict(self.attributes),
@@ -533,7 +531,7 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
 
 def get_aggregated_resources(
     detectors: Sequence["ResourceDetector"],
-    initial_resource: typing.Optional[Resource] = None,
+    initial_resource: Resource | None = None,
     timeout: int = 5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed

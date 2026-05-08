@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 - `opentelemetry-sdk`: Add Sphinx documentation for `opentelemetry.sdk.util` package (`BoundedList`, `BoundedDict`, `ns_to_iso_str`, `get_dict_as_key`), move `util.instrumentation` toctree entry from `trace` to `util` ([#2573](https://github.com/open-telemetry/opentelemetry-python/issues/2573))
 
+- Apply fixes for `UP` ruff rule
+  ([#5133](https://github.com/open-telemetry/opentelemetry-python/pull/5133))
 - Switch to SPDX license headers and add CI enforcement
   ([#5177](https://github.com/open-telemetry/opentelemetry-python/pull/5177))
 - `opentelemetry-api`: Enforce W3C Baggage size limits on outbound propagation in `W3CBaggagePropagator.inject()`. Previously only inbound extraction enforced limits; now inject also caps entries at 180, individual pairs at 4096 bytes, and total header at 8192 bytes per the W3C Baggage spec. The extract path max_pairs limit now counts all size-valid entries rather than only successfully parsed ones.
@@ -47,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
 - `opentelemetry-sdk`: only load entrypoints for resource detectors if they are configured via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#5145](https://github.com/open-telemetry/opentelemetry-python/pull/5145))
+- `opentelemetry-exporter-otlp-json-common`: add 'opentelemetry-exporter-otlp-json-common' package for OTLP JSON exporters
+  ([#4996](https://github.com/open-telemetry/opentelemetry-python/pull/4996))
+- `opentelemetry-exporter-otlp-proto-grpc`: make retryable gRPC error codes configurable for gRPC exporters
+  ([#4917](https://github.com/open-telemetry/opentelemetry-python/pull/4917))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 

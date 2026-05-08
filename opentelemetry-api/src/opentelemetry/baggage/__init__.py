@@ -1,10 +1,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Mapping
 from logging import getLogger
 from re import compile
 from types import MappingProxyType
-from typing import Dict, Mapping, Optional
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
@@ -23,7 +23,7 @@ _PROPERT_PATTERN = compile(_BAGGAGE_PROPERTY_FORMAT)
 
 
 def get_all(
-    context: Optional[Context] = None,
+    context: Context | None = None,
 ) -> Mapping[str, object]:
     """Returns the name/value pairs in the Baggage
 
@@ -36,9 +36,7 @@ def get_all(
     return MappingProxyType(_get_baggage_value(context=context))
 
 
-def get_baggage(
-    name: str, context: Optional[Context] = None
-) -> Optional[object]:
+def get_baggage(name: str, context: Context | None = None) -> object | None:
     """Provides access to the value for a name/value pair in the
     Baggage
 
@@ -54,7 +52,7 @@ def get_baggage(
 
 
 def set_baggage(
-    name: str, value: object, context: Optional[Context] = None
+    name: str, value: object, context: Context | None = None
 ) -> Context:
     """Sets a value in the Baggage
 
@@ -71,7 +69,7 @@ def set_baggage(
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 
-def remove_baggage(name: str, context: Optional[Context] = None) -> Context:
+def remove_baggage(name: str, context: Context | None = None) -> Context:
     """Removes a value from the Baggage
 
     Args:
@@ -87,7 +85,7 @@ def remove_baggage(name: str, context: Optional[Context] = None) -> Context:
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 
-def clear(context: Optional[Context] = None) -> Context:
+def clear(context: Context | None = None) -> Context:
     """Removes all values from the Baggage
 
     Args:
@@ -99,7 +97,7 @@ def clear(context: Optional[Context] = None) -> Context:
     return set_value(_BAGGAGE_KEY, {}, context=context)
 
 
-def _get_baggage_value(context: Optional[Context] = None) -> Dict[str, object]:
+def _get_baggage_value(context: Context | None = None) -> dict[str, object]:
     baggage = get_value(_BAGGAGE_KEY, context=context)
     if isinstance(baggage, dict):
         return baggage

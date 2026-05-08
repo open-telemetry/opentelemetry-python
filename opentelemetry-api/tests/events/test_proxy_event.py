@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=W0212,W0222,W0221
-import typing
 import unittest
 
 import opentelemetry._events as events
@@ -14,9 +13,9 @@ class TestProvider(events.NoOpEventLoggerProvider):
     def get_event_logger(
         self,
         name: str,
-        version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> events.EventLogger:
         return LoggerTest(name)
 

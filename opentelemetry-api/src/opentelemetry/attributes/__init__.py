@@ -5,8 +5,7 @@ import copy
 import logging
 import threading
 from collections import OrderedDict
-from collections.abc import MutableMapping
-from typing import Mapping, Optional, Sequence, Tuple, Union
+from collections.abc import Mapping, MutableMapping, Sequence
 
 from opentelemetry.util import types
 
@@ -37,8 +36,8 @@ _logger = logging.getLogger(__name__)
 
 
 def _clean_attribute(
-    key: str, value: types.AttributeValue, max_len: Optional[int]
-) -> Optional[Union[types.AttributeValue, Tuple[Union[str, int, float], ...]]]:
+    key: str, value: types.AttributeValue, max_len: int | None
+) -> types.AttributeValue | tuple[str | int | float, ...] | None:
     """Checks if attribute value is valid and cleans it if required.
 
     The function returns the cleaned value or None if the value is not valid.
@@ -116,7 +115,7 @@ def _clean_attribute(
 
 
 def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
-    value: types.AnyValue, max_len: Optional[int]
+    value: types.AnyValue, max_len: int | None
 ) -> types.AnyValue:
     # for primitive types just return the value and eventually shorten the string length
     if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
@@ -193,7 +192,7 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
 
 
 def _clean_extended_attribute(
-    key: str, value: types.AnyValue, max_len: Optional[int]
+    key: str, value: types.AnyValue, max_len: int | None
 ) -> types.AnyValue:
     """Checks if attribute value is valid and cleans it if required.
 
@@ -216,8 +215,8 @@ def _clean_extended_attribute(
 
 
 def _clean_attribute_value(
-    value: types.AttributeValue, limit: Optional[int]
-) -> Optional[types.AttributeValue]:
+    value: types.AttributeValue, limit: int | None
+) -> types.AttributeValue | None:
     if value is None:
         return None
 
@@ -242,10 +241,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
 
     def __init__(
         self,
-        maxlen: Optional[int] = None,
-        attributes: Optional[types._ExtendedAttributes] = None,
+        maxlen: int | None = None,
+        attributes: types._ExtendedAttributes | None = None,
         immutable: bool = True,
-        max_value_len: Optional[int] = None,
+        max_value_len: int | None = None,
         extended_attributes: bool = False,
     ):
         if maxlen is not None:
@@ -259,10 +258,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         self._extended_attributes = extended_attributes
         # OrderedDict is not used until the maxlen is reached for efficiency.
 
-        self._dict: Union[
-            MutableMapping[str, types.AnyValue],
-            OrderedDict[str, types.AnyValue],
-        ] = {}
+        self._dict: (
+            MutableMapping[str, types.AnyValue]
+            | OrderedDict[str, types.AnyValue]
+        ) = {}
         self._lock = threading.RLock()
         if attributes:
             for key, value in attributes.items():

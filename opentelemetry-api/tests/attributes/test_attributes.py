@@ -6,7 +6,7 @@
 import copy
 import unittest
 import unittest.mock
-from typing import MutableSequence
+from collections.abc import MutableSequence
 
 from opentelemetry.attributes import (
     BoundedAttributes,

@@ -1,7 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Optional, Union
 
 from opentelemetry.context import Context
 from opentelemetry.util.types import Attributes
@@ -20,16 +19,16 @@ class Observation:
 
     def __init__(
         self,
-        value: Union[int, float],
+        value: int | float,
         attributes: Attributes = None,
-        context: Optional[Context] = None,
+        context: Context | None = None,
     ) -> None:
         self._value = value
         self._attributes = attributes
         self._context = context
 
     @property
-    def value(self) -> Union[float, int]:
+    def value(self) -> float | int:
         return self._value
 
     @property
@@ -37,7 +36,7 @@ class Observation:
         return self._attributes
 
     @property
-    def context(self) -> Optional[Context]:
+    def context(self) -> Context | None:
         return self._context
 
     def __eq__(self, other: object) -> bool:

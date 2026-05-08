@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from opentelemetry.context import Context
 from opentelemetry.util.types import Attributes
@@ -26,7 +26,7 @@ class Measurement:
         attributes: Measurement attributes
     """
 
-    value: Union[int, float]
+    value: int | float
     time_unix_nano: int
     instrument: _Instrument
     context: Context

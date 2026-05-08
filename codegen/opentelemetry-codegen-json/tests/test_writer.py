@@ -1,6 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any, Optional
+from typing import Any
 
 import pytest  # type: ignore
 
@@ -95,8 +95,8 @@ def test_suite() -> None:
 )
 def test_class(
     name: str,
-    bases: Optional[str],
-    decorators: Optional[list[str]],
+    bases: str | None,
+    decorators: list[str] | None,
     expected: list[str],
 ) -> None:
     writer = CodeWriter()
@@ -164,8 +164,8 @@ def test_enum() -> None:
 def test_field(
     name: str,
     type_hint: str,
-    default: Optional[Any],
-    default_factory: Optional[Any],
+    default: Any | None,
+    default_factory: Any | None,
     expected: list[str],
 ) -> None:
     writer = CodeWriter()
