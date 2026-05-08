@@ -593,7 +593,7 @@ class TestOTLPExporterMixin(TestCase):
                 )
             after = time.time()
             self.assertEqual(
-                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED",
+                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED, details: Deadline Exceeded",
                 warning.records[-1].message,
             )
             self.assertEqual(mock_trace_service.num_requests, 2)
@@ -621,7 +621,8 @@ class TestOTLPExporterMixin(TestCase):
         with self.assertLogs(level=WARNING) as warning:
             add_TraceServiceServicer_to_server(
                 TraceServiceServicerWithExportParams(
-                    StatusCode.ALREADY_EXISTS
+                    StatusCode.ALREADY_EXISTS,
+                    optional_details="resource already exists",
                 ),
                 self.server,
             )
@@ -630,7 +631,7 @@ class TestOTLPExporterMixin(TestCase):
             )
             self.assertEqual(
                 warning.records[-1].message,
-                "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS",
+                "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS, details: resource already exists",
             )
 
         metrics_data = self.metric_reader.get_metrics_data()
@@ -766,41 +767,6 @@ class TestOTLPExporterMixin(TestCase):
             SpanExportResult.FAILURE,
         )
         self.assertEqual(mock_trace_service.num_requests, 1)
-
-    def test_error_details_logged_on_permanent_failure(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(
-                StatusCode.INVALID_ARGUMENT,
-                optional_details="field 'resource' is missing",
-            ),
-            self.server,
-        )
-        with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                self.exporter.export([self.span]), SpanExportResult.FAILURE
-            )
-            self.assertIn(
-                "field 'resource' is missing",
-                warning.records[-1].message,
-            )
-
-    def test_error_details_logged_on_transient_failure(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(
-                StatusCode.UNAVAILABLE,
-                optional_retry_nanos=200000000,
-                optional_details="collector is restarting",
-            ),
-            self.server,
-        )
-        exporter = OTLPSpanExporterForTesting(
-            insecure=True, timeout=10, meter_provider=self.meter_provider
-        )
-        with self.assertLogs(level=WARNING) as warning:
-            exporter.export([self.span])
-        warning_logs = [r for r in warning.records if "Transient" in r.message]
-        self.assertTrue(len(warning_logs) > 0)
-        self.assertIn("collector is restarting", warning_logs[0].message)
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(
