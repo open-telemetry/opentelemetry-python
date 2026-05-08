@@ -1,0 +1,1 @@
+Fix incorrect type annotation on `detectors` parameter of `get_aggregated_resources`

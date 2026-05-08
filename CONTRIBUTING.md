@@ -73,6 +73,45 @@ You can run `tox` with the following arguments:
 - `tox -e tracecontext` to run integration tests for tracecontext.
 - `tox -e precommit` to run all `pre-commit` actions
 
+### Changelog
+
+This project uses [towncrier](https://towncrier.readthedocs.io/) to manage the changelog. Instead of editing `CHANGELOG.md` directly, each PR should include a changelog fragment file in the `.changelog/` directory.
+
+**Creating a changelog fragment:**
+
+```console
+tox -e new-changelog -- PR_NUMBER TYPE "Description of the change"
+```
+
+Where `TYPE` is one of: `added`, `changed`, `deprecated`, `removed`, `fixed`.
+
+For example:
+
+```console
+tox -e new-changelog -- 1234 added "`opentelemetry-sdk`: add support for new feature"
+```
+
+This creates a file `.changelog/1234.added` containing the description. You can also create the file manually — it's just a text file with the description on one line.
+
+**Writing a good changelog entry:**
+
+- Write in imperative tone, as if completing the phrase "This change will..."
+- Keep entries concise — ideally under 80 characters
+- Prefix with the affected package name when applicable (e.g. `` `opentelemetry-sdk`: ... ``)
+- Don't include the PR number — towncrier adds it automatically
+
+**Preview the changelog:**
+
+```console
+tox -e changelog
+```
+
+Running `tox -e precommit` will check that a changelog fragment exists for your branch and remind you to create one if missing.
+
+The CI will also verify that a changelog fragment exists and that `CHANGELOG.md` is not directly modified.
+
+If your change does not need a changelog entry, add the "Skip Changelog" label to the PR.
+
 `ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` and `rstcheck` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
 
 ```console

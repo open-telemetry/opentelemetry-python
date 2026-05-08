@@ -1,0 +1,1 @@
+`opentelemetry-api`: Enforce W3C Baggage size limits on outbound propagation in `W3CBaggagePropagator.inject()`

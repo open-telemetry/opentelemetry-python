@@ -19,3 +19,11 @@ repos:
       - id: rstcheck
         additional_dependencies: ['rstcheck[sphinx]']
         args: ["--report-level", "warning"]
+  - repo: local
+    hooks:
+      - id: changelog
+        name: changelog fragment check
+        language: system
+        entry: python scripts/check_changelog_fragment.py
+        pass_filenames: false
+        always_run: true
