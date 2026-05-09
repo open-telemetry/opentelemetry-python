@@ -54,7 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#4996](https://github.com/open-telemetry/opentelemetry-python/pull/4996))
 - `opentelemetry-exporter-otlp-proto-grpc`: make retryable gRPC error codes configurable for gRPC exporters
   ([#4917](https://github.com/open-telemetry/opentelemetry-python/pull/4917))
-- `opentelemetry-api`, `opentelemetry-sdk`: add support for 'random-trace-id' flags in W3C traceparent header trace flags. Implementations of `IdGenerator` that do randomly generate the 56 least significant bits, should also implement a `is_trace_id_random` methods that returns `True`.
+- `opentelemetry-sdk`: add sampler plugin loading to declarative file configuration via the `opentelemetry_sampler` entry point group, matching the spec's PluginComponentProvider mechanism
+  ([#5095](https://github.com/open-telemetry/opentelemetry-python/pull/5095))
+- Add `registry` keyword argument to `PrometheusMetricReader` to allow passing a custom Prometheus registry
+  ([#5055](https://github.com/open-telemetry/opentelemetry-python/pull/5055))
+  - `opentelemetry-api`, `opentelemetry-sdk`: add support for 'random-trace-id' flags in W3C traceparent header trace flags. Implementations of `IdGenerator` that do randomly generate the 56 least significant bits, should also implement a `is_trace_id_random` methods that returns `True`.
   ([#4854](https://github.com/open-telemetry/opentelemetry-python/pull/4854))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
