@@ -4,8 +4,10 @@
 # pylint: disable=protected-access,no-self-use
 
 import unittest
+import warnings
 from unittest.mock import Mock, patch
 
+from opentelemetry import trace
 from opentelemetry._events import Event
 from opentelemetry._logs import SeverityNumber, set_logger_provider
 from opentelemetry.sdk._events import EventLoggerProvider
@@ -112,15 +114,9 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
-        trace_id = Mock()
-        span_id = Mock()
-        trace_flags = Mock()
         event = Event(
             name="test_event",
             timestamp=now,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
             body="test body",
             severity_number=SeverityNumber.ERROR,
             attributes={
@@ -135,9 +131,7 @@ class TestEventLoggerProvider(unittest.TestCase):
         log_record_mock.assert_called_once_with(
             timestamp=now,
             observed_timestamp=None,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
+            context=event.context,
             severity_text=None,
             severity_number=SeverityNumber.ERROR,
             body="test body",
@@ -148,6 +142,49 @@ class TestEventLoggerProvider(unittest.TestCase):
             },
         )
         logger_mock_inst.emit.assert_called_once_with(log_record_mock_inst)
+
+    @patch("opentelemetry.sdk._logs._internal.LoggerProvider.get_logger")
+    def test_event_logger_emit_explicit_trace_ids(self, logger_mock):
+        """Explicit trace_id/span_id on Event are preserved without deprecation warning."""
+        logger_provider = LoggerProvider()
+        logger_mock_inst = Mock()
+        logger_mock.return_value = logger_mock_inst
+        event_logger = EventLoggerProvider(logger_provider).get_event_logger(
+            "name",
+        )
+        explicit_trace_id = 0x1234567890ABCDEF1234567890ABCDEF
+        explicit_span_id = 0x1234567890ABCDEF
+        explicit_trace_flags = trace.TraceFlags(trace.TraceFlags.SAMPLED)
+        event = Event(
+            name="test_event",
+            timestamp=1000,
+            trace_id=explicit_trace_id,
+            span_id=explicit_span_id,
+            trace_flags=explicit_trace_flags,
+            body="test body",
+        )
+        # Emit should not trigger LogDeprecatedInitWarning
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            event_logger.emit(event)
+            deprecated_init_warnings = [
+                w
+                for w in caught
+                if "LogRecord" in str(w.message)
+                and "deprecated" in str(w.message).lower()
+                and "trace_id" in str(w.message)
+            ]
+            self.assertEqual(
+                len(deprecated_init_warnings),
+                0,
+                f"Unexpected deprecation warnings: {deprecated_init_warnings}",
+            )
+        # Verify the emitted LogRecord has the explicit trace data
+        logger_mock_inst.emit.assert_called_once()
+        emitted_record = logger_mock_inst.emit.call_args[0][0]
+        self.assertEqual(emitted_record.trace_id, explicit_trace_id)
+        self.assertEqual(emitted_record.span_id, explicit_span_id)
+        self.assertEqual(emitted_record.trace_flags, explicit_trace_flags)
 
     @patch("opentelemetry.sdk._events.LogRecord")
     @patch("opentelemetry.sdk._logs._internal.LoggerProvider.get_logger")
@@ -167,15 +204,9 @@ class TestEventLoggerProvider(unittest.TestCase):
             "name", "version", "schema_url", {"key": "value"}
         )
         now = Mock()
-        trace_id = Mock()
-        span_id = Mock()
-        trace_flags = Mock()
         event = Event(
             name="test_event",
             timestamp=now,
-            trace_id=trace_id,
-            span_id=span_id,
-            trace_flags=trace_flags,
             body="test body",
             severity_number=SeverityNumber.ERROR,
             attributes={

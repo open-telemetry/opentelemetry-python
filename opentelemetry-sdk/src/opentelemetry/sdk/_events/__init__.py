@@ -49,14 +49,34 @@ class EventLogger(APIEventLogger):
         if isinstance(self._logger, NoOpLogger):
             # Do nothing if SDK is disabled
             return
-        span_context = trace.get_current_span().get_span_context()
+
+        # Build a context that carries the event's trace correlation.
+        # If the Event was constructed with explicit trace_id/span_id,
+        # wrap them in a NonRecordingSpan so LogRecord picks them up
+        # from context instead of requiring the deprecated kwargs.
+        context = event.context
+        span_context = trace.get_current_span(context).get_span_context()
+        if (
+            event.trace_id != span_context.trace_id
+            or event.span_id != span_context.span_id
+            or event.trace_flags != span_context.trace_flags
+        ):
+            context = trace.set_span_in_context(
+                trace.NonRecordingSpan(
+                    trace.SpanContext(
+                        trace_id=event.trace_id,
+                        span_id=event.span_id,
+                        is_remote=False,
+                        trace_flags=event.trace_flags,
+                    )
+                ),
+                context,
+            )
 
         log_record = LogRecord(
             timestamp=event.timestamp or time_ns(),
             observed_timestamp=None,
-            trace_id=event.trace_id or span_context.trace_id,
-            span_id=event.span_id or span_context.span_id,
-            trace_flags=event.trace_flags or span_context.trace_flags,
+            context=context,
             severity_text=None,
             severity_number=event.severity_number or SeverityNumber.INFO,
             body=event.body,
