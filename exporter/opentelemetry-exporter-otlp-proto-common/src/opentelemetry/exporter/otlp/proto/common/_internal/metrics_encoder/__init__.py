@@ -1,21 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import logging
 from os import environ
-from typing import Dict, List
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -79,8 +67,8 @@ class OTLPMetricExporterMixin:
         )
 
     def _get_temporality(
-        self, preferred_temporality: Dict[type, AggregationTemporality]
-    ) -> Dict[type, AggregationTemporality]:
+        self, preferred_temporality: dict[type, AggregationTemporality]
+    ) -> dict[type, AggregationTemporality]:
         otel_exporter_otlp_metrics_temporality_preference = (
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
@@ -136,8 +124,8 @@ class OTLPMetricExporterMixin:
 
     def _get_aggregation(
         self,
-        preferred_aggregation: Dict[type, Aggregation],
-    ) -> Dict[type, Aggregation]:
+        preferred_aggregation: dict[type, Aggregation],
+    ) -> dict[type, Aggregation]:
         otel_exporter_otlp_metrics_default_histogram_aggregation = environ.get(
             OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
             "explicit_bucket_histogram",
@@ -344,7 +332,7 @@ def _encode_metric(metric, pb2_metric):
         )
 
 
-def _encode_exemplars(sdk_exemplars: List[Exemplar]) -> List[pb2.Exemplar]:
+def _encode_exemplars(sdk_exemplars: list[Exemplar]) -> list[pb2.Exemplar]:
     """
     Converts a list of SDK Exemplars into a list of protobuf Exemplars.
 
