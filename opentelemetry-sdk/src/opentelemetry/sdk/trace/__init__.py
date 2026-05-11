@@ -40,15 +40,19 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
     OTEL_SDK_DISABLED,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
 )
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
-from opentelemetry.sdk.trace._tracer_metrics import TracerMetrics
+from opentelemetry.sdk.trace._tracer_metrics import create_tracer_metrics
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
@@ -127,7 +131,7 @@ class SpanProcessor:
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:  # type: ignore[reportReturnType]
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # pylint: disable=no-self-use
         """Export all ended spans to the configured Exporter that have not yet
         been exported.
 
@@ -138,6 +142,7 @@ class SpanProcessor:
         Returns:
             False if the timeout is exceeded, True otherwise.
         """
+        return True
 
 
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
@@ -200,15 +205,19 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             given timeout, False otherwise.
         """
         deadline_ns = time_ns() + timeout_millis * 1000000
+        all_flushed = True
         for sp in self._span_processors:
             current_time_ns = time_ns()
             if current_time_ns >= deadline_ns:
                 return False
 
-            if not sp.force_flush((deadline_ns - current_time_ns) // 1000000):
-                return False
+            if (
+                sp.force_flush((deadline_ns - current_time_ns) // 1000000)
+                is False
+            ):
+                all_flushed = False
 
-        return True
+        return all_flushed
 
 
 class ConcurrentMultiSpanProcessor(SpanProcessor):
@@ -311,7 +320,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             return False
 
         for future in done_futures:
-            if not future.result():
+            if future.result() is False:
                 return False
 
         return True
@@ -1122,7 +1131,12 @@ class Tracer(trace_api.Tracer):
         self._tracer_config = _tracer_config or _TracerConfig.default()
 
         meter_provider = meter_provider or metrics_api.get_meter_provider()
-        self._tracer_metrics = TracerMetrics(meter_provider)
+        self._tracer_metrics = create_tracer_metrics(
+            meter_provider,
+            parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
+        )
 
     def _set_tracer_config(self, tracer_config: _TracerConfig):
         self._tracer_config = tracer_config
