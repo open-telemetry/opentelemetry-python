@@ -1,20 +1,8 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # type: ignore
 
-import typing
 import unittest
 from unittest.mock import Mock, patch
 
@@ -39,7 +27,7 @@ class TestTraceContextFormat(unittest.TestCase):
         If no traceparent header is received, the vendor creates a new
         trace-id and parent-id that represents the current request.
         """
-        output: typing.Dict[str, typing.List[str]] = {}
+        output: dict[str, list[str]] = {}
         span = trace.get_current_span(FORMAT.extract(output))
         self.assertIsInstance(span.get_span_context(), trace.SpanContext)
 
@@ -66,7 +54,7 @@ class TestTraceContextFormat(unittest.TestCase):
             span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
         )
         self.assertTrue(span_context.is_remote)
-        output: typing.Dict[str, str] = {}
+        output: dict[str, str] = {}
         span = trace.NonRecordingSpan(span_context)
 
         ctx = trace.set_span_in_context(span)
@@ -145,7 +133,7 @@ class TestTraceContextFormat(unittest.TestCase):
         Empty and whitespace-only list members are allowed. Vendors MUST accept
         empty tracestate headers but SHOULD avoid sending them.
         """
-        output: typing.Dict[str, str] = {}
+        output: dict[str, str] = {}
         span = trace.NonRecordingSpan(
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
@@ -177,7 +165,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context."""
-        output: typing.Dict[str, str] = {}
+        output: dict[str, str] = {}
         ctx = trace.set_span_in_context(trace.INVALID_SPAN)
         FORMAT.inject(output, context=ctx)
         self.assertFalse("traceparent" in output)

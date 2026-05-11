@@ -1,21 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from opentelemetry import trace
 from opentelemetry.sdk._configuration._common import (
@@ -108,8 +96,8 @@ def _create_otlp_http_span_exporter(
 
 
 def _map_compression(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
+    value: str | None, compression_enum: type
+) -> object | None:
     """Map a compression string to the given Compression enum value."""
     if value is None or value.lower() == "none":
         return None
@@ -201,7 +189,13 @@ def _create_span_processor(
 
 
 def _create_sampler(config: SamplerConfig) -> Sampler:
-    """Create a sampler from config."""
+    """Create a sampler from config.
+
+    Known sampler types are checked via typed fields on the Sampler
+    dataclass. Unknown sampler names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_sampler`` entry point group.
+    """
     if config.always_on is not None:
         return ALWAYS_ON
     if config.always_off is not None:
@@ -211,6 +205,9 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
         return TraceIdRatioBased(ratio if ratio is not None else 1.0)
     if config.parent_based is not None:
         return _create_parent_based_sampler(config.parent_based)
+    if config.additional_properties:
+        name = next(iter(config.additional_properties))
+        return load_entry_point("opentelemetry_sampler", name)()
     raise ConfigurationError(
         f"Unknown or unsupported sampler type in config: {config!r}. "
         "Supported types: always_on, always_off, trace_id_ratio_based, parent_based."
@@ -279,8 +276,8 @@ def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
 
 
 def create_tracer_provider(
-    config: Optional[TracerProviderConfig],
-    resource: Optional[Resource] = None,
+    config: TracerProviderConfig | None,
+    resource: Resource | None = None,
 ) -> TracerProvider:
     """Create an SDK TracerProvider from declarative config.
 
@@ -326,8 +323,8 @@ def create_tracer_provider(
 
 
 def configure_tracer_provider(
-    config: Optional[TracerProviderConfig],
-    resource: Optional[Resource] = None,
+    config: TracerProviderConfig | None,
+    resource: Resource | None = None,
 ) -> None:
     """Configure the global TracerProvider from declarative config.
 
