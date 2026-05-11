@@ -1,5 +1,5 @@
 OpenTelemetry Exporters HTTP Transport
-===============================
+======================================
 
 |pypi|
 

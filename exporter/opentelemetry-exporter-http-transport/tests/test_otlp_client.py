@@ -80,7 +80,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
             jitter=jitter,
         )
 
-    def test_export_returns_success_for_success_status_codes(self):
+    def test_export_success_status_codes(self):
         cases = (
             (200, "OK"),
             (204, "No Content"),
@@ -105,7 +105,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
         "opentelemetry.exporter.http.transport._otlp_client.time.time",
         side_effect=(100.0, 100.0, 100.0),
     )
-    def test_export_sends_request_arguments(self, mock_time):
+    def test_export_request_arguments(self, mock_time):
         transport = _TestHTTPTransport(
             _TestHTTPResult(status_code=200, reason="OK")
         )
@@ -156,7 +156,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
                     decompress(transport.requests[0]["data"]), b"payload"
                 )
 
-    def test_export_retries_retryable_status_codes(self):
+    def test_export_retryable_status_codes(self):
         cases = (
             (408, "Request Timeout"),
             (500, "Internal Server Error"),
@@ -186,7 +186,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 self.assertEqual(len(transport.requests), 2)
                 shutdown_event.wait.assert_called_once_with(1.0)
 
-    def test_export_retries_connection_errors_immediately(self):
+    def test_export_connection_errors(self):
         error = RuntimeError("connection failed")
         transport = _TestHTTPTransport(
             _TestHTTPResult(error=error, connection_error=True),
@@ -205,7 +205,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
         )
         self.assertGreater(transport.requests[1]["timeout"], 0.0)
 
-    def test_export_returns_failure_for_non_retryable_errors(self):
+    def test_export_non_retryable_errors(self):
         exception = RuntimeError("request failed")
         cases = (
             (
@@ -245,7 +245,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 self.assertEqual(result.reason, expected_reason)
                 self.assertIs(result.error, expected_error)
 
-    def test_export_returns_failure_when_shutdown_blocks_retry(self):
+    def test_export_with_shutdown(self):
         shutdown_event = Mock(spec=threading.Event)
         shutdown_event.is_set.return_value = True
         transport = _TestHTTPTransport(

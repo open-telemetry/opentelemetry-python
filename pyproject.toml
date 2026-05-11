@@ -140,6 +140,7 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/metric_reader_storage.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py",
   "opentelemetry-sdk/benchmarks",
+  "exporter/opentelemetry-exporter-http-transport/tests",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/tests",
