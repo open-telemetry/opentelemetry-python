@@ -4,6 +4,7 @@
 # pylint: disable=unused-import
 
 import os
+import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from threading import Lock
@@ -68,7 +69,14 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         ] = []
         self._needs_storage_reinit = False
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._at_fork_reinit)
+            weak_self = weakref.ref(self)
+
+            def _fork_handler():
+                obj = weak_self()
+                if obj is not None:
+                    obj._at_fork_reinit()  # pylint: disable=protected-access
+
+            os.register_at_fork(after_in_child=_fork_handler)
 
     def _at_fork_reinit(self):
         """Reinitialize lock in child process after fork"""

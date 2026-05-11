@@ -208,8 +208,10 @@ class TestSynchronousMeasurementConsumer(TestCase):
     "opentelemetry.sdk.metrics._internal."
     "measurement_consumer.MetricReaderStorage"
 )
-class TestSynchronousMeasurementConsumerForkHandler(TestCase):  # pylint: disable=protected-access
-    """Exhaustive tests for fork handler, needs_storage_reinit, and lazy _reinit_storages."""
+class TestSynchronousMeasurementConsumerForkHandler(TestCase):
+     """Exhaustive tests for fork handler, needs_storage_reinit, and lazy _reinit_storages."""
+
+    # pylint: disable=protected-access
 
     def test_register_at_fork_called_when_available(
         self, MockMetricReaderStorage
