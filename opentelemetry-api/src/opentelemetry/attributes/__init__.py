@@ -12,7 +12,9 @@ from opentelemetry.util import types
 # Re-exported so the "AnyValue" forward reference in
 # util.types._ExtendedAttributes resolves against this module's globals when
 # sphinx_autodoc_typehints introspects BoundedAttributes.
-from opentelemetry.util.types import AnyValue as AnyValue
+from opentelemetry.util.types import AnyValue
+
+__all__ = ["AnyValue", "BoundedAttributes"]
 
 # bytes are accepted as a user supplied value for attributes but
 # decoded to strings internally.
