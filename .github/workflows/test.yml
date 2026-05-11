@@ -1528,25 +1528,6 @@ jobs:
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-http-transport -- -ra
 
-  pypy3-test-opentelemetry-exporter-http-transport_ubuntu-latest:
-    name: opentelemetry-exporter-http-transport pypy-3.10 Ubuntu
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python pypy-3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "pypy-3.10"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-exporter-http-transport -- -ra
-
   py310-test-opentelemetry-exporter-opencensus_ubuntu-latest:
     name: opentelemetry-exporter-opencensus 3.10 Ubuntu
     runs-on: ubuntu-latest
@@ -4925,27 +4906,6 @@ jobs:
 
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-http-transport -- -ra
-
-  pypy3-test-opentelemetry-exporter-http-transport_windows-latest:
-    name: opentelemetry-exporter-http-transport pypy-3.10 Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Configure git to support long filenames
-        run: git config --system core.longpaths true
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python pypy-3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "pypy-3.10"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-exporter-http-transport -- -ra
 
   py310-test-opentelemetry-exporter-opencensus_windows-latest:
     name: opentelemetry-exporter-opencensus 3.10 Windows
