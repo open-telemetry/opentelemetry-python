@@ -49,9 +49,9 @@ def _propagators_from_textmap_config(
     ``opentelemetry_propagator`` entry point group.
     """
     result: list[TextMapPropagator] = []
-    for name in _PROPAGATOR_REGISTRY:
+    for name, factory in _PROPAGATOR_REGISTRY.items():
         if getattr(config, name, None) is not None:
-            result.append(_PROPAGATOR_REGISTRY[name](getattr(config, name)))
+            result.append(factory(getattr(config, name)))
 
     # Known schema fields not in registry (b3, b3multi) — loaded via entry point
     for name in ("b3", "b3multi"):
