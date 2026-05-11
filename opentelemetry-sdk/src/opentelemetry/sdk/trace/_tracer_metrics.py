@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Protocol
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.trace.sampling import Decision
@@ -17,6 +18,24 @@ from opentelemetry.semconv._incubating.metrics.otel_metrics import (
     create_otel_sdk_span_started,
 )
 from opentelemetry.trace.span import SpanContext
+
+
+class TracerMetricsT(Protocol):
+    def start_span(
+        self,
+        parent_span_context: SpanContext | None,
+        sampling_decision: Decision,
+    ) -> Callable[[], None]: ...
+
+
+# pylint: disable=no-self-use
+class NoOpTracerMetrics:
+    def start_span(
+        self,
+        parent_span_context: SpanContext | None,
+        sampling_decision: Decision,
+    ) -> Callable[[], None]:
+        return noop
 
 
 class TracerMetrics:
@@ -52,6 +71,16 @@ class TracerMetrics:
             self._live_spans.add(-1, live_span_attrs)
 
         return end_span
+
+
+def create_tracer_metrics(
+    meter_provider: metrics_api.MeterProvider,
+    enabled: bool,
+) -> TracerMetricsT:
+    if not enabled:
+        return NoOpTracerMetrics()
+
+    return TracerMetrics(meter_provider)
 
 
 def noop() -> None:

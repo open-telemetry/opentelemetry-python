@@ -829,6 +829,7 @@ requires-dist = [
 
 [[package]]
 name = "opentelemetry-codegen-json"
+version = "0.0.0"
 source = { editable = "codegen/opentelemetry-codegen-json" }
 dependencies = [
     { name = "protobuf" },
