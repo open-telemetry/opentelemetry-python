@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -18,16 +17,47 @@ from opentelemetry.exporter.http.transport._urllib3 import (
 
 _TEST_URL = "http://example.test/v1/traces"
 
+
 class TestUrllib3HTTPResult(unittest.TestCase):
     def test_is_connection_error(self):
         cases: list[tuple[Urllib3HTTPResult, bool]] = [
             (Urllib3HTTPResult(status_code=200, reason="OK"), False),
-            (Urllib3HTTPResult(error=urllib3.exceptions.ProtocolError("error")), True),
-            (Urllib3HTTPResult(error=urllib3.exceptions.NewConnectionError(None, "error")), True),
-            (Urllib3HTTPResult(error=urllib3.exceptions.ConnectTimeoutError(None, "error")), True),
-            (Urllib3HTTPResult(error=urllib3.exceptions.MaxRetryError(None, "http://x")), True),
-            (Urllib3HTTPResult(error=urllib3.exceptions.HTTPError("error")), False),
-            (Urllib3HTTPResult(error=urllib3.exceptions.ReadTimeoutError(None, "http://x", "timeout")), False),
+            (
+                Urllib3HTTPResult(
+                    error=urllib3.exceptions.ProtocolError("error")
+                ),
+                True,
+            ),
+            (
+                Urllib3HTTPResult(
+                    error=urllib3.exceptions.NewConnectionError(None, "error")
+                ),
+                True,
+            ),
+            (
+                Urllib3HTTPResult(
+                    error=urllib3.exceptions.ConnectTimeoutError(None, "error")
+                ),
+                True,
+            ),
+            (
+                Urllib3HTTPResult(
+                    error=urllib3.exceptions.MaxRetryError(None, "http://x")
+                ),
+                True,
+            ),
+            (
+                Urllib3HTTPResult(error=urllib3.exceptions.HTTPError("error")),
+                False,
+            ),
+            (
+                Urllib3HTTPResult(
+                    error=urllib3.exceptions.ReadTimeoutError(
+                        None, "http://x", "timeout"
+                    )
+                ),
+                False,
+            ),
             (Urllib3HTTPResult(error=RuntimeError("error")), False),
             (Urllib3HTTPResult(error=ValueError("error")), False),
         ]
@@ -36,7 +66,12 @@ class TestUrllib3HTTPResult(unittest.TestCase):
         )
         if name_resolution_error is not None:
             cases.append(
-                (Urllib3HTTPResult(error=name_resolution_error("host", None, "error")), True)
+                (
+                    Urllib3HTTPResult(
+                        error=name_resolution_error("host", None, "error")
+                    ),
+                    True,
+                )
             )
         for result, expected in cases:
             with self.subTest(error_type=type(result.error).__name__):
@@ -71,7 +106,10 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
 
     @pook.on
     def test_request_forwards_headers(self):
-        headers = {"content-type": "application/x-protobuf", "x-custom": "value"}
+        headers = {
+            "content-type": "application/x-protobuf",
+            "x-custom": "value",
+        }
         pook.post(_TEST_URL, headers=headers).reply(200)
         transport = Urllib3HTTPTransport()
         result = transport.request("POST", _TEST_URL, headers=headers)
@@ -94,7 +132,9 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
         for error, expected_is_connection_error in cases:
             with self.subTest(error_type=type(error).__name__):
                 transport = Urllib3HTTPTransport()
-                with patch.object(transport._pool, "request", side_effect=error):
+                with patch.object(
+                    transport._pool, "request", side_effect=error
+                ):
                     result = transport.request("POST", _TEST_URL)
                 self.assertIsNone(result.status_code)
                 self.assertIsNone(result.reason)
@@ -112,7 +152,9 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
             with self.subTest(timeout=timeout):
                 transport = Urllib3HTTPTransport()
                 with patch.object(transport._pool, "request") as mock_request:
-                    mock_request.return_value = MagicMock(status=200, reason="OK")
+                    mock_request.return_value = MagicMock(
+                        status=200, reason="OK"
+                    )
                     transport.request("POST", _TEST_URL, timeout=timeout)
                 timeout_kwarg = mock_request.call_args.kwargs["timeout"]
                 if timeout is not None:

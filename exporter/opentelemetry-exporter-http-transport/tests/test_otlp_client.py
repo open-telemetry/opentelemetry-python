@@ -5,6 +5,8 @@ import gzip
 import threading
 import unittest
 import zlib
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
@@ -16,6 +18,33 @@ from opentelemetry.exporter.http.transport._otlp_client import (
     Compression,
     OTLPHTTPClient,
 )
+
+
+@contextmanager
+def _mock_clock(
+    shutdown_event: Mock | None = None,
+) -> Iterator[Callable[[float], None]]:
+    _now = [0.0]
+
+    def advance(delta: float) -> None:
+        _now[0] += delta
+
+    def get_time() -> float:
+        return _now[0]
+
+    if shutdown_event is not None:
+
+        def _wait(duration: float) -> bool:
+            advance(duration)
+            return False
+
+        shutdown_event.wait.side_effect = _wait
+
+    with patch(
+        "opentelemetry.exporter.http.transport._otlp_client.time.time",
+        side_effect=get_time,
+    ):
+        yield advance
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +80,8 @@ class _TestHTTPTransport(BaseHTTPTransport):
             }
         )
         result = self.results.pop(0)
+        if callable(result):
+            result = result()
         if isinstance(result, Exception):
             raise result
         return result
@@ -267,3 +298,93 @@ class TestOTLPHTTPClient(unittest.TestCase):
         client.close()
 
         self.assertTrue(transport.closed)
+
+    def test_export_timeout_decreases_per_retry(self):
+        shutdown_event = Mock(spec=threading.Event)
+        shutdown_event.is_set.return_value = False
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(status_code=503, reason="Service Unavailable"),
+            _TestHTTPResult(status_code=503, reason="Service Unavailable"),
+            _TestHTTPResult(status_code=200, reason="OK"),
+        )
+        client = self._client(
+            transport, timeout=10.0, jitter=0.0, shutdown_event=shutdown_event
+        )
+
+        with _mock_clock(shutdown_event):
+            result = client.export(b"payload")
+
+        # retry=0: wait(1.0) -> time=1.0, retry=1: wait(2.0) -> time=3.0, success
+        self.assertTrue(result.success)
+        self.assertAlmostEqual(transport.requests[0]["timeout"], 10.0)
+        self.assertAlmostEqual(transport.requests[1]["timeout"], 9.0)
+        self.assertAlmostEqual(transport.requests[2]["timeout"], 7.0)
+
+    def test_export_backoff_exhausts_remaining_timeout(self):
+        shutdown_event = Mock(spec=threading.Event)
+        shutdown_event.is_set.return_value = False
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(status_code=503, reason="Service Unavailable"),
+            _TestHTTPResult(status_code=503, reason="Service Unavailable"),
+        )
+        # timeout=1.5: retry=0 backoff=1.0 fits -> wait(1.0) -> time=1.0
+        # retry=1 backoff=2.0 > 0.5 remaining -> give up
+        client = self._client(
+            transport, timeout=1.5, jitter=0.0, shutdown_event=shutdown_event
+        )
+
+        with _mock_clock(shutdown_event):
+            result = client.export(b"payload")
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.status_code, 503)
+        self.assertEqual(len(transport.requests), 2)
+        shutdown_event.wait.assert_called_once_with(1.0)
+
+    def test_export_exhausts_max_retries(self):
+        shutdown_event = Mock(spec=threading.Event)
+        shutdown_event.is_set.return_value = False
+        transport = _TestHTTPTransport(
+            *[_TestHTTPResult(status_code=503, reason="Service Unavailable")]
+            * 6
+        )
+        client = self._client(
+            transport,
+            timeout=1000.0,
+            jitter=0.0,
+            shutdown_event=shutdown_event,
+        )
+
+        with _mock_clock(shutdown_event):
+            result = client.export(b"payload")
+
+        self.assertFalse(result.success)
+        self.assertEqual(len(transport.requests), 6)
+        self.assertEqual(shutdown_event.wait.call_count, 5)
+        self.assertEqual(
+            [call.args[0] for call in shutdown_event.wait.call_args_list],
+            [1.0, 2.0, 4.0, 8.0, 16.0],
+        )
+
+    def test_export_connection_error_gets_reduced_timeout(self):
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(status_code=200, reason="OK"),
+        )
+
+        with _mock_clock() as advance:
+
+            def _slow_connection_error() -> _TestHTTPResult:
+                advance(2.0)
+                return _TestHTTPResult(
+                    error=RuntimeError("stale connection"),
+                    connection_error=True,
+                )
+
+            transport.results.insert(0, _slow_connection_error)
+            client = self._client(transport, timeout=5.0)
+            result = client.export(b"payload")
+
+        # _submit: deadline=0+5=5.0, after first request time=2.0, remaining=3.0
+        self.assertTrue(result.success)
+        self.assertEqual(len(transport.requests), 2)
+        self.assertAlmostEqual(transport.requests[1]["timeout"], 3.0)
