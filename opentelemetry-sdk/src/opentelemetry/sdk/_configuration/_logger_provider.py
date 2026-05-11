@@ -130,7 +130,7 @@ def _create_otlp_grpc_log_exporter(
 _LOG_EXPORTER_REGISTRY: dict = {
     "otlp_http": _create_otlp_http_log_exporter,
     "otlp_grpc": _create_otlp_grpc_log_exporter,
-    "console": lambda _: _create_console_log_exporter(),
+    "console": lambda _: ConsoleLogRecordExporter(),
 }
 
 
