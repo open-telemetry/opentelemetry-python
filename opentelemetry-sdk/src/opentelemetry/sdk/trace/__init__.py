@@ -40,15 +40,19 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
     OTEL_SDK_DISABLED,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
 )
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
-from opentelemetry.sdk.trace._tracer_metrics import TracerMetrics
+from opentelemetry.sdk.trace._tracer_metrics import create_tracer_metrics
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
@@ -1122,7 +1126,12 @@ class Tracer(trace_api.Tracer):
         self._tracer_config = _tracer_config or _TracerConfig.default()
 
         meter_provider = meter_provider or metrics_api.get_meter_provider()
-        self._tracer_metrics = TracerMetrics(meter_provider)
+        self._tracer_metrics = create_tracer_metrics(
+            meter_provider,
+            parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
+        )
 
     def _set_tracer_config(self, tracer_config: _TracerConfig):
         self._tracer_config = tracer_config

@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5095](https://github.com/open-telemetry/opentelemetry-python/pull/5095))
 - Add `registry` keyword argument to `PrometheusMetricReader` to allow passing a custom Prometheus registry
   ([#5055](https://github.com/open-telemetry/opentelemetry-python/pull/5055))
+- Add ability to selectively enable exporting of SDK internal metrics with the `OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED` environment variable.
+  ([#5151](https://github.com/open-telemetry/opentelemetry-python/pull/5151))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 

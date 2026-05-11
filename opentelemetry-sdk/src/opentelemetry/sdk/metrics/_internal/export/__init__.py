@@ -29,6 +29,10 @@ from opentelemetry.metrics import MeterProvider, NoOpMeterProvider
 from opentelemetry.sdk.environment_variables import (
     OTEL_METRIC_EXPORT_INTERVAL,
     OTEL_METRIC_EXPORT_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
@@ -57,7 +61,7 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
 )
 from opentelemetry.util._once import Once
 
-from ._metric_reader_metrics import MetricReaderMetrics
+from ._metric_reader_metrics import create_metric_reader_metrics
 
 _logger = getLogger(__name__)
 
@@ -321,8 +325,12 @@ class MetricReader(ABC):
             if otel_component_type
             else type(self).__qualname__
         )
-        self._metrics = MetricReaderMetrics(
-            self._otel_component_type, NoOpMeterProvider()
+        self._metrics = create_metric_reader_metrics(
+            self._otel_component_type,
+            NoOpMeterProvider(),
+            parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
         )
 
     @final
@@ -380,8 +388,12 @@ class MetricReader(ABC):
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
 
     def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
-        self._metrics = MetricReaderMetrics(
-            self._otel_component_type, meter_provider
+        self._metrics = create_metric_reader_metrics(
+            self._otel_component_type,
+            meter_provider,
+            parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
         )
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
