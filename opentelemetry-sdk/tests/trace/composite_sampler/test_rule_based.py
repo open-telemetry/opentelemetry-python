@@ -200,6 +200,21 @@ def test_attribute_patterns_predicate_is_case_sensitive():
     )
 
 
+def test_attribute_patterns_predicate_treats_brackets_as_literals():
+    predicate = AttributePatternsPredicate(
+        "http.route", included=["/api/[v1]"]
+    )
+
+    assert (
+        _predicate_result(predicate, attributes={"http.route": "/api/[v1]"})
+        is True
+    )
+    assert (
+        _predicate_result(predicate, attributes={"http.route": "/api/v"})
+        is False
+    )
+
+
 def test_attribute_patterns_predicate_matches_array_item():
     assert (
         _predicate_result(
