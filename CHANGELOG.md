@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-opencensus-shim`: Fix `test_install_shim_affects_existing_tracers` assuming wrong default tracer type in tests
+  ([#5047](https://github.com/open-telemetry/opentelemetry-python/pull/5047))
 - Apply fixes for `UP` ruff rule
   ([#5133](https://github.com/open-telemetry/opentelemetry-python/pull/5133))
 - Switch to SPDX license headers and add CI enforcement
