@@ -100,6 +100,8 @@ We meet weekly on Thursdays at 9AM PST. The meeting is subject to change dependi
 
 Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/18w8zOBm_mbety0OqlPwxc7dvnfu641EgmrO4AdJef0U/edit?tab=t.0).
 
+The meeting is open for all to join. We invite everyone to join our meeting, regardless of your experience level. Whether you're a seasoned OpenTelemetry developer, just starting your journey, or simply curious about the work we do, you're more than welcome to participate!
+
 ### Maintainers
 
 - [Aaron Abbott](https://github.com/aabmass), Google

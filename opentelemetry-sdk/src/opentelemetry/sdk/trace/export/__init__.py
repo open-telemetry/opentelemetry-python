@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import logging
@@ -27,12 +16,21 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.metrics import MeterProvider, get_meter_provider
-from opentelemetry.sdk._shared_internal import BatchProcessor, ProcessorMetrics
+from opentelemetry.sdk._shared_internal import (
+    BatchProcessor,
+)
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    create_processor_metrics,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -102,14 +100,17 @@ class SimpleSpanProcessor(SpanProcessor):
         meter_provider: MeterProvider | None = None,
     ):
         self.span_exporter = span_exporter
-        self._metrics = ProcessorMetrics(
+        self._metrics = create_processor_metrics(
             "traces",
             OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
             meter_provider or get_meter_provider(),
+            enabled=parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
         )
 
     def on_start(
-        self, span: Span, parent_context: typing.Optional[Context] = None
+        self, span: Span, parent_context: Context | None = None
     ) -> None:
         pass
 
@@ -196,11 +197,14 @@ class BatchSpanProcessor(SpanProcessor):
             export_timeout_millis,
             max_queue_size,
             "Span",
-            ProcessorMetrics(
+            create_processor_metrics(
                 "traces",
                 OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
+                enabled=parse_boolean_environment_variable(
+                    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+                ),
             ),
         )
 
@@ -225,7 +229,7 @@ class BatchSpanProcessor(SpanProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: typing.Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod

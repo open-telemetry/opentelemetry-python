@@ -1,20 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
-
-from typing import Optional
 
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.propagate import set_global_textmap
@@ -66,7 +53,7 @@ def _propagators_from_textmap_config(
 
 
 def create_propagator(
-    config: Optional[PropagatorConfig],
+    config: PropagatorConfig | None,
 ) -> CompositePropagator:
     """Create a CompositePropagator from declarative config.
 
@@ -103,7 +90,7 @@ def create_propagator(
     return CompositePropagator(list(propagators.values()))
 
 
-def configure_propagator(config: Optional[PropagatorConfig]) -> None:
+def configure_propagator(config: PropagatorConfig | None) -> None:
     """Configure the global text map propagator from declarative config.
 
     Always calls set_global_textmap to override any defaults (including the
