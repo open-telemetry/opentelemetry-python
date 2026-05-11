@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections import Counter
+from typing import Protocol
 
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -13,6 +14,15 @@ from opentelemetry.semconv._incubating.metrics.otel_metrics import (
 )
 
 _component_counter = Counter()
+
+
+class MetricReaderMetricsT(Protocol):
+    def record_collection(self, duration: float) -> None: ...
+
+
+class NoOpMetricReaderMetrics:
+    def record_collection(self, duration: float) -> None:
+        pass
 
 
 class MetricReaderMetrics:
@@ -35,3 +45,14 @@ class MetricReaderMetrics:
 
     def record_collection(self, duration: float) -> None:
         self._collection_duration.record(duration, self._standard_attrs)
+
+
+def create_metric_reader_metrics(
+    component_type: str,
+    meter_provider: MeterProvider,
+    enabled: bool,
+) -> MetricReaderMetricsT:
+    if not enabled:
+        return NoOpMetricReaderMetrics()
+
+    return MetricReaderMetrics(component_type, meter_provider)
