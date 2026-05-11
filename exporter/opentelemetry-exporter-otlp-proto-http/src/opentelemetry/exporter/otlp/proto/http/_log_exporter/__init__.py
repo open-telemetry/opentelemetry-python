@@ -3,6 +3,7 @@
 
 import gzip
 import logging
+import os
 import random
 import threading
 import zlib
@@ -16,7 +17,7 @@ import requests
 from requests.exceptions import ConnectionError
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
+    create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import (
@@ -50,6 +51,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
@@ -141,11 +143,15 @@ class OTLPLogExporter(LogRecordExporter):
             )
         self._shutdown = False
 
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_LOG_EXPORTER,
             "logs",
             urlparse(self._endpoint),
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
     def _export(
