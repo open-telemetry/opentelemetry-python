@@ -483,6 +483,19 @@ Entry point providers should implement the following:
 Note: This environment variable is experimental and subject to change.
 """
 
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES = (
+    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES` stores a comma-separated list of human-readable
+gRPC error codes that are considered retryable for the OTLP gRPC exporters (e.g. `UNAVAILABLE, DEADLINE_EXCEEDED`).
+Supported error codes are defined in `grpc.StatusCode` and are parsed in a case-insensitive manner.
+
+Note: This environment variable is experimental and subject to change.
+"""
+
 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
@@ -833,4 +846,15 @@ Default: opentelemetry.sdk._logs._internal._default_logger_configurator
 
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
+"""
+
+OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED = (
+    "OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED"
+)
+"""
+.. envvar:: OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+
+The :envvar:`OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED` environment variable enables
+metrics emitted by the SDK about its own internal state.
+Default: "false"
 """

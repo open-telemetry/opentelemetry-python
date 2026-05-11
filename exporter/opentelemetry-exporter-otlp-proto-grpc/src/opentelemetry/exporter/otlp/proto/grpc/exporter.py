@@ -9,11 +9,13 @@ logic to handle transient collector outages.
 
 """
 
+import os
 import random
 import threading
 from abc import ABC, abstractmethod
 from collections.abc import (
     Callable,
+    Iterable,
     Sequence,  # noqa: F401
 )
 from collections.abc import Sequence as TypingSequence
@@ -44,7 +46,7 @@ from grpc import (
     ssl_channel_credentials,
 )
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
+    create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
@@ -82,6 +84,7 @@ from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -90,6 +93,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -295,6 +299,7 @@ class OTLPExporterMixin(
         timeout: float | None = None,
         compression: Compression | None = None,
         channel_options: tuple[tuple[str, str]] | None = None,
+        retryable_error_codes: Iterable[StatusCode] | None = None,
         *,
         component_type: OtelComponentTypeValues | None = None,
         signal: Literal["traces", "metrics", "logs"] = "traces",
@@ -357,6 +362,22 @@ class OTLPExporterMixin(
             else compression
         ) or Compression.NoCompression
 
+        self._retryable_error_codes = retryable_error_codes or os.environ.get(
+            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES
+        )
+        if isinstance(self._retryable_error_codes, str):
+            self._retryable_error_codes = frozenset(
+                StatusCode[code.strip().upper()]
+                for code in self._retryable_error_codes.split(",")
+                if code.strip()
+            )
+        elif self._retryable_error_codes is not None:
+            self._retryable_error_codes = frozenset(
+                self._retryable_error_codes
+            )
+        else:
+            self._retryable_error_codes = _RETRYABLE_ERROR_CODES
+
         self._channel = None
         self._client = None
 
@@ -375,11 +396,15 @@ class OTLPExporterMixin(
         self._component_type = component_type
         self._signal: Literal["traces", "metrics", "logs"] = signal
         self._parsed_url = parsed_url
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             self._component_type,
             signal,
             parsed_url,
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
         self._initialize_channel_and_stub()
@@ -481,7 +506,7 @@ class OTLPExporterMixin(
                         self._initialize_channel_and_stub()
 
                     if (
-                        error.code() not in _RETRYABLE_ERROR_CODES  # type: ignore [reportAttributeAccessIssue]
+                        error.code() not in self._retryable_error_codes  # type: ignore [reportAttributeAccessIssue]
                         or retry_num + 1 == _MAX_RETRYS
                         or backoff_seconds > (deadline_sec - time())
                         or self._shutdown
@@ -537,9 +562,13 @@ class OTLPExporterMixin(
         pass
 
     def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             self._component_type,
             self._signal,
             self._parsed_url,
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )

@@ -46,10 +46,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5135](https://github.com/open-telemetry/opentelemetry-python/pull/5135))
 - ci: wait for tracecontext server readiness instead of a fixed sleep in `scripts/tracecontext-integration-test.sh`
   ([#5149](https://github.com/open-telemetry/opentelemetry-python/pull/5149))
+- `opentelemetry-api`: update `EnvironmentGetter` and `EnvironmentSetter` to use normalized environment variable names
+  ([#5119](https://github.com/open-telemetry/opentelemetry-python/pull/5119))
 - `opentelemetry-sdk`: only load entrypoints for resource detectors if they are configured via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`
   ([#5145](https://github.com/open-telemetry/opentelemetry-python/pull/5145))
 - `opentelemetry-api`: conditionallly import entrypoints for `opentelemetry_context` only if the `OTEL_PYTHON_CONTEXT` env variable is defined, return `ContextVarsRuntimeContext` otherwise
   ([#5144](https://github.com/open-telemetry/opentelemetry-python/pull/5144))
+- `opentelemetry-exporter-otlp-json-common`: add 'opentelemetry-exporter-otlp-json-common' package for OTLP JSON exporters
+  ([#4996](https://github.com/open-telemetry/opentelemetry-python/pull/4996))
+- `opentelemetry-exporter-otlp-proto-grpc`: make retryable gRPC error codes configurable for gRPC exporters
+  ([#4917](https://github.com/open-telemetry/opentelemetry-python/pull/4917))
+- `opentelemetry-sdk`: add sampler plugin loading to declarative file configuration via the `opentelemetry_sampler` entry point group, matching the spec's PluginComponentProvider mechanism
+  ([#5095](https://github.com/open-telemetry/opentelemetry-python/pull/5095))
+- Add `registry` keyword argument to `PrometheusMetricReader` to allow passing a custom Prometheus registry
+  ([#5055](https://github.com/open-telemetry/opentelemetry-python/pull/5055))
+- Add ability to selectively enable exporting of SDK internal metrics with the `OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED` environment variable.
+  ([#5151](https://github.com/open-telemetry/opentelemetry-python/pull/5151))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
