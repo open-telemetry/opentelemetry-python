@@ -254,12 +254,12 @@ Follow these steps:
 1. Open Core repo PR (Contrib Tests will fail)
 2. Open Contrib repo PR and modify its `CORE_REPO_SHA` in `.github/workflows/test_x.yml`
 to equal the commit SHA of the Core repo PR to pass tests
-1. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test_x.yml` to
+3. Modify the Core repo PR `CONTRIB_REPO_SHA` in `.github/workflows/test_x.yml` to
 equal the commit SHA of the Contrib repo PR to pass Contrib repo tests (a sanity
 check for the Maintainers & Approvers)
-1. Merge the Contrib repo
-2. Restore the Core repo PR `CONTRIB_REPO_SHA` to point to `main`
-3. Merge the Core repo PR
+4. Merge the Contrib repo
+5. Restore the Core repo PR `CONTRIB_REPO_SHA` to point to `main`
+6. Merge the Core repo PR
 
 ### How to Receive Comments
 
