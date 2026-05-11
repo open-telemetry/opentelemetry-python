@@ -16,12 +16,21 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.metrics import MeterProvider, get_meter_provider
-from opentelemetry.sdk._shared_internal import BatchProcessor, ProcessorMetrics
+from opentelemetry.sdk._shared_internal import (
+    BatchProcessor,
+)
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    create_processor_metrics,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -91,10 +100,13 @@ class SimpleSpanProcessor(SpanProcessor):
         meter_provider: MeterProvider | None = None,
     ):
         self.span_exporter = span_exporter
-        self._metrics = ProcessorMetrics(
+        self._metrics = create_processor_metrics(
             "traces",
             OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
             meter_provider or get_meter_provider(),
+            enabled=parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
         )
 
     def on_start(
@@ -185,11 +197,14 @@ class BatchSpanProcessor(SpanProcessor):
             export_timeout_millis,
             max_queue_size,
             "Span",
-            ProcessorMetrics(
+            create_processor_metrics(
                 "traces",
                 OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
+                enabled=parse_boolean_environment_variable(
+                    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+                ),
             ),
         )
 
