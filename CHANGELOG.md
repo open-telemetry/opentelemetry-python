@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- `opentelemetry-exporter-otlp-proto-http`: refactor shared HTTP exporter logic into `_common` module, introduce `OTLPHttpClient` base class and `_SignalConfig` dataclass, eliminating duplicated `__init__`, `_export`, retry loop, and `shutdown` across the trace, log, and metric exporters.
+  ([#2990](https://github.com/open-telemetry/opentelemetry-python/pull/5160))
 - Apply fixes for `UP` ruff rule
   ([#5133](https://github.com/open-telemetry/opentelemetry-python/pull/5133))
 - Switch to SPDX license headers and add CI enforcement
