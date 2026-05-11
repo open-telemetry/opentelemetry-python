@@ -8,7 +8,11 @@ from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping, Sequence
 
 from opentelemetry.util import types
-from opentelemetry.util.types import AnyValue  # noqa: F401  # exposes AnyValue for forward-ref resolution by sphinx_autodoc_typehints
+
+# Re-exported so the "AnyValue" forward reference in
+# util.types._ExtendedAttributes resolves against this module's globals when
+# sphinx_autodoc_typehints introspects BoundedAttributes.
+from opentelemetry.util.types import AnyValue as AnyValue
 
 # bytes are accepted as a user supplied value for attributes but
 # decoded to strings internally.
