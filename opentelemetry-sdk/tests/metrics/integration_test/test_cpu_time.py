@@ -1,20 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 # type: ignore
 
 import io
-from typing import Generator, Iterable, List
+from collections.abc import Generator, Iterable
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -52,7 +41,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
     @staticmethod
     def create_measurements_expected(
         instrument: Instrument,
-    ) -> List[Measurement]:
+    ) -> list[Measurement]:
         return [
             Measurement(
                 6150.29,

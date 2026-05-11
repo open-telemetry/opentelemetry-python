@@ -1,23 +1,12 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """Zipkin Export Encoder for Protobuf
 
 API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin.proto
 """
 
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
 
 from opentelemetry.exporter.zipkin.encoder import Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
@@ -90,8 +79,8 @@ class ProtobufEncoder(Encoder):
         return encoded_span
 
     def _encode_annotations(
-        self, span_events: Optional[List[Event]]
-    ) -> Optional[List]:
+        self, span_events: list[Event] | None
+    ) -> list | None:
         annotations = self._extract_annotations_from_events(span_events)
         if annotations is None:
             encoded_annotations = None
