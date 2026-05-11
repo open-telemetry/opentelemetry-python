@@ -131,7 +131,7 @@ class SpanProcessor:
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:  # type: ignore[reportReturnType]
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # pylint: disable=no-self-use
         """Export all ended spans to the configured Exporter that have not yet
         been exported.
 
@@ -142,6 +142,7 @@ class SpanProcessor:
         Returns:
             False if the timeout is exceeded, True otherwise.
         """
+        return True
 
 
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
@@ -204,15 +205,19 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             given timeout, False otherwise.
         """
         deadline_ns = time_ns() + timeout_millis * 1000000
+        all_flushed = True
         for sp in self._span_processors:
             current_time_ns = time_ns()
             if current_time_ns >= deadline_ns:
                 return False
 
-            if not sp.force_flush((deadline_ns - current_time_ns) // 1000000):
-                return False
+            if (
+                sp.force_flush((deadline_ns - current_time_ns) // 1000000)
+                is False
+            ):
+                all_flushed = False
 
-        return True
+        return all_flushed
 
 
 class ConcurrentMultiSpanProcessor(SpanProcessor):
@@ -315,7 +320,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             return False
 
         for future in done_futures:
-            if not future.result():
+            if future.result() is False:
                 return False
 
         return True

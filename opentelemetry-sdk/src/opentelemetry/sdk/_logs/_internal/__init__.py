@@ -413,15 +413,16 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
             False otherwise.
         """
         deadline_ns = time_ns() + timeout_millis * 1000000
+        all_flushed = True
         for lp in self._log_record_processors:
             current_ts = time_ns()
             if current_ts >= deadline_ns:
                 return False
 
-            if not lp.force_flush((deadline_ns - current_ts) // 1000000):
-                return False
+            if lp.force_flush((deadline_ns - current_ts) // 1000000) is False:
+                all_flushed = False
 
-        return True
+        return all_flushed
 
 
 class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
@@ -495,7 +496,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             return False
 
         for future in done_futures:
-            if not future.result():
+            if future.result() is False:
                 return False
 
         return True
