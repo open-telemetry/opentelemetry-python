@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#5095](https://github.com/open-telemetry/opentelemetry-python/pull/5095))
 - Add `registry` keyword argument to `PrometheusMetricReader` to allow passing a custom Prometheus registry
   ([#5055](https://github.com/open-telemetry/opentelemetry-python/pull/5055))
+- `opentelemetry-exporter-http-transport`: add 'opentelemetry-exporter-http-transport' package for HTTP exporters
+  ([#5194](https://github.com/open-telemetry/opentelemetry-python/pull/5194))
 
 ## Version 1.41.0/0.62b0 (2026-04-09)
 
