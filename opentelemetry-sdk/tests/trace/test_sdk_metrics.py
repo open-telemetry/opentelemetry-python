@@ -2,8 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from unittest import TestCase
+from unittest.mock import patch
 
 from opentelemetry import trace as trace_api
+from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.trace import TracerProvider
@@ -16,6 +20,7 @@ from opentelemetry.sdk.trace.sampling import (
 from opentelemetry.trace.span import SpanContext
 
 
+@patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
 class TestTracerProviderMetrics(TestCase):
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()
@@ -148,6 +153,7 @@ class TestTracerProviderMetrics(TestCase):
             },
         )
         self.assert_live_spans(metric_data, None, {})
+
         span.end()
         metric_data = self.metric_reader.get_metrics_data()
         self.assert_started_spans(
@@ -231,3 +237,19 @@ class TestTracerProviderMetrics(TestCase):
             },
         )
         self.assert_live_spans(metric_data, None, {})
+
+
+class TestTracerProviderMetricsDisabled(TestCase):
+    def test_disabled_by_default(self):
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+        tracer_provider = TracerProvider(
+            sampler=ALWAYS_ON, meter_provider=meter_provider
+        )
+        tracer = tracer_provider.get_tracer("test")
+
+        with tracer.start_as_current_span("span"):
+            pass
+
+        self.assertIsNone(metric_reader.get_metrics_data())
+        meter_provider.shutdown()
