@@ -79,19 +79,13 @@ This project uses [towncrier](https://towncrier.readthedocs.io/) to manage the c
 
 **Creating a changelog fragment:**
 
-```console
-tox -e new-changelog -- PR_NUMBER TYPE "Description of the change"
+Create a file named `.changelog/<PR_NUMBER>.<TYPE>` where `TYPE` is one of: `added`, `changed`, `deprecated`, `removed`, `fixed`.
+
+The file should contain a one-line description of the change. For example, `.changelog/1234.added`:
+
 ```
-
-Where `TYPE` is one of: `added`, `changed`, `deprecated`, `removed`, `fixed`.
-
-For example:
-
-```console
-tox -e new-changelog -- 1234 added "`opentelemetry-sdk`: add support for new feature"
+`opentelemetry-sdk`: add support for new feature
 ```
-
-This creates a file `.changelog/1234.added` containing the description. You can also create the file manually — it's just a text file with the description on one line.
 
 **Writing a good changelog entry:**
 
@@ -103,12 +97,10 @@ This creates a file `.changelog/1234.added` containing the description. You can 
 **Preview the changelog:**
 
 ```console
-tox -e changelog
+towncrier build --draft --version Unreleased
 ```
 
-Running `tox -e precommit` will check that a changelog fragment exists for your branch and remind you to create one if missing.
-
-The CI will also verify that a changelog fragment exists and that `CHANGELOG.md` is not directly modified.
+The CI will verify that a changelog fragment exists and that `CHANGELOG.md` is not directly modified.
 
 If your change does not need a changelog entry, add the "Skip Changelog" label to the PR.
 
