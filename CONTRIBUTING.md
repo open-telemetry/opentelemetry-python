@@ -234,7 +234,14 @@ git commit
 git push fork feature
 ```
 
-Open a pull request against the main `opentelemetry-python` repo.
+Open a pull request (PR) against the main `opentelemetry-python` repo.
+
+A descriptive PR title will help the community better triage and review your changes. Make sure to prefix with the name(s) of the package/subdirectory/domain that your PR updates. Following any of these examples will help:
+
+* "opentelemetry-sdk: make test_force_flush_late_by_timeout less flaky on pypy/windows"
+* "opentelemetry-exporter-otlp-proto-http: enable typechecking"
+* "docs: replace TODO placeholders with API and SDK overview descriptions"
+* "feat(config): Add TracerProvider support for declarative config"
 
 Pull requests are also tested for their compatibility with packages distributed
 by OpenTelemetry in the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git).
@@ -330,6 +337,16 @@ Register this module with the `opentelemetry_environment_variables` entry point 
 automatically load as options for the `opentelemetry-instrument` command.
 
 ## Style Guide
+
+* All Python files must include the following SPDX license header as the first
+  two lines (or immediately after a shebang line):
+
+  ```python
+  # Copyright The OpenTelemetry Authors
+  # SPDX-License-Identifier: Apache-2.0
+  ```
+
+  This is enforced by CI via `tox -e lint-license-header-check`.
 
 * docstrings should adhere to the [Google Python Style
   Guide](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)

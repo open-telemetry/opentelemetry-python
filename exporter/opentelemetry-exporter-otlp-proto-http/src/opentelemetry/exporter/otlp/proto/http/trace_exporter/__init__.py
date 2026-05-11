@@ -1,33 +1,23 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import gzip
 import logging
+import os
 import random
 import threading
 import zlib
+from collections.abc import Sequence
 from io import BytesIO
 from os import environ
 from time import time
-from typing import Dict, Optional, Sequence
 from urllib.parse import urlparse
 
 import requests
 from requests.exceptions import ConnectionError
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
+    create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -58,6 +48,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -82,16 +73,16 @@ _MAX_RETRYS = 6
 class OTLPSpanExporter(SpanExporter):
     def __init__(
         self,
-        endpoint: Optional[str] = None,
-        certificate_file: Optional[str] = None,
-        client_key_file: Optional[str] = None,
-        client_certificate_file: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
-        timeout: Optional[float] = None,
-        compression: Optional[Compression] = None,
-        session: Optional[requests.Session] = None,
+        endpoint: str | None = None,
+        certificate_file: str | None = None,
+        client_key_file: str | None = None,
+        client_certificate_file: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | None = None,
+        compression: Compression | None = None,
+        session: requests.Session | None = None,
         *,
-        meter_provider: Optional[MeterProvider] = None,
+        meter_provider: MeterProvider | None = None,
     ):
         self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
@@ -148,15 +139,19 @@ class OTLPSpanExporter(SpanExporter):
             )
         self._shutdown = False
 
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
             "traces",
             urlparse(self._endpoint),
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
     def _export(
-        self, serialized_data: bytes, timeout_sec: Optional[float] = None
+        self, serialized_data: bytes, timeout_sec: float | None = None
     ):
         data = serialized_data
         if self._compression == Compression.Gzip:
@@ -203,7 +198,7 @@ class OTLPSpanExporter(SpanExporter):
             for retry_num in range(_MAX_RETRYS):
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Optional[Exception] = None
+                export_error: Exception | None = None
                 try:
                     resp = self._export(serialized_data, deadline_sec - time())
                     if resp.ok:

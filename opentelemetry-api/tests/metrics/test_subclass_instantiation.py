@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 # type: ignore
 
 # NOTE: The tests in this file are intended to test the semver compatibility of the public API.
@@ -19,7 +8,6 @@
 
 # pylint: disable=useless-parent-delegation,arguments-differ
 
-from typing import Optional
 
 from opentelemetry.metrics import (
     Asynchronous,
@@ -41,8 +29,8 @@ class MeterProviderImplTest(MeterProvider):
     def get_meter(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
     ) -> Meter:
         return super().get_meter(name, version, schema_url)
 

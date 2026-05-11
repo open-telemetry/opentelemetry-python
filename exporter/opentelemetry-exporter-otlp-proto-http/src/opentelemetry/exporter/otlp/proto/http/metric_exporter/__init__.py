@@ -1,31 +1,19 @@
 # Copyright The OpenTelemetry Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import gzip
 import logging
+import os
 import random
 import threading
 import zlib
+from collections.abc import Callable, Iterable
 from io import BytesIO
 from os import environ
 from time import time
 from typing import (  # noqa: F401
     Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
     Optional,
 )
 from urllib.parse import urlparse
@@ -35,7 +23,7 @@ from requests.exceptions import ConnectionError
 from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
+    create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
@@ -88,6 +76,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
@@ -136,7 +125,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         *,
-        meter_provider: Optional[MeterProvider] = None,
+        meter_provider: MeterProvider | None = None,
     ):
         """OTLP HTTP metrics exporter
 
@@ -219,15 +208,19 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._max_export_batch_size: int | None = max_export_batch_size
         self._shutdown = False
 
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
     def _export(
-        self, serialized_data: bytes, timeout_sec: Optional[float] = None
+        self, serialized_data: bytes, timeout_sec: float | None = None
     ):
         data = serialized_data
         if self._compression == Compression.Gzip:
@@ -284,7 +277,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             for retry_num in range(_MAX_RETRYS):
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Optional[Exception] = None
+                export_error: Exception | None = None
                 try:
                     resp = self._export(serialized_data, deadline_sec - time())
                     if resp.ok:
@@ -345,7 +338,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
     def export(
         self,
         metrics_data: MetricsData,
-        timeout_millis: Optional[float] = 10000,
+        timeout_millis: float | None = 10000,
         **kwargs,
     ) -> MetricExportResult:
         if self._shutdown:
@@ -401,11 +394,15 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         return True
 
     def set_meter_provider(self, meter_provider: MeterProvider) -> None:
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
 
@@ -561,8 +558,8 @@ def _split_metrics_data(
 
 
 def _get_split_resource_metrics_pb2(
-    split_resource_metrics: List[Dict],
-) -> List[pb2.ResourceMetrics]:
+    split_resource_metrics: list[dict],
+) -> list[pb2.ResourceMetrics]:
     """Helper that returns a list of pb2.ResourceMetrics objects based on split_resource_metrics.
     Example input:
 
@@ -722,10 +719,10 @@ def _get_split_resource_metrics_pb2(
     "Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead. Deprecated since version 1.18.0.",
 )
 def get_resource_data(
-    sdk_resource_scope_data: Dict[SDKResource, Any],  # ResourceDataT?
+    sdk_resource_scope_data: dict[SDKResource, Any],  # ResourceDataT?
     resource_class: Callable[..., PB2Resource],
     name: str,
-) -> List[PB2Resource]:
+) -> list[PB2Resource]:
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 

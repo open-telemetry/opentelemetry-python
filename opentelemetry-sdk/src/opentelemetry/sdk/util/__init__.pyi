@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (
-    Any,
+from collections.abc import (
     Iterable,
     Iterator,
     Mapping,
     MutableMapping,
-    Optional,
     Sequence,
+)
+from typing import (
+    Any,
     TypeVar,
     overload,
 )
@@ -44,7 +45,7 @@ class BoundedList(Sequence[_T]):
     """
 
     dropped: int
-    def __init__(self, maxlen: Optional[int]): ...
+    def __init__(self, maxlen: int | None): ...
     def __deepcopy__(self, memo: dict[int, Any]) -> BoundedList[_T]: ...
     def insert(self, index: int, value: _T) -> None: ...
     @overload
@@ -56,7 +57,7 @@ class BoundedList(Sequence[_T]):
     def extend(self, seq: Sequence[_T]) -> None: ...
     @classmethod
     def from_seq(
-        cls, maxlen: Optional[int], seq: Iterable[_T]
+        cls, maxlen: int | None, seq: Iterable[_T]
     ) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
 
 class BoundedDict(MutableMapping[_KT, _VT]):
