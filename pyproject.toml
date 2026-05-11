@@ -89,6 +89,7 @@ select = [
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
   "TID", # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
   "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+  "T20", # https://docs.astral.sh/ruff/rules/#flake8-print-t20
 ]
 
 ignore = [
@@ -99,6 +100,12 @@ ignore = [
 "docs/**/*.*" = ["PLE"]
 "opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
 "shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
+"scripts/*" = ["T20"]
+"opentelemetry-sdk/tests/*" = ["T20"]
+"opentelemetry-api/tests/*" = ["T20"]
+"docs/getting_started/*" = ["T20"]
+"docs/examples/*" = ["T20"]
+"codegen/*" = ["T20"]
 
 [tool.ruff.lint.isort]
 known-third-party = [

@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Enabled the flake8-print plugin rules for ruff linter. These rules throw warnings over the use of `print` and `pprint` statements.
+([5046](https://github.com/open-telemetry/opentelemetry-python/pull/5046))
 - Apply fixes for `UP` ruff rule
   ([#5133](https://github.com/open-telemetry/opentelemetry-python/pull/5133))
 - Switch to SPDX license headers and add CI enforcement
