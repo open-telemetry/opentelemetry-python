@@ -7,7 +7,7 @@ params:
   excluded_attributes: ["messaging.client_id"]
 
   # excluded metrics will be excluded from the generated code in jinja templates
-  excluded_metrics: ["k8s.container.cpu.limit_utilization", "k8s.container.cpu.request_utilization"]
+  excluded_metrics: []
 
   stable_package_name: opentelemetry.semconv
 
