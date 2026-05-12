@@ -56,6 +56,7 @@ from typing import Final
 {{ import_instrument_classes(filtered_metrics) }}
 
 {%- for metric in ctx.metrics %}
+{% if metric.metric_name not in ctx.excluded_metrics %}
 {% set const_name = metric.metric_name | screaming_snake_case %}
 {{const_name}}: Final = "{{metric.metric_name}}"
 {%- set doc_string=write_docstring(metric, const_name, "")-%}{%- if doc_string %}
@@ -82,4 +83,5 @@ def create_{{ metric_name }}(meter: Meter) -> {{metric.instrument | map_text("py
     )
     {%- endif -%}
 
+{% endif %}
 {% endfor %}

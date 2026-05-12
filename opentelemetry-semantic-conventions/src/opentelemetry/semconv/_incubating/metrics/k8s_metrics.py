@@ -20,6 +20,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 K8S_CONTAINER_CPU_LIMIT: Final = "k8s.container.cpu.limit"
 """
 Deprecated: Replaced by `k8s.container.cpu.limit.desired`.
@@ -105,26 +106,6 @@ def create_k8s_container_cpu_limit_utilization(
     )
 
 
-K8S_CONTAINER_CPU_LIMIT_UTILIZATION: Final = (
-    "k8s.container.cpu.limit_utilization"
-)
-"""
-Deprecated: Replaced by `k8s.container.cpu.limit.utilization`.
-"""
-
-
-def create_k8s_container_cpu_limit_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
-    """Deprecated, use `k8s.container.cpu.limit.utilization` instead"""
-    return meter.create_observable_gauge(
-        name=K8S_CONTAINER_CPU_LIMIT_UTILIZATION,
-        callbacks=callbacks,
-        description="Deprecated, use `k8s.container.cpu.limit.utilization` instead.",
-        unit="1",
-    )
-
-
 K8S_CONTAINER_CPU_REQUEST: Final = "k8s.container.cpu.request"
 """
 Deprecated: Replaced by `k8s.container.cpu.request.desired`.
@@ -206,26 +187,6 @@ def create_k8s_container_cpu_request_utilization(
         name=K8S_CONTAINER_CPU_REQUEST_UTILIZATION,
         callbacks=callbacks,
         description="The ratio of container CPU usage to its current CPU request.",
-        unit="1",
-    )
-
-
-K8S_CONTAINER_CPU_REQUEST_UTILIZATION: Final = (
-    "k8s.container.cpu.request_utilization"
-)
-"""
-Deprecated: Replaced by `k8s.container.cpu.request.utilization`.
-"""
-
-
-def create_k8s_container_cpu_request_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
-    """Deprecated, use `k8s.container.cpu.request.utilization` instead"""
-    return meter.create_observable_gauge(
-        name=K8S_CONTAINER_CPU_REQUEST_UTILIZATION,
-        callbacks=callbacks,
-        description="Deprecated, use `k8s.container.cpu.request.utilization` instead.",
         unit="1",
     )
 

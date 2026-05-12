@@ -20,6 +20,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
 Operating frequency of the logical CPU in Hertz
