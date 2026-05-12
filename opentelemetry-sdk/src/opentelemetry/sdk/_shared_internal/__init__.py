@@ -25,7 +25,7 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._shared_internal._processor_metrics import (
-    ProcessorMetrics,
+    ProcessorMetricsT,
 )
 from opentelemetry.util._once import Once
 
@@ -89,7 +89,7 @@ class BatchProcessor(Generic[Telemetry]):
         export_timeout_millis: float,
         max_queue_size: int,
         exporting: str,
-        metrics: ProcessorMetrics,
+        metrics: ProcessorMetricsT,
     ):
         self._bsp_reset_once = Once()
         self._exporter = exporter
