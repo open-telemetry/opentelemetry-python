@@ -14,6 +14,7 @@ from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
 from typing import IO
+
 from typing_extensions import final
 
 # This kind of import is needed to avoid Sphinx errors.

@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+import opentelemetry.sdk.metrics._internal.export as _export_module
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
@@ -393,15 +394,13 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
     def test_detach_called_on_export_failure(self):
         """detach(token) must run in finally even when export returns FAILURE."""
-        import opentelemetry.sdk.metrics._internal.export as export_module
-
         exporter = FakeMetricsExporter()
         exporter.export = Mock(return_value=MetricExportResult.FAILURE)
         pmr = self._create_periodic_reader(metrics, exporter)
 
         with patch(
             "opentelemetry.sdk.metrics._internal.export.detach",
-            wraps=export_module.detach,
+            wraps=_export_module.detach,
         ) as mock_detach:
             pmr.force_flush(timeout_millis=5_000)
             pmr.shutdown()
