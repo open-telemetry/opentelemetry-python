@@ -1,0 +1,15 @@
+attrs==26.1.0
+furl==2.1.4
+iniconfig==2.3.0
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+orderedmultidict==1.0.2
+packaging==26.2
+pluggy==1.6.0
+pook==2.1.6
+pytest==7.4.4
+referencing==0.37.0
+rpds-py==0.30.0
+six==1.17.0
+xmltodict==1.0.4
+-e exporter/opentelemetry-exporter-http-transport[urllib3,requests]

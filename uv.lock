@@ -871,8 +871,8 @@ urllib3 = [
 
 [package.metadata]
 requires-dist = [
-    { name = "requests", marker = "extra == 'requests'", specifier = "~=2.7" },
-    { name = "urllib3", marker = "extra == 'urllib3'", specifier = ">=1.11" },
+    { name = "requests", marker = "extra == 'requests'", specifier = "~=2.25" },
+    { name = "urllib3", marker = "extra == 'urllib3'", specifier = ">=1.26" },
 ]
 provides-extras = ["requests", "urllib3"]
 
