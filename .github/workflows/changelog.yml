@@ -34,28 +34,27 @@ jobs:
           then
             echo "CHANGELOG.md should not be directly modified."
             echo "Please add a changelog fragment file to the .changelog/ directory instead."
-            echo ""
-            echo "Create a fragment with:"
-            echo "  tox -e new-changelog -- ${{ github.event.pull_request.number }} TYPE \"Description\""
-            echo "where TYPE is one of: added, changed, deprecated, removed, fixed"
+            echo "See CONTRIBUTING.md for details."
             echo ""
             echo "Or add the \"Skip Changelog\" label if this job should be skipped."
             false
           fi
 
       - name: Install towncrier
-        run: pip install towncrier
+        run: pip install towncrier==25.8.0
 
       - name: Check for changelog fragment
         run: |
           if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
             echo ""
             echo "No changelog fragment found for this PR."
-            echo ""
-            echo "Create a fragment with:"
-            echo "  tox -e new-changelog -- ${{ github.event.pull_request.number }} TYPE \"Description\""
-            echo "where TYPE is one of: added, changed, deprecated, removed, fixed"
+            echo "Add a file named .changelog/${{ github.event.pull_request.number }}.<type>"
+            echo "where <type> is one of: added, changed, deprecated, removed, fixed"
+            echo "See CONTRIBUTING.md for details."
             echo ""
             echo "Or add the \"Skip Changelog\" label if this job should be skipped."
             false
           fi
+
+      - name: Preview changelog
+        run: towncrier build --draft --version Unreleased
