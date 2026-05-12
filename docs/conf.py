@@ -26,6 +26,15 @@ from django.conf import settings
 
 settings.configure()
 
+# Provide AnyValue in opentelemetry.attributes module's namespace so the
+# "AnyValue" forward reference in opentelemetry.util.types._ExtendedAttributes
+# resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
+# BoundedAttributes (whose __globals__ is the attributes module). Docs-only.
+import opentelemetry.attributes  # noqa: E402
+from opentelemetry.util.types import AnyValue as _AnyValue  # noqa: E402
+
+opentelemetry.attributes.AnyValue = _AnyValue
+
 
 source_dirs = [
     os.path.abspath("../opentelemetry-instrumentation/src/"),

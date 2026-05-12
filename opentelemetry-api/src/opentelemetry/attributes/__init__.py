@@ -9,13 +9,6 @@ from collections.abc import Mapping, MutableMapping, Sequence
 
 from opentelemetry.util import types
 
-# Re-exported so the "AnyValue" forward reference in
-# util.types._ExtendedAttributes resolves against this module's globals when
-# sphinx_autodoc_typehints introspects BoundedAttributes.
-from opentelemetry.util.types import AnyValue
-
-__all__ = ["AnyValue", "BoundedAttributes"]
-
 # bytes are accepted as a user supplied value for attributes but
 # decoded to strings internally.
 _VALID_ATTR_VALUE_TYPES = (bool, str, bytes, int, float)
