@@ -2,11 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from functools import cache
-
-# FIXME: Use importlib.metadata (not importlib_metadata)
-# when support for 3.11 is dropped if the rest of
-# the supported versions at that time have the same API.
-from importlib_metadata import (  # type: ignore
+from importlib.metadata import (
     Distribution,
     EntryPoint,
     EntryPoints,
@@ -15,21 +11,19 @@ from importlib_metadata import (  # type: ignore
     requires,
     version,
 )
-from importlib_metadata import (
-    entry_points as original_entry_points,
-)
 
 
 @cache
-def _original_entry_points_cached():
-    return original_entry_points()
+def _all_entry_points_cached() -> EntryPoints:
+    return EntryPoints(
+        ep for dist in distributions() for ep in dist.entry_points
+    )
 
 
 def entry_points(**params) -> EntryPoints:
-    """Replacement for importlib_metadata.entry_points that caches getting all the entry points.
-
-    That part can be very slow, and OTel uses this function many times."""
-    return _original_entry_points_cached().select(**params)
+    if not params:
+        return _all_entry_points_cached()
+    return _all_entry_points_cached().select(**params)
 
 
 __all__ = [
