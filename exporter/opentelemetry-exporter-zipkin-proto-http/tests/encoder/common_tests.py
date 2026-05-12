@@ -1,19 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 import abc
 import unittest
-from typing import Dict, List
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (
@@ -165,7 +153,7 @@ class CommonEncoderTestCases:
         @staticmethod
         def get_data_for_max_tag_length_test(
             max_tag_length: int,
-        ) -> (trace._Span, Dict):
+        ) -> (trace._Span, dict):
             start_time = 683647322 * 10**9  # in ns
             duration = 50 * 10**6
             end_time = start_time + duration
@@ -327,7 +315,7 @@ class CommonEncoderTestCases:
             return span, expected_outputs[max_tag_length]
 
         @staticmethod
-        def get_exhaustive_otel_span_list() -> List[trace._Span]:
+        def get_exhaustive_otel_span_list() -> list[trace._Span]:
             trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
 
             base_time = 683647322 * 10**9  # in ns

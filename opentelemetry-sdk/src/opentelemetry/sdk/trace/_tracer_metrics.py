@@ -1,20 +1,10 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Protocol
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.trace.sampling import Decision
@@ -28,6 +18,24 @@ from opentelemetry.semconv._incubating.metrics.otel_metrics import (
     create_otel_sdk_span_started,
 )
 from opentelemetry.trace.span import SpanContext
+
+
+class TracerMetricsT(Protocol):
+    def start_span(
+        self,
+        parent_span_context: SpanContext | None,
+        sampling_decision: Decision,
+    ) -> Callable[[], None]: ...
+
+
+# pylint: disable=no-self-use
+class NoOpTracerMetrics:
+    def start_span(
+        self,
+        parent_span_context: SpanContext | None,
+        sampling_decision: Decision,
+    ) -> Callable[[], None]:
+        return noop
 
 
 class TracerMetrics:
@@ -63,6 +71,16 @@ class TracerMetrics:
             self._live_spans.add(-1, live_span_attrs)
 
         return end_span
+
+
+def create_tracer_metrics(
+    meter_provider: metrics_api.MeterProvider,
+    enabled: bool,
+) -> TracerMetricsT:
+    if not enabled:
+        return NoOpTracerMetrics()
+
+    return TracerMetrics(meter_provider)
 
 
 def noop() -> None:
