@@ -1,0 +1,1 @@
+remove obsolete dependency on importlib-metadata. All required APIs are already available in PSL importlib.metadata as for python>=3.10
