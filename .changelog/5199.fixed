@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: use context parameter instead of deprecated trace_id/span_id/trace_flags kwargs in EventLogger.emit
