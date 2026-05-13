@@ -582,6 +582,27 @@ def _initialize_components(
     meter_configurator: _MeterConfiguratorT | None = None,
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
+    if resource_attributes is None:
+        resource_attributes = {}
+    # populate version if using auto-instrumentation
+    if auto_instrumentation_version:
+        resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (  # type: ignore[reportIndexIssue]
+            auto_instrumentation_version
+        )
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    resource = Resource.create(resource_attributes)
+
+    # OpAMP is a system created to configure OpenTelemetry SDKs with a remote config.
+    # This is different than other init helpers because setting up OpAMP requires distro
+    # provided code as it's not strictly specified. We have two entry points for OpAMP:
+    # one called early people that want it blocking to get an updated config before
+    # setting up the rest of the SDK and the other after for people that want the
+    # SDK already setup.
+    _init_opamp = _import_opamp("pre_sdk_init_function")
+    if _init_opamp is not None:
+        _init_opamp(resource)
+
     # pylint: disable=too-many-locals
     if trace_exporter_names is None:
         trace_exporter_names = []
@@ -600,13 +621,7 @@ def _initialize_components(
     if id_generator is None:
         id_generator_name = _get_id_generator()
         id_generator = _import_id_generator(id_generator_name)
-    if resource_attributes is None:
-        resource_attributes = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (  # type: ignore[reportIndexIssue]
-            auto_instrumentation_version
-        )
+
     if tracer_configurator is None:
         tracer_configurator_name = _get_tracer_configurator()
         tracer_configurator = _import_tracer_configurator(
@@ -622,20 +637,6 @@ def _initialize_components(
         logger_configurator = _import_logger_configurator(
             logger_configurator_name
         )
-
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    resource = Resource.create(resource_attributes)
-
-    # OpAMP is a system created to configure OpenTelemetry SDKs with a remote config.
-    # This is different than other init helpers because setting up OpAMP requires distro
-    # provided code as it's not strictly specified. We have two entry points for OpAMP:
-    # one called before other for people that want it blocking to get an updated config
-    # before setting up the rest of the SDK and the other after for people that want the
-    # SDK already setup.
-    _init_opamp = _import_opamp("pre_sdk_init_function")
-    if _init_opamp is not None:
-        _init_opamp(resource)
 
     _init_tracing(
         exporters=span_exporters,
