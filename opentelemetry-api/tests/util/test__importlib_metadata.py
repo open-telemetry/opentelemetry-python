@@ -103,6 +103,12 @@ class TestEntryPoints(TestCase):
         self.assertIsInstance(version("opentelemetry-api"), str)
 
     def test_as_entry_points_selectable_groups_compat(self):
+        """Test that _as_entry_points correctly normalizes dict-like SelectableGroups
+        (returned by importlib.metadata.entry_points() in Python 3.10) into EntryPoints.
+
+        On Python 3.11+, entry_points() returns EntryPoints directly, which is
+        handled by the fast-path in _as_entry_points.
+        """
         ep1 = EntryPoint(name="foo", value="bar:baz", group="gp")
         ep2 = EntryPoint(name="foo2", value="bar2:baz2", group="gp")
         selectable_groups = {"gp": [ep1, ep2]}
