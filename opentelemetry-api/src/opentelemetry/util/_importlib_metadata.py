@@ -28,8 +28,6 @@ def _all_entry_points_cached() -> EntryPoints:
 
 
 def entry_points(**params) -> EntryPoints:
-    if not params:
-        return _all_entry_points_cached()
     return _all_entry_points_cached().select(**params)
 
 
