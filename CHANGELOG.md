@@ -22,8 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- `opentelemetry-sdk`: Honour `OTEL_LOG_LEVEL` environment variable to configure the SDK's internal diagnostic logger
-  ([#5115](https://github.com/open-telemetry/opentelemetry-python/pull/5115))
 - `opentelemetry-sdk`: fix multi-processor `force_flush` skipping remaining processors when one returns `None`
   ([#5179](https://github.com/open-telemetry/opentelemetry-python/pull/5179))
 - Apply fixes for `UP` ruff rule
