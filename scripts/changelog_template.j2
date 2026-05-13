@@ -1,0 +1,24 @@
+## Version {{ versiondata.version }} ({{ versiondata.date }})
+
+{% for section, _ in sections.items() %}
+{%- if section %}{{ section }}{% endif -%}
+
+{% if sections[section] %}
+{% for category, val in definitions.items() if category in sections[section] %}
+### {{ definitions[category]['name'] }}
+
+{% for text, values in sections[section][category].items() %}
+{% if "\n  - " in text or '\n  * ' in text %}
+{%- set main_text, sub_items = text.split('\n', 1) %}
+- {{ main_text }} ({{ values|join(', ') }})
+{% if sub_items %}
+  {{- sub_items }}
+{% endif %}
+{% else %}
+- {{ text }} ({{ values|join(', ') }})
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+{% endfor %}
