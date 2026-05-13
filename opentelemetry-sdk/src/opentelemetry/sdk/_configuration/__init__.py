@@ -582,6 +582,7 @@ def _initialize_components(
     meter_configurator: _MeterConfiguratorT | None = None,
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
+    # pylint: disable=too-many-locals,too-many-branches
     if resource_attributes is None:
         resource_attributes = {}
     # populate version if using auto-instrumentation
@@ -603,7 +604,6 @@ def _initialize_components(
     if _init_opamp is not None:
         _init_opamp(resource)
 
-    # pylint: disable=too-many-locals
     if trace_exporter_names is None:
         trace_exporter_names = []
     if metric_exporter_names is None:
