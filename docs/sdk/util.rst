@@ -1,5 +1,5 @@
-opentelemetry.sdk.util
-======================
+opentelemetry.sdk.util package
+==============================
 
 .. automodule:: opentelemetry.sdk.util
     :members:
