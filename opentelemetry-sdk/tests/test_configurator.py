@@ -1568,10 +1568,18 @@ class TestClearLoggingHandlers(TestCase):
 
 
 class TestOpAMPInit(TestCase):
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
     @patch("opentelemetry.sdk._configuration.entry_points")
     @patch("opentelemetry.sdk._configuration.Resource")
     def test_pre_sdk_init_function_found(
-        self, mock_resource, mock_entry_points
+        self,
+        mock_resource,
+        mock_entry_points,
+        mock_logging,
+        mock_tracing,
+        mock_metrics,
     ):
         init_function = mock.Mock()
         mock_entry_points.side_effect = [
@@ -1592,10 +1600,18 @@ class TestOpAMPInit(TestCase):
             mock_resource.create.return_value
         )
 
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
     @patch("opentelemetry.sdk._configuration.entry_points")
     @patch("opentelemetry.sdk._configuration.Resource")
     def test_post_sdk_init_function_found(
-        self, mock_resource, mock_entry_points
+        self,
+        mock_resource,
+        mock_entry_points,
+        mock_logging,
+        mock_tracing,
+        mock_metrics,
     ):
         init_function = mock.Mock()
         mock_entry_points.side_effect = [
@@ -1616,8 +1632,13 @@ class TestOpAMPInit(TestCase):
             mock_resource.create.return_value
         )
 
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
     @patch("opentelemetry.sdk._configuration.entry_points")
-    def test_init_function_load_failure(self, mock_entry_points):
+    def test_init_function_load_failure(
+        self, mock_entry_points, mock_logging, mock_tracing, mock_metrics
+    ):
         entry_point_mock = mock.Mock()
         entry_point_mock.load.side_effect = AttributeError(
             "module 'foo' has no attribute 'OpampInit'"
@@ -1644,8 +1665,13 @@ class TestOpAMPInit(TestCase):
             cm.output,
         )
 
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
     @patch("opentelemetry.sdk._configuration.entry_points")
-    def test_init_function_not_found(self, mock_entry_points):
+    def test_init_function_not_found(
+        self, mock_entry_points, mock_logging, mock_tracing, mock_metrics
+    ):
         mock_entry_points.configure_mock(return_value=[])
 
         with self.assertLogs(level="DEBUG") as cm:
