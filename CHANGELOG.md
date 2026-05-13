@@ -22,8 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- `opentelemetry-exporter-otlp-proto-http`: Log server error details from response body on export failure
-  ([#5155](https://github.com/open-telemetry/opentelemetry-python/pull/5155))
 - `opentelemetry-sdk`: fix multi-processor `force_flush` skipping remaining processors when one returns `None`
   ([#5179](https://github.com/open-telemetry/opentelemetry-python/pull/5179))
 - Apply fixes for `UP` ruff rule
