@@ -457,8 +457,8 @@ class WeaverLiveCheck:
             def _read(path: str | None) -> str:
                 if path is None or not os.path.exists(path):
                     return ""
-                with open(path, "rb") as f:
-                    return f.read().decode(errors="replace")
+                with open(path, "rb") as fp:
+                    return fp.read().decode(errors="replace")
 
             return f"{_read(self._stdout_path)}\n{_read(self._stderr_path)}"
         except Exception as exc:  # pylint: disable=broad-except
