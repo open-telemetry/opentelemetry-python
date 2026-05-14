@@ -509,7 +509,7 @@ class TestConcurrentMultiSpanProcessor(
 
         none_mock = mock.Mock(spec=trace.SpanProcessor)
         none_mock.force_flush = mock.Mock(return_value=None)
-        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 4)]
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(4)]
         mocks.insert(0, none_mock)
 
         for mock_processor in mocks:
