@@ -9,10 +9,13 @@ import weakref
 from logging import WARNING
 from time import sleep, time_ns
 from typing import cast
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
+from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
 from opentelemetry.sdk.metrics import (
     Counter,
     MeterProvider,
@@ -304,6 +307,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
         )
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     def test_metric_reader_metrics(self):
         exporter = FakeMetricsExporter()
         pmr = PeriodicExportingMetricReader(
