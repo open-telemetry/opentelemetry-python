@@ -232,6 +232,11 @@ GEN_AI_REQUEST_STOP_SEQUENCES: Final = "gen_ai.request.stop_sequences"
 List of sequences that the model will use to stop generating further tokens.
 """
 
+GEN_AI_REQUEST_STREAM: Final = "gen_ai.request.stream"
+"""
+Indicates whether the GenAI request was made in streaming mode.
+"""
+
 GEN_AI_REQUEST_TEMPERATURE: Final = "gen_ai.request.temperature"
 """
 The temperature setting for the GenAI request.
@@ -260,6 +265,13 @@ The unique identifier for the completion.
 GEN_AI_RESPONSE_MODEL: Final = "gen_ai.response.model"
 """
 The name of the model that generated the response.
+"""
+
+GEN_AI_RESPONSE_TIME_TO_FIRST_CHUNK: Final = (
+    "gen_ai.response.time_to_first_chunk"
+)
+"""
+Time to first chunk in a streaming response, measured from request issuance, in seconds. The value is measured from when the client issues the generation request to when the first chunk is received in the response stream.
 """
 
 GEN_AI_RETRIEVAL_DOCUMENTS: Final = "gen_ai.retrieval.documents"
@@ -345,16 +357,16 @@ deserialize it to an object. When recorded on spans, it MAY be recorded as a JSO
 
 GEN_AI_TOOL_DEFINITIONS: Final = "gen_ai.tool.definitions"
 """
-The list of source system tool definitions available to the GenAI agent or model.
-Note: The value of this attribute matches source system tool definition format.
+The list of tool definitions available to the GenAI agent or model.
+Note: Instrumentations MUST follow [Tool Definitions JSON Schema](/docs/gen-ai/gen-ai-tool-definitions.json).
 
-It's expected to be an array of objects where each object represents a tool definition. In case a serialized string is available
-to the instrumentation, the instrumentation SHOULD do the best effort to
-deserialize it to an array. When recorded on spans, it MAY be recorded as a JSON string if structured format is not supported and SHOULD be recorded in structured form otherwise.
+When the attribute is recorded on events, it MUST be recorded in structured
+form. When recorded on spans, it MAY be recorded as a JSON string if structured
+format is not supported and SHOULD be recorded in structured form otherwise.
 
 Since this attribute could be large, it's NOT RECOMMENDED to populate
-it by default. Instrumentations MAY provide a way to enable
-populating this attribute.
+non-required properties by default. Instrumentations MAY provide a way
+to enable populating optional properties.
 """
 
 GEN_AI_TOOL_DESCRIPTION: Final = "gen_ai.tool.description"
@@ -417,6 +429,20 @@ GEN_AI_USAGE_PROMPT_TOKENS: Final = "gen_ai.usage.prompt_tokens"
 Deprecated: Replaced by `gen_ai.usage.input_tokens`.
 """
 
+GEN_AI_USAGE_REASONING_OUTPUT_TOKENS: Final = (
+    "gen_ai.usage.reasoning.output_tokens"
+)
+"""
+The number of output tokens used for reasoning (e.g. chain-of-thought, extended thinking).
+Note: The value SHOULD be included in `gen_ai.usage.output_tokens`.
+"""
+
+GEN_AI_WORKFLOW_NAME: Final = "gen_ai.workflow.name"
+"""
+Human-readable name of the GenAI workflow provided by the application.
+Note: This attribute can be populated in different frameworks eg: name of the first chain in LangChain OR name of the crew in CrewAI.
+"""
+
 
 @deprecated(
     "The attribute gen_ai.openai.request.response_format is deprecated - Replaced by `gen_ai.output.type`"
@@ -457,6 +483,8 @@ class GenAiOperationNameValues(Enum):
     """Invoke GenAI agent."""
     EXECUTE_TOOL = "execute_tool"
     """Execute a tool."""
+    INVOKE_WORKFLOW = "invoke_workflow"
+    """Invoke GenAI workflow."""
 
 
 class GenAiOutputTypeValues(Enum):
@@ -486,7 +514,7 @@ class GenAiProviderNameValues(Enum):
     AZURE_AI_INFERENCE = "azure.ai.inference"
     """Azure AI Inference."""
     AZURE_AI_OPENAI = "azure.ai.openai"
-    """[Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service/)."""
+    """[Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview)."""
     IBM_WATSONX_AI = "ibm.watsonx.ai"
     """[IBM Watsonx AI](https://www.ibm.com/products/watsonx-ai)."""
     AWS_BEDROCK = "aws.bedrock"
