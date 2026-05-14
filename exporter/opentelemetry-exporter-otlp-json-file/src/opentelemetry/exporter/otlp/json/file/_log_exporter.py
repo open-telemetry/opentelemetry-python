@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 from collections.abc import Callable, Sequence
 from typing import IO
