@@ -3,6 +3,9 @@ from collections.abc import Callable
 from os import environ
 from typing import IO
 
+from opentelemetry.exporter.otlp.json.common._internal.metrics_encoder import (
+    encode_metrics,
+)
 from opentelemetry.exporter.otlp.json.file._internal import _format_line
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
@@ -22,7 +25,10 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     ExplicitBucketHistogramAggregation,
     ExponentialBucketHistogramAggregation,
 )
-from opentelemetry.sdk.metrics._internal.export import MetricExporter, MetricExportResult
+from opentelemetry.sdk.metrics._internal.export import (
+    MetricExporter,
+    MetricExportResult,
+)
 from opentelemetry.sdk.metrics._internal.point import MetricsData
 
 _logger = logging.getLogger(__name__)
@@ -47,15 +53,40 @@ class FileMetricExporter(MetricExporter):
         self._formatter = _formatter or _format_line
         self._shutdown = False
 
-    def export(self, metrics_data: MetricsData, timeout_millis: float = 10_000, **kwargs) -> MetricExportResult:
-        pass
-
-    def force_flush(self, timeout_millis: float = 10_000) -> bool:
-        pass
+    def export(
+        self,
+        metrics_data: MetricsData,
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring call")
+            return MetricExportResult.FAILURE
+        try:
+            lines = [
+                self._formatter(rms.to_dict())
+                for rms in encode_metrics(metrics_data).resource_metrics
+            ]
+            self._stream.writelines(lines)
+            self._stream.flush()
+        except Exception as error:
+            _logger.exception(
+                "Failed to write metric batch to stream: %s: %s",
+                type(error).__name__,
+                error,
+            )
+            return MetricExportResult.FAILURE
+        return MetricExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self._shutdown = True
 
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Nothing is buffered in this exporter, so this method does nothing."""
+        return True
 
 
 def _get_temporality(
@@ -91,7 +122,7 @@ def _get_temporality(
         }
 
     else:
-        if temporality_preference != ("CUMULATIVE"):
+        if temporality_preference != "CUMULATIVE":
             _logger.warning(
                 "Unrecognized OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
                 " value found: "
@@ -120,13 +151,13 @@ def _get_aggregation(
         "explicit_bucket_histogram",
     )
 
-    if default_histogram_aggregation == ("base2_exponential_bucket_histogram"):
+    if default_histogram_aggregation == "base2_exponential_bucket_histogram":
         instrument_class_aggregation = {
             Histogram: ExponentialBucketHistogramAggregation(),
         }
 
     else:
-        if default_histogram_aggregation != ("explicit_bucket_histogram"):
+        if default_histogram_aggregation != "explicit_bucket_histogram":
             _logger.warning(
                 (
                     "Invalid value for %s: %s, using explicit bucket "

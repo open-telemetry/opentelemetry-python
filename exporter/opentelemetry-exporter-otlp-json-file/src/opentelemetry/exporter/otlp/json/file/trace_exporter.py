@@ -27,15 +27,19 @@ class FileSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
         try:
             lines = [
-                self._formatter(span.to_dict())
-                for span in encode_spans(spans).resource_spans
+                self._formatter(rss.to_dict())
+                for rss in encode_spans(spans).resource_spans
             ]
             self._stream.writelines(lines)
             self._stream.flush()
-            return SpanExportResult.SUCCESS
         except Exception as error:
-            _logger.error("Failed to export span batch: %s", error)
-        return SpanExportResult.FAILURE
+            _logger.exception(
+                "Failed to write span batch to stream: %s: %s",
+                type(error).__name__,
+                error,
+            )
+            return SpanExportResult.FAILURE
+        return SpanExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:
