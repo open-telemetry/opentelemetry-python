@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # type: ignore
 # pylint: skip-file
@@ -18,9 +7,9 @@ from __future__ import annotations
 
 import logging
 import logging.config
+from collections.abc import Iterable, Sequence
 from logging import WARNING, getLogger
 from os import environ
-from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
@@ -273,7 +262,7 @@ class CustomSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional[Context],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind = None,
@@ -337,6 +326,9 @@ class CustomIdGenerator(IdGenerator):
 
     def generate_trace_id(self):
         pass
+
+    def is_trace_id_random(self):
+        return False
 
 
 class TestTraceInit(TestCase):

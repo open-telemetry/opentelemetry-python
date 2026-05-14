@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """
 This library allows export of metrics data to `Prometheus <https://prometheus.io/>`_.
@@ -63,13 +52,13 @@ API
 """
 
 from collections import deque
+from collections.abc import Iterable, Sequence, Callable
 from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
-from typing import Callable, Deque, Dict, Iterable, Sequence, Tuple, Union
 
-from prometheus_client import start_http_server
+from prometheus_client import CollectorRegistry, start_http_server
 from prometheus_client.core import (
     REGISTRY,
     CounterMetricFamily,
@@ -118,7 +107,7 @@ _TARGET_INFO_DESCRIPTION = "Target metadata"
 
 def _convert_buckets(
     bucket_counts: Sequence[int], explicit_bounds: Sequence[float]
-) -> Sequence[Tuple[str, int]]:
+) -> Sequence[tuple[str, int]]:
     buckets = []
     total_count = 0
     for upper_bound, count in zip(
@@ -148,6 +137,8 @@ class PrometheusMetricReader(MetricReader):
         disable_target_info: bool = False,
         prefix: str = "",
         resource_attr_filter: Callable[[str], bool] | None = None,
+        *,
+        registry: CollectorRegistry = REGISTRY,
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -165,7 +156,8 @@ class PrometheusMetricReader(MetricReader):
             prefix=prefix,
             resource_attr_filter=resource_attr_filter,
         )
-        REGISTRY.register(self._collector)
+        self._registry = registry
+        self._registry.register(self._collector)
         self._collector._callback = self.collect
         self._prefix = prefix
 
@@ -180,7 +172,7 @@ class PrometheusMetricReader(MetricReader):
         self._collector.add_metrics_data(metrics_data)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        REGISTRY.unregister(self._collector)
+        self._registry.unregister(self._collector)
 
 
 class _CustomCollector:
@@ -197,7 +189,7 @@ class _CustomCollector:
         resource_attr_filter: Callable[[str], bool] | None = None,
     ):
         self._callback = None
-        self._metrics_datas: Deque[MetricsData] = deque()
+        self._metrics_datas: deque[MetricsData] = deque()
         self._disable_target_info = disable_target_info
         self._target_info = None
         self._prefix = prefix
@@ -244,7 +236,7 @@ class _CustomCollector:
     def _translate_to_prometheus(
         self,
         metrics_data: MetricsData,
-        metric_family_id_metric_family: Dict[str, PrometheusMetric],
+        metric_family_id_metric_family: dict[str, PrometheusMetric],
     ):
         for resource_metrics in metrics_data.resource_metrics:
             resource_attrs = (
@@ -424,14 +416,14 @@ class _CustomCollector:
                         )
 
     # pylint: disable=no-self-use
-    def _check_value(self, value: Union[int, float, str, Sequence]) -> str:
+    def _check_value(self, value: int | float | str | Sequence) -> str:
         """Check the label value and return is appropriate representation"""
         if not isinstance(value, str):
             return dumps(value, default=str)
         return str(value)
 
     def _create_info_metric(
-        self, name: str, description: str, attributes: Dict[str, str]
+        self, name: str, description: str, attributes: dict[str, str]
     ) -> InfoMetricFamily:
         """Create an Info Metric Family with list of attributes"""
         # sanitize the attribute names according to Prometheus rule

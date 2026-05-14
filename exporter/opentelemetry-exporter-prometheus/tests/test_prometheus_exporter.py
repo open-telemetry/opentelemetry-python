@@ -1,22 +1,11 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from prometheus_client import generate_latest
+from prometheus_client import CollectorRegistry, generate_latest
 from prometheus_client.core import (
     CounterMetricFamily,
     GaugeMetricFamily,
@@ -47,14 +36,26 @@ from opentelemetry.test.metrictestutil import (
 )
 
 
-# pylint: disable=too-many-public-methods
-class TestPrometheusMetricReader(TestCase):
+class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-methods
     def setUp(self):
         self._mock_registry_register = Mock()
         self._registry_register_patch = patch(
             "prometheus_client.core.REGISTRY.register",
             side_effect=self._mock_registry_register,
         )
+
+    def test_custom_registry(self):
+        with self._registry_register_patch:
+            custom_registry = CollectorRegistry()
+            reader = PrometheusMetricReader(registry=custom_registry)
+            # global REGISTRY should NOT be used
+            self._mock_registry_register.assert_not_called()
+            # check custom_registry was registered
+            self.assertIn(
+                reader._collector,  # pylint: disable=protected-access
+                custom_registry._collector_to_names,  # pylint: disable=protected-access
+            )
+            reader.shutdown()
 
     def verify_text_format(
         self, metric: Metric, expect_prometheus_text: str, prefix: str = ""
