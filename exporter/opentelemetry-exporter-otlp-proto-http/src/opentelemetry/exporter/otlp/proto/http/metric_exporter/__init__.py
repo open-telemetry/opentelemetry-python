@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import logging
+import os
 import random
 import threading
 import zlib
@@ -22,7 +23,7 @@ from requests.exceptions import ConnectionError
 from typing_extensions import deprecated
 
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
+    create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
@@ -73,6 +74,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
@@ -204,11 +206,15 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._max_export_batch_size: int | None = max_export_batch_size
         self._shutdown = False
 
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
     def _export(
@@ -386,11 +392,15 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         return True
 
     def set_meter_provider(self, meter_provider: MeterProvider) -> None:
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
             urlparse(self._endpoint),
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
 

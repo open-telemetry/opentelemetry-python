@@ -1,12 +1,12 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from collections.abc import Sequence as TypingSequence
 from os import environ
 from typing import Literal
 
-from grpc import ChannelCredentials, Compression
+from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
@@ -62,6 +62,7 @@ class OTLPLogExporter(
         timeout: float | None = None,
         compression: Compression | None = None,
         channel_options: tuple[tuple[str, str]] | None = None,
+        retryable_error_codes: Iterable[StatusCode] | None = None,
         *,
         meter_provider: MeterProvider | None = None,
     ):
@@ -103,6 +104,7 @@ class OTLPLogExporter(
             stub=LogsServiceStub,
             result=LogRecordExportResult,
             channel_options=channel_options,
+            retryable_error_codes=retryable_error_codes,
             component_type=OtelComponentTypeValues.OTLP_GRPC_LOG_EXPORTER,
             signal="logs",
             meter_provider=meter_provider,
