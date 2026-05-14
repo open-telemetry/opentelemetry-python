@@ -20,6 +20,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
 Operating frequency of the logical CPU in Hertz
@@ -347,6 +348,135 @@ def create_system_memory_linux_available(meter: Meter) -> UpDownCounter:
         name=SYSTEM_MEMORY_LINUX_AVAILABLE,
         description="An estimate of how much memory is available for starting new applications, without causing swapping.",
         unit="By",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_LIMIT: Final = (
+    "system.memory.linux.hugepages.limit"
+)
+"""
+Total number of hugepages available
+Instrument: updowncounter
+Unit: {page}
+"""
+
+
+def create_system_memory_linux_hugepages_limit(meter: Meter) -> UpDownCounter:
+    """Total number of hugepages available"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_LIMIT,
+        description="Total number of hugepages available.",
+        unit="{page}",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_PAGE_SIZE: Final = (
+    "system.memory.linux.hugepages.page_size"
+)
+"""
+System hugepage size in bytes
+Instrument: updowncounter
+Unit: By
+"""
+
+
+def create_system_memory_linux_hugepages_page_size(
+    meter: Meter,
+) -> UpDownCounter:
+    """System hugepage size in bytes"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_PAGE_SIZE,
+        description="System hugepage size in bytes.",
+        unit="By",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_RESERVED: Final = (
+    "system.memory.linux.hugepages.reserved"
+)
+"""
+Number of reserved hugepages
+Instrument: updowncounter
+Unit: {page}
+Note: Hugepages for which a commitment to allocate has been made, but no allocation has yet been made.
+This is reported as a separate metric rather than a `usage` state because reserved pages are already counted in `free` pages.
+They represent a subset of free pages that cannot be used for non-reserved allocations.
+"""
+
+
+def create_system_memory_linux_hugepages_reserved(
+    meter: Meter,
+) -> UpDownCounter:
+    """Number of reserved hugepages"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_RESERVED,
+        description="Number of reserved hugepages.",
+        unit="{page}",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_SURPLUS: Final = (
+    "system.memory.linux.hugepages.surplus"
+)
+"""
+Number of surplus hugepages
+Instrument: updowncounter
+Unit: {page}
+Note: Overcommitted hugepages beyond the persistent pool.
+This is reported as a separate metric rather than a `usage` state because surplus pages can be in either `used` or `free` state.
+Including them in `usage` would break the convention that `usage` states sum to the `limit`.
+"""
+
+
+def create_system_memory_linux_hugepages_surplus(
+    meter: Meter,
+) -> UpDownCounter:
+    """Number of surplus hugepages"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_SURPLUS,
+        description="Number of surplus hugepages.",
+        unit="{page}",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_USAGE: Final = (
+    "system.memory.linux.hugepages.usage"
+)
+"""
+Number of hugepages in use by state
+Instrument: updowncounter
+Unit: {page}
+"""
+
+
+def create_system_memory_linux_hugepages_usage(meter: Meter) -> UpDownCounter:
+    """Number of hugepages in use by state"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_USAGE,
+        description="Number of hugepages in use by state.",
+        unit="{page}",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_UTILIZATION: Final = (
+    "system.memory.linux.hugepages.utilization"
+)
+"""
+Percentage of hugepages in use by state
+Instrument: gauge
+Unit: 1
+"""
+
+
+def create_system_memory_linux_hugepages_utilization(
+    meter: Meter, callbacks: Sequence[CallbackT] | None
+) -> ObservableGauge:
+    """Percentage of hugepages in use by state"""
+    return meter.create_observable_gauge(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_UTILIZATION,
+        callbacks=callbacks,
+        description="Percentage of hugepages in use by state.",
+        unit="1",
     )
 
 

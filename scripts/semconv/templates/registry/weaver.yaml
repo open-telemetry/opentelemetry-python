@@ -6,6 +6,9 @@ params:
   # this behavior is fully controlled by jinja templates
   excluded_attributes: ["messaging.client_id"]
 
+  # excluded metrics will be excluded from the generated code in jinja templates
+  excluded_metrics: []
+
   stable_package_name: opentelemetry.semconv
 
 templates:
@@ -35,7 +38,8 @@ templates:
         metrics: .metrics,
         output: $output + "metrics/",
         stable_package_name: $stable_package_name + ".metrics",
-        filter: $filter
+        filter: $filter,
+        excluded_metrics: $excluded_metrics
       })
     application_mode: each
 text_maps:
