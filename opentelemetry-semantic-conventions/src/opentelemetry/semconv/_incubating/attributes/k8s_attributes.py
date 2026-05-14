@@ -314,9 +314,109 @@ K8S_NODE_NAME: Final = "k8s.node.name"
 The name of the Node.
 """
 
+K8S_NODE_SYSTEM_CONTAINER_NAME: Final = "k8s.node.system_container.name"
+"""
+The name of the system container running on the K8s Node.
+"""
+
 K8S_NODE_UID: Final = "k8s.node.uid"
 """
 The UID of the Node.
+"""
+
+K8S_PERSISTENTVOLUME_ANNOTATION_TEMPLATE: Final = (
+    "k8s.persistentvolume.annotation"
+)
+"""
+The annotation placed on the PersistentVolume, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+Note: Examples:
+
+- An annotation `pv.kubernetes.io/provisioned-by` with value `kubernetes.io/aws-ebs` SHOULD be recorded as
+  the `k8s.persistentvolume.annotation.pv.kubernetes.io/provisioned-by` attribute with value `"kubernetes.io/aws-ebs"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.persistentvolume.annotation.data` attribute with value `""`.
+"""
+
+K8S_PERSISTENTVOLUME_LABEL_TEMPLATE: Final = "k8s.persistentvolume.label"
+"""
+The label placed on the PersistentVolume, the `<key>` being the label name, the value being the label value, even if the value is empty.
+Note: Examples:
+
+- A label `type` with value `ssd` SHOULD be recorded as
+  the `k8s.persistentvolume.label.type` attribute with value `"ssd"`.
+- A label `data` with empty string value SHOULD be recorded as
+  the `k8s.persistentvolume.label.data` attribute with value `""`.
+"""
+
+K8S_PERSISTENTVOLUME_NAME: Final = "k8s.persistentvolume.name"
+"""
+The name of the PersistentVolume.
+"""
+
+K8S_PERSISTENTVOLUME_RECLAIM_POLICY: Final = (
+    "k8s.persistentvolume.reclaim_policy"
+)
+"""
+The reclaim policy of the PersistentVolume.
+Note: This attribute aligns with the `persistentVolumeReclaimPolicy` field of the
+[K8s PersistentVolumeSpec](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-v1/#PersistentVolumeSpec).
+"""
+
+K8S_PERSISTENTVOLUME_STATUS_PHASE: Final = "k8s.persistentvolume.status.phase"
+"""
+The phase of the PersistentVolume.
+Note: This attribute aligns with the `phase` field of the
+[K8s PersistentVolumeStatus](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-v1/#PersistentVolumeStatus).
+"""
+
+K8S_PERSISTENTVOLUME_UID: Final = "k8s.persistentvolume.uid"
+"""
+The UID of the PersistentVolume.
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_ANNOTATION_TEMPLATE: Final = (
+    "k8s.persistentvolumeclaim.annotation"
+)
+"""
+The annotation placed on the PersistentVolumeClaim, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+Note: Examples:
+
+- An annotation `volume.beta.kubernetes.io/storage-provisioner` with value `kubernetes.io/aws-ebs` SHOULD be recorded as
+  the `k8s.persistentvolumeclaim.annotation.volume.beta.kubernetes.io/storage-provisioner` attribute with value `"kubernetes.io/aws-ebs"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.persistentvolumeclaim.annotation.data` attribute with value `""`.
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_LABEL_TEMPLATE: Final = (
+    "k8s.persistentvolumeclaim.label"
+)
+"""
+The label placed on the PersistentVolumeClaim, the `<key>` being the label name, the value being the label value, even if the value is empty.
+Note: Examples:
+
+- A label `app` with value `my-app` SHOULD be recorded as
+  the `k8s.persistentvolumeclaim.label.app` attribute with value `"my-app"`.
+- A label `data` with empty string value SHOULD be recorded as
+  the `k8s.persistentvolumeclaim.label.data` attribute with value `""`.
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_NAME: Final = "k8s.persistentvolumeclaim.name"
+"""
+The name of the PersistentVolumeClaim.
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_STATUS_PHASE: Final = (
+    "k8s.persistentvolumeclaim.status.phase"
+)
+"""
+The phase of the PersistentVolumeClaim.
+Note: This attribute aligns with the `phase` field of the
+[K8s PersistentVolumeClaimStatus](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimStatus).
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_UID: Final = "k8s.persistentvolumeclaim.uid"
+"""
+The UID of the PersistentVolumeClaim.
 """
 
 K8S_POD_ANNOTATION_TEMPLATE: Final = "k8s.pod.annotation"
@@ -669,6 +769,37 @@ class K8sNodeConditionTypeValues(Enum):
     """Pressure exists on the processes—that is, if there are too many processes on the node."""
     NETWORK_UNAVAILABLE = "NetworkUnavailable"
     """The network for the node is not correctly configured."""
+
+
+class K8sPersistentvolumeReclaimPolicyValues(Enum):
+    DELETE = "Delete"
+    """The volume will be deleted when released from its claim."""
+    RECYCLE = "Recycle"
+    """The volume will be recycled (basic scrub) when released from its claim."""
+    RETAIN = "Retain"
+    """The volume will be retained when released from its claim."""
+
+
+class K8sPersistentvolumeStatusPhaseValues(Enum):
+    AVAILABLE = "Available"
+    """The volume is available and not yet bound to a claim."""
+    BOUND = "Bound"
+    """The volume is bound to a claim."""
+    FAILED = "Failed"
+    """The volume has failed its automatic reclamation."""
+    PENDING = "Pending"
+    """The volume is being provisioned."""
+    RELEASED = "Released"
+    """The claim has been deleted but the volume is not yet available."""
+
+
+class K8sPersistentvolumeclaimStatusPhaseValues(Enum):
+    BOUND = "Bound"
+    """The claim is bound to a volume."""
+    LOST = "Lost"
+    """The claim has lost its underlying volume (the volume does not exist anymore)."""
+    PENDING = "Pending"
+    """The claim has not yet been bound to a volume."""
 
 
 class K8sPodStatusPhaseValues(Enum):

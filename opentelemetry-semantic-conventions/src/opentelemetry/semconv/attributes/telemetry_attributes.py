@@ -4,6 +4,18 @@
 from enum import Enum
 from typing import Final
 
+TELEMETRY_DISTRO_NAME: Final = "telemetry.distro.name"
+"""
+The name of the auto instrumentation agent or distribution, if used.
+Note: Official auto instrumentation agents and distributions SHOULD set the `telemetry.distro.name` attribute to
+a string starting with `opentelemetry-`, e.g. `opentelemetry-java-instrumentation`.
+"""
+
+TELEMETRY_DISTRO_VERSION: Final = "telemetry.distro.version"
+"""
+The version string of the auto instrumentation agent or distribution, if used.
+"""
+
 TELEMETRY_SDK_LANGUAGE: Final = "telemetry.sdk.language"
 """
 The language of the telemetry SDK.
