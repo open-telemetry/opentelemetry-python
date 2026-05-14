@@ -42,6 +42,7 @@ The human readable name of a task within a pipeline. Task here most closely alig
 CICD_PIPELINE_TASK_RUN_ID: Final = "cicd.pipeline.task.run.id"
 """
 The unique identifier of a task run within a pipeline.
+Note: For a given pipeline run and task, the `cicd.pipeline.task.run.id` MUST be unique within that run. For the same task across different runs of the same pipeline, the `cicd.pipeline.task.run.id` MAY remain the same, enabling correlation of `cicd.pipeline.task.run.result` values across multiple pipeline runs.
 """
 
 CICD_PIPELINE_TASK_RUN_RESULT: Final = "cicd.pipeline.task.run.result"

@@ -20,6 +20,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 CONTAINER_CPU_TIME: Final = "container.cpu.time"
 """
 Total CPU time consumed
