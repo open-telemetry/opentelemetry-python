@@ -142,6 +142,21 @@ class TestSDKInitLiveCheck(unittest.TestCase):
             )
         )
 
+    def test_extra_args_are_appended_to_command(self):
+        """`extra_args` are appended verbatim and weaver still runs cleanly."""
+        with WeaverLiveCheck(
+            registry=_REGISTRY_DIR, extra_args=["--quiet"]
+        ) as weaver:
+            self.assertIn("--quiet", weaver._command)
+            provider = _make_provider(weaver.otlp_endpoint)
+            with provider.get_tracer("test-tracer").start_as_current_span(
+                "test-span"
+            ):
+                pass
+            provider.force_flush()
+            report = weaver.end_and_check()
+        self.assertIsInstance(report, LiveCheckReport)
+
     def test_report_span_statistics(self):
         """The full report exposes span counts and individual span samples."""
         with WeaverLiveCheck(registry=_REGISTRY_DIR) as weaver:
@@ -162,3 +177,44 @@ class TestSDKInitLiveCheck(unittest.TestCase):
             any(s["name"] == "test-span" for s in span_samples),
             f"Expected 'test-span' in samples, got: {[s['name'] for s in span_samples]}",
         )
+
+
+@unittest.skipUnless(
+    _HAS_GRPC,
+    "grpc exporter not installed",
+)
+@unittest.skipUnless(
+    shutil.which("weaver") is not None,
+    "weaver binary not found on PATH — install from https://github.com/open-telemetry/weaver/releases",
+)
+class TestOutputCapture(unittest.TestCase):
+    """weaver's stdout/stderr is captured to tempfiles, not PIPE, so large
+    diagnostic output can't deadlock the subprocess."""
+
+    def test_tempfiles_cleaned_up_on_close(self):
+        weaver = WeaverLiveCheck(registry=_REGISTRY_DIR)
+        weaver.start()
+        stdout_path = weaver._stdout_path
+        stderr_path = weaver._stderr_path
+        self.assertIsNotNone(stdout_path)
+        self.assertIsNotNone(stderr_path)
+        self.assertTrue(os.path.exists(stdout_path))
+        self.assertTrue(os.path.exists(stderr_path))
+        weaver.close()
+        self.assertFalse(os.path.exists(stdout_path))
+        self.assertFalse(os.path.exists(stderr_path))
+
+    def test_does_not_deadlock_on_large_diagnostic_output(self):
+        """`--debug --debug` makes weaver dump trace logs that exceed the 64KB
+        PIPE buffer; with tempfile capture the subprocess still exits cleanly."""
+        with WeaverLiveCheck(
+            registry=_REGISTRY_DIR, extra_args=["--debug", "--debug"]
+        ) as weaver:
+            provider = _make_provider(weaver.otlp_endpoint)
+            with provider.get_tracer("test-tracer").start_as_current_span(
+                "test-span"
+            ):
+                pass
+            provider.force_flush()
+            report = weaver.end()
+        self.assertIsInstance(report, LiveCheckReport)
