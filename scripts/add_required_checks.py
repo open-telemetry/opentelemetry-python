@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # This script is to be used by maintainers by running it locally.
 
 from json import dumps
