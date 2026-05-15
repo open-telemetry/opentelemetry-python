@@ -1,0 +1,1 @@
+Bump minimum `requests` to 2.32 in HTTP/Zipkin exporters to mitigate CVE-2018-18074
