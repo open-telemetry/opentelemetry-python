@@ -177,8 +177,8 @@ def _create_span_processor(
 def _create_sampler(config: SamplerConfig) -> Sampler:
     """Create a sampler from config.
 
-    Known sampler types are checked via typed fields on the Sampler
-    dataclass. Unknown sampler names captured in additional_properties
+    Built-in sampler types are checked via typed fields on the Sampler
+    dataclass. Plugin sampler names captured in additional_properties
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_sampler`` entry point group.
     """
@@ -195,7 +195,7 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
         name = next(iter(config.additional_properties))
         return load_entry_point("opentelemetry_sampler", name)()
     raise ConfigurationError(
-        f"Unknown or unsupported sampler type in config: {config!r}. "
+        f"Unsupported sampler type in config: {config!r}. "
         "Supported types: always_on, always_off, trace_id_ratio_based, parent_based."
     )
 

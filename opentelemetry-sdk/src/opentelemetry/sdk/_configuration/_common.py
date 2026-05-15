@@ -16,11 +16,11 @@ _logger = logging.getLogger(__name__)
 def _additional_properties(cls):
     """Decorator for dataclasses whose JSON Schema sets additionalProperties.
 
-    Wraps the dataclass-generated ``__init__`` so that unknown keyword
+    Wraps the dataclass-generated ``__init__`` so that extra keyword
     arguments are captured into an ``additional_properties`` instance
-    attribute instead of raising ``TypeError``.  This lets plugin/custom
+    attribute instead of raising ``TypeError``.  This lets plugin
     component names flow through the config pipeline without modifying
-    the codegen output for known fields.
+    the codegen output for built-in fields.
 
     Applied automatically by the custom template in ``opentelemetry-sdk/codegen/``
     when ``additionalPropertiesType`` is present in the template context
