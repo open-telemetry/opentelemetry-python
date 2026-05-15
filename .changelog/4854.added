@@ -1,0 +1,1 @@
+`opentelemetry-api`, `opentelemetry-sdk`: add support for 'random-trace-id' flags in W3C traceparent header trace flags. Implementations of `IdGenerator` that do randomly generate the 56 least significant bits, should also implement a `is_trace_id_random` methods that returns `True`.
