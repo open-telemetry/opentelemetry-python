@@ -1,2 +1,1 @@
-``opentelemetry-sdk``: Allow declarative OTLP HTTP exporters to map
-``compression: deflate`` instead of rejecting it as unsupported.
+`opentelemetry-sdk`: Allow declarative OTLP HTTP exporters to map `compression: deflate` instead of rejecting it as unsupported.
