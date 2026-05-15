@@ -937,7 +937,7 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
-    { name = "requests", specifier = "~=2.32" },
+    { name = "requests", specifier = "~=2.31" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
 provides-extras = ["gcp-auth"]
@@ -971,7 +971,7 @@ dependencies = [
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
-    { name = "requests", specifier = "~=2.32" },
+    { name = "requests", specifier = "~=2.31" },
 ]
 
 [[package]]
