@@ -29,7 +29,7 @@ classifiers = [
 dependencies = [
   "opentelemetry-api ~= 1.3",
   "opentelemetry-sdk ~= 1.11",
-  "requests ~= 2.7",
+  "requests ~= 2.32",
 ]
 
 [project.entry-points.opentelemetry_traces_exporter]
