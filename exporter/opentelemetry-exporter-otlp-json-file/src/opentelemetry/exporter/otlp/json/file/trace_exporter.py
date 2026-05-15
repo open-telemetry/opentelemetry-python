@@ -30,11 +30,13 @@ class FileSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
         try:
             lines = [
-                self._formatter(rss.to_dict())
-                for rss in encode_spans(spans).resource_spans
+                self._formatter(resource_spans.to_dict())
+                # pylint: disable-next=not-an-iterable
+                for resource_spans in encode_spans(spans).resource_spans
             ]
             self._stream.writelines(lines)
             self._stream.flush()
+        # pylint: disable-next=broad-exception-caught
         except Exception as error:
             _logger.exception(
                 "Failed to write span batch to stream: %s: %s",

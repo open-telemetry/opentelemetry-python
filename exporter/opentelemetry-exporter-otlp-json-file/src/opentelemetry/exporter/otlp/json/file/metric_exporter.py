@@ -67,11 +67,14 @@ class FileMetricExporter(MetricExporter):
             return MetricExportResult.FAILURE
         try:
             lines = [
-                self._formatter(rms.to_dict())
-                for rms in encode_metrics(metrics_data).resource_metrics
+                self._formatter(resource_metrics.to_dict())
+                for resource_metrics in encode_metrics(
+                    metrics_data
+                ).resource_metrics
             ]
             self._stream.writelines(lines)
             self._stream.flush()
+        # pylint: disable-next=broad-exception-caught
         except Exception as error:
             _logger.exception(
                 "Failed to write metric batch to stream: %s: %s",
@@ -105,7 +108,7 @@ def _get_temporality(
     )
 
     if temporality_preference == "DELTA":
-        instrument_class_temporality = {
+        instrument_class_temporality: dict[type, AggregationTemporality] = {
             Counter: AggregationTemporality.DELTA,
             UpDownCounter: AggregationTemporality.CUMULATIVE,
             Histogram: AggregationTemporality.DELTA,
@@ -115,7 +118,7 @@ def _get_temporality(
         }
 
     elif temporality_preference == "LOWMEMORY":
-        instrument_class_temporality = {
+        instrument_class_temporality: dict[type, AggregationTemporality] = {
             Counter: AggregationTemporality.DELTA,
             UpDownCounter: AggregationTemporality.CUMULATIVE,
             Histogram: AggregationTemporality.DELTA,
@@ -133,7 +136,7 @@ def _get_temporality(
                 "using CUMULATIVE",
                 temporality_preference,
             )
-        instrument_class_temporality = {
+        instrument_class_temporality: dict[type, AggregationTemporality] = {
             Counter: AggregationTemporality.CUMULATIVE,
             UpDownCounter: AggregationTemporality.CUMULATIVE,
             Histogram: AggregationTemporality.CUMULATIVE,
@@ -155,10 +158,9 @@ def _get_aggregation(
     )
 
     if default_histogram_aggregation == "base2_exponential_bucket_histogram":
-        instrument_class_aggregation = {
+        instrument_class_aggregation: dict[type, Aggregation] = {
             Histogram: ExponentialBucketHistogramAggregation(),
         }
-
     else:
         if default_histogram_aggregation != "explicit_bucket_histogram":
             _logger.warning(
@@ -170,7 +172,7 @@ def _get_aggregation(
                 default_histogram_aggregation,
             )
 
-        instrument_class_aggregation = {
+        instrument_class_aggregation: dict[type, Aggregation] = {
             Histogram: ExplicitBucketHistogramAggregation(),
         }
 

@@ -38,11 +38,12 @@ class FileLogExporter(LogRecordExporter):
             return LogRecordExportResult.FAILURE
         try:
             lines = [
-                self._formatter(rls.to_dict())
-                for rls in encode_logs(batch).resource_logs
+                self._formatter(resource_logs.to_dict())
+                for resource_logs in encode_logs(batch).resource_logs
             ]
             self._stream.writelines(lines)
             self._stream.flush()
+        # pylint: disable-next=broad-exception-caught
         except Exception as error:
             _logger.exception(
                 "Failed to write log batch to stream: %s: %s",
