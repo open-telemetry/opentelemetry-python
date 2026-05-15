@@ -72,6 +72,45 @@ def load_entry_point(group: str, name: str) -> type:
         ) from exc
 
 
+def _resolve_component(
+    config,
+    registry: dict,
+    entry_point_group: str,
+    component_type: str,
+):
+    """Resolve a config dataclass to a component instance.
+
+    Checks built-in factories in ``registry`` first (by matching typed
+    field names on ``config``), then falls back to entry point loading
+    for plugin components found in ``config.additional_properties``.
+
+    Args:
+        config: A dataclass with ``additional_properties`` (from the
+            ``@_additional_properties`` decorator).
+        registry: Mapping of built-in component names to factory
+            callables. Each factory receives the field value from config.
+        entry_point_group: The entry point group name for plugin loading.
+        component_type: Human-readable name for error messages
+            (e.g. "span exporter").
+
+    Returns:
+        The resolved component instance.
+
+    Raises:
+        ConfigurationError: If no component type is specified in config.
+    """
+    for name, factory in registry.items():
+        value = getattr(config, name, None)
+        if value is not None:
+            return factory(value)
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point(entry_point_group, name)(
+            **(plugin_config or {})
+        )
+    raise ConfigurationError(f"No {component_type} type specified in config.")
+
+
 def _parse_headers(
     headers: list | None,
     headers_list: str | None,

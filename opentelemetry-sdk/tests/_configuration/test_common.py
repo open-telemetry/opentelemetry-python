@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 from opentelemetry.sdk._configuration._common import (
     _additional_properties,
     _parse_headers,
+    _resolve_component,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
@@ -224,3 +225,74 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
 
     def test_push_metric_exporter(self):
         self._assert_supports_additional_properties(PushMetricExporter)
+
+
+class TestResolveComponent(unittest.TestCase):
+    def setUp(self):
+        @_additional_properties
+        @dataclass
+        class _Config:
+            builtin_a: dict | None = None
+            builtin_b: str | None = None
+            additional_properties: ClassVar[dict[str, Any]]
+
+        self.cls = _Config
+        self.registry = {
+            "builtin_a": lambda v: ("resolved_a", v),
+            "builtin_b": lambda v: ("resolved_b", v),
+        }
+
+    def test_resolves_builtin_from_registry(self):
+        config = self.cls(builtin_a={"key": "val"})
+        result = _resolve_component(
+            config, self.registry, "test_group", "test component"
+        )
+        self.assertEqual(result, ("resolved_a", {"key": "val"}))
+
+    def test_resolves_plugin_via_entry_point(self):
+        mock_instance = MagicMock()
+        mock_class = MagicMock(return_value=mock_instance)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self.cls(my_plugin={"opt": "val"})
+            result = _resolve_component(
+                config, self.registry, "test_group", "test component"
+            )
+        self.assertIs(result, mock_instance)
+        mock_class.assert_called_once_with(opt="val")
+
+    def test_plugin_with_empty_config(self):
+        mock_instance = MagicMock()
+        mock_class = MagicMock(return_value=mock_instance)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self.cls(my_plugin={})
+            _resolve_component(
+                config, self.registry, "test_group", "test component"
+            )
+        mock_class.assert_called_once_with()
+
+    def test_no_component_raises_configuration_error(self):
+        config = self.cls()
+        with self.assertRaises(ConfigurationError):
+            _resolve_component(
+                config, self.registry, "test_group", "test component"
+            )
+
+    def test_plugin_not_found_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self.cls(missing_plugin={})
+            with self.assertRaises(ConfigurationError):
+                _resolve_component(
+                    config, self.registry, "test_group", "test component"
+                )
