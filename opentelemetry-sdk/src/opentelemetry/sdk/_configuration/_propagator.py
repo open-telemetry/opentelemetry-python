@@ -46,8 +46,12 @@ def _propagators_from_textmap_config(
             result.append(load_entry_point("opentelemetry_propagator", name)())
 
     # Plugin propagators from additional_properties
-    for name in config.additional_properties:
-        result.append(load_entry_point("opentelemetry_propagator", name)())
+    for name, plugin_config in config.additional_properties.items():
+        result.append(
+            load_entry_point("opentelemetry_propagator", name)(
+                **(plugin_config or {})
+            )
+        )
 
     return result
 
