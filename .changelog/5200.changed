@@ -1,0 +1,1 @@
+`opentelemetry-semantic-conventions`: Bump semantic conventions to 1.41.1, this changes the metrics name of `K8S_CONTAINER_CPU_LIMIT_UTILIZATION` and `K8S_CONTAINER_CPU_REQUEST_UTILIZATION`.
