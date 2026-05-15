@@ -56,5 +56,30 @@ jobs:
             false
           fi
 
+      - name: Validate fragment filenames
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          fragments=$(git diff --diff-filter=A --name-only origin/${{ github.base_ref }} -- '.changelog/*' | grep -v '/\.gitignore$' || true)
+          [ -z "$fragments" ] && exit 0
+          invalid=()
+          while IFS= read -r f; do
+            base=$(basename "$f")
+            if [[ ! "$base" =~ ^([0-9]+)\.(added|changed|deprecated|removed|fixed)$ ]]; then
+              invalid+=("$f (expected <PR_NUMBER>.<type>; type one of added, changed, deprecated, removed, fixed)")
+              continue
+            fi
+            if [[ "${BASH_REMATCH[1]}" != "${PR_NUMBER}" ]]; then
+              invalid+=("$f (PR number ${BASH_REMATCH[1]} does not match this PR's number ${PR_NUMBER})")
+            fi
+          done <<< "$fragments"
+          if (( ${#invalid[@]} > 0 )); then
+            echo "Invalid changelog fragment(s):"
+            for msg in "${invalid[@]}"; do
+              echo "  $msg"
+            done
+            exit 1
+          fi
+
       - name: Preview changelog
         run: towncrier build --draft --version Unreleased
