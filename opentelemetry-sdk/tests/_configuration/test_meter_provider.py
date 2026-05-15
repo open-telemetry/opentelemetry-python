@@ -313,10 +313,11 @@ class TestCreateMetricReaders(unittest.TestCase):
                     )
                 ]
             )
-            create_meter_provider(config)
+            provider = create_meter_provider(config)
 
         mock_reader_cls.assert_called_once_with(disable_target_info=True)
         mock_start_server.assert_called_once_with(port=9090, addr="0.0.0.0")
+        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
 
     def test_pull_prometheus_defaults(self):
         mock_reader_cls = MagicMock()
@@ -340,10 +341,11 @@ class TestCreateMetricReaders(unittest.TestCase):
                     )
                 ]
             )
-            create_meter_provider(config)
+            provider = create_meter_provider(config)
 
         mock_reader_cls.assert_called_once_with(disable_target_info=False)
         mock_start_server.assert_called_once_with(port=9464, addr="localhost")
+        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
 
     def test_pull_prometheus_missing_package_raises(self):
         with patch.dict(
