@@ -19,9 +19,9 @@ from opentelemetry.trace.propagation.tracecontext import (
 )
 
 # Propagators bundled with the SDK — no entry point lookup needed.
-_PROPAGATOR_REGISTRY: dict = {
-    "tracecontext": lambda _: TraceContextTextMapPropagator(),
-    "baggage": lambda _: W3CBaggagePropagator(),
+_PROPAGATOR_REGISTRY: dict[str, type[TextMapPropagator]] = {
+    "tracecontext": TraceContextTextMapPropagator,
+    "baggage": W3CBaggagePropagator,
 }
 
 
@@ -36,9 +36,9 @@ def _propagators_from_textmap_config(
     ``opentelemetry_propagator`` entry point group.
     """
     result: list[TextMapPropagator] = []
-    for name, factory in _PROPAGATOR_REGISTRY.items():
+    for name, cls in _PROPAGATOR_REGISTRY.items():
         if getattr(config, name, None) is not None:
-            result.append(factory(getattr(config, name)))
+            result.append(cls())
 
     # Known schema fields not in registry (b3, b3multi) — loaded via entry point
     for name in ("b3", "b3multi"):
