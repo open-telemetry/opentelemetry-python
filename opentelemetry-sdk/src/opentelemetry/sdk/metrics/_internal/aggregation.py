@@ -48,6 +48,7 @@ from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
+    DataPointFlags,
     ExponentialHistogramDataPoint,
     HistogramDataPoint,
     NumberDataPoint,
@@ -873,10 +874,9 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                             offset=value_negative.offset,
                             bucket_counts=(value_negative.get_offset_counts()),
                         ),
-                        # FIXME: Find the right value for flags
-                        flags=0,
                         min=min_,
                         max=max_,
+                        flags=DataPointFlags.get_default(),
                     )
 
                 # Here collection_temporality is CUMULATIVE.
@@ -1049,10 +1049,9 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                             self._previous_value_negative.get_offset_counts()
                         ),
                     ),
-                    # FIXME: Find the right value for flags
-                    flags=0,
                     min=self._previous_min,
                     max=self._previous_max,
+                    flags=DataPointFlags.get_default(),
                 )
 
             return None

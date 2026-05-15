@@ -240,6 +240,7 @@ def _encode_metric(metric, pb2_metric):
                 attributes=_encode_attributes(data_point.attributes),
                 time_unix_nano=data_point.time_unix_nano,
                 exemplars=_encode_exemplars(data_point.exemplars),
+                flags=int(data_point.flags),
             )
             if isinstance(data_point.value, int):
                 pt.as_int = data_point.value
@@ -260,6 +261,7 @@ def _encode_metric(metric, pb2_metric):
                 explicit_bounds=data_point.explicit_bounds,
                 max=data_point.max,
                 min=data_point.min,
+                flags=int(data_point.flags),
             )
             pb2_metric.histogram.aggregation_temporality = (
                 metric.data.aggregation_temporality
@@ -273,6 +275,7 @@ def _encode_metric(metric, pb2_metric):
                 start_time_unix_nano=data_point.start_time_unix_nano,
                 time_unix_nano=data_point.time_unix_nano,
                 exemplars=_encode_exemplars(data_point.exemplars),
+                flags=int(data_point.flags),
             )
             if isinstance(data_point.value, int):
                 pt.as_int = data_point.value
@@ -316,9 +319,9 @@ def _encode_metric(metric, pb2_metric):
                 zero_count=data_point.zero_count,
                 positive=positive,
                 negative=negative,
-                flags=data_point.flags,
                 max=data_point.max,
                 min=data_point.min,
+                flags=int(data_point.flags),
             )
             pb2_metric.exponential_histogram.aggregation_temporality = (
                 metric.data.aggregation_temporality
