@@ -144,13 +144,20 @@ def _create_log_record_exporter(
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_logs_exporter`` entry point group.
     """
+    if config.otlp_file_development is not None:
+        raise ConfigurationError(
+            "otlp_file_development log exporter is experimental "
+            "and not yet supported."
+        )
     for name, factory in _LOG_EXPORTER_REGISTRY.items():
         value = getattr(config, name, None)
         if value is not None:
             return factory(value)
     if config.additional_properties:
-        name = next(iter(config.additional_properties))
-        return load_entry_point("opentelemetry_logs_exporter", name)()
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_logs_exporter", name)(
+            **(plugin_config or {})
+        )
     raise ConfigurationError(
         "No exporter type specified in log record exporter config. "
         "Supported types: console, otlp_http, otlp_grpc."

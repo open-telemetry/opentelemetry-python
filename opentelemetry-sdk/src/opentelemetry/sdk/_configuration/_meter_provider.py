@@ -357,13 +357,20 @@ def _create_push_metric_exporter(
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_metrics_exporter`` entry point group.
     """
+    if config.otlp_file_development is not None:
+        raise ConfigurationError(
+            "otlp_file_development metric exporter is experimental "
+            "and not yet supported."
+        )
     for name, factory in _METRIC_EXPORTER_REGISTRY.items():
         value = getattr(config, name, None)
         if value is not None:
             return factory(value)
     if config.additional_properties:
-        name = next(iter(config.additional_properties))
-        return load_entry_point("opentelemetry_metrics_exporter", name)()
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_metrics_exporter", name)(
+            **(plugin_config or {})
+        )
     raise ConfigurationError(
         "No exporter type specified in push metric exporter config. "
         "Supported types: console, otlp_http, otlp_grpc."

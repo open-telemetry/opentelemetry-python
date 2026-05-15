@@ -152,13 +152,20 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_traces_exporter`` entry point group.
     """
+    if config.otlp_file_development is not None:
+        raise ConfigurationError(
+            "otlp_file_development span exporter is experimental "
+            "and not yet supported."
+        )
     for name, factory in _SPAN_EXPORTER_REGISTRY.items():
         value = getattr(config, name, None)
         if value is not None:
             return factory(value)
     if config.additional_properties:
-        name = next(iter(config.additional_properties))
-        return load_entry_point("opentelemetry_traces_exporter", name)()
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_traces_exporter", name)(
+            **(plugin_config or {})
+        )
     raise ConfigurationError(
         "No exporter type specified in span exporter config. "
         "Supported types: otlp_http, otlp_grpc, console."
