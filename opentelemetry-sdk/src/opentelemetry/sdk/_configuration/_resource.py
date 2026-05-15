@@ -184,11 +184,11 @@ def _run_detectors(
             cls = load_entry_point(
                 "opentelemetry_resource_detector", name.name
             )
-            detected_attrs.update(cls().detect().attributes)
+            detected_attrs.update(cls(**(value or {})).detect().attributes)
 
-    for name in detector_config.additional_properties:
+    for name, plugin_config in detector_config.additional_properties.items():
         cls = load_entry_point("opentelemetry_resource_detector", name)
-        detected_attrs.update(cls().detect().attributes)
+        detected_attrs.update(cls(**(plugin_config or {})).detect().attributes)
 
 
 def _filter_attributes(
