@@ -8,14 +8,12 @@ from typing_extensions import deprecated
 
 TELEMETRY_DISTRO_NAME: Final = "telemetry.distro.name"
 """
-The name of the auto instrumentation agent or distribution, if used.
-Note: Official auto instrumentation agents and distributions SHOULD set the `telemetry.distro.name` attribute to
-a string starting with `opentelemetry-`, e.g. `opentelemetry-java-instrumentation`.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_DISTRO_NAME`.
 """
 
 TELEMETRY_DISTRO_VERSION: Final = "telemetry.distro.version"
 """
-The version string of the auto instrumentation agent or distribution, if used.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TELEMETRY_DISTRO_VERSION`.
 """
 
 TELEMETRY_SDK_LANGUAGE: Final = "telemetry.sdk.language"
