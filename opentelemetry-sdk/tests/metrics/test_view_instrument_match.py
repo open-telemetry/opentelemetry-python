@@ -296,9 +296,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         number_data_points = list(number_data_points)
         self.assertEqual(len(number_data_points), 1)
-        self.assertEqual(
-            number_data_points[0].attributes, {"key": "original"}
-        )
+        self.assertEqual(number_data_points[0].attributes, {"key": "original"})
 
     @patch(
         "opentelemetry.sdk.metrics._internal._view_instrument_match.time_ns",
