@@ -165,6 +165,40 @@ target-python-version = "3.10"
 custom-template-dir = "opentelemetry-sdk/codegen"
 additional-imports = "typing.ClassVar,opentelemetry.sdk._configuration._common._additional_properties"
 
+[tool.towncrier]
+directory = ".changelog"
+filename = "CHANGELOG.md"
+start_string = "<!-- changelog start -->\n"
+template = "scripts/changelog_template.j2"
+issue_format = "[#{issue}](https://github.com/open-telemetry/opentelemetry-python/pull/{issue})"
+wrap = true # wrap fragments to 79 char line length
+issue_pattern = "^(\\d+)" # only PR numbers as fragment prefix (e.g. 1234.fixed)
+
+[[tool.towncrier.type]]
+directory = "added"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "changed"
+name = "Changed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "deprecated"
+name = "Deprecated"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "removed"
+name = "Removed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fixed"
+name = "Fixed"
+showcontent = true
+
 [dependency-groups]
 dev = [
     "tox",
@@ -172,4 +206,5 @@ dev = [
     "pre-commit",
     "datamodel-code-generator[http]",
     "datamodel-code-generator[ruff]",
+    "towncrier",
 ]
