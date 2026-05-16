@@ -83,8 +83,10 @@ class TestFileMetricExporter(unittest.TestCase):
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
         rm = OtlpResourceMetrics.from_json(lines[0])
+        # pylint: disable-next=unsubscriptable-object
         self.assertEqual(rm.scope_metrics[0].metrics[0].name, "requests")
 
+    # pylint: disable-next=no-self-use
     def test_stream_flushed_after_export(self):
         mock_stream = Mock()
         exporter = FileMetricExporter(stream=mock_stream)
@@ -129,7 +131,7 @@ class TestFileMetricExporter(unittest.TestCase):
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 2)
         names = {
-            OtlpResourceMetrics.from_json(line)
+            OtlpResourceMetrics.from_json(line)  # pylint: disable=unsubscriptable-object
             .scope_metrics[0]
             .metrics[0]
             .name
@@ -161,13 +163,15 @@ class TestFileMetricExporter(unittest.TestCase):
         self.assertEqual(result, MetricExportResult.FAILURE)
 
     def test_export_with_path(self):
+        # pylint: disable-next=consider-using-with
         tmp_dir = tempfile.TemporaryDirectory()
         path = os.path.join(tmp_dir.name, "output.jsonl")
         exporter = FileMetricExporter(path)
         exporter.export(_make_metrics_data())
         exporter.shutdown()
-        with open(path) as f:
-            rm = OtlpResourceMetrics.from_json(f.read().splitlines()[0])
+        with open(path, encoding="utf-8") as fh:
+            rm = OtlpResourceMetrics.from_json(fh.read().splitlines()[0])
+        # pylint: disable-next=unsubscriptable-object
         self.assertEqual(rm.scope_metrics[0].metrics[0].name, "requests")
         tmp_dir.cleanup()
 
@@ -177,6 +181,7 @@ class TestFileMetricExporter(unittest.TestCase):
 
     def test_default_stream_is_stdout(self):
         exporter = FileMetricExporter()
+        # pylint: disable-next=protected-access
         self.assertIs(exporter._stream, sys.stdout)
 
 
@@ -199,7 +204,7 @@ class TestFileMetricExporterRoundTrip(unittest.TestCase):
     def _expected(self) -> str:
         return "".join(
             _format_line(rm.to_dict())
-            for rm in encode_metrics(
+            for rm in encode_metrics(  # pylint: disable=not-an-iterable
                 self._exporter.last_metrics_data  # type: ignore
             ).resource_metrics
         )

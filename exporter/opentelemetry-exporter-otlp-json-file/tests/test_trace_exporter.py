@@ -56,6 +56,7 @@ class TestFileSpanExporter(unittest.TestCase):
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
         rs = ResourceSpans.from_json(lines[0])
+        # pylint: disable-next=unsubscriptable-object
         self.assertEqual(rs.scope_spans[0].spans[0].name, "my-span")
 
     def test_export_multiple_spans_same_resource(self):
@@ -67,7 +68,7 @@ class TestFileSpanExporter(unittest.TestCase):
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
         rs = ResourceSpans.from_json(lines[0])
-        total_spans = sum(len(ss.spans) for ss in rs.scope_spans)
+        total_spans = sum(len(ss.spans) for ss in rs.scope_spans)  # pylint: disable=not-an-iterable
         self.assertEqual(total_spans, 2)
 
     def test_stream_flushed_after_export(self):
@@ -109,13 +110,15 @@ class TestFileSpanExporter(unittest.TestCase):
         self.assertEqual(result, SpanExportResult.FAILURE)
 
     def test_export_with_path(self):
+        # pylint: disable-next=consider-using-with
         tmp_dir = tempfile.TemporaryDirectory()
         path = os.path.join(tmp_dir.name, "output.jsonl")
         exporter = FileSpanExporter(path)
         exporter.export(self._make_span("path-span"))
         exporter.shutdown()
-        with open(path) as f:
-            rs = ResourceSpans.from_json(f.read().splitlines()[0])
+        with open(path, encoding="utf-8") as fh:
+            rs = ResourceSpans.from_json(fh.read().splitlines()[0])
+        # pylint: disable-next=unsubscriptable-object
         self.assertEqual(rs.scope_spans[0].spans[0].name, "path-span")
         tmp_dir.cleanup()
 
@@ -125,6 +128,7 @@ class TestFileSpanExporter(unittest.TestCase):
 
     def test_default_stream_is_stdout(self):
         exporter = FileSpanExporter()
+        # pylint: disable-next=protected-access
         self.assertIs(exporter._stream, sys.stdout)
 
 
@@ -142,7 +146,7 @@ class TestFileSpanExporterRoundTrip(unittest.TestCase):
         return "".join(
             _format_line(rs.to_dict())
             for span in self._in_memory.get_finished_spans()
-            for rs in encode_spans([span]).resource_spans
+            for rs in encode_spans([span]).resource_spans  # pylint: disable=not-an-iterable
         )
 
     def test_single_span_matches_in_memory(self):

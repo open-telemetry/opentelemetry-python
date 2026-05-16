@@ -77,7 +77,9 @@ class FileMetricExporter(MetricExporter):
             preferred_aggregation=_get_aggregation(preferred_aggregation),
         )
         if path is not None:
-            self._stream: IO[str] = open(path, "a")
+            self._stream: IO[str] = open(  # pylint: disable=consider-using-with
+                path, "a", encoding="utf-8"
+            )
             self._owns_stream = True
         elif stream is not None:
             self._stream = stream

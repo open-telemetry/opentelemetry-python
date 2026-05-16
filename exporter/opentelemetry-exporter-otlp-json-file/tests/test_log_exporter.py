@@ -62,7 +62,7 @@ class TestFileLogExporter(unittest.TestCase):
         self.assertEqual(len(lines), 1)
         rl = ResourceLogs.from_json(lines[0])
         self.assertEqual(
-            rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore
+            rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore  # pylint: disable=unsubscriptable-object
             "hello from test",
         )
 
@@ -75,7 +75,7 @@ class TestFileLogExporter(unittest.TestCase):
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
         rl = ResourceLogs.from_json(lines[0])
-        total_logs = sum(len(sl.log_records) for sl in rl.scope_logs)
+        total_logs = sum(len(sl.log_records) for sl in rl.scope_logs)  # pylint: disable=not-an-iterable
         self.assertEqual(total_logs, 2)
 
     def test_export_logs_different_resources(self):
@@ -87,7 +87,7 @@ class TestFileLogExporter(unittest.TestCase):
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 2)
         bodies = {
-            ResourceLogs.from_json(line)
+            ResourceLogs.from_json(line)  # pylint: disable=unsubscriptable-object
             .scope_logs[0]
             .log_records[0]
             .body.string_value  # type: ignore
@@ -95,6 +95,7 @@ class TestFileLogExporter(unittest.TestCase):
         }
         self.assertEqual(bodies, {"from-a", "from-b"})
 
+    # pylint: disable-next=no-self-use
     def test_stream_flushed_after_export(self):
         mock_stream = Mock()
         exporter = FileLogExporter(stream=mock_stream)
@@ -129,15 +130,16 @@ class TestFileLogExporter(unittest.TestCase):
         self.assertEqual(result, LogRecordExportResult.FAILURE)
 
     def test_export_with_path(self):
+        # pylint: disable-next=consider-using-with
         tmp_dir = tempfile.TemporaryDirectory()
         path = os.path.join(tmp_dir.name, "output.jsonl")
         exporter = FileLogExporter(path)
         exporter.export([_make_log_record("hello from path")])
         exporter.shutdown()
-        with open(path) as f:
-            rl = ResourceLogs.from_json(f.read().splitlines()[0])
+        with open(path, encoding="utf-8") as fh:
+            rl = ResourceLogs.from_json(fh.read().splitlines()[0])
         self.assertEqual(
-            rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore
+            rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore  # pylint: disable=unsubscriptable-object
             "hello from path",
         )
         tmp_dir.cleanup()
@@ -148,6 +150,7 @@ class TestFileLogExporter(unittest.TestCase):
 
     def test_default_stream_is_stdout(self):
         exporter = FileLogExporter()
+        # pylint: disable-next=protected-access
         self.assertIs(exporter._stream, sys.stdout)
 
 
@@ -169,7 +172,7 @@ class TestFileLogExporterRoundTrip(unittest.TestCase):
         return "".join(
             _format_line(rl.to_dict())
             for record in self._in_memory.get_finished_logs()
-            for rl in encode_logs([record]).resource_logs
+            for rl in encode_logs([record]).resource_logs  # pylint: disable=not-an-iterable
         )
 
     def test_single_log_matches_in_memory(self):
