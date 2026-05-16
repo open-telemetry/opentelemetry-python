@@ -10,10 +10,14 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
+# pylint: disable=unexpected-keyword-arg
+# pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._base import (
     BaseHTTPResult,
     BaseHTTPTransport,
 )
+
+# pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._otlp_client import (
     Compression,
     OTLPHTTPClient,

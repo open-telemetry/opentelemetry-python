@@ -8,6 +8,7 @@ import warnings
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+# pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._base import (
     BaseHTTPResult,
     BaseHTTPTransport,
@@ -84,8 +85,10 @@ class RequestsHTTPTransport(BaseHTTPTransport):
             )
         # pylint: disable-next=broad-exception-caught
         except Exception as error:
+            # pylint: disable-next=unexpected-keyword-arg
             return RequestsHTTPResult(error=error)
 
+        # pylint: disable-next=unexpected-keyword-arg
         return RequestsHTTPResult(
             status_code=response.status_code,
             reason=response.reason,

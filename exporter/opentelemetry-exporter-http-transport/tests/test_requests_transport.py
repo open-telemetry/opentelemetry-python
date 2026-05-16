@@ -11,6 +11,7 @@ import requests.exceptions
 from mocket import Mocket, Mocketizer, mocketize
 from mocket.mocks.mockhttp import Entry
 
+# pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPResult,
     RequestsHTTPTransport,
@@ -88,7 +89,9 @@ class TestRequestsHTTPTransport(unittest.TestCase):
         for status_code, reason in cases:
             with self.subTest(status_code=status_code):
                 with Mocketizer():
-                    Entry.single_register(Entry.POST, _TEST_URL, status=status_code)
+                    Entry.single_register(
+                        Entry.POST, _TEST_URL, status=status_code
+                    )
                     transport = RequestsHTTPTransport()
                     result = transport.request("POST", _TEST_URL)
                     self.assertEqual(result.status_code, status_code)
