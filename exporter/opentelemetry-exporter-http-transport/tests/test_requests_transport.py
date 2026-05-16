@@ -6,10 +6,12 @@ from __future__ import annotations
 import unittest
 from unittest.mock import MagicMock, patch
 
-import pook
 import requests
 import requests.exceptions
+from mocket import Mocket, Mocketizer, mocketize
+from mocket.mocks.mockhttp import Entry
 
+# pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPResult,
     RequestsHTTPTransport,
@@ -78,7 +80,6 @@ class TestRequestsHTTPResult(unittest.TestCase):
 
 # pylint: disable=protected-access,no-self-use
 class TestRequestsHTTPTransport(unittest.TestCase):
-    @pook.on
     def test_request_returns_status_code_and_reason(self):
         cases = [
             (200, "OK"),
@@ -87,40 +88,44 @@ class TestRequestsHTTPTransport(unittest.TestCase):
         ]
         for status_code, reason in cases:
             with self.subTest(status_code=status_code):
-                pook.post(_TEST_URL).reply(status_code)
-                transport = RequestsHTTPTransport()
-                result = transport.request("POST", _TEST_URL)
-                self.assertEqual(result.status_code, status_code)
-                self.assertEqual(result.reason, reason)
-                self.assertIsNone(result.error)
-                pook.reset()
+                with Mocketizer():
+                    Entry.single_register(
+                        Entry.POST, _TEST_URL, status=status_code
+                    )
+                    transport = RequestsHTTPTransport()
+                    result = transport.request("POST", _TEST_URL)
+                    self.assertEqual(result.status_code, status_code)
+                    self.assertEqual(result.reason, reason)
+                    self.assertIsNone(result.error)
 
-    @pook.on
+    @mocketize
     def test_request_result_is_not_a_connection_error(self):
-        pook.post(_TEST_URL).reply(200)
+        Entry.single_register(Entry.POST, _TEST_URL, status=200)
         transport = RequestsHTTPTransport()
         result = transport.request("POST", _TEST_URL)
         self.assertFalse(result.is_connection_error())
 
-    @pook.on
+    @mocketize
     def test_request_forwards_headers(self):
         headers = {
             "content-type": "application/x-protobuf",
             "x-custom": "value",
         }
-        pook.post(_TEST_URL, headers=headers).reply(200)
+        Entry.single_register(Entry.POST, _TEST_URL, status=200)
         transport = RequestsHTTPTransport()
         result = transport.request("POST", _TEST_URL, headers=headers)
         self.assertEqual(result.status_code, 200)
-        self.assertTrue(pook.isdone())
+        req = Mocket.last_request()
+        for key, value in headers.items():
+            self.assertEqual(req.headers[key], value)
 
-    @pook.on
+    @mocketize
     def test_request_forwards_data(self):
-        pook.post(_TEST_URL, body=b"payload").reply(200)
+        Entry.single_register(Entry.POST, _TEST_URL, status=200)
         transport = RequestsHTTPTransport()
         result = transport.request("POST", _TEST_URL, data=b"payload")
         self.assertEqual(result.status_code, 200)
-        self.assertTrue(pook.isdone())
+        self.assertEqual(Mocket.last_request().body, "payload")
 
     def test_request_catches_exception(self):
         cases = [

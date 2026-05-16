@@ -1,0 +1,1 @@
+Add `registry` keyword argument to `PrometheusMetricReader` to allow passing a custom Prometheus registry

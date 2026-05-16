@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`: make retryable gRPC error codes configurable for gRPC exporters

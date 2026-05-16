@@ -14,6 +14,7 @@ from http import HTTPStatus
 from io import BytesIO
 from typing import Final, Literal
 
+# pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._base import (
     BaseHTTPResult,
     BaseHTTPTransport,
