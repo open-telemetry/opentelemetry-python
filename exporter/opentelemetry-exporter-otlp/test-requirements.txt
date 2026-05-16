@@ -18,3 +18,4 @@ zipp==3.19.2
 -e opentelemetry-sdk
 -e opentelemetry-semantic-conventions
 -e exporter/opentelemetry-exporter-otlp
+-e exporter/opentelemetry-exporter-http-transport
