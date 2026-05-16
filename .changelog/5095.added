@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add sampler plugin loading to declarative file configuration via the `opentelemetry_sampler` entry point group, matching the spec's PluginComponentProvider mechanism

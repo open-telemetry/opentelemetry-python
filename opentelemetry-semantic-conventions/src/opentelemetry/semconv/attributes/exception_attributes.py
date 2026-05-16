@@ -24,4 +24,9 @@ A stacktrace as a string in the natural representation for the language runtime.
 EXCEPTION_TYPE: Final = "exception.type"
 """
 The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.
+Note: If the recorded exception type is a wrapper that is not meaningful for
+failure classification, instrumentation MAY use the type of the inner
+exception instead. For example, in Go, errors created with `fmt.Errorf`
+using `%w` MAY be unwrapped when the wrapper type does not help
+classify the failure.
 """

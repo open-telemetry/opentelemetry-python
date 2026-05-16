@@ -19,6 +19,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 CPU_FREQUENCY: Final = "cpu.frequency"
 """
 Deprecated: Replaced by `system.cpu.frequency`.

@@ -69,7 +69,20 @@ PROCESS_EXECUTABLE_BUILD_ID_HTLHASH: Final = (
     "process.executable.build_id.htlhash"
 )
 """
-Profiling specific build ID for executables. See the OTel specification for Profiles for more information.
+Deterministic build ID for executables.
+Note: GNU and Go build IDs may be stripped or unavailable in some environments
+(e.g., Alpine Linux, Docker images). This attribute provides a deterministic
+build ID computed by hashing the first and last 4096 bytes of the file
+along with its length:
+
+```
+Input   ← Concat(File[:4096], File[-4096:], BigEndianUInt64(Len(File)))
+Digest  ← SHA256(Input)
+BuildID ← Digest[:16]
+```
+
+The result is the first 16 bytes (128 bits) of the SHA256 digest,
+represented as a hex string.
 """
 
 PROCESS_EXECUTABLE_BUILD_ID_PROFILING: Final = (

@@ -33,8 +33,7 @@ E.g. for Java the fully qualified classname SHOULD be used in this case.
 
 OTEL_EVENT_NAME: Final = "otel.event.name"
 """
-Identifies the class / type of event.
-Note: This attribute SHOULD be used by non-OTLP exporters when destination does not support `EventName` or equivalent field. This attribute MAY be used by applications using existing logging libraries so that it can be used to set the `EventName` field by Collector or SDK components.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.otel_attributes.OTEL_EVENT_NAME`.
 """
 
 OTEL_LIBRARY_NAME: Final = "otel.library.name"
