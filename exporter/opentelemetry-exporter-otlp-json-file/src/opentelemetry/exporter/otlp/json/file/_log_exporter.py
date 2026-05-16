@@ -23,11 +23,10 @@ class FileLogExporter(LogRecordExporter):
     def __init__(
         self,
         stream: IO[str],
-        *,
-        _formatter: Callable[[dict], str] | None = None,
+        formatter: Callable[[dict], str] | None = None,
     ) -> None:
         self._stream = stream
-        self._formatter = _formatter or _format_line
+        self._formatter = formatter or _format_line
         self._shutdown = False
 
     def export(
@@ -58,3 +57,7 @@ class FileLogExporter(LogRecordExporter):
             _logger.warning("Exporter already shutdown, ignoring call")
             return
         self._shutdown = True
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Nothing is buffered in this exporter, so this method does nothing."""
+        return True

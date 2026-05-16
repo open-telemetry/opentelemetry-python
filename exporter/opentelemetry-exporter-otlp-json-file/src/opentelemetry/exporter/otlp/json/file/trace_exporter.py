@@ -17,11 +17,10 @@ class FileSpanExporter(SpanExporter):
     def __init__(
         self,
         stream: IO[str],
-        *,
-        _formatter: Callable[[dict], str] | None = None,
+        formatter: Callable[[dict], str] | None = None,
     ) -> None:
         self._stream = stream
-        self._formatter = _formatter or _format_line
+        self._formatter = formatter or _format_line
         self._shutdown = False
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:

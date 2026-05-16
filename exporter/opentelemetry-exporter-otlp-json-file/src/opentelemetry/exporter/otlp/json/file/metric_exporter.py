@@ -6,7 +6,7 @@ from collections.abc import Callable
 from os import environ
 from typing import IO
 
-from opentelemetry.exporter.otlp.json.common._internal.metrics_encoder import (
+from opentelemetry.exporter.otlp.json.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.json.file._internal import _format_line
@@ -22,17 +22,17 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk.metrics._internal.aggregation import (
-    Aggregation,
+from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    MetricExporter,
+    MetricExportResult,
+    MetricsData,
+)
+from opentelemetry.sdk.metrics.view import (
+    Aggregation,
     ExplicitBucketHistogramAggregation,
     ExponentialBucketHistogramAggregation,
 )
-from opentelemetry.sdk.metrics._internal.export import (
-    MetricExporter,
-    MetricExportResult,
-)
-from opentelemetry.sdk.metrics._internal.point import MetricsData
 
 _logger = logging.getLogger(__name__)
 
@@ -41,11 +41,10 @@ class FileMetricExporter(MetricExporter):
     def __init__(
         self,
         stream: IO[str],
+        formatter: Callable[[dict], str] | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
-        *,
-        _formatter: Callable[[dict], str] | None = None,
     ) -> None:
         MetricExporter.__init__(
             self,
@@ -53,7 +52,7 @@ class FileMetricExporter(MetricExporter):
             preferred_aggregation=_get_aggregation(preferred_aggregation),
         )
         self._stream = stream
-        self._formatter = _formatter or _format_line
+        self._formatter = formatter or _format_line
         self._shutdown = False
 
     def export(
