@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: Update exporter to use new HTTP transport package
