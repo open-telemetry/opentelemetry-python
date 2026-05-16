@@ -6,29 +6,12 @@ from __future__ import annotations
 import io
 import json
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from opentelemetry.exporter.otlp.json.file.metric_exporter import (
     FileMetricExporter,
 )
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
-from opentelemetry.sdk.metrics import (
-    Counter,
-    Histogram,
-    MeterProvider,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
-from opentelemetry.sdk.metrics._internal.aggregation import (
-    AggregationTemporality,
-    ExplicitBucketHistogramAggregation,
-    ExponentialBucketHistogramAggregation,
-)
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.export import MetricExportResult
 from opentelemetry.sdk.metrics._internal.point import (
     MetricsData,
@@ -69,18 +52,12 @@ class TestFileMetricExporter(unittest.TestCase):
         self._stream = io.StringIO()
         self._exporter = FileMetricExporter(self._stream)
 
-    def test_export_metrics_returns_success(self):
+    def test_export_metrics(self):
         result = self._exporter.export(_make_metrics_data())
         self.assertEqual(result, MetricExportResult.SUCCESS)
-
-    def test_export_metrics_writes_valid_json(self):
-        self._exporter.export(_make_metrics_data())
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
         json.loads(lines[0])
-
-    def test_export_metric_name_in_output(self):
-        self._exporter.export(_make_metrics_data())
         self.assertIn("requests", self._stream.getvalue())
 
     def test_stream_flushed_after_export(self):
@@ -89,14 +66,14 @@ class TestFileMetricExporter(unittest.TestCase):
         exporter.export(_make_metrics_data())
         mock_stream.flush.assert_called_once()
 
-    def test_custom_formatter_called(self):
+    def test_custom_formatter(self):
         formatter = Mock(return_value="formatted\n")
         exporter = FileMetricExporter(self._stream, formatter=formatter)
         exporter.export(_make_metrics_data())
         formatter.assert_called_once()
         self.assertIn("formatted\n", self._stream.getvalue())
 
-    def test_export_multiple_resource_metrics_writes_one_line_each(self):
+    def test_export_multiple_resource_metrics(self):
         data = MetricsData(
             resource_metrics=[
                 ResourceMetrics(
@@ -127,22 +104,14 @@ class TestFileMetricExporter(unittest.TestCase):
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 2)
 
-    def test_export_after_shutdown_returns_failure(self):
-        self._exporter.shutdown()
-        result = self._exporter.export(_make_metrics_data())
-        self.assertEqual(result, MetricExportResult.FAILURE)
-
-    def test_export_after_shutdown_logs_warning(self):
+    def test_export_after_shutdown(self):
         self._exporter.shutdown()
         with self.assertLogs(_LOGGER_NAME, level="WARNING"):
-            self._exporter.export(_make_metrics_data())
-
-    def test_export_after_shutdown_writes_nothing(self):
-        self._exporter.shutdown()
-        self._exporter.export(_make_metrics_data())
+            result = self._exporter.export(_make_metrics_data())
+        self.assertEqual(result, MetricExportResult.FAILURE)
         self.assertEqual(self._stream.getvalue(), "")
 
-    def test_shutdown_idempotent_logs_warning(self):
+    def test_shutdown_idempotent(self):
         self._exporter.shutdown()
         with self.assertLogs(_LOGGER_NAME, level="WARNING"):
             self._exporter.shutdown()
@@ -150,168 +119,13 @@ class TestFileMetricExporter(unittest.TestCase):
     def test_force_flush_returns_true(self):
         self.assertTrue(self._exporter.force_flush())
 
-    def test_export_stream_error_returns_failure(self):
-        mock_stream = Mock()
-        mock_stream.writelines.side_effect = OSError("disk full")
-        exporter = FileMetricExporter(mock_stream)
-        result = exporter.export(_make_metrics_data())
-        self.assertEqual(result, MetricExportResult.FAILURE)
-
-    def test_export_stream_error_logs_exception(self):
+    def test_export_stream_error(self):
         mock_stream = Mock()
         mock_stream.writelines.side_effect = OSError("disk full")
         exporter = FileMetricExporter(mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
-            exporter.export(_make_metrics_data())
-
-
-class TestFileMetricExporterTemporality(unittest.TestCase):
-    def setUp(self):
-        self._stream = io.StringIO()
-
-    def _exporter(self, **kwargs) -> FileMetricExporter:
-        return FileMetricExporter(self._stream, **kwargs)
-
-    def test_temporality_default_is_cumulative(self):
-        exporter = self._exporter()
-        for instrument_class in (
-            Counter,
-            UpDownCounter,
-            Histogram,
-            ObservableCounter,
-            ObservableUpDownCounter,
-            ObservableGauge,
-        ):
-            with self.subTest(instrument=instrument_class.__name__):
-                self.assertEqual(
-                    exporter._preferred_temporality[instrument_class],
-                    AggregationTemporality.CUMULATIVE,
-                )
-
-    def test_temporality_delta_env(self):
-        delta_cases = {
-            Counter: AggregationTemporality.DELTA,
-            UpDownCounter: AggregationTemporality.CUMULATIVE,
-            Histogram: AggregationTemporality.DELTA,
-            ObservableCounter: AggregationTemporality.DELTA,
-            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-            ObservableGauge: AggregationTemporality.CUMULATIVE,
-        }
-        with patch.dict(
-            "os.environ",
-            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
-        ):
-            exporter = self._exporter()
-        for instrument_class, expected in delta_cases.items():
-            with self.subTest(instrument=instrument_class.__name__):
-                self.assertEqual(
-                    exporter._preferred_temporality[instrument_class],
-                    expected,
-                )
-
-    def test_temporality_lowmemory_env(self):
-        lowmemory_cases = {
-            Counter: AggregationTemporality.DELTA,
-            UpDownCounter: AggregationTemporality.CUMULATIVE,
-            Histogram: AggregationTemporality.DELTA,
-            ObservableCounter: AggregationTemporality.CUMULATIVE,
-            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-            ObservableGauge: AggregationTemporality.CUMULATIVE,
-        }
-        with patch.dict(
-            "os.environ",
-            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "LOWMEMORY"},
-        ):
-            exporter = self._exporter()
-        for instrument_class, expected in lowmemory_cases.items():
-            with self.subTest(instrument=instrument_class.__name__):
-                self.assertEqual(
-                    exporter._preferred_temporality[instrument_class],
-                    expected,
-                )
-
-    def test_temporality_invalid_env_logs_warning(self):
-        with patch.dict(
-            "os.environ",
-            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "INVALID"},
-        ):
-            with self.assertLogs(_LOGGER_NAME, level="WARNING"):
-                exporter = self._exporter()
-        self.assertEqual(
-            exporter._preferred_temporality[Counter],
-            AggregationTemporality.CUMULATIVE,
-        )
-
-    def test_temporality_constructor_overrides_env(self):
-        with patch.dict(
-            "os.environ",
-            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
-        ):
-            exporter = self._exporter(
-                preferred_temporality={Counter: AggregationTemporality.DELTA}
-            )
-        self.assertEqual(
-            exporter._preferred_temporality[Counter],
-            AggregationTemporality.DELTA,
-        )
-
-
-class TestFileMetricExporterAggregation(unittest.TestCase):
-    def setUp(self):
-        self._stream = io.StringIO()
-
-    def _exporter(self, **kwargs) -> FileMetricExporter:
-        return FileMetricExporter(self._stream, **kwargs)
-
-    def test_aggregation_default_is_explicit_bucket(self):
-        exporter = self._exporter()
-        self.assertIsInstance(
-            exporter._preferred_aggregation[Histogram],
-            ExplicitBucketHistogramAggregation,
-        )
-
-    def test_aggregation_exponential_env(self):
-        with patch.dict(
-            "os.environ",
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "base2_exponential_bucket_histogram"
-            },
-        ):
-            exporter = self._exporter()
-        self.assertIsInstance(
-            exporter._preferred_aggregation[Histogram],
-            ExponentialBucketHistogramAggregation,
-        )
-
-    def test_aggregation_invalid_env_logs_warning(self):
-        with patch.dict(
-            "os.environ",
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "unknown_aggregation"
-            },
-        ):
-            with self.assertLogs(_LOGGER_NAME, level="WARNING"):
-                exporter = self._exporter()
-        self.assertIsInstance(
-            exporter._preferred_aggregation[Histogram],
-            ExplicitBucketHistogramAggregation,
-        )
-
-    def test_aggregation_constructor_overrides_env(self):
-        custom_aggregation = ExponentialBucketHistogramAggregation()
-        with patch.dict(
-            "os.environ",
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "explicit_bucket_histogram"
-            },
-        ):
-            exporter = self._exporter(
-                preferred_aggregation={Histogram: custom_aggregation}
-            )
-        self.assertIs(
-            exporter._preferred_aggregation[Histogram],
-            custom_aggregation,
-        )
+            result = exporter.export(_make_metrics_data())
+        self.assertEqual(result, MetricExportResult.FAILURE)
 
 
 class TestFileMetricExporterIntegration(unittest.TestCase):

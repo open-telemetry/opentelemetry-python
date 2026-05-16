@@ -48,21 +48,15 @@ class TestFileSpanExporter(unittest.TestCase):
         self.assertEqual(result, SpanExportResult.SUCCESS)
         self.assertEqual(self._stream.getvalue(), "")
 
-    def test_export_single_span_returns_success(self):
-        result = self._exporter.export(self._make_span())
+    def test_export_single_span(self):
+        result = self._exporter.export(self._make_span("my-span"))
         self.assertEqual(result, SpanExportResult.SUCCESS)
-
-    def test_export_single_span_writes_one_json_line(self):
-        self._exporter.export(self._make_span())
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        json.loads(lines[0])  # must be valid JSON
-
-    def test_export_span_name_in_output(self):
-        self._exporter.export(self._make_span("my-span"))
+        json.loads(lines[0])
         self.assertIn("my-span", self._stream.getvalue())
 
-    def test_export_multiple_spans_same_resource_writes_one_line(self):
+    def test_export_multiple_spans_same_resource(self):
         with self._tracer.start_as_current_span("first"):
             pass
         with self._tracer.start_as_current_span("second"):
@@ -80,53 +74,37 @@ class TestFileSpanExporter(unittest.TestCase):
         exporter.export(self._make_span())
         mock_stream.flush.assert_called_once()
 
-    def test_custom_formatter_called(self):
+    def test_custom_formatter(self):
         formatter = Mock(return_value="formatted\n")
         exporter = FileSpanExporter(self._stream, formatter=formatter)
         exporter.export(self._make_span())
         formatter.assert_called_once()
         self.assertIn("formatted\n", self._stream.getvalue())
 
-    def test_export_after_shutdown_returns_failure(self):
-        self._exporter.shutdown()
-        result = self._exporter.export(self._make_span())
-        self.assertEqual(result, SpanExportResult.FAILURE)
-
-    def test_export_after_shutdown_logs_warning(self):
+    def test_export_after_shutdown(self):
         self._exporter.shutdown()
         with self.assertLogs(_LOGGER_NAME, level="WARNING"):
-            self._exporter.export([])
-
-    def test_export_after_shutdown_writes_nothing(self):
-        self._exporter.shutdown()
-        self._exporter.export(self._make_span())
+            result = self._exporter.export(self._make_span())
+        self.assertEqual(result, SpanExportResult.FAILURE)
         self.assertEqual(self._stream.getvalue(), "")
 
-    def test_shutdown_idempotent_logs_warning(self):
+    def test_shutdown_idempotent(self):
         self._exporter.shutdown()
         with self.assertLogs(_LOGGER_NAME, level="WARNING"):
             self._exporter.shutdown()
 
     def test_force_flush_returns_true(self):
         self.assertTrue(self._exporter.force_flush())
-
-    def test_force_flush_returns_true_after_export(self):
         self._exporter.export(self._make_span())
         self.assertTrue(self._exporter.force_flush())
 
-    def test_export_stream_error_returns_failure(self):
-        mock_stream = Mock()
-        mock_stream.writelines.side_effect = OSError("disk full")
-        exporter = FileSpanExporter(mock_stream)
-        result = exporter.export(self._make_span())
-        self.assertEqual(result, SpanExportResult.FAILURE)
-
-    def test_export_stream_error_logs_exception(self):
+    def test_export_stream_error(self):
         mock_stream = Mock()
         mock_stream.writelines.side_effect = OSError("disk full")
         exporter = FileSpanExporter(mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
-            exporter.export(self._make_span())
+            result = exporter.export(self._make_span())
+        self.assertEqual(result, SpanExportResult.FAILURE)
 
 
 class TestFileSpanExporterIntegration(unittest.TestCase):
