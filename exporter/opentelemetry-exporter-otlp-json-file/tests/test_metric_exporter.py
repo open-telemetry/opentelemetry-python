@@ -1,15 +1,24 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations
-
 import io
-import json
+import os
+import sys
+import tempfile
 import unittest
+from typing import IO
 from unittest.mock import Mock
 
+from opentelemetry.exporter.otlp.json.common.metrics_encoder import (
+    encode_metrics,
+)
+from opentelemetry.exporter.otlp.json.file._internal import _format_line
 from opentelemetry.exporter.otlp.json.file.metric_exporter import (
     FileMetricExporter,
+)
+from opentelemetry.metrics import Observation
+from opentelemetry.proto_json.metrics.v1.metrics import (
+    ResourceMetrics as OtlpResourceMetrics,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.export import MetricExportResult
@@ -19,7 +28,6 @@ from opentelemetry.sdk.metrics._internal.point import (
     ScopeMetrics,
 )
 from opentelemetry.sdk.metrics.export import (
-    InMemoryMetricReader,
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import Resource
@@ -27,6 +35,23 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.metrictestutil import _generate_gauge, _generate_sum
 
 _LOGGER_NAME = "opentelemetry.exporter.otlp.json.file.metric_exporter"
+
+
+class _CapturingMetricExporter(FileMetricExporter):
+    def __init__(self, *, stream: IO[str]) -> None:
+        super().__init__(stream=stream)
+        self.last_metrics_data: MetricsData | None = None
+
+    def export(
+        self,
+        metrics_data: MetricsData,
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
+        self.last_metrics_data = metrics_data
+        return super().export(
+            metrics_data, timeout_millis=timeout_millis, **kwargs
+        )
 
 
 def _make_metrics_data() -> MetricsData:
@@ -50,25 +75,25 @@ def _make_metrics_data() -> MetricsData:
 class TestFileMetricExporter(unittest.TestCase):
     def setUp(self):
         self._stream = io.StringIO()
-        self._exporter = FileMetricExporter(self._stream)
+        self._exporter = FileMetricExporter(stream=self._stream)
 
     def test_export_metrics(self):
         result = self._exporter.export(_make_metrics_data())
         self.assertEqual(result, MetricExportResult.SUCCESS)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        json.loads(lines[0])
-        self.assertIn("requests", self._stream.getvalue())
+        rm = OtlpResourceMetrics.from_json(lines[0])
+        self.assertEqual(rm.scope_metrics[0].metrics[0].name, "requests")
 
     def test_stream_flushed_after_export(self):
         mock_stream = Mock()
-        exporter = FileMetricExporter(mock_stream)
+        exporter = FileMetricExporter(stream=mock_stream)
         exporter.export(_make_metrics_data())
         mock_stream.flush.assert_called_once()
 
     def test_custom_formatter(self):
         formatter = Mock(return_value="formatted\n")
-        exporter = FileMetricExporter(self._stream, formatter=formatter)
+        exporter = FileMetricExporter(stream=self._stream, formatter=formatter)
         exporter.export(_make_metrics_data())
         formatter.assert_called_once()
         self.assertIn("formatted\n", self._stream.getvalue())
@@ -103,6 +128,14 @@ class TestFileMetricExporter(unittest.TestCase):
         self._exporter.export(data)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 2)
+        names = {
+            OtlpResourceMetrics.from_json(line)
+            .scope_metrics[0]
+            .metrics[0]
+            .name
+            for line in lines
+        }
+        self.assertEqual(names, {"counter_a", "gauge_b"})
 
     def test_export_after_shutdown(self):
         self._exporter.shutdown()
@@ -122,23 +155,40 @@ class TestFileMetricExporter(unittest.TestCase):
     def test_export_stream_error(self):
         mock_stream = Mock()
         mock_stream.writelines.side_effect = OSError("disk full")
-        exporter = FileMetricExporter(mock_stream)
+        exporter = FileMetricExporter(stream=mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
             result = exporter.export(_make_metrics_data())
         self.assertEqual(result, MetricExportResult.FAILURE)
 
+    def test_export_with_path(self):
+        tmp_dir = tempfile.TemporaryDirectory()
+        path = os.path.join(tmp_dir.name, "output.jsonl")
+        exporter = FileMetricExporter(path)
+        exporter.export(_make_metrics_data())
+        exporter.shutdown()
+        with open(path) as f:
+            rm = OtlpResourceMetrics.from_json(f.read().splitlines()[0])
+        self.assertEqual(rm.scope_metrics[0].metrics[0].name, "requests")
+        tmp_dir.cleanup()
 
-class TestFileMetricExporterIntegration(unittest.TestCase):
+    def test_path_and_stream_raises(self):
+        with self.assertRaises(ValueError):
+            FileMetricExporter("output.jsonl", stream=self._stream)  # type: ignore
+
+    def test_default_stream_is_stdout(self):
+        exporter = FileMetricExporter()
+        self.assertIs(exporter._stream, sys.stdout)
+
+
+class TestFileMetricExporterRoundTrip(unittest.TestCase):
     def setUp(self):
         self._stream = io.StringIO()
-        self._file_exporter = FileMetricExporter(self._stream)
-        self._in_memory = InMemoryMetricReader()
+        self._exporter = _CapturingMetricExporter(stream=self._stream)
         self._provider = MeterProvider(
             metric_readers=[
                 PeriodicExportingMetricReader(
-                    self._file_exporter, export_interval_millis=100_000
+                    self._exporter, export_interval_millis=100_000
                 ),
-                self._in_memory,
             ]
         )
         self._meter = self._provider.get_meter(__name__)
@@ -146,45 +196,31 @@ class TestFileMetricExporterIntegration(unittest.TestCase):
     def tearDown(self):
         self._provider.shutdown()
 
-    def _metric_names_and_values(
-        self, metrics_data
-    ) -> dict[str, list[int | float]]:
-        result: dict[str, list[int | float]] = {}
-        for rm in metrics_data.resource_metrics:
-            for sm in rm.scope_metrics:
-                for m in sm.metrics:
-                    result[m.name] = [
-                        getattr(dp, "value", getattr(dp, "sum", None))
-                        for dp in m.data.data_points
-                    ]
-        return result
+    def _expected(self) -> str:
+        return "".join(
+            _format_line(rm.to_dict())
+            for rm in encode_metrics(
+                self._exporter.last_metrics_data  # type: ignore
+            ).resource_metrics
+        )
 
-    def test_counter_matches_in_memory(self):
-        counter = self._meter.create_counter("requests")
-        counter.add(42)
+    def test_synchronous_instruments_match_in_memory(self):
+        self._meter.create_counter("req.count").add(10)
+        self._meter.create_up_down_counter("queue.depth").add(-3)
+        self._meter.create_histogram("req.duration").record(1.5)
+        self._meter.create_gauge("cpu.temp").set(72.0)
         self._provider.force_flush()
-        metrics_data = self._in_memory.get_metrics_data()
+        self.assertEqual(self._stream.getvalue(), self._expected())
 
-        self.assertIn("requests", self._stream.getvalue())
-        in_memory_nv = self._metric_names_and_values(metrics_data)
-        self.assertIn("requests", in_memory_nv)
-        self.assertEqual(in_memory_nv["requests"], [42])
-
-    def test_histogram_matches_in_memory(self):
-        histogram = self._meter.create_histogram("latency")
-        histogram.record(1.5)
-        histogram.record(3.0)
+    def test_observable_instruments_match_in_memory(self):
+        self._meter.create_observable_counter(
+            "obs.req.count", callbacks=[lambda _: [Observation(20)]]
+        )
+        self._meter.create_observable_up_down_counter(
+            "obs.queue.depth", callbacks=[lambda _: [Observation(-7)]]
+        )
+        self._meter.create_observable_gauge(
+            "obs.cpu.temp", callbacks=[lambda _: [Observation(55.5)]]
+        )
         self._provider.force_flush()
-        metrics_data = self._in_memory.get_metrics_data()
-
-        self.assertIn("latency", self._stream.getvalue())
-        in_memory_nv = self._metric_names_and_values(metrics_data)
-        self.assertIn("latency", in_memory_nv)
-        self.assertEqual(in_memory_nv["latency"], [4.5])
-
-    def test_stream_output_is_valid_json(self):
-        counter = self._meter.create_counter("ops")
-        counter.add(1)
-        self._provider.force_flush()
-        for line in self._stream.getvalue().splitlines():
-            json.loads(line)
+        self.assertEqual(self._stream.getvalue(), self._expected())

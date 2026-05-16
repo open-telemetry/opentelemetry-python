@@ -1,9 +1,13 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import logging
+import sys
 from collections.abc import Callable, Sequence
-from typing import IO
+from os import PathLike
+from typing import IO, overload
 
 from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.json.file._internal import _format_line
@@ -20,12 +24,47 @@ _logger.addFilter(DuplicateFilter())
 
 
 class FileLogExporter(LogRecordExporter):
+    @overload
     def __init__(
         self,
+        path: str | PathLike[str],
+        *,
+        formatter: Callable[[dict], str] | None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
         stream: IO[str],
         formatter: Callable[[dict], str] | None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        formatter: Callable[[dict], str] | None = None,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        path: str | PathLike[str] | None = None,
+        *,
+        stream: IO[str] | None = None,
+        formatter: Callable[[dict], str] | None = None,
     ) -> None:
-        self._stream = stream
+        if path is not None and stream is not None:
+            raise ValueError("Cannot specify both 'path' and 'stream'")
+        if path is not None:
+            self._stream: IO[str] = open(path, "a")
+            self._owns_stream = True
+        elif stream is not None:
+            self._stream = stream
+            self._owns_stream = False
+        else:
+            self._stream = sys.stdout
+            self._owns_stream = False
         self._formatter = formatter or _format_line
         self._shutdown = False
 
@@ -57,7 +96,5 @@ class FileLogExporter(LogRecordExporter):
             _logger.warning("Exporter already shutdown, ignoring call")
             return
         self._shutdown = True
-
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        """Nothing is buffered in this exporter, so this method does nothing."""
-        return True
+        if self._owns_stream:
+            self._stream.close()

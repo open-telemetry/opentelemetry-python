@@ -1,11 +1,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations
-
 import io
-import json
-import logging
+import os
+import sys
+import tempfile
 import unittest
 from unittest.mock import Mock
 
@@ -15,9 +14,9 @@ from opentelemetry.exporter.otlp.json.file._internal import _format_line
 from opentelemetry.exporter.otlp.json.file._log_exporter import (
     FileLogExporter,
 )
+from opentelemetry.proto_json.logs.v1.logs import ResourceLogs
 from opentelemetry.sdk._logs import (
     LoggerProvider,
-    LoggingHandler,
     ReadableLogRecord,
 )
 from opentelemetry.sdk._logs.export import (
@@ -49,7 +48,7 @@ def _make_log_record(
 class TestFileLogExporter(unittest.TestCase):
     def setUp(self):
         self._stream = io.StringIO()
-        self._exporter = FileLogExporter(self._stream)
+        self._exporter = FileLogExporter(stream=self._stream)
 
     def test_export_empty_sequence(self):
         result = self._exporter.export([])
@@ -61,8 +60,11 @@ class TestFileLogExporter(unittest.TestCase):
         self.assertEqual(result, LogRecordExportResult.SUCCESS)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        json.loads(lines[0])
-        self.assertIn("hello from test", self._stream.getvalue())
+        rl = ResourceLogs.from_json(lines[0])
+        self.assertEqual(
+            rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore
+            "hello from test",
+        )
 
     def test_export_multiple_logs_same_resource(self):
         logs = [
@@ -72,8 +74,8 @@ class TestFileLogExporter(unittest.TestCase):
         self._exporter.export(logs)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        data = json.loads(lines[0])
-        total_logs = sum(len(sl["logRecords"]) for sl in data["scopeLogs"])
+        rl = ResourceLogs.from_json(lines[0])
+        total_logs = sum(len(sl.log_records) for sl in rl.scope_logs)
         self.assertEqual(total_logs, 2)
 
     def test_export_logs_different_resources(self):
@@ -84,16 +86,24 @@ class TestFileLogExporter(unittest.TestCase):
         self._exporter.export(logs)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 2)
+        bodies = {
+            ResourceLogs.from_json(line)
+            .scope_logs[0]
+            .log_records[0]
+            .body.string_value  # type: ignore
+            for line in lines
+        }
+        self.assertEqual(bodies, {"from-a", "from-b"})
 
     def test_stream_flushed_after_export(self):
         mock_stream = Mock()
-        exporter = FileLogExporter(mock_stream)
+        exporter = FileLogExporter(stream=mock_stream)
         exporter.export([_make_log_record()])
         mock_stream.flush.assert_called_once()
 
     def test_custom_formatter(self):
         formatter = Mock(return_value="formatted\n")
-        exporter = FileLogExporter(self._stream, formatter=formatter)
+        exporter = FileLogExporter(stream=self._stream, formatter=formatter)
         exporter.export([_make_log_record()])
         formatter.assert_called_once()
         self.assertIn("formatted\n", self._stream.getvalue())
@@ -110,22 +120,41 @@ class TestFileLogExporter(unittest.TestCase):
         with self.assertLogs(_LOGGER_NAME, level="WARNING"):
             self._exporter.shutdown()
 
-    def test_force_flush_returns_true(self):
-        self.assertTrue(self._exporter.force_flush())
-
     def test_export_stream_error(self):
         mock_stream = Mock()
         mock_stream.writelines.side_effect = OSError("disk full")
-        exporter = FileLogExporter(mock_stream)
+        exporter = FileLogExporter(stream=mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
             result = exporter.export([_make_log_record()])
         self.assertEqual(result, LogRecordExportResult.FAILURE)
 
+    def test_export_with_path(self):
+        tmp_dir = tempfile.TemporaryDirectory()
+        path = os.path.join(tmp_dir.name, "output.jsonl")
+        exporter = FileLogExporter(path)
+        exporter.export([_make_log_record("hello from path")])
+        exporter.shutdown()
+        with open(path) as f:
+            rl = ResourceLogs.from_json(f.read().splitlines()[0])
+        self.assertEqual(
+            rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore
+            "hello from path",
+        )
+        tmp_dir.cleanup()
 
-class TestFileLogExporterIntegration(unittest.TestCase):
+    def test_path_and_stream_raises(self):
+        with self.assertRaises(ValueError):
+            FileLogExporter("output.jsonl", stream=self._stream)  # type: ignore
+
+    def test_default_stream_is_stdout(self):
+        exporter = FileLogExporter()
+        self.assertIs(exporter._stream, sys.stdout)
+
+
+class TestFileLogExporterRoundTrip(unittest.TestCase):
     def setUp(self):
         self._stream = io.StringIO()
-        self._file_exporter = FileLogExporter(self._stream)
+        self._file_exporter = FileLogExporter(stream=self._stream)
         self._in_memory = InMemoryLogRecordExporter()
         provider = LoggerProvider()
         provider.add_log_record_processor(
@@ -134,14 +163,7 @@ class TestFileLogExporterIntegration(unittest.TestCase):
         provider.add_log_record_processor(
             SimpleLogRecordProcessor(self._in_memory)
         )
-        handler = LoggingHandler(logger_provider=provider)
-        self._logger = logging.getLogger("test.file.log.exporter.integration")
-        self._logger.addHandler(handler)
-        self._logger.setLevel(logging.DEBUG)
-
-    def tearDown(self):
-        for h in self._logger.handlers[:]:
-            self._logger.removeHandler(h)
+        self._logger = provider.get_logger("test.integration")
 
     def _expected(self) -> str:
         return "".join(
@@ -151,10 +173,23 @@ class TestFileLogExporterIntegration(unittest.TestCase):
         )
 
     def test_single_log_matches_in_memory(self):
-        self._logger.info("hello from integration")
+        self._logger.emit(
+            LogRecord(
+                body="hello from integration",
+                severity_number=SeverityNumber.INFO,
+            )
+        )
         self.assertEqual(self._stream.getvalue(), self._expected())
 
     def test_multiple_logs_match_in_memory(self):
-        self._logger.info("first message")
-        self._logger.warning("second message")
+        self._logger.emit(
+            LogRecord(
+                body="first message", severity_number=SeverityNumber.INFO
+            )
+        )
+        self._logger.emit(
+            LogRecord(
+                body="second message", severity_number=SeverityNumber.WARN
+            )
+        )
         self.assertEqual(self._stream.getvalue(), self._expected())
