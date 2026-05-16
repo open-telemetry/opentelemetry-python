@@ -30,9 +30,9 @@ class BatchCountingHTTPExporter(OTLPMetricExporter):
         super().__init__(*args, **kwargs)
         self.export_call_count = 0
 
-    def _export(self, *args, **kwargs):
+    def _export_with_retries(self, *args, **kwargs):
         self.export_call_count += 1
-        return super()._export(*args, **kwargs)
+        return super()._export_with_retries(*args, **kwargs)
 
 
 class TestOTLPHTTPExporter(BaseTestOTLPExporter, TestBase):
