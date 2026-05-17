@@ -1,24 +1,15 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from opentelemetry._logs import set_logger_provider
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _parse_headers,
+    load_entry_point,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
@@ -60,8 +51,8 @@ _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 
 
 def _map_compression(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
+    value: str | None, compression_enum: type
+) -> object | None:
     """Map a compression string to the given Compression enum value."""
     if value is None or value.lower() == "none":
         return None
@@ -136,19 +127,36 @@ def _create_otlp_grpc_log_exporter(
     )
 
 
+_LOG_EXPORTER_REGISTRY: dict = {
+    "otlp_http": _create_otlp_http_log_exporter,
+    "otlp_grpc": _create_otlp_grpc_log_exporter,
+    "console": lambda _: ConsoleLogRecordExporter(),
+}
+
+
 def _create_log_record_exporter(
     config: LogRecordExporterConfig,
 ) -> LogRecordExporter:
-    """Create a log record exporter from config."""
-    if config.console is not None:
-        return _create_console_log_exporter()
-    if config.otlp_http is not None:
-        return _create_otlp_http_log_exporter(config.otlp_http)
-    if config.otlp_grpc is not None:
-        return _create_otlp_grpc_log_exporter(config.otlp_grpc)
+    """Create a log record exporter from config.
+
+    Known exporter types are checked via typed fields on the LogRecordExporter
+    dataclass. Unknown exporter names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_logs_exporter`` entry point group.
+    """
     if config.otlp_file_development is not None:
         raise ConfigurationError(
-            "otlp_file_development log exporter is experimental and not yet supported."
+            "otlp_file_development log exporter is experimental "
+            "and not yet supported."
+        )
+    for name, factory in _LOG_EXPORTER_REGISTRY.items():
+        value = getattr(config, name, None)
+        if value is not None:
+            return factory(value)
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_logs_exporter", name)(
+            **(plugin_config or {})
         )
     raise ConfigurationError(
         "No exporter type specified in log record exporter config. "
@@ -216,8 +224,8 @@ def _create_log_record_processor(
 
 
 def create_logger_provider(
-    config: Optional[LoggerProviderConfig],
-    resource: Optional[Resource] = None,
+    config: LoggerProviderConfig | None,
+    resource: Resource | None = None,
 ) -> LoggerProvider:
     """Create an SDK LoggerProvider from declarative config.
 
@@ -251,8 +259,8 @@ def create_logger_provider(
 
 
 def configure_logger_provider(
-    config: Optional[LoggerProviderConfig],
-    resource: Optional[Resource] = None,
+    config: LoggerProviderConfig | None,
+    resource: Resource | None = None,
 ) -> None:
     """Configure the global LoggerProvider from declarative config.
 

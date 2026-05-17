@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access
 
@@ -20,7 +9,6 @@ from unittest.mock import Mock, patch
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
-from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk._logs import (
     Logger,
     LoggerProvider,
@@ -28,12 +16,12 @@ from opentelemetry.sdk._logs import (
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
-    LoggerMetrics,
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
     _disable_logger_configurator,
     _LoggerConfig,
     _RuleBasedLoggerConfigurator,
+    create_logger_metrics,
 )
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
 from opentelemetry.sdk.resources import Resource
@@ -289,7 +277,7 @@ class TestLogger(unittest.TestCase):
                 "schema_url",
                 {"an": "attribute"},
             ),
-            logger_metrics=LoggerMetrics(NoOpMeterProvider()),
+            logger_metrics=create_logger_metrics(Mock(), False),
             _logger_config=_LoggerConfig.default(),
         )
         return logger, log_record_processor_mock

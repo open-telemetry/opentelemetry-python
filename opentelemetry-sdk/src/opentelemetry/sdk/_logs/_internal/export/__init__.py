@@ -1,24 +1,14 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import abc
 import enum
 import logging
 import sys
+from collections.abc import Callable, Sequence
 from os import environ, linesep
-from typing import IO, Callable, Optional, Sequence
+from typing import IO
 
 from typing_extensions import deprecated
 
@@ -39,13 +29,19 @@ from opentelemetry.sdk._logs import (
 from opentelemetry.sdk._shared_internal import (
     BatchProcessor,
     DuplicateFilter,
-    ProcessorMetrics,
+)
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    create_processor_metrics,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BLRP_MAX_QUEUE_SIZE,
     OTEL_BLRP_SCHEDULE_DELAY,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -186,10 +182,13 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
     ):
         self._exporter = exporter
         self._shutdown = False
-        self._metrics = ProcessorMetrics(
+        self._metrics = create_processor_metrics(
             "logs",
             OtelComponentTypeValues.SIMPLE_LOG_PROCESSOR,
             meter_provider or get_meter_provider(),
+            enabled=parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord):
@@ -299,11 +298,14 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             export_timeout_millis,
             max_queue_size,
             "Log",
-            ProcessorMetrics(
+            create_processor_metrics(
                 "logs",
                 OtelComponentTypeValues.BATCHING_LOG_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
+                enabled=parse_boolean_environment_variable(
+                    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+                ),
             ),
         )
 
@@ -326,7 +328,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod

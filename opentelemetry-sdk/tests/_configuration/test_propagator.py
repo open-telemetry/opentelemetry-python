@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import unittest
 from os import environ
@@ -233,6 +222,40 @@ class TestCreatePropagator(unittest.TestCase):
             return_value=[],
         ):
             config = PropagatorConfig(composite_list="nonexistent")
+            with self.assertRaises(ConfigurationError):
+                create_propagator(config)
+
+    def test_plugin_propagator_via_entry_point(self):
+        mock_propagator = MagicMock()
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = lambda: mock_propagator
+
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[mock_ep],
+        ):
+            config = PropagatorConfig(
+                composite=[
+                    # pylint: disable=unexpected-keyword-arg
+                    TextMapPropagatorConfig(my_custom_propagator={})
+                ]
+            )
+            result = create_propagator(config)
+
+        self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
+        self.assertIs(result._propagators[0], mock_propagator)  # type: ignore[attr-defined]
+
+    def test_unknown_composite_propagator_raises(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            config = PropagatorConfig(
+                composite=[
+                    # pylint: disable=unexpected-keyword-arg
+                    TextMapPropagatorConfig(nonexistent={})
+                ]
+            )
             with self.assertRaises(ConfigurationError):
                 create_propagator(config)
 

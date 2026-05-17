@@ -1,24 +1,15 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 import logging
-from typing import Optional, Set, Type
 
 from opentelemetry import metrics
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _parse_headers,
+    load_entry_point,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     Aggregation as AggregationConfig,
@@ -95,7 +86,7 @@ _DEFAULT_EXPORT_INTERVAL_MILLIS = 60000
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 
 # Instrument type → SDK instrument class mapping (for View selectors).
-_INSTRUMENT_TYPE_MAP: dict[InstrumentType, Type] = {
+_INSTRUMENT_TYPE_MAP: dict[InstrumentType, type] = {
     InstrumentType.counter: Counter,
     InstrumentType.up_down_counter: UpDownCounter,
     InstrumentType.histogram: Histogram,
@@ -107,7 +98,7 @@ _INSTRUMENT_TYPE_MAP: dict[InstrumentType, Type] = {
 
 
 def _map_temporality(
-    pref: Optional[ExporterTemporalityPreference],
+    pref: ExporterTemporalityPreference | None,
 ) -> dict[type, AggregationTemporality]:
     """Map a temporality preference to an explicit preferred_temporality dict.
 
@@ -148,7 +139,7 @@ def _map_temporality(
 
 
 def _map_histogram_aggregation(
-    pref: Optional[ExporterDefaultHistogramAggregation],
+    pref: ExporterDefaultHistogramAggregation | None,
 ) -> dict[type, Aggregation]:
     """Map a histogram aggregation preference to an explicit preferred_aggregation dict.
 
@@ -223,7 +214,7 @@ def _create_view(config: ViewConfig) -> View:
                 f"Unknown instrument type: {selector.instrument_type!r}"
             )
 
-    attribute_keys: Optional[Set[str]] = None
+    attribute_keys: set[str] | None = None
     if stream.attribute_keys is not None:
         if stream.attribute_keys.excluded:
             _logger.warning(
@@ -266,8 +257,8 @@ def _create_console_metric_exporter(
 
 
 def _map_compression_metric(
-    value: Optional[str], compression_enum: type
-) -> Optional[object]:
+    value: str | None, compression_enum: type
+) -> object | None:
     """Map a compression string to the given Compression enum value."""
     if value is None or value.lower() == "none":
         return None
@@ -349,19 +340,36 @@ def _create_otlp_grpc_metric_exporter(
     )
 
 
+_METRIC_EXPORTER_REGISTRY: dict = {
+    "otlp_http": _create_otlp_http_metric_exporter,
+    "otlp_grpc": _create_otlp_grpc_metric_exporter,
+    "console": _create_console_metric_exporter,
+}
+
+
 def _create_push_metric_exporter(
     config: PushMetricExporterConfig,
 ) -> MetricExporter:
-    """Create a push metric exporter from config."""
-    if config.console is not None:
-        return _create_console_metric_exporter(config.console)
-    if config.otlp_http is not None:
-        return _create_otlp_http_metric_exporter(config.otlp_http)
-    if config.otlp_grpc is not None:
-        return _create_otlp_grpc_metric_exporter(config.otlp_grpc)
+    """Create a push metric exporter from config.
+
+    Known exporter types are checked via typed fields on the PushMetricExporter
+    dataclass. Unknown exporter names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_metrics_exporter`` entry point group.
+    """
     if config.otlp_file_development is not None:
         raise ConfigurationError(
-            "otlp_file_development metric exporter is experimental and not yet supported."
+            "otlp_file_development metric exporter is experimental "
+            "and not yet supported."
+        )
+    for name, factory in _METRIC_EXPORTER_REGISTRY.items():
+        value = getattr(config, name, None)
+        if value is not None:
+            return factory(value)
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_metrics_exporter", name)(
+            **(plugin_config or {})
         )
     raise ConfigurationError(
         "No exporter type specified in push metric exporter config. "
@@ -426,8 +434,8 @@ def _create_exemplar_filter(
 
 
 def create_meter_provider(
-    config: Optional[MeterProviderConfig],
-    resource: Optional[Resource] = None,
+    config: MeterProviderConfig | None,
+    resource: Resource | None = None,
 ) -> MeterProvider:
     """Create an SDK MeterProvider from declarative config.
 
@@ -467,8 +475,8 @@ def create_meter_provider(
 
 
 def configure_meter_provider(
-    config: Optional[MeterProviderConfig],
-    resource: Optional[Resource] = None,
+    config: MeterProviderConfig | None,
+    resource: Resource | None = None,
 ) -> None:
     """Configure the global MeterProvider from declarative config.
 
