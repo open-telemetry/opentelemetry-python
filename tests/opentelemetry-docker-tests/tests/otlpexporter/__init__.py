@@ -1,166 +1,151 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import time
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
-from opentelemetry.context import (
-    _SUPPRESS_INSTRUMENTATION_KEY,
-    attach,
-    detach,
-    set_value,
-)
-from opentelemetry.sdk.metrics._internal.export import (
-    MetricExportResult,
-    PeriodicExportingMetricReader,
-)
-from opentelemetry.sdk.metrics._internal.point import (
-    Metric,
-    NumberDataPoint,
-    Sum,
-)
-from opentelemetry.sdk.metrics.export import (
-    MetricsData,
-    ResourceMetrics,
-    ScopeMetrics,
-)
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
+from opentelemetry.test.otlp_test_server import OtlpProtoTestServer
 
 
-class ExportStatusSpanProcessor(SimpleSpanProcessor):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.export_status = []
-
-    def on_end(self, span):
-        token = attach(set_value("suppress_instrumentation", True))
-        self.export_status.append(self.span_exporter.export((span,)))
-        detach(token)
-
-
-class ExportStatusMetricReader(PeriodicExportingMetricReader):
-    def __init__(self, exporter, **kwargs):
-        # Very short export interval for testing
-        super().__init__(exporter, export_interval_millis=1, **kwargs)
-        self.export_status = []
-
-    def _receive_metrics(self, metrics_data, timeout_millis=10_000, **kwargs):
-        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        try:
-            export_result = self._exporter.export(
-                metrics_data, timeout_millis=timeout_millis
-            )
-            self.export_status.append(export_result)
-        except Exception:
-            self.export_status.append(MetricExportResult.FAILURE)
-        finally:
-            detach(token)
+def _attrs_to_dict(attributes) -> dict:
+    result = {}
+    for kv in attributes:
+        which = kv.value.WhichOneof("value")
+        if which == "string_value":
+            result[kv.key] = kv.value.string_value
+        elif which == "int_value":
+            result[kv.key] = kv.value.int_value
+        elif which == "double_value":
+            result[kv.key] = kv.value.double_value
+        elif which == "bool_value":
+            result[kv.key] = kv.value.bool_value
+    return result
 
 
-class BaseTestOTLPExporter(ABC):
-    @abstractmethod
-    def get_span_processor(self):
-        pass
+class ExporterTracesFunctionalTests(ABC):
+    _server: OtlpProtoTestServer
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._server = OtlpProtoTestServer(host="0.0.0.0", port=4319).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._server.stop()
+        super().tearDownClass()
+
+    def setUp(self):
+        super().setUp()
+        self._tracer_provider = TracerProvider()
+        self._tracer_provider.add_span_processor(
+            SimpleSpanProcessor(self.build_exporter())
+        )
+        self._tracer = self._tracer_provider.get_tracer(__name__)
+        self._server.clear()
+
+    def tearDown(self):
+        self._tracer_provider.shutdown()
+        super().tearDown()
 
     @abstractmethod
-    def get_metric_reader(self):
-        pass
+    def build_exporter(self) -> SpanExporter: ...
 
-    # pylint: disable=no-member
-    def test_export(self):
-        """Test span export"""
-        with self.tracer.start_as_current_span("foo"):
-            with self.tracer.start_as_current_span("bar"):
-                with self.tracer.start_as_current_span("baz"):
+    def test_simple_span_name(self):
+        with self._tracer.start_as_current_span("my-span"):
+            pass
+
+        recorded = self._server.get_span(timeout=5.0)
+        self.assertEqual(recorded.span.name, "my-span")
+
+    def test_span_attributes(self):
+        with self._tracer.start_as_current_span(
+            "attrs-span",
+            attributes={
+                "str_key": "hello",
+                "int_key": 42,
+                "float_key": 3.14,
+                "bool_key": True,
+            },
+        ):
+            pass
+
+        recorded = self._server.get_span(timeout=5.0)
+        attrs = _attrs_to_dict(recorded.span.attributes)
+        self.assertEqual(attrs["str_key"], "hello")
+        self.assertEqual(attrs["int_key"], 42)
+        self.assertAlmostEqual(attrs["float_key"], 3.14, places=5)
+        self.assertEqual(attrs["bool_key"], True)
+
+    def test_nested_spans_parent_child(self):
+        with self._tracer.start_as_current_span("foo"):
+            with self._tracer.start_as_current_span("bar"):
+                with self._tracer.start_as_current_span("baz"):
                     pass
 
-        self.assertTrue(len(self.span_processor.export_status), 3)
+        spans = {
+            r.span.name: r.span
+            for r in self._server.get_spans(count=3, timeout=10.0)
+        }
+        self.assertIn("foo", spans)
+        self.assertIn("bar", spans)
+        self.assertIn("baz", spans)
+        self.assertEqual(spans["baz"].parent_span_id, spans["bar"].span_id)
+        self.assertEqual(spans["bar"].parent_span_id, spans["foo"].span_id)
+        self.assertEqual(spans["foo"].parent_span_id, b"")
 
-        for export_status in self.span_processor.export_status:
-            self.assertEqual(export_status.name, "SUCCESS")
-            self.assertEqual(export_status.value, 0)
+    def test_span_with_event(self):
+        with self._tracer.start_as_current_span("event-span") as span:
+            span.add_event("my-event", {"event_key": "event_val"})
 
-    def test_metrics_export(self):
-        """Test metrics export from full metrics SDK pipeline"""
-        counter = self.meter.create_counter("test_counter")
-        histogram = self.meter.create_histogram("test_histogram")
-        up_down_counter = self.meter.create_up_down_counter(
-            "test_up_down_counter"
-        )
-
-        counter.add(1, {"key1": "value1"})
-        counter.add(2, {"key2": "value2"})
-        histogram.record(1.5, {"key3": "value3"})
-        histogram.record(2.5, {"key4": "value4"})
-        up_down_counter.add(3, {"key5": "value5"})
-        up_down_counter.add(-1, {"key6": "value6"})
-        self.metric_reader.force_flush(timeout_millis=5000)
-        time.sleep(0.1)
-
-        # Verify at least one export happened
-        self.assertTrue(len(self.metric_reader.export_status) >= 1)
-        # Verify all exports succeeded
-        for export_status in self.metric_reader.export_status:
-            self.assertEqual(export_status.name, "SUCCESS")
-            self.assertEqual(export_status.value, 0)
-
-    @abstractmethod
-    def test_metrics_export_batch_size_two(self):
-        """Test metrics max_export_batch_size=2 directly through exporter"""
-
-    def _create_test_metrics_data(self, num_data_points=6):
-        """Create test metrics data with specified number of data points."""
-        data_points = [
-            NumberDataPoint(
-                attributes={"key": f"value{i}"},
-                start_time_unix_nano=1000000 + i,
-                time_unix_nano=2000000 + i,
-                value=i + 1.0,
-            )
-            for i in range(num_data_points)
-        ]
-        metric = Metric(
-            name="otel_test_counter_foobar",
-            description="Test counter metric for batch verification",
-            unit="1",
-            data=Sum(
-                data_points=data_points,
-                aggregation_temporality=1,  # CUMULATIVE
-                is_monotonic=True,
-            ),
-        )
-        scope_metrics = ScopeMetrics(
-            scope=InstrumentationScope(name="test_scope"),
-            metrics=[metric],
-            schema_url=None,
-        )
-        resource_metrics = ResourceMetrics(
-            resource=Resource.create({"service.name": "test-service"}),
-            scope_metrics=[scope_metrics],
-            schema_url=None,
-        )
-
-        return MetricsData(resource_metrics=[resource_metrics]), data_points
-
-    def _verify_batch_export_result(
-        self, result, data_points, batch_counter, max_batch_size=2
-    ):
-        """Verify export result and batch count for export batching tests."""
+        recorded = self._server.get_span(timeout=5.0)
+        self.assertEqual(len(recorded.span.events), 1)
+        event = recorded.span.events[0]
+        self.assertEqual(event.name, "my-event")
         self.assertEqual(
-            result.name, "SUCCESS", f"Expected SUCCESS, got: {result}"
-        )
-        self.assertEqual(
-            result.value, 0, f"Expected result code 0, got: {result.value}"
+            _attrs_to_dict(event.attributes), {"event_key": "event_val"}
         )
 
-        expected_batches = (
-            len(data_points) + max_batch_size - 1
-        ) // max_batch_size
-        self.assertEqual(
-            batch_counter.export_call_count,
-            expected_batches,
-            f"Expected {expected_batches} export calls with max_export_batch_size={max_batch_size} and {len(data_points)} data points, "
-            f"but got {batch_counter.export_call_count} calls",
+    def test_span_with_link(self):
+        from opentelemetry.trace import Link, SpanContext, TraceFlags
+
+        link_trace_id = 0x000000000000000000000000DEADBEEF
+        link_span_id = 0x00000000DEADBEF0
+        link_context = SpanContext(
+            trace_id=link_trace_id,
+            span_id=link_span_id,
+            is_remote=True,
+            trace_flags=TraceFlags(0x01),
         )
+        with self._tracer.start_as_current_span(
+            "linked-span", links=[Link(link_context)]
+        ):
+            pass
+
+        recorded = self._server.get_span(timeout=5.0)
+        self.assertEqual(len(recorded.span.links), 1)
+        link = recorded.span.links[0]
+        self.assertEqual(link.trace_id, link_trace_id.to_bytes(16, "big"))
+        self.assertEqual(link.span_id, link_span_id.to_bytes(8, "big"))
+
+    def test_span_status_ok(self):
+        from opentelemetry.trace import StatusCode
+
+        with self._tracer.start_as_current_span("ok-span") as span:
+            span.set_status(StatusCode.OK)
+
+        recorded = self._server.get_span(timeout=5.0)
+        self.assertEqual(recorded.span.status.code, 1)  # proto OK = 1
+
+    def test_span_status_error(self):
+        from opentelemetry.trace import StatusCode
+
+        with self._tracer.start_as_current_span("error-span") as span:
+            span.set_status(StatusCode.ERROR, "something went wrong")
+
+        recorded = self._server.get_span(timeout=5.0)
+        self.assertEqual(recorded.span.status.code, 2)  # proto ERROR = 2
+        self.assertEqual(recorded.span.status.message, "something went wrong")

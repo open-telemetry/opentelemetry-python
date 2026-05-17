@@ -176,6 +176,7 @@ class OtlpProtoTestServer:
             self._server.shutdown()
             if self._thread is not None:
                 self._thread.join()
+            self._server.server_close()
 
     def __enter__(self) -> OtlpProtoTestServer:
         return self.start()
