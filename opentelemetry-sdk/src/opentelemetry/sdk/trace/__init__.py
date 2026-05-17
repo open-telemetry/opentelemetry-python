@@ -492,7 +492,8 @@ class ReadableSpan:
         return self._status
 
     @property
-    def attributes(self) -> types.Attributes:
+    def attributes(self) -> Mapping[str, types.AttributeValue]:
+        # `or {}` keeps the return non-None; see #4569.
         return MappingProxyType(self._attributes or {})
 
     @property
