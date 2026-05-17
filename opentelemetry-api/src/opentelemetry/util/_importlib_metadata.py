@@ -1,23 +1,18 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+
+"""
+Caching and compatibility wrapper for standard library ``importlib.metadata``.
+
+This module caches ``entry_points()`` to avoid reloading entry points from disk on every call.
+It also normalizes minor differences across python versions 3.10+. References to issues:
+
+- https://github.com/open-telemetry/opentelemetry-python/pull/4735
+- https://github.com/open-telemetry/opentelemetry-python/pull/5203
+"""
 
 from functools import cache
-
-# FIXME: Use importlib.metadata (not importlib_metadata)
-# when support for 3.11 is dropped if the rest of
-# the supported versions at that time have the same API.
-from importlib_metadata import (  # type: ignore
+from importlib.metadata import (
     Distribution,
     EntryPoint,
     EntryPoints,
@@ -26,20 +21,23 @@ from importlib_metadata import (  # type: ignore
     requires,
     version,
 )
-from importlib_metadata import (
-    entry_points as original_entry_points,
-)
+from importlib.metadata import entry_points as original_entry_points
+from typing import Any
+
+
+def _as_entry_points(eps: Any) -> EntryPoints:
+    if isinstance(eps, EntryPoints):
+        return eps
+    # Handle Python 3.10 SelectableGroups (dict-like)
+    return EntryPoints(ep for group_eps in eps.values() for ep in group_eps)
 
 
 @cache
-def _original_entry_points_cached():
-    return original_entry_points()
+def _original_entry_points_cached() -> EntryPoints:
+    return _as_entry_points(original_entry_points())
 
 
 def entry_points(**params) -> EntryPoints:
-    """Replacement for importlib_metadata.entry_points that caches getting all the entry points.
-
-    That part can be very slow, and OTel uses this function many times."""
     return _original_entry_points_cached().select(**params)
 
 

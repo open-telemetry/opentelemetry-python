@@ -1,0 +1,1 @@
+`opentelemetry-api`: remove third-party importlib-metadata in favor of standard library since Python >= 3.10 is now required

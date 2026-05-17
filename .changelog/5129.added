@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add generic resource detector plugin loading to declarative file configuration via the `opentelemetry_resource_detector` entry point group, matching the spec's PluginComponentProvider mechanism

@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from unittest import TestCase
 
@@ -18,6 +7,7 @@ from opentelemetry.metrics import MeterProvider
 from opentelemetry.util._importlib_metadata import (
     EntryPoint,
     EntryPoints,
+    _as_entry_points,
     version,
 )
 from opentelemetry.util._importlib_metadata import (
@@ -111,3 +101,19 @@ class TestEntryPoints(TestCase):
         self.assertEqual(len(entry_points), 0)
 
         self.assertIsInstance(version("opentelemetry-api"), str)
+
+    def test_as_entry_points_selectable_groups_compat(self):
+        """Test that _as_entry_points correctly normalizes dict-like SelectableGroups
+        (returned by importlib.metadata.entry_points() in Python 3.10) into EntryPoints.
+
+        On Python 3.11+, entry_points() returns EntryPoints directly, which is
+        handled by the fast-path in _as_entry_points.
+        """
+        ep1 = EntryPoint(name="foo", value="bar:baz", group="gp")
+        ep2 = EntryPoint(name="foo2", value="bar2:baz2", group="gp")
+        selectable_groups = {"gp": [ep1, ep2]}
+
+        normalized = _as_entry_points(selectable_groups)
+        self.assertIsInstance(normalized, EntryPoints)
+        self.assertEqual(len(normalized), 2)
+        self.assertEqual(list(normalized), [ep1, ep2])

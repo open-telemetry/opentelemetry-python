@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 from typing import Final
@@ -80,7 +69,20 @@ PROCESS_EXECUTABLE_BUILD_ID_HTLHASH: Final = (
     "process.executable.build_id.htlhash"
 )
 """
-Profiling specific build ID for executables. See the OTel specification for Profiles for more information.
+Deterministic build ID for executables.
+Note: GNU and Go build IDs may be stripped or unavailable in some environments
+(e.g., Alpine Linux, Docker images). This attribute provides a deterministic
+build ID computed by hashing the first and last 4096 bytes of the file
+along with its length:
+
+```
+Input   ← Concat(File[:4096], File[-4096:], BigEndianUInt64(Len(File)))
+Digest  ← SHA256(Input)
+BuildID ← Digest[:16]
+```
+
+The result is the first 16 bytes (128 bits) of the SHA256 digest,
+represented as a hex string.
 """
 
 PROCESS_EXECUTABLE_BUILD_ID_PROFILING: Final = (
