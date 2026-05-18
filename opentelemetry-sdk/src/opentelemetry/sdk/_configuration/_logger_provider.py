@@ -50,6 +50,7 @@ _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 
+
 def _create_console_log_exporter() -> ConsoleLogRecordExporter:
     """Create a ConsoleLogRecordExporter."""
     return ConsoleLogRecordExporter()

@@ -97,6 +97,7 @@ def _create_otlp_http_span_exporter(
         compression=compression,  # type: ignore[arg-type]
     )
 
+
 def _create_otlp_grpc_span_exporter(
     config: OtlpGrpcExporterConfig,
 ) -> SpanExporter:

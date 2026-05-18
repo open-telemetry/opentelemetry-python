@@ -155,9 +155,7 @@ class TestMapCompression(unittest.TestCase):
         self.assertIsNone(_map_compression(None, _CompressionWithDeflate))
 
     def test_none_string_returns_none(self):
-        self.assertIsNone(
-            _map_compression("none", _CompressionWithDeflate)
-        )
+        self.assertIsNone(_map_compression("none", _CompressionWithDeflate))
 
     def test_gzip_maps_to_gzip(self):
         self.assertEqual(
