@@ -93,6 +93,36 @@ class TestEnvironmentGetter(unittest.TestCase):
             expected_keys = {"KEY1", "KEY2", "KEY3"}
             self.assertEqual(set(keys), expected_keys)
 
+    def test_get_normalizes_carrier_keys(self):
+        """Test lookup when the carrier stores non-normalized keys."""
+        with patch.dict(os.environ, {}, clear=True):
+            getter = EnvironmentGetter()
+            carrier = {"x-b3-traceid": "abc123"}
+
+            result = getter.get(carrier, "x-b3-traceid")
+
+            self.assertEqual(result, ["abc123"])
+
+    def test_get_uses_carrier_before_environment_snapshot(self):
+        """Test that explicit carriers take precedence over the snapshot."""
+        with patch.dict(os.environ, {"X_B3_TRACEID": "from_env"}):
+            getter = EnvironmentGetter()
+            carrier = {"x-b3-traceid": "from_carrier"}
+
+            result = getter.get(carrier, "x-b3-traceid")
+
+            self.assertEqual(result, ["from_carrier"])
+
+    def test_keys_normalizes_carrier_keys(self):
+        """Test getting normalized keys from an explicit carrier."""
+        with patch.dict(os.environ, {}, clear=True):
+            getter = EnvironmentGetter()
+            keys = getter.keys(
+                {"x-b3-traceid": "value1", "BAGGAGE": "value2"}
+            )
+
+            self.assertEqual(set(keys), {"X_B3_TRACEID", "BAGGAGE"})
+
     def test_keys_empty_environment(self):
         """Test getting keys when environment is empty."""
         with patch.dict(os.environ, {}, clear=True):
@@ -100,20 +130,14 @@ class TestEnvironmentGetter(unittest.TestCase):
             keys = getter.keys({})
             self.assertEqual(keys, [])
 
-    def test_uses_snapshot_not_carrier_parameter(self):
-        """Test that getter uses internal snapshot, not carrier parameter.
-
-        The carrier parameter exists for interface compatibility with
-        Getter[CarrierT], but EnvironmentGetter reads from os.environ at
-        initialization, creating an immutable snapshot.
-        """
+    def test_uses_snapshot_when_carrier_is_empty(self):
+        """Test that getter uses its internal snapshot for an empty carrier."""
         with patch.dict(os.environ, {"TEST_KEY": "test_value"}):
             getter = EnvironmentGetter()
-            # Both return same value from snapshot, carrier is ignored
-            result1 = getter.get({}, "test_key")
-            result2 = getter.get({"test_key": "different"}, "test_key")
-            self.assertEqual(result1, ["test_value"])
-            self.assertEqual(result2, ["test_value"])
+
+            result = getter.get({}, "test_key")
+
+            self.assertEqual(result, ["test_value"])
 
     def test_snapshot_immutability(self):
         """Test that getter snapshot doesn't see changes after initialization."""

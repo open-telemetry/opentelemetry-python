@@ -39,19 +39,36 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
             _normalize_key(k): v for k, v in os.environ.items()
         }
 
+    def _carrier(
+        self, carrier: typing.Mapping[str, str]
+    ) -> typing.Mapping[str, str]:
+        return carrier or self.carrier
+
     def get(
         self, carrier: typing.Mapping[str, str], key: str
     ) -> list[str] | None:
         """Get a value from the environment carrier for the given key.
 
         Args:
-            carrier: Not used; maintained for interface compatibility with Getter[CarrierT]
-            key: The key to look up (case-insensitive)
+            carrier: Mapping to read from. If empty, uses the environment
+                snapshot captured at initialization.
+            key: The key to look up (normalized before lookup)
 
         Returns:
             A list with a single string value if the key exists, None otherwise.
         """
-        val = self.carrier.get(_normalize_key(key))
+        source = self._carrier(carrier)
+        normalized_key = _normalize_key(key)
+        val = source.get(normalized_key)
+        if val is None:
+            val = next(
+                (
+                    carrier_value
+                    for carrier_key, carrier_value in source.items()
+                    if _normalize_key(carrier_key) == normalized_key
+                ),
+                None,
+            )
         if val is None:
             return None
         return [val]
@@ -60,12 +77,13 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
         """Get all keys from the environment carrier.
 
         Args:
-            carrier: Not used; maintained for interface compatibility with Getter[CarrierT]
+            carrier: Mapping to read from. If empty, uses the environment
+                snapshot captured at initialization.
 
         Returns:
             List of all environment variable keys (normalized).
         """
-        return list(self.carrier.keys())
+        return [_normalize_key(key) for key in self._carrier(carrier)]
 
 
 class EnvironmentSetter(Setter[MutableMapping[str, str]]):

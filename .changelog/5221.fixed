@@ -1,0 +1,1 @@
+`opentelemetry-api`: use provided carriers for normalized `EnvironmentGetter` lookups
