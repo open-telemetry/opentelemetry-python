@@ -117,9 +117,7 @@ class TestEnvironmentGetter(unittest.TestCase):
         """Test getting normalized keys from an explicit carrier."""
         with patch.dict(os.environ, {}, clear=True):
             getter = EnvironmentGetter()
-            keys = getter.keys(
-                {"x-b3-traceid": "value1", "BAGGAGE": "value2"}
-            )
+            keys = getter.keys({"x-b3-traceid": "value1", "BAGGAGE": "value2"})
 
             self.assertEqual(set(keys), {"X_B3_TRACEID", "BAGGAGE"})
 
