@@ -7,9 +7,6 @@ Do *NOT* add changelog entries here!
 
 This changelog is managed by towncrier and is compiled at release time.
 
-The static "## Unreleased" section below pre-dates towncrier; its entries
-must be folded into the first towncrier-generated release manually.
-
 See https://github.com/open-telemetry/opentelemetry-python/blob/main/CONTRIBUTING.md#changelog for details.
 -->
 
