@@ -156,7 +156,7 @@ class OtlpProtoTestServer:
         except ImportError:
             raise ImportError(
                 "opentelemetry-proto is required to use OtlpProtoTestServer. "
-                "Install it with: pip install opentelemetry-test-utils[test-server]"
+                "Install it with: pip install opentelemetry-proto"
             ) from None
         self._host = host
         self._port = port
