@@ -13,18 +13,18 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
 )
 from opentelemetry.sdk.trace.export import SpanExporter
 
-from . import ExporterTracesFunctionalTests
+from . import TracesExporterTestsBase
 
 
-class ProtoHTTPExporterTracesFunctionalTests(
-    ExporterTracesFunctionalTests, unittest.TestCase
-):
+class HTTPProtobufTracesExporterTests(TracesExporterTestsBase):
+    __test__ = True
+
     def build_exporter(self) -> SpanExporter:
         return HTTPSpanExporter(endpoint="http://localhost:4318/v1/traces")
 
 
-class ProtoGRPCExporterTracesFunctionalTests(
-    ExporterTracesFunctionalTests, unittest.TestCase
-):
+class GrpcTracesExporterTests(TracesExporterTestsBase):
+    __test__ = True
+
     def build_exporter(self) -> SpanExporter:
         return GRPCSpanExporter(insecure=True)

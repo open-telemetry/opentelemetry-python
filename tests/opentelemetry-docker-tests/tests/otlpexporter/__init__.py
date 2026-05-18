@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import unittest
 from abc import ABC, abstractmethod
 
 from opentelemetry.sdk.trace import TracerProvider
@@ -25,7 +26,9 @@ def _attrs_to_dict(attributes) -> dict:
     return result
 
 
-class ExporterTracesFunctionalTests(ABC):
+class TracesExporterTestsBase(ABC, unittest.TestCase):
+    __test__ = False
+
     _server: OtlpProtoTestServer
 
     @classmethod
