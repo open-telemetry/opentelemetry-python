@@ -382,9 +382,12 @@ class TestCreateMetricReaders(unittest.TestCase):
     def test_pull_plugin_loads_via_entry_point(self):
         mock_reader = MagicMock()
         mock_class = MagicMock(return_value=mock_reader)
+        mock_entry_points = MagicMock(
+            return_value=[MagicMock(**{"load.return_value": mock_class})]
+        )
         with patch(
             "opentelemetry.sdk._configuration._common.entry_points",
-            return_value=[MagicMock(**{"load.return_value": mock_class})],
+            mock_entry_points,
         ):
             config = MeterProviderConfig(
                 readers=[
@@ -401,6 +404,10 @@ class TestCreateMetricReaders(unittest.TestCase):
             provider = create_meter_provider(config)
         self.assertEqual(len(provider._sdk_config.metric_readers), 1)
         mock_class.assert_called_once_with(port=8080)
+        mock_entry_points.assert_called_once_with(
+            group="opentelemetry_pull_metric_exporter",
+            name="my_custom_reader",
+        )
 
     def test_pull_plugin_not_found_raises(self):
         with patch(

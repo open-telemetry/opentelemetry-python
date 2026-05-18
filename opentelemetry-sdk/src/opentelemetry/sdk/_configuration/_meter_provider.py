@@ -21,6 +21,9 @@ from opentelemetry.sdk._configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     ExporterDefaultHistogramAggregation,
     ExporterTemporalityPreference,
     InstrumentType,
@@ -391,7 +394,9 @@ def _create_periodic_metric_reader(
     )
 
 
-def _create_prometheus_metric_reader(config) -> MetricReader:
+def _create_prometheus_metric_reader(
+    config: PrometheusMetricExporterConfig,
+) -> MetricReader:
     """Create a PrometheusMetricReader from config.
 
     Dynamically imports the prometheus exporter package to avoid a hard
