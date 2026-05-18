@@ -352,7 +352,11 @@ class OtlpProtoTestServer:
                 return result
 
     def clear(self) -> None:
-        for queue in (self._spans_queue, self._metrics_queue, self._logs_queue):
+        for queue in (
+            self._spans_queue,
+            self._metrics_queue,
+            self._logs_queue,
+        ):
             while True:
                 try:
                     queue.get_nowait()

@@ -114,7 +114,9 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         tracer.start_span("baz").end()
 
         spans = self.server.get_spans(count=3, timeout=5.0)
-        self.assertEqual({recorded.span.name for recorded in spans}, {"foo", "bar", "baz"})
+        self.assertEqual(
+            {recorded.span.name for recorded in spans}, {"foo", "bar", "baz"}
+        )
         for recorded in spans:
             self.assertIsInstance(recorded, RecordedSpan)
             self.assertEqual(recorded.scope.name, "trace-scope")
@@ -363,6 +365,4 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         ):
             with self.assertRaises(ImportError) as cm:
                 OtlpProtoTestServer()
-        self.assertIn(
-            "opentelemetry-test-utils[test-server]", str(cm.exception)
-        )
+        self.assertIn("opentelemetry-proto", str(cm.exception))
