@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add exporter plugin loading to declarative file configuration for all three signals (traces, metrics, logs) via the `opentelemetry_*_exporter` entry point groups, matching the spec's PluginComponentProvider mechanism
