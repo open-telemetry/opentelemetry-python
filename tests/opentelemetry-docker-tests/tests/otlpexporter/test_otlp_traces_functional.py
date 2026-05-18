@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import unittest
-
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter as GRPCSpanExporter,
 )

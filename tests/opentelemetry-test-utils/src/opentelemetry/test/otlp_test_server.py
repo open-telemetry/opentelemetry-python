@@ -50,15 +50,16 @@ def _make_handler(
     metrics_path: str,
     logs_path: str,
 ) -> type[BaseHTTPRequestHandler]:
-    from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    # pylint: disable=import-outside-toplevel,no-name-in-module
+    from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (  # noqa: PLC0415
         ExportLogsServiceRequest,
         ExportLogsServiceResponse,
     )
-    from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
+    from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: PLC0415
         ExportMetricsServiceRequest,
         ExportMetricsServiceResponse,
     )
-    from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (  # noqa: PLC0415
         ExportTraceServiceRequest,
         ExportTraceServiceResponse,
     )
@@ -93,36 +94,49 @@ def _make_handler(
                 return zlib.decompress(body)
             return body
 
-        def _handle_traces(self, body: bytes) -> bytes:
+        @staticmethod
+        def _handle_traces(body: bytes) -> bytes:
             request = ExportTraceServiceRequest()
             request.ParseFromString(body)
             for rs in request.resource_spans:
                 for ss in rs.scope_spans:
                     for span in ss.spans:
                         spans_queue.put(
-                            RecordedSpan(span=span, resource=rs.resource, scope=ss.scope)
+                            RecordedSpan(
+                                span=span, resource=rs.resource, scope=ss.scope
+                            )
                         )
             return ExportTraceServiceResponse().SerializeToString()
 
-        def _handle_metrics(self, body: bytes) -> bytes:
+        @staticmethod
+        def _handle_metrics(body: bytes) -> bytes:
             request = ExportMetricsServiceRequest()
             request.ParseFromString(body)
             for rm in request.resource_metrics:
                 for sm in rm.scope_metrics:
                     for metric in sm.metrics:
                         metrics_queue.put(
-                            RecordedMetric(metric=metric, resource=rm.resource, scope=sm.scope)
+                            RecordedMetric(
+                                metric=metric,
+                                resource=rm.resource,
+                                scope=sm.scope,
+                            )
                         )
             return ExportMetricsServiceResponse().SerializeToString()
 
-        def _handle_logs(self, body: bytes) -> bytes:
+        @staticmethod
+        def _handle_logs(body: bytes) -> bytes:
             request = ExportLogsServiceRequest()
             request.ParseFromString(body)
             for rl in request.resource_logs:
                 for sl in rl.scope_logs:
                     for log_record in sl.log_records:
                         logs_queue.put(
-                            RecordedLogRecord(log_record=log_record, resource=rl.resource, scope=sl.scope)
+                            RecordedLogRecord(
+                                log_record=log_record,
+                                resource=rl.resource,
+                                scope=sl.scope,
+                            )
                         )
             return ExportLogsServiceResponse().SerializeToString()
 
@@ -137,7 +151,8 @@ class OtlpProtoTestServer:
         self, host: str = "127.0.0.1", port: int = 0, base_path: str = ""
     ) -> None:
         try:
-            import opentelemetry.proto  # noqa: F401
+            # pylint: disable-next=import-outside-toplevel,unused-import
+            import opentelemetry.proto  # noqa: F401, PLC0415
         except ImportError:
             raise ImportError(
                 "opentelemetry-proto is required to use OtlpProtoTestServer. "
@@ -206,7 +221,9 @@ class OtlpProtoTestServer:
         except Empty:
             raise TimeoutError(f"No span received within {timeout}s") from None
 
-    def get_spans(self, count: int = 1, timeout: float = 5.0) -> list[RecordedSpan]:
+    def get_spans(
+        self, count: int = 1, timeout: float = 5.0
+    ) -> list[RecordedSpan]:
         deadline = time.monotonic() + timeout
         spans = []
         for _ in range(count):
@@ -249,7 +266,9 @@ class OtlpProtoTestServer:
         try:
             return self._metrics_queue.get(timeout=timeout)
         except Empty:
-            raise TimeoutError(f"No metric received within {timeout}s") from None
+            raise TimeoutError(
+                f"No metric received within {timeout}s"
+            ) from None
 
     def get_metrics(
         self, count: int = 1, timeout: float = 5.0
@@ -296,7 +315,9 @@ class OtlpProtoTestServer:
         try:
             return self._logs_queue.get(timeout=timeout)
         except Empty:
-            raise TimeoutError(f"No log record received within {timeout}s") from None
+            raise TimeoutError(
+                f"No log record received within {timeout}s"
+            ) from None
 
     def get_log_records(
         self, count: int = 1, timeout: float = 5.0
@@ -312,7 +333,9 @@ class OtlpProtoTestServer:
             log_records.append(self.get_log_record(timeout=remaining))
         return log_records
 
-    def wait_for_log_record(self, *, timeout: float = 5.0) -> RecordedLogRecord:
+    def wait_for_log_record(
+        self, *, timeout: float = 5.0
+    ) -> RecordedLogRecord:
         try:
             return self._logs_queue.get(timeout=timeout)
         except Empty:
@@ -329,9 +352,9 @@ class OtlpProtoTestServer:
                 return result
 
     def clear(self) -> None:
-        for q in (self._spans_queue, self._metrics_queue, self._logs_queue):
+        for queue in (self._spans_queue, self._metrics_queue, self._logs_queue):
             while True:
                 try:
-                    q.get_nowait()
+                    queue.get_nowait()
                 except Empty:
                     break
