@@ -1,1 +1,0 @@
-`opentelemetry-api`: update `EnvironmentGetter` and `EnvironmentSetter` to use normalized environment variable names
