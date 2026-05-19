@@ -1,20 +1,11 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import os
 import unittest
 from unittest.mock import patch
+
+import yaml
 
 from opentelemetry.sdk._configuration.file import (
     EnvSubstitutionError,
@@ -115,3 +106,45 @@ line2: value2"""
         """Test string with only escaped dollar signs."""
         result = substitute_env_vars("$$$$")
         self.assertEqual(result, "$$")
+
+    def test_newline_in_value_prevents_yaml_injection(self):
+        """Values containing newlines must not inject YAML structure.
+
+        Per spec: "It MUST NOT be possible to inject YAML structures by
+        environment variables." A value like "legit\\nmalicious_key: val"
+        must be emitted as a quoted scalar, not raw YAML.
+        """
+        with patch.dict(
+            os.environ,
+            {"SERVICE_NAME": "legit-service\nmalicious_key: injected_value"},
+        ):
+            result = substitute_env_vars(
+                "file_format: '0.1'\nservice_name: ${SERVICE_NAME}"
+            )
+        parsed = yaml.safe_load(result)
+        self.assertNotIn("malicious_key", parsed)
+        self.assertIn("legit-service", parsed["service_name"])
+
+    def test_newline_in_value_preserved_as_literal(self):
+        """Newline within a value is preserved as a literal newline character."""
+        with patch.dict(os.environ, {"MULTI": "line1\nline2"}):
+            result = substitute_env_vars("key: ${MULTI}")
+        parsed = yaml.safe_load(result)
+        self.assertEqual(parsed["key"], "line1\nline2")
+
+    def test_carriage_return_in_value_is_escaped(self):
+        """Carriage return in value is escaped, not injected."""
+        with patch.dict(os.environ, {"VAL": "text\r\nmore"}):
+            result = substitute_env_vars("key: ${VAL}")
+        parsed = yaml.safe_load(result)
+        self.assertIsInstance(parsed["key"], str)
+
+    def test_type_coercion_preserved_for_simple_values(self):
+        """Simple values without newlines still undergo YAML type coercion per spec."""
+        with patch.dict(os.environ, {"BOOL_VAL": "true", "INT_VAL": "42"}):
+            bool_result = yaml.safe_load(
+                substitute_env_vars("key: ${BOOL_VAL}")
+            )
+            int_result = yaml.safe_load(substitute_env_vars("key: ${INT_VAL}"))
+        self.assertIs(bool_result["key"], True)
+        self.assertEqual(int_result["key"], 42)

@@ -1,0 +1,1 @@
+`opentelemetry-test-utils`: fix weaver live check hanging when weaver log output fills the pipe buffer

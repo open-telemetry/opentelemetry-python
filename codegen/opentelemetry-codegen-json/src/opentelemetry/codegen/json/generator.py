@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=no-member,invalid-name,too-many-lines
 
@@ -18,9 +7,9 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Callable, Final, Optional, Set
+from typing import Final
 
 from google.protobuf import descriptor_pb2 as descriptor
 from google.protobuf.compiler import plugin_pb2 as plugin
@@ -34,7 +23,6 @@ from opentelemetry.codegen.json.types import (
     is_int64_type,
     to_json_field_name,
 )
-from opentelemetry.codegen.json.version import __version__ as GENERATOR_VERSION
 from opentelemetry.codegen.json.writer import CodeWriter
 
 _logger = logging.getLogger(__name__)
@@ -136,7 +124,7 @@ class OtlpJsonGenerator:
         msg_desc: descriptor.DescriptorProto,
         package: str,
         file_name: str,
-        parent_path: Optional[str],
+        parent_path: str | None,
     ) -> None:
         """
         Recursively index a message and its nested types.
@@ -349,7 +337,6 @@ class OtlpJsonGenerator:
             "builtins",
             "dataclasses",
             "functools",
-            "sys",
             "typing",
         ]
         if include_enum:
@@ -360,14 +347,10 @@ class OtlpJsonGenerator:
 
         writer.blank_line()
 
-        # TODO: Remove after dropping support for Python 3.9
-        with writer.if_("sys.version_info >= (3, 10)"):
-            writer.assignment(
-                "_dataclass",
-                "functools.partial(dataclasses.dataclass, slots=True)",
-            )
-        with writer.else_():
-            writer.assignment("_dataclass", "dataclasses.dataclass")
+        writer.assignment(
+            "_dataclass",
+            "functools.partial(dataclasses.dataclass, slots=True)",
+        )
         writer.blank_line()
 
         # Collect all imports needed
@@ -381,7 +364,7 @@ class OtlpJsonGenerator:
             writer.blank_line()
         writer.blank_line()
 
-    def _collect_imports(self, proto_file: str) -> Set[str]:
+    def _collect_imports(self, proto_file: str) -> set[str]:
         """
         Collect all import statements needed for cross file references.
 
@@ -437,7 +420,7 @@ class OtlpJsonGenerator:
         writer: CodeWriter,
         proto_file: str,
         msg_desc: descriptor.DescriptorProto,
-        parent_path: Optional[str] = None,
+        parent_path: str | None = None,
     ) -> None:
         """
         Generate a complete dataclass for a protobuf message.
@@ -967,7 +950,7 @@ class OtlpJsonGenerator:
     @classmethod
     def _get_field_default(
         cls, field_desc: descriptor.FieldDescriptorProto
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Get the default value for a field.
 
@@ -1062,9 +1045,7 @@ def generate_code(
     Returns:
         Dictionary mapping output file paths to generated code
     """
-    generator = OtlpJsonGenerator(
-        request, package_transform, version=GENERATOR_VERSION
-    )
+    generator = OtlpJsonGenerator(request, package_transform, version="0.0.0")
     return generator.generate_all()
 
 
