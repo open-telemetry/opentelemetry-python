@@ -7,7 +7,7 @@ import threading
 import time
 import unittest
 from logging import WARNING
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import requests
 from google.protobuf.json_format import MessageToDict
@@ -16,10 +16,22 @@ from requests.exceptions import ConnectionError
 from requests.models import Response
 
 from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.exporter.http.transport._otlp_client import (
+    ExportResult,
+    OTLPHTTPClient,
+)
+from opentelemetry.exporter.http.transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.http.transport._urllib3 import (
+    Urllib3HTTPTransport,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_ENDPOINT,
     DEFAULT_COMPRESSION,
-    DEFAULT_ENDPOINT,
+)
+from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
@@ -46,7 +58,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
@@ -79,7 +90,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         exporter = OTLPLogExporter()
 
         self.assertEqual(
-            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
+            exporter._endpoint,
+            f"{_DEFAULT_ENDPOINT}/{DEFAULT_LOGS_EXPORT_PATH}",
         )
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)
@@ -87,15 +99,17 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
-        self.assertIsInstance(exporter._session, requests.Session)
-        self.assertIn("User-Agent", exporter._session.headers)
+        self.assertIn("User-Agent", exporter._client._headers)
         self.assertEqual(
-            exporter._session.headers.get("Content-Type"),
+            exporter._client._headers.get("Content-Type"),
             "application/x-protobuf",
         )
         self.assertEqual(
-            exporter._session.headers.get("User-Agent"),
+            exporter._client._headers.get("User-Agent"),
             "OTel-OTLP-Exporter-Python/" + __version__,
+        )
+        self.assertIsInstance(
+            exporter._client._transport, Urllib3HTTPTransport
         )
 
     @patch.dict(
@@ -147,15 +161,12 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 "user-agent": "LogsUserAgent",
             },
         )
-        self.assertIs(exporter._session, credential)
-        self.assertIsInstance(exporter._session, requests.Session)
-        self.assertEqual(
-            exporter._session.headers.get("User-Agent"),
-            "LogsUserAgent",
+        self.assertIsInstance(
+            exporter._client._transport, RequestsHTTPTransport
         )
-        self.assertEqual(
-            exporter._session.headers.get("Content-Type"),
-            "application/x-protobuf",
+        self.assertIs(exporter._client._transport._session, credential)
+        self.assertIsInstance(
+            exporter._client._transport._session, requests.Session
         )
 
     @patch.dict(
@@ -200,7 +211,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         },
     )
     def test_exporter_constructor_take_priority(self):
-        sess = MagicMock()
+        session = Session()
         exporter = OTLPLogExporter(
             endpoint="endpoint.local:69/logs",
             certificate_file="/hello.crt",
@@ -209,7 +220,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             headers={"testHeader1": "value1", "testHeader2": "value2"},
             timeout=70,
             compression=Compression.NoCompression,
-            session=sess(),
+            session=session,
         )
 
         self.assertEqual(exporter._endpoint, "endpoint.local:69/logs")
@@ -222,7 +233,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._headers,
             {"testHeader1": "value1", "testHeader2": "value2"},
         )
-        self.assertTrue(sess.called)
+        self.assertIsInstance(
+            exporter._client._transport, RequestsHTTPTransport
+        )
+        self.assertIs(exporter._client._transport._session, session)
 
     @patch.dict(
         "os.environ",
@@ -257,14 +271,17 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 "user-agent": "Overridden",
             },
         )
-        self.assertIsInstance(exporter._session, requests.Session)
 
     @staticmethod
     def export_log_and_deserialize(log):
-        with patch("requests.Session.post") as mock_post:
-            exporter = OTLPLogExporter()
+        resp = Response()
+        resp.status_code = 200
+        with patch(
+            "requests.Session.request", return_value=resp
+        ) as mock_request:
+            exporter = OTLPLogExporter(session=Session())
             exporter.export([log])
-            request_body = mock_post.call_args[1]["data"]
+            request_body = mock_request.call_args[1]["data"]
             request = ExportLogsServiceRequest()
             request.ParseFromString(request_body)
             request_dict = MessageToDict(request)
@@ -445,8 +462,12 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         return [log1, log2, log3, log4]
 
-    @patch.object(OTLPLogExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
+    @patch.object(
+        OTLPHTTPClient,
+        "export",
+        return_value=ExportResult(True, 200, "OK", None),
+    )
+    def test_2xx_status_code(self, mock_client_export):
         """
         Test that any HTTP 2XX code returns a successful result
         """
@@ -456,19 +477,16 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             LogRecordExportResult.SUCCESS,
         )
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
-    )
-    @patch.object(Session, "post")
-    def test_retry_timeout(self, mock_post):
+    @patch.object(Session, "request")
+    def test_retry_timeout(self, mock_request):
         exporter = OTLPLogExporter(
-            timeout=1.5, meter_provider=self.meter_provider
+            session=Session(), timeout=1.5, meter_provider=self.meter_provider
         )
 
         resp = Response()
         resp.status_code = 503
         resp.reason = "UNAVAILABLE"
-        mock_post.return_value = resp
+        mock_request.return_value = resp
         with self.assertLogs(level=WARNING) as warning:
             before = time.time()
             # Set timeout to 1.5 seconds
@@ -478,7 +496,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             )
             after = time.time()
             # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
-            self.assertEqual(mock_post.call_count, 2)
+            self.assertEqual(mock_request.call_count, 2)
             # There's a +/-20% jitter on each backoff.
             self.assertTrue(0.75 < after - before < 1.25)
             self.assertIn(
@@ -529,11 +547,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             503,
         )
 
-    @patch.object(Session, "post")
-    def test_export_no_collector_available_retryable(self, mock_post):
-        exporter = OTLPLogExporter(timeout=1.5)
+    @patch.object(Session, "request")
+    def test_export_no_collector_available_retryable(self, mock_request):
+        exporter = OTLPLogExporter(session=Session(), timeout=1.5)
         msg = "Server not available."
-        mock_post.side_effect = ConnectionError(msg)
+        mock_request.side_effect = ConnectionError(msg)
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
                 exporter.export(self._get_sdk_log_data()),
@@ -541,28 +559,25 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             )
             # Check for greater 2 because the request is on each retry
             # done twice at the moment.
-            self.assertGreater(mock_post.call_count, 2)
+            self.assertGreater(mock_request.call_count, 2)
             self.assertIn(
                 f"Transient error {msg} encountered while exporting logs batch, retrying in",
                 warning.records[0].message,
             )
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
-    @patch.object(Session, "post")
-    def test_export_no_collector_available(self, mock_post):
+    @patch.object(Session, "request")
+    def test_export_no_collector_available(self, mock_request):
         exporter = OTLPLogExporter(
-            timeout=1.5, meter_provider=self.meter_provider
+            session=Session(), timeout=1.5, meter_provider=self.meter_provider
         )
 
-        mock_post.side_effect = requests.exceptions.RequestException()
+        mock_request.side_effect = requests.exceptions.RequestException()
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
                 exporter.export(self._get_sdk_log_data()),
                 LogRecordExportResult.FAILURE,
             )
-            self.assertEqual(mock_post.call_count, 1)
+            self.assertEqual(mock_request.call_count, 1)
             self.assertIn(
                 "Failed to export logs batch code",
                 warning.records[0].message,
@@ -611,8 +626,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             metrics[2].data.data_points[0].attributes,
         )
 
-    @patch.object(Session, "post")
-    def test_timeout_set_correctly(self, mock_post):
+    @patch.object(Session, "request")
+    def test_timeout_set_correctly(self, mock_request):
         resp = Response()
         resp.status_code = 200
 
@@ -621,18 +636,18 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             self.assertAlmostEqual(0.4, kwargs["timeout"], 2)
             return resp
 
-        mock_post.side_effect = export_side_effect
-        exporter = OTLPLogExporter(timeout=0.4)
+        mock_request.side_effect = export_side_effect
+        exporter = OTLPLogExporter(session=Session(), timeout=0.4)
         exporter.export(self._get_sdk_log_data())
 
-    @patch.object(Session, "post")
-    def test_shutdown_interrupts_retry_backoff(self, mock_post):
-        exporter = OTLPLogExporter(timeout=1.5)
+    @patch.object(Session, "request")
+    def test_shutdown_interrupts_retry_backoff(self, mock_request):
+        exporter = OTLPLogExporter(session=Session(), timeout=1.5)
 
         resp = Response()
         resp.status_code = 503
         resp.reason = "UNAVAILABLE"
-        mock_post.return_value = resp
+        mock_request.return_value = resp
         thread = threading.Thread(
             target=exporter.export, args=(self._get_sdk_log_data(),)
         )

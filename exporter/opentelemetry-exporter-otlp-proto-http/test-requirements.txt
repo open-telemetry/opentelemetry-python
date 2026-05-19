@@ -23,3 +23,4 @@ wrapt==1.16.0
 -e opentelemetry-sdk
 -e opentelemetry-semantic-conventions
 -e exporter/opentelemetry-exporter-otlp-proto-http
+-e exporter/opentelemetry-exporter-http-transport
