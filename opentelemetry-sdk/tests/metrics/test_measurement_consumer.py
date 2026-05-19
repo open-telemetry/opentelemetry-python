@@ -209,7 +209,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
     "measurement_consumer.MetricReaderStorage"
 )
 class TestSynchronousMeasurementConsumerForkHandler(TestCase):
-     """Exhaustive tests for fork handler, needs_storage_reinit, and lazy _reinit_storages."""
+    """Exhaustive tests for fork handler, needs_storage_reinit, and lazy _reinit_storages."""
 
     # pylint: disable=protected-access
 

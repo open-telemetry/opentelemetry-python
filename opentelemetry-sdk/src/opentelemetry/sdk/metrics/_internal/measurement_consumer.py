@@ -168,5 +168,5 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             if not self._needs_storage_reinit:
                 return
             for storage in self._reader_storages.values():
-                storage._at_fork_reinit()
+                storage._at_fork_reinit()  # pylint: disable=protected-access
             self._needs_storage_reinit = False
