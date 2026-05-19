@@ -20,6 +20,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
 Number of times the process has been context switched
@@ -39,17 +40,17 @@ def create_process_context_switches(meter: Meter) -> Counter:
 
 PROCESS_CPU_TIME: Final = "process.cpu.time"
 """
-Total CPU seconds broken down by different states
+Total CPU seconds broken down by different CPU modes
 Instrument: counter
 Unit: s
 """
 
 
 def create_process_cpu_time(meter: Meter) -> Counter:
-    """Total CPU seconds broken down by different states"""
+    """Total CPU seconds broken down by different CPU modes"""
     return meter.create_counter(
         name=PROCESS_CPU_TIME,
-        description="Total CPU seconds broken down by different states.",
+        description="Total CPU seconds broken down by different CPU modes.",
         unit="s",
     )
 
