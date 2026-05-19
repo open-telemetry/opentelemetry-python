@@ -263,6 +263,34 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertIsNone(kwargs["timeout"])
         self.assertIsNone(kwargs["compression"])
 
+    def test_otlp_http_created_with_deflate_compression(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_compression_cls.Deflate = "deflate_val"
+        mock_http_module = MagicMock()
+        mock_http_module.Compression = mock_compression_cls
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(
+                        compression="deflate"
+                    )
+                )
+            )
+            create_meter_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertEqual(kwargs["compression"], "deflate_val")
+
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_periodic_config(
             PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig())
@@ -294,6 +322,32 @@ class TestCreateMetricReaders(unittest.TestCase):
         config = self._make_periodic_config(PushMetricExporterConfig())
         with self.assertRaises(ConfigurationError):
             create_meter_provider(config)
+
+    def test_plugin_metric_exporter_loaded_via_entry_point(self):
+        mock_exporter = MagicMock()
+        mock_class = MagicMock(return_value=mock_exporter)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(my_custom_exporter={})
+            )
+            provider = create_meter_provider(config)
+        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+
+    def test_unknown_metric_exporter_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(no_such_exporter={})
+            )
+            with self.assertRaises(ConfigurationError):
+                create_meter_provider(config)
 
     def test_multiple_readers(self):
         config = MeterProviderConfig(

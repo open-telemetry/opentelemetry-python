@@ -7,7 +7,7 @@ from typing import Final
 GRAPHQL_DOCUMENT: Final = "graphql.document"
 """
 The GraphQL document being executed.
-Note: The value may be sanitized to exclude sensitive information.
+Note: If instrumentation can reliably identify and redact sensitive information it SHOULD do it.
 """
 
 GRAPHQL_OPERATION_NAME: Final = "graphql.operation.name"

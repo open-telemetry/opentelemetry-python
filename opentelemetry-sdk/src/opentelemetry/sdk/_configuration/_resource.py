@@ -3,13 +3,16 @@
 
 from __future__ import annotations
 
+import dataclasses
 import fnmatch
 import logging
 import os
 import uuid
 from collections.abc import Callable
+from typing import Any
 from urllib import parse
 
+from opentelemetry.sdk._configuration._common import load_entry_point
 from opentelemetry.sdk._configuration.models import (
     AttributeNameValue,
     AttributeType,
@@ -26,7 +29,7 @@ from opentelemetry.sdk.resources import (
     Resource,
     _HostResourceDetector,
 )
-from opentelemetry.util._importlib_metadata import entry_points
+from opentelemetry.util.types import AttributeValue
 
 _logger = logging.getLogger(__name__)
 
@@ -135,55 +138,57 @@ def create_resource(config: ResourceConfig | None) -> Resource:
     return result.merge(config_resource)
 
 
+def _detect_service(_config: Any) -> dict[str, AttributeValue]:
+    """Service detector: generates instance ID and reads OTEL_SERVICE_NAME."""
+    attrs: dict[str, AttributeValue] = {
+        SERVICE_INSTANCE_ID: str(uuid.uuid4()),
+    }
+    if service_name := os.environ.get(OTEL_SERVICE_NAME):
+        attrs[SERVICE_NAME] = service_name
+    return attrs
+
+
+_RESOURCE_DETECTOR_REGISTRY: dict[
+    str, Callable[[Any], dict[str, AttributeValue]]
+] = {
+    "service": _detect_service,
+    "host": lambda _: dict(_HostResourceDetector().detect().attributes),
+    "process": lambda _: dict(ProcessResourceDetector().detect().attributes),
+}
+
+
 def _run_detectors(
     detector_config: ExperimentalResourceDetector,
     detected_attrs: dict[str, object],
 ) -> None:
-    """Run any detectors present in a single detector config entry.
+    """Run detectors present in a single detector config entry.
 
-    Each detector PR adds its own branch here. The detected_attrs dict
-    is updated in-place; later detectors overwrite earlier ones for the
-    same key.
+    Known detectors (service, host, process) are handled directly via
+    _RESOURCE_DETECTOR_REGISTRY. All other detectors — including known
+    schema fields like container that require contrib packages, and
+    unknown plugin detectors captured in additional_properties — are
+    loaded via the ``opentelemetry_resource_detector`` entry point group.
+
+    The detected_attrs dict is updated in-place; later detectors overwrite
+    earlier ones for the same key.
     """
-    if detector_config.service is not None:
-        attrs: dict[str, object] = {
-            SERVICE_INSTANCE_ID: str(uuid.uuid4()),
-        }
-        service_name = os.environ.get(OTEL_SERVICE_NAME)
-        if service_name:
-            attrs[SERVICE_NAME] = service_name
-        detected_attrs.update(attrs)
-
-    if detector_config.host is not None:
-        detected_attrs.update(_HostResourceDetector().detect().attributes)
-
-    if detector_config.container is not None:
-        # The container detector is not part of the core SDK. It is provided
-        # by the opentelemetry-resource-detector-containerid contrib package,
-        # which registers itself under the opentelemetry_resource_detector
-        # entry point group as "container". Loading via entry point matches
-        # the env-var config counterpart (OTEL_EXPERIMENTAL_RESOURCE_DETECTORS)
-        # and avoids a hard import dependency on contrib. See also:
-        # https://github.com/open-telemetry/opentelemetry-configuration/issues/570
-        ep = next(
-            iter(
-                entry_points(
-                    group="opentelemetry_resource_detector", name="container"
-                )
-            ),
-            None,
-        )
-        if ep is None:
-            _logger.warning(
-                "container resource detector requested but "
-                "'opentelemetry-resource-detector-containerid' is not "
-                "installed; install it to enable container detection"
+    for name in dataclasses.fields(detector_config):
+        value = getattr(detector_config, name.name, None)
+        if value is None:
+            continue
+        if name.name in _RESOURCE_DETECTOR_REGISTRY:
+            detected_attrs.update(
+                _RESOURCE_DETECTOR_REGISTRY[name.name](value)
             )
         else:
-            detected_attrs.update(ep.load()().detect().attributes)
+            cls = load_entry_point(
+                "opentelemetry_resource_detector", name.name
+            )
+            detected_attrs.update(cls(**(value or {})).detect().attributes)
 
-    if detector_config.process is not None:
-        detected_attrs.update(ProcessResourceDetector().detect().attributes)
+    for name, plugin_config in detector_config.additional_properties.items():
+        cls = load_entry_point("opentelemetry_resource_detector", name)
+        detected_attrs.update(cls(**(plugin_config or {})).detect().attributes)
 
 
 def _filter_attributes(
