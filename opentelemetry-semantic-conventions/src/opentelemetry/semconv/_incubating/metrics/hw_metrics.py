@@ -20,6 +20,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 HW_BATTERY_CHARGE: Final = "hw.battery.charge"
 """
 Remaining fraction of battery charge
