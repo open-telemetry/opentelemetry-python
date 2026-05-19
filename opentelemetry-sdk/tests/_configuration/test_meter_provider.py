@@ -287,6 +287,8 @@ class TestCreateMetricReaders(unittest.TestCase):
                 create_meter_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
+
+class TestCreatePullMetricReaders(unittest.TestCase):
     def test_pull_prometheus_creates_reader(self):
         mock_reader_cls = MagicMock()
         mock_start_server = MagicMock()
