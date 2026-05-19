@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: Fix mutable attributes reference in metrics, attributes passed to instrument `add`/`record` are now copied so that subsequent mutations do not affect recorded data points

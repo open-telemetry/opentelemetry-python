@@ -6,7 +6,11 @@ from __future__ import annotations
 import logging
 
 from opentelemetry import metrics
-from opentelemetry.sdk._configuration._common import _parse_headers
+from opentelemetry.sdk._configuration._common import (
+    _map_compression,
+    _parse_headers,
+    load_entry_point,
+)
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     Aggregation as AggregationConfig,
@@ -253,19 +257,6 @@ def _create_console_metric_exporter(
     )
 
 
-def _map_compression_metric(
-    value: str | None, compression_enum: type
-) -> object | None:
-    """Map a compression string to the given Compression enum value."""
-    if value is None or value.lower() == "none":
-        return None
-    if value.lower() == "gzip":
-        return compression_enum.Gzip  # type: ignore[attr-defined]
-    raise ConfigurationError(
-        f"Unsupported compression value '{value}'. Supported values: 'gzip', 'none'."
-    )
-
-
 def _create_otlp_http_metric_exporter(
     config: OtlpHttpMetricExporterConfig,
 ) -> MetricExporter:
@@ -284,7 +275,9 @@ def _create_otlp_http_metric_exporter(
             "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
         ) from exc
 
-    compression = _map_compression_metric(config.compression, Compression)
+    compression = _map_compression(
+        config.compression, Compression, allow_deflate=True
+    )
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
     preferred_temporality = _map_temporality(config.temporality_preference)
@@ -319,7 +312,7 @@ def _create_otlp_grpc_metric_exporter(
             "Install it with: pip install opentelemetry-exporter-otlp-proto-grpc"
         ) from exc
 
-    compression = _map_compression_metric(config.compression, grpc.Compression)
+    compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
     preferred_temporality = _map_temporality(config.temporality_preference)
@@ -337,19 +330,36 @@ def _create_otlp_grpc_metric_exporter(
     )
 
 
+_METRIC_EXPORTER_REGISTRY: dict = {
+    "otlp_http": _create_otlp_http_metric_exporter,
+    "otlp_grpc": _create_otlp_grpc_metric_exporter,
+    "console": _create_console_metric_exporter,
+}
+
+
 def _create_push_metric_exporter(
     config: PushMetricExporterConfig,
 ) -> MetricExporter:
-    """Create a push metric exporter from config."""
-    if config.console is not None:
-        return _create_console_metric_exporter(config.console)
-    if config.otlp_http is not None:
-        return _create_otlp_http_metric_exporter(config.otlp_http)
-    if config.otlp_grpc is not None:
-        return _create_otlp_grpc_metric_exporter(config.otlp_grpc)
+    """Create a push metric exporter from config.
+
+    Known exporter types are checked via typed fields on the PushMetricExporter
+    dataclass. Unknown exporter names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_metrics_exporter`` entry point group.
+    """
     if config.otlp_file_development is not None:
         raise ConfigurationError(
-            "otlp_file_development metric exporter is experimental and not yet supported."
+            "otlp_file_development metric exporter is experimental "
+            "and not yet supported."
+        )
+    for name, factory in _METRIC_EXPORTER_REGISTRY.items():
+        value = getattr(config, name, None)
+        if value is not None:
+            return factory(value)
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_metrics_exporter", name)(
+            **(plugin_config or {})
         )
     raise ConfigurationError(
         "No exporter type specified in push metric exporter config. "

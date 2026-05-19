@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: only load entrypoints for resource detectors if they are configured via `OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`

@@ -162,3 +162,31 @@ class TestSDKInitLiveCheck(unittest.TestCase):
             any(s["name"] == "test-span" for s in span_samples),
             f"Expected 'test-span' in samples, got: {[s['name'] for s in span_samples]}",
         )
+
+
+@unittest.skipUnless(
+    _HAS_GRPC,
+    "grpc exporter not installed",
+)
+@unittest.skipUnless(
+    shutil.which("weaver") is not None,
+    "weaver binary not found on PATH — install from https://github.com/open-telemetry/weaver/releases",
+)
+class TestOutputCapture(unittest.TestCase):
+    """weaver's stdout/stderr is captured to tempfiles, not PIPE, so large
+    diagnostic output can't deadlock the subprocess."""
+
+    def test_does_not_deadlock_on_large_diagnostic_output(self):
+        """`--debug --debug` makes weaver dump trace logs that exceed the 64KB
+        PIPE buffer; with tempfile capture the subprocess still exits cleanly."""
+        with WeaverLiveCheck(
+            registry=_REGISTRY_DIR, extra_args=["--debug", "--debug"]
+        ) as weaver:
+            provider = _make_provider(weaver.otlp_endpoint)
+            with provider.get_tracer("test-tracer").start_as_current_span(
+                "test-span"
+            ):
+                pass
+            provider.force_flush()
+            report = weaver.end()
+        self.assertIsInstance(report, LiveCheckReport)
