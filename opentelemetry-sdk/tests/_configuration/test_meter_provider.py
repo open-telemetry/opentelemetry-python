@@ -511,6 +511,20 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 create_meter_provider(config)
         self.assertTrue(any("cardinality_limits" in msg for msg in cm.output))
 
+
+class TestCreateMetricReadersGeneral(unittest.TestCase):
+    @staticmethod
+    def _make_periodic_config(exporter_config):
+        return MeterProviderConfig(
+            readers=[
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=exporter_config
+                    )
+                )
+            ]
+        )
+
     def test_no_reader_type_raises(self):
         config = MeterProviderConfig(readers=[MetricReaderConfig()])
         with self.assertRaises(ConfigurationError):
