@@ -161,6 +161,14 @@ def _load_propagators() -> textmap.TextMapPropagator:
 
 _HTTP_TEXT_FORMAT: textmap.TextMapPropagator = _load_propagators()
 
+# Deprecated: propagators, environ_propagators and propagator names were never intendended to be part of the public API.
+propagators: list[textmap.TextMapPropagator] = []
+
+environ_propagators = environ.get(OTEL_PROPAGATORS, "tracecontext,baggage")
+
+for propagator in environ_propagators.split(","):  # type: ignore[assignment]
+    propagator = propagator.strip()
+
 
 def get_global_textmap() -> textmap.TextMapPropagator:
     return _HTTP_TEXT_FORMAT
