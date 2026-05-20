@@ -18,25 +18,41 @@ from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
 
-
-def _load_entry_point_propagator(name: str) -> TextMapPropagator:
-    """Load and instantiate a propagator by name."""
-    return load_entry_point("opentelemetry_propagator", name)()
+# Propagators bundled with the SDK — no entry point lookup needed.
+_PROPAGATOR_REGISTRY: dict[str, type[TextMapPropagator]] = {
+    "tracecontext": TraceContextTextMapPropagator,
+    "baggage": W3CBaggagePropagator,
+}
 
 
 def _propagators_from_textmap_config(
     config: TextMapPropagatorConfig,
 ) -> list[TextMapPropagator]:
-    """Resolve a single TextMapPropagator config entry to a list of propagators."""
+    """Resolve a TextMapPropagator config to a list of propagators.
+
+    Known names (tracecontext, baggage) are bootstrapped directly via
+    _PROPAGATOR_REGISTRY. Known schema fields not in the registry (b3, b3multi)
+    and unknown plugin names from additional_properties are loaded via the
+    ``opentelemetry_propagator`` entry point group.
+    """
     result: list[TextMapPropagator] = []
-    if config.tracecontext is not None:
-        result.append(TraceContextTextMapPropagator())
-    if config.baggage is not None:
-        result.append(W3CBaggagePropagator())
-    if config.b3 is not None:
-        result.append(_load_entry_point_propagator("b3"))
-    if config.b3multi is not None:
-        result.append(_load_entry_point_propagator("b3multi"))
+    for name, cls in _PROPAGATOR_REGISTRY.items():
+        if getattr(config, name, None) is not None:
+            result.append(cls())
+
+    # Known schema fields not in registry (b3, b3multi) — loaded via entry point
+    for name in ("b3", "b3multi"):
+        if getattr(config, name, None) is not None:
+            result.append(load_entry_point("opentelemetry_propagator", name)())
+
+    # Plugin propagators from additional_properties
+    for name, plugin_config in config.additional_properties.items():
+        result.append(
+            load_entry_point("opentelemetry_propagator", name)(
+                **(plugin_config or {})
+            )
+        )
+
     return result
 
 
@@ -72,7 +88,7 @@ def create_propagator(
             name = name.strip()
             if not name or name.lower() == "none":
                 continue
-            propagator = _load_entry_point_propagator(name)
+            propagator = load_entry_point("opentelemetry_propagator", name)()
             propagators.setdefault(type(propagator), propagator)
 
     return CompositePropagator(list(propagators.values()))

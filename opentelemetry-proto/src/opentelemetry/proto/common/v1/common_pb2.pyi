@@ -45,6 +45,7 @@ class AnyValue(google.protobuf.message.Message):
     ARRAY_VALUE_FIELD_NUMBER: builtins.int
     KVLIST_VALUE_FIELD_NUMBER: builtins.int
     BYTES_VALUE_FIELD_NUMBER: builtins.int
+    STRING_VALUE_STRINDEX_FIELD_NUMBER: builtins.int
     string_value: builtins.str
     bool_value: builtins.bool
     int_value: builtins.int
@@ -54,6 +55,18 @@ class AnyValue(google.protobuf.message.Message):
     @property
     def kvlist_value(self) -> global___KeyValueList: ...
     bytes_value: builtins.bytes
+    string_value_strindex: builtins.int
+    """Reference to the string value in ProfilesDictionary.string_table.
+
+    Note: This is currently used exclusively in the Profiling signal.
+    Implementers of OTLP receivers for signals other than Profiling should
+    treat the presence of this value as a non-fatal issue.
+    Log an error or warning indicating an unexpected field intended for the
+    Profiling signal and process the data as if this value were absent or
+    empty, ignoring its semantic content for the non-Profiling signal.
+
+    Status: [Development]
+    """
     def __init__(
         self,
         *,
@@ -64,10 +77,11 @@ class AnyValue(google.protobuf.message.Message):
         array_value: global___ArrayValue | None = ...,
         kvlist_value: global___KeyValueList | None = ...,
         bytes_value: builtins.bytes = ...,
+        string_value_strindex: builtins.int = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["array_value", b"array_value", "bool_value", b"bool_value", "bytes_value", b"bytes_value", "double_value", b"double_value", "int_value", b"int_value", "kvlist_value", b"kvlist_value", "string_value", b"string_value", "value", b"value"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["array_value", b"array_value", "bool_value", b"bool_value", "bytes_value", b"bytes_value", "double_value", b"double_value", "int_value", b"int_value", "kvlist_value", b"kvlist_value", "string_value", b"string_value", "value", b"value"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["value", b"value"]) -> typing_extensions.Literal["string_value", "bool_value", "int_value", "double_value", "array_value", "kvlist_value", "bytes_value"] | None: ...
+    def HasField(self, field_name: typing_extensions.Literal["array_value", b"array_value", "bool_value", b"bool_value", "bytes_value", b"bytes_value", "double_value", b"double_value", "int_value", b"int_value", "kvlist_value", b"kvlist_value", "string_value", b"string_value", "string_value_strindex", b"string_value_strindex", "value", b"value"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["array_value", b"array_value", "bool_value", b"bool_value", "bytes_value", b"bytes_value", "double_value", b"double_value", "int_value", b"int_value", "kvlist_value", b"kvlist_value", "string_value", b"string_value", "string_value_strindex", b"string_value_strindex", "value", b"value"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["value", b"value"]) -> typing_extensions.Literal["string_value", "bool_value", "int_value", "double_value", "array_value", "kvlist_value", "bytes_value", "string_value_strindex"] | None: ...
 
 global___AnyValue = AnyValue
 
@@ -132,19 +146,36 @@ class KeyValue(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     VALUE_FIELD_NUMBER: builtins.int
+    KEY_STRINDEX_FIELD_NUMBER: builtins.int
     key: builtins.str
-    """The key name of the pair."""
+    """The key name of the pair.
+    key_ref MUST NOT be set if key is used.
+    """
     @property
     def value(self) -> global___AnyValue:
         """The value of the pair."""
+    key_strindex: builtins.int
+    """Reference to the string key in ProfilesDictionary.string_table.
+    key MUST NOT be set if key_strindex is used.
+
+    Note: This is currently used exclusively in the Profiling signal.
+    Implementers of OTLP receivers for signals other than Profiling should
+    treat the presence of this key as a non-fatal issue.
+    Log an error or warning indicating an unexpected field intended for the
+    Profiling signal and process the data as if this value were absent or
+    empty, ignoring its semantic content for the non-Profiling signal.
+
+    Status: [Development]
+    """
     def __init__(
         self,
         *,
         key: builtins.str = ...,
         value: global___AnyValue | None = ...,
+        key_strindex: builtins.int = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["value", b"value"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "key_strindex", b"key_strindex", "value", b"value"]) -> None: ...
 
 global___KeyValue = KeyValue
 

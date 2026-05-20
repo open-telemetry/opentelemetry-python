@@ -8,6 +8,7 @@ on:
     branches:
     - 'main'
   pull_request:
+  merge_group:
 
 permissions:
   contents: read
@@ -43,6 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
+        if: ${{ !(github.event_name == 'merge_group' && contains(github.event.merge_group.head_commit.message, 'Update version to')) }}
         uses: re-actors/alls-green@release/v1
         with:
           jobs: ${{ toJSON(needs) }}
