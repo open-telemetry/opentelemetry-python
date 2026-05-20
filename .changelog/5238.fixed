@@ -1,0 +1,1 @@
+Avoid import-time deprecation warnings on Python 3.10 and 3.11.
