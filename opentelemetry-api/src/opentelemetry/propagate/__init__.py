@@ -130,33 +130,33 @@ def _load_propagators() -> textmap.TextMapPropagator:
         entry_points,
     )
 
-    propagators: list[textmap.TextMapPropagator] = []
-    for propagator in configured.split(","):
-        propagator = propagator.strip()
-        if propagator.lower() == "none":
+    _propagators: list[textmap.TextMapPropagator] = []
+    for _propagator in configured.split(","):
+        _propagator = _propagator.strip()
+        if _propagator.lower() == "none":
             logger.debug(
                 "OTEL_PROPAGATORS environment variable contains none, removing all propagators"
             )
             return composite.CompositePropagator([])
         try:
-            propagators.append(
+            _propagators.append(
                 next(  # type: ignore
                     iter(  # type: ignore
                         entry_points(  # type: ignore[misc]
                             group="opentelemetry_propagator",
-                            name=propagator,
+                            name=_propagator,
                         )
                     )
                 ).load()()
             )
         except StopIteration:
             raise ValueError(
-                f"Propagator {propagator} not found. It is either misspelled or not installed."
+                f"Propagator {_propagator} not found. It is either misspelled or not installed."
             )
         except Exception:  # pylint: disable=broad-exception-caught
-            logger.exception("Failed to load propagator: %s", propagator)
+            logger.exception("Failed to load propagator: %s", _propagator)
             raise
-    return composite.CompositePropagator(propagators)
+    return composite.CompositePropagator(_propagators)
 
 
 _HTTP_TEXT_FORMAT: textmap.TextMapPropagator = _load_propagators()
