@@ -115,6 +115,7 @@ def _load_propagators() -> textmap.TextMapPropagator:
         from opentelemetry.baggage.propagation import (  # noqa: PLC0415
             W3CBaggagePropagator,
         )
+
         # pylint: disable=import-outside-toplevel,no-name-in-module
         from opentelemetry.trace.propagation.tracecontext import (  # noqa: PLC0415
             TraceContextTextMapPropagator,
