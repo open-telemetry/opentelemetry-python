@@ -117,3 +117,18 @@ class TestEntryPoints(TestCase):
         self.assertIsInstance(normalized, EntryPoints)
         self.assertEqual(len(normalized), 2)
         self.assertEqual(list(normalized), [ep1, ep2])
+
+    def test_as_entry_points_uses_selectable_groups_select(self):
+        """Test that SelectableGroups are normalized without the deprecated dict API."""
+        entry_point = EntryPoint(name="foo", value="bar:baz", group="gp")
+
+        class SelectableGroups:
+            def select(self):
+                return EntryPoints([entry_point])
+
+            def values(self):
+                raise AssertionError("deprecated dict interface used")
+
+        normalized = _as_entry_points(SelectableGroups())
+        self.assertIsInstance(normalized, EntryPoints)
+        self.assertEqual(list(normalized), [entry_point])

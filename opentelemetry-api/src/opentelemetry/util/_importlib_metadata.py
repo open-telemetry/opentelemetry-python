@@ -28,6 +28,8 @@ from typing import Any
 def _as_entry_points(eps: Any) -> EntryPoints:
     if isinstance(eps, EntryPoints):
         return eps
+    if hasattr(eps, "select"):
+        return eps.select()
     # Handle Python 3.10 SelectableGroups (dict-like)
     return EntryPoints(ep for group_eps in eps.values() for ep in group_eps)
 
