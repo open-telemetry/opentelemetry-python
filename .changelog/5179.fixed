@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: fix multi-processor `force_flush` skipping remaining processors when one returns `None`
