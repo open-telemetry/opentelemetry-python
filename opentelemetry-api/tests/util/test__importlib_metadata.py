@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import importlib.metadata
+import warnings
 from unittest import TestCase
 
 from opentelemetry.metrics import MeterProvider
@@ -117,3 +119,23 @@ class TestEntryPoints(TestCase):
         self.assertIsInstance(normalized, EntryPoints)
         self.assertEqual(len(normalized), 2)
         self.assertEqual(list(normalized), [ep1, ep2])
+
+    def test_as_entry_points_selectable_groups_without_warning(self):
+        selectable_groups_class = getattr(
+            importlib.metadata, "SelectableGroups", None
+        )
+        if selectable_groups_class is None:
+            self.skipTest("SelectableGroups is not available")
+
+        ep1 = EntryPoint(name="foo", value="bar:baz", group="gp")
+        ep2 = EntryPoint(name="foo2", value="bar2:baz2", group="gp2")
+        selectable_groups = selectable_groups_class(
+            {"gp": [ep1], "gp2": [ep2]}
+        )
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            normalized = _as_entry_points(selectable_groups)
+
+        self.assertIsInstance(normalized, EntryPoints)
+        self.assertCountEqual(normalized, [ep1, ep2])
