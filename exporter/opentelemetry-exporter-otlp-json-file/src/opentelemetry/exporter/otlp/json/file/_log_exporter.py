@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from os import PathLike
 from typing import IO, overload
 
@@ -28,8 +28,6 @@ class FileLogExporter(LogRecordExporter):
     def __init__(
         self,
         path: str | PathLike[str],
-        *,
-        formatter: Callable[[dict], str] | None = None,
     ) -> None: ...
 
     @overload
@@ -37,14 +35,11 @@ class FileLogExporter(LogRecordExporter):
         self,
         *,
         stream: IO[str],
-        formatter: Callable[[dict], str] | None = None,
     ) -> None: ...
 
     @overload
     def __init__(
         self,
-        *,
-        formatter: Callable[[dict], str] | None = None,
     ) -> None: ...
 
     def __init__(
@@ -52,7 +47,6 @@ class FileLogExporter(LogRecordExporter):
         path: str | PathLike[str] | None = None,
         *,
         stream: IO[str] | None = None,
-        formatter: Callable[[dict], str] | None = None,
     ) -> None:
         if path is not None and stream is not None:
             raise ValueError("Cannot specify both 'path' and 'stream'")
@@ -67,7 +61,6 @@ class FileLogExporter(LogRecordExporter):
         else:
             self._stream = sys.stdout
             self._owns_stream = False
-        self._formatter = formatter or _format_line
         self._shutdown = False
 
     def export(
@@ -78,7 +71,7 @@ class FileLogExporter(LogRecordExporter):
             return LogRecordExportResult.FAILURE
         try:
             lines = [
-                self._formatter(resource_logs.to_dict())
+                _format_line(resource_logs.to_dict())
                 for resource_logs in encode_logs(batch).resource_logs
             ]
             self._stream.writelines(lines)

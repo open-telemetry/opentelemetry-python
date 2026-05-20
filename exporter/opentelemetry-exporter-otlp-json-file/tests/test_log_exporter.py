@@ -102,13 +102,6 @@ class TestFileLogExporter(unittest.TestCase):
         exporter.export([_make_log_record()])
         mock_stream.flush.assert_called_once()
 
-    def test_custom_formatter(self):
-        formatter = Mock(return_value="formatted\n")
-        exporter = FileLogExporter(stream=self._stream, formatter=formatter)
-        exporter.export([_make_log_record()])
-        formatter.assert_called_once()
-        self.assertIn("formatted\n", self._stream.getvalue())
-
     def test_export_after_shutdown(self):
         self._exporter.shutdown()
         with self.assertLogs(_LOGGER_NAME, level="WARNING"):
@@ -130,19 +123,17 @@ class TestFileLogExporter(unittest.TestCase):
         self.assertEqual(result, LogRecordExportResult.FAILURE)
 
     def test_export_with_path(self):
-        # pylint: disable-next=consider-using-with
-        tmp_dir = tempfile.TemporaryDirectory()
-        path = os.path.join(tmp_dir.name, "output.jsonl")
-        exporter = FileLogExporter(path)
-        exporter.export([_make_log_record("hello from path")])
-        exporter.shutdown()
-        with open(path, encoding="utf-8") as fh:
-            rl = ResourceLogs.from_json(fh.read().splitlines()[0])
-        self.assertEqual(
-            rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore  # pylint: disable=unsubscriptable-object
-            "hello from path",
-        )
-        tmp_dir.cleanup()
+        with tempfile.TemporaryDirectory() as tmp_dir_name:
+            path = os.path.join(tmp_dir_name, "output.jsonl")
+            exporter = FileLogExporter(path)
+            exporter.export([_make_log_record("hello from path")])
+            exporter.shutdown()
+            with open(path, encoding="utf-8") as fh:
+                rl = ResourceLogs.from_json(fh.read().splitlines()[0])
+            self.assertEqual(
+                rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore  # pylint: disable=unsubscriptable-object
+                "hello from path",
+            )
 
     def test_path_and_stream_raises(self):
         with self.assertRaises(ValueError):

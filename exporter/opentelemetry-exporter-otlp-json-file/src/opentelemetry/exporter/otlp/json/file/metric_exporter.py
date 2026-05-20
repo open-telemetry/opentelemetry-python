@@ -3,7 +3,6 @@
 
 import logging
 import sys
-from collections.abc import Callable
 from os import PathLike
 from typing import IO, overload
 
@@ -32,7 +31,6 @@ class FileMetricExporter(MetricExporter):
         self,
         path: str | PathLike[str],
         *,
-        formatter: Callable[[dict], str] | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
@@ -43,7 +41,6 @@ class FileMetricExporter(MetricExporter):
         self,
         *,
         stream: IO[str],
-        formatter: Callable[[dict], str] | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
@@ -53,7 +50,6 @@ class FileMetricExporter(MetricExporter):
     def __init__(
         self,
         *,
-        formatter: Callable[[dict], str] | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
@@ -64,7 +60,6 @@ class FileMetricExporter(MetricExporter):
         path: str | PathLike[str] | None = None,
         *,
         stream: IO[str] | None = None,
-        formatter: Callable[[dict], str] | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
@@ -87,7 +82,6 @@ class FileMetricExporter(MetricExporter):
         else:
             self._stream = sys.stdout
             self._owns_stream = False
-        self._formatter = formatter or _format_line
         self._shutdown = False
 
     def export(
@@ -101,7 +95,7 @@ class FileMetricExporter(MetricExporter):
             return MetricExportResult.FAILURE
         try:
             lines = [
-                self._formatter(resource_metrics.to_dict())
+                _format_line(resource_metrics.to_dict())
                 for resource_metrics in encode_metrics(
                     metrics_data
                 ).resource_metrics

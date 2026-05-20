@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from os import PathLike
 from typing import IO, overload
 
@@ -22,8 +22,6 @@ class FileSpanExporter(SpanExporter):
     def __init__(
         self,
         path: str | PathLike[str],
-        *,
-        formatter: Callable[[dict], str] | None = None,
     ) -> None: ...
 
     @overload
@@ -31,14 +29,11 @@ class FileSpanExporter(SpanExporter):
         self,
         *,
         stream: IO[str],
-        formatter: Callable[[dict], str] | None = None,
     ) -> None: ...
 
     @overload
     def __init__(
         self,
-        *,
-        formatter: Callable[[dict], str] | None = None,
     ) -> None: ...
 
     def __init__(
@@ -46,7 +41,6 @@ class FileSpanExporter(SpanExporter):
         path: str | PathLike[str] | None = None,
         *,
         stream: IO[str] | None = None,
-        formatter: Callable[[dict], str] | None = None,
     ) -> None:
         if path is not None and stream is not None:
             raise ValueError("Cannot specify both 'path' and 'stream'")
@@ -61,7 +55,6 @@ class FileSpanExporter(SpanExporter):
         else:
             self._stream = sys.stdout
             self._owns_stream = False
-        self._formatter = formatter or _format_line
         self._shutdown = False
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
@@ -70,7 +63,7 @@ class FileSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
         try:
             lines = [
-                self._formatter(resource_spans.to_dict())
+                _format_line(resource_spans.to_dict())
                 # pylint: disable-next=not-an-iterable
                 for resource_spans in encode_spans(spans).resource_spans
             ]
