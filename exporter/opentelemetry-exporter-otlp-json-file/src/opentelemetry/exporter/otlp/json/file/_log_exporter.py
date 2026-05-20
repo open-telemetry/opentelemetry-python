@@ -70,11 +70,9 @@ class FileLogExporter(LogRecordExporter):
             _logger.warning("Exporter already shutdown, ignoring call")
             return LogRecordExportResult.FAILURE
         try:
-            lines = [
-                _format_line(resource_logs.to_dict())
-                for resource_logs in encode_logs(batch).resource_logs
-            ]
-            self._stream.writelines(lines)
+            logs_data = encode_logs(batch)
+            if logs_data.resource_logs:
+                self._stream.write(_format_line(logs_data.to_dict()))
             self._stream.flush()
         # pylint: disable-next=broad-exception-caught
         except Exception as error:

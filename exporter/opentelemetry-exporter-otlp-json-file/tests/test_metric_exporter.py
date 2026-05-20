@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# pylint: disable=unsubscriptable-object
+
 import io
 import os
 import sys
@@ -18,7 +20,7 @@ from opentelemetry.exporter.otlp.json.file.metric_exporter import (
 )
 from opentelemetry.metrics import Observation
 from opentelemetry.proto_json.metrics.v1.metrics import (
-    ResourceMetrics as OtlpResourceMetrics,
+    MetricsData as OtlpMetricsData,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.export import MetricExportResult
@@ -82,9 +84,13 @@ class TestFileMetricExporter(unittest.TestCase):
         self.assertEqual(result, MetricExportResult.SUCCESS)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        rm = OtlpResourceMetrics.from_json(lines[0])
-        # pylint: disable-next=unsubscriptable-object
-        self.assertEqual(rm.scope_metrics[0].metrics[0].name, "requests")
+        data = OtlpMetricsData.from_json(lines[0])
+        resource_metrics = data.resource_metrics[0]
+        scope_metrics = resource_metrics.scope_metrics[0]
+        self.assertEqual(
+            scope_metrics.metrics[0].name,
+            "requests",
+        )
 
     # pylint: disable-next=no-self-use
     def test_stream_flushed_after_export(self):
@@ -122,13 +128,14 @@ class TestFileMetricExporter(unittest.TestCase):
         )
         self._exporter.export(data)
         lines = self._stream.getvalue().splitlines()
-        self.assertEqual(len(lines), 2)
+        self.assertEqual(len(lines), 1)
+        data = OtlpMetricsData.from_json(lines[0])
+        self.assertEqual(len(data.resource_metrics), 2)
         names = {
-            OtlpResourceMetrics.from_json(line)  # pylint: disable=unsubscriptable-object
-            .scope_metrics[0]
-            .metrics[0]
-            .name
-            for line in lines
+            metric.name
+            for rm in data.resource_metrics  # pylint: disable=not-an-iterable
+            for sm in rm.scope_metrics
+            for metric in sm.metrics
         }
         self.assertEqual(names, {"counter_a", "gauge_b"})
 
@@ -149,7 +156,7 @@ class TestFileMetricExporter(unittest.TestCase):
 
     def test_export_stream_error(self):
         mock_stream = Mock()
-        mock_stream.writelines.side_effect = OSError("disk full")
+        mock_stream.write.side_effect = OSError("disk full")
         exporter = FileMetricExporter(stream=mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
             result = exporter.export(_make_metrics_data())
@@ -162,9 +169,13 @@ class TestFileMetricExporter(unittest.TestCase):
             exporter.export(_make_metrics_data())
             exporter.shutdown()
             with open(path, encoding="utf-8") as fh:
-                rm = OtlpResourceMetrics.from_json(fh.read().splitlines()[0])
-            # pylint: disable-next=unsubscriptable-object
-            self.assertEqual(rm.scope_metrics[0].metrics[0].name, "requests")
+                data = OtlpMetricsData.from_json(fh.read().splitlines()[0])
+            resource_metrics = data.resource_metrics[0]
+            scope_metrics = resource_metrics.scope_metrics[0]
+            self.assertEqual(
+                scope_metrics.metrics[0].name,
+                "requests",
+            )
 
     def test_path_and_stream_raises(self):
         with self.assertRaises(ValueError):
@@ -193,11 +204,8 @@ class TestFileMetricExporterRoundTrip(unittest.TestCase):
         self._provider.shutdown()
 
     def _expected(self) -> str:
-        return "".join(
-            _format_line(rm.to_dict())
-            for rm in encode_metrics(  # pylint: disable=not-an-iterable
-                self._exporter.last_metrics_data  # type: ignore
-            ).resource_metrics
+        return _format_line(
+            encode_metrics(self._exporter.last_metrics_data).to_dict()  # type: ignore
         )
 
     def test_synchronous_instruments_match_in_memory(self):

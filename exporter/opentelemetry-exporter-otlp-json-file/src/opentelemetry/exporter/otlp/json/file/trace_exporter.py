@@ -62,12 +62,9 @@ class FileSpanExporter(SpanExporter):
             _logger.warning("Exporter already shutdown, ignoring call")
             return SpanExportResult.FAILURE
         try:
-            lines = [
-                _format_line(resource_spans.to_dict())
-                # pylint: disable-next=not-an-iterable
-                for resource_spans in encode_spans(spans).resource_spans
-            ]
-            self._stream.writelines(lines)
+            traces_data = encode_spans(spans)
+            if traces_data.resource_spans:
+                self._stream.write(_format_line(traces_data.to_dict()))
             self._stream.flush()
         # pylint: disable-next=broad-exception-caught
         except Exception as error:

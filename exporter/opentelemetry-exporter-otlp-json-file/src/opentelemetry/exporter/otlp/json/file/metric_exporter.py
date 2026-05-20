@@ -94,13 +94,9 @@ class FileMetricExporter(MetricExporter):
             _logger.warning("Exporter already shutdown, ignoring call")
             return MetricExportResult.FAILURE
         try:
-            lines = [
-                _format_line(resource_metrics.to_dict())
-                for resource_metrics in encode_metrics(
-                    metrics_data
-                ).resource_metrics
-            ]
-            self._stream.writelines(lines)
+            json_metrics_data = encode_metrics(metrics_data)
+            if json_metrics_data.resource_metrics:
+                self._stream.write(_format_line(json_metrics_data.to_dict()))
             self._stream.flush()
         # pylint: disable-next=broad-exception-caught
         except Exception as error:

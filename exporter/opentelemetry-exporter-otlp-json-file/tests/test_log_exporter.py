@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# pylint: disable=unsubscriptable-object
+
 import io
 import os
 import sys
@@ -14,7 +16,7 @@ from opentelemetry.exporter.otlp.json.file._internal import _format_line
 from opentelemetry.exporter.otlp.json.file._log_exporter import (
     FileLogExporter,
 )
-from opentelemetry.proto_json.logs.v1.logs import ResourceLogs
+from opentelemetry.proto_json.logs.v1.logs import LogsData
 from opentelemetry.sdk._logs import (
     LoggerProvider,
     ReadableLogRecord,
@@ -60,9 +62,12 @@ class TestFileLogExporter(unittest.TestCase):
         self.assertEqual(result, LogRecordExportResult.SUCCESS)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        rl = ResourceLogs.from_json(lines[0])
+        data = LogsData.from_json(lines[0])
+        resource_logs = data.resource_logs[0]
+        scope_logs = resource_logs.scope_logs[0]
+        log_record = scope_logs.log_records[0]
         self.assertEqual(
-            rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore  # pylint: disable=unsubscriptable-object
+            log_record.body.string_value,  # type: ignore
             "hello from test",
         )
 
@@ -74,8 +79,12 @@ class TestFileLogExporter(unittest.TestCase):
         self._exporter.export(logs)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        rl = ResourceLogs.from_json(lines[0])
-        total_logs = sum(len(sl.log_records) for sl in rl.scope_logs)  # pylint: disable=not-an-iterable
+        data = LogsData.from_json(lines[0])
+        total_logs = sum(
+            len(sl.log_records)
+            for rl in data.resource_logs  # pylint: disable=not-an-iterable
+            for sl in rl.scope_logs
+        )
         self.assertEqual(total_logs, 2)
 
     def test_export_logs_different_resources(self):
@@ -85,13 +94,14 @@ class TestFileLogExporter(unittest.TestCase):
         ]
         self._exporter.export(logs)
         lines = self._stream.getvalue().splitlines()
-        self.assertEqual(len(lines), 2)
+        self.assertEqual(len(lines), 1)
+        data = LogsData.from_json(lines[0])
+        self.assertEqual(len(data.resource_logs), 2)
         bodies = {
-            ResourceLogs.from_json(line)  # pylint: disable=unsubscriptable-object
-            .scope_logs[0]
-            .log_records[0]
-            .body.string_value  # type: ignore
-            for line in lines
+            log_record.body.string_value  # type: ignore
+            for rl in data.resource_logs  # pylint: disable=not-an-iterable
+            for sl in rl.scope_logs
+            for log_record in sl.log_records
         }
         self.assertEqual(bodies, {"from-a", "from-b"})
 
@@ -116,7 +126,7 @@ class TestFileLogExporter(unittest.TestCase):
 
     def test_export_stream_error(self):
         mock_stream = Mock()
-        mock_stream.writelines.side_effect = OSError("disk full")
+        mock_stream.write.side_effect = OSError("disk full")
         exporter = FileLogExporter(stream=mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
             result = exporter.export([_make_log_record()])
@@ -129,9 +139,12 @@ class TestFileLogExporter(unittest.TestCase):
             exporter.export([_make_log_record("hello from path")])
             exporter.shutdown()
             with open(path, encoding="utf-8") as fh:
-                rl = ResourceLogs.from_json(fh.read().splitlines()[0])
+                data = LogsData.from_json(fh.read().splitlines()[0])
+            resource_logs = data.resource_logs[0]
+            scope_logs = resource_logs.scope_logs[0]
+            log_record = scope_logs.log_records[0]
             self.assertEqual(
-                rl.scope_logs[0].log_records[0].body.string_value,  # type: ignore  # pylint: disable=unsubscriptable-object
+                log_record.body.string_value,  # type: ignore
                 "hello from path",
             )
 
@@ -161,9 +174,8 @@ class TestFileLogExporterRoundTrip(unittest.TestCase):
 
     def _expected(self) -> str:
         return "".join(
-            _format_line(rl.to_dict())
+            _format_line(encode_logs([record]).to_dict())
             for record in self._in_memory.get_finished_logs()
-            for rl in encode_logs([record]).resource_logs  # pylint: disable=not-an-iterable
         )
 
     def test_single_log_matches_in_memory(self):

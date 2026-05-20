@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# pylint: disable=unsubscriptable-object
+
 import io
 import os
 import sys
@@ -13,7 +15,8 @@ from opentelemetry.exporter.otlp.json.file._internal import _format_line
 from opentelemetry.exporter.otlp.json.file.trace_exporter import (
     FileSpanExporter,
 )
-from opentelemetry.proto_json.trace.v1.trace import ResourceSpans
+from opentelemetry.proto_json.trace.v1.trace import TracesData
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
@@ -55,9 +58,10 @@ class TestFileSpanExporter(unittest.TestCase):
         self.assertEqual(result, SpanExportResult.SUCCESS)
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        rs = ResourceSpans.from_json(lines[0])
-        # pylint: disable-next=unsubscriptable-object
-        self.assertEqual(rs.scope_spans[0].spans[0].name, "my-span")
+        data = TracesData.from_json(lines[0])
+        resource_spans = data.resource_spans[0]
+        scope_spans = resource_spans.scope_spans[0]
+        self.assertEqual(scope_spans.spans[0].name, "my-span")
 
     def test_export_multiple_spans_same_resource(self):
         with self._tracer.start_as_current_span("first"):
@@ -67,9 +71,37 @@ class TestFileSpanExporter(unittest.TestCase):
         self._exporter.export(self._finished_spans())
         lines = self._stream.getvalue().splitlines()
         self.assertEqual(len(lines), 1)
-        rs = ResourceSpans.from_json(lines[0])
-        total_spans = sum(len(ss.spans) for ss in rs.scope_spans)  # pylint: disable=not-an-iterable
+        data = TracesData.from_json(lines[0])
+        total_spans = sum(
+            len(ss.spans)
+            for rs in data.resource_spans  # pylint: disable=not-an-iterable
+            for ss in rs.scope_spans
+        )
         self.assertEqual(total_spans, 2)
+
+    def test_export_spans_different_resources(self):
+        spans = []
+        for name, host in (("from-a", "a"), ("from-b", "b")):
+            exporter = InMemorySpanExporter()
+            provider = TracerProvider(resource=Resource({"host": host}))
+            provider.add_span_processor(SimpleSpanProcessor(exporter))
+            tracer = provider.get_tracer(__name__)
+            with tracer.start_as_current_span(name):
+                pass
+            spans.extend(exporter.get_finished_spans())
+
+        self._exporter.export(spans)
+        lines = self._stream.getvalue().splitlines()
+        self.assertEqual(len(lines), 1)
+        data = TracesData.from_json(lines[0])
+        self.assertEqual(len(data.resource_spans), 2)
+        names = {
+            span.name
+            for rs in data.resource_spans  # pylint: disable=not-an-iterable
+            for ss in rs.scope_spans
+            for span in ss.spans
+        }
+        self.assertEqual(names, {"from-a", "from-b"})
 
     def test_stream_flushed_after_export(self):
         mock_stream = Mock()
@@ -96,7 +128,7 @@ class TestFileSpanExporter(unittest.TestCase):
 
     def test_export_stream_error(self):
         mock_stream = Mock()
-        mock_stream.writelines.side_effect = OSError("disk full")
+        mock_stream.write.side_effect = OSError("disk full")
         exporter = FileSpanExporter(stream=mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
             result = exporter.export(self._make_span())
@@ -109,9 +141,10 @@ class TestFileSpanExporter(unittest.TestCase):
             exporter.export(self._make_span("path-span"))
             exporter.shutdown()
             with open(path, encoding="utf-8") as fh:
-                rs = ResourceSpans.from_json(fh.read().splitlines()[0])
-            # pylint: disable-next=unsubscriptable-object
-            self.assertEqual(rs.scope_spans[0].spans[0].name, "path-span")
+                data = TracesData.from_json(fh.read().splitlines()[0])
+            resource_spans = data.resource_spans[0]
+            scope_spans = resource_spans.scope_spans[0]
+            self.assertEqual(scope_spans.spans[0].name, "path-span")
 
     def test_path_and_stream_raises(self):
         with self.assertRaises(ValueError):
@@ -135,9 +168,8 @@ class TestFileSpanExporterRoundTrip(unittest.TestCase):
 
     def _expected(self) -> str:
         return "".join(
-            _format_line(rs.to_dict())
+            _format_line(encode_spans([span]).to_dict())
             for span in self._in_memory.get_finished_spans()
-            for rs in encode_spans([span]).resource_spans  # pylint: disable=not-an-iterable
         )
 
     def test_single_span_matches_in_memory(self):
