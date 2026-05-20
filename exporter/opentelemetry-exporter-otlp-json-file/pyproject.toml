@@ -26,8 +26,8 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "opentelemetry-exporter-otlp-json-common == 0.63b0.dev",
-  "opentelemetry-sdk ~= 1.42.0.dev",
+  "opentelemetry-exporter-otlp-json-common == 0.64b0.dev",
+  "opentelemetry-sdk ~= 1.43.0.dev",
 ]
 
 [project.entry-points.opentelemetry_traces_exporter]
