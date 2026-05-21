@@ -1,0 +1,1 @@
+Preserve the random trace ID flag when creating child spans.
