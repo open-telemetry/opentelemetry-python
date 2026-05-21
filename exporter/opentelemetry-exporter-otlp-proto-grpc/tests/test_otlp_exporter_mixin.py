@@ -1,26 +1,16 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import threading
 import time
 import unittest
+from collections.abc import Sequence
 from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
 )
 from logging import WARNING, getLogger
 from platform import system
-from typing import Any, Optional, Sequence
+from typing import Any
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -37,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
+    _RETRYABLE_ERROR_CODES,
     InvalidCompressionValueException,
     OTLPExporterMixin,
     environ_to_compression,
@@ -54,6 +45,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
@@ -115,9 +107,9 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
     def __init__(
         self,
         export_result: StatusCode,
-        optional_retry_nanos: Optional[int] = None,
-        optional_export_sleep: Optional[float] = None,
-        optional_error_details: Optional[str] = None,
+        optional_retry_nanos: int | None = None,
+        optional_export_sleep: float | None = None,
+        optional_error_details: str | None = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
@@ -168,12 +160,12 @@ class ThreadWithReturnValue(threading.Thread):
             # an argument that has a member that points to the thread.
             del self._target, self._args, self._kwargs  # type: ignore
 
-    def join(self, timeout: Optional[float] = None) -> Any:
+    def join(self, timeout: float | None = None) -> Any:
         super().join(timeout=timeout)
         return self._return
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable-next=too-many-public-methods
 class TestOTLPExporterMixin(TestCase):
     def setUp(self):
         self.server = server(ThreadPoolExecutor(max_workers=10))
@@ -391,13 +383,19 @@ class TestOTLPExporterMixin(TestCase):
             ),
         )
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
+    )
     def test_shutdown(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(StatusCode.OK),
             self.server,
         )
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, meter_provider=self.meter_provider
+        )
         self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.SUCCESS
+            exporter.export([self.span]), SpanExportResult.SUCCESS
         )
         metrics_data = self.metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
@@ -419,10 +417,10 @@ class TestOTLPExporterMixin(TestCase):
             metrics[2].data.data_points[0].attributes
         )
 
-        self.exporter.shutdown()
+        exporter.shutdown()
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                self.exporter.export([self.span]), SpanExportResult.FAILURE
+                exporter.export([self.span]), SpanExportResult.FAILURE
             )
             self.assertEqual(
                 warning.records[0].message,
@@ -483,6 +481,9 @@ class TestOTLPExporterMixin(TestCase):
     @unittest.skipIf(
         system() == "Windows",
         "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
     )
     def test_retry_info_is_respected(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
@@ -626,7 +627,13 @@ class TestOTLPExporterMixin(TestCase):
             (),
         )
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     def test_permanent_failure(self):
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, meter_provider=self.meter_provider
+        )
         with self.assertLogs(level=WARNING) as warning:
             add_TraceServiceServicer_to_server(
                 TraceServiceServicerWithExportParams(
@@ -636,7 +643,7 @@ class TestOTLPExporterMixin(TestCase):
                 self.server,
             )
             self.assertEqual(
-                self.exporter.export([self.span]), SpanExportResult.FAILURE
+                exporter.export([self.span]), SpanExportResult.FAILURE
             )
             self.assertEqual(
                 warning.records[-1].message,
@@ -710,7 +717,72 @@ class TestOTLPExporterMixin(TestCase):
         # Since the initial channel was created in setUp (unpatched), this call
         # must be from the reconnection logic.
         self.assertTrue(mock_insecure_channel.called)
-        # Verify that reconnection enabled flag is set
+
+    def test_retryable_error_codes_initialization(self):
+        # pylint: disable=protected-access
+        self.assertEqual(
+            self.exporter._retryable_error_codes, _RETRYABLE_ERROR_CODES
+        )
+        custom_codes = [StatusCode.INTERNAL, StatusCode.UNKNOWN]
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, retryable_error_codes=custom_codes
+        )
+        self.assertEqual(
+            exporter._retryable_error_codes, frozenset(custom_codes)
+        )
+
+    @patch.dict(
+        "os.environ",
+        {
+            "OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES": ",INTERNAL, unknown,,,dEAdline_Exceeded "
+        },
+    )
+    def test_retryable_error_codes_initialization_from_env(self):
+        expected_codes = frozenset(
+            {
+                StatusCode.INTERNAL,
+                StatusCode.UNKNOWN,
+                StatusCode.DEADLINE_EXCEEDED,
+            }
+        )
+        exporter = OTLPSpanExporterForTesting()
+        # pylint: disable=protected-access
+        self.assertEqual(exporter._retryable_error_codes, expected_codes)
+
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
+    def test_retryable_error_codes_custom(self):
+        # Test that a custom error code is retried if specified
+        custom_codes = [StatusCode.INTERNAL]
+        mock_trace_service = TraceServiceServicerWithExportParams(
+            StatusCode.INTERNAL,
+            optional_retry_nanos=200000000,  # .2 seconds
+        )
+        add_TraceServiceServicer_to_server(
+            mock_trace_service,
+            self.server,
+        )
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, retryable_error_codes=custom_codes, timeout=10
+        )
+
+        self.assertEqual(
+            exporter.export([self.span]),
+            SpanExportResult.FAILURE,
+        )
+
+        self.assertEqual(mock_trace_service.num_requests, 6)
+
+        # Test that a default retryable code is NOT retried if not in custom_codes
+        mock_trace_service.num_requests = 0
+        mock_trace_service.export_result = StatusCode.UNAVAILABLE
+        self.assertEqual(
+            exporter.export([self.span]),
+            SpanExportResult.FAILURE,
+        )
+        self.assertEqual(mock_trace_service.num_requests, 1)
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(

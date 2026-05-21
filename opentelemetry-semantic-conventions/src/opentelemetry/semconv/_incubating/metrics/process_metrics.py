@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
 from collections.abc import Callable, Generator, Iterable, Sequence
@@ -31,6 +20,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
 Number of times the process has been context switched
@@ -50,17 +40,17 @@ def create_process_context_switches(meter: Meter) -> Counter:
 
 PROCESS_CPU_TIME: Final = "process.cpu.time"
 """
-Total CPU seconds broken down by different states
+Total CPU seconds broken down by different CPU modes
 Instrument: counter
 Unit: s
 """
 
 
 def create_process_cpu_time(meter: Meter) -> Counter:
-    """Total CPU seconds broken down by different states"""
+    """Total CPU seconds broken down by different CPU modes"""
     return meter.create_counter(
         name=PROCESS_CPU_TIME,
-        description="Total CPU seconds broken down by different states.",
+        description="Total CPU seconds broken down by different CPU modes.",
         unit="s",
     )
 

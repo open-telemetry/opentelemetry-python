@@ -2,7 +2,6 @@ asgiref==3.7.2
 certifi==2024.7.4
 charset-normalizer==3.3.2
 idna==3.7
-importlib-metadata==6.11.0
 iniconfig==2.0.0
 packaging==24.0
 pluggy==1.6.0
@@ -14,7 +13,6 @@ tomli==2.0.1
 typing_extensions==4.10.0
 urllib3==2.2.2
 wrapt==1.16.0
-zipp==3.19.2
 -e opentelemetry-api
 -e exporter/opentelemetry-exporter-zipkin-json
 -e opentelemetry-sdk
