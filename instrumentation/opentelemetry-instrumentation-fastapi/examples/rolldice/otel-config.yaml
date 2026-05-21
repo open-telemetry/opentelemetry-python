@@ -1,0 +1,72 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Declarative configuration for the rolldice reference application.
+#
+# NOTE: With the exception of env var substitution syntax,
+# SDKs ignore environment variables when interpreting config files.
+#
+# Schema docs: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/schema-docs.md
+
+file_format: "1.0"
+disabled: false
+
+resource:
+  attributes:
+    - name: service.name
+      value: rolldice
+  attributes_list: ${OTEL_RESOURCE_ATTRIBUTES:-}
+  detection/development:
+    detectors:
+      - service:
+      - process:
+
+propagator:
+  composite:
+    - tracecontext:
+    - baggage:
+
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}/v1/traces
+    - simple:
+        exporter:
+          console: {}
+  sampler:
+    parent_based:
+      root:
+        always_on:
+
+meter_provider:
+  readers:
+    - periodic:
+        exporter:
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}/v1/metrics
+    - periodic:
+        exporter:
+          console: {}
+
+logger_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}/v1/logs
+    - batch:
+        exporter:
+          console: {}
