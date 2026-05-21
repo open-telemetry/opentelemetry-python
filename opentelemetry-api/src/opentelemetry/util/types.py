@@ -16,18 +16,11 @@ AnyValue = (
     | Mapping[str, "AnyValue"]
     | None
 )
-
-AttributeValue = (
-    str
-    | bool
-    | int
-    | float
-    | Sequence[str]
-    | Sequence[bool]
-    | Sequence[int]
-    | Sequence[float]
-)
-Attributes = Mapping[str, AttributeValue] | None
+AttributeValue = AnyValue
+Attributes = Mapping[str, AnyValue] | None
+# Not sure of the purpose of this type.. this is likely to confuse people..
+# I see only 1 usage in the repo: https://github.com/open-telemetry/opentelemetry-python/blob/main/opentelemetry-sdk/src/opentelemetry/sdk/util/__init__.pyi#L28
+# No usages in contrib.
 AttributesAsKey = tuple[
     tuple[
         str,
@@ -42,5 +35,3 @@ AttributesAsKey = tuple[
     ],
     ...,
 ]
-
-_ExtendedAttributes = Mapping[str, "AnyValue"]

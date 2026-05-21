@@ -82,7 +82,7 @@ class Span(abc.ABC):
 
     @abc.abstractmethod
     def set_attributes(
-        self, attributes: typing.Mapping[str, types.AttributeValue]
+        self, attributes: types.Attributes
     ) -> None:
         """Sets Attributes.
 
@@ -536,11 +536,11 @@ class NonRecordingSpan(Span):
         pass
 
     def set_attributes(
-        self, attributes: typing.Mapping[str, types.AttributeValue]
+        self, attributes: types.Attributes
     ) -> None:
         pass
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.Attribute) -> None:
         pass
 
     def add_event(
