@@ -1,20 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
-
-from typing import Optional
 
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.propagate import set_global_textmap
@@ -31,30 +18,46 @@ from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
 
-
-def _load_entry_point_propagator(name: str) -> TextMapPropagator:
-    """Load and instantiate a propagator by name."""
-    return load_entry_point("opentelemetry_propagator", name)()
+# Propagators bundled with the SDK — no entry point lookup needed.
+_PROPAGATOR_REGISTRY: dict[str, type[TextMapPropagator]] = {
+    "tracecontext": TraceContextTextMapPropagator,
+    "baggage": W3CBaggagePropagator,
+}
 
 
 def _propagators_from_textmap_config(
     config: TextMapPropagatorConfig,
 ) -> list[TextMapPropagator]:
-    """Resolve a single TextMapPropagator config entry to a list of propagators."""
+    """Resolve a TextMapPropagator config to a list of propagators.
+
+    Known names (tracecontext, baggage) are bootstrapped directly via
+    _PROPAGATOR_REGISTRY. Known schema fields not in the registry (b3, b3multi)
+    and unknown plugin names from additional_properties are loaded via the
+    ``opentelemetry_propagator`` entry point group.
+    """
     result: list[TextMapPropagator] = []
-    if config.tracecontext is not None:
-        result.append(TraceContextTextMapPropagator())
-    if config.baggage is not None:
-        result.append(W3CBaggagePropagator())
-    if config.b3 is not None:
-        result.append(_load_entry_point_propagator("b3"))
-    if config.b3multi is not None:
-        result.append(_load_entry_point_propagator("b3multi"))
+    for name, cls in _PROPAGATOR_REGISTRY.items():
+        if getattr(config, name, None) is not None:
+            result.append(cls())
+
+    # Known schema fields not in registry (b3, b3multi) — loaded via entry point
+    for name in ("b3", "b3multi"):
+        if getattr(config, name, None) is not None:
+            result.append(load_entry_point("opentelemetry_propagator", name)())
+
+    # Plugin propagators from additional_properties
+    for name, plugin_config in config.additional_properties.items():
+        result.append(
+            load_entry_point("opentelemetry_propagator", name)(
+                **(plugin_config or {})
+            )
+        )
+
     return result
 
 
 def create_propagator(
-    config: Optional[PropagatorConfig],
+    config: PropagatorConfig | None,
 ) -> CompositePropagator:
     """Create a CompositePropagator from declarative config.
 
@@ -85,13 +88,13 @@ def create_propagator(
             name = name.strip()
             if not name or name.lower() == "none":
                 continue
-            propagator = _load_entry_point_propagator(name)
+            propagator = load_entry_point("opentelemetry_propagator", name)()
             propagators.setdefault(type(propagator), propagator)
 
     return CompositePropagator(list(propagators.values()))
 
 
-def configure_propagator(config: Optional[PropagatorConfig]) -> None:
+def configure_propagator(config: PropagatorConfig | None) -> None:
     """Configure the global text map propagator from declarative config.
 
     Always calls set_global_textmap to override any defaults (including the

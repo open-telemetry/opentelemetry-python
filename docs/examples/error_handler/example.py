@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 from opentelemetry.sdk.error_handler import GlobalErrorHandler
 
 # ZeroDivisionError to be handled by ErrorHandler0

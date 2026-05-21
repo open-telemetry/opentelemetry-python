@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -22,6 +25,15 @@ from os.path import isdir, join
 from django.conf import settings
 
 settings.configure()
+
+# Provide AnyValue in opentelemetry.attributes module's namespace so the
+# "AnyValue" forward reference in opentelemetry.util.types._ExtendedAttributes
+# resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
+# BoundedAttributes (whose __globals__ is the attributes module). Docs-only.
+import opentelemetry.attributes  # noqa: E402
+from opentelemetry.util.types import AnyValue as _AnyValue  # noqa: E402
+
+opentelemetry.attributes.AnyValue = _AnyValue
 
 
 source_dirs = [
@@ -174,6 +186,11 @@ nitpick_ignore = [
         "py:class",
         "AnyValue",
     ),
+    (
+        "py:class",
+        "_ExtendedAttributes",
+    ),
+    ("py:class", "Token"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.

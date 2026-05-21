@@ -1,18 +1,6 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
-import typing
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -36,7 +24,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
     def extract(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         getter: Getter = default_getter,
     ) -> Context:
         return Context()
@@ -44,7 +32,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
     def inject(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: Setter = default_setter,
     ) -> None:
         return None
@@ -63,7 +51,7 @@ class MockTextMapPropagator(TextMapPropagator):
     def extract(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         getter: Getter = default_getter,
     ) -> Context:
         if context is None:
@@ -88,7 +76,7 @@ class MockTextMapPropagator(TextMapPropagator):
     def inject(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context)

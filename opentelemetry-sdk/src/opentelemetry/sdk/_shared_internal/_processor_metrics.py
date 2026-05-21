@@ -1,22 +1,11 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Callable
-from typing import Literal
+from typing import Literal, Protocol
 
 from opentelemetry.metrics import CallbackOptions, MeterProvider, Observation
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -35,6 +24,27 @@ from opentelemetry.semconv._incubating.metrics.otel_metrics import (
 from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
 
 _component_counter = Counter()
+
+
+class ProcessorMetricsT(Protocol):
+    def register_queue_size(
+        self, get_queue_size: Callable[[], int]
+    ) -> None: ...
+
+    def drop_items(self, count: int) -> None: ...
+
+    def finish_items(self, count: int, error: Exception | None) -> None: ...
+
+
+class NoOpProcessorMetrics:
+    def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
+        pass
+
+    def drop_items(self, count: int) -> None:
+        pass
+
+    def finish_items(self, count: int, error: Exception | None) -> None:
+        pass
 
 
 class ProcessorMetrics:
@@ -114,3 +124,22 @@ class ProcessorMetrics:
             ERROR_TYPE: type(error).__name__,
         }
         self._processed.add(count, attrs)
+
+
+def create_processor_metrics(
+    signal: Literal["traces", "logs"],
+    component_type: OtelComponentTypeValues,
+    meter_provider: MeterProvider,
+    *,
+    capacity: int | None = None,
+    enabled: bool,
+) -> ProcessorMetricsT:
+    if not enabled:
+        return NoOpProcessorMetrics()
+
+    return ProcessorMetrics(
+        signal,
+        component_type,
+        meter_provider,
+        capacity=capacity,
+    )

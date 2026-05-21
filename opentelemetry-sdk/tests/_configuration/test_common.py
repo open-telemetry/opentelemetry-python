@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import inspect
 import unittest
@@ -21,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._common import (
     _additional_properties,
+    _map_compression,
     _parse_headers,
     load_entry_point,
 )
@@ -149,6 +139,70 @@ class TestLoadEntryPoint(unittest.TestCase):
             # ConfigurationError
             with self.assertRaises(TypeError, msg="bad init"):
                 cls()
+
+
+class _CompressionWithDeflate:
+    Gzip = "gzip"
+    Deflate = "deflate"
+
+
+class _CompressionWithoutDeflate:
+    Gzip = "gzip"
+
+
+class TestMapCompression(unittest.TestCase):
+    def test_none_returns_none(self):
+        self.assertIsNone(_map_compression(None, _CompressionWithDeflate))
+
+    def test_none_string_returns_none(self):
+        self.assertIsNone(_map_compression("none", _CompressionWithDeflate))
+
+    def test_gzip_maps_to_gzip(self):
+        self.assertEqual(
+            _map_compression("gzip", _CompressionWithDeflate), "gzip"
+        )
+
+    def test_deflate_maps_when_enabled(self):
+        self.assertEqual(
+            _map_compression(
+                "deflate", _CompressionWithDeflate, allow_deflate=True
+            ),
+            "deflate",
+        )
+
+    def test_deflate_raises_by_default(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression("deflate", _CompressionWithDeflate)
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'deflate'. Supported values: "
+            "'gzip', 'none'.",
+        )
+
+    def test_deflate_raises_when_http_enum_lacks_support(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression(
+                "deflate", _CompressionWithoutDeflate, allow_deflate=True
+            )
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'deflate'. Supported values: "
+            "'gzip', 'none'.",
+        )
+
+    def test_http_error_message_includes_deflate(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression(
+                "brotli", _CompressionWithDeflate, allow_deflate=True
+            )
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'brotli'. Supported values: "
+            "'gzip', 'deflate', 'none'.",
+        )
 
 
 class TestAdditionalPropertiesSupport(unittest.TestCase):

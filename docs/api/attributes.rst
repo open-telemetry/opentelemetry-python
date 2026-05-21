@@ -1,7 +1,7 @@
-opentelemetry.trace.span
+opentelemetry.attributes
 ========================
 
-.. automodule:: opentelemetry.trace.span
+.. automodule:: opentelemetry.attributes
     :members:
     :undoc-members:
     :show-inheritance:
