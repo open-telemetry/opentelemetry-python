@@ -70,7 +70,7 @@ import typing
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, Optional, Set, cast
+from typing import List, Optional, cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -195,22 +195,27 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        otel_experimental_resource_detectors: Set[str] = {"otel"}.union(
-            {
-                otel_experimental_resource_detector.strip()
-                for otel_experimental_resource_detector in environ.get(
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-                ).split(",")
-                if otel_experimental_resource_detector
-            }
-        )
+        otel_experimental_resource_detectors: list[str] = [
+            detector.strip()
+            for detector in environ.get(
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+            ).split(",")
+            if detector.strip()
+        ]
 
         resource_detectors: List[ResourceDetector] = []
 
         if "*" in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors = entry_points(
-                group="opentelemetry_resource_detector"
-            ).names
+            otel_experimental_resource_detectors = [
+                name
+                for name in sorted(
+                    entry_points(group="opentelemetry_resource_detector").names
+                )
+                if name != "otel"
+            ]
+            otel_experimental_resource_detectors.append("otel")
+        elif "otel" not in otel_experimental_resource_detectors:
+            otel_experimental_resource_detectors.append("otel")
 
         for resource_detector in otel_experimental_resource_detectors:
             try:
@@ -380,9 +385,16 @@ class ProcessResourceDetector(ResourceDetector):
         _process_pid = os.getpid()
         _process_executable_name = sys.executable
         _process_executable_path = os.path.dirname(_process_executable_name)
-        _process_command = sys.argv[0]
-        _process_command_line = " ".join(sys.argv)
-        _process_command_args = sys.argv
+        # Use sys.orig_argv, which preserves the original arguments received
+        # by the interpreter. This correctly captures ``python -m <module>``
+        # invocations where sys.argv is rewritten to the resolved module path
+        # and the ``-m <module>`` information is lost. sys.orig_argv also
+        # aligns with /proc/<pid>/cmdline, which the OTel semantic
+        # conventions reference for these attributes.
+        _process_argv = list(sys.orig_argv)
+        _process_command = _process_argv[0] if _process_argv else ""
+        _process_command_line = " ".join(_process_argv)
+        _process_command_args = _process_argv
         resource_info = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,

@@ -35,11 +35,11 @@ following example::
     # Define which OpenTelemetry Tracer provider implementation to use.
     trace.set_tracer_provider(TracerProvider())
 
-    # Create an OpenTelemetry Tracer.
-    otel_tracer = trace.get_tracer(__name__)
+    # Get the OpenTelemetry TracerProvider.
+    tracer_provider = trace.get_tracer_provider()
 
     # Create an OpenTracing shim.
-    shim = create_tracer(otel_tracer)
+    shim = create_tracer(tracer_provider)
 
     with shim.start_active_span("ProcessHTTPRequest"):
         print("Processing HTTP request")
