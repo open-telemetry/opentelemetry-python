@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access
@@ -38,6 +27,9 @@ from opentelemetry.sdk._configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     ExplicitBucketHistogramAggregation as ExplicitBucketConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -62,6 +54,12 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     PeriodicMetricReader as PeriodicMetricReaderConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    PullMetricExporter as PullMetricExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    PullMetricReader as PullMetricReaderConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     PushMetricExporter as PushMetricExporterConfig,
@@ -269,6 +267,34 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertIsNone(kwargs["timeout"])
         self.assertIsNone(kwargs["compression"])
 
+    def test_otlp_http_created_with_deflate_compression(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_compression_cls.Deflate = "deflate_val"
+        mock_http_module = MagicMock()
+        mock_http_module.Compression = mock_compression_cls
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(
+                        compression="deflate"
+                    )
+                )
+            )
+            create_meter_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertEqual(kwargs["compression"], "deflate_val")
+
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_periodic_config(
             PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig())
@@ -284,12 +310,215 @@ class TestCreateMetricReaders(unittest.TestCase):
                 create_meter_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
-    def test_pull_reader_raises(self):
+
+class TestCreatePullMetricReaders(unittest.TestCase):
+    def test_pull_prometheus_creates_reader(self):
+        mock_reader_cls = MagicMock()
+        mock_start_server = MagicMock()
+        mock_module = MagicMock()
+        mock_module.PrometheusMetricReader = mock_reader_cls
+        mock_module.start_http_server = mock_start_server
+
+        with patch.dict(
+            sys.modules,
+            {"opentelemetry.exporter.prometheus": mock_module},
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            exporter=PullMetricExporterConfig(
+                                prometheus_development=PrometheusMetricExporterConfig(
+                                    host="0.0.0.0",
+                                    port=9090,
+                                    without_target_info_development=True,
+                                )
+                            )
+                        )
+                    )
+                ]
+            )
+            provider = create_meter_provider(config)
+
+        mock_reader_cls.assert_called_once_with(disable_target_info=True)
+        mock_start_server.assert_called_once_with(port=9090, addr="0.0.0.0")
+        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+
+    def test_pull_prometheus_defaults(self):
+        mock_reader_cls = MagicMock()
+        mock_start_server = MagicMock()
+        mock_module = MagicMock()
+        mock_module.PrometheusMetricReader = mock_reader_cls
+        mock_module.start_http_server = mock_start_server
+
+        with patch.dict(
+            sys.modules,
+            {"opentelemetry.exporter.prometheus": mock_module},
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            exporter=PullMetricExporterConfig(
+                                prometheus_development=PrometheusMetricExporterConfig()
+                            )
+                        )
+                    )
+                ]
+            )
+            provider = create_meter_provider(config)
+
+        mock_reader_cls.assert_called_once_with(disable_target_info=False)
+        mock_start_server.assert_called_once_with(port=9464, addr="localhost")
+        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+
+    def test_pull_prometheus_missing_package_raises(self):
+        with patch.dict(
+            sys.modules,
+            {"opentelemetry.exporter.prometheus": None},
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            exporter=PullMetricExporterConfig(
+                                prometheus_development=PrometheusMetricExporterConfig()
+                            )
+                        )
+                    )
+                ]
+            )
+            with self.assertRaises(ConfigurationError):
+                create_meter_provider(config)
+
+    def test_pull_no_exporter_raises(self):
         config = MeterProviderConfig(
-            readers=[MetricReaderConfig(pull=MagicMock())]
+            readers=[
+                MetricReaderConfig(
+                    pull=PullMetricReaderConfig(
+                        exporter=PullMetricExporterConfig()
+                    )
+                )
+            ]
         )
         with self.assertRaises(ConfigurationError):
             create_meter_provider(config)
+
+    def test_pull_plugin_loads_via_entry_point(self):
+        mock_reader = MagicMock()
+        mock_class = MagicMock(return_value=mock_reader)
+        mock_entry_points = MagicMock(
+            return_value=[MagicMock(**{"load.return_value": mock_class})]
+        )
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            mock_entry_points,
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            # pylint: disable=unexpected-keyword-arg
+                            exporter=PullMetricExporterConfig(
+                                my_custom_reader={"port": 8080}
+                            )
+                        )
+                    )
+                ]
+            )
+            provider = create_meter_provider(config)
+        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+        mock_class.assert_called_once_with(port=8080)
+        mock_entry_points.assert_called_once_with(
+            group="opentelemetry_pull_metric_exporter",
+            name="my_custom_reader",
+        )
+
+    def test_pull_plugin_not_found_raises(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            # pylint: disable=unexpected-keyword-arg
+                            exporter=PullMetricExporterConfig(
+                                no_such_reader={}
+                            )
+                        )
+                    )
+                ]
+            )
+            with self.assertRaises(ConfigurationError):
+                create_meter_provider(config)
+
+    def test_pull_producers_warns(self):
+        mock_module = MagicMock()
+
+        with patch.dict(
+            sys.modules,
+            {"opentelemetry.exporter.prometheus": mock_module},
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            exporter=PullMetricExporterConfig(
+                                prometheus_development=PrometheusMetricExporterConfig()
+                            ),
+                            producers=[MagicMock()],
+                        )
+                    )
+                ]
+            )
+            with self.assertLogs(
+                "opentelemetry.sdk._configuration._meter_provider",
+                level="WARNING",
+            ) as cm:
+                create_meter_provider(config)
+        self.assertTrue(any("MetricProducer" in msg for msg in cm.output))
+
+    def test_pull_cardinality_limits_warns(self):
+        mock_module = MagicMock()
+
+        with patch.dict(
+            sys.modules,
+            {"opentelemetry.exporter.prometheus": mock_module},
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            exporter=PullMetricExporterConfig(
+                                prometheus_development=PrometheusMetricExporterConfig()
+                            ),
+                            cardinality_limits=MagicMock(),
+                        )
+                    )
+                ]
+            )
+            with self.assertLogs(
+                "opentelemetry.sdk._configuration._meter_provider",
+                level="WARNING",
+            ) as cm:
+                create_meter_provider(config)
+        self.assertTrue(any("cardinality_limits" in msg for msg in cm.output))
+
+
+class TestCreateMetricReadersGeneral(unittest.TestCase):
+    @staticmethod
+    def _make_periodic_config(exporter_config):
+        return MeterProviderConfig(
+            readers=[
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=exporter_config
+                    )
+                )
+            ]
+        )
 
     def test_no_reader_type_raises(self):
         config = MeterProviderConfig(readers=[MetricReaderConfig()])
@@ -300,6 +529,32 @@ class TestCreateMetricReaders(unittest.TestCase):
         config = self._make_periodic_config(PushMetricExporterConfig())
         with self.assertRaises(ConfigurationError):
             create_meter_provider(config)
+
+    def test_plugin_metric_exporter_loaded_via_entry_point(self):
+        mock_exporter = MagicMock()
+        mock_class = MagicMock(return_value=mock_exporter)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(my_custom_exporter={})
+            )
+            provider = create_meter_provider(config)
+        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+
+    def test_unknown_metric_exporter_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(no_such_exporter={})
+            )
+            with self.assertRaises(ConfigurationError):
+                create_meter_provider(config)
 
     def test_multiple_readers(self):
         config = MeterProviderConfig(

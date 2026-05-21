@@ -393,10 +393,16 @@ class Profile(google.protobuf.message.Message):
     """The following fields 3-12 are informational, do not affect
     interpretation of results.
 
-    Time of collection (UTC) represented as nanoseconds past the epoch.
+    Time of collection. Value is UNIX Epoch time in nanoseconds since 00:00:00
+    UTC on 1 January 1970.
     """
     duration_nano: builtins.int
-    """Duration of the profile, if a duration makes sense."""
+    """Duration of the profile. For instant profiles like live heap snapshot, the
+    duration can be zero but it may be preferable to set time_unix_nano to the
+    process start time and duration_nano to the relative time when the profile
+    was gathered. This ensures Sample.timestamps_unix_nano values such as
+    allocation timestamp fall into the profile time range.
+    """
     @property
     def period_type(self) -> global___ValueType:
         """The kind of events between sampled occurrences.
@@ -524,7 +530,11 @@ class Sample(google.protobuf.message.Message):
     both fields are populated, they MUST contain the same number of elements, and
     the elements at the same index MUST refer to the same event.
 
-    Examples of different ways of representing a sample with the total value of 10:
+    For the purposes of efficiently representing aggregated data observations, a Sample is regarded
+    as having a shared identity and an associated collection of per-observation data points.
+    Samples having the same identity SHOULD be combined by inserting timestamps and values to the data arrays.
+
+    Examples of different ways ('shapes') of representing a sample with the total value of 10:
 
     Report of a stacktrace at 10 timestamps (consumers must assume the value is 1 for each point):
        values: []
@@ -537,20 +547,23 @@ class Sample(google.protobuf.message.Message):
     Report of a stacktrace at 4 timestamps where each point records a specific value:
        values: [2, 2, 3, 3]
        timestamps_unix_nano: [1, 2, 3, 4]
+
+    All Samples for a Profile SHOULD have the same shape, i.e. all data observation series should consistently
+    adopt the same data recording style.
     """
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     STACK_INDEX_FIELD_NUMBER: builtins.int
-    VALUES_FIELD_NUMBER: builtins.int
     ATTRIBUTE_INDICES_FIELD_NUMBER: builtins.int
     LINK_INDEX_FIELD_NUMBER: builtins.int
+    VALUES_FIELD_NUMBER: builtins.int
     TIMESTAMPS_UNIX_NANO_FIELD_NUMBER: builtins.int
     stack_index: builtins.int
-    """Reference to stack in ProfilesDictionary.stack_table."""
-    @property
-    def values(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-        """The type and unit of each value is defined by Profile.sample_type."""
+    """A Sample's identity (i.e. 'primary key') is the tuple of {stack_index, set_of(attribute_indices), link_index}
+
+    Reference to stack in ProfilesDictionary.stack_table.
+    """
     @property
     def attribute_indices(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
         """References to attributes in ProfilesDictionary.attribute_table. [optional]"""
@@ -559,17 +572,25 @@ class Sample(google.protobuf.message.Message):
     It can be unset / set to 0 if no link exists, as link_table[0] is always a 'null' default value.
     """
     @property
+    def values(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
+        """The following fields may contain per-observation data and do not form part of the Sample's identity.
+
+        The type and unit of each value is defined by Profile.sample_type.
+        """
+    @property
     def timestamps_unix_nano(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-        """Timestamps associated with Sample represented in nanoseconds. These
-        timestamps should fall within the Profile's time range.
+        """Timestamps associated with Sample. Value is UNIX Epoch time in nanoseconds
+        since 00:00:00 UTC on 1 January 1970. The timestamps should fall within the
+        [Profile.time_unix_nano, Profile.time_unix_nano + Profile.duration_nano)
+        time range.
         """
     def __init__(
         self,
         *,
         stack_index: builtins.int = ...,
-        values: collections.abc.Iterable[builtins.int] | None = ...,
         attribute_indices: collections.abc.Iterable[builtins.int] | None = ...,
         link_index: builtins.int = ...,
+        values: collections.abc.Iterable[builtins.int] | None = ...,
         timestamps_unix_nano: collections.abc.Iterable[builtins.int] | None = ...,
     ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["attribute_indices", b"attribute_indices", "link_index", b"link_index", "stack_index", b"stack_index", "timestamps_unix_nano", b"timestamps_unix_nano", "values", b"values"]) -> None: ...

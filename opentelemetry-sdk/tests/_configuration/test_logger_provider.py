@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access
@@ -228,15 +217,34 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         exporter = _create_log_record_exporter(config)
         self.assertIsInstance(exporter, ConsoleLogRecordExporter)
 
-    def test_otlp_file_development_raises(self):
-        config = LogRecordExporterConfig(otlp_file_development={})
-        with self.assertRaises(ConfigurationError):
-            _create_log_record_exporter(config)
-
     def test_no_exporter_type_raises(self):
         config = LogRecordExporterConfig()
         with self.assertRaises(ConfigurationError):
             _create_log_record_exporter(config)
+
+    def test_plugin_log_exporter_loaded_via_entry_point(self):
+        mock_exporter = MagicMock()
+        mock_class = MagicMock(return_value=mock_exporter)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            result = _create_log_record_exporter(
+                LogRecordExporterConfig(my_custom_exporter={})
+            )
+        self.assertIs(result, mock_exporter)
+
+    def test_unknown_log_exporter_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            with self.assertRaises(ConfigurationError):
+                # pylint: disable=unexpected-keyword-arg
+                _create_log_record_exporter(
+                    LogRecordExporterConfig(no_such_exporter={})
+                )
 
     def test_otlp_http_missing_package_raises(self):
         config = LogRecordExporterConfig(
@@ -322,6 +330,30 @@ class TestCreateLogRecordExporters(unittest.TestCase):
 
         call_kwargs = mock_exporter_cls.call_args.kwargs
         self.assertEqual(call_kwargs["headers"], {"x-api-key": "secret"})
+
+    def test_otlp_http_exporter_deflate_compression(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_compression_cls.Deflate = "deflate"
+        mock_module = MagicMock()
+        mock_module.Compression = mock_compression_cls
+        mock_log_module = MagicMock()
+        mock_log_module.OTLPLogExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http": mock_module,
+                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+            },
+        ):
+            config = LogRecordExporterConfig(
+                otlp_http=OtlpHttpExporterConfig(compression="deflate")
+            )
+            _create_log_record_exporter(config)
+
+        call_kwargs = mock_exporter_cls.call_args.kwargs
+        self.assertEqual(call_kwargs["compression"], "deflate")
 
     def test_otlp_grpc_exporter_endpoint(self):
         mock_exporter_cls = MagicMock()

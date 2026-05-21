@@ -1,20 +1,9 @@
 # Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+from collections.abc import Iterable, Iterator, Mapping
 from logging import getLogger
 from re import split
-from typing import Iterable, List, Mapping, Optional, Set
 from urllib.parse import quote_plus, unquote_plus
 
 from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
@@ -24,6 +13,59 @@ from opentelemetry.propagators import textmap
 from opentelemetry.util.re import _DELIMITER_PATTERN
 
 _logger = getLogger(__name__)
+
+
+def _filter_valid_entries(
+    entries: Iterable[str],
+    max_pair_length: int,
+) -> Iterator[str]:
+    for entry in entries:
+        if not entry:
+            continue
+        if not entry.isascii():
+            _logger.warning(
+                "Baggage entry with key `%s` contains non-ASCII characters",
+                entry.split("=", 1)[0],
+            )
+            continue
+        if len(entry) > max_pair_length:
+            _logger.warning(
+                "Baggage entry with key `%s` exceeded the maximum number of bytes per list-member with length %d",
+                entry.split("=", 1)[0],
+                len(entry),
+            )
+            continue
+        yield entry
+
+
+def _apply_baggage_limits(
+    entries: Iterable[str],
+    max_pairs: int,
+    max_pair_length: int,
+    max_header_length: int,
+) -> Iterator[str]:
+    """Apply W3C Baggage size limits to a sequence of baggage entries.
+
+    Yields entries that fit within the W3C specification limits.
+    Logs warnings when entries are dropped.
+    """
+    length = 0
+    for index, entry in enumerate(
+        _filter_valid_entries(entries, max_pair_length)
+    ):
+        if index >= max_pairs:
+            _logger.warning(
+                "Baggage exceeded the maximum number of list-members"
+            )
+            return
+
+        length += (1 if index > 0 else 0) + len(entry)
+        if length > max_header_length:
+            _logger.warning(
+                "Baggage exceeded the maximum number of bytes per baggage-string"
+            )
+            return
+        yield entry
 
 
 class W3CBaggagePropagator(textmap.TextMapPropagator):
@@ -37,7 +79,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
     def extract(
         self,
         carrier: textmap.CarrierT,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
     ) -> Context:
         """Extract Baggage from the carrier.
@@ -56,31 +98,21 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         if not header:
             return context
 
-        if len(header) > self._MAX_HEADER_LENGTH:
+        if len(header.encode()) > self._MAX_HEADER_LENGTH:
             _logger.warning(
                 "Baggage header `%s` exceeded the maximum number of bytes per baggage-string",
                 header,
             )
             return context
 
-        baggage_entries: List[str] = split(_DELIMITER_PATTERN, header)
-        total_baggage_entries = self._MAX_PAIRS
+        baggage_entries = split(_DELIMITER_PATTERN, header)
 
-        if len(baggage_entries) > self._MAX_PAIRS:
-            _logger.warning(
-                "Baggage header `%s` exceeded the maximum number of list-members",
-                header,
-            )
-
-        for entry in baggage_entries:
-            if len(entry) > self._MAX_PAIR_LENGTH:
-                _logger.warning(
-                    "Baggage entry `%s` exceeded the maximum number of bytes per list-member",
-                    entry,
-                )
-                continue
-            if not entry:  # empty string
-                continue
+        for entry in _apply_baggage_limits(
+            baggage_entries,
+            max_pairs=self._MAX_PAIRS,
+            max_pair_length=self._MAX_PAIR_LENGTH,
+            max_header_length=self._MAX_HEADER_LENGTH,
+        ):
             try:
                 name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-exception-caught
@@ -101,16 +133,13 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 value,
                 context=context,
             )
-            total_baggage_entries -= 1
-            if total_baggage_entries == 0:
-                break
 
         return context
 
     def inject(
         self,
         carrier: textmap.CarrierT,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
@@ -122,25 +151,35 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         if not baggage_entries:
             return
 
-        baggage_string = _format_baggage(baggage_entries)
-        setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
+        baggage_string = ",".join(
+            _apply_baggage_limits(
+                _encode_baggage_pairs(baggage_entries),
+                max_pairs=self._MAX_PAIRS,
+                max_pair_length=self._MAX_PAIR_LENGTH,
+                max_header_length=self._MAX_HEADER_LENGTH,
+            )
+        )
+
+        if baggage_string:
+            setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
     @property
-    def fields(self) -> Set[str]:
+    def fields(self) -> set[str]:
         """Returns a set with the fields set in `inject`."""
         return {self._BAGGAGE_HEADER_NAME}
 
 
-def _format_baggage(baggage_entries: Mapping[str, object]) -> str:
-    return ",".join(
-        quote_plus(str(key)) + "=" + quote_plus(str(value))
-        for key, value in baggage_entries.items()
-    )
+def _encode_baggage_pairs(
+    baggage_entries: Mapping[str, object],
+) -> Iterator[str]:
+    """Yield URL-encoded 'key=value' pairs from baggage entries."""
+    for key, value in baggage_entries.items():
+        yield quote_plus(str(key)) + "=" + quote_plus(str(value))
 
 
 def _extract_first_element(
-    items: Optional[Iterable[textmap.CarrierT]],
-) -> Optional[textmap.CarrierT]:
+    items: Iterable[textmap.CarrierT] | None,
+) -> textmap.CarrierT | None:
     if items is None:
         return None
     return next(iter(items), None)

@@ -1,21 +1,11 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
+import dataclasses
+import inspect
 import logging
-from typing import Optional, Type
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.util._importlib_metadata import entry_points
@@ -23,7 +13,41 @@ from opentelemetry.util._importlib_metadata import entry_points
 _logger = logging.getLogger(__name__)
 
 
-def load_entry_point(group: str, name: str) -> Type:
+def _additional_properties(cls):
+    """Decorator for dataclasses whose JSON Schema sets additionalProperties.
+
+    Wraps the dataclass-generated ``__init__`` so that unknown keyword
+    arguments are captured into an ``additional_properties`` instance
+    attribute instead of raising ``TypeError``.  This lets plugin/custom
+    component names flow through the config pipeline without modifying
+    the codegen output for known fields.
+
+    Applied automatically by the custom template in ``opentelemetry-sdk/codegen/``
+    when ``additionalPropertiesType`` is present in the template context
+    (set by ``datamodel-codegen`` for schema types with ``additionalProperties``).
+    """
+    original_init = cls.__init__
+    original_sig = inspect.signature(original_init)
+    known_fields = frozenset(f.name for f in dataclasses.fields(cls))
+
+    def _init(self, **kwargs):
+        known = {k: v for k, v in kwargs.items() if k in known_fields}
+        extra = {k: v for k, v in kwargs.items() if k not in known_fields}
+        original_init(self, **known)
+        self.additional_properties = extra
+
+    # Preserve the original parameter list for IDE autocompletion and
+    # inspect.signature(), adding **kwargs to signal extras are accepted.
+    # setattr used because pyright rejects direct __signature__ assignment.
+    params = list(original_sig.parameters.values())
+    params.append(inspect.Parameter("kwargs", inspect.Parameter.VAR_KEYWORD))
+    setattr(_init, "__signature__", original_sig.replace(parameters=params))  # noqa: B010
+
+    cls.__init__ = _init
+    return cls
+
+
+def load_entry_point(group: str, name: str) -> type:
     """Load a plugin class from an entry point group by name.
 
     Returns the loaded class — callers are responsible for instantiation
@@ -49,9 +73,9 @@ def load_entry_point(group: str, name: str) -> Type:
 
 
 def _parse_headers(
-    headers: Optional[list],
-    headers_list: Optional[str],
-) -> Optional[dict[str, str]]:
+    headers: list | None,
+    headers_list: str | None,
+) -> dict[str, str] | None:
     """Merge headers struct and headers_list into a dict.
 
     Returns None if neither is set, letting the exporter read env vars.
@@ -73,5 +97,38 @@ def _parse_headers(
                 )
     if headers:
         for pair in headers:
-            result[pair.name] = pair.value or ""
+            if isinstance(pair, dict):
+                result[pair["name"]] = pair.get("value") or ""
+            else:
+                result[pair.name] = pair.value or ""
     return result
+
+
+def _map_compression(
+    value: str | None,
+    compression_enum: type,
+    *,
+    allow_deflate: bool = False,
+) -> object | None:
+    """Map a compression string to the given Compression enum value."""
+    if value is None:
+        return None
+
+    value_lower = value.lower()
+    supports_deflate = hasattr(compression_enum, "Deflate")
+
+    if value_lower == "none":
+        return None
+    if value_lower == "gzip":
+        return compression_enum.Gzip  # type: ignore[attr-defined]
+    if value_lower == "deflate" and allow_deflate and supports_deflate:
+        return compression_enum.Deflate  # type: ignore[attr-defined]
+
+    supported_values = ["'gzip'", "'none'"]
+    if allow_deflate and supports_deflate:
+        supported_values.insert(1, "'deflate'")
+
+    raise ConfigurationError(
+        f"Unsupported compression value '{value}'. Supported values: "
+        f"{', '.join(supported_values)}."
+    )
