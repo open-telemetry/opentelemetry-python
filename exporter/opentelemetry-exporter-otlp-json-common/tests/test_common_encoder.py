@@ -6,6 +6,7 @@
 import base64
 import unittest
 from logging import ERROR
+from pathlib import Path
 
 from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_array,
@@ -326,3 +327,28 @@ class TestCommonEncoder(unittest.TestCase):
         result = _encode_instrumentation_scope(None)
         self.assertEqual(result, JSONInstrumentationScope())
         self.assertEqual(result.to_dict(), {})
+
+    def test_encode_value_pathlib_path(self):
+        result = _encode_value(Path("/models/my-model"))
+        self.assertEqual(result, JSONAnyValue(string_value="/models/my-model"))
+        self.assertEqual(result.to_dict(), {"stringValue": "/models/my-model"})
+
+    def test_encode_attributes_pathlib_path(self):
+        result = _encode_attributes({"model_path": Path("/models/my-model")})
+        self.assertEqual(
+            result,
+            [
+                JSONKeyValue(
+                    key="model_path",
+                    value=JSONAnyValue(string_value="/models/my-model"),
+                )
+            ],
+        )
+
+    def test_encode_value_unstringable_type_raises(self):
+        class _Unstringable:
+            def __str__(self):
+                raise RuntimeError("cannot convert")
+
+        with self.assertRaises((TypeError, Exception)):
+            _encode_value(_Unstringable())

@@ -79,6 +79,15 @@ def _encode_value(value: Any, allow_null: bool = False) -> PB2AnyValue | None:
                 ]
             )
         )
+    # Third-party instrumentation can inject arbitrary types that cannot be exhaustively
+    # whitelisted; stringify as a best-effort fallback so telemetry is not silently lost.
+    # None is excluded — it must be handled via allow_null=True at the call site.
+    if value is not None:
+        # pylint: disable=broad-exception-caught
+        try:
+            return PB2AnyValue(string_value=str(value))
+        except Exception:
+            pass
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
 

@@ -3,9 +3,11 @@
 
 import unittest
 from logging import ERROR
+from pathlib import Path
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
+    _encode_value,
 )
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -110,3 +112,27 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
                 PB2KeyValue(key="b", value=PB2AnyValue(int_value=2)),
             ],
         )
+
+    def test_encode_value_pathlib_path(self):
+        result = _encode_value(Path("/models/my-model"))
+        self.assertEqual(result, PB2AnyValue(string_value="/models/my-model"))
+
+    def test_encode_attributes_pathlib_path(self):
+        result = _encode_attributes({"model_path": Path("/models/my-model")})
+        self.assertEqual(
+            result,
+            [
+                PB2KeyValue(
+                    key="model_path",
+                    value=PB2AnyValue(string_value="/models/my-model"),
+                )
+            ],
+        )
+
+    def test_encode_value_unstringable_type_raises(self):
+        class _Unstringable:
+            def __str__(self):
+                raise RuntimeError("cannot convert")
+
+        with self.assertRaises(Exception):
+            _encode_value(_Unstringable())
