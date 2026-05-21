@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog start -->
 
+## Version 1.42.1/0.63b1 (2026-05-21)
+
+### Fixed
+
+- Preserve the random trace ID flag when creating child spans instead of always
+  setting the random trace id bit depending on the available trace id
+  generator.
+  ([#5241](https://github.com/open-telemetry/opentelemetry-python/pull/5241))
+
 ## Version 1.42.0/0.63b0 (2026-05-19)
 
 ### Added
