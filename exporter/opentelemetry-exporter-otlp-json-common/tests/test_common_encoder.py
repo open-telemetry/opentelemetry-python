@@ -36,7 +36,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
-class TestCommonEncoder(unittest.TestCase):
+class TestCommonEncoder(unittest.TestCase):  # pylint: disable=too-many-public-methods
     def test_encode_value(self):
         cases = [
             (
@@ -329,18 +329,20 @@ class TestCommonEncoder(unittest.TestCase):
         self.assertEqual(result.to_dict(), {})
 
     def test_encode_value_pathlib_path(self):
-        result = _encode_value(Path("/models/my-model"))
-        self.assertEqual(result, JSONAnyValue(string_value="/models/my-model"))
-        self.assertEqual(result.to_dict(), {"stringValue": "/models/my-model"})
+        path = Path("/models/my-model")
+        result = _encode_value(path)
+        self.assertEqual(result, JSONAnyValue(string_value=str(path)))
+        self.assertEqual(result.to_dict(), {"stringValue": str(path)})
 
     def test_encode_attributes_pathlib_path(self):
-        result = _encode_attributes({"model_path": Path("/models/my-model")})
+        path = Path("/models/my-model")
+        result = _encode_attributes({"model_path": path})
         self.assertEqual(
             result,
             [
                 JSONKeyValue(
                     key="model_path",
-                    value=JSONAnyValue(string_value="/models/my-model"),
+                    value=JSONAnyValue(string_value=str(path)),
                 )
             ],
         )

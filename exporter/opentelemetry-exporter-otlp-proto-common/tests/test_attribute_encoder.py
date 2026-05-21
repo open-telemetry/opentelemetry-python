@@ -114,17 +114,19 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
         )
 
     def test_encode_value_pathlib_path(self):
-        result = _encode_value(Path("/models/my-model"))
-        self.assertEqual(result, PB2AnyValue(string_value="/models/my-model"))
+        path = Path("/models/my-model")
+        result = _encode_value(path)
+        self.assertEqual(result, PB2AnyValue(string_value=str(path)))
 
     def test_encode_attributes_pathlib_path(self):
-        result = _encode_attributes({"model_path": Path("/models/my-model")})
+        path = Path("/models/my-model")
+        result = _encode_attributes({"model_path": path})
         self.assertEqual(
             result,
             [
                 PB2KeyValue(
                     key="model_path",
-                    value=PB2AnyValue(string_value="/models/my-model"),
+                    value=PB2AnyValue(string_value=str(path)),
                 )
             ],
         )
