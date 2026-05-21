@@ -115,8 +115,14 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
 
     def test_encode_value_pathlib_path(self):
         path = Path("/models/my-model")
-        result = _encode_value(path)
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.proto.common._internal", level=ERROR
+        ) as log_cm:
+            result = _encode_value(path)
         self.assertEqual(result, PB2AnyValue(string_value=str(path)))
+        self.assertTrue(
+            any("Invalid type" in msg for msg in log_cm.output)
+        )
 
     def test_encode_attributes_pathlib_path(self):
         path = Path("/models/my-model")
@@ -136,5 +142,11 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
             def __str__(self):
                 raise RuntimeError("cannot convert")
 
-        with self.assertRaises(Exception):
-            _encode_value(_Unstringable())
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.proto.common._internal", level=ERROR
+        ) as log_cm:
+            with self.assertRaises(Exception):
+                _encode_value(_Unstringable())
+        self.assertTrue(
+            any("Invalid type" in msg for msg in log_cm.output)
+        )

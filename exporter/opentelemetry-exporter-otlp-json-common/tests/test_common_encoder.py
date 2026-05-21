@@ -330,9 +330,15 @@ class TestCommonEncoder(unittest.TestCase):  # pylint: disable=too-many-public-m
 
     def test_encode_value_pathlib_path(self):
         path = Path("/models/my-model")
-        result = _encode_value(path)
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.json.common._internal", level=ERROR
+        ) as log_cm:
+            result = _encode_value(path)
         self.assertEqual(result, JSONAnyValue(string_value=str(path)))
         self.assertEqual(result.to_dict(), {"stringValue": str(path)})
+        self.assertTrue(
+            any("Invalid type" in msg for msg in log_cm.output)
+        )
 
     def test_encode_attributes_pathlib_path(self):
         path = Path("/models/my-model")
@@ -352,5 +358,11 @@ class TestCommonEncoder(unittest.TestCase):  # pylint: disable=too-many-public-m
             def __str__(self):
                 raise RuntimeError("cannot convert")
 
-        with self.assertRaises((TypeError, Exception)):
-            _encode_value(_Unstringable())
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.json.common._internal", level=ERROR
+        ) as log_cm:
+            with self.assertRaises((TypeError, Exception)):
+                _encode_value(_Unstringable())
+        self.assertTrue(
+            any("Invalid type" in msg for msg in log_cm.output)
+        )
