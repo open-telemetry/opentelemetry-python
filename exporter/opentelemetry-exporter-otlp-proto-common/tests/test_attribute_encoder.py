@@ -120,9 +120,7 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
         ) as log_cm:
             result = _encode_value(path)
         self.assertEqual(result, PB2AnyValue(string_value=str(path)))
-        self.assertTrue(
-            any("Invalid type" in msg for msg in log_cm.output)
-        )
+        self.assertTrue(any("Invalid type" in msg for msg in log_cm.output))
 
     def test_encode_attributes_pathlib_path(self):
         path = Path("/models/my-model")
@@ -147,6 +145,4 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
         ) as log_cm:
             with self.assertRaises(Exception):
                 _encode_value(_Unstringable())
-        self.assertTrue(
-            any("Invalid type" in msg for msg in log_cm.output)
-        )
+        self.assertTrue(any("Invalid type" in msg for msg in log_cm.output))
