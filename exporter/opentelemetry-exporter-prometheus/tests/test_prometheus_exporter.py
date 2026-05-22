@@ -10,10 +10,12 @@ from prometheus_client.core import (
     CounterMetricFamily,
     GaugeMetricFamily,
     InfoMetricFamily,
+    UnknownMetricFamily,
 )
 
 from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
+    TranslationStrategy,
     _CustomCollector,
 )
 from opentelemetry.metrics import NoOpMeterProvider
@@ -34,6 +36,35 @@ from opentelemetry.test.metrictestutil import (
     _generate_sum,
     _generate_unsupported_metric,
 )
+
+
+def _collect_metric(
+    metric: Metric,
+    translation_strategy: TranslationStrategy = TranslationStrategy.UNDERSCORE_ESCAPING_WITH_SUFFIXES,
+    prefix: str = "",
+) -> list:
+    metrics_data = MetricsData(
+        resource_metrics=[
+            ResourceMetrics(
+                resource=Mock(),
+                scope_metrics=[
+                    ScopeMetrics(
+                        scope=Mock(),
+                        metrics=[metric],
+                        schema_url="schema_url",
+                    )
+                ],
+                schema_url="schema_url",
+            )
+        ]
+    )
+    collector = _CustomCollector(
+        disable_target_info=True,
+        prefix=prefix,
+        translation_strategy=translation_strategy,
+    )
+    collector.add_metrics_data(metrics_data)
+    return list(collector.collect())
 
 
 class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-methods
@@ -721,3 +752,82 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 """
             ),
         )
+
+    def test_translation_strategy(self):
+        cases = [
+            (
+                TranslationStrategy.UNDERSCORE_ESCAPING_WITH_SUFFIXES,
+                CounterMetricFamily,
+                "test_counter_seconds",
+                GaugeMetricFamily,
+                "test_gauge_seconds",
+            ),
+            (
+                TranslationStrategy.UNDERSCORE_ESCAPING_WITHOUT_SUFFIXES,
+                UnknownMetricFamily,
+                "test_counter",
+                GaugeMetricFamily,
+                "test_gauge",
+            ),
+            (
+                TranslationStrategy.NO_UTF8_ESCAPING_WITH_SUFFIXES,
+                CounterMetricFamily,
+                "test.counter_seconds",
+                GaugeMetricFamily,
+                "test.gauge_seconds",
+            ),
+            (
+                TranslationStrategy.NO_TRANSLATION,
+                UnknownMetricFamily,
+                "test.counter",
+                GaugeMetricFamily,
+                "test.gauge",
+            ),
+        ]
+        for (
+            strategy,
+            counter_cls,
+            counter_name,
+            gauge_cls,
+            gauge_name,
+        ) in cases:
+            with self.subTest(strategy=strategy):
+                counter_result = _collect_metric(
+                    _generate_sum("test.counter", 1, unit="s"), strategy
+                )
+                self.assertEqual(type(counter_result[0]), counter_cls)
+                self.assertEqual(counter_result[0].name, counter_name)
+
+                gauge_result = _collect_metric(
+                    _generate_gauge("test.gauge", 1, unit="s"), strategy
+                )
+                self.assertEqual(type(gauge_result[0]), gauge_cls)
+                self.assertEqual(gauge_result[0].name, gauge_name)
+
+    def test_translation_strategy_prefix(self):
+        cases = [
+            (
+                TranslationStrategy.UNDERSCORE_ESCAPING_WITH_SUFFIXES,
+                "myprefix_test_counter",
+            ),
+            (
+                TranslationStrategy.UNDERSCORE_ESCAPING_WITHOUT_SUFFIXES,
+                "myprefix_test_counter",
+            ),
+            (
+                TranslationStrategy.NO_UTF8_ESCAPING_WITH_SUFFIXES,
+                "myprefix_test.counter",
+            ),
+            (
+                TranslationStrategy.NO_TRANSLATION,
+                "test.counter",  # prefix is not applied
+            ),
+        ]
+        for strategy, expected_name in cases:
+            with self.subTest(strategy=strategy):
+                result = _collect_metric(
+                    _generate_sum("test.counter", 1, unit=""),
+                    strategy,
+                    prefix="myprefix",
+                )
+                self.assertEqual(result[0].name, expected_name)
