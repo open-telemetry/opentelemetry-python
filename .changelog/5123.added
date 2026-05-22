@@ -1,0 +1,1 @@
+`opentelemetry-exporter-prometheus`: add support for configuring scope info metric attributes for the Prometheus exporter
