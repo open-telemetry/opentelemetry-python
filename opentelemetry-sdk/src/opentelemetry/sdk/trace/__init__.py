@@ -1225,7 +1225,12 @@ class Tracer(trace_api.Tracer):
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
 
-        if self.id_generator.is_trace_id_random():
+        if parent_span_context is None:
+            random_trace_id = self.id_generator.is_trace_id_random()
+        else:
+            random_trace_id = parent_span_context.trace_flags.random_trace_id
+
+        if random_trace_id:
             trace_flags = trace_api.TraceFlags(
                 trace_flags | trace_api.TraceFlags.RANDOM_TRACE_ID
             )

@@ -101,6 +101,7 @@ jobs:
         run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Backport patch release changelog to main
+        id: backport_pr
         env:
           GITHUB_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
@@ -112,11 +113,19 @@ jobs:
           git fetch origin $release_branch
 
           # Copy the updated CHANGELOG.md from the release branch
-          git checkout $release_branch -- CHANGELOG.md
+          git checkout FETCH_HEAD -- CHANGELOG.md
           git commit -m "$message"
 
           git push origin HEAD:$branch
-          gh pr create --title "$message" \
-                       --body "$body" \
-                       --head $branch \
-                       --base main
+          pr_url=$(gh pr create --title "$message" \
+                                --body "$body" \
+                                --head $branch \
+                                --base main)
+          echo "pr_url=$pr_url" >> $GITHUB_OUTPUT
+
+      - name: Add Skip Changelog label to backport PR
+        if: steps.backport_pr.outputs.pr_url != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ steps.backport_pr.outputs.pr_url }} --add-label "Skip Changelog"
