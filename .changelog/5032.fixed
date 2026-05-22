@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: add experimental opt-in HTTP 413 (Payload Too Large) handling in trace and log exporters that bisects the batch and retries each half. Enable via `OTEL_PYTHON_EXPORTER_OTLP_RETRY_ON_413=true`.
