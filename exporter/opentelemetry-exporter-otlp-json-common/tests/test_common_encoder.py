@@ -6,6 +6,7 @@
 import base64
 import unittest
 from logging import ERROR
+from pathlib import Path
 
 from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_array,
@@ -35,7 +36,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
-class TestCommonEncoder(unittest.TestCase):
+class TestCommonEncoder(unittest.TestCase):  # pylint: disable=too-many-public-methods
     def test_encode_value(self):
         cases = [
             (
@@ -326,3 +327,38 @@ class TestCommonEncoder(unittest.TestCase):
         result = _encode_instrumentation_scope(None)
         self.assertEqual(result, JSONInstrumentationScope())
         self.assertEqual(result.to_dict(), {})
+
+    def test_encode_value_pathlib_path(self):
+        path = Path("/models/my-model")
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.json.common._internal", level=ERROR
+        ) as log_cm:
+            result = _encode_value(path)
+        self.assertEqual(result, JSONAnyValue(string_value=str(path)))
+        self.assertEqual(result.to_dict(), {"stringValue": str(path)})
+        self.assertTrue(any("Invalid type" in msg for msg in log_cm.output))
+
+    def test_encode_attributes_pathlib_path(self):
+        path = Path("/models/my-model")
+        result = _encode_attributes({"model_path": path})
+        self.assertEqual(
+            result,
+            [
+                JSONKeyValue(
+                    key="model_path",
+                    value=JSONAnyValue(string_value=str(path)),
+                )
+            ],
+        )
+
+    def test_encode_value_unstringable_type_raises(self):
+        class _Unstringable:
+            def __str__(self):
+                raise RuntimeError("cannot convert")
+
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.json.common._internal", level=ERROR
+        ) as log_cm:
+            with self.assertRaises((TypeError, Exception)):
+                _encode_value(_Unstringable())
+        self.assertTrue(any("Invalid type" in msg for msg in log_cm.output))

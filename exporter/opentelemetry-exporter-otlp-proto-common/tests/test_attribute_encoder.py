@@ -3,9 +3,11 @@
 
 import unittest
 from logging import ERROR
+from pathlib import Path
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
+    _encode_value,
 )
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -110,3 +112,37 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
                 PB2KeyValue(key="b", value=PB2AnyValue(int_value=2)),
             ],
         )
+
+    def test_encode_value_pathlib_path(self):
+        path = Path("/models/my-model")
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.proto.common._internal", level=ERROR
+        ) as log_cm:
+            result = _encode_value(path)
+        self.assertEqual(result, PB2AnyValue(string_value=str(path)))
+        self.assertTrue(any("Invalid type" in msg for msg in log_cm.output))
+
+    def test_encode_attributes_pathlib_path(self):
+        path = Path("/models/my-model")
+        result = _encode_attributes({"model_path": path})
+        self.assertEqual(
+            result,
+            [
+                PB2KeyValue(
+                    key="model_path",
+                    value=PB2AnyValue(string_value=str(path)),
+                )
+            ],
+        )
+
+    def test_encode_value_unstringable_type_raises(self):
+        class _Unstringable:
+            def __str__(self):
+                raise RuntimeError("cannot convert")
+
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.proto.common._internal", level=ERROR
+        ) as log_cm:
+            with self.assertRaises(Exception):
+                _encode_value(_Unstringable())
+        self.assertTrue(any("Invalid type" in msg for msg in log_cm.output))
