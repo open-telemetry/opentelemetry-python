@@ -342,7 +342,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
 
         mock_reader_cls.assert_called_once_with(disable_target_info=True)
         mock_start_server.assert_called_once_with(port=9090, addr="0.0.0.0")
-        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+        self.assertEqual(len(provider._metric_readers), 1)
 
     def test_pull_prometheus_defaults(self):
         mock_reader_cls = MagicMock()
@@ -370,7 +370,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
 
         mock_reader_cls.assert_called_once_with(disable_target_info=False)
         mock_start_server.assert_called_once_with(port=9464, addr="localhost")
-        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+        self.assertEqual(len(provider._metric_readers), 1)
 
     def test_pull_prometheus_missing_package_raises(self):
         with patch.dict(
@@ -427,7 +427,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 ]
             )
             provider = create_meter_provider(config)
-        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+        self.assertEqual(len(provider._metric_readers), 1)
         mock_class.assert_called_once_with(port=8080)
         mock_entry_points.assert_called_once_with(
             group="opentelemetry_pull_metric_exporter",
@@ -542,7 +542,7 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
                 PushMetricExporterConfig(my_custom_exporter={})
             )
             provider = create_meter_provider(config)
-        self.assertEqual(len(provider._sdk_config.metric_readers), 1)
+        self.assertEqual(len(provider._metric_readers), 1)
 
     def test_unknown_metric_exporter_raises_configuration_error(self):
         with patch(
