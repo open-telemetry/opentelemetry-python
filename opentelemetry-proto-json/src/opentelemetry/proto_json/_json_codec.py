@@ -38,14 +38,14 @@ class JsonMessage(abc.ABC):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls: type[M], data: typing.Union[str, bytes]) -> M:
+    def from_json(cls: type[M], data: str | bytes) -> M:
         """
         Deserialize from a JSON string or bytes.
         """
         return cls.from_dict(json.loads(data))
 
 
-def encode_hex(value: typing.Optional[bytes]) -> str:
+def encode_hex(value: bytes | None) -> str:
     """
     Encode bytes as hex string.
 
@@ -57,7 +57,7 @@ def encode_hex(value: typing.Optional[bytes]) -> str:
     return value.hex() if value else ""
 
 
-def encode_base64(value: typing.Optional[bytes]) -> str:
+def encode_base64(value: bytes | None) -> str:
     """
     Encode bytes as base64 string.
     Standard Proto3 JSON mapping for bytes.
@@ -83,7 +83,7 @@ def encode_int64(value: int) -> str:
     return str(value)
 
 
-def encode_float(value: float) -> typing.Union[float, str]:
+def encode_float(value: float) -> float | str:
     """
     Encode float/double values.
 
@@ -100,7 +100,7 @@ def encode_float(value: float) -> typing.Union[float, str]:
 
 
 def encode_repeated(
-    values: typing.Optional[list[T]],
+    values: list[T] | None,
     map_fn: typing.Callable[[T], typing.Any],
 ) -> list[typing.Any]:
     """
@@ -115,7 +115,7 @@ def encode_repeated(
     return [map_fn(v) for v in values] if values else []
 
 
-def decode_hex(value: typing.Optional[str], field_name: str) -> bytes:
+def decode_hex(value: str | None, field_name: str) -> bytes:
     """
     Decode hex string to bytes.
 
@@ -136,7 +136,7 @@ def decode_hex(value: typing.Optional[str], field_name: str) -> bytes:
         ) from None
 
 
-def decode_base64(value: typing.Optional[str], field_name: str) -> bytes:
+def decode_base64(value: str | None, field_name: str) -> bytes:
     """
     Decode base64 string to bytes.
 
@@ -157,9 +157,7 @@ def decode_base64(value: typing.Optional[str], field_name: str) -> bytes:
         ) from None
 
 
-def decode_int64(
-    value: typing.Optional[typing.Union[int, str]], field_name: str
-) -> int:
+def decode_int64(value: int | str | None, field_name: str) -> int:
     """
     Parse int64 from number or string.
 
@@ -180,9 +178,7 @@ def decode_int64(
         ) from None
 
 
-def decode_float(
-    value: typing.Optional[typing.Union[float, int, str]], field_name: str
-) -> float:
+def decode_float(value: float | int | str | None, field_name: str) -> float:
     """
     Parse float/double from number or string, handling special values.
 
@@ -210,7 +206,7 @@ def decode_float(
 
 
 def decode_repeated(
-    values: typing.Optional[list[typing.Any]],
+    values: list[typing.Any] | None,
     item_parser: typing.Callable[[typing.Any], T],
     field_name: str,
 ) -> list[T]:
@@ -232,7 +228,7 @@ def decode_repeated(
 
 def validate_type(
     value: typing.Any,
-    expected_types: typing.Union[type, tuple[type, ...]],
+    expected_types: type | tuple[type, ...],
     field_name: str,
 ) -> None:
     """
