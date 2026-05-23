@@ -1,0 +1,1 @@
+`opentelemetry-exporter-prometheus`: add support for Resource attributes configuration for Prometheus exporter
