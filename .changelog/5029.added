@@ -1,0 +1,1 @@
+Enabled the flake8-type-checking plugin rules for ruff linter. These rules do not allow the import of python objects outside the type-checking block, if they are only used for type annotations and are not used at runtime.
