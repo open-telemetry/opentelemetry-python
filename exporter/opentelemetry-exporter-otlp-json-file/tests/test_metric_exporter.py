@@ -95,6 +95,7 @@ class TestFileMetricExporter(unittest.TestCase):
     # pylint: disable-next=no-self-use
     def test_stream_flushed_after_export(self):
         mock_stream = Mock()
+        mock_stream.closed = False
         exporter = FileMetricExporter(stream=mock_stream)
         exporter.export(_make_metrics_data())
         mock_stream.flush.assert_called_once()
@@ -156,6 +157,7 @@ class TestFileMetricExporter(unittest.TestCase):
 
     def test_export_stream_error(self):
         mock_stream = Mock()
+        mock_stream.closed = False
         mock_stream.write.side_effect = OSError("disk full")
         exporter = FileMetricExporter(stream=mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
@@ -184,7 +186,7 @@ class TestFileMetricExporter(unittest.TestCase):
     def test_default_stream_is_stdout(self):
         exporter = FileMetricExporter()
         # pylint: disable-next=protected-access
-        self.assertIs(exporter._stream, sys.stdout)
+        self.assertIs(exporter._exporter._stream, sys.stdout)
 
 
 class TestFileMetricExporterRoundTrip(unittest.TestCase):

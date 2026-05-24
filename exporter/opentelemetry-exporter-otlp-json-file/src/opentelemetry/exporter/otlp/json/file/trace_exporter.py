@@ -4,17 +4,23 @@
 from __future__ import annotations
 
 import logging
-import sys
 from collections.abc import Sequence
 from os import PathLike
-from typing import IO, overload
+from typing import IO, Any, overload
 
 from opentelemetry.exporter.otlp.json.common.trace_encoder import encode_spans
-from opentelemetry.exporter.otlp.json.file._internal import _format_line
+from opentelemetry.exporter.otlp.json.file._internal import FileExporter
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 _logger = logging.getLogger(__name__)
+
+
+def _encode_spans_to_dict(
+    spans: Sequence[ReadableSpan],
+) -> dict[str, Any] | None:
+    data = encode_spans(spans)
+    return data.to_dict() if data.resource_spans else None
 
 
 class FileSpanExporter(SpanExporter):
@@ -42,48 +48,23 @@ class FileSpanExporter(SpanExporter):
         *,
         stream: IO[str] | None = None,
     ) -> None:
-        if path is not None and stream is not None:
-            raise ValueError("Cannot specify both 'path' and 'stream'")
-        if path is not None:
-            self._stream: IO[str] = open(  # pylint: disable=consider-using-with
-                path, "a", encoding="utf-8"
-            )
-            self._owns_stream = True
-        elif stream is not None:
-            self._stream = stream
-            self._owns_stream = False
-        else:
-            self._stream = sys.stdout
-            self._owns_stream = False
-        self._shutdown = False
+        self._exporter: FileExporter[Sequence[ReadableSpan]] = FileExporter(
+            encode=_encode_spans_to_dict,
+            kind="spans",
+            logger=_logger,
+            path=path,
+            stream=stream,
+        )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring call")
-            return SpanExportResult.FAILURE
-        try:
-            traces_data = encode_spans(spans)
-            if traces_data.resource_spans:
-                self._stream.write(_format_line(traces_data.to_dict()))
-            self._stream.flush()
-        # pylint: disable-next=broad-exception-caught
-        except Exception as error:
-            _logger.exception(
-                "Failed to write span batch to stream: %s: %s",
-                type(error).__name__,
-                error,
-            )
-            return SpanExportResult.FAILURE
-        return SpanExportResult.SUCCESS
+        return (
+            SpanExportResult.SUCCESS
+            if self._exporter.export(spans)
+            else SpanExportResult.FAILURE
+        )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring call")
-            return
-        self._shutdown = True
-        if self._owns_stream:
-            self._stream.close()
+        self._exporter.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
-        """Nothing is buffered in this exporter, so this method does nothing."""
         return True

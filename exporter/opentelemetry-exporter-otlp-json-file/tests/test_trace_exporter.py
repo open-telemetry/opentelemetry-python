@@ -105,6 +105,7 @@ class TestFileSpanExporter(unittest.TestCase):
 
     def test_stream_flushed_after_export(self):
         mock_stream = Mock()
+        mock_stream.closed = False
         exporter = FileSpanExporter(stream=mock_stream)
         exporter.export(self._make_span())
         mock_stream.flush.assert_called_once()
@@ -128,6 +129,7 @@ class TestFileSpanExporter(unittest.TestCase):
 
     def test_export_stream_error(self):
         mock_stream = Mock()
+        mock_stream.closed = False
         mock_stream.write.side_effect = OSError("disk full")
         exporter = FileSpanExporter(stream=mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
@@ -153,7 +155,7 @@ class TestFileSpanExporter(unittest.TestCase):
     def test_default_stream_is_stdout(self):
         exporter = FileSpanExporter()
         # pylint: disable-next=protected-access
-        self.assertIs(exporter._stream, sys.stdout)
+        self.assertIs(exporter._exporter._stream, sys.stdout)
 
 
 class TestFileSpanExporterRoundTrip(unittest.TestCase):

@@ -108,6 +108,7 @@ class TestFileLogExporter(unittest.TestCase):
     # pylint: disable-next=no-self-use
     def test_stream_flushed_after_export(self):
         mock_stream = Mock()
+        mock_stream.closed = False
         exporter = FileLogExporter(stream=mock_stream)
         exporter.export([_make_log_record()])
         mock_stream.flush.assert_called_once()
@@ -126,6 +127,7 @@ class TestFileLogExporter(unittest.TestCase):
 
     def test_export_stream_error(self):
         mock_stream = Mock()
+        mock_stream.closed = False
         mock_stream.write.side_effect = OSError("disk full")
         exporter = FileLogExporter(stream=mock_stream)
         with self.assertLogs(_LOGGER_NAME, level="ERROR"):
@@ -155,7 +157,7 @@ class TestFileLogExporter(unittest.TestCase):
     def test_default_stream_is_stdout(self):
         exporter = FileLogExporter()
         # pylint: disable-next=protected-access
-        self.assertIs(exporter._stream, sys.stdout)
+        self.assertIs(exporter._exporter._stream, sys.stdout)
 
 
 class TestFileLogExporterRoundTrip(unittest.TestCase):
