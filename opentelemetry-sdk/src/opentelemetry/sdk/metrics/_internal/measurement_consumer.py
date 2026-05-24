@@ -21,7 +21,7 @@ from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
 from opentelemetry.sdk.metrics._internal.point import MetricsData
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Iterable
+    from collections.abc import Iterable, Mapping
 
     import opentelemetry.sdk.metrics._internal.sdk_configuration
 
@@ -53,7 +53,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     def __init__(
         self,
         sdk_config: "opentelemetry.sdk.metrics._internal.sdk_configuration.SdkConfiguration",
-        metric_readers: Iterable["opentelemetry.sdk.metrics.MetricReader"],
+        metric_readers: "Iterable[opentelemetry.sdk.metrics.MetricReader]",
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
