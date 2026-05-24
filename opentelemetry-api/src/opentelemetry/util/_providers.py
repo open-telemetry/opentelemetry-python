@@ -5,8 +5,6 @@ from logging import getLogger
 from os import environ
 from typing import TYPE_CHECKING, TypeVar, cast
 
-from opentelemetry.util._importlib_metadata import entry_points
-
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
     from opentelemetry.trace import TracerProvider
@@ -19,6 +17,11 @@ logger = getLogger(__name__)
 def _load_provider(
     provider_environment_variable: str, provider: str
 ) -> Provider:  # type: ignore[type-var]
+    # pylint: disable=import-outside-toplevel,no-name-in-module
+    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+        entry_points,
+    )
+
     try:
         provider_name = cast(
             "str",
