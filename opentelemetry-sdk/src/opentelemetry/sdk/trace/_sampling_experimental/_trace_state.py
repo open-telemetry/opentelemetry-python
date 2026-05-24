@@ -6,8 +6,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from opentelemetry.trace import TraceState
-
 from ._util import (
     INVALID_RANDOM_VALUE,
     INVALID_THRESHOLD,

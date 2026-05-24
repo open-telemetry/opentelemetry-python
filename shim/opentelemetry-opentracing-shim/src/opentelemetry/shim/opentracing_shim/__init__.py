@@ -76,7 +76,6 @@ API
 from __future__ import annotations
 
 import logging
-from types import TracebackType
 from typing import TYPE_CHECKING, TypeVar
 
 from opentracing import (

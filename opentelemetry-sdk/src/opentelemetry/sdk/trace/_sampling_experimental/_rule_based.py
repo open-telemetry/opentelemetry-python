@@ -6,10 +6,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Protocol
 
-from opentelemetry.context import Context
-from opentelemetry.trace import Link, SpanKind, TraceState
-from opentelemetry.util.types import AnyValue, Attributes
-
 from ._composable import ComposableSampler, SamplingIntent
 from ._util import INVALID_THRESHOLD
 

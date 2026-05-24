@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from opentelemetry.metrics import CallbackOptions, MeterProvider, Observation
