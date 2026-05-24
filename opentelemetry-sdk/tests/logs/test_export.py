@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access
 import logging
@@ -19,10 +8,10 @@ import sys
 import threading
 import time
 import unittest
+from collections.abc import Sequence
 from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
 )
-from typing import Sequence
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -51,6 +40,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BLRP_MAX_QUEUE_SIZE,
     OTEL_BLRP_SCHEDULE_DELAY,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
@@ -406,6 +396,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         ]
         self.assertEqual(expected, emitted)
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     def test_metrics(self):  # pylint: disable=too-many-locals
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
@@ -695,6 +688,9 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=101,
         )
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])

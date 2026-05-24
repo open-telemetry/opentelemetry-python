@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 from logging import getLogger
@@ -42,13 +31,13 @@ class Event(LogRecord):
     def __init__(
         self,
         name: str,
-        timestamp: Optional[int] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
+        timestamp: int | None = None,
+        trace_id: int | None = None,
+        span_id: int | None = None,
         trace_flags: Optional["TraceFlags"] = None,
-        body: Optional[AnyValue] = None,
-        severity_number: Optional[SeverityNumber] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        body: AnyValue | None = None,
+        severity_number: SeverityNumber | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ):
         attributes = attributes or {}
         event_attributes = {
@@ -75,9 +64,9 @@ class EventLogger(ABC):
     def __init__(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ):
         self._name = name
         self._version = version
@@ -106,9 +95,9 @@ class ProxyEventLogger(EventLogger):
     def __init__(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ):
         super().__init__(
             name=name,
@@ -116,7 +105,7 @@ class ProxyEventLogger(EventLogger):
             schema_url=schema_url,
             attributes=attributes,
         )
-        self._real_event_logger: Optional[EventLogger] = None
+        self._real_event_logger: EventLogger | None = None
         self._noop_event_logger = NoOpEventLogger(name)
 
     @property
@@ -147,9 +136,9 @@ class EventLoggerProvider(ABC):
     def get_event_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> EventLogger:
         """Returns an EventLoggerProvider for use."""
 
@@ -162,9 +151,9 @@ class NoOpEventLoggerProvider(EventLoggerProvider):
     def get_event_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> EventLogger:
         return NoOpEventLogger(
             name, version=version, schema_url=schema_url, attributes=attributes
@@ -179,9 +168,9 @@ class ProxyEventLoggerProvider(EventLoggerProvider):
     def get_event_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> EventLogger:
         if _EVENT_LOGGER_PROVIDER:
             return _EVENT_LOGGER_PROVIDER.get_event_logger(
@@ -199,7 +188,7 @@ class ProxyEventLoggerProvider(EventLoggerProvider):
 
 
 _EVENT_LOGGER_PROVIDER_SET_ONCE = Once()
-_EVENT_LOGGER_PROVIDER: Optional[EventLoggerProvider] = None
+_EVENT_LOGGER_PROVIDER: EventLoggerProvider | None = None
 _PROXY_EVENT_LOGGER_PROVIDER = ProxyEventLoggerProvider()
 
 
@@ -253,10 +242,10 @@ def set_event_logger_provider(
 )
 def get_event_logger(
     name: str,
-    version: Optional[str] = None,
-    schema_url: Optional[str] = None,
-    attributes: Optional[_ExtendedAttributes] = None,
-    event_logger_provider: Optional[EventLoggerProvider] = None,
+    version: str | None = None,
+    schema_url: str | None = None,
+    attributes: _ExtendedAttributes | None = None,
+    event_logger_provider: EventLoggerProvider | None = None,
 ) -> "EventLogger":
     if event_logger_provider is None:
         event_logger_provider = get_event_logger_provider()

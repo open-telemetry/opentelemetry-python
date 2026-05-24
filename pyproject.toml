@@ -12,6 +12,7 @@ dependencies = [
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
   "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-otlp-json-common",
   "opentelemetry-exporter-zipkin-json",
   "opentelemetry-exporter-prometheus",
   "opentelemetry-propagator-jaeger",
@@ -34,6 +35,7 @@ opentelemetry-test-utils = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
 opentelemetry-exporter-otlp-proto-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-common = { workspace = true }
+opentelemetry-exporter-otlp-json-common = { workspace = true }
 opentelemetry-exporter-zipkin-json = { workspace = true }
 opentelemetry-exporter-prometheus = {workspace = true }
 opentelemetry-propagator-jaeger = { workspace = true }
@@ -77,21 +79,17 @@ output-format = "concise"
 # https://docs.astral.sh/ruff/linter/#rule-selection
 # pylint: https://github.com/astral-sh/ruff/issues/970
 select = [
-  "I",   # isort
-  "F",   # pyflakes
-  "E",   # pycodestyle errors
-  "W",   # pycodestyle warnings
-  "PLC", # pylint convention
-  "PLE", # pylint error
-  "Q",   # flake8-quotes
+  "I",   # https://docs.astral.sh/ruff/rules/#isort-i
+  "F",   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+  "E",   # https://docs.astral.sh/ruff/rules/#error-e
+  "W",   # https://docs.astral.sh/ruff/rules/#warning-w
+  "PLC", # https://docs.astral.sh/ruff/rules/#convention-plc
+  "PLE", # https://docs.astral.sh/ruff/rules/#error-ple
+  "Q",   # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
   "TCH", # flake8-type-checking
-  "TID", # flake8-tidy-imports
-  "UP011", # lru-cache-without-parameters
-  "UP015", # redundant-open-modes
-  "UP032", # f-string
-  "UP034", # extraneous-parentheses
-  "UP037", # quoted-annotation
+  "TID", # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
+  "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up
 ]
 
 ignore = [
@@ -110,6 +108,7 @@ ignore = [
 "docs/**/*.*" = ["PLE"]
 "opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
 "shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
+"opentelemetry-sdk/tests/**" = ["TCH"]
 
 [tool.ruff.lint.isort]
 known-third-party = [
@@ -132,6 +131,7 @@ include = [
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
+  "exporter/opentelemetry-exporter-otlp-json-common",
   "codegen/opentelemetry-codegen-json"
 ]
 
@@ -149,6 +149,8 @@ exclude = [
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
+  "exporter/opentelemetry-exporter-otlp-json-common/tests",
+  "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
 ]
 
 # When packages are correct typed add them to the strict list
@@ -173,6 +175,41 @@ target-python-version = "3.10"
 custom-template-dir = "opentelemetry-sdk/codegen"
 additional-imports = "typing.ClassVar,opentelemetry.sdk._configuration._common._additional_properties"
 
+[tool.towncrier]
+directory = ".changelog"
+filename = "CHANGELOG.md"
+start_string = "<!-- changelog start -->\n"
+template = "scripts/changelog_template.j2"
+issue_format = "[#{issue}](https://github.com/open-telemetry/opentelemetry-python/pull/{issue})"
+wrap = true # wrap fragments to 79 char line length
+issue_pattern = "^(\\d+)" # only PR numbers as fragment prefix (e.g. 1234.fixed)
+
+# NOTE: remember to update the changelog workflow if these types change 
+[[tool.towncrier.type]]
+directory = "added"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "changed"
+name = "Changed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "deprecated"
+name = "Deprecated"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "removed"
+name = "Removed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fixed"
+name = "Fixed"
+showcontent = true
+
 [dependency-groups]
 dev = [
     "tox",
@@ -180,4 +217,5 @@ dev = [
     "pre-commit",
     "datamodel-code-generator[http]",
     "datamodel-code-generator[ruff]",
+    "towncrier",
 ]

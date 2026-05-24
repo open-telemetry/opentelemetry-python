@@ -1,22 +1,12 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 import logging
-import typing
+from contextvars import Token
 from os import environ
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 # pylint: disable=wrong-import-position
@@ -24,7 +14,7 @@ from opentelemetry.context.context import Context, _RuntimeContext  # noqa
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 from opentelemetry.util._importlib_metadata import entry_points
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from contextvars import Token
 
 logger = logging.getLogger(__name__)
@@ -84,7 +74,7 @@ def create_key(keyname: str) -> str:
     return keyname + "-" + str(uuid4())
 
 
-def get_value(key: str, context: typing.Optional[Context] = None) -> object:
+def get_value(key: str, context: Context | None = None) -> object:
     """To access the local state of a concern, the RuntimeContext API
     provides a function which takes a context and a key as input,
     and returns a value.
@@ -100,7 +90,7 @@ def get_value(key: str, context: typing.Optional[Context] = None) -> object:
 
 
 def set_value(
-    key: str, value: object, context: typing.Optional[Context] = None
+    key: str, value: object, context: Context | None = None
 ) -> Context:
     """To record the local state of a cross-cutting concern, the
     RuntimeContext API provides a function which takes a context, a

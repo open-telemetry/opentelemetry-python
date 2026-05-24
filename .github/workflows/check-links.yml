@@ -13,13 +13,23 @@ on:
       - '**/*.rst'
       - '.github/workflows/check-links.yml'
       - '.github/workflows/check_links_config.json'
+  merge_group:
+    paths:
+      - '**/*.md'
+      - '**/*.rst'
+      - '.github/workflows/check-links.yml'
+      - '.github/workflows/check_links_config.json'
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
   cancel-in-progress: true
+
+env:
+  # Diff against merge group SHAs in queue, or PR base branch otherwise
+  DIFF_RANGE: ${{ github.event_name == 'merge_group' && format('{0}...{1}', github.event.merge_group.base_sha, github.event.merge_group.head_sha) || format('origin/{0}...HEAD', github.base_ref) }}
 
 jobs:
   check-links:
@@ -29,6 +39,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Get changed markdown files
         id: changed-files
@@ -42,11 +54,41 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         run: npm install -g markdown-link-check@v3.12.2
 
-      - name: Run markdown-link-check
-        if: steps.changed-files.outputs.any_changed == 'true'
+      - name: Check links on push to main
+        if: steps.changed-files.outputs.any_changed == 'true' && github.event_name == 'push'
         run: |
           markdown-link-check \
             --verbose \
             --config .github/workflows/check_links_config.json \
             ${{ steps.changed-files.outputs.all_changed_files }} \
+            || { echo "Check that anchor links are lowercase"; exit 1; }
+
+      - name: Check new links only on pull requests and merge groups
+        if: steps.changed-files.outputs.any_changed == 'true' && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
+        run: |
+          # Extract URLs only from added lines in the diff to avoid
+          # rate limiting when checking all links in large files like
+          # CHANGELOG.md. Only new/changed links are checked on PRs;
+          # pushes to main still check all links in changed files.
+          git diff "$DIFF_RANGE" -- \
+            ${{ steps.changed-files.outputs.all_changed_files }} \
+            | grep '^+' | grep -v '^+++' \
+            | grep -oP 'https?://[^\s\)\]\"'"'"'`>]+' \
+            | sort -u > /tmp/new_links.txt
+
+          if [ ! -s /tmp/new_links.txt ]; then
+            echo "No new links found in diff, skipping check"
+            exit 0
+          fi
+
+          echo "Checking $(wc -l < /tmp/new_links.txt) new links:"
+          cat /tmp/new_links.txt
+
+          # Write links as markdown so markdown-link-check can parse them
+          awk '{print "- <" $0 ">"}' /tmp/new_links.txt > /tmp/new_links.md
+
+          markdown-link-check \
+            --verbose \
+            --config .github/workflows/check_links_config.json \
+            /tmp/new_links.md \
             || { echo "Check that anchor links are lowercase"; exit 1; }

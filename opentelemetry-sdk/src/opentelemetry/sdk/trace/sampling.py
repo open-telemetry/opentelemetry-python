@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """
 For general information about sampling, see `the specification <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#sampling>`_.
@@ -135,9 +124,10 @@ above sampler, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES
 import abc
 import enum
 import os
+from collections.abc import Sequence
 from logging import getLogger
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Optional, Sequence
+from typing import TYPE_CHECKING, Optional
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
@@ -204,9 +194,9 @@ class Sampler(abc.ABC):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
+        links: Sequence["Link"] | None = None,
         trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         pass
@@ -227,9 +217,9 @@ class StaticSampler(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
+        links: Sequence["Link"] | None = None,
         trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
@@ -288,9 +278,9 @@ class TraceIdRatioBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
+        links: Sequence["Link"] | None = None,
         trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         decision = Decision.DROP
@@ -343,9 +333,9 @@ class ParentBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
+        links: Sequence["Link"] | None = None,
         trace_state: Optional["TraceState"] = None,
     ) -> "SamplingResult":
         parent_span_context = get_current_span(
@@ -447,7 +437,7 @@ def _get_from_env_or_default() -> Sampler:
 
 
 def _get_parent_trace_state(
-    parent_context: Optional[Context],
+    parent_context: Context | None,
 ) -> Optional["TraceState"]:
     parent_span_context = get_current_span(parent_context).get_span_context()
     if parent_span_context is None or not parent_span_context.is_valid:

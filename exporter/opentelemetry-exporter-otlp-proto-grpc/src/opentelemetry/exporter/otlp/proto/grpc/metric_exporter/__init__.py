@@ -1,23 +1,12 @@
 # Copyright The OpenTelemetry Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 from dataclasses import replace
 from logging import getLogger
 from os import environ
-from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple, Union
-from typing import Sequence as TypingSequence
+from typing import TYPE_CHECKING
 
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
@@ -31,7 +20,6 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     environ_to_compression,
     get_resource_data,
 )
-from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -76,7 +64,11 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
 )
 
 if TYPE_CHECKING:
-    from grpc import ChannelCredentials, Compression
+    from collections.abc import Iterable
+    from collections.abc import Sequence as TypingSequence
+
+    from grpc import ChannelCredentials, Compression, StatusCode
+    from opentelemetry.metrics import MeterProvider
     from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 
 _logger = getLogger(__name__)
@@ -106,7 +98,9 @@ class OTLPMetricExporter(
         endpoint: str | None = None,
         insecure: bool | None = None,
         credentials: ChannelCredentials | None = None,
-        headers: Union[TypingSequence[Tuple[str, str]], dict[str, str], str]
+        headers: TypingSequence[tuple[str, str]]
+        | dict[str, str]
+        | str
         | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
@@ -114,9 +108,10 @@ class OTLPMetricExporter(
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
-        channel_options: Tuple[Tuple[str, str]] | None = None,
+        channel_options: tuple[tuple[str, str]] | None = None,
+        retryable_error_codes: Iterable[StatusCode] | None = None,
         *,
-        meter_provider: Optional[MeterProvider] = None,
+        meter_provider: MeterProvider | None = None,
     ):
         insecure_metrics = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
         if insecure is None and insecure_metrics is not None:
@@ -161,6 +156,7 @@ class OTLPMetricExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
+            retryable_error_codes=retryable_error_codes,
             component_type=OtelComponentTypeValues.OTLP_GRPC_METRIC_EXPORTER,
             signal="metrics",
             meter_provider=meter_provider,
@@ -208,10 +204,10 @@ class OTLPMetricExporter(
     ) -> Iterable[MetricsData]:
         assert self._max_export_batch_size is not None
         batch_size: int = 0
-        split_resource_metrics: List[ResourceMetrics] = []
+        split_resource_metrics: list[ResourceMetrics] = []
 
         for resource_metrics in metrics_data.resource_metrics:
-            split_scope_metrics: List[ScopeMetrics] = []
+            split_scope_metrics: list[ScopeMetrics] = []
             split_resource_metrics.append(
                 replace(
                     resource_metrics,
@@ -219,7 +215,7 @@ class OTLPMetricExporter(
                 )
             )
             for scope_metrics in resource_metrics.scope_metrics:
-                split_metrics: List[Metric] = []
+                split_metrics: list[Metric] = []
                 split_scope_metrics.append(
                     replace(
                         scope_metrics,
@@ -227,7 +223,7 @@ class OTLPMetricExporter(
                     )
                 )
                 for metric in scope_metrics.metrics:
-                    split_data_points: List[DataPointT] = []
+                    split_data_points: list[DataPointT] = []
                     split_metrics.append(
                         replace(
                             metric,

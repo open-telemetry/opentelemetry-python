@@ -1,24 +1,13 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 from collections import Counter
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from time import perf_counter
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING, Protocol
 
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -42,6 +31,7 @@ from opentelemetry.semconv.attributes.server_attributes import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from typing import Literal
     from urllib.parse import ParseResult as UrlParseResult
 
@@ -54,6 +44,18 @@ _component_counter = Counter()
 class ExportResult:
     error: Exception | None = None
     error_attrs: Attributes = None
+
+
+class ExporterMetricsT(Protocol):
+    def export_operation(
+        self, num_items: int
+    ) -> AbstractContextManager[ExportResult]: ...
+
+
+class NoOpExporterMetrics:
+    @contextmanager
+    def export_operation(self, num_items: int) -> Iterator[ExportResult]:
+        yield ExportResult()
 
 
 class ExporterMetrics:
@@ -85,14 +87,14 @@ class ExporterMetrics:
             elif endpoint.scheme == "http":
                 port = 80
 
-        component_type = (
-            component_type or OtelComponentTypeValues("unknown_otlp_exporter")
-        ).value
-        count = _component_counter[component_type]
-        _component_counter[component_type] = count + 1
+        component_type_value = (
+            component_type.value if component_type else "unknown_otlp_exporter"
+        )
+        count = _component_counter[component_type_value]
+        _component_counter[component_type_value] = count + 1
         self._standard_attrs: dict[str, AttributeValue] = {
-            OTEL_COMPONENT_TYPE: component_type,
-            OTEL_COMPONENT_NAME: f"{component_type}/{count}",
+            OTEL_COMPONENT_TYPE: component_type_value,
+            OTEL_COMPONENT_NAME: f"{component_type_value}/{count}",
         }
         if endpoint.hostname:
             self._standard_attrs[SERVER_ADDRESS] = endpoint.hostname
@@ -131,3 +133,21 @@ class ExporterMetrics:
                 else exported_attrs
             )
             self._duration.record(end_time - start_time, duration_attrs)
+
+
+def create_exporter_metrics(
+    component_type: OtelComponentTypeValues | None,
+    signal: Literal["traces", "metrics", "logs"],
+    endpoint: UrlParseResult,
+    meter_provider: MeterProvider | None,
+    enabled: bool,
+) -> ExporterMetricsT:
+    if not enabled:
+        return NoOpExporterMetrics()
+
+    return ExporterMetrics(
+        component_type,
+        signal,
+        endpoint,
+        meter_provider,
+    )

@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import abc
@@ -57,11 +46,18 @@ from opentelemetry.sdk._logs._internal._exceptions import (
     _create_log_record_with_exception,
     _set_log_record_exception_attributes,
 )
-from opentelemetry.sdk._logs._internal._logger_metrics import LoggerMetrics
+from opentelemetry.sdk._logs._internal._logger_metrics import (
+    LoggerMetricsT,
+    create_logger_metrics,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
     OTEL_SDK_DISABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -79,6 +75,8 @@ from opentelemetry.trace import (
 if TYPE_CHECKING:
     from opentelemetry.context.context import Context
     from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+
+# pylint: disable=too-many-lines
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
@@ -418,15 +416,16 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
             False otherwise.
         """
         deadline_ns = time_ns() + timeout_millis * 1000000
+        all_flushed = True
         for lp in self._log_record_processors:
             current_ts = time_ns()
             if current_ts >= deadline_ns:
                 return False
 
-            if not lp.force_flush((deadline_ns - current_ts) // 1000000):
-                return False
+            if lp.force_flush((deadline_ns - current_ts) // 1000000) is False:
+                all_flushed = False
 
-        return True
+        return all_flushed
 
 
 class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
@@ -500,7 +499,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             return False
 
         for future in done_futures:
-            if not future.result():
+            if future.result() is False:
                 return False
 
         return True
@@ -672,13 +671,11 @@ class Logger(APILogger):
     def __init__(
         self,
         resource: Resource,
-        multi_log_record_processor: Union[
-            SynchronousMultiLogRecordProcessor,
-            ConcurrentMultiLogRecordProcessor,
-        ],
+        multi_log_record_processor: SynchronousMultiLogRecordProcessor
+        | ConcurrentMultiLogRecordProcessor,
         instrumentation_scope: InstrumentationScope,
         *,
-        logger_metrics: LoggerMetrics,
+        logger_metrics: LoggerMetricsT,
         _logger_config: _LoggerConfig,
     ):
         super().__init__(
@@ -800,8 +797,11 @@ class LoggerProvider(APILoggerProvider):
         self._multi_log_record_processor = (
             multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         )
-        self._logger_metrics = LoggerMetrics(
-            meter_provider or get_meter_provider()
+        self._logger_metrics = create_logger_metrics(
+            meter_provider or get_meter_provider(),
+            parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
         )
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"

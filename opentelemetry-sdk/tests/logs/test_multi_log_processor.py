@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint:disable=protected-access,no-self-use,no-member
 
@@ -172,6 +161,36 @@ class TestSynchronousMultiLogRecordProcessor(
         self.assertEqual(mock_processor1.force_flush.call_count, 1)
         self.assertEqual(mock_processor2.force_flush.call_count, 0)
 
+    def test_force_flush_processor_returns_false(self):
+        multi_log_record_processor = SynchronousMultiLogRecordProcessor()
+
+        mock_processor1 = Mock(spec=LogRecordProcessor)
+        mock_processor1.force_flush = Mock(return_value=False)
+        multi_log_record_processor.add_log_record_processor(mock_processor1)
+        mock_processor2 = Mock(spec=LogRecordProcessor)
+        mock_processor2.force_flush = Mock(return_value=True)
+        multi_log_record_processor.add_log_record_processor(mock_processor2)
+
+        ret_value = multi_log_record_processor.force_flush(50)
+        self.assertFalse(ret_value)
+        self.assertEqual(mock_processor1.force_flush.call_count, 1)
+        self.assertEqual(mock_processor2.force_flush.call_count, 1)
+
+    def test_force_flush_processor_returns_none(self):
+        multi_log_record_processor = SynchronousMultiLogRecordProcessor()
+
+        mock_processor1 = Mock(spec=LogRecordProcessor)
+        mock_processor1.force_flush = Mock(return_value=None)
+        multi_log_record_processor.add_log_record_processor(mock_processor1)
+        mock_processor2 = Mock(spec=LogRecordProcessor)
+        mock_processor2.force_flush = Mock(return_value=True)
+        multi_log_record_processor.add_log_record_processor(mock_processor2)
+
+        ret_value = multi_log_record_processor.force_flush(50)
+        self.assertTrue(ret_value)
+        self.assertEqual(mock_processor1.force_flush.call_count, 1)
+        self.assertEqual(mock_processor2.force_flush.call_count, 1)
+
 
 class TestConcurrentMultiLogRecordProcessor(
     MultiLogRecordProcessorTestBase, unittest.TestCase
@@ -197,6 +216,42 @@ class TestConcurrentMultiLogRecordProcessor(
         wait_event.set()
 
         self.assertFalse(ret_value)
+        for mock in mocks:
+            self.assertEqual(1, mock.force_flush.call_count)
+        multi_log_record_processor.shutdown()
+
+    def test_force_flush_processor_returns_false(self):
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor()
+
+        false_mock = Mock(spec=LogRecordProcessor)
+        false_mock.force_flush = Mock(return_value=False)
+        mocks = [Mock(spec=LogRecordProcessor) for _ in range(4)]
+        mocks.insert(0, false_mock)
+
+        for mock_processor in mocks:
+            multi_log_record_processor.add_log_record_processor(mock_processor)
+
+        ret_value = multi_log_record_processor.force_flush()
+
+        self.assertFalse(ret_value)
+        for mock in mocks:
+            self.assertEqual(1, mock.force_flush.call_count)
+        multi_log_record_processor.shutdown()
+
+    def test_force_flush_processor_returns_none(self):
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor()
+
+        none_mock = Mock(spec=LogRecordProcessor)
+        none_mock.force_flush = Mock(return_value=None)
+        mocks = [Mock(spec=LogRecordProcessor) for _ in range(4)]
+        mocks.insert(0, none_mock)
+
+        for mock_processor in mocks:
+            multi_log_record_processor.add_log_record_processor(mock_processor)
+
+        ret_value = multi_log_record_processor.force_flush()
+
+        self.assertTrue(ret_value)
         for mock in mocks:
             self.assertEqual(1, mock.force_flush.call_count)
         multi_log_record_processor.shutdown()

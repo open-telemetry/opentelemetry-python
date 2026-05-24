@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
 from typing import Final
@@ -30,6 +19,50 @@ def create_gen_ai_client_operation_duration(meter: Meter) -> Histogram:
     return meter.create_histogram(
         name=GEN_AI_CLIENT_OPERATION_DURATION,
         description="GenAI operation duration.",
+        unit="s",
+    )
+
+
+GEN_AI_CLIENT_OPERATION_TIME_PER_OUTPUT_CHUNK: Final = (
+    "gen_ai.client.operation.time_per_output_chunk"
+)
+"""
+Time per output chunk, recorded for each chunk received after the first one, measured as the time elapsed from the end of the previous chunk to the end of the current chunk
+Instrument: histogram
+Unit: s
+Note: This metrics SHOULD be reported for streaming calls and SHOULD NOT be reported otherwise.
+"""
+
+
+def create_gen_ai_client_operation_time_per_output_chunk(
+    meter: Meter,
+) -> Histogram:
+    """Time per output chunk, recorded for each chunk received after the first one, measured as the time elapsed from the end of the previous chunk to the end of the current chunk"""
+    return meter.create_histogram(
+        name=GEN_AI_CLIENT_OPERATION_TIME_PER_OUTPUT_CHUNK,
+        description="Time per output chunk, recorded for each chunk received after the first one, measured as the time elapsed from the end of the previous chunk to the end of the current chunk.",
+        unit="s",
+    )
+
+
+GEN_AI_CLIENT_OPERATION_TIME_TO_FIRST_CHUNK: Final = (
+    "gen_ai.client.operation.time_to_first_chunk"
+)
+"""
+Time to receive the first chunk, measured from when the client issues the generation request to when the first chunk is received in the response stream
+Instrument: histogram
+Unit: s
+Note: This metrics SHOULD be reported for streaming calls and SHOULD NOT be reported otherwise.
+"""
+
+
+def create_gen_ai_client_operation_time_to_first_chunk(
+    meter: Meter,
+) -> Histogram:
+    """Time to receive the first chunk, measured from when the client issues the generation request to when the first chunk is received in the response stream"""
+    return meter.create_histogram(
+        name=GEN_AI_CLIENT_OPERATION_TIME_TO_FIRST_CHUNK,
+        description="Time to receive the first chunk, measured from when the client issues the generation request to when the first chunk is received in the response stream.",
         unit="s",
     )
 
