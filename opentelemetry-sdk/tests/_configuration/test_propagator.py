@@ -86,8 +86,8 @@ class TestCreatePropagator(unittest.TestCase):
             )
             result = create_propagator(config)
 
-        self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
-        self.assertIs(result._propagators[0], mock_propagator)  # type: ignore[attr-defined]
+            self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
+            self.assertIs(result._propagators[0], mock_propagator)  # type: ignore[attr-defined]
 
     def test_b3multi_via_entry_point(self):
         mock_propagator = MagicMock()
@@ -129,7 +129,7 @@ class TestCreatePropagator(unittest.TestCase):
         ):
             result = create_propagator(config)
 
-        self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
+            self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
 
     def test_composite_list_multiple(self):
         mock_tc = TraceContextTextMapPropagator()
