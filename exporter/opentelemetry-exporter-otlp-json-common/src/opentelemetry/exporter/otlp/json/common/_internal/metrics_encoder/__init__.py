@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Collection
 from typing import TYPE_CHECKING
 
 from opentelemetry.exporter.otlp.json.common._internal import (
@@ -48,17 +47,6 @@ from opentelemetry.proto_json.metrics.v1.metrics import Sum as JSONSum
 from opentelemetry.proto_json.resource.v1.resource import (
     Resource as JSONResource,
 )
-from opentelemetry.sdk.metrics import (
-    Exemplar,
-)
-from opentelemetry.sdk.metrics._internal.point import (
-    ExponentialHistogramDataPoint,
-    HistogramDataPoint,
-    Metric,
-    NumberDataPoint,
-    ResourceMetrics,
-    ScopeMetrics,
-)
 from opentelemetry.sdk.metrics.export import (
     ExponentialHistogram,
     Gauge,
@@ -68,8 +56,21 @@ from opentelemetry.sdk.metrics.export import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from typing_extensions import assert_never
 
+    from opentelemetry.sdk.metrics import (
+        Exemplar,
+    )
+    from opentelemetry.sdk.metrics._internal.point import (
+        ExponentialHistogramDataPoint,
+        HistogramDataPoint,
+        Metric,
+        NumberDataPoint,
+        ResourceMetrics,
+        ScopeMetrics,
+    )
 _logger = logging.getLogger(__name__)
 
 

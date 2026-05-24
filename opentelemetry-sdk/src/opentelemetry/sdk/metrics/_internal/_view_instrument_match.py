@@ -71,8 +71,8 @@ class _ViewInstrumentMatch:
 
         if isinstance(self._aggregation, _SumAggregation):
             # if result is True the two aggregation are of the same type
-            self._aggregation = cast(_SumAggregation, self._aggregation)
-            other._aggregation = cast(_SumAggregation, other._aggregation)
+            self._aggregation = cast("_SumAggregation", self._aggregation)
+            other._aggregation = cast("_SumAggregation", other._aggregation)
 
             result = (
                 self._aggregation._instrument_is_monotonic

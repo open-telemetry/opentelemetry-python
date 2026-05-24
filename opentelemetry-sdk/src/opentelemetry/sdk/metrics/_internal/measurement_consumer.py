@@ -5,9 +5,9 @@
 
 import weakref
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping
 from threading import Lock
 from time import time_ns
+from typing import TYPE_CHECKING
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -19,6 +19,11 @@ from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
 from opentelemetry.sdk.metrics._internal.point import MetricsData
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
+    import opentelemetry.sdk.metrics._internal.sdk_configuration
 
 
 class MeasurementConsumer(ABC):
@@ -48,7 +53,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     def __init__(
         self,
         sdk_config: "opentelemetry.sdk.metrics._internal.sdk_configuration.SdkConfiguration",
-        metric_readers: Iterable["opentelemetry.sdk.metrics.MetricReader"],
+        metric_readers: "Iterable[opentelemetry.sdk.metrics.MetricReader]",
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config

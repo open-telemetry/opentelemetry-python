@@ -4,6 +4,7 @@
 from logging import getLogger
 from threading import RLock
 from time import time_ns
+from typing import TYPE_CHECKING
 
 from opentelemetry.metrics import (
     Asynchronous,
@@ -39,7 +40,9 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk.metrics._internal.view import View
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 _logger = getLogger(__name__)
 

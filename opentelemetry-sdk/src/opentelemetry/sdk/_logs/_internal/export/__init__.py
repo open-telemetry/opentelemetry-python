@@ -6,9 +6,8 @@ import abc
 import enum
 import logging
 import sys
-from collections.abc import Callable, Sequence
 from os import environ, linesep
-from typing import IO
+from typing import IO, TYPE_CHECKING
 
 from typing_extensions import deprecated
 
@@ -47,6 +46,10 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
 
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512

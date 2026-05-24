@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from collections.abc import Collection
+from typing import TYPE_CHECKING
 
 from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_attributes,
@@ -30,9 +30,13 @@ from opentelemetry.proto_json.trace.v1.trace import (
     SpanFlags as JSONSpanFlags,
 )
 from opentelemetry.proto_json.trace.v1.trace import Status as JSONStatus
-from opentelemetry.sdk.trace import Event, ReadableSpan
 from opentelemetry.trace import Link, SpanKind
-from opentelemetry.trace.span import SpanContext, Status, TraceState
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
+
+    from opentelemetry.sdk.trace import Event, ReadableSpan
+    from opentelemetry.trace.span import SpanContext, Status, TraceState
 
 # pylint: disable=E1101
 _SPAN_KIND_MAP = {

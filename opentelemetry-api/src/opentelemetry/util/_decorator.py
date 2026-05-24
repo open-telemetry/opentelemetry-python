@@ -4,7 +4,6 @@
 import contextlib
 import functools
 import inspect
-from collections.abc import Callable, Iterator
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 V = TypeVar("V")
@@ -16,6 +15,8 @@ Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
 # import. ParamSpec can be imported directly from typing after python 3.9 is dropped
 # https://peps.python.org/pep-0612/.
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
     from typing_extensions import ParamSpec
 
     P = ParamSpec("P")  # Generic type for all arguments

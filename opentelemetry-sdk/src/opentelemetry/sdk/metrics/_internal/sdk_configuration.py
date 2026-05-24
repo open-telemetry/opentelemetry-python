@@ -5,10 +5,13 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
-import opentelemetry.sdk.resources
+
+if TYPE_CHECKING:
+    import opentelemetry.sdk.resources
 
 
 @dataclass

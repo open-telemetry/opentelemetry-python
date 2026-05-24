@@ -57,6 +57,7 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
+from typing import TYPE_CHECKING
 
 from prometheus_client import CollectorRegistry, start_http_server
 from prometheus_client.core import (
@@ -97,7 +98,9 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
-from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 

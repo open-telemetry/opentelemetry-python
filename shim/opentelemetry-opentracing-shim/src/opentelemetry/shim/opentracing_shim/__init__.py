@@ -76,8 +76,7 @@ API
 from __future__ import annotations
 
 import logging
-from types import TracebackType
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from opentracing import (
     Format,
@@ -113,7 +112,11 @@ from opentelemetry.trace import (
 )
 from opentelemetry.trace import SpanContext as OtelSpanContext
 from opentelemetry.trace import Tracer as OtelTracer
-from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    from types import TracebackType
+
+    from opentelemetry.util.types import Attributes
 
 ValueT = TypeVar("ValueT", int, float, bool, str)
 logger = logging.getLogger(__name__)

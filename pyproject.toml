@@ -87,18 +87,28 @@ select = [
   "PLE", # https://docs.astral.sh/ruff/rules/#error-ple
   "Q",   # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
   "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
+  "TCH", # flake8-type-checking
   "TID", # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
   "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up
 ]
 
 ignore = [
   "E501", # line-too-long
+  
+  # flake8-type-checking rules:
+  # This rule enforces to add quotes for type aliases.
+  # This rule is unsafe as no static type checker can determine
+  # the exact behavior of runtime typing libraries.
+  "TC007",
+  # This rule is unstable and in preview
+  "TC008",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**/*.*" = ["PLE"]
 "opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
 "shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
+"opentelemetry-sdk/tests/**" = ["TCH"]
 
 [tool.ruff.lint.isort]
 known-third-party = [
