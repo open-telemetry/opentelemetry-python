@@ -1,0 +1,1 @@
+`opentelemetry-exporter-prometheus`: add `default_aggregation` to `PrometheusMetricReader`
