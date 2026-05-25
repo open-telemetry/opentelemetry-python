@@ -24,6 +24,7 @@ protoc() {
     uvx -c $repo_root/gen-requirements.txt \
         --python 3.12 \
         --from grpcio-tools \
+        --with "$repo_root/codegen/opentelemetry-codegen-json" \
         python -m grpc_tools.protoc "$@"
 }
 
