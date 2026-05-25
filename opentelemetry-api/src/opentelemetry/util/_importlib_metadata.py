@@ -11,6 +11,7 @@ It also normalizes minor differences across python versions 3.10+. References to
 - https://github.com/open-telemetry/opentelemetry-python/pull/5203
 """
 
+import warnings
 from functools import cache
 from importlib.metadata import (
     Distribution,
@@ -29,7 +30,13 @@ def _as_entry_points(eps: Any) -> EntryPoints:
     if isinstance(eps, EntryPoints):
         return eps
     # Handle Python 3.10 SelectableGroups (dict-like)
-    return EntryPoints(ep for group_eps in eps.values() for ep in group_eps)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=r"SelectableGroups dict interface is deprecated\. Use select\.",
+            category=DeprecationWarning,
+        )
+        return EntryPoints(ep for group_eps in eps.values() for ep in group_eps)
 
 
 @cache
