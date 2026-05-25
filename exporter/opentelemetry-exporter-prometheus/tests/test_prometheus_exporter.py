@@ -17,7 +17,7 @@ from opentelemetry.exporter.prometheus import (
     _CustomCollector,
 )
 from opentelemetry.metrics import NoOpMeterProvider
-from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Histogram,
@@ -27,6 +27,7 @@ from opentelemetry.sdk.metrics.export import (
     ResourceMetrics,
     ScopeMetrics,
 )
+from opentelemetry.sdk.metrics.view import DropAggregation
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
@@ -88,6 +89,25 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         with self._registry_register_patch:
             _ = PrometheusMetricReader()
             self.assertTrue(self._mock_registry_register.called)
+
+    def test_constructor_default_aggregation(self):
+        custom_registry = CollectorRegistry()
+        metric_reader = PrometheusMetricReader(
+            disable_target_info=True,
+            registry=custom_registry,
+            default_aggregation={Counter: DropAggregation()},
+        )
+        provider = MeterProvider(metric_readers=[metric_reader])
+
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+
+        self.assertEqual(
+            generate_latest(custom_registry).decode("utf-8"),
+            "", # DropAggregation drops all measurements, so no metrics are exported
+        )
+        provider.shutdown()
 
     def test_shutdown(self):
         with patch(
