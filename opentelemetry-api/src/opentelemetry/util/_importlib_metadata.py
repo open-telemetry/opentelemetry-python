@@ -11,6 +11,7 @@ It also normalizes minor differences across python versions 3.10+. References to
 - https://github.com/open-telemetry/opentelemetry-python/pull/5203
 """
 
+import itertools
 from functools import cache
 from importlib.metadata import (
     Distribution,
@@ -28,8 +29,15 @@ from typing import Any
 def _as_entry_points(eps: Any) -> EntryPoints:
     if isinstance(eps, EntryPoints):
         return eps
-    # Handle Python 3.10 SelectableGroups (dict-like)
-    return EntryPoints(ep for group_eps in eps.values() for ep in group_eps)
+    # Python 3.10 entry_points() returns a dict-like SelectableGroups object.
+    # Use dict.values() instead of eps.values() to avoid the DeprecationWarning
+    # that SelectableGroups raises when calling .values().
+    if isinstance(eps, dict):
+        return EntryPoints(itertools.chain.from_iterable(dict.values(eps)))
+    # Fallback for all other types
+    return EntryPoints(
+        ep for group in eps.groups for ep in eps.select(group=group)
+    )
 
 
 @cache
