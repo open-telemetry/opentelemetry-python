@@ -10,6 +10,7 @@ import urllib3
 import urllib3.exceptions
 from mocket import Mocket, Mocketizer, mocketize
 from mocket.mocks.mockhttp import Entry
+from urllib3._collections import HTTPHeaderDict
 
 # pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._urllib3 import (
@@ -21,63 +22,113 @@ _TEST_URL = "http://example.test/v1/traces"
 
 
 class TestUrllib3HTTPResult(unittest.TestCase):
-    def test_is_connection_error(self):
-        cases: list[tuple[Urllib3HTTPResult, bool]] = [
-            (Urllib3HTTPResult(status_code=200, reason="OK"), False),
-            (
-                Urllib3HTTPResult(
-                    error=urllib3.exceptions.ProtocolError("error")
-                ),
-                True,
-            ),
-            (
-                Urllib3HTTPResult(
-                    error=urllib3.exceptions.NewConnectionError(None, "error")
-                ),
-                True,
-            ),
-            (
-                Urllib3HTTPResult(
-                    error=urllib3.exceptions.ConnectTimeoutError(None, "error")
-                ),
-                True,
-            ),
-            (
-                Urllib3HTTPResult(
-                    error=urllib3.exceptions.MaxRetryError(None, "http://x")
-                ),
-                True,
-            ),
-            (
-                Urllib3HTTPResult(error=urllib3.exceptions.HTTPError("error")),
-                False,
-            ),
-            (
-                Urllib3HTTPResult(
-                    error=urllib3.exceptions.ReadTimeoutError(
-                        None, "http://x", "timeout"
-                    )
-                ),
-                False,
-            ),
-            (Urllib3HTTPResult(error=RuntimeError("error")), False),
-            (Urllib3HTTPResult(error=ValueError("error")), False),
-        ]
-        name_resolution_error = getattr(
-            urllib3.exceptions, "NameResolutionError", None
+    @mocketize
+    def test_content_returns_body(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=200, body="hello")
+        result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.content(), b"hello")
+
+    def test_content_returns_empty_bytes_when_no_response(self):
+        result = Urllib3HTTPResult(status_code=200, reason="OK")
+        self.assertEqual(result.content(), b"")
+
+    @mocketize
+    def test_content_returns_empty_bytes_for_empty_body(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=204)
+        result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.content(), b"")
+
+    @mocketize
+    def test_text_decodes_utf8(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=200, body="hello")
+        result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.text(), "hello")
+
+    def test_text_returns_empty_string_when_no_response(self):
+        result = Urllib3HTTPResult(status_code=200, reason="OK")
+        self.assertEqual(result.text(), "")
+
+    @mocketize
+    def test_text_returns_empty_string_for_empty_body(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=204)
+        result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.text(), "")
+
+    def test_text_raises_for_non_utf8_content(self):
+        mock_response = MagicMock()
+        mock_response.data = b"\xff\xfe"
+        result = Urllib3HTTPResult(
+            status_code=200, reason="OK", response=mock_response
         )
-        if name_resolution_error is not None:
-            cases.append(
-                (
-                    Urllib3HTTPResult(
-                        error=name_resolution_error("host", None, "error")
-                    ),
-                    True,
-                )
-            )
-        for result, expected in cases:
-            with self.subTest(error_type=type(result.error).__name__):
-                self.assertEqual(result.is_connection_error(), expected)
+        self.assertRaises(UnicodeDecodeError, result.text)
+
+    @mocketize
+    def test_json_parses_dict(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            body='{"key": "val"}',
+            headers={"Content-Type": "application/json"},
+        )
+        result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.json(), {"key": "val"})
+
+    def test_json_raises_when_no_response(self):
+        result = Urllib3HTTPResult(status_code=200, reason="OK")
+        self.assertRaises(ValueError, result.json)
+
+    @mocketize
+    def test_json_raises_for_malformed_json(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            body="not json",
+            headers={"Content-Type": "application/json"},
+        )
+        result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        self.assertRaises(ValueError, result.json)
+
+    @mocketize
+    def test_headers_returns_response_headers(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            headers={"X-Custom": "value"},
+        )
+        result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.headers()["X-Custom"], "value")
+
+    def test_headers_raises_when_no_response(self):
+        result = Urllib3HTTPResult(status_code=200, reason="OK")
+        self.assertRaises(ValueError, result.headers)
+
+    @mocketize
+    def test_headers_are_case_insensitive(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            headers={"X-Custom": "value"},
+        )
+        result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        headers = result.headers()
+        self.assertEqual(headers["x-custom"], "value")
+        self.assertEqual(headers["X-CUSTOM"], "value")
+        self.assertEqual(headers["X-Custom"], "value")
+
+    def test_headers_returns_multiple_values_as_comma_separated(self):
+        mock_response = MagicMock()
+        headers = HTTPHeaderDict()
+        headers.add("X-Multi", "value1")
+        headers.add("X-Multi", "value2")
+        mock_response.headers = headers
+        result = Urllib3HTTPResult(
+            status_code=200, reason="OK", response=mock_response
+        )
+        self.assertEqual(result.headers()["X-Multi"], "value1, value2")
 
 
 # pylint: disable=protected-access,no-self-use
@@ -101,11 +152,11 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
                     self.assertIsNone(result.error)
 
     @mocketize
-    def test_request_result_is_not_a_connection_error(self):
+    def test_request_returns_response_content(self):
         Entry.single_register(Entry.POST, _TEST_URL, status=200)
         transport = Urllib3HTTPTransport()
         result = transport.request("POST", _TEST_URL)
-        self.assertFalse(result.is_connection_error())
+        self.assertIsInstance(result.content(), bytes)
 
     @mocketize
     def test_request_forwards_headers(self):
@@ -129,6 +180,14 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
         self.assertEqual(Mocket.last_request().body, "payload")
 
+    @mocketize
+    def test_request_does_not_follow_redirects(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=302)
+        transport = Urllib3HTTPTransport()
+        result = transport.request("POST", _TEST_URL)
+        self.assertEqual(result.status_code, 302)
+        self.assertIsNone(result.error)
+
     def test_request_catches_exception(self):
         cases = [
             (RuntimeError("unexpected"), False),
@@ -145,7 +204,37 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
                 self.assertIsNone(result.reason)
                 self.assertIs(result.error, error)
                 self.assertEqual(
-                    result.is_connection_error(), expected_is_connection_error
+                    transport.is_connection_error(result.error),
+                    expected_is_connection_error,
+                )
+
+    def test_is_connection_error(self):
+        cases: list[tuple[Exception | None, bool]] = [
+            (urllib3.exceptions.ProtocolError("error"), True),
+            (urllib3.exceptions.NewConnectionError(None, "error"), True),
+            (urllib3.exceptions.ConnectTimeoutError(None, "error"), True),
+            (urllib3.exceptions.MaxRetryError(None, "http://x"), True),
+            (urllib3.exceptions.HTTPError("error"), False),
+            (
+                urllib3.exceptions.ReadTimeoutError(
+                    None, "http://x", "timeout"
+                ),
+                False,
+            ),
+            (RuntimeError("error"), False),
+            (ValueError("error"), False),
+            (None, False),
+        ]
+        name_resolution_error = getattr(
+            urllib3.exceptions, "NameResolutionError", None
+        )
+        if name_resolution_error is not None:
+            cases.append((name_resolution_error("host", None, "error"), True))
+        transport = Urllib3HTTPTransport()
+        for exception, expected in cases:
+            with self.subTest(error_type=type(exception).__name__):
+                self.assertEqual(
+                    transport.is_connection_error(exception), expected
                 )
 
     def test_request_passes_timeout(self):

@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import requests
 import requests.exceptions
+import requests.structures
 from mocket import Mocket, Mocketizer, mocketize
 from mocket.mocks.mockhttp import Entry
 
@@ -21,61 +22,110 @@ _TEST_URL = "http://example.test/v1/traces"
 
 
 class TestRequestsHTTPResult(unittest.TestCase):
-    def test_is_connection_error(self):
-        cases = [
-            (RequestsHTTPResult(status_code=200, reason="OK"), False),
-            (
-                RequestsHTTPResult(
-                    error=requests.exceptions.ConnectionError("error")
-                ),
-                True,
-            ),
-            (
-                RequestsHTTPResult(
-                    error=requests.exceptions.ConnectTimeout("error")
-                ),
-                True,
-            ),
-            (
-                RequestsHTTPResult(
-                    error=requests.exceptions.ReadTimeout("error")
-                ),
-                True,
-            ),
-            (
-                RequestsHTTPResult(error=requests.exceptions.Timeout("error")),
-                True,
-            ),
-            (
-                RequestsHTTPResult(
-                    error=requests.exceptions.SSLError("error")
-                ),
-                True,
-            ),
-            (
-                RequestsHTTPResult(
-                    error=requests.exceptions.ProxyError("error")
-                ),
-                True,
-            ),
-            (
-                RequestsHTTPResult(
-                    error=requests.exceptions.HTTPError("error")
-                ),
-                False,
-            ),
-            (
-                RequestsHTTPResult(
-                    error=requests.exceptions.RequestException("error")
-                ),
-                False,
-            ),
-            (RequestsHTTPResult(error=RuntimeError("error")), False),
-            (RequestsHTTPResult(error=ValueError("error")), False),
-        ]
-        for result, expected in cases:
-            with self.subTest(error_type=type(result.error).__name__):
-                self.assertEqual(result.is_connection_error(), expected)
+    @mocketize
+    def test_content_returns_body(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=200, body="hello")
+        result = RequestsHTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.content(), b"hello")
+
+    def test_content_returns_empty_bytes_when_no_response(self):
+        result = RequestsHTTPResult(status_code=200, reason="OK")
+        self.assertEqual(result.content(), b"")
+
+    @mocketize
+    def test_content_returns_empty_bytes_for_empty_body(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=204)
+        result = RequestsHTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.content(), b"")
+
+    @mocketize
+    def test_text_uses_response_text(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            body="hello",
+            headers={"Content-Type": "text/plain; charset=utf-8"},
+        )
+        result = RequestsHTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.text(), "hello")
+
+    def test_text_returns_empty_string_when_no_response(self):
+        result = RequestsHTTPResult(status_code=200, reason="OK")
+        self.assertEqual(result.text(), "")
+
+    @mocketize
+    def test_text_returns_empty_string_for_empty_body(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=204)
+        result = RequestsHTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.text(), "")
+
+    @mocketize
+    def test_json_uses_response_json(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            body='{"key": "val"}',
+            headers={"Content-Type": "application/json"},
+        )
+        result = RequestsHTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.json(), {"key": "val"})
+
+    def test_json_raises_when_no_response(self):
+        result = RequestsHTTPResult(status_code=200, reason="OK")
+        self.assertRaises(ValueError, result.json)
+
+    @mocketize
+    def test_json_raises_for_malformed_json(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            body="not json",
+            headers={"Content-Type": "application/json"},
+        )
+        result = RequestsHTTPTransport().request("POST", _TEST_URL)
+        self.assertRaises(ValueError, result.json)
+
+    @mocketize
+    def test_headers_returns_response_headers(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            headers={"X-Custom": "value"},
+        )
+        result = RequestsHTTPTransport().request("POST", _TEST_URL)
+        self.assertEqual(result.headers()["X-Custom"], "value")
+
+    def test_headers_raises_when_no_response(self):
+        result = RequestsHTTPResult(status_code=200, reason="OK")
+        self.assertRaises(ValueError, result.headers)
+
+    @mocketize
+    def test_headers_are_case_insensitive(self):
+        Entry.single_register(
+            Entry.POST,
+            _TEST_URL,
+            status=200,
+            headers={"X-Custom": "value"},
+        )
+        result = RequestsHTTPTransport().request("POST", _TEST_URL)
+        headers = result.headers()
+        self.assertEqual(headers["x-custom"], "value")
+        self.assertEqual(headers["X-CUSTOM"], "value")
+        self.assertEqual(headers["X-Custom"], "value")
+
+    def test_headers_returns_multiple_values_as_comma_separated(self):
+        mock_response = MagicMock()
+        mock_response.headers = requests.structures.CaseInsensitiveDict(
+            {"X-Multi": "value1, value2"}
+        )
+        result = RequestsHTTPResult(
+            status_code=200, reason="OK", response=mock_response
+        )
+        self.assertEqual(result.headers()["X-Multi"], "value1, value2")
 
 
 # pylint: disable=protected-access,no-self-use
@@ -99,11 +149,11 @@ class TestRequestsHTTPTransport(unittest.TestCase):
                     self.assertIsNone(result.error)
 
     @mocketize
-    def test_request_result_is_not_a_connection_error(self):
+    def test_request_returns_response_content(self):
         Entry.single_register(Entry.POST, _TEST_URL, status=200)
         transport = RequestsHTTPTransport()
         result = transport.request("POST", _TEST_URL)
-        self.assertFalse(result.is_connection_error())
+        self.assertIsInstance(result.content(), bytes)
 
     @mocketize
     def test_request_forwards_headers(self):
@@ -127,6 +177,32 @@ class TestRequestsHTTPTransport(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
         self.assertEqual(Mocket.last_request().body, "payload")
 
+    @mocketize
+    def test_request_does_not_follow_redirects(self):
+        Entry.single_register(Entry.POST, _TEST_URL, status=302)
+        transport = RequestsHTTPTransport()
+        result = transport.request("POST", _TEST_URL)
+        self.assertEqual(result.status_code, 302)
+        self.assertIsNone(result.error)
+
+    def test_request_passes_timeout(self):
+        cases = [
+            (3.5,),
+            (None,),
+        ]
+        for (timeout,) in cases:
+            with self.subTest(timeout=timeout):
+                mock_session = MagicMock(spec=requests.Session)
+                mock_session.request.return_value = MagicMock(
+                    status_code=200, reason="OK"
+                )
+                transport = RequestsHTTPTransport(session=mock_session)
+                transport.request("POST", _TEST_URL, timeout=timeout)
+                timeout_kwarg = mock_session.request.call_args.kwargs[
+                    "timeout"
+                ]
+                self.assertEqual(timeout_kwarg, timeout)
+
     def test_request_catches_exception(self):
         cases = [
             (RuntimeError("unexpected"), False),
@@ -141,7 +217,31 @@ class TestRequestsHTTPTransport(unittest.TestCase):
                 self.assertIsNone(result.reason)
                 self.assertIs(result.error, error)
                 self.assertEqual(
-                    result.is_connection_error(), expected_is_connection_error
+                    transport.is_connection_error(result.error),
+                    expected_is_connection_error,
+                )
+
+    def test_is_connection_error(self):
+        cases = [
+            (requests.exceptions.ConnectionError("error"), True),
+            (requests.exceptions.ConnectTimeout("error"), True),
+            (requests.exceptions.ReadTimeout("error"), True),
+            (requests.exceptions.Timeout("error"), True),
+            (requests.exceptions.SSLError("error"), True),
+            (requests.exceptions.ProxyError("error"), True),
+            (requests.exceptions.HTTPError("error"), False),
+            (requests.exceptions.RequestException("error"), False),
+            (RuntimeError("error"), False),
+            (ValueError("error"), False),
+            (None, False),
+        ]
+        transport = RequestsHTTPTransport(
+            session=MagicMock(spec=requests.Session)
+        )
+        for exception, expected in cases:
+            with self.subTest(error_type=type(exception).__name__):
+                self.assertEqual(
+                    transport.is_connection_error(exception), expected
                 )
 
     def test_verify_sets_session_verify(self):

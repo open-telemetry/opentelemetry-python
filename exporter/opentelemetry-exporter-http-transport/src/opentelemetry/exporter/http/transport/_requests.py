@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import functools
 import warnings
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 # pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._base import (
@@ -16,6 +17,7 @@ from opentelemetry.exporter.http.transport._base import (
 
 if TYPE_CHECKING:
     import requests
+    from requests import Response
 
 
 @functools.cache
@@ -35,10 +37,27 @@ def _get_connection_error_types() -> tuple[type[Exception], ...]:
 
 @dataclass(frozen=True, slots=True)
 class RequestsHTTPResult(BaseHTTPResult):
-    def is_connection_error(self) -> bool:
-        if self.error is None:
-            return False
-        return isinstance(self.error, _get_connection_error_types())
+    response: Response | None = field(default=None, hash=False, compare=False)
+
+    def content(self) -> bytes:
+        if self.response is None:
+            return b""
+        return self.response.content or b""
+
+    def text(self) -> str:
+        if self.response is None:
+            return ""
+        return self.response.text or ""
+
+    def json(self) -> Any:
+        if self.response is None:
+            raise ValueError("No response available.")
+        return self.response.json()
+
+    def headers(self) -> Mapping[str, str]:
+        if self.response is None:
+            raise ValueError("No response available.")
+        return self.response.headers
 
 
 class RequestsHTTPTransport(BaseHTTPTransport):
@@ -92,7 +111,12 @@ class RequestsHTTPTransport(BaseHTTPTransport):
         return RequestsHTTPResult(
             status_code=response.status_code,
             reason=response.reason,
+            response=response,
         )
+
+    # pylint: disable-next=no-self-use
+    def is_connection_error(self, exception: Exception | None) -> bool:
+        return isinstance(exception, _get_connection_error_types())
 
     def close(self) -> None:
         self._session.close()

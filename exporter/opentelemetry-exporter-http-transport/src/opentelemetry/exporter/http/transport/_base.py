@@ -1,8 +1,11 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,12 +21,42 @@ class BaseHTTPResult(ABC):
     error: Exception | None = None
 
     @abstractmethod
-    def is_connection_error(self) -> bool:
-        """Return ``True`` if the failure is a transport-level connection error."""
+    def content(self) -> bytes:
+        """Return the raw response body.
+
+        Implementations may raise an exception if the returned content is malformed.
+        """
+
+    @abstractmethod
+    def headers(self) -> Mapping[str, str]:
+        """Return the response headers.
+
+        The returned mapping MUST be case-insensitive with respect to header
+        keys. Headers with multiple values are represented as a single string
+        of comma separated values.
+
+        Implementations may raise an exception if no response is available
+        or if the returned headers are malformed.
+        """
+
+    def text(self) -> str:
+        """Return the response body decoded as UTF-8.
+
+        Implementations may raise an exception if the returned string is malformed.
+        """
+        return self.content().decode("utf-8")
+
+    def json(self) -> Any:
+        """Return the response body parsed as JSON.
+
+        Implementations may raise an exception if no response is available
+        or if the returned JSON is malformed.
+        """
+        return json.loads(self.text())
 
 
 class BaseHTTPTransport(ABC):
-    """Abstract HTTP transport interface used by OTLP HTTP exporters."""
+    """Abstract HTTP transport interface used by HTTP exporters."""
 
     @abstractmethod
     def request(
@@ -48,3 +81,7 @@ class BaseHTTPTransport(ABC):
     @abstractmethod
     def close(self) -> None:
         """Release any resources held by the transport."""
+
+    @abstractmethod
+    def is_connection_error(self, exception: Exception | None) -> bool:
+        """Return ``True`` if the exception is a transport-level connection error."""
