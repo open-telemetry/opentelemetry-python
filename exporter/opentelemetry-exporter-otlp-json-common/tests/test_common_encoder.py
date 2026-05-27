@@ -8,7 +8,6 @@ import unittest
 from logging import ERROR
 
 from opentelemetry.exporter.otlp.json.common._internal import (
-    _encode_array,
     _encode_attributes,
     _encode_instrumentation_scope,
     _encode_key_value,
@@ -33,6 +32,11 @@ from opentelemetry.proto_json.resource.v1.resource import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+
+
+class CannotEncode:
+    def __str__(self):
+        raise ValueError("Cannot encode")
 
 
 class TestCommonEncoder(unittest.TestCase):
@@ -131,19 +135,18 @@ class TestCommonEncoder(unittest.TestCase):
 
     def test_encode_null(self):
         result = _encode_value(None)
-        self.assertIsNone(result)
+        self.assertEqual(result, JSONAnyValue())
 
     def test_encode_array_with_nulls(self):
-        result = _encode_array([1, None, 2])
+        result = _encode_value([1, None, 2])
         self.assertEqual(
-            result,
+            result.array_value.values,
             [
                 JSONAnyValue(int_value=1),
                 JSONAnyValue(),
                 JSONAnyValue(int_value=2),
             ],
         )
-        self.assertEqual(result[1].to_dict(), {})
 
     def test_encode_key_value(self):
         result = _encode_key_value("mykey", "myval")
@@ -224,7 +227,9 @@ class TestCommonEncoder(unittest.TestCase):
 
     def test_encode_attributes_error_skips_bad_key(self):
         with self.assertLogs(level=ERROR) as error:
-            result = _encode_attributes({"a": 1, "bad_key": None, "b": 2})
+            result = _encode_attributes(
+                {"a": 1, "bad_key": CannotEncode(), "b": 2}
+            )
 
         self.assertEqual(len(error.records), 1)
         self.assertEqual(error.records[0].msg, "Failed to encode key %s: %s")
@@ -238,10 +243,10 @@ class TestCommonEncoder(unittest.TestCase):
             ],
         )
 
-    def test_encode_attributes_error_list_none(self):
+    def test_encode_attributes_error_list_unencodable(self):
         with self.assertLogs(level=ERROR) as error:
             result = _encode_attributes(
-                {"a": 1, "bad_key": ["test", None, "test"], "b": 2}
+                {"a": 1, "bad_key": ["test", CannotEncode(), "test"], "b": 2}
             )
 
         self.assertEqual(len(error.records), 1)
