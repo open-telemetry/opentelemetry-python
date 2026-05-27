@@ -71,7 +71,7 @@ from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 # pylint: disable=too-many-lines
 
@@ -555,7 +555,7 @@ class LoggingHandler(logging.Handler):
         )
 
     @staticmethod
-    def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
+    def _get_attributes(record: logging.LogRecord) -> Attributes:
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
@@ -712,7 +712,7 @@ class Logger(APILogger):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -822,7 +822,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         scope = InstrumentationScope(name, version, schema_url, attributes)
 
@@ -855,7 +855,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> APILogger:
         if self._disabled:
             return NoOpLogger(

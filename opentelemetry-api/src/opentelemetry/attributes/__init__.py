@@ -242,7 +242,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     def __init__(
         self,
         maxlen: int | None = None,
-        attributes: types._ExtendedAttributes | None = None,
+        attributes: types.Attributes = None,
         immutable: bool = True,
         max_value_len: int | None = None,
         extended_attributes: bool = False,

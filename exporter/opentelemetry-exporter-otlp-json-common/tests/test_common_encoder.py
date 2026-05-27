@@ -129,16 +129,12 @@ class TestCommonEncoder(unittest.TestCase):
         result_dict = result.to_dict()
         self.assertIn("kvlistValue", result_dict)
 
-    def test_encode_value_none_not_allowed(self):
-        with self.assertRaises(TypeError):
-            _encode_value(None)
-
-    def test_encode_value_none_allowed(self):
-        result = _encode_value(None, allow_null=True)
+    def test_encode_null(self):
+        result = _encode_value(None)
         self.assertIsNone(result)
 
     def test_encode_array_with_nulls(self):
-        result = _encode_array([1, None, 2], allow_null=True)
+        result = _encode_array([1, None, 2])
         self.assertEqual(
             result,
             [
@@ -148,10 +144,6 @@ class TestCommonEncoder(unittest.TestCase):
             ],
         )
         self.assertEqual(result[1].to_dict(), {})
-
-    def test_encode_array_none_raises(self):
-        with self.assertRaises(TypeError):
-            _encode_array([1, None, 2], allow_null=False)
 
     def test_encode_key_value(self):
         result = _encode_key_value("mykey", "myval")
