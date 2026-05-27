@@ -26,7 +26,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "googleapis-common-protos ~= 1.57",
+  "googleapis-common-protos ~= 1.75",
   "grpcio >= 1.63.2, < 2.0.0; python_version < '3.13'",
   "grpcio >= 1.66.2, < 2.0.0; python_version == '3.13'",
   "grpcio >= 1.75.1, < 2.0.0; python_version >= '3.14'",
