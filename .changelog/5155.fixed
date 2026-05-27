@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: Log server error details from response body on export failure
