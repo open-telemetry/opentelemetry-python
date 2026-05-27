@@ -48,6 +48,7 @@ _CONTEXT_LOG = set_span_in_context(
     )
 )
 
+# Otherwise the diffs get truncated..
 unittest.util._MAX_LENGTH=2000
 
 
@@ -168,8 +169,13 @@ class TestOTLPLogEncoder(unittest.TestCase):
                     ],
                 )
             ]
-        )        
-        self.assertEqual(encode_logs([log_record_with_no_instrumentation_scope_and_dict_body]), pb2_resource_logs)
+        )
+        self.assertEqual(
+            encode_logs(
+                [log_record_with_no_instrumentation_scope_and_dict_body]
+            ),
+            ExportLogsServiceRequest(resource_logs=[pb2_resource_logs]),
+        )
 
     def test_encode_log_record_with_empty_resource_and_dict_attribute_value(self):
         log_record_with_empty_resource_and_dict_attribute_value = ReadWriteLogRecord(
@@ -201,8 +207,9 @@ class TestOTLPLogEncoder(unittest.TestCase):
             scope_logs=[
                 PB2ScopeLogs(
                     scope=PB2InstrumentationScope(
-                        name="scope_with_attributes", 
+                        name="scope_with_attributes",
                         version="scope_with_attributes_version",
+                        attributes=_encode_attributes({"one": 1, "two": "2"}),
                     ),
                     log_records=[
                         PB2LogRecord(
@@ -232,8 +239,13 @@ class TestOTLPLogEncoder(unittest.TestCase):
                     schema_url="instrumentation_schema_url",
                 )
             ]
-        )        
-        self.assertEqual(encode_logs([log_record_with_empty_resource_and_dict_attribute_value]), pb2_resource_logs)
+        )
+        self.assertEqual(
+            encode_logs(
+                [log_record_with_empty_resource_and_dict_attribute_value]
+            ),
+            ExportLogsServiceRequest(resource_logs=[pb2_resource_logs]),
+        )
 
     def test_dropped_attributes_count(self):
         sdk_logs = self._get_test_logs_dropped_attributes()
