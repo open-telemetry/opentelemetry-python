@@ -49,7 +49,7 @@ _CONTEXT_LOG = set_span_in_context(
 )
 
 # Otherwise the diffs get truncated..
-unittest.util._MAX_LENGTH=2000
+unittest.util._MAX_LENGTH = 2000
 
 
 class TestOTLPLogEncoder(unittest.TestCase):
@@ -117,7 +117,9 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
         self.assertEqual(encode_logs([basic_log_record]), pb2_service_request)
 
-    def test_encode_log_record_with_no_instrumentation_scope_and_dict_body(self):
+    def test_encode_log_record_with_no_instrumentation_scope_and_dict_body(
+        self,
+    ):
         log_record_with_no_instrumentation_scope_and_dict_body = (
             ReadWriteLogRecord(
                 LogRecord(
@@ -144,8 +146,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
             scope_logs=[
                 PB2ScopeLogs(
-                    scope=PB2InstrumentationScope(
-                    ),
+                    scope=PB2InstrumentationScope(),
                     log_records=[
                         PB2LogRecord(
                             time_unix_nano=1644650427658989056,
@@ -153,22 +154,21 @@ class TestOTLPLogEncoder(unittest.TestCase):
                             trace_id=_encode_trace_id(
                                 89564621134313219400156819398935297684
                             ),
-                            span_id=_encode_span_id(
-                                1312458408527513268
-                            ),
+                            span_id=_encode_span_id(1312458408527513268),
                             flags=int(TraceFlags(0x01)),
                             severity_text="DEBUG",
                             severity_number=SeverityNumber.DEBUG.value,
                             body=_encode_value(
-                                {"error": None, "array_with_nones": [1, None, 2]}
+                                {
+                                    "error": None,
+                                    "array_with_nones": [1, None, 2],
+                                }
                             ),
-                            attributes=_encode_attributes(
-                                {"a": 1, "b": "c"}
-                            ),
+                            attributes=_encode_attributes({"a": 1, "b": "c"}),
                         )
                     ],
                 )
-            ]
+            ],
         )
         self.assertEqual(
             encode_logs(
@@ -177,7 +177,9 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ExportLogsServiceRequest(resource_logs=[pb2_resource_logs]),
         )
 
-    def test_encode_log_record_with_empty_resource_and_dict_attribute_value(self):
+    def test_encode_log_record_with_empty_resource_and_dict_attribute_value(
+        self,
+    ):
         log_record_with_empty_resource_and_dict_attribute_value = ReadWriteLogRecord(
             LogRecord(
                 timestamp=1644650584292683033,
@@ -201,9 +203,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
         )
         pb2_resource_logs = PB2ResourceLogs(
-            resource=PB2Resource(
-                attributes=[]
-            ),
+            resource=PB2Resource(attributes=[]),
             scope_logs=[
                 PB2ScopeLogs(
                     scope=PB2InstrumentationScope(
@@ -218,9 +218,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                             trace_id=_encode_trace_id(
                                 89564621134313219400156819398935297684
                             ),
-                            span_id=_encode_span_id(
-                                1312458408527513268
-                            ),
+                            span_id=_encode_span_id(1312458408527513268),
                             flags=int(TraceFlags(0x01)),
                             severity_text="FATAL",
                             severity_number=SeverityNumber.FATAL.value,
@@ -230,7 +228,9 @@ class TestOTLPLogEncoder(unittest.TestCase):
                             attributes=_encode_attributes(
                                 {
                                     "extended": {
-                                        "sequence": [{"inner": "mapping", "none": None}]
+                                        "sequence": [
+                                            {"inner": "mapping", "none": None}
+                                        ]
                                     }
                                 }
                             ),
@@ -238,7 +238,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                     ],
                     schema_url="instrumentation_schema_url",
                 )
-            ]
+            ],
         )
         self.assertEqual(
             encode_logs(
