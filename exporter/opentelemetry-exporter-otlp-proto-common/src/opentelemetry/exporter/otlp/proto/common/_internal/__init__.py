@@ -66,28 +66,19 @@ def _encode_value(value: Any) -> PB2AnyValue:
         return PB2AnyValue(bytes_value=value)
     if isinstance(value, Sequence):
         return PB2AnyValue(
-            array_value=PB2ArrayValue(
-                values=[_encode_value(v) for v in value]
-            )
+            array_value=PB2ArrayValue(values=[_encode_value(v) for v in value])
         )
     if isinstance(value, Mapping):
         return PB2AnyValue(
             kvlist_value=PB2KeyValueList(
-                values=[
-                    _encode_key_value(str(k), v)
-                    for k, v in value.items()
-                ]
+                values=[_encode_key_value(str(k), v) for k, v in value.items()]
             )
         )
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
 
-def _encode_key_value(
-    key: str, value: Any
-) -> PB2KeyValue:
-    return PB2KeyValue(
-        key=key, value=_encode_value(value)
-    )
+def _encode_key_value(key: str, value: Any) -> PB2KeyValue:
+    return PB2KeyValue(key=key, value=_encode_value(value))
 
 
 def _encode_span_id(span_id: int) -> bytes:
