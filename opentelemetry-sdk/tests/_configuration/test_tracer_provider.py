@@ -211,7 +211,7 @@ class TestCreateSampler(unittest.TestCase):
         with self.assertRaises(ConfigurationError):
             self._make_provider(SamplerConfig())
 
-    def test_plugin_sampler_loaded_via_entry_point(self):
+    def test_user_defined_sampler_loaded_via_entry_point(self):
         mock_sampler = MagicMock(spec=Sampler)
         mock_class = MagicMock(return_value=mock_sampler)
         with patch(
@@ -222,7 +222,7 @@ class TestCreateSampler(unittest.TestCase):
             provider = self._make_provider(SamplerConfig(my_custom_sampler={}))
         self.assertIs(provider.sampler, mock_sampler)
 
-    def test_plugin_sampler_not_found_raises_configuration_error(self):
+    def test_user_defined_sampler_not_found_raises_configuration_error(self):
         with patch(
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],

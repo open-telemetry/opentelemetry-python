@@ -18,7 +18,7 @@ def _additional_properties(cls):
 
     Wraps the dataclass-generated ``__init__`` so that extra keyword
     arguments are captured into an ``additional_properties`` instance
-    attribute instead of raising ``TypeError``.  This lets plugin
+    attribute instead of raising ``TypeError``.  This lets user-defined
     component names flow through the config pipeline without modifying
     the codegen output for built-in fields.
 

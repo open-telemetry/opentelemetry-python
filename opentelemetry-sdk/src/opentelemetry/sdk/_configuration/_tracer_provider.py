@@ -189,7 +189,7 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     """Create a sampler from config.
 
     Built-in sampler types are checked via typed fields on the Sampler
-    dataclass. Plugin sampler names captured in additional_properties
+    dataclass. User-defined sampler names captured in additional_properties
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_sampler`` entry point group.
     """
