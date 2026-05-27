@@ -53,6 +53,7 @@ from opentelemetry.sdk._logs._internal._logger_metrics import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_LOG_LEVEL,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
     OTEL_SDK_DISABLED,
 )
@@ -78,7 +79,40 @@ from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
+# "warn" is accepted alongside "warning" because OTel canonical short names
+# use "WARN", so users following OTel documentation will naturally try "warn".
+# "trace" maps to DEBUG because Python has no TRACE level and the OTel
+# declarative config schema includes "trace" as a valid log level value.
+_OTEL_LOG_LEVEL_TO_PYTHON = {
+    "trace": logging.DEBUG,
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warn": logging.WARNING,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
+}
+
 _logger = logging.getLogger(__name__)
+
+
+def _configure_otel_log_level() -> None:
+    """Apply OTEL_LOG_LEVEL to the ``opentelemetry.sdk`` logger hierarchy."""
+    otel_log_level_raw = environ.get(OTEL_LOG_LEVEL)
+    if not otel_log_level_raw:
+        return
+    otel_log_level = otel_log_level_raw.lower()
+    if otel_log_level in _OTEL_LOG_LEVEL_TO_PYTHON:
+        logging.getLogger("opentelemetry.sdk").setLevel(
+            _OTEL_LOG_LEVEL_TO_PYTHON[otel_log_level]
+        )
+    else:
+        _logger.warning(
+            "Invalid value for OTEL_LOG_LEVEL: %r. "
+            "Valid values: trace, debug, info, warn, warning, error, critical. "
+            "Logger level unchanged.",
+            otel_log_level_raw,
+        )
 
 
 class BytesEncoder(json.JSONEncoder):
