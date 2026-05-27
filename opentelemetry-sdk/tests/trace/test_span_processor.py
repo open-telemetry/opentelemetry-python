@@ -423,7 +423,35 @@ class TestSynchronousMultiSpanProcessor(
         flushed = multi_processor.force_flush(50)
         self.assertFalse(flushed)
         self.assertEqual(1, mock_processor1.force_flush.call_count)
-        self.assertEqual(0, mock_processor2.force_flush.call_count)
+        self.assertEqual(1, mock_processor2.force_flush.call_count)
+
+    def test_force_flush_processor_returns_none(self):
+        multi_processor = trace.SynchronousMultiSpanProcessor()
+
+        mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
+        mock_processor1.force_flush = mock.Mock(return_value=None)
+        multi_processor.add_span_processor(mock_processor1)
+        mock_processor2 = mock.Mock(spec=trace.SpanProcessor)
+        mock_processor2.force_flush = mock.Mock(return_value=True)
+        multi_processor.add_span_processor(mock_processor2)
+
+        flushed = multi_processor.force_flush(50)
+        self.assertTrue(flushed)
+        self.assertEqual(1, mock_processor1.force_flush.call_count)
+        self.assertEqual(1, mock_processor2.force_flush.call_count)
+
+    def test_force_flush_default_processor(self):
+        multi_processor = trace.SynchronousMultiSpanProcessor()
+
+        default_processor = trace.SpanProcessor()
+        multi_processor.add_span_processor(default_processor)
+        mock_processor = mock.Mock(spec=trace.SpanProcessor)
+        mock_processor.force_flush = mock.Mock(return_value=True)
+        multi_processor.add_span_processor(mock_processor)
+
+        flushed = multi_processor.force_flush(50)
+        self.assertTrue(flushed)
+        self.assertEqual(1, mock_processor.force_flush.call_count)
 
 
 class TestConcurrentMultiSpanProcessor(
@@ -472,6 +500,24 @@ class TestConcurrentMultiSpanProcessor(
         flushed = multi_processor.force_flush()
 
         self.assertFalse(flushed)
+        for mock_processor in mocks:
+            self.assertEqual(1, mock_processor.force_flush.call_count)
+        multi_processor.shutdown()
+
+    def test_force_flush_processor_returns_none(self):
+        multi_processor = trace.ConcurrentMultiSpanProcessor(5)
+
+        none_mock = mock.Mock(spec=trace.SpanProcessor)
+        none_mock.force_flush = mock.Mock(return_value=None)
+        mocks = [mock.Mock(spec=trace.SpanProcessor) for _ in range(0, 4)]
+        mocks.insert(0, none_mock)
+
+        for mock_processor in mocks:
+            multi_processor.add_span_processor(mock_processor)
+
+        flushed = multi_processor.force_flush()
+
+        self.assertTrue(flushed)
         for mock_processor in mocks:
             self.assertEqual(1, mock_processor.force_flush.call_count)
         multi_processor.shutdown()

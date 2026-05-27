@@ -6,7 +6,7 @@ from typing import Final
 
 HW_BATTERY_CAPACITY: Final = "hw.battery.capacity"
 """
-Design capacity in Watts-hours or Amper-hours.
+Design capacity in Watts-hours or Ampere-hours.
 """
 
 HW_BATTERY_CHEMISTRY: Final = "hw.battery.chemistry"

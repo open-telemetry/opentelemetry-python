@@ -41,6 +41,13 @@ SYSTEM_FILESYSTEM_TYPE: Final = "system.filesystem.type"
 The filesystem type.
 """
 
+SYSTEM_MEMORY_LINUX_HUGEPAGES_STATE: Final = (
+    "system.memory.linux.hugepages.state"
+)
+"""
+The Linux HugePages memory state.
+"""
+
 SYSTEM_MEMORY_LINUX_SLAB_STATE: Final = "system.memory.linux.slab.state"
 """
 The Linux Slab memory state.
@@ -129,6 +136,13 @@ class SystemFilesystemTypeValues(Enum):
     """hfsplus."""
     EXT4 = "ext4"
     """ext4."""
+
+
+class SystemMemoryLinuxHugepagesStateValues(Enum):
+    FREE = "free"
+    """free."""
+    USED = "used"
+    """used."""
 
 
 class SystemMemoryLinuxSlabStateValues(Enum):

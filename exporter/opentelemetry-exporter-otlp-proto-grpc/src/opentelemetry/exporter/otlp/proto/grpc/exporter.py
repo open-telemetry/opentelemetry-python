@@ -46,7 +46,7 @@ from grpc import (
     ssl_channel_credentials,
 )
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
-    ExporterMetrics,
+    create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
@@ -93,6 +93,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -395,11 +396,15 @@ class OTLPExporterMixin(
         self._component_type = component_type
         self._signal: Literal["traces", "metrics", "logs"] = signal
         self._parsed_url = parsed_url
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             self._component_type,
             signal,
             parsed_url,
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
 
         self._initialize_channel_and_stub()
@@ -507,10 +512,11 @@ class OTLPExporterMixin(
                         or self._shutdown
                     ):
                         logger.error(
-                            "Failed to export %s to %s, error code: %s",
+                            "Failed to export %s to %s, error code: %s, error details: %s",
                             self._exporting,
                             self._endpoint,
                             error.code(),  # type: ignore [reportAttributeAccessIssue]
+                            error.details(),
                             exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
                         )
                         result.error = error
@@ -519,11 +525,12 @@ class OTLPExporterMixin(
                         }
                         return self._result.FAILURE  # type: ignore [reportReturnType]
                     logger.warning(
-                        "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
+                        "Transient error %s encountered while exporting %s to %s, retrying in %.2fs. Error details: %s",
                         error.code(),  # type: ignore [reportAttributeAccessIssue]
                         self._exporting,
                         self._endpoint,
                         backoff_seconds,
+                        error.details(),
                     )
                 shutdown = self._shutdown_in_progress.wait(backoff_seconds)
                 if shutdown:
@@ -557,9 +564,13 @@ class OTLPExporterMixin(
         pass
 
     def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
-        self._metrics = ExporterMetrics(
+        self._metrics = create_exporter_metrics(
             self._component_type,
             self._signal,
             self._parsed_url,
             meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
         )
