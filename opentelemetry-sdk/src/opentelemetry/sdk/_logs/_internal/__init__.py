@@ -81,7 +81,10 @@ _ENV_VALUE_UNSET = ""
 
 # "warn" is accepted alongside "warning" because OTel canonical short names
 # use "WARN", so users following OTel documentation will naturally try "warn".
+# "trace" maps to DEBUG because Python has no TRACE level and the OTel
+# declarative config schema includes "trace" as a valid log level value.
 _OTEL_LOG_LEVEL_TO_PYTHON = {
+    "trace": logging.DEBUG,
     "debug": logging.DEBUG,
     "info": logging.INFO,
     "warn": logging.WARNING,
@@ -106,7 +109,7 @@ def _configure_otel_log_level() -> None:
     else:
         _logger.warning(
             "Invalid value for OTEL_LOG_LEVEL: %r. "
-            "Valid values: debug, info, warn, warning, error, critical. "
+            "Valid values: trace, debug, info, warn, warning, error, critical. "
             "Logger level unchanged.",
             otel_log_level_raw,
         )

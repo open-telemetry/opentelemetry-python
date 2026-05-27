@@ -470,6 +470,7 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
 
     def test_otel_log_level_to_python_mapping_accepted_keys(self):
         expected_keys = {
+            "trace",
             "debug",
             "info",
             "warn",
@@ -485,7 +486,7 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
         self.assertEqual(self._sdk_logger.level, logging.NOTSET)
 
     def test_invalid_value_warns_and_leaves_level_unchanged(self):
-        for invalid in ("INVALID", "trace", "verbose", "none", "0"):
+        for invalid in ("INVALID", "verbose", "none", "0"):
             with self.subTest(invalid=invalid):
                 with patch.dict("os.environ", {OTEL_LOG_LEVEL: invalid}):
                     with self.assertLogs(
@@ -526,6 +527,7 @@ class TestOtelLogLevelEnvVar(unittest.TestCase):
 
     def test_all_valid_values_map_to_correct_level(self):
         cases = [
+            ("trace", logging.DEBUG),
             ("debug", logging.DEBUG),
             ("info", logging.INFO),
             ("warn", logging.WARNING),
