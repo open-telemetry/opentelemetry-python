@@ -1,0 +1,102 @@
+name: "Reference App: rolldice"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "instrumentation/opentelemetry-instrumentation-fastapi/examples/rolldice/**"
+  pull_request:
+    paths:
+      - "instrumentation/opentelemetry-instrumentation-fastapi/examples/rolldice/**"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    strategy:
+      matrix:
+        variant: [instrumented, uninstrumented]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: instrumentation/opentelemetry-instrumentation-fastapi/examples/rolldice
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install instrumented version
+        if: matrix.variant == 'instrumented'
+        run: pip install .
+
+      - name: Install uninstrumented version
+        if: matrix.variant == 'uninstrumented'
+        run: pip install fastapi "uvicorn[standard]>=0.20"
+
+      - name: Start server (instrumented)
+        if: matrix.variant == 'instrumented'
+        run: |
+          python -m app.main &
+          echo "SERVER_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Start server (uninstrumented)
+        if: matrix.variant == 'uninstrumented'
+        run: |
+          cd uninstrumented
+          python -m app.main &
+          echo "SERVER_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/rolldice | grep -q 200; then
+              echo "Server ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start"
+          exit 1
+
+      - name: "Smoke test: default roll (rolls omitted)"
+        run: |
+          status=$(curl -s -o /tmp/response.txt -w '%{http_code}' http://localhost:8080/rolldice)
+          echo "Status: $status, Body: $(cat /tmp/response.txt)"
+          test "$status" = "200"
+          # Body should be a single digit 1-6
+          grep -qE '^[1-6]$' /tmp/response.txt
+
+      - name: "Smoke test: multiple rolls"
+        run: |
+          status=$(curl -s -o /tmp/response.txt -w '%{http_code}' 'http://localhost:8080/rolldice?rolls=3')
+          echo "Status: $status, Body: $(cat /tmp/response.txt)"
+          test "$status" = "200"
+          # Body should be a JSON array of 3 numbers
+          python -c "import json; d=json.load(open('/tmp/response.txt')); assert len(d)==3 and all(1<=v<=6 for v in d)"
+
+      - name: "Smoke test: invalid rolls (non-numeric) → 400"
+        run: |
+          status=$(curl -s -o /tmp/response.txt -w '%{http_code}' 'http://localhost:8080/rolldice?rolls=abc')
+          echo "Status: $status, Body: $(cat /tmp/response.txt)"
+          test "$status" = "400"
+          python -c "import json; d=json.load(open('/tmp/response.txt')); assert d['message']=='Parameter rolls must be a positive integer'"
+
+      - name: "Smoke test: zero rolls → 500"
+        run: |
+          status=$(curl -s -o /tmp/response.txt -w '%{http_code}' 'http://localhost:8080/rolldice?rolls=0')
+          echo "Status: $status, Body: $(cat /tmp/response.txt)"
+          test "$status" = "500"
+
+      - name: "Smoke test: player parameter"
+        run: |
+          status=$(curl -s -o /tmp/response.txt -w '%{http_code}' 'http://localhost:8080/rolldice?rolls=1&player=Alice')
+          echo "Status: $status, Body: $(cat /tmp/response.txt)"
+          test "$status" = "200"
+
+      - name: Stop server
+        if: always()
+        run: kill $SERVER_PID 2>/dev/null || true

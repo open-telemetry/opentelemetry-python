@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-reference-application-rolldice"
+version = "0.1.0"
+description = "OpenTelemetry reference application — rolldice (FastAPI)"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+dependencies = [
+    # Web framework and ASGI server.
+    "fastapi >= 0.100",
+    "uvicorn[standard] >= 0.20",
+
+    # OpenTelemetry API — the stable, vendor-neutral interface used by library
+    # code.  Does not include any SDK or exporters.
+    "opentelemetry-api ~= 1.36",
+
+    # OpenTelemetry SDK with file-configuration support — enables declarative
+    # setup from otel-config.yaml (brings in pyyaml and jsonschema).
+    "opentelemetry-sdk[file-configuration] ~= 1.36",
+
+    # FastAPI instrumentation — auto-instruments FastAPI apps with HTTP server
+    # spans and metrics following the OTel HTTP semantic conventions.
+    "opentelemetry-instrumentation-fastapi ~= 0.57b0",
+
+    # Python logging bridge — provides LoggingHandler, a stdlib logging.Handler
+    # that forwards Python log records to the OTel LoggerProvider.
+    "opentelemetry-instrumentation-logging ~= 0.57b0",
+
+    # OTLP HTTP exporter — sends spans, metrics, and log records to any
+    # OTLP-compatible backend (OTel Collector, Jaeger, Tempo, etc.) over HTTP.
+    "opentelemetry-exporter-otlp-proto-http ~= 1.36",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app", "library"]
