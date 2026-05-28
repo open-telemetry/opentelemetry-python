@@ -50,6 +50,7 @@ Importing this module activates the SDK globally.
 """
 
 import logging
+import os
 from pathlib import Path
 
 from opentelemetry import _logs, metrics, trace
@@ -69,6 +70,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.resources import (
     OTELResourceDetector,
+    OsResourceDetector,
     ProcessResourceDetector,
     Resource,
     SERVICE_NAME,
@@ -91,16 +93,19 @@ _CONFIG_PATH = Path(__file__).resolve().parent.parent / "otel-config.yaml"
 
 def _build_resource(config) -> Resource:
     """Build a Resource from the parsed config's resource section."""
-    service_name = "unknown_service"
+    service_name = os.environ.get("OTEL_SERVICE_NAME", "rolldice")
     if config.resource and isinstance(config.resource, dict):
         for attr in config.resource.get("attributes", []):
             if attr.get("name") == "service.name":
-                service_name = attr["value"]
+                value = attr["value"]
+                if not value.startswith("${"):
+                    service_name = value
 
     base = Resource.create({SERVICE_NAME: service_name})
     process_resource = ProcessResourceDetector().detect()
+    os_resource = OsResourceDetector().detect()
     otel_resource = OTELResourceDetector().detect()
-    return base.merge(process_resource).merge(otel_resource)
+    return base.merge(process_resource).merge(os_resource).merge(otel_resource)
 
 
 def _get_otlp_endpoint(provider_dict, signal_path) -> str | None:
@@ -179,6 +184,11 @@ def configure_opentelemetry() -> None:
     root_logger.addHandler(otel_handler)
     root_logger.addHandler(console_handler)
     root_logger.setLevel(logging.DEBUG)
+
+    # ── OTEL_LOG_LEVEL: control verbosity of OTel's own diagnostic output ──
+    otel_log_level = os.environ.get("OTEL_LOG_LEVEL", "info").upper()
+    otel_level = getattr(logging, otel_log_level, logging.INFO)
+    logging.getLogger("opentelemetry").setLevel(otel_level)
 
 
 configure_opentelemetry()

@@ -12,8 +12,8 @@ It demonstrates all four OpenTelemetry signal types in a single service:
   defined in the library using only the OTel API.
 * **Logs** — structured log records emitted through Python's ``logging`` module
   and forwarded to OpenTelemetry via ``LoggingHandler`` (the log bridge).
-* **Resources** — process and environment metadata attached automatically via
-  resource detectors.
+* **Resources** — process, OS, and environment metadata attached automatically
+  via resource detectors.
 
 Architecture
 ------------
@@ -112,18 +112,16 @@ Environment variables
 +-----------------------------------+----------------------------------------------+-------------------------+
 | Variable                          | Description                                  | Default                 |
 +===================================+==============================================+=========================+
+| ``OTEL_SERVICE_NAME``             | Service name reported in telemetry           | ``rolldice``            |
++-----------------------------------+----------------------------------------------+-------------------------+
 | ``OTEL_EXPORTER_OTLP_ENDPOINT``   | OTLP HTTP endpoint for the backend           | ``http://localhost:4318``|
 +-----------------------------------+----------------------------------------------+-------------------------+
 | ``OTEL_RESOURCE_ATTRIBUTES``      | Extra resource attributes (``key=value,...``)| *(none)*                |
 +-----------------------------------+----------------------------------------------+-------------------------+
+| ``OTEL_LOG_LEVEL``                | Verbosity of OTel diagnostic output          | ``info``                |
++-----------------------------------+----------------------------------------------+-------------------------+
 | ``APPLICATION_PORT``              | Listening port                               | ``8080``                |
 +-----------------------------------+----------------------------------------------+-------------------------+
-
-.. note::
-
-   ``OTEL_SERVICE_NAME`` is set to ``rolldice`` in ``otel-config.yaml``.  To
-   override it, edit the config file or add ``service.name`` to
-   ``OTEL_RESOURCE_ATTRIBUTES``.
 
 Run with an OTLP backend
 ------------------------

@@ -25,12 +25,14 @@ disabled: false
 resource:
   attributes:
     - name: service.name
-      value: rolldice
+      value: ${OTEL_SERVICE_NAME:-rolldice}
   attributes_list: ${OTEL_RESOURCE_ATTRIBUTES:-}
   detection/development:
     detectors:
       - service:
       - process:
+      - container:
+      - host:
 
 propagator:
   composite:
