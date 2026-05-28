@@ -1,8 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations
-
 import unittest
 from json import JSONDecodeError
 from unittest.mock import MagicMock, patch
@@ -232,10 +230,10 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
 
     def test_request_passes_timeout(self):
         cases = [
-            (3.5,),
-            (None,),
+            3.5,
+            None,
         ]
-        for (timeout,) in cases:
+        for timeout in cases:
             with self.subTest(timeout=timeout):
                 transport = Urllib3HTTPTransport()
                 with patch.object(transport._pool, "request") as mock_request:

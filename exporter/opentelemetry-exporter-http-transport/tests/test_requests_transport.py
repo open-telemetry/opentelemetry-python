@@ -1,8 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations
-
 import unittest
 from json import JSONDecodeError
 from unittest.mock import MagicMock, patch
@@ -46,7 +44,6 @@ class TestRequestsHTTPResult(unittest.TestCase):
             _TEST_URL,
             status=200,
             body="hello",
-            headers={"Content-Type": "text/plain; charset=utf-8"},
         )
         result = RequestsHTTPTransport().request("POST", _TEST_URL)
         self.assertEqual(result.text(), "hello")
@@ -163,10 +160,10 @@ class TestRequestsHTTPTransport(unittest.TestCase):
 
     def test_request_passes_timeout(self):
         cases = [
-            (3.5,),
-            (None,),
+            3.5,
+            None,
         ]
-        for (timeout,) in cases:
+        for timeout in cases:
             with self.subTest(timeout=timeout):
                 mock_session = MagicMock(spec=requests.Session)
                 mock_session.request.return_value = MagicMock(
