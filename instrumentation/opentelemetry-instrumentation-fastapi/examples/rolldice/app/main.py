@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """FastAPI application entry point for the rolldice reference application.
 
@@ -35,9 +24,9 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 # Importing telemetry first ensures the SDK is initialized before the
 # FastAPIInstrumentor (below) registers its ASGI middleware, and before
 # library/rolldice.py creates its tracer and meter at module load time.
-import app.telemetry  # noqa: F401
+import app.telemetry  # noqa: F401, E402  # isort: skip
 
-from library import rolldice
+from library import rolldice  # noqa: E402
 
 # FastAPIInstrumentor automatically wraps every FastAPI route with an HTTP
 # server span.  It reads the ASGI scope to populate standard HTTP semantic

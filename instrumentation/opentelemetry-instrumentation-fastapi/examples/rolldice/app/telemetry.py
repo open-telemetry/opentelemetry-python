@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """OpenTelemetry SDK initialization via declarative (file-based) configuration.
 
@@ -54,26 +43,33 @@ import os
 from pathlib import Path
 
 from opentelemetry import _logs, metrics, trace
-from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+    OTLPLogExporter,
+)
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     OTLPMetricExporter,
 )
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.instrumentation.logging.handler import LoggingHandler
 from opentelemetry.sdk._configuration.file import load_config_file
 from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, ConsoleLogExporter
+from opentelemetry.sdk._logs.export import (
+    BatchLogRecordProcessor,
+    ConsoleLogExporter,
+)
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import (
-    OTELResourceDetector,
+    SERVICE_NAME,
     OsResourceDetector,
+    OTELResourceDetector,
     ProcessResourceDetector,
     Resource,
-    SERVICE_NAME,
 )
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -112,7 +108,9 @@ def _get_otlp_endpoint(provider_dict, signal_path) -> str | None:
     """Extract the OTLP HTTP endpoint from a provider config dict."""
     if not isinstance(provider_dict, dict):
         return None
-    items = provider_dict.get("processors") or provider_dict.get("readers") or []
+    items = (
+        provider_dict.get("processors") or provider_dict.get("readers") or []
+    )
     for item in items:
         if not isinstance(item, dict):
             continue
@@ -148,7 +146,9 @@ def configure_opentelemetry() -> None:
     tracer_provider.add_span_processor(
         BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint))
     )
-    tracer_provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+    tracer_provider.add_span_processor(
+        SimpleSpanProcessor(ConsoleSpanExporter())
+    )
 
     # ── Metrics ──
     endpoint = _get_otlp_endpoint(config.meter_provider, "metrics")
