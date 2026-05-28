@@ -38,9 +38,8 @@ class FileExporter(Generic[T]):
         self,
         encode: Callable[[T], dict | None],
         kind: Literal["spans", "logs", "metrics"],
-        logger: logging.Logger,
+        logger: logging.Logger | None = None,
         path: str | PathLike[str] | None = None,
-        *,
         stream: IO[str] | None = None,
     ) -> None:
         if path is not None and stream is not None:
@@ -59,7 +58,7 @@ class FileExporter(Generic[T]):
         self._shutdown = False
         self._encode = encode
         self._kind = kind
-        self._logger = logger
+        self._logger = logger if logger is not None else _logger
         self._lock = threading.Lock()
 
     def export(self, data: T) -> bool:

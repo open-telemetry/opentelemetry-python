@@ -1,8 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations
-
 import logging
 from collections.abc import Sequence
 from os import PathLike
