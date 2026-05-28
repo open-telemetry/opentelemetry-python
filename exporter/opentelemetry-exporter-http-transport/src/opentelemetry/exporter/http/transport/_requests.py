@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import functools
-import warnings
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -75,14 +74,6 @@ class RequestsHTTPTransport(BaseHTTPTransport):
         self._session.verify = verify
         if cert is not None:
             self._session.cert = cert
-
-        if verify is False:
-            # pylint: disable-next=import-outside-toplevel
-            from urllib3.exceptions import (  # noqa: PLC0415
-                InsecureRequestWarning,
-            )
-
-            warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 
     def request(
         self,

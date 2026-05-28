@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import functools
 import json
-import warnings
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -80,10 +79,6 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         }
         if verify is False:
             pool_kwargs["cert_reqs"] = "CERT_NONE"
-            warnings.filterwarnings(
-                "ignore",
-                category=urllib3.exceptions.InsecureRequestWarning,
-            )
         else:
             pool_kwargs["cert_reqs"] = "CERT_REQUIRED"
             if isinstance(verify, str):

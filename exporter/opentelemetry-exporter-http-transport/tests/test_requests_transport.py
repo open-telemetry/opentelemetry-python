@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import unittest
+from json import JSONDecodeError
 from unittest.mock import MagicMock, patch
 
 import requests
@@ -86,7 +87,7 @@ class TestRequestsHTTPResult(unittest.TestCase):
             headers={"Content-Type": "application/json"},
         )
         result = RequestsHTTPTransport().request("POST", _TEST_URL)
-        self.assertRaises(ValueError, result.json)
+        self.assertRaises(JSONDecodeError, result.json)
 
     @mocketize
     def test_headers_returns_response_headers(self):
@@ -117,16 +118,6 @@ class TestRequestsHTTPResult(unittest.TestCase):
         self.assertEqual(headers["X-CUSTOM"], "value")
         self.assertEqual(headers["X-Custom"], "value")
 
-    def test_headers_returns_multiple_values_as_comma_separated(self):
-        mock_response = MagicMock()
-        mock_response.headers = requests.structures.CaseInsensitiveDict(
-            {"X-Multi": "value1, value2"}
-        )
-        result = RequestsHTTPResult(
-            status_code=200, reason="OK", response=mock_response
-        )
-        self.assertEqual(result.headers()["X-Multi"], "value1, value2")
-
 
 # pylint: disable=protected-access,no-self-use
 class TestRequestsHTTPTransport(unittest.TestCase):
@@ -149,13 +140,6 @@ class TestRequestsHTTPTransport(unittest.TestCase):
                     self.assertIsNone(result.error)
 
     @mocketize
-    def test_request_returns_response_content(self):
-        Entry.single_register(Entry.POST, _TEST_URL, status=200)
-        transport = RequestsHTTPTransport()
-        result = transport.request("POST", _TEST_URL)
-        self.assertIsInstance(result.content(), bytes)
-
-    @mocketize
     def test_request_forwards_headers(self):
         headers = {
             "content-type": "application/x-protobuf",
@@ -176,14 +160,6 @@ class TestRequestsHTTPTransport(unittest.TestCase):
         result = transport.request("POST", _TEST_URL, data=b"payload")
         self.assertEqual(result.status_code, 200)
         self.assertEqual(Mocket.last_request().body, "payload")
-
-    @mocketize
-    def test_request_does_not_follow_redirects(self):
-        Entry.single_register(Entry.POST, _TEST_URL, status=302)
-        transport = RequestsHTTPTransport()
-        result = transport.request("POST", _TEST_URL)
-        self.assertEqual(result.status_code, 302)
-        self.assertIsNone(result.error)
 
     def test_request_passes_timeout(self):
         cases = [

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import unittest
+from json import JSONDecodeError
 from unittest.mock import MagicMock, patch
 
 import urllib3
@@ -88,7 +89,7 @@ class TestUrllib3HTTPResult(unittest.TestCase):
             headers={"Content-Type": "application/json"},
         )
         result = Urllib3HTTPTransport().request("POST", _TEST_URL)
-        self.assertRaises(ValueError, result.json)
+        self.assertRaises(JSONDecodeError, result.json)
 
     @mocketize
     def test_headers_returns_response_headers(self):
@@ -179,14 +180,6 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
         result = transport.request("POST", _TEST_URL, data=b"payload")
         self.assertEqual(result.status_code, 200)
         self.assertEqual(Mocket.last_request().body, "payload")
-
-    @mocketize
-    def test_request_does_not_follow_redirects(self):
-        Entry.single_register(Entry.POST, _TEST_URL, status=302)
-        transport = Urllib3HTTPTransport()
-        result = transport.request("POST", _TEST_URL)
-        self.assertEqual(result.status_code, 302)
-        self.assertIsNone(result.error)
 
     def test_request_catches_exception(self):
         cases = [

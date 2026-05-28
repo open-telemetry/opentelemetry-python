@@ -6,8 +6,7 @@ OpenTelemetry Exporters HTTP Transport
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-http-transport.svg
    :target: https://pypi.org/project/opentelemetry-exporter-http-transport/
 
-This package provides shared HTTP transport abstractions and an OTLP HTTP
-client used by OpenTelemetry exporters.
+This package provides shared HTTP transport abstractions used by OpenTelemetry exporters.
 
 The package has **no required dependencies**. The ``requests`` and ``urllib3``
 transports are available as optional extras.
