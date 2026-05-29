@@ -842,7 +842,12 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("http.response.status_code", 200)
             root.set_attribute("http.status_text", "OK")
             root.set_attribute("misc.pi", 3.14)
-
+            root.set_attribute("mapping-key", {"key": "value"})
+            root.set_attribute("array-key", [1, 2, 3])
+            root.set_attribute(
+                "complex-key",
+                [{"key1": "value1"}, {"key2": 42}, "key3", [1, 2, 3]],
+            )
             # Setting an attribute with the same key as an existing attribute
             # SHOULD overwrite the existing attribute's value.
             root.set_attribute("attr-key", "attr-value1")
@@ -854,7 +859,7 @@ class TestSpan(unittest.TestCase):
             list_of_numerics = [123, 314, 0]
             root.set_attribute("list-of-numerics", list_of_numerics)
 
-            self.assertEqual(len(root.attributes), 9)
+            self.assertEqual(len(root.attributes), 12)
             self.assertEqual(root.attributes["http.request.method"], "GET")
             self.assertEqual(
                 root.attributes["url.full"],

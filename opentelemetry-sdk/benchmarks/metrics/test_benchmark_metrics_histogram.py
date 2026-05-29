@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=invalid-name
+import json
 import random
 
 import pytest
@@ -57,61 +58,100 @@ hist50 = meter.create_histogram("test_histogram_50_bound")
 hist1000 = meter.create_histogram("test_histogram_1000_bound")
 
 
-@pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
-def test_histogram_record(benchmark, num_labels):
-    labels = {}
-    for i in range(num_labels):
-        labels[f"Key{i}"] = "Value{i}"
-
-    def benchmark_histogram_record():
-        hist.record(random.random() * MAX_BOUND_VALUE)
-
-    benchmark(benchmark_histogram_record)
-
-
-@pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
+@pytest.mark.parametrize("num_labels", [1, 3])
 def test_histogram_record_10(benchmark, num_labels):
-    labels = {}
-    for i in range(num_labels):
-        labels[f"Key{i}"] = "Value{i}"
-
     def benchmark_histogram_record_10():
-        hist10.record(random.random() * MAX_BOUND_VALUE)
+        hist10.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={f"Key{i}": f"Value{i}" for i in range(num_labels)},
+        )
 
     benchmark(benchmark_histogram_record_10)
 
 
+@pytest.mark.parametrize("num_labels", [1, 3])
+def test_histogram_record_10_small_mapping_attrs(benchmark, num_labels):
+    def test_histogram_record_10_complex_attrs():
+        hist10.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={f"Key{i}": {"k1": "v1"} for i in range(num_labels)},
+        )
+
+    benchmark(test_histogram_record_10_complex_attrs)
+
+
+@pytest.mark.parametrize("num_labels", [1, 3])
+def test_histogram_record_10_complex_attrs(benchmark, num_labels):
+    def test_histogram_record_10_complex_attrs():
+        hist10.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={
+                f"Key{i}": {"k1": "v1", "k2": {"k3": "v3", "k4": [1, 2, 3]}}
+                for i in range(num_labels)
+            },
+        )
+
+    benchmark(test_histogram_record_10_complex_attrs)
+
+
+@pytest.mark.parametrize("num_labels", [1, 3])
+def test_histogram_record_10_array_attrs(benchmark, num_labels):
+    def test_histogram_record_10_array_attrs():
+        hist10.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={
+                f"Key{i}": ["k1", "v1", "k2", "k3", "v3", "k4", "1", "2", "3"]
+                for i in range(num_labels)
+            },
+        )
+
+    benchmark(test_histogram_record_10_array_attrs)
+
+
+@pytest.mark.parametrize("num_labels", [1, 3])
+def test_histogram_record_10_json_string_attrs(benchmark, num_labels):
+    def test_histogram_record_10_json_string_attrs():
+        hist10.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={
+                f"Key{i}": json.dumps(
+                    {"k1": "v1", "k2": {"k3": "v3", "k4": [1, 2, 3]}}
+                )
+                for i in range(num_labels)
+            },
+        )
+
+    benchmark(test_histogram_record_10_json_string_attrs)
+
+
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record_49(benchmark, num_labels):
-    labels = {}
-    for i in range(num_labels):
-        labels[f"Key{i}"] = "Value{i}"
-
     def benchmark_histogram_record_49():
-        hist49.record(random.random() * MAX_BOUND_VALUE)
+        hist49.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={f"Key{i}": f"Value{i}" for i in range(num_labels)},
+        )
 
     benchmark(benchmark_histogram_record_49)
 
 
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record_50(benchmark, num_labels):
-    labels = {}
-    for i in range(num_labels):
-        labels[f"Key{i}"] = "Value{i}"
-
     def benchmark_histogram_record_50():
-        hist50.record(random.random() * MAX_BOUND_VALUE)
+        hist50.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={f"Key{i}": f"Value{i}" for i in range(num_labels)},
+        )
 
     benchmark(benchmark_histogram_record_50)
 
 
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record_1000(benchmark, num_labels):
-    labels = {}
-    for i in range(num_labels):
-        labels[f"Key{i}"] = "Value{i}"
-
     def benchmark_histogram_record_1000():
-        hist1000.record(random.random() * MAX_BOUND_VALUE)
+        hist1000.record(
+            random.random() * MAX_BOUND_VALUE,
+            attributes={f"Key{i}": f"Value{i}" for i in range(num_labels)},
+        )
 
     benchmark(benchmark_histogram_record_1000)
