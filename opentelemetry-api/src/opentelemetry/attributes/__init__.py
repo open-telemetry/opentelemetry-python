@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import copy
-import time
 import logging
 import threading
+import time
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from enum import Enum
