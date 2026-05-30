@@ -34,6 +34,7 @@ from opentelemetry.sdk.resources import (
     PROCESS_RUNTIME_DESCRIPTION,
     PROCESS_RUNTIME_NAME,
     PROCESS_RUNTIME_VERSION,
+    SERVICE_INSTANCE_ID,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
@@ -43,6 +44,7 @@ from opentelemetry.sdk.resources import (
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
+    ServiceInstanceIdResourceDetector,
     _HostResourceDetector,
     get_aggregated_resources,
 )
@@ -912,3 +914,40 @@ class TestHostResourceDetector(unittest.TestCase):
             resource.attributes["telemetry.sdk.language"], "python"
         )
         self.assertIn(HOST_NAME, resource.attributes)
+
+
+class TestServiceInstanceIdResourceDetector(unittest.TestCase):
+    def test_detect_value_is_valid_uuid4(self):
+        detector = ServiceInstanceIdResourceDetector()
+        value = detector.detect().attributes[SERVICE_INSTANCE_ID]
+        parsed = uuid.UUID(value)
+        self.assertEqual(parsed.version, 4)
+
+    def test_detect_stable_within_instance(self):
+        detector = ServiceInstanceIdResourceDetector()
+        id1 = detector.detect().attributes[SERVICE_INSTANCE_ID]
+        id2 = detector.detect().attributes[SERVICE_INSTANCE_ID]
+        self.assertEqual(id1, id2)
+
+    def test_detect_unique_across_instances(self):
+        id1 = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
+        id2 = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
+        self.assertNotEqual(id1, id2)
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "service_instance"},
+        clear=True,
+    )
+    def test_resource_detector_entry_points_service_instance(self):
+        resource = Resource.create()
+        self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
+        uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID])

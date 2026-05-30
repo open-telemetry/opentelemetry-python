@@ -56,6 +56,7 @@ import platform
 import socket
 import sys
 import typing
+import uuid
 from collections.abc import Sequence
 from json import dumps
 from os import environ
@@ -460,6 +461,21 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
                 HOST_ARCH: platform.machine(),
             }
         )
+
+
+class ServiceInstanceIdResourceDetector(ResourceDetector):
+    """Detects service.instance.id as a random UUID v4.
+
+    Per the OpenTelemetry specification, SDKs SHOULD generate a random v1/v4
+    UUID for service.instance.id to uniquely identify each service instance.
+    """
+
+    def __init__(self, raise_on_error: bool = False) -> None:
+        super().__init__(raise_on_error)
+        self._instance_id = str(uuid.uuid4())
+
+    def detect(self) -> "Resource":
+        return Resource({SERVICE_INSTANCE_ID: self._instance_id})
 
 
 def _build_resource_detectors() -> list["ResourceDetector"]:
