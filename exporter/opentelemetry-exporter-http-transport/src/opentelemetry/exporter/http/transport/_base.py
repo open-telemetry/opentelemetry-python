@@ -35,8 +35,7 @@ class BaseHTTPResult(ABC):
         keys. Headers with multiple values are represented as a single string
         of comma separated values.
 
-        Implementations may raise an exception if no response is available
-        or if the returned headers are malformed.
+        Implementations may raise an exception the returned headers are malformed.
         """
 
     def text(self) -> str:
@@ -49,8 +48,8 @@ class BaseHTTPResult(ABC):
     def json(self) -> Any:
         """Return the response body parsed as JSON.
 
-        Implementations may raise an exception if no response is available
-        or if the returned JSON is malformed.
+        Implementations may raise an exception if no response content
+        is available or the returned JSON is malformed.
         """
         return json.loads(self.text())
 

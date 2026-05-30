@@ -55,7 +55,7 @@ class Urllib3HTTPResult(BaseHTTPResult):
 
     def headers(self) -> Mapping[str, str]:
         if self.response is None:
-            raise ValueError("No response available.")
+            return {}
         return self.response.headers
 
     def json(self) -> Any:

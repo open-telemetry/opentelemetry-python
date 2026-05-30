@@ -97,9 +97,9 @@ class TestRequestsHTTPResult(unittest.TestCase):
         result = RequestsHTTPTransport().request("POST", _TEST_URL)
         self.assertEqual(result.headers()["X-Custom"], "value")
 
-    def test_headers_raises_when_no_response(self):
+    def test_headers_returns_empty_dict_when_no_response(self):
         result = RequestsHTTPResult(status_code=200, reason="OK")
-        self.assertRaises(ValueError, result.headers)
+        self.assertEqual(result.headers(), {})
 
     @mocketize
     def test_headers_are_case_insensitive(self):
