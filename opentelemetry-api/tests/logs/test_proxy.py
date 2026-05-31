@@ -22,7 +22,23 @@ from opentelemetry.test.globals_test import LoggingGlobalsTest
 from opentelemetry.util.types import Attributes
 
 
-class TestProvider(_logs.NoOpLoggerProvider):
+class LoggerProviderTest(_logs.NoOpLoggerProvider):
+    def __init__(self):
+        self.instrumentation_scope = None
+
+    def get_logger(
+        self,
+        name: str,
+        version: typing.Optional[str] = None,
+        schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[Attributes] = None,
+        instrumentation_scope: typing.Optional[typing.Any] = None,
+    ) -> _logs.Logger:
+        self.instrumentation_scope = instrumentation_scope
+        return LoggerTest(name)
+
+
+class OldSignatureLoggerProvider(_logs.NoOpLoggerProvider):
     def get_logger(
         self,
         name: str,
@@ -49,10 +65,10 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         self.assertIsInstance(logger, _logs_internal.ProxyLogger)
 
         # set a real provider
-        _logs.set_logger_provider(TestProvider())
+        _logs.set_logger_provider(LoggerProviderTest())
 
         # get_logger_provider() now returns the real provider
-        self.assertIsInstance(_logs.get_logger_provider(), TestProvider)
+        self.assertIsInstance(_logs.get_logger_provider(), LoggerProviderTest)
 
         # logger provider now returns real instance
         self.assertIsInstance(
@@ -62,3 +78,34 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         # references to the old provider still work but return real logger now
         real_logger = provider.get_logger("proxy-test")
         self.assertIsInstance(real_logger, LoggerTest)
+
+    def test_proxy_logger_instrumentation_scope(self):
+        provider = _logs.get_logger_provider()
+        instrumentation_scope = object()
+
+        logger = provider.get_logger(
+            "proxy-test", instrumentation_scope=instrumentation_scope
+        )
+
+        logger_provider = LoggerProviderTest()
+        _logs.set_logger_provider(logger_provider)
+
+        self.assertIsInstance(logger._logger, LoggerTest)
+        self.assertIs(
+            logger_provider.instrumentation_scope, instrumentation_scope
+        )
+
+    def test_proxy_logger_works_with_old_signature_provider(self):
+        provider = _logs.get_logger_provider()
+        logger = provider.get_logger("proxy-test")
+
+        _logs.set_logger_provider(OldSignatureLoggerProvider())
+
+        self.assertIsInstance(logger._logger, LoggerTest)
+
+    def test_get_logger_works_with_old_signature_provider(self):
+        logger_provider = OldSignatureLoggerProvider()
+
+        logger = _logs.get_logger("proxy-test", logger_provider=logger_provider)
+
+        self.assertIsInstance(logger, LoggerTest)

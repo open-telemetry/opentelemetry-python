@@ -72,6 +72,37 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             warning_log_record.severity_number, SeverityNumber.WARN
         )
 
+    def test_simple_log_record_processor_instrumentation_scope(self):
+        exporter = InMemoryLogExporter()
+        logger_provider = LoggerProvider()
+        instrumentation_scope = InstrumentationScope(
+            "custom_name",
+            "custom_version",
+            "custom_schema_url",
+            {"custom_key": "custom_value"},
+        )
+
+        logger_provider.add_log_record_processor(
+            SimpleLogRecordProcessor(exporter)
+        )
+
+        logger = logging.getLogger("custom_instrumentation_scope")
+        logger.propagate = False
+        logger.addHandler(
+            LoggingHandler(
+                logger_provider=logger_provider,
+                instrumentation_scope=instrumentation_scope,
+            )
+        )
+
+        logger.warning("Something is wrong")
+        finished_logs = exporter.get_finished_logs()
+
+        self.assertEqual(len(finished_logs), 1)
+        self.assertEqual(
+            finished_logs[0].instrumentation_scope, instrumentation_scope
+        )
+
     def test_simple_log_record_processor_custom_level(self):
         exporter = InMemoryLogExporter()
         logger_provider = LoggerProvider()
