@@ -41,7 +41,6 @@ from typing import Any, Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
@@ -121,11 +120,13 @@ class ProxyLogger(Logger):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
+        instrumentation_scope: Optional[Any] = None,
     ):
         self._name = name
         self._version = version
         self._schema_url = schema_url
         self._attributes = attributes
+        self._instrumentation_scope = instrumentation_scope
         self._real_logger: Optional[Logger] = None
         self._noop_logger = NoOpLogger(name)
 
@@ -135,11 +136,20 @@ class ProxyLogger(Logger):
             return self._real_logger
 
         if _LOGGER_PROVIDER:
+            if self._instrumentation_scope is None:
+                self._real_logger = _LOGGER_PROVIDER.get_logger(
+                    self._name,
+                    self._version,
+                    self._schema_url,
+                    self._attributes,
+                )
+                return self._real_logger
             self._real_logger = _LOGGER_PROVIDER.get_logger(
                 self._name,
                 self._version,
                 self._schema_url,
                 self._attributes,
+                self._instrumentation_scope,
             )
             return self._real_logger
         return self._noop_logger
@@ -160,7 +170,7 @@ class LoggerProvider(ABC):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
-        instrumentation_scope: Optional[InstrumentationScope] = None,
+        instrumentation_scope: Optional[Any] = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -199,8 +209,10 @@ class NoOpLoggerProvider(LoggerProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
+        instrumentation_scope: Optional[Any] = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
+        _ = instrumentation_scope
         return NoOpLogger(
             name, version=version, schema_url=schema_url, attributes=attributes
         )
@@ -213,19 +225,29 @@ class ProxyLoggerProvider(LoggerProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
         attributes: Optional[Attributes] = None,
+        instrumentation_scope: Optional[Any] = None,
     ) -> Logger:
         if _LOGGER_PROVIDER:
+            if instrumentation_scope is None:
+                return _LOGGER_PROVIDER.get_logger(
+                    name,
+                    version=version,
+                    schema_url=schema_url,
+                    attributes=attributes,
+                )
             return _LOGGER_PROVIDER.get_logger(
                 name,
                 version=version,
                 schema_url=schema_url,
                 attributes=attributes,
+                instrumentation_scope=instrumentation_scope,
             )
         return ProxyLogger(
             name,
             version=version,
             schema_url=schema_url,
             attributes=attributes,
+            instrumentation_scope=instrumentation_scope,
         )
 
 
@@ -276,7 +298,7 @@ def get_logger(
     logger_provider: Optional[LoggerProvider] = None,
     schema_url: Optional[str] = None,
     attributes: Optional[Attributes] = None,
-    instrumentation_scope: Optional[InstrumentationScope] = None,
+    instrumentation_scope: Optional[Any] = None,
 ) -> "Logger":
     """Returns a `Logger` for use within a python process.
 
@@ -287,12 +309,12 @@ def get_logger(
     """
     if logger_provider is None:
         logger_provider = get_logger_provider()
-    if isinstance(logger_provider, NoOpLoggerProvider):
-        return NoOpLogger(
+    if instrumentation_scope is None:
+        return logger_provider.get_logger(
             instrumenting_module_name,
-            version=instrumenting_library_version,
-            schema_url=schema_url,
-            attributes=attributes,
+            instrumenting_library_version,
+            schema_url,
+            attributes,
         )
     return logger_provider.get_logger(
         instrumenting_module_name,
