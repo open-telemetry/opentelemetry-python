@@ -3,6 +3,7 @@
 
 import unittest
 
+from opencensus.trace import execution_context
 from opencensus.trace.tracer import Tracer
 from opencensus.trace.tracers.noop_tracer import NoopTracer
 
@@ -13,9 +14,15 @@ from opentelemetry.shim.opencensus._shim_tracer import ShimTracer
 class TestPatch(unittest.TestCase):
     def setUp(self):
         uninstall_shim()
+        # Clear any OpenCensus execution context (current span / tracer) that
+        # may have been left by a previous test, e.g. test_shim_with_sdk.py.
+        # Without this, Tracer() can pick up a stale ContextTracer from the
+        # thread-local store and fail the assertIsInstance(…, NoopTracer) checks.
+        execution_context.clean()
 
     def tearDown(self):
         uninstall_shim()
+        execution_context.clean()
 
     def test_install_shim(self):
         # Initially the shim is not installed. The Tracer class has no tracer property, it is
