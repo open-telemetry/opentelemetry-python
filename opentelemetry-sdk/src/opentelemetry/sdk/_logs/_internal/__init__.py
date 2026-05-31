@@ -544,9 +544,11 @@ class LoggingHandler(logging.Handler):
         self,
         level: int = logging.NOTSET,
         logger_provider: APILoggerProvider | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
+        self._instrumentation_scope = instrumentation_scope
 
         warnings.warn(
             "`LoggingHandler` in `opentelemetry-sdk` is deprecated. Use the "
@@ -638,7 +640,11 @@ class LoggingHandler(logging.Handler):
 
         The record is translated to OTel format, and then sent across the pipeline.
         """
-        logger = get_logger(record.name, logger_provider=self._logger_provider)
+        logger = get_logger(
+            record.name,
+            logger_provider=self._logger_provider,
+            instrumentation_scope=self._instrumentation_scope,
+        )
         if not isinstance(logger, NoOpLogger):
             logger.emit(self._translate(record))
 
@@ -856,6 +862,7 @@ class LoggerProvider(APILoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: _ExtendedAttributes | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
     ) -> APILogger:
         if self._disabled:
             return NoOpLogger(
@@ -864,13 +871,21 @@ class LoggerProvider(APILoggerProvider):
                 schema_url=schema_url,
                 attributes=attributes,
             )
-        logger = (
-            self._get_logger_cached(name, version, schema_url)
-            if attributes is None
-            else self._get_logger_no_cache(
-                name, version, schema_url, attributes
+        if instrumentation_scope is None:
+            logger = (
+                self._get_logger_cached(name, version, schema_url)
+                if attributes is None
+                else self._get_logger_no_cache(
+                    name, version, schema_url, attributes
+                )
             )
-        )
+        else:
+            logger = self._get_logger_no_cache(
+                instrumentation_scope.name,
+                instrumentation_scope.version,
+                instrumentation_scope.schema_url,
+                instrumentation_scope.attributes,
+            )
         with self._active_loggers_lock:
             self._active_loggers.add(logger)
         return logger

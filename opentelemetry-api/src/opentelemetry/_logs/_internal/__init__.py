@@ -28,7 +28,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import cast, overload
+from typing import Any, cast, overload
 
 from typing_extensions import deprecated
 
@@ -227,11 +227,13 @@ class ProxyLogger(Logger):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: _ExtendedAttributes | None = None,
+        instrumentation_scope: Any | None = None,
     ):
         self._name = name
         self._version = version
         self._schema_url = schema_url
         self._attributes = attributes
+        self._instrumentation_scope = instrumentation_scope
         self._real_logger: Logger | None = None
         self._noop_logger = NoOpLogger(name)
 
@@ -241,11 +243,20 @@ class ProxyLogger(Logger):
             return self._real_logger
 
         if _LOGGER_PROVIDER:
+            if self._instrumentation_scope is None:
+                self._real_logger = _LOGGER_PROVIDER.get_logger(
+                    self._name,
+                    self._version,
+                    self._schema_url,
+                    self._attributes,
+                )
+                return self._real_logger
             self._real_logger = _LOGGER_PROVIDER.get_logger(
                 self._name,
                 self._version,
                 self._schema_url,
                 self._attributes,
+                self._instrumentation_scope,
             )
             return self._real_logger
         return self._noop_logger
@@ -313,6 +324,7 @@ class LoggerProvider(ABC):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: _ExtendedAttributes | None = None,
+        instrumentation_scope: Any | None = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -352,8 +364,10 @@ class NoOpLoggerProvider(LoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: _ExtendedAttributes | None = None,
+        instrumentation_scope: Any | None = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
+        _ = instrumentation_scope
         return NoOpLogger(
             name, version=version, schema_url=schema_url, attributes=attributes
         )
@@ -366,19 +380,29 @@ class ProxyLoggerProvider(LoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: _ExtendedAttributes | None = None,
+        instrumentation_scope: Any | None = None,
     ) -> Logger:
         if _LOGGER_PROVIDER:
+            if instrumentation_scope is None:
+                return _LOGGER_PROVIDER.get_logger(
+                    name,
+                    version=version,
+                    schema_url=schema_url,
+                    attributes=attributes,
+                )
             return _LOGGER_PROVIDER.get_logger(
                 name,
                 version=version,
                 schema_url=schema_url,
                 attributes=attributes,
+                instrumentation_scope=instrumentation_scope,
             )
         return ProxyLogger(
             name,
             version=version,
             schema_url=schema_url,
             attributes=attributes,
+            instrumentation_scope=instrumentation_scope,
         )
 
 
@@ -429,6 +453,7 @@ def get_logger(
     logger_provider: LoggerProvider | None = None,
     schema_url: str | None = None,
     attributes: _ExtendedAttributes | None = None,
+    instrumentation_scope: Any | None = None,
 ) -> Logger:
     """Returns a `Logger` for use within a python process.
 
@@ -439,9 +464,17 @@ def get_logger(
     """
     if logger_provider is None:
         logger_provider = get_logger_provider()
+    if instrumentation_scope is None:
+        return logger_provider.get_logger(
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
+            attributes,
+        )
     return logger_provider.get_logger(
         instrumenting_module_name,
         instrumenting_library_version,
         schema_url,
         attributes,
+        instrumentation_scope,
     )
