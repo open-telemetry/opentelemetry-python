@@ -8,6 +8,8 @@ These examples show how to customize the metrics that are output by the SDK usin
 * limit_num_of_attrs.py: Shows how to limit the number of attributes that are output for a metric.
 * drop_metrics_from_instrument.py: Shows how to drop measurements from an instrument.
 * change_reservoir_factory.py: Shows how to use your own ``ExemplarReservoir``
+* disable_all_metrics_from_instrument.py: Shows how to turn off all metrics from a given instrumentation library.
+* disable_default_views.py: Shows how to disable all metrics by default and opt-in to individual instruments explicitly.
 
 The source files of these examples are available :scm_web:`here <docs/examples/metrics/views/>`.
 
