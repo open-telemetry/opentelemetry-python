@@ -31,9 +31,9 @@ _HashedAttributes = (
 def _hash_attributes(value: Attributes | AttributeValue) -> _HashedAttributes:
     if value is None or isinstance(value, (str, int, float, bool, bytes)):
         return value
-    elif isinstance(value, Sequence):
+    if isinstance(value, Sequence):
         return tuple(_hash_attributes(v) for v in value)
-    elif isinstance(value, Mapping):
+    if isinstance(value, Mapping):
         return tuple((k, _hash_attributes(value[k])) for k in sorted(value))
     raise TypeError(f"Invalid value type for attributes: {type(value)}")
 

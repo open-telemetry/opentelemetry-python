@@ -71,18 +71,18 @@ def test_histogram_record_10(benchmark, num_labels):
 
 @pytest.mark.parametrize("num_labels", [1, 3])
 def test_histogram_record_10_small_mapping_attrs(benchmark, num_labels):
-    def test_histogram_record_10_complex_attrs():
+    def test_histogram_record_10_attrs():
         hist10.record(
             random.random() * MAX_BOUND_VALUE,
             attributes={f"Key{i}": {"k1": "v1"} for i in range(num_labels)},
         )
 
-    benchmark(test_histogram_record_10_complex_attrs)
+    benchmark(test_histogram_record_10_attrs)
 
 
 @pytest.mark.parametrize("num_labels", [1, 3])
 def test_histogram_record_10_complex_attrs(benchmark, num_labels):
-    def test_histogram_record_10_complex_attrs():
+    def test_histogram_record_10_attrs():
         hist10.record(
             random.random() * MAX_BOUND_VALUE,
             attributes={
@@ -91,12 +91,12 @@ def test_histogram_record_10_complex_attrs(benchmark, num_labels):
             },
         )
 
-    benchmark(test_histogram_record_10_complex_attrs)
+    benchmark(test_histogram_record_10_attrs)
 
 
 @pytest.mark.parametrize("num_labels", [1, 3])
 def test_histogram_record_10_array_attrs(benchmark, num_labels):
-    def test_histogram_record_10_array_attrs():
+    def test_histogram_record_10_attrs():
         hist10.record(
             random.random() * MAX_BOUND_VALUE,
             attributes={
@@ -105,12 +105,12 @@ def test_histogram_record_10_array_attrs(benchmark, num_labels):
             },
         )
 
-    benchmark(test_histogram_record_10_array_attrs)
+    benchmark(test_histogram_record_10_attrs)
 
 
 @pytest.mark.parametrize("num_labels", [1, 3])
 def test_histogram_record_10_json_string_attrs(benchmark, num_labels):
-    def test_histogram_record_10_json_string_attrs():
+    def test_histogram_record_10_attrs():
         hist10.record(
             random.random() * MAX_BOUND_VALUE,
             attributes={
@@ -121,7 +121,7 @@ def test_histogram_record_10_json_string_attrs(benchmark, num_labels):
             },
         )
 
-    benchmark(test_histogram_record_10_json_string_attrs)
+    benchmark(test_histogram_record_10_attrs)
 
 
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
