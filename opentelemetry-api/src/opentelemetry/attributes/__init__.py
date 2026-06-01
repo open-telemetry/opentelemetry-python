@@ -122,7 +122,7 @@ class BoundedAttributes(dict):
         attributes: types.Attributes = None,
         immutable: bool = True,
         max_value_len: int | None = None,
-        extended_attributes: bool = False,  # No longer used.. etended attributes are always used. Here for backward compatibility.
+        extended_attributes: bool = False,  # No longer used. Extended attributes are always used. Here for backward compatibility.
         disable_cleaning_and_immutability_for_copy: bool = False,
     ):
         if maxlen is not None:
