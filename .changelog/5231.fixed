@@ -1,0 +1,4 @@
+Suppress ``SelectableGroups`` ``DeprecationWarning`` emitted by
+``importlib.metadata.entry_points()`` on Python 3.10 and 3.11 when
+``opentelemetry.context`` (or any module that calls ``entry_points()``) is
+imported.

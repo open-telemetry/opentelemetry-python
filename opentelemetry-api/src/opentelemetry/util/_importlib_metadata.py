@@ -9,8 +9,10 @@ It also normalizes minor differences across python versions 3.10+. References to
 
 - https://github.com/open-telemetry/opentelemetry-python/pull/4735
 - https://github.com/open-telemetry/opentelemetry-python/pull/5203
+- https://github.com/open-telemetry/opentelemetry-python/issues/5231
 """
 
+import warnings
 from functools import cache
 from importlib.metadata import (
     Distribution,
@@ -34,7 +36,19 @@ def _as_entry_points(eps: Any) -> EntryPoints:
 
 @cache
 def _original_entry_points_cached() -> EntryPoints:
-    return _as_entry_points(original_entry_points())
+    # On Python 3.10 and 3.11, calling entry_points() without arguments returns
+    # a SelectableGroups object. Its .values() method emits a DeprecationWarning
+    # ("SelectableGroups dict interface is deprecated. Use select.") that cannot
+    # be avoided while caching all entry points in a single upfront call.
+    # The @cache decorator ensures this path runs only once per interpreter
+    # session, so suppressing the warning here is both safe and targeted.
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=DeprecationWarning,
+            message="SelectableGroups dict interface is deprecated",
+        )
+        return _as_entry_points(original_entry_points())
 
 
 def entry_points(**params) -> EntryPoints:
