@@ -619,7 +619,7 @@ class LoggingHandler(logging.Handler):
                     ),
                 ):
                     _logger.warning(
-                        "LogRecord.msg is of type %s which is not a valid AnyValue, attemping to cast it to a string.",
+                        "LogRecord.msg is of type %s which is not a valid AnyValue, attempting to cast it to a string.",
                         type(record.msg),
                     )
                     body = str(record.msg)

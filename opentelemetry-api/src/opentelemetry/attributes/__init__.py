@@ -37,7 +37,7 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(_DuplicateFilter())
 
 
-def _clean_attribute_value(
+def _clean_attribute_value(  # pylint: disable=too-many-return-statements,too-many-branches
     value: types.AttributeValue, max_string_value_length: int | None
 ) -> types.AttributeValue | Literal[_InvalidAttributeValue.INVALID_VALUE]:
     """Recursively checks if an attribute value is valid and cleans it if required.
@@ -73,11 +73,11 @@ def _clean_attribute_value(
         return value
     if isinstance(value, Sequence):
         cleaned_sequence = []
-        for v in value:
+        for val in value:
             # Drop invalid values.
             if (
                 cleaned_value := _clean_attribute_value(
-                    v, max_string_value_length
+                    val, max_string_value_length
                 )
             ) != _InvalidAttributeValue.INVALID_VALUE:
                 cleaned_sequence.append(cleaned_value)
@@ -106,7 +106,7 @@ def _clean_attribute_value(
     )
     try:
         return str(value)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return _InvalidAttributeValue.INVALID_VALUE
 
 
@@ -122,7 +122,7 @@ class BoundedAttributes(dict):
         attributes: types.Attributes = None,
         immutable: bool = True,
         max_value_len: int | None = None,
-        extended_attributes: bool = True,  # Not used, here for backward compatability.
+        extended_attributes: bool = False,  # No longer used.. etended attributes are always used. Here for backward compatibility.
         disable_cleaning_and_immutability_for_copy: bool = False,
     ):
         if maxlen is not None:
@@ -146,7 +146,8 @@ class BoundedAttributes(dict):
 
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
         if self.disable_cleaning_and_immutability_for_copy:
-            return dict.__setitem__(self, key, value)
+            dict.__setitem__(self, key, value)
+            return
         if self._immutable:
             raise TypeError
         with self._lock:
@@ -216,5 +217,5 @@ class BoundedAttributes(dict):
     # Python's dict.update doesn't call setitem. We are overwriting this method to make sure it does..
     def update(self, *args, **kwargs):
         with self._lock:
-            for k, v in dict(*args, **kwargs).items():
-                self[k] = v
+            for key, val in dict(*args, **kwargs).items():
+                self[key] = val

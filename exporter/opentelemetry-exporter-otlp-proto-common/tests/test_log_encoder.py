@@ -48,9 +48,6 @@ _CONTEXT_LOG = set_span_in_context(
     )
 )
 
-# Otherwise the diffs get truncated..
-unittest.util._MAX_LENGTH = 2000
-
 
 class TestOTLPLogEncoder(unittest.TestCase):
     def test_encode_basic_log_record(self):
