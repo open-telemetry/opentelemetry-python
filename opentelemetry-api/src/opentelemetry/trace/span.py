@@ -7,6 +7,7 @@ import re
 import types as python_types
 import typing
 import warnings
+from collections.abc import Mapping
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -81,7 +82,9 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_attributes(self, attributes: types.Attributes) -> None:
+    def set_attributes(
+        self, attributes: Mapping[str, types.AttributeValue]
+    ) -> None:
         """Sets Attributes.
 
         Sets Attributes with the key and value passed as arguments dict.

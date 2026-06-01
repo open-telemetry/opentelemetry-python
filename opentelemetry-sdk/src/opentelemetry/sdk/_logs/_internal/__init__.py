@@ -18,6 +18,7 @@ from time import time_ns
 from typing import (  # noqa
     Any,
     Callable,
+    Mapping,
     Sequence,
     Tuple,
     Union,
@@ -37,7 +38,7 @@ from opentelemetry._logs import (
     get_logger,
     get_logger_provider,
 )
-from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
@@ -603,7 +604,24 @@ class LoggingHandler(logging.Handler):
             # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
             if not record.args and not isinstance(record.msg, str):
                 #  if record.msg is not a value we can export, cast it to string
-                if not isinstance(record.msg, _VALID_ANY_VALUE_TYPES):
+                # This check is not very good, because Sequence/Mapping can contain bad types..
+                if not isinstance(
+                    record.msg,
+                    (
+                        type(None),
+                        bool,
+                        bytes,
+                        int,
+                        float,
+                        str,
+                        Sequence,
+                        Mapping,
+                    ),
+                ):
+                    _logger.warning(
+                        "LogRecord.msg is of type %s which is not a valid AnyValue, attemping to cast it to a string.",
+                        type(record.msg),
+                    )
                     body = str(record.msg)
                 else:
                     body = record.msg

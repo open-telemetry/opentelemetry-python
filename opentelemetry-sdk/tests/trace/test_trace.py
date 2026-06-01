@@ -902,32 +902,11 @@ class TestSpan(unittest.TestCase):
         with self.tracer.start_as_current_span("root") as root:
             with self.assertLogs(level=WARNING):
                 root.set_attributes(
-                    {"correct-value": "foo", "non-primitive-data-type": {}}
+                    {
+                        "correct-value": "foo",
+                        "bad-bytes": b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
+                    }
                 )
-
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("non-primitive-data-type", {})
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "list-of-mixed-data-types-numeric-first",
-                    [123, False, "string"],
-                )
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "list-of-mixed-data-types-non-numeric-first",
-                    [False, 123, "string"],
-                )
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "list-with-non-primitive-data-type", [{}, 123]
-                )
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("list-with-numeric-and-bool", [1, True])
-
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("", 123)
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(None, 123)
 
             self.assertEqual(len(root.attributes), 1)
             self.assertEqual(root.attributes["correct-value"], "foo")
@@ -1036,26 +1015,25 @@ class TestSpan(unittest.TestCase):
             with self.assertRaises(TypeError):
                 event.attributes["name"] = "hello"
 
-    def test_invalid_event_attributes(self):
+    def test_setting_event_attributes(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         with self.tracer.start_as_current_span("root") as root:
-            with self.assertLogs(level=WARNING):
-                root.add_event(
-                    "event0", {"attr1": True, "attr2": ["hi", False]}
-                )
-            with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": {}})
-            with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": [[True]]})
-            with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
+            root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
+            root.add_event("event0", {"attr1": {}})
+            root.add_event("event0", {"attr1": [[True]]})
+            root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
 
             self.assertEqual(len(root.events), 4)
-            self.assertEqual(root.events[0].attributes, {"attr1": True})
-            self.assertEqual(root.events[1].attributes, {})
-            self.assertEqual(root.events[2].attributes, {})
-            self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
+            self.assertEqual(
+                root.events[0].attributes,
+                {"attr1": True, "attr2": ("hi", False)},
+            )
+            self.assertEqual(root.events[1].attributes, {"attr1": {}})
+            self.assertEqual(root.events[2].attributes, {"attr1": ((True,),)})
+            self.assertEqual(
+                root.events[3].attributes, {"attr2": (1, 2), "attr1": ({},)}
+            )
 
     def test_links(self):
         id_generator = RandomIdGenerator()

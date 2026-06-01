@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-
+import copy
 from collections.abc import Mapping, Sequence
 from logging import getLogger
 from threading import Lock
@@ -19,16 +19,16 @@ from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
-from opentelemetry.util.types import AnyValue, Attributes
+from opentelemetry.util.types import Attributes, AttributeValue
 
 _logger = getLogger(__name__)
 
-_HashedAttributes = tuple[
-    str | bool | int | float | bytes | tuple["_HashedAttributes"] | None
-]
+_HashedAttributes = (
+    str | bool | int | float | bytes | None | tuple["_HashedAttributes", ...]
+)
 
 
-def _hash_attributes(value: Attributes | AnyValue) -> _HashedAttributes:
+def _hash_attributes(value: Attributes | AttributeValue) -> _HashedAttributes:
     if value is None or isinstance(value, (str, int, float, bool, bytes)):
         return value
     elif isinstance(value, Sequence):
@@ -104,7 +104,11 @@ class _ViewInstrumentMatch:
     def consume_measurement(
         self, measurement: Measurement, should_sample_exemplar: bool = True
     ) -> None:
-        attributes = measurement.attributes or {}
+        attributes = {}
+        if measurement.attributes:
+            # Deepcopy to prevent the user from modifying the attributes after the
+            # measurement has been consumed.
+            attributes = copy.deepcopy(measurement.attributes)
         if self._view._attribute_keys is not None:
             attributes = {
                 k: v

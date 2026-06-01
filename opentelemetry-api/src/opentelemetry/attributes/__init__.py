@@ -5,7 +5,6 @@ import copy
 import logging
 import threading
 import time
-from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from typing import Literal
@@ -111,11 +110,10 @@ def _clean_attribute_value(
         return _InvalidAttributeValue.INVALID_VALUE
 
 
-class BoundedAttributes(OrderedDict):  # type: ignore
-    """An ordered dict with a fixed max capacity.
+class BoundedAttributes(dict):
+    """A dict with a fixed max capacity which cleans values to ensure they are valid attribute values.
 
-    Oldest elements are dropped when the dict is full and a new element is
-    added.
+    When the dict is full and a new element is added, the oldest element is dropped.
     """
 
     def __init__(
@@ -124,17 +122,21 @@ class BoundedAttributes(OrderedDict):  # type: ignore
         attributes: types.Attributes = None,
         immutable: bool = True,
         max_value_len: int | None = None,
-        extended_attributes: bool = True,
+        extended_attributes: bool = True,  # Not used, here for backward compatability.
+        disable_cleaning_and_immutability_for_copy: bool = False,
     ):
         if maxlen is not None:
             if not isinstance(maxlen, int) or maxlen < 0:
                 raise ValueError(
                     "maxlen must be valid int greater or equal to 0"
                 )
+        dict.__init__(self)
+        self.disable_cleaning_and_immutability_for_copy = (
+            disable_cleaning_and_immutability_for_copy
+        )
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
-        self._dict: OrderedDict[str, types.AnyValue] = OrderedDict()
         self._lock = threading.RLock()
         self._immutable = False
         if attributes:
@@ -142,13 +144,9 @@ class BoundedAttributes(OrderedDict):  # type: ignore
                 self[key] = value
         self._immutable = immutable
 
-    def __repr__(self) -> str:
-        return f"{dict(self._dict)}"
-
-    def __getitem__(self, key: str) -> types.AnyValue:
-        return self._dict[key]
-
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
+        if self.disable_cleaning_and_immutability_for_copy:
+            return dict.__setitem__(self, key, value)
         if self._immutable:
             raise TypeError
         with self._lock:
@@ -171,48 +169,52 @@ class BoundedAttributes(OrderedDict):  # type: ignore
                 )
                 self.dropped += 1
                 return
-            if key in self._dict:
+            if key in self:
                 _logger.warning(
                     "Key `%s` already exists in attributes. Overwriting value with new value.",
                     key,
                 )
-                del self._dict[key]
-            if len(self._dict) == self.maxlen:
+                dict.__delitem__(self, key)
+            if self.maxlen and len(self) >= self.maxlen:
                 _logger.warning(
                     "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
                 )
-                self._dict.popitem(last=False)
+                # In python 3.7+ dictionaries are ordered, this is the recommended way to get the oldest value.
+                first_key = next(iter(self.keys()))
+                self.pop(first_key)
                 self.dropped += 1
 
-            self._dict[key] = value
+            dict.__setitem__(self, key, cleaned_value)
 
     def __delitem__(self, key: str) -> None:
         if self._immutable:
             raise TypeError
         with self._lock:
-            del self._dict[key]
+            dict.__delitem__(self, key)
 
     def __iter__(self):
         with self._lock:
-            return iter(self._dict.copy())
-
-    def __len__(self) -> int:
-        return len(self._dict)
+            return iter(self.copy())
 
     def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
-        copy_ = BoundedAttributes(
-            maxlen=self.maxlen,
-            immutable=self._immutable,
-            max_value_len=self.max_value_len,
-            extended_attributes=True,
-        )
-        memo[id(self)] = copy_
         with self._lock:
+            copy_ = BoundedAttributes(
+                maxlen=self.maxlen,
+                attributes=copy.deepcopy(self.copy(), memo),
+                immutable=self._immutable,
+                max_value_len=self.max_value_len,
+                extended_attributes=True,
+                disable_cleaning_and_immutability_for_copy=True,
+            )
+            memo[id(self)] = copy_
             # Assign _dict directly to avoid re-cleaning already clean values
             # and to bypass the immutability guard in __setitem__
-            copy_._dict = copy.deepcopy(self._dict, memo)
             copy_.dropped = self.dropped
-        return copy_
+            copy_.disable_cleaning_and_immutability_for_copy = False
+            return copy_
 
-    def copy(self):  # type: ignore
-        return self._dict.copy()  # type: ignore
+    # Python's dict.update doesn't call setitem. We are overwriting this method to make sure it does..
+    def update(self, *args, **kwargs):
+        with self._lock:
+            for k, v in dict(*args, **kwargs).items():
+                self[k] = v

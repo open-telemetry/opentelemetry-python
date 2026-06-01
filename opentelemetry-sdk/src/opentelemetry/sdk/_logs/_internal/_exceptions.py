@@ -50,7 +50,6 @@ def _get_attributes_with_exception(
             attributes=bounded_attributes,
             immutable=False,
             max_value_len=bounded_attributes.max_value_len,
-            extended_attributes=bounded_attributes._extended_attributes,  # pylint: disable=protected-access
         )
         merged.dropped = bounded_attributes.dropped
         for key, value in exception_attributes_map.items():

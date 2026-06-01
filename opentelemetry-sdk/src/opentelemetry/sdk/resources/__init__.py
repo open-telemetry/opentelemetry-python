@@ -55,7 +55,7 @@ import os
 import platform
 import socket
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
@@ -200,7 +200,7 @@ class Resource:
         return _EMPTY_RESOURCE
 
     @property
-    def attributes(self) -> Attributes:
+    def attributes(self) -> Mapping[str, AttributeValue]:
         return self._attributes
 
     @property
