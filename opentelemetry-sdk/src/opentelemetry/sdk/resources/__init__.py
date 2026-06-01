@@ -55,8 +55,7 @@ import os
 import platform
 import socket
 import sys
-import typing
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
@@ -73,7 +72,7 @@ from opentelemetry.sdk.version import (
     __version__ as _OPENTELEMETRY_SDK_VERSION,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util.types import AttributeValue
+from opentelemetry.util.types import Attributes, AttributeValue
 
 psutil: ModuleType | None = None
 
@@ -85,7 +84,6 @@ except ImportError:
     pass
 
 LabelValue = AttributeValue
-Attributes = typing.Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -162,7 +160,7 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         schema_url: str | None = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
@@ -202,7 +200,7 @@ class Resource:
         return _EMPTY_RESOURCE
 
     @property
-    def attributes(self) -> Attributes:
+    def attributes(self) -> Mapping[str, AttributeValue]:
         return self._attributes
 
     @property

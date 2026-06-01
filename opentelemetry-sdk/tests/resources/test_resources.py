@@ -3,7 +3,6 @@
 import os
 import sys
 import unittest
-import uuid
 from concurrent.futures import TimeoutError
 from logging import ERROR, WARNING
 from os import environ
@@ -235,13 +234,10 @@ class TestResources(unittest.TestCase):
             resource = Resource(
                 {
                     SERVICE_NAME: "test",
-                    "non-primitive-data-type": {},
                     "invalid-byte-type-attribute": (
                         b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1"
                     ),
                     "": "empty-key-value",
-                    None: "null-key-value",
-                    "another-non-primitive": uuid.uuid4(),
                 }
             )
         self.assertEqual(

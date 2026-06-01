@@ -1,8 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-
-from collections.abc import Sequence
+import copy
+from collections.abc import Mapping, Sequence
 from logging import getLogger
 from threading import Lock
 from time import time_ns
@@ -19,8 +19,23 @@ from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
+from opentelemetry.util.types import Attributes, AttributeValue
 
 _logger = getLogger(__name__)
+
+_HashedAttributes = (
+    str | bool | int | float | bytes | None | tuple["_HashedAttributes", ...]
+)
+
+
+def _hash_attributes(value: Attributes | AttributeValue) -> _HashedAttributes:
+    if value is None or isinstance(value, (str, int, float, bool, bytes)):
+        return value
+    if isinstance(value, Sequence):
+        return tuple(_hash_attributes(v) for v in value)
+    if isinstance(value, Mapping):
+        return tuple((k, _hash_attributes(value[k])) for k in sorted(value))
+    raise TypeError(f"Invalid value type for attributes: {type(value)}")
 
 
 class _ViewInstrumentMatch:
@@ -32,7 +47,9 @@ class _ViewInstrumentMatch:
     ):
         self._view = view
         self._instrument = instrument
-        self._attributes_aggregation: dict[frozenset, _Aggregation] = {}
+        self._attributes_aggregation: dict[
+            _HashedAttributes, _Aggregation
+        ] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
@@ -87,18 +104,19 @@ class _ViewInstrumentMatch:
     def consume_measurement(
         self, measurement: Measurement, should_sample_exemplar: bool = True
     ) -> None:
+        attributes = {}
+        if measurement.attributes:
+            # Deepcopy to prevent the user from modifying the attributes after the
+            # measurement has been consumed.
+            attributes = copy.deepcopy(measurement.attributes)
         if self._view._attribute_keys is not None:
-            attributes = {}
+            attributes = {
+                k: v
+                for k, v in attributes.items()
+                if k in self._view._attribute_keys
+            }
 
-            for key, value in (measurement.attributes or {}).items():
-                if key in self._view._attribute_keys:
-                    attributes[key] = value
-        elif measurement.attributes is not None:
-            attributes = dict(measurement.attributes)
-        else:
-            attributes = {}
-
-        aggr_key = frozenset(attributes.items())
+        aggr_key = _hash_attributes(attributes)
 
         if aggr_key not in self._attributes_aggregation:
             with self._lock:

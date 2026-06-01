@@ -274,7 +274,9 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
             t.start()
             try:
                 consumer.add_metric_reader(MagicMock())
-                consumer.consume_measurement(MagicMock())
+                consumer.consume_measurement(
+                    MagicMock(attributes={"test": "test"})
+                )
             finally:
                 t.join()
             self.assertEqual(mutation_timeout_error, failure)

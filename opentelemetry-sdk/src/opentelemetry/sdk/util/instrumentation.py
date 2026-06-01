@@ -10,7 +10,6 @@ from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.util.types import (  # TODO: see if we can remove F401 when using new sphinx version # noqa: F401 # pylint: disable=unused-import
     AnyValue,
     Attributes,
-    _ExtendedAttributes,
 )
 
 
@@ -88,7 +87,7 @@ class InstrumentationScope:
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> None:
         self._name = name
         self._version = version

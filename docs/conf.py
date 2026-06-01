@@ -26,6 +26,7 @@ from django.conf import settings
 
 settings.configure()
 
+# TODO: check if this is still needed or not ?
 # Provide AnyValue in opentelemetry.attributes module's namespace so the
 # "AnyValue" forward reference in opentelemetry.util.types._ExtendedAttributes
 # resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
@@ -185,10 +186,6 @@ nitpick_ignore = [
     (
         "py:class",
         "AnyValue",
-    ),
-    (
-        "py:class",
-        "_ExtendedAttributes",
     ),
     ("py:class", "Token"),
 ]
