@@ -434,9 +434,9 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     stack_index: typing.Optional[builtins.int] = 0
-    values: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
     attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
     link_index: typing.Optional[builtins.int] = 0
+    values: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
     timestamps_unix_nano: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
@@ -449,12 +449,12 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
         _result = {}
         if self.stack_index:
             _result["stackIndex"] = self.stack_index
-        if self.values:
-            _result["values"] = opentelemetry.proto_json._json_codec.encode_repeated(self.values, lambda _v: opentelemetry.proto_json._json_codec.encode_int64(_v))
         if self.attribute_indices:
             _result["attributeIndices"] = self.attribute_indices
         if self.link_index:
             _result["linkIndex"] = self.link_index
+        if self.values:
+            _result["values"] = opentelemetry.proto_json._json_codec.encode_repeated(self.values, lambda _v: opentelemetry.proto_json._json_codec.encode_int64(_v))
         if self.timestamps_unix_nano:
             _result["timestampsUnixNano"] = opentelemetry.proto_json._json_codec.encode_repeated(self.timestamps_unix_nano, lambda _v: opentelemetry.proto_json._json_codec.encode_int64(_v))
         return _result
@@ -476,13 +476,13 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("stackIndex")) is not None:
             opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "stack_index")
             _args["stack_index"] = _value
-        if (_value := data.get("values")) is not None:
-            _args["values"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json._json_codec.decode_int64(_v, "values"), "values")
         if (_value := data.get("attributeIndices")) is not None:
             _args["attribute_indices"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "attribute_indices")
         if (_value := data.get("linkIndex")) is not None:
             opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "link_index")
             _args["link_index"] = _value
+        if (_value := data.get("values")) is not None:
+            _args["values"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json._json_codec.decode_int64(_v, "values"), "values")
         if (_value := data.get("timestampsUnixNano")) is not None:
             _args["timestamps_unix_nano"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json._json_codec.decode_int64(_v, "timestamps_unix_nano"), "timestamps_unix_nano")
 

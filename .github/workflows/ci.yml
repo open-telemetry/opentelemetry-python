@@ -43,7 +43,11 @@ jobs:
       - contrib
     runs-on: ubuntu-latest
     steps:
+      # Skip alls-green check for post-release version bumps in merge_group.
+      # This avoids a deadlock where core and contrib repos wait for each other's releases.
+      # See RELEASING.md for more details.
       - name: Decide whether the needed jobs succeeded or failed
+        if: ${{ !(github.event_name == 'merge_group' && contains(github.event.merge_group.head_commit.message, 'Update version to')) }}
         uses: re-actors/alls-green@release/v1
         with:
           jobs: ${{ toJSON(needs) }}

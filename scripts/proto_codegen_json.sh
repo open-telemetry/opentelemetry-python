@@ -12,7 +12,7 @@
 #   PROTO_REPO_DIR - the path to an existing checkout of the opentelemetry-proto repo
 
 # Pinned commit/branch/tag for the current version used in opentelemetry-proto python package.
-PROTO_REPO_BRANCH_OR_COMMIT="v1.9.0"
+PROTO_REPO_BRANCH_OR_COMMIT="v1.10.0"
 
 set -e
 
@@ -24,6 +24,7 @@ protoc() {
     uvx -c $repo_root/gen-requirements.txt \
         --python 3.12 \
         --from grpcio-tools \
+        --with "$repo_root/codegen/opentelemetry-codegen-json" \
         python -m grpc_tools.protoc "$@"
 }
 
