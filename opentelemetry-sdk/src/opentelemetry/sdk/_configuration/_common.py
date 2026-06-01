@@ -6,6 +6,8 @@ from __future__ import annotations
 import dataclasses
 import inspect
 import logging
+from collections.abc import Callable
+from typing import Any, Protocol
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.util._importlib_metadata import entry_points
@@ -72,12 +74,18 @@ def load_entry_point(group: str, name: str) -> type:
         ) from exc
 
 
+class _ComponentConfig(Protocol):
+    """Protocol for config dataclasses decorated with @_additional_properties."""
+
+    additional_properties: dict[str, Any]
+
+
 def _resolve_component(
-    config,
-    registry: dict,
+    config: _ComponentConfig,
+    registry: dict[str, Callable[[Any], Any]],
     entry_point_group: str,
     component_type: str,
-):
+) -> Any:
     """Resolve a config dataclass to a component instance.
 
     Checks built-in factories in ``registry`` first (by matching typed
