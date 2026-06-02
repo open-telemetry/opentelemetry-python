@@ -195,7 +195,7 @@ class BoundedAttributes(dict):
 
     def __iter__(self):
         with self._lock:
-            return iter(self.copy())
+            return iter(list(dict.keys(self)))
 
     def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
         with self._lock:
