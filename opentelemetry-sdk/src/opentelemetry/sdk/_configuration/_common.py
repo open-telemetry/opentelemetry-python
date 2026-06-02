@@ -80,6 +80,11 @@ class _ComponentConfig(Protocol):
     Values in ``additional_properties`` are nested config dicts (suitable
     for ``**kwargs`` splatting to the user-defined component class) or
     ``None`` (when the YAML uses ``my_plugin:`` or ``my_plugin: null``).
+
+    Note: the generated models declare ``additional_properties`` as a
+    ``ClassVar`` even though the decorator assigns it as an instance
+    attribute at runtime. This is tolerated by pyright in ``standard``
+    mode but flagged in ``strict`` mode. See #5268.
     """
 
     additional_properties: dict[str, dict[str, Any] | None]
