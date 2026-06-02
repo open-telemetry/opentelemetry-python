@@ -149,7 +149,9 @@ class BoundedAttributes(dict):
             dict.__setitem__(self, key, value)
             return
         if self._immutable:
-            raise TypeError
+            raise TypeError(
+                "Cannot mutate this instance, as it was created with immutable=True."
+            )
         with self._lock:
             if self.maxlen == 0:
                 self.dropped += 1
@@ -171,10 +173,10 @@ class BoundedAttributes(dict):
                 self.dropped += 1
                 return
             if key in self:
-                _logger.warning(
-                    "Key `%s` already exists in attributes. Overwriting value with new value.",
-                    key,
-                )
+                # _logger.warning(
+                #     "Key `%s` already exists in attributes. Overwriting value with new value.",
+                #     key,
+                # )
                 dict.__delitem__(self, key)
             if self.maxlen and len(self) >= self.maxlen:
                 _logger.warning(
@@ -189,7 +191,9 @@ class BoundedAttributes(dict):
 
     def __delitem__(self, key: str) -> None:
         if self._immutable:
-            raise TypeError
+            raise TypeError(
+                "Cannot mutate this instance, as it was created with immutable=True."
+            )
         with self._lock:
             dict.__delitem__(self, key)
 
