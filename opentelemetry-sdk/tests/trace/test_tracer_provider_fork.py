@@ -32,22 +32,23 @@ _fork_ctx = (
     "needs *nix",
 )
 class TestTracerProviderFork(unittest.TestCase):
-    def test_at_fork_reinit_changes_service_instance_id(self):
-        """_at_fork_reinit should assign a new service.instance.id."""
+    def test_reset_service_instance_id_changes_service_instance_id(self):
+        """_reset_service_instance_id should assign the given service.instance.id."""
         resource = Resource({"service.instance.id": "original-id"})
         provider = TracerProvider(resource=resource)
 
         original_id = provider._resource.attributes.get("service.instance.id")
         self.assertEqual(original_id, "original-id")
 
-        provider._at_fork_reinit()
+        provider._reset_service_instance_id("new-id")
 
         new_id = provider._resource.attributes.get("service.instance.id")
-        self.assertNotEqual(new_id, "original-id")
-        self.assertIsNotNone(new_id)
+        self.assertEqual(new_id, "new-id")
 
-    def test_at_fork_reinit_preserves_other_resource_attributes(self):
-        """_at_fork_reinit should not affect other resource attributes."""
+    def test_reset_service_instance_id_preserves_other_resource_attributes(
+        self,
+    ):
+        """_reset_service_instance_id should not affect other resource attributes."""
         resource = Resource(
             {
                 "service.name": "my-service",
@@ -57,7 +58,7 @@ class TestTracerProviderFork(unittest.TestCase):
         )
         provider = TracerProvider(resource=resource)
 
-        provider._at_fork_reinit()
+        provider._reset_service_instance_id("new-id")
 
         attrs = provider._resource.attributes
         self.assertEqual(attrs.get("service.name"), "my-service")

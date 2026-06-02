@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-sdk`: Add `service.instance.id` to default resource so every process gets a unique instance identity at startup
   ([#5000](https://github.com/open-telemetry/opentelemetry-python/pull/5000))
-- `opentelemetry-sdk`: Regenerate `service.instance.id` post-fork in `MeterProvider` and `TracerProvider` to ensure distinct resource identities across prefork workers
+- `opentelemetry-sdk`: Regenerate a single shared `service.instance.id` post-fork, applied to every registered `MeterProvider` and `TracerProvider` (including providers created after the fork), so prefork workers get distinct but cross-signal-consistent resource identities
   ([#5000](https://github.com/open-telemetry/opentelemetry-python/pull/5000))
 - `opentelemetry-sdk`: Add file configuration support with YAML/JSON loading, environment variable substitution, and schema validation against the vendored OTel config JSON schema
   ([#4898](https://github.com/open-telemetry/opentelemetry-python/pull/4898))
