@@ -37,29 +37,21 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(_DuplicateFilter())
 
 
-def _clean_attribute_value(  # pylint: disable=too-many-return-statements,too-many-branches
+def _clean_attribute_value(
     value: types.AttributeValue, max_string_value_length: int | None
 ) -> types.AttributeValue | Literal[_InvalidAttributeValue.INVALID_VALUE]:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
-    Bytes are decoded to strings via utf-8, and removed if decoding fails.
     String values are truncated to max_string_value_length if provided.
-    Anything that isn't of `types.AttributeValue` is removed.
+    Anything that isn't of `types.AttributeValue`, we attempt to cast to `str`.
+    If this fails, the value is dropped.
 
     Returns:
-        _InvalidAttributeValue.INVALID_VALUE if the value is removed and otherwise
+        _InvalidAttributeValue.INVALID_VALUE if the top level value is dropped and otherwise
         returns the cleaned value.
     """
-    if isinstance(value, (type(None), bool, int, float)):
+    if isinstance(value, (type(None), bool, int, float, bytes)):
         return value
-    if isinstance(value, bytes):
-        try:
-            value = value.decode("utf-8")
-        except UnicodeDecodeError:
-            _logger.exception(
-                "Invalid byte sequence for attribute value, dropping value from attribute."
-            )
-            return _InvalidAttributeValue.INVALID_VALUE
     if isinstance(value, str):
         if (
             max_string_value_length is not None
@@ -169,8 +161,8 @@ class BoundedAttributes(dict):
                 )
             ) is _InvalidAttributeValue.INVALID_VALUE:
                 _logger.warning(
-                    "Invalid value `%s` for key `%s`. Dropping this key-value pair from attributes.",
-                    value,
+                    "Invalid value type `%s` for key `%s`. Dropping this key-value pair from attributes.",
+                    type(value).__name__,
                     key,
                 )
                 self.dropped += 1

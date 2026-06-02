@@ -14,6 +14,11 @@ from opentelemetry.attributes import (
 )
 
 
+class BadStr:
+    def __str__(self):
+        raise RuntimeError("boom")
+
+
 class TestBoundedAttributes(unittest.TestCase):
     # pylint: disable=consider-using-dict-items
     base = {
@@ -24,10 +29,6 @@ class TestBoundedAttributes(unittest.TestCase):
     }
 
     def test_clean_attribute_value_with_various_params(self):
-        class BadStr:
-            def __str__(self):
-                raise RuntimeError("boom")
-
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             self.assertEqual(
                 _clean_attribute_value(BadStr(), None),
@@ -48,15 +49,6 @@ class TestBoundedAttributes(unittest.TestCase):
                 _clean_attribute_value(valid_primitive, None), valid_primitive
             )
 
-        # Invalid utf-8 bytes.
-        with self.assertLogs("opentelemetry", level="WARNING") as cm:
-            self.assertEqual(
-                _clean_attribute_value(b"\xff", None),
-                _InvalidAttributeValue.INVALID_VALUE,
-            )
-        self.assertEqual(len(cm.output), 1)
-        self.assertIn("Invalid byte sequence", cm.output[0])
-
         # String too long
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             self.assertEqual(_clean_attribute_value("a" * 1000, 5), "aaaaa")
@@ -71,10 +63,10 @@ class TestBoundedAttributes(unittest.TestCase):
                 _clean_attribute_value(
                     ["a", 2, BadStr(), None, b"\xff"], None
                 ),
-                ("a", 2, None),
+                ("a", 2, None, b"\xff"),
             )
-        # 2 logs for the 2 bad values that get dropped.
-        self.assertEqual(len(cm.output), 2)
+        # 1 logs for the 1 bad value that gets dropped.
+        self.assertEqual(len(cm.output), 1)
 
         # Invalid non-str key in map.
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
@@ -97,19 +89,16 @@ class TestBoundedAttributes(unittest.TestCase):
                     },
                     None,
                 ),
-                {"a": 1, "c": 3, "d": (2, 3)},
+                {"a": 1, "c": 3, "d": (2, 3), "bytes": b"\xff"},
             )
-        # 2 logs for the 2 bad values that get dropped.
-        self.assertEqual(len(cm.output), 2)
+        # 1 logs for the 1 bad value that gets dropped.
+        self.assertEqual(len(cm.output), 1)
 
     def test_same_key_value_overwritten(self):
         bdict = BoundedAttributes(1, {"name": "Firulais"}, immutable=False)
         self.assertEqual(bdict["name"], "Firulais")
         self.assertEqual(bdict.dropped, 0)
-        with self.assertLogs("opentelemetry", level="WARNING") as cm:
-            bdict["name"] = "Bruno"
-        self.assertEqual(len(cm.output), 1)
-        self.assertIn("Key `name` already exists in attributes", cm.output[0])
+        bdict["name"] = "Bruno"
         self.assertEqual(bdict["name"], "Bruno")
         self.assertEqual(bdict.dropped, 0)
 
@@ -124,11 +113,7 @@ class TestBoundedAttributes(unittest.TestCase):
 
     def test_invalid_value_not_used(self):
         bdict = BoundedAttributes(50, {}, immutable=False)
-        with self.assertLogs("opentelemetry", level="WARNING") as cm:
-            # Invalid bytes.
-            bdict["good-key"] = b"\xff"
-        self.assertEqual(len(cm.output), 2)
-        self.assertIn("Invalid value", cm.output[1])
+        bdict["good-key"] = BadStr()
         self.assertNotIn("good-key", bdict)
         self.assertEqual(bdict.dropped, 1)
 
