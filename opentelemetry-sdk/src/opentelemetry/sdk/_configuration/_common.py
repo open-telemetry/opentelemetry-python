@@ -75,9 +75,14 @@ def load_entry_point(group: str, name: str) -> type:
 
 
 class _ComponentConfig(Protocol):
-    """Protocol for config dataclasses decorated with @_additional_properties."""
+    """Protocol for config dataclasses decorated with @_additional_properties.
 
-    additional_properties: dict[str, Any]
+    Values in ``additional_properties`` are nested config dicts (suitable
+    for ``**kwargs`` splatting to the user-defined component class) or
+    ``None`` (when the YAML uses ``my_plugin:`` or ``my_plugin: null``).
+    """
+
+    additional_properties: dict[str, dict[str, Any] | None]
 
 
 def _resolve_component(
