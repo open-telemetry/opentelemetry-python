@@ -163,8 +163,11 @@ class BoundedAttributes(dict):
                 )
                 self.dropped += 1
                 return
-            cleaned_value = _clean_attribute_value(value, self.max_value_len)
-            if cleaned_value is _InvalidAttributeValue.INVALID_VALUE:
+            if (
+                cleaned_value := _clean_attribute_value(
+                    value, self.max_value_len
+                )
+            ) is _InvalidAttributeValue.INVALID_VALUE:
                 _logger.warning(
                     "Invalid value `%s` for key `%s`. Dropping this key-value pair from attributes.",
                     value,
@@ -173,18 +176,13 @@ class BoundedAttributes(dict):
                 self.dropped += 1
                 return
             if key in self:
-                # _logger.warning(
-                #     "Key `%s` already exists in attributes. Overwriting value with new value.",
-                #     key,
-                # )
                 dict.__delitem__(self, key)
             if self.maxlen and len(self) >= self.maxlen:
                 _logger.warning(
                     "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
                 )
                 # In python 3.7+ dictionaries are ordered, this is the recommended way to get the oldest value.
-                first_key = next(iter(self.keys()))
-                self.pop(first_key)
+                self.pop(next(iter(self.keys())))
                 self.dropped += 1
 
             dict.__setitem__(self, key, cleaned_value)
