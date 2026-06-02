@@ -361,3 +361,13 @@ class TestResolveComponent(unittest.TestCase):
                 _resolve_component(
                     config, self.registry, "test_group", "test component"
                 )
+
+    def test_first_registry_match_wins_when_multiple_set(self):
+        """When multiple built-in fields are set (which the schema should
+        prevent), the first registry match wins."""
+        config = self.cls(builtin_a={"a": 1}, builtin_b="b")
+        result = _resolve_component(
+            config, self.registry, "test_group", "test component"
+        )
+        # builtin_a comes first in the registry dict
+        self.assertEqual(result, ("resolved_a", {"a": 1}))

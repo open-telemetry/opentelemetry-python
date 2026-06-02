@@ -92,6 +92,11 @@ def _resolve_component(
     field names on ``config``), then falls back to entry point loading
     for plugin components found in ``config.additional_properties``.
 
+    The JSON schema enforces exactly one component per config block
+    (``minProperties: 1, maxProperties: 1``). If multiple typed fields or
+    ``additional_properties`` entries are set (e.g. when schema validation
+    is bypassed), the first registry match wins.
+
     Args:
         config: A dataclass with ``additional_properties`` (from the
             ``@_additional_properties`` decorator).
