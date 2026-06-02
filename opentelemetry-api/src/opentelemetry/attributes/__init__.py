@@ -84,6 +84,7 @@ def _clean_attribute_value(
                     key,
                 )
                 continue
+            # Drop invalid values.
             if (
                 cleaned_value := _clean_attribute_value(
                     val, max_string_value_length
