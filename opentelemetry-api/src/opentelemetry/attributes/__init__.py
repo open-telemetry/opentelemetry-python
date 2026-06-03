@@ -5,8 +5,9 @@ import copy
 import logging
 import threading
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from enum import Enum
+from types import MappingProxyType
 from typing import Literal
 
 from opentelemetry.util import types
@@ -38,13 +39,16 @@ _logger.addFilter(_DuplicateFilter())
 
 
 def _clean_attribute_value(
-    value: types.AttributeValue, max_string_value_length: int | None
+    value: types.AttributeValue,
+    max_string_value_length: int | None,
 ) -> types.AttributeValue | Literal[_InvalidAttributeValue.INVALID_VALUE]:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
     String values are truncated to max_string_value_length if provided.
     Anything that isn't of `types.AttributeValue`, we attempt to cast to `str`.
-    If this fails, the value is dropped.
+    If this fails, the value is dropped. Sequence's are converted to tuples and mappings
+    are converted to MappingProxyType, these are immutable data structures, so if the sequence/map
+    is modified outside of this method, it will not affect the value in this container.
 
     Returns:
         _InvalidAttributeValue.INVALID_VALUE if the top level value is dropped and otherwise
@@ -91,7 +95,7 @@ def _clean_attribute_value(
                 )
             ) != _InvalidAttributeValue.INVALID_VALUE:
                 cleaned_mapping[key] = cleaned_value
-        return cleaned_mapping
+        return MappingProxyType(cleaned_mapping)
     _logger.warning(
         "Invalid type %s for attribute value. Expected one of bool, str, None, bytes, int, float or a "
         "Mapping or Sequence of those types. Attempting to cast type to string, value will be dropped if that fails.",
@@ -103,10 +107,18 @@ def _clean_attribute_value(
         return _InvalidAttributeValue.INVALID_VALUE
 
 
-class BoundedAttributes(dict):
-    """A dict with a fixed max capacity which cleans values to ensure they are valid attribute values.
+class BoundedAttributes(MutableMapping):
+    """A dict with a fixed max capacity which cleans and potentially drops values to ensure they are valid attribute values.
 
-    When the dict is full and a new element is added, the oldest element is dropped.
+    Args:
+        maxlen: The maximum number of attributes to store.
+        attributes: The initial attributes to store.
+        immutable: Defaults to true. Whether to allow adding/removing of attributes after the initialisation of the instance.
+        max_value_len: The maximum length of string values.
+        extended_attributes: Unused param, kept for backwards compatibility.
+
+    When the dict is full and a new element is added, the oldest element is dropped. Attributes are made to be immutable when set in this container.
+    So passing a mutable list as an attribute value, and then mutating it after will not change it's value in this container.
     """
 
     def __init__(
@@ -116,17 +128,13 @@ class BoundedAttributes(dict):
         immutable: bool = True,
         max_value_len: int | None = None,
         extended_attributes: bool = False,  # No longer used. Extended attributes are always used. Here for backward compatibility.
-        disable_cleaning_and_immutability_for_copy: bool = False,
     ):
         if maxlen is not None:
             if not isinstance(maxlen, int) or maxlen < 0:
                 raise ValueError(
                     "maxlen must be valid int greater or equal to 0"
                 )
-        dict.__init__(self)
-        self.disable_cleaning_and_immutability_for_copy = (
-            disable_cleaning_and_immutability_for_copy
-        )
+        self._dict = {}
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
@@ -137,10 +145,14 @@ class BoundedAttributes(dict):
                 self[key] = value
         self._immutable = immutable
 
+    def __repr__(self) -> str:
+        return f"{dict(self._dict)}"
+
+    def __getitem__(self, key: str) -> types.AttributeValue:
+        with self._lock:
+            return self._dict[key]
+
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
-        if self.disable_cleaning_and_immutability_for_copy:
-            dict.__setitem__(self, key, value)
-            return
         if self._immutable:
             raise TypeError(
                 "Cannot mutate this instance, as it was created with immutable=True."
@@ -168,17 +180,17 @@ class BoundedAttributes(dict):
                 )
                 self.dropped += 1
                 return
-            if key in self:
-                dict.__delitem__(self, key)
+            if key in self._dict:
+                del self._dict[key]
             if self.maxlen and len(self) >= self.maxlen:
                 _logger.warning(
                     "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
                 )
                 # In python 3.7+ dictionaries are ordered, this is the recommended way to get the oldest value.
-                self.pop(next(iter(self.keys())))
+                del self._dict[next(iter(self._dict.keys()))]
                 self.dropped += 1
 
-            dict.__setitem__(self, key, cleaned_value)
+            self._dict[key] = cleaned_value
 
     def __delitem__(self, key: str) -> None:
         if self._immutable:
@@ -186,31 +198,29 @@ class BoundedAttributes(dict):
                 "Cannot mutate this instance, as it was created with immutable=True."
             )
         with self._lock:
-            dict.__delitem__(self, key)
+            del self._dict[key]
 
     def __iter__(self):
         with self._lock:
-            return iter(list(dict.keys(self)))
+            return iter(list(self._dict.keys()))
+
+    def __len__(self):
+        with self._lock:
+            return len(self._dict)
 
     def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
+        copy_ = BoundedAttributes(
+            maxlen=self.maxlen,
+            immutable=self._immutable,
+            max_value_len=self.max_value_len,
+        )
+        memo[id(self)] = copy_
         with self._lock:
-            copy_ = BoundedAttributes(
-                maxlen=self.maxlen,
-                attributes=copy.deepcopy(self.copy(), memo),
-                immutable=self._immutable,
-                max_value_len=self.max_value_len,
-                extended_attributes=True,
-                disable_cleaning_and_immutability_for_copy=True,
-            )
-            memo[id(self)] = copy_
             # Assign _dict directly to avoid re-cleaning already clean values
             # and to bypass the immutability guard in __setitem__
+            copy_._dict = copy.deepcopy(self._dict, memo)
             copy_.dropped = self.dropped
-            copy_.disable_cleaning_and_immutability_for_copy = False
-            return copy_
+        return copy_
 
-    # Python's dict.update doesn't call setitem. We are overwriting this method to make sure it does..
-    def update(self, *args, **kwargs):
-        with self._lock:
-            for key, val in dict(*args, **kwargs).items():
-                self[key] = val
+    def copy(self):  # type: ignore
+        return self._dict.copy()  # type: ignore

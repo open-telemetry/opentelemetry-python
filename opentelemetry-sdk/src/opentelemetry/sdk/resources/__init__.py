@@ -153,7 +153,10 @@ class Resource:
     _schema_url: str
 
     def __init__(self, attributes: Attributes, schema_url: str | None = None):
-        self._attributes = BoundedAttributes(attributes=attributes)
+        # Immutable set to true so attributes cannot be added or removed after creation.
+        self._attributes = BoundedAttributes(
+            attributes=attributes, immutable=True
+        )
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url

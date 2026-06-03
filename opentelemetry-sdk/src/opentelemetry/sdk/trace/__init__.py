@@ -846,10 +846,12 @@ class Span(trace_api.Span, ReadableSpan):
         self._events = self._new_events()
         if events:
             for event in events:
+                # Immutable set to true so attributes cannot be added or removed after creation.
                 event._attributes = BoundedAttributes(
                     self._limits.max_event_attributes,
                     event.attributes,
                     max_value_len=self._limits.max_attribute_length,
+                    immutable=True,
                 )
                 self._events.append(event)
 
@@ -870,11 +872,13 @@ class Span(trace_api.Span, ReadableSpan):
         valid_links = []
         for link in links:
             if link and _is_valid_link(link.context, link.attributes):
+                # Immutable set to true so attributes cannot be added or removed after creation.
                 # pylint: disable=protected-access
                 link._attributes = BoundedAttributes(
                     self._limits.max_link_attributes,
                     link.attributes,
                     max_value_len=self._limits.max_attribute_length,
+                    immutable=True,
                 )
                 valid_links.append(link)
 
@@ -907,10 +911,12 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: int | None = None,
     ) -> None:
+        # Immutable set to true so attributes cannot be added or removed after creation.
         attributes = BoundedAttributes(
             self._limits.max_event_attributes,
             attributes,
             max_value_len=self._limits.max_attribute_length,
+            immutable=True,
         )
         self._add_event(
             Event(
@@ -931,11 +937,12 @@ class Span(trace_api.Span, ReadableSpan):
     ) -> None:
         if not _is_valid_link(context, attributes):
             return
-
+        # Immutable set to true so attributes cannot be added or removed after creation.
         attributes = BoundedAttributes(
             self._limits.max_link_attributes,
             attributes,
             max_value_len=self._limits.max_attribute_length,
+            immutable=True,
         )
         self._add_link(
             trace_api.Link(

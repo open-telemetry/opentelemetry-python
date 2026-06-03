@@ -94,7 +94,10 @@ class InstrumentationScope:
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
-        self._attributes = BoundedAttributes(attributes=attributes)
+        # Attributes cannot be added/removed after creation.
+        self._attributes = BoundedAttributes(
+            attributes=attributes, immutable=True
+        )
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url}, {self._attributes})"
