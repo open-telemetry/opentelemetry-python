@@ -74,15 +74,6 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
     return value
 
 
-def _resolve_type_hints(cls: type) -> dict[str, Any]:
-    # Wrapped so callers see ``dict[str, Any]`` rather than the typing internals;
-    # this keeps astroid from importing Python 3.14's ``annotationlib`` (which
-    # uses t-strings) during inference under pylint 3.x. See pull/5269 history.
-    resolved: dict[str, Any] = {}
-    resolved.update(typing.get_type_hints(cls, include_extras=False))
-    return resolved
-
-
 def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
     """Recursively convert a mapping to a dataclass instance.
 
@@ -102,7 +93,12 @@ def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
     if not dataclasses.is_dataclass(cls):
         raise TypeError(f"{cls.__name__} is not a dataclass")
 
-    hints = _resolve_type_hints(cls)
+    # Annotated as ``dict[str, Any]`` so astroid stops tracing into
+    # ``typing.get_type_hints`` — under pylint 3.x that path leads into
+    # Python 3.14's ``annotationlib`` (which uses t-strings) and crashes.
+    hints: dict[str, Any] = dict(
+        typing.get_type_hints(cls, include_extras=False)
+    )
     known_fields = {f.name for f in dataclasses.fields(cls)}
     kwargs: dict[str, Any] = {}
 
