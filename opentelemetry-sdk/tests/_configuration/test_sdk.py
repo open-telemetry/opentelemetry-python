@@ -31,7 +31,6 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
 
-
 _MIN_CONFIG_KWARGS = {"file_format": "1.0-rc.1"}
 
 
