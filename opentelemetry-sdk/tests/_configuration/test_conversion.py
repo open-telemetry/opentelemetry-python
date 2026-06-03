@@ -6,11 +6,11 @@
 
 import unittest
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, ClassVar
 
 from opentelemetry.sdk._configuration._common import _additional_properties
 from opentelemetry.sdk._configuration._conversion import _dict_to_dataclass
+from opentelemetry.sdk._configuration.models import ExemplarFilter
 
 
 @dataclass
@@ -37,14 +37,9 @@ class _WithExtras:
     additional_properties: ClassVar[dict[str, Any]]
 
 
-class _Level(Enum):
-    info = "info"
-    warn = "warn"
-
-
 @dataclass
 class _WithEnum:
-    level: _Level | None = None
+    filter: ExemplarFilter | None = None
 
 
 class TestDictToDataclass(unittest.TestCase):
@@ -105,9 +100,11 @@ class TestDictToDataclass(unittest.TestCase):
         self.assertEqual(result.middle.items, [])
 
     def test_enum_value_coerced_from_string(self):
-        result = _dict_to_dataclass({"level": "info"}, _WithEnum)
-        self.assertIs(result.level, _Level.info)
+        result = _dict_to_dataclass({"filter": "always_on"}, _WithEnum)
+        self.assertIs(result.filter, ExemplarFilter.always_on)
 
     def test_enum_value_already_enum_passes_through(self):
-        result = _dict_to_dataclass({"level": _Level.warn}, _WithEnum)
-        self.assertIs(result.level, _Level.warn)
+        result = _dict_to_dataclass(
+            {"filter": ExemplarFilter.trace_based}, _WithEnum
+        )
+        self.assertIs(result.filter, ExemplarFilter.trace_based)
