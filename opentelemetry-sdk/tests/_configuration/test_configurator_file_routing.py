@@ -33,9 +33,7 @@ class TestConfiguratorFileRouting(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
     @patch("opentelemetry.sdk._configuration._sdk.configure_sdk")
-    @patch(
-        "opentelemetry.sdk._configuration.file._loader.load_config_file"
-    )
+    @patch("opentelemetry.sdk._configuration.file._loader.load_config_file")
     @patch("opentelemetry.sdk._configuration._initialize_components")
     # pylint: disable=no-self-use
     def test_env_var_set_routes_to_declarative_path(
@@ -60,9 +58,7 @@ class TestConfiguratorFileRouting(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
     @patch("opentelemetry.sdk._configuration._sdk.configure_sdk")
-    @patch(
-        "opentelemetry.sdk._configuration.file._loader.load_config_file"
-    )
+    @patch("opentelemetry.sdk._configuration.file._loader.load_config_file")
     def test_env_var_set_with_kwargs_warns_and_ignores(
         self, mock_load, mock_configure_sdk
     ):
