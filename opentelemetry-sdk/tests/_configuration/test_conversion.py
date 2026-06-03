@@ -48,8 +48,11 @@ class _WithEnum:
 
 
 class TestDictToDataclass(unittest.TestCase):
-    def test_returns_data_unchanged_for_non_dataclass(self):
-        self.assertEqual(_dict_to_dataclass({"x": 1}, dict), {"x": 1})
+    def test_raises_on_non_dataclass(self):
+        # _dict_to_dataclass is internal and assumes cls is a dataclass.
+        with self.assertRaises(TypeError) as ctx:
+            _dict_to_dataclass({"x": 1}, dict)
+        self.assertIn("not a dataclass", str(ctx.exception))
 
     def test_converts_flat_dict(self):
         result = _dict_to_dataclass({"value": 42}, _Inner)

@@ -15,7 +15,10 @@ import dataclasses
 import enum
 import types
 import typing
-from typing import Any, Union, get_args, get_origin
+from collections.abc import Mapping
+from typing import Any, TypeVar, Union, get_args, get_origin
+
+_T = TypeVar("_T")
 
 
 def _unwrap_optional(type_hint: Any) -> Any:
@@ -71,8 +74,8 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
     return value
 
 
-def _dict_to_dataclass(data: dict[str, Any], cls: type) -> Any:
-    """Recursively convert a dict to a dataclass instance.
+def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
+    """Recursively convert a mapping to a dataclass instance.
 
     For each key in ``data``:
     - If it matches a known dataclass field, the value is converted according
@@ -83,9 +86,12 @@ def _dict_to_dataclass(data: dict[str, Any], cls: type) -> Any:
 
     ``ClassVar`` fields (e.g. the ``additional_properties`` annotation on
     decorated dataclasses) are ignored as expected.
+
+    Raises:
+        TypeError: If ``cls`` is not a dataclass type.
     """
     if not dataclasses.is_dataclass(cls):
-        return data
+        raise TypeError(f"{cls.__name__} is not a dataclass")
 
     hints = typing.get_type_hints(cls, include_extras=False)
     known_fields = {f.name for f in dataclasses.fields(cls)}
