@@ -6,14 +6,13 @@
 import os
 import weakref
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from threading import Lock
 from time import time_ns
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
 import opentelemetry.sdk.metrics._internal.instrument
-import opentelemetry.sdk.metrics._internal.sdk_configuration
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
@@ -50,10 +49,10 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     def __init__(
         self,
         sdk_config: "opentelemetry.sdk.metrics._internal.sdk_configuration.SdkConfiguration",
+        metric_readers: Iterable["opentelemetry.sdk.metrics.MetricReader"],
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
-        # should never be mutated
         self._reader_storages: Mapping[
             opentelemetry.sdk.metrics.export.MetricReader, MetricReaderStorage
         ] = {
@@ -62,7 +61,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                 reader._instrument_class_temporality,
                 reader._instrument_class_aggregation,
             )
-            for reader in sdk_config.metric_readers
+            for reader in metric_readers
         }
         self._async_instruments: list[
             opentelemetry.sdk.metrics._internal.instrument._Asynchronous
@@ -99,7 +98,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                 measurement.context,
             )
         )
-        for reader_storage in self._reader_storages.values():
+        with self._lock:
+            reader_storages = weakref.WeakSet(self._reader_storages.values())
+        for reader_storage in reader_storages:
             reader_storage.consume_measurement(
                 measurement, should_sample_exemplar
             )
@@ -170,3 +171,23 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             for storage in self._reader_storages.values():
                 storage._at_fork_reinit()  # pylint: disable=protected-access
             self._needs_storage_reinit = False
+
+    def add_metric_reader(
+        self, metric_reader: "opentelemetry.sdk.metrics.MetricReader"
+    ) -> None:
+        """Registers a new metric reader."""
+        with self._lock:
+            self._reader_storages[metric_reader] = MetricReaderStorage(
+                self._sdk_config,
+                # pylint: disable-next=protected-access
+                metric_reader._instrument_class_temporality,
+                # pylint: disable-next=protected-access
+                metric_reader._instrument_class_aggregation,
+            )
+
+    def remove_metric_reader(
+        self, metric_reader: "opentelemetry.sdk.metrics.MetricReader"
+    ) -> None:
+        """Unregisters the given metric reader."""
+        with self._lock:
+            self._reader_storages.pop(metric_reader)

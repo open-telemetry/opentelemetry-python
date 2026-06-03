@@ -1,1 +1,0 @@
-`opentelemetry-docker-tests`: add docker-tests coverage of `opentelemetry-exporter-otlp-proto-grpc` and `opentelemetry-exporter-otlp-proto-http` metrics export
