@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add public `opentelemetry.sdk.configuration` module that re-exports `configure_sdk`, `load_config_file`, `OpenTelemetryConfiguration`, and `ConfigurationError`. `load_config_file` is resolved lazily so the file-configuration extras (pyyaml, jsonschema) remain optional for callers that build an `OpenTelemetryConfiguration` programmatically.
