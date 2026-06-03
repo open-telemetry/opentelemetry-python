@@ -683,8 +683,11 @@ class _OTelSDKConfigurator(_BaseConfigurator):
             # Imported lazily so that the SDK does not require the optional
             # file-configuration extras (pyyaml, jsonschema) unless a config
             # file is actually requested.
-            from opentelemetry.sdk._configuration._sdk import configure_sdk
-            from opentelemetry.sdk._configuration.file._loader import (
+            # pylint: disable=import-outside-toplevel
+            from opentelemetry.sdk._configuration._sdk import (  # noqa: PLC0415
+                configure_sdk,
+            )
+            from opentelemetry.sdk._configuration.file._loader import (  # noqa: PLC0415
                 load_config_file,
             )
 
