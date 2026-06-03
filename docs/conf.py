@@ -27,9 +27,9 @@ from django.conf import settings
 settings.configure()
 
 # TODO: Is there a better way to do this ? I have to  do this re-import thing
-# in like a dozen places.
-# Provide AnyValue in opentelemetry.attributes module's namespace so the
-# "AnyValue" forward reference in opentelemetry.util.types._ExtendedAttributes
+# in like a dozen
+# Provide AnyValue to a bunch of module's namespaces.
+# "AnyValue" forward reference in opentelemetry.util.types.AnyValue
 # resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
 # BoundedAttributes (whose __globals__ is the attributes module). Docs-only.
 import opentelemetry.attributes  # noqa: E402
