@@ -29,6 +29,7 @@ from opentelemetry.sdk._configuration.models import (
 from opentelemetry.sdk._configuration.models import (
     TracerProvider as TracerProviderConfig,
 )
+from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
 
 
 _MIN_CONFIG_KWARGS = {"file_format": "1.0-rc.1"}
@@ -44,6 +45,7 @@ class TestConfigureSdk(unittest.TestCase):
     @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
     @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
     @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    # pylint: disable=no-self-use
     def test_calls_each_signal_with_resource(
         self,
         mock_create_resource,
@@ -77,6 +79,7 @@ class TestConfigureSdk(unittest.TestCase):
     @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
     @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
     @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    # pylint: disable=no-self-use
     def test_disabled_skips_everything(
         self,
         mock_create_resource,
@@ -103,6 +106,7 @@ class TestConfigureSdk(unittest.TestCase):
     @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
     @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
     @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    # pylint: disable=no-self-use
     def test_disabled_false_runs_setup(
         self,
         mock_create_resource,
@@ -148,8 +152,6 @@ class TestConfigureSdkIntegration(unittest.TestCase):
         "opentelemetry.sdk._configuration._tracer_provider.trace.set_tracer_provider"
     )
     def test_applies_tracer_provider_globally(self, mock_set_tracer):
-        from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
-
         config = _config(
             tracer_provider=TracerProviderConfig(
                 processors=[
