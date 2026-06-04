@@ -14,6 +14,7 @@
     * Release builds now should pass.
   * Merge the release PR.
   * Merge the PR to main (this can be done separately from [making the release](#making-the-release))
+    * ⚠️ **Merge `core` first**: To avoid a merge queue deadlock with `contrib`, you must merge the `core` PR to `main` first. We skip `alls-green` in the core merge queue ([ci.yml](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/ci.yml)) for this PR, which unblocks `contrib` once merged.
 
 ## Preparing a new patch release
 
