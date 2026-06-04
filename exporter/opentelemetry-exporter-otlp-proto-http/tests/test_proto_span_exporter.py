@@ -247,6 +247,22 @@ class TestOTLPSpanExporter(unittest.TestCase):
             OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}",
         )
 
+    def test_endpoint_base_url_no_path(self):
+        exporter = OTLPSpanExporter(endpoint="http://collector:4318")
+        self.assertEqual(exporter._endpoint, "http://collector:4318/v1/traces")
+
+    def test_endpoint_base_url_trailing_slash(self):
+        exporter = OTLPSpanExporter(endpoint="http://collector:4318/")
+        self.assertEqual(exporter._endpoint, "http://collector:4318/v1/traces")
+
+    def test_endpoint_full_url_unchanged(self):
+        exporter = OTLPSpanExporter(endpoint="http://collector:4318/v1/traces")
+        self.assertEqual(exporter._endpoint, "http://collector:4318/v1/traces")
+
+    def test_endpoint_custom_path_unchanged(self):
+        exporter = OTLPSpanExporter(endpoint="http://collector:4318/custom")
+        self.assertEqual(exporter._endpoint, "http://collector:4318/custom")
+
     @patch.dict(
         "os.environ",
         {

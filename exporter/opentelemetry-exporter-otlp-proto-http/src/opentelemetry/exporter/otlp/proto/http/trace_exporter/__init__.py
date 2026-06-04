@@ -27,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _is_base_endpoint,
     _is_retryable,
     _load_session_from_envvar,
 )
@@ -84,12 +85,19 @@ class OTLPSpanExporter(SpanExporter):
         meter_provider: MeterProvider | None = None,
     ):
         self._shutdown_in_progress = threading.Event()
-        self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
-            _append_trace_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
-        )
+        if endpoint is not None:
+            self._endpoint = (
+                _append_trace_path(endpoint)
+                if _is_base_endpoint(endpoint)
+                else endpoint
+            )
+        else:
+            self._endpoint = environ.get(
+                OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+                _append_trace_path(
+                    environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+                ),
+            )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),

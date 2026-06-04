@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: auto-append signal path when a base URL (no path or path `/`) is passed as `endpoint` to HTTP OTLP exporters

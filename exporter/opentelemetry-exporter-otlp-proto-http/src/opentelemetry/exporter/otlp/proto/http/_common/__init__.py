@@ -3,6 +3,7 @@
 
 from os import environ
 from typing import Literal
+from urllib.parse import urlparse
 
 import requests
 
@@ -10,6 +11,12 @@ from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.util._importlib_metadata import entry_points
+
+
+def _is_base_endpoint(endpoint: str) -> bool:
+    """Return True if endpoint has no signal-specific path (empty path or just '/')."""
+    path = urlparse(endpoint).path
+    return not path or path == "/"
 
 
 def _is_retryable(resp: requests.Response) -> bool:

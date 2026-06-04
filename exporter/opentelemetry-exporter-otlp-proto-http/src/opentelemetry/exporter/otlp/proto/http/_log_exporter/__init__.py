@@ -25,6 +25,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _is_base_endpoint,
     _is_retryable,
     _load_session_from_envvar,
 )
@@ -88,12 +89,19 @@ class OTLPLogExporter(LogRecordExporter):
         meter_provider: MeterProvider | None = None,
     ):
         self._shutdown_is_occuring = threading.Event()
-        self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-            _append_logs_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
-        )
+        if endpoint is not None:
+            self._endpoint = (
+                _append_logs_path(endpoint)
+                if _is_base_endpoint(endpoint)
+                else endpoint
+            )
+        else:
+            self._endpoint = environ.get(
+                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+                _append_logs_path(
+                    environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+                ),
+            )
         # Keeping these as instance variables because they are used in tests
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
