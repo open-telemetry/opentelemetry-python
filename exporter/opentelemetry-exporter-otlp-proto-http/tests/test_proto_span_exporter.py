@@ -263,6 +263,15 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter(endpoint="http://collector:4318/custom")
         self.assertEqual(exporter._endpoint, "http://collector:4318/custom")
 
+    def test_endpoint_base_url_with_query_string(self):
+        exporter = OTLPSpanExporter(
+            endpoint="http://collector:4318?tenant=acme"
+        )
+        self.assertEqual(
+            exporter._endpoint,
+            "http://collector:4318/v1/traces?tenant=acme",
+        )
+
     @patch.dict(
         "os.environ",
         {

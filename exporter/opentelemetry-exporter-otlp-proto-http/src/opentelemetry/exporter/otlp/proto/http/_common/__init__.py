@@ -3,7 +3,7 @@
 
 from os import environ
 from typing import Literal
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 import requests
 
@@ -13,10 +13,17 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.util._importlib_metadata import entry_points
 
 
-def _is_base_endpoint(endpoint: str) -> bool:
-    """Return True if endpoint has no signal-specific path (empty path or just '/')."""
-    path = urlparse(endpoint).path
-    return not path or path == "/"
+def _resolve_endpoint_to_signal(endpoint: str, signal_path: str) -> str:
+    """Append signal_path to endpoint if it has no signal-specific path.
+
+    Uses proper URL manipulation so query strings and fragments are preserved.
+    If the endpoint already has a path other than '/', it is returned unchanged.
+    """
+    parsed = urlparse(endpoint)
+    if not parsed.path or parsed.path == "/":
+        base = parsed.path.rstrip("/")
+        return urlunparse(parsed._replace(path=f"{base}/{signal_path}"))
+    return endpoint
 
 
 def _is_retryable(resp: requests.Response) -> bool:

@@ -27,9 +27,9 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
-    _is_base_endpoint,
     _is_retryable,
     _load_session_from_envvar,
+    _resolve_endpoint_to_signal,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.environment_variables import (
@@ -86,10 +86,8 @@ class OTLPSpanExporter(SpanExporter):
     ):
         self._shutdown_in_progress = threading.Event()
         if endpoint is not None:
-            self._endpoint = (
-                _append_trace_path(endpoint)
-                if _is_base_endpoint(endpoint)
-                else endpoint
+            self._endpoint = _resolve_endpoint_to_signal(
+                endpoint, DEFAULT_TRACES_EXPORT_PATH
             )
         else:
             self._endpoint = environ.get(
