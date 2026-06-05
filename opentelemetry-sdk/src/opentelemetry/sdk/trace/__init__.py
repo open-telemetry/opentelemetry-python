@@ -1263,7 +1263,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent_span_context,
                 sampler=self.sampler,
                 resource=self.resource,
-                attributes=sampling_result.attributes.copy(),
+                attributes=sampling_result.attributes,
                 span_processor=self.span_processor,
                 kind=kind,
                 links=links,
