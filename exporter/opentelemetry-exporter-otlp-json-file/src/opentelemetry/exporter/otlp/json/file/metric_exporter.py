@@ -5,14 +5,14 @@ import logging
 from os import PathLike
 from typing import IO, Any, overload
 
-from opentelemetry.exporter.otlp.json.common.metrics_encoder import (
-    encode_metrics,
-)
-from opentelemetry.exporter.otlp.json.file._internal import (
-    _FileExporter,
+from opentelemetry.exporter.otlp.json.common._internal import (
     _get_aggregation,
     _get_temporality,
 )
+from opentelemetry.exporter.otlp.json.common.metrics_encoder import (
+    encode_metrics,
+)
+from opentelemetry.exporter.otlp.json.file._internal import _FileExporter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     MetricExporter,
