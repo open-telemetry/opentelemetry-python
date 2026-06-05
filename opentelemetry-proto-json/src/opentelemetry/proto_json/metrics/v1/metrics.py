@@ -316,7 +316,7 @@ class Sum(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     data_points: builtins.list[NumberDataPoint] = dataclasses.field(default_factory=builtins.list)
-    aggregation_temporality: typing.Union[AggregationTemporality, builtins.int, None] = 0
+    aggregation_temporality: AggregationTemporality | builtins.int | None = 0
     is_monotonic: typing.Optional[builtins.bool] = False
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
@@ -369,7 +369,7 @@ class Histogram(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     data_points: builtins.list[HistogramDataPoint] = dataclasses.field(default_factory=builtins.list)
-    aggregation_temporality: typing.Union[AggregationTemporality, builtins.int, None] = 0
+    aggregation_temporality: AggregationTemporality | builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -416,7 +416,7 @@ class ExponentialHistogram(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     data_points: builtins.list[ExponentialHistogramDataPoint] = dataclasses.field(default_factory=builtins.list)
-    aggregation_temporality: typing.Union[AggregationTemporality, builtins.int, None] = 0
+    aggregation_temporality: AggregationTemporality | builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """

@@ -18,7 +18,6 @@ from threading import Lock
 from time import time_ns
 from typing import (  # noqa
     Any,
-    Union,
     cast,
     overload,
 )

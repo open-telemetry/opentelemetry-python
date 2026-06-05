@@ -326,7 +326,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
     parent_span_id: typing.Optional[builtins.bytes] = b""
     flags: typing.Optional[builtins.int] = 0
     name: typing.Optional[builtins.str] = ""
-    kind: typing.Union[Span.SpanKind, builtins.int, None] = 0
+    kind: Span.SpanKind | builtins.int | None = 0
     start_time_unix_nano: typing.Optional[builtins.int] = 0
     end_time_unix_nano: typing.Optional[builtins.int] = 0
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
@@ -454,7 +454,7 @@ class Status(opentelemetry.proto_json._json_codec.JsonMessage):
         STATUS_CODE_ERROR = 2
 
     message: typing.Optional[builtins.str] = ""
-    code: typing.Union[Status.StatusCode, builtins.int, None] = 0
+    code: Status.StatusCode | builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """

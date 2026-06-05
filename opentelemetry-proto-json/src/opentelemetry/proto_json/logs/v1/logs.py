@@ -214,7 +214,7 @@ class LogRecord(opentelemetry.proto_json._json_codec.JsonMessage):
 
     time_unix_nano: typing.Optional[builtins.int] = 0
     observed_time_unix_nano: typing.Optional[builtins.int] = 0
-    severity_number: typing.Union[SeverityNumber, builtins.int, None] = 0
+    severity_number: SeverityNumber | builtins.int | None = 0
     severity_text: typing.Optional[builtins.str] = ""
     body: typing.Optional[opentelemetry.proto_json.common.v1.common.AnyValue] = None
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
