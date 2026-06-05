@@ -125,6 +125,9 @@ class TestFileLogExporter(unittest.TestCase):
         with self.assertLogs(_LOGGER_NAME, level="WARNING"):
             self._exporter.shutdown()
 
+    def test_force_flush_returns_true(self):
+        self.assertTrue(self._exporter.force_flush())
+
     def test_export_stream_error(self):
         mock_stream = Mock()
         mock_stream.closed = False

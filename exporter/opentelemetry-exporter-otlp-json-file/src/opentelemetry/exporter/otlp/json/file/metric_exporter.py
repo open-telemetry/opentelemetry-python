@@ -9,7 +9,7 @@ from opentelemetry.exporter.otlp.json.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.json.file._internal import (
-    FileExporter,
+    _FileExporter,
     _get_aggregation,
     _get_temporality,
 )
@@ -75,7 +75,7 @@ class FileMetricExporter(MetricExporter):
             preferred_temporality=_get_temporality(preferred_temporality),
             preferred_aggregation=_get_aggregation(preferred_aggregation),
         )
-        self._exporter: FileExporter[MetricsData] = FileExporter(
+        self._exporter: _FileExporter[MetricsData] = _FileExporter(
             encode=_encode_metrics_to_dict,
             kind="metrics",
             logger=_logger,

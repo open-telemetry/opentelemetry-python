@@ -7,7 +7,7 @@ from os import PathLike
 from typing import IO, Any, overload
 
 from opentelemetry.exporter.otlp.json.common.trace_encoder import encode_spans
-from opentelemetry.exporter.otlp.json.file._internal import FileExporter
+from opentelemetry.exporter.otlp.json.file._internal import _FileExporter
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
@@ -46,7 +46,7 @@ class FileSpanExporter(SpanExporter):
         *,
         stream: IO[str] | None = None,
     ) -> None:
-        self._exporter: FileExporter[Sequence[ReadableSpan]] = FileExporter(
+        self._exporter: _FileExporter[Sequence[ReadableSpan]] = _FileExporter(
             encode=_encode_spans_to_dict,
             kind="spans",
             logger=_logger,

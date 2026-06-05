@@ -7,7 +7,7 @@ from os import PathLike
 from typing import IO, Any, overload
 
 from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
-from opentelemetry.exporter.otlp.json.file._internal import FileExporter
+from opentelemetry.exporter.otlp.json.file._internal import _FileExporter
 from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
@@ -51,8 +51,8 @@ class FileLogExporter(LogRecordExporter):
         *,
         stream: IO[str] | None = None,
     ) -> None:
-        self._exporter: FileExporter[Sequence[ReadableLogRecord]] = (
-            FileExporter(
+        self._exporter: _FileExporter[Sequence[ReadableLogRecord]] = (
+            _FileExporter(
                 encode=_encode_logs_to_dict,
                 kind="logs",
                 logger=_logger,
@@ -72,3 +72,7 @@ class FileLogExporter(LogRecordExporter):
 
     def shutdown(self) -> None:
         self._exporter.shutdown()
+
+    # pylint: disable-next=no-self-use
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True

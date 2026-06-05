@@ -33,7 +33,7 @@ _logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-class FileExporter(Generic[T]):
+class _FileExporter(Generic[T]):
     def __init__(
         self,
         encode: Callable[[T], dict | None],
