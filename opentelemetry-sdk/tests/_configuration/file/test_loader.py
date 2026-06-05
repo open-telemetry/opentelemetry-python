@@ -7,11 +7,27 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from opentelemetry.sdk._configuration._tracer_provider import (
+    create_tracer_provider,
+)
 from opentelemetry.sdk._configuration.file import (
     ConfigurationError,
     load_config_file,
 )
+from opentelemetry.sdk._configuration.models import (
+    BatchSpanProcessor as BatchSpanProcessorConfig,
+)
 from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
+from opentelemetry.sdk._configuration.models import (
+    ParentBasedSampler as ParentBasedSamplerConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    SpanProcessor as SpanProcessorConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    TracerProvider as TracerProviderConfig,
+)
+from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
 
 
 class TestConfigLoader(unittest.TestCase):
@@ -231,3 +247,61 @@ class TestConfigLoader(unittest.TestCase):
             self.assertIn("schema", str(ctx.exception).lower())
         finally:
             os.unlink(temp_path)
+
+
+class TestConfigLoaderEndToEnd(unittest.TestCase):
+    """Smoke-test the full YAML -> typed config -> SDK object pipeline.
+
+    Unit tests in test_conversion.py exercise the dict-to-dataclass
+    conversion in isolation; these tests verify it composes with the
+    real loader and downstream factory functions on a representative
+    nested configuration.
+    """
+
+    _YAML = """
+file_format: '1.0-rc.1'
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          console: {}
+  sampler:
+    parent_based:
+      root:
+        trace_id_ratio_based: {ratio: 0.5}
+"""
+
+    def _load(self) -> OpenTelemetryConfiguration:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", delete=False
+        ) as fh:
+            fh.write(self._YAML)
+            path = fh.name
+        try:
+            return load_config_file(path)
+        finally:
+            os.unlink(path)
+
+    def test_nested_fields_are_typed_dataclasses(self):
+        config = self._load()
+
+        self.assertIsInstance(config.tracer_provider, TracerProviderConfig)
+        self.assertIsInstance(
+            config.tracer_provider.sampler.parent_based,
+            ParentBasedSamplerConfig,
+        )
+        # Lists of dataclasses are converted element-wise.
+        self.assertIsInstance(
+            config.tracer_provider.processors[0], SpanProcessorConfig
+        )
+        self.assertIsInstance(
+            config.tracer_provider.processors[0].batch,
+            BatchSpanProcessorConfig,
+        )
+
+    def test_typed_config_feeds_factory_function(self):
+        config = self._load()
+
+        provider = create_tracer_provider(config.tracer_provider)
+
+        self.assertIsInstance(provider, SdkTracerProvider)
