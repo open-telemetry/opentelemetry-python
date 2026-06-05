@@ -7,6 +7,7 @@ import re
 import types as python_types
 import typing
 import warnings
+from collections.abc import Iterator, Mapping, Sequence
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -82,7 +83,7 @@ class Span(abc.ABC):
 
     @abc.abstractmethod
     def set_attributes(
-        self, attributes: typing.Mapping[str, types.AttributeValue]
+        self, attributes: Mapping[str, types.AttributeValue]
     ) -> None:
         """Sets Attributes.
 
@@ -232,7 +233,7 @@ class TraceFlags(int):
 DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()
 
 
-class TraceState(typing.Mapping[str, str]):
+class TraceState(Mapping[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
@@ -245,7 +246,7 @@ class TraceState(typing.Mapping[str, str]):
 
     def __init__(
         self,
-        entries: typing.Sequence[tuple[str, str]] | None = None,
+        entries: Sequence[tuple[str, str]] | None = None,
     ) -> None:
         self._dict = {}  # type: dict[str, str]
         if entries is None:
@@ -274,7 +275,7 @@ class TraceState(typing.Mapping[str, str]):
     def __getitem__(self, key: str) -> str:
         return self._dict[key]
 
-    def __iter__(self) -> typing.Iterator[str]:
+    def __iter__(self) -> Iterator[str]:
         return iter(self._dict)
 
     def __len__(self) -> int:
@@ -536,7 +537,7 @@ class NonRecordingSpan(Span):
         pass
 
     def set_attributes(
-        self, attributes: typing.Mapping[str, types.AttributeValue]
+        self, attributes: Mapping[str, types.AttributeValue]
     ) -> None:
         pass
 
