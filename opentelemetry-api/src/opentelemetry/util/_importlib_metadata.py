@@ -27,14 +27,16 @@ from typing import Any
 
 
 def _as_entry_points(eps: Any) -> EntryPoints:
+    # Python versions greater than 3.11 return EntryPoints.
     if isinstance(eps, EntryPoints):
         return eps
-    # Python 3.10 entry_points() returns a dict-like SelectableGroups object.
+    # In Python 3.10 and 3.11 entry_points() returns
+    # a dict-like SelectableGroups object.
     # Use dict.values() instead of eps.values() to avoid the DeprecationWarning
     # that SelectableGroups raises when calling .values().
     if isinstance(eps, dict):
         return EntryPoints(itertools.chain.from_iterable(dict.values(eps)))
-    # Fallback for all other types
+    # This case should be unreachable, but is included as a fallback.
     return EntryPoints(
         ep for group in eps.groups for ep in eps.select(group=group)
     )
