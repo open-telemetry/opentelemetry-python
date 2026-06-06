@@ -819,13 +819,14 @@ class LoggerProvider(APILoggerProvider):
         self._logger_cache_lock = Lock()
         self._active_loggers: WeakSet[Logger] = WeakSet()
         self._active_loggers_lock = Lock()
-        weak_at_fork = WeakMethod(self._at_fork_update_resource)
+        if hasattr(os, "register_at_fork"):
+            weak_at_fork = WeakMethod(self._at_fork_update_resource)
 
-        def _after_in_child() -> None:
-            if at_fork := weak_at_fork():
-                at_fork()
+            def _after_in_child() -> None:
+                if at_fork := weak_at_fork():
+                    at_fork()
 
-        os.register_at_fork(after_in_child=_after_in_child)
+            os.register_at_fork(after_in_child=_after_in_child)
 
     def _at_fork_update_resource(self) -> None:
         self.update_resource(_get_process_sensitive_resource())

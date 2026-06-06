@@ -87,8 +87,8 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertIs(new_logger.resource, logger_provider.resource)
 
     @unittest.skipUnless(
-        hasattr(os, "fork"),
-        "requires os.fork",
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "requires os.fork and os.register_at_fork",
     )
     def test_logger_provider_updates_process_sensitive_resource_after_fork(
         self,
