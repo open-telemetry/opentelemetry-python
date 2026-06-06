@@ -14,8 +14,8 @@ logs as compact JSON Lines to a file, an arbitrary ``IO[str]`` stream or
 
 Three exporters are provided:
 
-- :class:`FileSpanExporter` - traces
-- :class:`FileMetricExporter` - metrics
+- :class:`~opentelemetry.exporter.otlp.json.file.trace_exporter.FileSpanExporter` - traces
+- :class:`~opentelemetry.exporter.otlp.json.file.metric_exporter.FileMetricExporter` - metrics
 - :class:`~opentelemetry.exporter.otlp.json.file._log_exporter.FileLogExporter` - logs
 
 Each exporter accepts a destination in one of three ways:
