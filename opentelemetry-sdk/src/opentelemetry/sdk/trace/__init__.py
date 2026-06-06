@@ -1352,7 +1352,7 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracers_lock = threading.Lock()
         self._tracers: dict[InstrumentationScope, Tracer] = {}
         if hasattr(os, "register_at_fork"):
-            weak_at_fork = weakref.WeakMethod(self._at_fork_update_resource)
+            weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
 
             def _after_in_child() -> None:
                 if at_fork := weak_at_fork():
@@ -1360,7 +1360,8 @@ class TracerProvider(trace_api.TracerProvider):
 
             os.register_at_fork(after_in_child=_after_in_child)
 
-    def _at_fork_update_resource(self) -> None:
+    def _at_fork_reinit(self) -> None:
+        self._tracers_lock = threading.Lock()
         self.update_resource(_get_process_sensitive_resource())
 
     def _set_tracer_configurator(

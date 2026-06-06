@@ -820,7 +820,7 @@ class LoggerProvider(APILoggerProvider):
         self._active_loggers: WeakSet[Logger] = WeakSet()
         self._active_loggers_lock = Lock()
         if hasattr(os, "register_at_fork"):
-            weak_at_fork = WeakMethod(self._at_fork_update_resource)
+            weak_at_fork = WeakMethod(self._at_fork_reinit)
 
             def _after_in_child() -> None:
                 if at_fork := weak_at_fork():
@@ -828,7 +828,9 @@ class LoggerProvider(APILoggerProvider):
 
             os.register_at_fork(after_in_child=_after_in_child)
 
-    def _at_fork_update_resource(self) -> None:
+    def _at_fork_reinit(self) -> None:
+        self._logger_cache_lock = Lock()
+        self._active_loggers_lock = Lock()
         self.update_resource(_get_process_sensitive_resource())
 
     @property
@@ -848,7 +850,7 @@ class LoggerProvider(APILoggerProvider):
         """
         with self._active_loggers_lock:
             self._resource = self._resource.merge(resource)
-            for logger in self._active_loggers:
+            for logger in list(self._active_loggers):
                 # pylint: disable-next=protected-access
                 logger._set_resource(self._resource)
 
@@ -932,7 +934,7 @@ class LoggerProvider(APILoggerProvider):
         """
         self._logger_configurator = logger_configurator
         with self._active_loggers_lock:
-            for logger in self._active_loggers:
+            for logger in list(self._active_loggers):
                 # pylint: disable-next=protected-access
                 logger._set_logger_config(
                     self._apply_logger_configurator(

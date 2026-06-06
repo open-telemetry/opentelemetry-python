@@ -531,7 +531,7 @@ class MeterProvider(APIMeterProvider):
             metric_reader._set_meter_provider(self)
 
         if hasattr(os, "register_at_fork"):
-            weak_at_fork = weakref.WeakMethod(self._at_fork_update_resource)
+            weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
 
             def _after_in_child() -> None:
                 if at_fork := weak_at_fork():
@@ -539,7 +539,10 @@ class MeterProvider(APIMeterProvider):
 
             os.register_at_fork(after_in_child=_after_in_child)
 
-    def _at_fork_update_resource(self) -> None:
+    def _at_fork_reinit(self) -> None:
+        self._lock = Lock()
+        self._meter_lock = Lock()
+        type(self)._all_metric_readers_lock = Lock()
         self.update_resource(_get_process_sensitive_resource())
 
     def _set_meter_configurator(
