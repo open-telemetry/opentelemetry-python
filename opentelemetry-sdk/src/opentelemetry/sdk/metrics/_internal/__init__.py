@@ -560,7 +560,8 @@ class MeterProvider(APIMeterProvider):
                 )
 
     def update_resource(self, resource: Resource) -> None:
-        """Merge a :class:`Resource` into this `MeterProvider`'s resource.
+        """Merge a :class:`opentelemetry.sdk.resources.Resource` into this
+        `MeterProvider`'s resource.
 
         Args:
             resource: The resource to merge into this `MeterProvider`'s

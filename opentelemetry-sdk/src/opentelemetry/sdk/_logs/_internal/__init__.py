@@ -836,10 +836,11 @@ class LoggerProvider(APILoggerProvider):
         return self._resource
 
     def update_resource(self, resource: Resource) -> None:
-        """Merge a :class:`Resource` into this `LoggerProvider`'s resource.
+        """Merge a :class:`opentelemetry.sdk.resources.Resource` into this
+        `LoggerProvider`'s resource.
 
         The resource of all existing :class:`Logger` instances created by this
-        provider is also updated to the merged :class:`Resource`.
+        provider is also updated to the merged :class:`opentelemetry.sdk.resources.Resource`.
 
         Args:
             resource: The resource to merge into this `LoggerProvider`'s

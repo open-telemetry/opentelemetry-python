@@ -547,7 +547,7 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     return detectors
 
 
-def _get_process_sensitive_resource() -> Resource:
+def _get_process_sensitive_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
     return get_aggregated_resources(
         [
             detector

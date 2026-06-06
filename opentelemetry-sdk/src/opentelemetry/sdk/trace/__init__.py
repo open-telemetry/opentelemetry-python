@@ -1385,10 +1385,11 @@ class TracerProvider(trace_api.TracerProvider):
         return self._resource
 
     def update_resource(self, resource: Resource) -> None:
-        """Merge a :class:`Resource` into this `TracerProvider`'s resource.
+        """Merge a :class:`opentelemetry.sdk.resources.Resource` into this
+        `TracerProvider`'s resource.
 
         The resource of all existing :class:`Tracer` instances created by this
-        provider is also updated to the merged :class:`Resource`.
+        provider is also updated to the merged :class:`opentelemetry.sdk.resources.Resource`.
 
         Args:
             resource: The resource to merge into this `TracerProvider`'s
