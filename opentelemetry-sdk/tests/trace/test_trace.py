@@ -6,11 +6,15 @@
 
 import copy
 import dataclasses
+import json
+import os
 import shutil
 import subprocess
+import sys
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
+from pathlib import Path
 from random import randint
 from time import time_ns
 from unittest import mock
@@ -24,6 +28,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SDK_DISABLED,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -162,6 +167,58 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertEqual(
             span_processor, tracer_provider._active_span_processor
         )
+
+    @unittest.skipUnless(
+        hasattr(os, "fork"),
+        "requires os.fork",
+    )
+    def test_tracer_provider_updates_process_sensitive_resource_after_fork(
+        self,
+    ):
+        script_path = (
+            Path(__file__).parent
+            / "scripts"
+            / "tracer_provider_resource_after_fork.py"
+        )
+
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            check=False,
+            text=True,
+            env={
+                **os.environ,
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "process",
+            },
+        )
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"stdout: {result.stdout}\nstderr: {result.stderr}",
+        )
+        payload = json.loads(result.stdout)
+        child_payload = payload["child"]
+
+        self.assertEqual(payload["parent_resource_pid"], payload["parent_pid"])
+        self.assertEqual(payload["parent_tracer_pid"], payload["parent_pid"])
+        self.assertEqual(
+            payload["parent_resource_pid_after_fork"], payload["parent_pid"]
+        )
+        self.assertEqual(
+            payload["parent_tracer_pid_after_fork"], payload["parent_pid"]
+        )
+
+        self.assertNotEqual(child_payload["child_pid"], payload["parent_pid"])
+        self.assertEqual(
+            child_payload["provider_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(
+            child_payload["cached_tracer_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(
+            child_payload["new_tracer_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(child_payload["span_pid"], child_payload["child_pid"])
 
     def test_get_tracer_sdk(self):
         tracer_provider = trace.TracerProvider()
@@ -650,6 +707,32 @@ class TestSpanCreation(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")
         self.assertIs(span.resource, resource)
+
+    def test_update_resource(self):
+        initial_resource = resources.Resource({"one": "one", "two": "old"})
+        updating_resource = resources.Resource({"two": "new", "three": "three"})
+        tracer_provider = trace.TracerProvider(resource=initial_resource)
+        tracer = tracer_provider.get_tracer(__name__)
+        other_tracer = tracer_provider.get_tracer("other")
+        original_span = tracer.start_span("original")
+
+        tracer_provider.update_resource(updating_resource)
+
+        self.assertEqual(
+            tracer_provider.resource.attributes,
+            {"one": "one", "two": "new", "three": "three"},
+        )
+        self.assertIs(tracer.resource, tracer_provider.resource)
+        self.assertIs(other_tracer.resource, tracer_provider.resource)
+        self.assertIs(original_span.resource, initial_resource)
+
+        updated_span = tracer.start_span("updated")
+        self.assertIs(updated_span.resource, tracer_provider.resource)
+
+        updated_tracer = tracer_provider.get_tracer("new")
+        self.assertIs(updated_tracer.resource, tracer_provider.resource)
+        new_span = updated_tracer.start_span("new")
+        self.assertIs(new_span.resource, tracer_provider.resource)
 
     def test_default_span_resource(self):
         tracer_provider = trace.TracerProvider()

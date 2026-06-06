@@ -43,6 +43,7 @@ from opentelemetry.sdk.resources import (
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
+    _get_process_sensitive_resource,
     _HostResourceDetector,
     get_aggregated_resources,
 )
@@ -56,6 +57,27 @@ except ImportError:
     psutil = None
 
 
+class DefaultResourceDetector(ResourceDetector):
+    def detect(self) -> Resource:
+        return Resource.get_empty()
+
+
+class ProcessSensitivityResourceDetector(ResourceDetector):
+    def __init__(
+        self, resource: Resource, process_sensitive: bool = False
+    ) -> None:
+        super().__init__()
+        self.resource = resource
+        self.process_sensitive = process_sensitive
+
+    def detect(self) -> Resource:
+        return self.resource
+
+    def is_process_sensitive(self) -> bool:
+        return self.process_sensitive
+
+
+# pylint: disable-next=too-many-public-methods
 class TestResources(unittest.TestCase):
     def setUp(self) -> None:
         environ[OTEL_RESOURCE_ATTRIBUTES] = ""
@@ -417,6 +439,42 @@ class TestResources(unittest.TestCase):
         resource_detector.raise_on_error = True
         self.assertRaises(
             Exception, get_aggregated_resources, [resource_detector]
+        )
+
+    def test_resource_detector_is_not_process_sensitive_by_default(self):
+        self.assertFalse(DefaultResourceDetector().is_process_sensitive())
+
+    def test_process_resource_detector_is_process_sensitive(self):
+        self.assertTrue(ProcessResourceDetector().is_process_sensitive())
+
+    @patch("opentelemetry.sdk.resources._build_resource_detectors")
+    def test_get_process_sensitive_resource(self, build_resource_detectors_mock):
+        build_resource_detectors_mock.return_value = [
+            ProcessSensitivityResourceDetector(Resource({"ignored": "ignored"})),
+            ProcessSensitivityResourceDetector(
+                Resource({"one": "one", "two": "old"}), process_sensitive=True
+            ),
+            ProcessSensitivityResourceDetector(
+                Resource({"two": "new", "three": "three"}),
+                process_sensitive=True,
+            ),
+        ]
+
+        self.assertEqual(
+            _get_process_sensitive_resource(),
+            Resource({"one": "one", "two": "new", "three": "three"}),
+        )
+
+    @patch("opentelemetry.sdk.resources._build_resource_detectors")
+    def test_get_process_sensitive_resource_empty(
+        self, build_resource_detectors_mock
+    ):
+        build_resource_detectors_mock.return_value = [
+            ProcessSensitivityResourceDetector(Resource({"ignored": "ignored"})),
+        ]
+
+        self.assertEqual(
+            _get_process_sensitive_resource(), Resource.get_empty()
         )
 
     @patch("opentelemetry.sdk.resources.logger")
