@@ -38,8 +38,9 @@ def main() -> None:
     child_payload = os.read(read_fd, 4096)
     os.close(read_fd)
     _, status = os.waitpid(pid, 0)
-    if status != 0:
-        raise SystemExit(status)
+    exit_code = os.waitstatus_to_exitcode(status)
+    if exit_code != 0:
+        raise SystemExit(exit_code)
 
     print(
         json.dumps(
