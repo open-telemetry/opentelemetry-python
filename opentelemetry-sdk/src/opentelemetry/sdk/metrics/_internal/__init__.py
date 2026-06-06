@@ -566,7 +566,9 @@ class MeterProvider(APIMeterProvider):
                 current resource.
         """
         with self._meter_lock:
-            self._sdk_config.resource = self._sdk_config.resource.merge(resource)
+            self._sdk_config.resource = self._sdk_config.resource.merge(
+                resource
+            )
 
     def _apply_meter_configurator(
         self, instrumentation_scope: InstrumentationScope

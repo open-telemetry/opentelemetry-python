@@ -42,9 +42,7 @@ def main() -> None:
             "exported_resource_pids": [
                 log.resource.attributes[PROCESS_PID] for log in finished_logs
             ],
-            "log_bodies": sorted(
-                log.log_record.body for log in finished_logs
-            ),
+            "log_bodies": sorted(log.log_record.body for log in finished_logs),
         }
         os.write(write_fd, json.dumps(payload).encode())
         os.close(write_fd)
@@ -74,7 +72,7 @@ def main() -> None:
                 "child": json.loads(child_payload.decode()),
             }
         ),
-        flush=True
+        flush=True,
     )
 
 

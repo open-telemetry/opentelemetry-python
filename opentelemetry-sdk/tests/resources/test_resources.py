@@ -448,9 +448,13 @@ class TestResources(unittest.TestCase):
         self.assertTrue(ProcessResourceDetector().is_process_sensitive())
 
     @patch("opentelemetry.sdk.resources._build_resource_detectors")
-    def test_get_process_sensitive_resource(self, build_resource_detectors_mock):
+    def test_get_process_sensitive_resource(
+        self, build_resource_detectors_mock
+    ):
         build_resource_detectors_mock.return_value = [
-            ProcessSensitivityResourceDetector(Resource({"ignored": "ignored"})),
+            ProcessSensitivityResourceDetector(
+                Resource({"ignored": "ignored"})
+            ),
             ProcessSensitivityResourceDetector(
                 Resource({"one": "one", "two": "old"}), process_sensitive=True
             ),
@@ -470,7 +474,9 @@ class TestResources(unittest.TestCase):
         self, build_resource_detectors_mock
     ):
         build_resource_detectors_mock.return_value = [
-            ProcessSensitivityResourceDetector(Resource({"ignored": "ignored"})),
+            ProcessSensitivityResourceDetector(
+                Resource({"ignored": "ignored"})
+            ),
         ]
 
         self.assertEqual(

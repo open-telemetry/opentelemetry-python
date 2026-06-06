@@ -710,7 +710,9 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_update_resource(self):
         initial_resource = resources.Resource({"one": "one", "two": "old"})
-        updating_resource = resources.Resource({"two": "new", "three": "three"})
+        updating_resource = resources.Resource(
+            {"two": "new", "three": "three"}
+        )
         tracer_provider = trace.TracerProvider(resource=initial_resource)
         tracer = tracer_provider.get_tracer(__name__)
         other_tracer = tracer_provider.get_tracer("other")

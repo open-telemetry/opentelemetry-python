@@ -83,7 +83,7 @@ def main() -> None:
                 "child": json.loads(child_payload.decode()),
             }
         ),
-        flush=True
+        flush=True,
     )
 
 
