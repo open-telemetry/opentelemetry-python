@@ -83,6 +83,9 @@ def _clean_attribute(
                     continue
             elif max_len is not None and isinstance(element, str):
                 element = element[:max_len]
+            elif element == None:
+                cleaned_seq.append(None)
+                continue
 
             element_type = type(element)
             # Reject attribute value if sequence contains a value with an incompatible type.
