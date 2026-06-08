@@ -91,6 +91,19 @@ def test_simple_start_span_with_tracer_configurator_rules(
     )
 
 
+@pytest.mark.parametrize("num_attrs", [1, 10, 50, 128])
+def test_set_attribute(benchmark, num_attrs):
+    attrs = {f"key{i}": f"value{i}" for i in range(num_attrs)}
+
+    def benchmark_set_attribute():
+        span = tracer.start_span("benchmarkedSpan")
+        for key, value in attrs.items():
+            span.set_attribute(key, value)
+        span.end()
+
+    benchmark(benchmark_set_attribute)
+
+
 def test_simple_start_as_current_span(benchmark):
     def benchmark_start_as_current_span():
         with tracer.start_as_current_span(
