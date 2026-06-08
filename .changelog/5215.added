@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add `_resolve_component` shared utility for declarative config plugin loading, reducing boilerplate in exporter factory functions
