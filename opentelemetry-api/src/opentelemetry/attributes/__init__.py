@@ -83,7 +83,7 @@ def _clean_attribute(
                     continue
             elif max_len is not None and isinstance(element, str):
                 element = element[:max_len]
-            elif element == None:
+            elif element is None:
                 cleaned_seq.append(None)
                 continue
 
