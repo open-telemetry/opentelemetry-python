@@ -34,7 +34,8 @@ def _type_name(t):
 
 _logger = logging.getLogger(__name__)
 
-
+# pylint: disable=too-many-return-statements
+# pylint: disable=too-many-branches
 def _clean_attribute(
     key: str, value: types.AttributeValue, max_len: int | None
 ) -> types.AttributeValue | tuple[str | int | float, ...] | None:
