@@ -65,7 +65,7 @@ def _clean_attribute(
             except UnicodeDecodeError:
                 _logger.warning("Byte attribute could not be decoded.")
                 return None
-        elif max_len is not None and isinstance(value, str):
+        if max_len is not None and isinstance(value, str):
             value = value[:max_len]
         return value
 
@@ -81,7 +81,7 @@ def _clean_attribute(
                     _logger.warning("Byte attribute could not be decoded.")
                     cleaned_seq.append(None)
                     continue
-            elif max_len is not None and isinstance(element, str):
+            if max_len is not None and isinstance(element, str):
                 element = element[:max_len]
             elif element is None:
                 cleaned_seq.append(None)
