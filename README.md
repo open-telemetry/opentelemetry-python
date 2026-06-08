@@ -115,7 +115,7 @@ For more information about the maintainer role, see the [community repository](h
 - [Dylan Russell](https://github.com/dylanrussell), Google
 - [Emídio Neto](https://github.com/emdneto), Independent
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
-- [Liudmila Molkova](https://github.com/lmolkova), Grafana Labs
+- [Liudmila Molkova](https://github.com/lmolkova), Google
 - [Lukas Hering](https://github.com/herin049), Oracle
 - [Mike Goldsmith](https://github.com/MikeGoldsmith), Honeycomb
 - [Pablo Collins](https://github.com/pmcollins), Splunk
