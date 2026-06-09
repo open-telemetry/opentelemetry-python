@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import abc
 import logging
 import re
@@ -71,7 +73,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_span_context(self) -> "SpanContext":
+    def get_span_context(self) -> SpanContext:
         """Gets the span's SpanContext.
 
         Get an immutable, serializable identifier for this span that can be
@@ -123,7 +125,7 @@ class Span(abc.ABC):
 
     def add_link(  # pylint: disable=no-self-use
         self,
-        context: "SpanContext",
+        context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
         """Adds a `Link`.
@@ -180,7 +182,7 @@ class Span(abc.ABC):
     ) -> None:
         """Records an exception as a span event."""
 
-    def __enter__(self) -> "Span":
+    def __enter__(self) -> Span:
         """Invoked when `Span` is used as a context manager.
 
         Returns the `Span` itself.
@@ -218,7 +220,7 @@ class TraceFlags(int):
     RANDOM_TRACE_ID = 0x02
 
     @classmethod
-    def get_default(cls) -> "TraceFlags":
+    def get_default(cls) -> TraceFlags:
         return cls(cls.DEFAULT)
 
     @property
@@ -288,7 +290,7 @@ class TraceState(Mapping[str, str]):
         ]
         return str(pairs)
 
-    def add(self, key: str, value: str) -> "TraceState":
+    def add(self, key: str, value: str) -> TraceState:
         """Adds a key-value pair to tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
 
@@ -319,7 +321,7 @@ class TraceState(Mapping[str, str]):
         new_state = [(key, value)] + list(self._dict.items())
         return TraceState(new_state)
 
-    def update(self, key: str, value: str) -> "TraceState":
+    def update(self, key: str, value: str) -> TraceState:
         """Updates a key-value pair in tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
 
@@ -344,7 +346,7 @@ class TraceState(Mapping[str, str]):
         new_state = [(key, value), *prev_state.items()]
         return TraceState(new_state)
 
-    def delete(self, key: str) -> "TraceState":
+    def delete(self, key: str) -> TraceState:
         """Deletes a key-value from tracestate.
 
         Args:
@@ -375,7 +377,7 @@ class TraceState(Mapping[str, str]):
         return ",".join(key + "=" + value for key, value in self._dict.items())
 
     @classmethod
-    def from_header(cls, header_list: list[str]) -> "TraceState":
+    def from_header(cls, header_list: list[str]) -> TraceState:
         """Parses one or more w3c tracestate header into a TraceState.
 
         Args:
@@ -414,7 +416,7 @@ class TraceState(Mapping[str, str]):
         return cls(list(pairs.items()))
 
     @classmethod
-    def get_default(cls) -> "TraceState":
+    def get_default(cls) -> TraceState:
         return cls()
 
     def keys(self) -> typing.KeysView[str]:
@@ -451,9 +453,9 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
         trace_id: int,
         span_id: int,
         is_remote: bool,
-        trace_flags: typing.Optional["TraceFlags"] = DEFAULT_TRACE_OPTIONS,
-        trace_state: typing.Optional["TraceState"] = DEFAULT_TRACE_STATE,
-    ) -> "SpanContext":
+        trace_flags: TraceFlags | None = DEFAULT_TRACE_OPTIONS,
+        trace_state: TraceState | None = DEFAULT_TRACE_STATE,
+    ) -> SpanContext:
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
         if trace_state is None:
@@ -471,7 +473,7 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
 
     def __getnewargs__(
         self,
-    ) -> tuple[int, int, bool, "TraceFlags", "TraceState"]:
+    ) -> tuple[int, int, bool, TraceFlags, TraceState]:
         return (
             self.trace_id,
             self.span_id,
@@ -493,11 +495,11 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
         return self[2]  # pylint: disable=unsubscriptable-object
 
     @property
-    def trace_flags(self) -> "TraceFlags":
+    def trace_flags(self) -> TraceFlags:
         return self[3]  # pylint: disable=unsubscriptable-object
 
     @property
-    def trace_state(self) -> "TraceState":
+    def trace_state(self) -> TraceState:
         return self[4]  # pylint: disable=unsubscriptable-object
 
     @property
@@ -524,10 +526,10 @@ class NonRecordingSpan(Span):
     All operations are no-op except context propagation.
     """
 
-    def __init__(self, context: "SpanContext") -> None:
+    def __init__(self, context: SpanContext) -> None:
         self._context = context
 
-    def get_span_context(self) -> "SpanContext":
+    def get_span_context(self) -> SpanContext:
         return self._context
 
     def is_recording(self) -> bool:
@@ -554,7 +556,7 @@ class NonRecordingSpan(Span):
 
     def add_link(
         self,
-        context: "SpanContext",
+        context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
         pass

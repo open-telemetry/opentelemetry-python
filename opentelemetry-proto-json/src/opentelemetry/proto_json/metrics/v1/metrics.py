@@ -86,9 +86,9 @@ class ResourceMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ResourceMetrics
     """
 
-    resource: typing.Optional[opentelemetry.proto_json.resource.v1.resource.Resource] = None
+    resource: opentelemetry.proto_json.resource.v1.resource.Resource | None = None
     scope_metrics: builtins.list[ScopeMetrics] = dataclasses.field(default_factory=builtins.list)
-    schema_url: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -138,9 +138,9 @@ class ScopeMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ScopeMetrics
     """
 
-    scope: typing.Optional[opentelemetry.proto_json.common.v1.common.InstrumentationScope] = None
+    scope: opentelemetry.proto_json.common.v1.common.InstrumentationScope | None = None
     metrics: builtins.list[Metric] = dataclasses.field(default_factory=builtins.list)
-    schema_url: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -190,14 +190,14 @@ class Metric(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message Metric
     """
 
-    name: typing.Optional[builtins.str] = ""
-    description: typing.Optional[builtins.str] = ""
-    unit: typing.Optional[builtins.str] = ""
-    gauge: typing.Optional[Gauge] = None
-    sum: typing.Optional[Sum] = None
-    histogram: typing.Optional[Histogram] = None
-    exponential_histogram: typing.Optional[ExponentialHistogram] = None
-    summary: typing.Optional[Summary] = None
+    name: builtins.str | None = ""
+    description: builtins.str | None = ""
+    unit: builtins.str | None = ""
+    gauge: Gauge | None = None
+    sum: Sum | None = None
+    histogram: Histogram | None = None
+    exponential_histogram: ExponentialHistogram | None = None
+    summary: Summary | None = None
     metadata: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
@@ -317,7 +317,7 @@ class Sum(opentelemetry.proto_json._json_codec.JsonMessage):
 
     data_points: builtins.list[NumberDataPoint] = dataclasses.field(default_factory=builtins.list)
     aggregation_temporality: AggregationTemporality | builtins.int | None = 0
-    is_monotonic: typing.Optional[builtins.bool] = False
+    is_monotonic: builtins.bool | None = False
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -504,12 +504,12 @@ class NumberDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-    start_time_unix_nano: typing.Optional[builtins.int] = 0
-    time_unix_nano: typing.Optional[builtins.int] = 0
-    as_double: typing.Optional[builtins.float] = None
-    as_int: typing.Optional[builtins.int] = None
+    start_time_unix_nano: builtins.int | None = 0
+    time_unix_nano: builtins.int | None = 0
+    as_double: builtins.float | None = None
+    as_int: builtins.int | None = None
     exemplars: builtins.list[Exemplar] = dataclasses.field(default_factory=builtins.list)
-    flags: typing.Optional[builtins.int] = 0
+    flags: builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -576,16 +576,16 @@ class HistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-    start_time_unix_nano: typing.Optional[builtins.int] = 0
-    time_unix_nano: typing.Optional[builtins.int] = 0
-    count: typing.Optional[builtins.int] = 0
-    sum: typing.Optional[builtins.float] = None
+    start_time_unix_nano: builtins.int | None = 0
+    time_unix_nano: builtins.int | None = 0
+    count: builtins.int | None = 0
+    sum: builtins.float | None = None
     bucket_counts: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
     explicit_bounds: builtins.list[builtins.float] = dataclasses.field(default_factory=builtins.list)
     exemplars: builtins.list[Exemplar] = dataclasses.field(default_factory=builtins.list)
-    flags: typing.Optional[builtins.int] = 0
-    min: typing.Optional[builtins.float] = None
-    max: typing.Optional[builtins.float] = None
+    flags: builtins.int | None = 0
+    min: builtins.float | None = None
+    max: builtins.float | None = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -674,7 +674,7 @@ class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMes
         Generated from protobuf message Buckets
         """
 
-        offset: typing.Optional[builtins.int] = 0
+        offset: builtins.int | None = 0
         bucket_counts: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
         def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
@@ -714,19 +714,19 @@ class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMes
             return cls(**_args)
 
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-    start_time_unix_nano: typing.Optional[builtins.int] = 0
-    time_unix_nano: typing.Optional[builtins.int] = 0
-    count: typing.Optional[builtins.int] = 0
-    sum: typing.Optional[builtins.float] = None
-    scale: typing.Optional[builtins.int] = 0
-    zero_count: typing.Optional[builtins.int] = 0
-    positive: typing.Optional[ExponentialHistogramDataPoint.Buckets] = None
-    negative: typing.Optional[ExponentialHistogramDataPoint.Buckets] = None
-    flags: typing.Optional[builtins.int] = 0
+    start_time_unix_nano: builtins.int | None = 0
+    time_unix_nano: builtins.int | None = 0
+    count: builtins.int | None = 0
+    sum: builtins.float | None = None
+    scale: builtins.int | None = 0
+    zero_count: builtins.int | None = 0
+    positive: ExponentialHistogramDataPoint.Buckets | None = None
+    negative: ExponentialHistogramDataPoint.Buckets | None = None
+    flags: builtins.int | None = 0
     exemplars: builtins.list[Exemplar] = dataclasses.field(default_factory=builtins.list)
-    min: typing.Optional[builtins.float] = None
-    max: typing.Optional[builtins.float] = None
-    zero_threshold: typing.Optional[builtins.float] = 0.0
+    min: builtins.float | None = None
+    max: builtins.float | None = None
+    zero_threshold: builtins.float | None = 0.0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -828,8 +828,8 @@ class SummaryDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
         Generated from protobuf message ValueAtQuantile
         """
 
-        quantile: typing.Optional[builtins.float] = 0.0
-        value: typing.Optional[builtins.float] = 0.0
+        quantile: builtins.float | None = 0.0
+        value: builtins.float | None = 0.0
 
         def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
             """
@@ -867,12 +867,12 @@ class SummaryDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
             return cls(**_args)
 
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-    start_time_unix_nano: typing.Optional[builtins.int] = 0
-    time_unix_nano: typing.Optional[builtins.int] = 0
-    count: typing.Optional[builtins.int] = 0
-    sum: typing.Optional[builtins.float] = 0.0
+    start_time_unix_nano: builtins.int | None = 0
+    time_unix_nano: builtins.int | None = 0
+    count: builtins.int | None = 0
+    sum: builtins.float | None = 0.0
     quantile_values: builtins.list[SummaryDataPoint.ValueAtQuantile] = dataclasses.field(default_factory=builtins.list)
-    flags: typing.Optional[builtins.int] = 0
+    flags: builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -939,11 +939,11 @@ class Exemplar(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     filtered_attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-    time_unix_nano: typing.Optional[builtins.int] = 0
-    as_double: typing.Optional[builtins.float] = None
-    as_int: typing.Optional[builtins.int] = None
-    span_id: typing.Optional[builtins.bytes] = b""
-    trace_id: typing.Optional[builtins.bytes] = b""
+    time_unix_nano: builtins.int | None = 0
+    as_double: builtins.float | None = None
+    as_int: builtins.int | None = None
+    span_id: builtins.bytes | None = b""
+    trace_id: builtins.bytes | None = b""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """

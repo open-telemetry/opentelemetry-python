@@ -108,9 +108,9 @@ class ResourceLogs(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ResourceLogs
     """
 
-    resource: typing.Optional[opentelemetry.proto_json.resource.v1.resource.Resource] = None
+    resource: opentelemetry.proto_json.resource.v1.resource.Resource | None = None
     scope_logs: builtins.list[ScopeLogs] = dataclasses.field(default_factory=builtins.list)
-    schema_url: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -160,9 +160,9 @@ class ScopeLogs(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ScopeLogs
     """
 
-    scope: typing.Optional[opentelemetry.proto_json.common.v1.common.InstrumentationScope] = None
+    scope: opentelemetry.proto_json.common.v1.common.InstrumentationScope | None = None
     log_records: builtins.list[LogRecord] = dataclasses.field(default_factory=builtins.list)
-    schema_url: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -212,17 +212,17 @@ class LogRecord(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message LogRecord
     """
 
-    time_unix_nano: typing.Optional[builtins.int] = 0
-    observed_time_unix_nano: typing.Optional[builtins.int] = 0
+    time_unix_nano: builtins.int | None = 0
+    observed_time_unix_nano: builtins.int | None = 0
     severity_number: SeverityNumber | builtins.int | None = 0
-    severity_text: typing.Optional[builtins.str] = ""
-    body: typing.Optional[opentelemetry.proto_json.common.v1.common.AnyValue] = None
+    severity_text: builtins.str | None = ""
+    body: opentelemetry.proto_json.common.v1.common.AnyValue | None = None
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-    dropped_attributes_count: typing.Optional[builtins.int] = 0
-    flags: typing.Optional[builtins.int] = 0
-    trace_id: typing.Optional[builtins.bytes] = b""
-    span_id: typing.Optional[builtins.bytes] = b""
-    event_name: typing.Optional[builtins.str] = ""
+    dropped_attributes_count: builtins.int | None = 0
+    flags: builtins.int | None = 0
+    trace_id: builtins.bytes | None = b""
+    span_id: builtins.bytes | None = b""
+    event_name: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
