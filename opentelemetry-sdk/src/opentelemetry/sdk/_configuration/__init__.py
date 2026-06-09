@@ -41,6 +41,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
+    OTEL_LOG_LEVEL,
     OTEL_PYTHON_LOGGER_CONFIGURATOR,
     OTEL_PYTHON_METER_CONFIGURATOR,
     OTEL_PYTHON_TRACER_CONFIGURATOR,
@@ -92,6 +93,17 @@ _RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
 
 _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
+
+_INTERNAL_LOGGER_NAME = "opentelemetry"
+_DEFAULT_OTEL_LOG_LEVEL = logging.INFO
+_OTEL_LOG_LEVEL_BY_NAME = {
+    "critical": logging.CRITICAL,
+    "debug": logging.DEBUG,
+    "error": logging.ERROR,
+    "info": logging.INFO,
+    "warn": logging.WARNING,
+    "warning": logging.WARNING,
+}
 
 _logger = logging.getLogger(__name__)
 
@@ -167,6 +179,29 @@ def _get_meter_configurator() -> str | None:
 
 def _get_logger_configurator() -> str | None:
     return environ.get(OTEL_PYTHON_LOGGER_CONFIGURATOR, None)
+
+
+def _configure_internal_logging() -> None:
+    internal_logger = logging.getLogger(_INTERNAL_LOGGER_NAME)
+    configured_log_level = environ.get(OTEL_LOG_LEVEL)
+
+    if not configured_log_level or not configured_log_level.strip():
+        internal_logger.setLevel(_DEFAULT_OTEL_LOG_LEVEL)
+        return
+
+    log_level = _OTEL_LOG_LEVEL_BY_NAME.get(
+        configured_log_level.strip().lower()
+    )
+    if log_level is None:
+        internal_logger.setLevel(_DEFAULT_OTEL_LOG_LEVEL)
+        _logger.warning(
+            "Invalid value for %s: %r. Defaulting to INFO.",
+            OTEL_LOG_LEVEL,
+            configured_log_level,
+        )
+        return
+
+    internal_logger.setLevel(log_level)
 
 
 def _get_exporter_entry_point(
@@ -677,4 +712,5 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
+        _configure_internal_logging()
         _initialize_components(**kwargs)

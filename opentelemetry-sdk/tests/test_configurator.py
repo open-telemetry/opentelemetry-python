@@ -49,6 +49,7 @@ from opentelemetry.sdk._logs.export import (
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.environment_variables import (
+    OTEL_LOG_LEVEL,
     OTEL_PYTHON_LOGGER_CONFIGURATOR,
     OTEL_PYTHON_METER_CONFIGURATOR,
     OTEL_TRACES_SAMPLER,
@@ -1507,6 +1508,84 @@ class TestConfigurator(TestCase):
             "sampler": "TEST_SAMPLER",
         }
         mock_init_comp.assert_called_once_with(**kwargs)
+
+
+class TestInternalLogLevel(TestCase):
+    def setUp(self):
+        self.otel_logger = getLogger("opentelemetry")
+        self.otel_child_logger = getLogger("opentelemetry.sdk.trace")
+        self.original_otel_level = self.otel_logger.level
+        self.original_child_level = self.otel_child_logger.level
+
+    def tearDown(self):
+        self.otel_logger.setLevel(self.original_otel_level)
+        self.otel_child_logger.setLevel(self.original_child_level)
+
+    @patch.dict(environ, {OTEL_LOG_LEVEL: "debug"}, clear=True)
+    @patch("opentelemetry.sdk._configuration._initialize_components")
+    def test_configurator_sets_internal_logger_level_from_env(
+        self, mock_init_comp
+    ):
+        self.otel_logger.setLevel(logging.ERROR)
+
+        _OTelSDKConfigurator().configure()
+
+        self.assertEqual(self.otel_logger.level, logging.DEBUG)
+        mock_init_comp.assert_called_once_with()
+
+    @patch.dict(environ, {}, clear=True)
+    @patch("opentelemetry.sdk._configuration._initialize_components")
+    def test_configurator_defaults_internal_logger_level_to_info(
+        self, mock_init_comp
+    ):
+        self.otel_logger.setLevel(logging.ERROR)
+
+        _OTelSDKConfigurator().configure()
+
+        self.assertEqual(self.otel_logger.level, logging.INFO)
+        mock_init_comp.assert_called_once_with()
+
+    @patch.dict(environ, {OTEL_LOG_LEVEL: ""}, clear=True)
+    @patch("opentelemetry.sdk._configuration._initialize_components")
+    def test_configurator_treats_empty_internal_logger_level_as_unset(
+        self, mock_init_comp
+    ):
+        self.otel_logger.setLevel(logging.ERROR)
+
+        _OTelSDKConfigurator().configure()
+
+        self.assertEqual(self.otel_logger.level, logging.INFO)
+        mock_init_comp.assert_called_once_with()
+
+    @patch.dict(environ, {OTEL_LOG_LEVEL: "NOT_A_LEVEL"}, clear=True)
+    @patch("opentelemetry.sdk._configuration._initialize_components")
+    def test_configurator_warns_for_invalid_internal_logger_level(
+        self, mock_init_comp
+    ):
+        self.otel_logger.setLevel(logging.ERROR)
+
+        with self.assertLogs(
+            "opentelemetry.sdk._configuration", level=WARNING
+        ):
+            _OTelSDKConfigurator().configure()
+
+        self.assertEqual(self.otel_logger.level, logging.INFO)
+        mock_init_comp.assert_called_once_with()
+
+    @patch.dict(environ, {OTEL_LOG_LEVEL: "critical"}, clear=True)
+    @patch("opentelemetry.sdk._configuration._initialize_components")
+    def test_configurator_internal_logger_level_propagates_to_children(
+        self, mock_init_comp
+    ):
+        self.otel_child_logger.setLevel(logging.NOTSET)
+
+        _OTelSDKConfigurator().configure()
+
+        self.assertEqual(self.otel_logger.level, logging.CRITICAL)
+        self.assertEqual(
+            self.otel_child_logger.getEffectiveLevel(), logging.CRITICAL
+        )
+        mock_init_comp.assert_called_once_with()
 
 
 # Any test that calls _init_logging with setup_logging_handler=True
