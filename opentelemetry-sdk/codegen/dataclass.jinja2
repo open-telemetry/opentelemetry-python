@@ -2,7 +2,7 @@
    Extends the default datamodel-codegen dataclass template to support
    JSON Schema additionalProperties. When a schema type allows additional
    properties (e.g. Sampler, SpanExporter), this template adds:
-   - @_additional_properties decorator (captures unknown kwargs)
+   - @_additional_properties decorator (captures user-defined kwargs)
    - additional_properties: ClassVar[dict[str, Any]] annotation (for type checkers)
 
    The template checks two context variables set by datamodel-codegen:

@@ -35,6 +35,8 @@ def _type_name(t):
 _logger = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-return-statements
+# pylint: disable=too-many-branches
 def _clean_attribute(
     key: str, value: types.AttributeValue, max_len: int | None
 ) -> types.AttributeValue | tuple[str | int | float, ...] | None:
@@ -58,16 +60,32 @@ def _clean_attribute(
         return None
 
     if isinstance(value, _VALID_ATTR_VALUE_TYPES):
-        return _clean_attribute_value(value, max_len)
+        if isinstance(value, bytes):
+            try:
+                value = value.decode()
+            except UnicodeDecodeError:
+                _logger.warning("Byte attribute could not be decoded.")
+                return None
+        if max_len is not None and isinstance(value, str):
+            value = value[:max_len]
+        return value
 
     if isinstance(value, Sequence):
         sequence_first_valid_type = None
         cleaned_seq = []
 
         for element in value:
-            element = _clean_attribute_value(element, max_len)  # type: ignore
-            if element is None:
-                cleaned_seq.append(element)
+            if isinstance(element, bytes):
+                try:
+                    element = element.decode()
+                except UnicodeDecodeError:
+                    _logger.warning("Byte attribute could not be decoded.")
+                    cleaned_seq.append(None)
+                    continue
+            if max_len is not None and isinstance(element, str):
+                element = element[:max_len]
+            elif element is None:
+                cleaned_seq.append(None)
                 continue
 
             element_type = type(element)
@@ -212,24 +230,6 @@ def _clean_extended_attribute(
     except TypeError as exception:
         _logger.warning("Attribute %s: %s", key, exception)
         return None
-
-
-def _clean_attribute_value(
-    value: types.AttributeValue, limit: int | None
-) -> types.AttributeValue | None:
-    if value is None:
-        return None
-
-    if isinstance(value, bytes):
-        try:
-            value = value.decode()
-        except UnicodeDecodeError:
-            _logger.warning("Byte attribute could not be decoded.")
-            return None
-
-    if limit is not None and isinstance(value, str):
-        value = value[:limit]
-    return value
 
 
 class BoundedAttributes(MutableMapping):  # type: ignore
