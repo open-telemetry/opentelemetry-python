@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: inline the method `_clean_attribute_value`
