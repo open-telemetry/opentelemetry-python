@@ -9,6 +9,18 @@ The :envvar:`OTEL_SDK_DISABLED` environment variable disables the SDK for all si
 Default: "false"
 """
 
+OTEL_CONFIG_FILE = "OTEL_CONFIG_FILE"
+"""
+.. envvar:: OTEL_CONFIG_FILE
+
+The :envvar:`OTEL_CONFIG_FILE` environment variable points the SDK at a
+declarative configuration file (YAML or JSON). When set, the file is the
+sole source of SDK configuration; other ``OTEL_*`` environment variables
+are ignored except where referenced via ``${env:VAR}`` substitution inside
+the file. See the OpenTelemetry declarative configuration specification
+for details.
+"""
+
 OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 """
 .. envvar:: OTEL_RESOURCE_ATTRIBUTES
