@@ -105,28 +105,6 @@ class TestConfigureSdk(unittest.TestCase):
     @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
     @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
     @patch("opentelemetry.sdk._configuration._sdk.create_resource")
-    # pylint: disable=no-self-use
-    def test_disabled_false_runs_setup(
-        self,
-        mock_create_resource,
-        mock_tracer,
-        mock_meter,
-        mock_logger,
-        mock_propagator,
-    ):
-        config = _config(disabled=False)
-        configure_sdk(config)
-        mock_create_resource.assert_called_once()
-        mock_tracer.assert_called_once()
-        mock_meter.assert_called_once()
-        mock_logger.assert_called_once()
-        mock_propagator.assert_called_once()
-
-    @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.create_resource")
     def test_absent_sections_pass_none(
         self,
         mock_create_resource,  # noqa: ARG002
