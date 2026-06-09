@@ -45,7 +45,12 @@ if TYPE_CHECKING:
 _logger = getLogger(__name__)
 
 
-_ERROR_MESSAGE = (
+_NAME_ERROR_MESSAGE = (
+    "Instrument name must be an ASCII string, start with a letter, "
+    "contain only letters, digits, '_', '.', '-', '/' and be at most 255 characters; got {}"
+)
+
+_UNIT_ERROR_MESSAGE = (
     "Expected ASCII string of maximum length 63 characters but got {}"
 )
 
@@ -74,11 +79,11 @@ class _Synchronous(_Instrument, Synchronous):
 
         if result["name"] is None:
             # pylint: disable=broad-exception-raised
-            raise Exception(_ERROR_MESSAGE.format(name))
+            raise Exception(_NAME_ERROR_MESSAGE.format(name))
 
         if result["unit"] is None:
             # pylint: disable=broad-exception-raised
-            raise Exception(_ERROR_MESSAGE.format(unit))
+            raise Exception(_UNIT_ERROR_MESSAGE.format(unit))
 
         name = result["name"]
         unit = result["unit"]
@@ -113,11 +118,11 @@ class _Asynchronous(_Instrument, Asynchronous):
 
         if result["name"] is None:
             # pylint: disable=broad-exception-raised
-            raise Exception(_ERROR_MESSAGE.format(name))
+            raise Exception(_NAME_ERROR_MESSAGE.format(name))
 
         if result["unit"] is None:
             # pylint: disable=broad-exception-raised
-            raise Exception(_ERROR_MESSAGE.format(unit))
+            raise Exception(_UNIT_ERROR_MESSAGE.format(unit))
 
         name = result["name"]
         unit = result["unit"]
