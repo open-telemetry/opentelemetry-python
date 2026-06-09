@@ -1572,6 +1572,21 @@ class TestInternalLogLevel(TestCase):
         self.assertEqual(self.otel_logger.level, logging.INFO)
         mock_init_comp.assert_called_once_with()
 
+    def test_configurator_maps_fatal_internal_logger_levels(self):
+        for configured_log_level in ("fatal", "fatal2", "fatal3", "fatal4"):
+            with self.subTest(configured_log_level=configured_log_level):
+                self.otel_logger.setLevel(logging.INFO)
+
+                with patch.dict(
+                    environ, {OTEL_LOG_LEVEL: configured_log_level}, clear=True
+                ), patch(
+                    "opentelemetry.sdk._configuration._initialize_components"
+                ) as mock_init_comp:
+                    _OTelSDKConfigurator().configure()
+
+                self.assertEqual(self.otel_logger.level, logging.CRITICAL)
+                mock_init_comp.assert_called_once_with()
+
     @patch.dict(environ, {OTEL_LOG_LEVEL: "critical"}, clear=True)
     @patch("opentelemetry.sdk._configuration._initialize_components")
     def test_configurator_internal_logger_level_propagates_to_children(
