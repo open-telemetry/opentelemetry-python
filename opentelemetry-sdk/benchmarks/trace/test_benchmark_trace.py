@@ -45,6 +45,17 @@ def test_simple_start_span(benchmark):
     benchmark(benchmark_start_span)
 
 
+@pytest.mark.parametrize("num_attrs", [0, 1, 10, 50, 128])
+def test_start_span_with_attributes(benchmark, num_attrs):
+    attrs = {f"key{i}": f"value{i}" for i in range(num_attrs)}
+
+    def benchmark_start_span():
+        span = tracer.start_span("benchmarkedSpan", attributes=attrs)
+        span.end()
+
+    benchmark(benchmark_start_span)
+
+
 # pylint: disable=protected-access,redefined-outer-name
 def test_simple_start_span_with_tracer_configurator_rules(
     benchmark, num_tracer_configurator_rules
