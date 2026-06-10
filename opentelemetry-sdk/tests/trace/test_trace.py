@@ -718,7 +718,8 @@ class TestSpanCreation(unittest.TestCase):
         other_tracer = tracer_provider.get_tracer("other")
         original_span = tracer.start_span("original")
 
-        tracer_provider.update_resource(updating_resource)
+        # pylint: disable-next=protected-access
+        tracer_provider._update_resource(updating_resource)
 
         self.assertEqual(
             tracer_provider.resource.attributes,

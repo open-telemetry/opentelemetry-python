@@ -140,7 +140,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         meter = meter_provider.get_meter("name")
         counter = meter.create_counter("counter")
 
-        meter_provider.update_resource(updating_resource)
+        meter_provider._update_resource(updating_resource)
 
         self.assertEqual(
             meter_provider._sdk_config.resource.attributes,

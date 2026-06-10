@@ -1352,7 +1352,7 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracers_lock = threading.Lock()
         self._tracers: dict[InstrumentationScope, Tracer] = {}
         if hasattr(os, "register_at_fork"):
-            weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
+            weak_at_fork = weakref.WeakMethod(self._handle_fork)
 
             def _after_in_child() -> None:
                 if at_fork := weak_at_fork():
@@ -1360,9 +1360,9 @@ class TracerProvider(trace_api.TracerProvider):
 
             os.register_at_fork(after_in_child=_after_in_child)
 
-    def _at_fork_reinit(self) -> None:
+    def _handle_fork(self) -> None:
         self._tracers_lock = threading.Lock()
-        self.update_resource(_get_process_sensitive_resource())
+        self._update_resource(_get_process_sensitive_resource())
 
     def _set_tracer_configurator(
         self, *, tracer_configurator: _TracerConfiguratorT
@@ -1385,17 +1385,7 @@ class TracerProvider(trace_api.TracerProvider):
     def resource(self) -> Resource:
         return self._resource
 
-    def update_resource(self, resource: Resource) -> None:
-        """Merge a :class:`opentelemetry.sdk.resources.Resource` into this
-        `TracerProvider`'s resource.
-
-        The resource of all existing :class:`Tracer` instances created by this
-        provider is also updated to the merged :class:`opentelemetry.sdk.resources.Resource`.
-
-        Args:
-            resource: The resource to merge into this `TracerProvider`'s
-                current resource.
-        """
+    def _update_resource(self, resource: Resource) -> None:
         with self._tracers_lock:
             self._resource = self._resource.merge(resource)
             for tracer in self._tracers.values():

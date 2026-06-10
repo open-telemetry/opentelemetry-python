@@ -531,7 +531,7 @@ class MeterProvider(APIMeterProvider):
             metric_reader._set_meter_provider(self)
 
         if hasattr(os, "register_at_fork"):
-            weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
+            weak_at_fork = weakref.WeakMethod(self._handle_fork)
 
             def _after_in_child() -> None:
                 if at_fork := weak_at_fork():
@@ -539,11 +539,11 @@ class MeterProvider(APIMeterProvider):
 
             os.register_at_fork(after_in_child=_after_in_child)
 
-    def _at_fork_reinit(self) -> None:
+    def _handle_fork(self) -> None:
         self._lock = Lock()
         self._meter_lock = Lock()
         type(self)._all_metric_readers_lock = Lock()
-        self.update_resource(_get_process_sensitive_resource())
+        self._update_resource(_get_process_sensitive_resource())
 
     def _set_meter_configurator(
         self, *, meter_configurator: _MeterConfiguratorT
@@ -562,14 +562,7 @@ class MeterProvider(APIMeterProvider):
                     self._apply_meter_configurator(instrumentation_scope)
                 )
 
-    def update_resource(self, resource: Resource) -> None:
-        """Merge a :class:`opentelemetry.sdk.resources.Resource` into this
-        `MeterProvider`'s resource.
-
-        Args:
-            resource: The resource to merge into this `MeterProvider`'s
-                current resource.
-        """
+    def _update_resource(self, resource: Resource) -> None:
         with self._meter_lock:
             self._sdk_config.resource = self._sdk_config.resource.merge(
                 resource

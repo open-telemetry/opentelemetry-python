@@ -820,7 +820,7 @@ class LoggerProvider(APILoggerProvider):
         self._active_loggers: WeakSet[Logger] = WeakSet()
         self._active_loggers_lock = Lock()
         if hasattr(os, "register_at_fork"):
-            weak_at_fork = WeakMethod(self._at_fork_reinit)
+            weak_at_fork = WeakMethod(self._handle_fork)
 
             def _after_in_child() -> None:
                 if at_fork := weak_at_fork():
@@ -828,26 +828,16 @@ class LoggerProvider(APILoggerProvider):
 
             os.register_at_fork(after_in_child=_after_in_child)
 
-    def _at_fork_reinit(self) -> None:
+    def _handle_fork(self) -> None:
         self._logger_cache_lock = Lock()
         self._active_loggers_lock = Lock()
-        self.update_resource(_get_process_sensitive_resource())
+        self._update_resource(_get_process_sensitive_resource())
 
     @property
     def resource(self):
         return self._resource
 
-    def update_resource(self, resource: Resource) -> None:
-        """Merge a :class:`opentelemetry.sdk.resources.Resource` into this
-        `LoggerProvider`'s resource.
-
-        The resource of all existing :class:`Logger` instances created by this
-        provider is also updated to the merged :class:`opentelemetry.sdk.resources.Resource`.
-
-        Args:
-            resource: The resource to merge into this `LoggerProvider`'s
-                current resource.
-        """
+    def _update_resource(self, resource: Resource) -> None:
         with self._active_loggers_lock:
             self._resource = self._resource.merge(resource)
             for logger in list(self._active_loggers):

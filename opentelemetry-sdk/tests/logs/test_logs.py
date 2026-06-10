@@ -70,7 +70,7 @@ class TestLoggerProvider(unittest.TestCase):
         processor_mock = Mock()
         logger_provider.add_log_record_processor(processor_mock)
 
-        logger_provider.update_resource(updating_resource)
+        logger_provider._update_resource(updating_resource)
 
         self.assertEqual(
             logger_provider.resource.attributes,
