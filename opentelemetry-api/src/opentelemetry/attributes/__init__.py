@@ -125,7 +125,7 @@ class BoundedAttributes(MutableMapping):
         attributes: The initial attributes to store.
         immutable: Defaults to true. Whether to allow adding/removing of attributes after the initialisation of the instance.
         max_value_len: The maximum length of string values.
-        extended_attributes: Unused param, kept for backwards compatibility with a dperecation warning.
+        extended_attributes: Unused param, kept for backwards compatibility with a deprecation warning.
 
     When the dict is full and a new element is added, the oldest element is dropped. Attributes are made to be immutable when set in this container.
     So passing a mutable list as an attribute value, and then mutating it after will not change it's value in this container.
