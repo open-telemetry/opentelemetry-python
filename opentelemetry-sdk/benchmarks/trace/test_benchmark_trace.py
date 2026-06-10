@@ -168,12 +168,12 @@ _link_context = SpanContext(
 def test_read_events(benchmark, num_events):
     provider = TracerProvider(sampler=sampling.DEFAULT_ON)
     provider.add_span_processor(_EventsReadingProcessor())
-    t = provider.get_tracer("bench")
+    tp = provider.get_tracer("bench")
 
     def benchmark_read_events():
-        span = t.start_span("benchmarkedSpan")
-        for i in range(num_events):
-            span.add_event(f"event{i}", {"k": "v"})
+        span = tp.start_span("benchmarkedSpan")
+        for event in range(num_events):
+            span.add_event(f"event{event}", {"k": "v"})
         span.end()
 
     benchmark(benchmark_read_events)
@@ -183,10 +183,10 @@ def test_read_events(benchmark, num_events):
 def test_read_links(benchmark, num_links):
     provider = TracerProvider(sampler=sampling.DEFAULT_ON)
     provider.add_span_processor(_LinksReadingProcessor())
-    t = provider.get_tracer("bench")
+    tp = provider.get_tracer("bench")
 
     def benchmark_read_links():
-        span = t.start_span("benchmarkedSpan")
+        span = tp.start_span("benchmarkedSpan")
         for _ in range(num_links):
             span.add_link(_link_context)
         span.end()
