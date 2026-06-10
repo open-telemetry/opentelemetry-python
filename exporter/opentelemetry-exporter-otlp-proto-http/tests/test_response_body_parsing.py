@@ -1,7 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import json
 import unittest
 
 from google.rpc.status_pb2 import Status
@@ -59,50 +58,6 @@ class TestParseResponseBody(unittest.TestCase):
             "quota exceeded",
         )
 
-    def test_json_content_type_with_partial_success_error_message(self):
-        body = json.dumps(
-            {"partialSuccess": {"errorMessage": "rate limit exceeded"}}
-        ).encode()
-        resp = _make_response(content=body, content_type="application/json")
-        self.assertEqual(
-            _parse_response_body(resp),
-            "rate limit exceeded",
-        )
-
-    def test_json_content_type_with_rpc_status_message(self):
-        body = json.dumps({"message": "permission denied"}).encode()
-        resp = _make_response(content=body, content_type="application/json")
-        self.assertEqual(
-            _parse_response_body(resp),
-            "permission denied",
-        )
-
-    def test_json_content_type_with_charset_parameter(self):
-        body = json.dumps({"message": "not authorized"}).encode()
-        resp = _make_response(
-            content=body, content_type="application/json; charset=utf-8"
-        )
-        self.assertEqual(
-            _parse_response_body(resp),
-            "not authorized",
-        )
-
-    def test_json_partial_success_null_falls_through(self):
-        body = json.dumps({"partialSuccess": None}).encode()
-        resp = _make_response(content=body, content_type="application/json")
-        self.assertEqual(
-            _parse_response_body(resp),
-            '{"partialSuccess": null}',
-        )
-
-    def test_json_partial_success_non_dict_falls_through(self):
-        body = json.dumps({"partialSuccess": "x"}).encode()
-        resp = _make_response(content=body, content_type="application/json")
-        self.assertEqual(
-            _parse_response_body(resp),
-            '{"partialSuccess": "x"}',
-        )
-
     def test_unknown_content_type_returns_text(self):
         resp = _make_response(
             content=b"something went wrong",
@@ -134,18 +89,3 @@ class TestParseResponseBody(unittest.TestCase):
             _parse_response_body(resp),
             "Bad Request",
         )
-
-    def test_malformed_json_body_falls_back_to_text(self):
-        resp = _make_response(
-            content=b"not valid json {{{",
-            content_type="application/json",
-            reason="Bad Request",
-        )
-        self.assertEqual(
-            _parse_response_body(resp),
-            "not valid json {{{",
-        )
-
-
-if __name__ == "__main__":
-    unittest.main()

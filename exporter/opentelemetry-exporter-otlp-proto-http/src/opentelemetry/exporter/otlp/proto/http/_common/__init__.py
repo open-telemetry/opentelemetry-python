@@ -16,14 +16,13 @@ from opentelemetry.util._importlib_metadata import entry_points
 _logger = logging.getLogger(__name__)
 
 _CONTENT_TYPE_PROTOBUF = "application/x-protobuf"
-_CONTENT_TYPE_JSON = "application/json"
 
 
 def _parse_response_body(resp: requests.Response) -> str:
     """Parse an HTTP response body based on its Content-Type header.
 
-    Per the OTLP spec, error responses (4xx/5xx) use ``google.rpc.Status``
-    for protobuf bodies and the equivalent JSON representation.
+    Per the OTLP spec, error responses (4xx/5xx) MUST be a protobuf-encoded
+    ``google.rpc.Status`` message.
 
     Args:
         resp: The HTTP response from the OTLP endpoint.
@@ -49,22 +48,6 @@ def _parse_response_body(resp: requests.Response) -> str:
             )
             return resp.reason
         return status.message or resp.reason
-
-    if content_type == _CONTENT_TYPE_JSON:
-        try:
-            body = resp.json()
-        except Exception:  # pylint: disable=broad-except
-            _logger.debug("Failed to parse JSON response body", exc_info=True)
-            return resp.text or resp.reason
-        if isinstance(body, dict):
-            partial = body.get("partialSuccess")
-            if isinstance(partial, dict) and (
-                error_message := partial.get("errorMessage", "")
-            ):
-                return error_message
-            # google.rpc.Status uses "message"
-            if rpc_message := body.get("message", ""):
-                return rpc_message
 
     return resp.text.strip() or resp.reason
 
