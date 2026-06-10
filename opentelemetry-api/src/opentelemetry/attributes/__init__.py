@@ -38,12 +38,13 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(_DuplicateFilter())
 
 
-def _clean_attribute_value(
+def _clean_attribute_value(  # pylint: disable=too-many-branches, too-many-return-statements
     value: types.AttributeValue,
     max_string_value_length: int | None,
 ) -> types.AttributeValue | Literal[_InvalidAttributeValue.INVALID_VALUE]:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
+    Byte values are attempted to be decoded to strings using utf-8. If it fails it is left as bytes.
     String values are truncated to max_string_value_length if provided.
     Anything that isn't of `types.AttributeValue`, we attempt to cast to `str`.
     If this fails, the value is dropped. Sequence's are converted to tuples and mappings
@@ -54,8 +55,15 @@ def _clean_attribute_value(
         _InvalidAttributeValue.INVALID_VALUE if the top level value is dropped and otherwise
         returns the cleaned value.
     """
-    if isinstance(value, (type(None), bool, int, float, bytes)):
+    if isinstance(value, (type(None), bool, int, float)):
         return value
+    if isinstance(value, bytes):
+        # Attempt to decode bytes into a string using utf-8.
+        # If it fails just leave it as is, as bytes is a valid attribute value type.
+        try:
+            value = value.decode("utf-8")
+        except UnicodeDecodeError:
+            return value
     if isinstance(value, str):
         if (
             max_string_value_length is not None
