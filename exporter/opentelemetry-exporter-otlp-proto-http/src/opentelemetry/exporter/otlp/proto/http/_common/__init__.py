@@ -17,9 +17,13 @@ def _resolve_endpoint_to_signal(endpoint: str, signal_path: str) -> str:
     """Append signal_path to endpoint if it has no signal-specific path.
 
     Uses proper URL manipulation so query strings and fragments are preserved.
-    If the endpoint already has a path other than '/', it is returned unchanged.
+    If the endpoint already has a path other than '/', or cannot be parsed as
+    a URL, it is returned unchanged.
     """
-    parsed = urlparse(endpoint)
+    try:
+        parsed = urlparse(endpoint)
+    except ValueError:
+        return endpoint
     if not parsed.path or parsed.path == "/":
         base = parsed.path.rstrip("/")
         return urlunparse(parsed._replace(path=f"{base}/{signal_path}"))

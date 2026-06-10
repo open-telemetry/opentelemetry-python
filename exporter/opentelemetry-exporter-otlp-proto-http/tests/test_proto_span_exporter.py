@@ -13,6 +13,9 @@ from requests.exceptions import ConnectionError
 from requests.models import Response
 
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _resolve_endpoint_to_signal,
+)
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
@@ -271,6 +274,22 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._endpoint,
             "http://collector:4318/v1/traces?tenant=acme",
         )
+
+    def test_endpoint_unparsable_url_unchanged(self):
+        # Unclosed IPv6 bracket makes urlparse raise ValueError; the
+        # helper must pass the endpoint through unchanged.
+        self.assertEqual(
+            _resolve_endpoint_to_signal(
+                "http://[invalid:4318", DEFAULT_TRACES_EXPORT_PATH
+            ),
+            "http://[invalid:4318",
+        )
+
+    def test_endpoint_schemeless_host_port_unchanged(self):
+        # Without a scheme, urlparse reads "collector" as the scheme and
+        # "4318" as the path, so the endpoint is left untouched.
+        exporter = OTLPSpanExporter(endpoint="collector:4318")
+        self.assertEqual(exporter._endpoint, "collector:4318")
 
     @patch.dict(
         "os.environ",
