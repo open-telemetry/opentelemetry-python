@@ -8,7 +8,9 @@ import time
 from collections.abc import Mapping, MutableMapping, Sequence
 from enum import Enum
 from types import MappingProxyType
-from typing import Literal
+from typing import Literal, overload
+
+from typing_extensions import deprecated
 
 from opentelemetry.util import types
 
@@ -123,11 +125,26 @@ class BoundedAttributes(MutableMapping):
         attributes: The initial attributes to store.
         immutable: Defaults to true. Whether to allow adding/removing of attributes after the initialisation of the instance.
         max_value_len: The maximum length of string values.
-        extended_attributes: Unused param, kept for backwards compatibility.
+        extended_attributes: Unused param, kept for backwards compatibility with a dperecation warning.
 
     When the dict is full and a new element is added, the oldest element is dropped. Attributes are made to be immutable when set in this container.
     So passing a mutable list as an attribute value, and then mutating it after will not change it's value in this container.
     """
+
+    @overload
+    @deprecated(
+        "Creating BoundedAttributes with `extended_attributes` set is deprecated. "
+        "The `extended_attributes` param is no longer used and will be removed "
+        "in a future release. Extended attributes are now always used for attributes everywhere."
+    )
+    def __init__(
+        self,
+        maxlen: int | None = None,
+        attributes: types.Attributes = None,
+        immutable: bool = True,
+        max_value_len: int | None = None,
+        extended_attributes: bool = False,
+    ) -> None: ...
 
     def __init__(
         self,
@@ -135,7 +152,6 @@ class BoundedAttributes(MutableMapping):
         attributes: types.Attributes = None,
         immutable: bool = True,
         max_value_len: int | None = None,
-        extended_attributes: bool = False,  # No longer used. Extended attributes are always used. Here for backward compatibility.
     ):
         if maxlen is not None:
             if not isinstance(maxlen, int) or maxlen < 0:

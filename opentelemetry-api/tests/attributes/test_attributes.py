@@ -49,8 +49,6 @@ class TestBoundedAttributes(unittest.TestCase):
                 _clean_attribute_value(valid_primitive, None), valid_primitive
             )
 
-
-
         # Strings too long
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             # valid utf-8 bytes are converted to strings and truncated according to max_string_value_length.
