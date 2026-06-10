@@ -4,9 +4,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, ClassVar, TypeAlias
+from typing import Any, TypeAlias
 
 from opentelemetry.sdk._configuration._common import _additional_properties
 
@@ -359,7 +359,9 @@ class SpanExporter:
     otlp_grpc: OtlpGrpcExporter | None = None
     otlp_file_development: ExperimentalOtlpFileExporter | None = None
     console: ConsoleExporter | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 class SpanKind(Enum):
@@ -511,7 +513,9 @@ class ExperimentalResourceDetector:
     host: ExperimentalHostResourceDetector | None = None
     process: ExperimentalProcessResourceDetector | None = None
     service: ExperimentalServiceResourceDetector | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass
@@ -537,21 +541,27 @@ class LogRecordExporter:
     otlp_grpc: OtlpGrpcExporter | None = None
     otlp_file_development: ExperimentalOtlpFileExporter | None = None
     console: ConsoleExporter | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @_additional_properties
 @dataclass
 class MetricProducer:
     opencensus: OpenCensusMetricProducer | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @_additional_properties
 @dataclass
 class PullMetricExporter:
     prometheus_development: ExperimentalPrometheusMetricExporter | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass
@@ -568,7 +578,9 @@ class PushMetricExporter:
     otlp_grpc: OtlpGrpcMetricExporter | None = None
     otlp_file_development: ExperimentalOtlpFileMetricExporter | None = None
     console: ConsoleMetricExporter | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass
@@ -586,7 +598,9 @@ class SimpleSpanProcessor:
 class SpanProcessor:
     batch: BatchSpanProcessor | None = None
     simple: SimpleSpanProcessor | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @_additional_properties
@@ -596,7 +610,9 @@ class TextMapPropagator:
     baggage: BaggagePropagator | None = None
     b3: B3Propagator | None = None
     b3multi: B3MultiPropagator | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass
@@ -662,7 +678,9 @@ class ExperimentalResourceDetection:
 class LogRecordProcessor:
     batch: BatchLogRecordProcessor | None = None
     simple: SimpleLogRecordProcessor | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass
@@ -731,7 +749,9 @@ class OpenTelemetryConfiguration:
     resource: Resource | None = None
     instrumentation_development: ExperimentalInstrumentation | None = None
     distribution: Distribution | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass
@@ -773,7 +793,9 @@ class ExperimentalComposableSampler:
     )
     probability: ExperimentalComposableProbabilitySampler | None = None
     rule_based: ExperimentalComposableRuleBasedSampler | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass
@@ -802,7 +824,9 @@ class Sampler:
     parent_based: ParentBasedSampler | None = None
     probability_development: ExperimentalProbabilitySampler | None = None
     trace_id_ratio_based: TraceIdRatioBasedSampler | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass

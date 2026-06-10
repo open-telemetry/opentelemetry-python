@@ -172,17 +172,20 @@ def _run_detectors(
     The detected_attrs dict is updated in-place; later detectors overwrite
     earlier ones for the same key.
     """
-    for name in dataclasses.fields(detector_config):
-        value = getattr(detector_config, name.name, None)
+    for field in dataclasses.fields(detector_config):
+        if not field.init:
+            continue
+
+        value = getattr(detector_config, field.name, None)
         if value is None:
             continue
-        if name.name in _RESOURCE_DETECTOR_REGISTRY:
+        if field.name in _RESOURCE_DETECTOR_REGISTRY:
             detected_attrs.update(
-                _RESOURCE_DETECTOR_REGISTRY[name.name](value)
+                _RESOURCE_DETECTOR_REGISTRY[field.name](value)
             )
         else:
             cls = load_entry_point(
-                "opentelemetry_resource_detector", name.name
+                "opentelemetry_resource_detector", field.name
             )
             detected_attrs.update(cls(**(value or {})).detect().attributes)
 
