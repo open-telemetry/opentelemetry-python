@@ -66,6 +66,11 @@ except ImportError:
 class TestResources(unittest.TestCase):
     def setUp(self) -> None:
         environ[OTEL_RESOURCE_ATTRIBUTES] = ""
+        self._service_instance_id = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
 
     def tearDown(self) -> None:
         environ.pop(OTEL_RESOURCE_ATTRIBUTES)
@@ -86,6 +91,7 @@ class TestResources(unittest.TestCase):
             TELEMETRY_SDK_NAME: "opentelemetry",
             TELEMETRY_SDK_LANGUAGE: "python",
             TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
+            SERVICE_INSTANCE_ID: self._service_instance_id,
             SERVICE_NAME: "unknown_service",
         }
 
@@ -112,40 +118,30 @@ class TestResources(unittest.TestCase):
         resource = Resource.get_empty()
         self.assertEqual(resource, _EMPTY_RESOURCE)
 
-        resource = Resource.create(None)
-        self.assertEqual(
-            resource,
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
+        expected_default = _DEFAULT_RESOURCE.merge(
+            Resource(
+                {
+                    SERVICE_INSTANCE_ID: self._service_instance_id,
+                    SERVICE_NAME: "unknown_service",
+                },
+                "",
+            )
         )
+
+        resource = Resource.create(None)
+        self.assertEqual(resource, expected_default)
         self.assertEqual(resource.schema_url, "")
 
         resource = Resource.create(None, None)
-        self.assertEqual(
-            resource,
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
-        )
+        self.assertEqual(resource, expected_default)
         self.assertEqual(resource.schema_url, "")
 
         resource = Resource.create({})
-        self.assertEqual(
-            resource,
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
-        )
+        self.assertEqual(resource, expected_default)
         self.assertEqual(resource.schema_url, "")
 
         resource = Resource.create({}, None)
-        self.assertEqual(
-            resource,
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
-        )
+        self.assertEqual(resource, expected_default)
         self.assertEqual(resource.schema_url, "")
 
     def test_resource_merge(self):
@@ -209,6 +205,7 @@ class TestResources(unittest.TestCase):
             TELEMETRY_SDK_NAME: "opentelemetry",
             TELEMETRY_SDK_LANGUAGE: "python",
             TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
+            SERVICE_INSTANCE_ID: self._service_instance_id,
             SERVICE_NAME: "unknown_service",
         }
 
@@ -264,7 +261,13 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             aggregated_resources,
             _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
+                Resource(
+                    {
+                        SERVICE_INSTANCE_ID: self._service_instance_id,
+                        SERVICE_NAME: "unknown_service",
+                    },
+                    "",
+                )
             ),
         )
 
@@ -315,7 +318,13 @@ class TestResources(unittest.TestCase):
                 [resource_detector1, resource_detector2, resource_detector3]
             ),
             _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
+                Resource(
+                    {
+                        SERVICE_INSTANCE_ID: self._service_instance_id,
+                        SERVICE_NAME: "unknown_service",
+                    },
+                    "",
+                )
             ).merge(
                 Resource(
                     {
@@ -358,7 +367,13 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             get_aggregated_resources([resource_detector1, resource_detector2]),
             _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
+                Resource(
+                    {
+                        SERVICE_INSTANCE_ID: self._service_instance_id,
+                        SERVICE_NAME: "unknown_service",
+                    },
+                    "",
+                )
             ).merge(
                 Resource(
                     {"key1": "value1", "key2": "value2", "key3": "value3"},
@@ -372,7 +387,13 @@ class TestResources(unittest.TestCase):
                     [resource_detector2, resource_detector3]
                 ),
                 _DEFAULT_RESOURCE.merge(
-                    Resource({SERVICE_NAME: "unknown_service"}, "")
+                    Resource(
+                        {
+                            SERVICE_INSTANCE_ID: self._service_instance_id,
+                            SERVICE_NAME: "unknown_service",
+                        },
+                        "",
+                    )
                 ).merge(
                     Resource({"key2": "value2", "key3": "value3"}, "url1")
                 ),
@@ -390,7 +411,13 @@ class TestResources(unittest.TestCase):
                     ]
                 ),
                 _DEFAULT_RESOURCE.merge(
-                    Resource({SERVICE_NAME: "unknown_service"}, "")
+                    Resource(
+                        {
+                            SERVICE_INSTANCE_ID: self._service_instance_id,
+                            SERVICE_NAME: "unknown_service",
+                        },
+                        "",
+                    )
                 ).merge(
                     Resource(
                         {
@@ -414,7 +441,13 @@ class TestResources(unittest.TestCase):
             self.assertEqual(
                 get_aggregated_resources([resource_detector]),
                 _DEFAULT_RESOURCE.merge(
-                    Resource({SERVICE_NAME: "unknown_service"}, "")
+                    Resource(
+                        {
+                            SERVICE_INSTANCE_ID: self._service_instance_id,
+                            SERVICE_NAME: "unknown_service",
+                        },
+                        "",
+                    )
                 ),
             )
 
@@ -434,7 +467,13 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             get_aggregated_resources([resource_detector]),
             _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
+                Resource(
+                    {
+                        SERVICE_INSTANCE_ID: self._service_instance_id,
+                        SERVICE_NAME: "unknown_service",
+                    },
+                    "",
+                )
             ),
         )
         mock_logger.warning.assert_called_with(

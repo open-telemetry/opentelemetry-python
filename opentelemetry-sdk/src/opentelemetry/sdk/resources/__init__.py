@@ -496,12 +496,14 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
 def _build_resource_detectors() -> list["ResourceDetector"]:
     """Returns the ordered list of resource detectors to use for Resource.create.
 
-    Fast path: if no extra detectors are configured, returns only
-    OTELResourceDetector without scanning entry_points.
+    Fast path: if no extra detectors are configured, returns only the two
+    built-in detectors without scanning entry_points.
 
-    "otel" (OTELResourceDetector) defaults to last position so that
-    OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge priority,
-    but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS is respected.
+    "service_instance" (ServiceInstanceIdResourceDetector) and "otel"
+    (OTELResourceDetector) are always appended as defaults. "otel" is last so
+    that OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge
+    priority, but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
+    is respected for either name.
     """
     detector_names: list[str] = list(
         dict.fromkeys(
@@ -512,13 +514,13 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
                 ).split(",")
                 if name.strip()
             ]
-            + ["otel"]
+            + ["service_instance", "otel"]
         )
     )
 
-    # Fast path: only the built-in "otel" detector — no entry_points scan needed.
-    if detector_names == ["otel"]:
-        return [OTELResourceDetector()]
+    # Fast path: only the two built-in detectors — no entry_points scan needed.
+    if detector_names == ["service_instance", "otel"]:
+        return [ServiceInstanceIdResourceDetector(), OTELResourceDetector()]
 
     # pylint: disable=import-outside-toplevel
     from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
