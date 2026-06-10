@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+from email.message import Message
 from os import environ
 from typing import Literal
 
@@ -34,9 +35,9 @@ def _parse_response_body(resp: requests.Response) -> str:
     if not resp.content:
         return resp.reason
 
-    content_type = (
-        resp.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
-    )
+    msg = Message()
+    msg["Content-Type"] = resp.headers.get("Content-Type", "")
+    content_type = msg.get_content_type()
 
     if content_type == _CONTENT_TYPE_PROTOBUF:
         status = Status()
