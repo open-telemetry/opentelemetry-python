@@ -24,8 +24,9 @@ def _resolve_endpoint_to_signal(endpoint: str, signal_path: str) -> str:
         parsed = urlparse(endpoint)
     except ValueError:
         return endpoint
-    if not parsed.path or parsed.path == "/":
-        base = parsed.path.rstrip("/")
+    path = getattr(parsed, "path", "")
+    if not path or path == "/":
+        base = path.rstrip("/")
         return urlunparse(parsed._replace(path=f"{base}/{signal_path}"))
     return endpoint
 
