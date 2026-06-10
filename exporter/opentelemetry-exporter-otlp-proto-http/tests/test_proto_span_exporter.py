@@ -486,7 +486,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
             assert after - before < 0.2
 
-
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(
             attributes["otel.component.type"], "otlp_http_span_exporter"
