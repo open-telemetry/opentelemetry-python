@@ -91,6 +91,8 @@ from opentelemetry.sdk.metrics import (
 from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    DataPointT,
+    DataT,
     Gauge,
     Histogram,
     HistogramDataPoint,
@@ -381,7 +383,7 @@ class _CustomCollector:
         description = metric.description or ""
         unit = map_unit(metric.unit or "")
         label_keys, label_rows, values = self._collect_data_points(
-            metric, scope_attrs
+            metric.data, scope_attrs
         )
         per_metric_family_id = "|".join((metric_name, description, unit))
 
@@ -389,36 +391,36 @@ class _CustomCollector:
 
         if isinstance(metric.data, Sum) and not convert_sum_to_gauge:
             _populate_counter_family(
-                metric_family_id_metric_family,
-                per_metric_family_id,
-                metric_name,
-                description,
-                unit,
-                label_keys,
-                label_rows,
-                values,
+                registry=metric_family_id_metric_family,
+                per_metric_family_id=per_metric_family_id,
+                metric_name=metric_name,
+                description=description,
+                unit=unit,
+                label_keys=label_keys,
+                label_rows=label_rows,
+                values=values,
             )
         elif isinstance(metric.data, Gauge) or convert_sum_to_gauge:
             _populate_gauge_family(
-                metric_family_id_metric_family,
-                per_metric_family_id,
-                metric_name,
-                description,
-                unit,
-                label_keys,
-                label_rows,
-                values,
+                registry=metric_family_id_metric_family,
+                per_metric_family_id=per_metric_family_id,
+                metric_name=metric_name,
+                description=description,
+                unit=unit,
+                label_keys=label_keys,
+                label_rows=label_rows,
+                values=values,
             )
         elif isinstance(metric.data, Histogram):
             _populate_histogram_family(
-                metric_family_id_metric_family,
-                per_metric_family_id,
-                metric_name,
-                description,
-                unit,
-                label_keys,
-                label_rows,
-                values,
+                registry=metric_family_id_metric_family,
+                per_metric_family_id=per_metric_family_id,
+                metric_name=metric_name,
+                description=description,
+                unit=unit,
+                label_keys=label_keys,
+                label_rows=label_rows,
+                values=values,
             )
         else:
             _logger.warning("Unsupported metric data. %s", type(metric.data))
@@ -444,14 +446,14 @@ class _CustomCollector:
 
     def _collect_data_points(
         self,
-        metric: Metric,
+        metric_data: DataT,
         scope_attrs: dict[str, AttributeValue],
-    ) -> tuple[list[str], list[list[str]], list[Any]]:
+    ) -> tuple[list[str], list[list[str]], list[DataPointT]]:
         keys: set[str] = set()
         rows: list[dict[str, str]] = []
-        values: list = []
+        values: list[DataPointT] = []
 
-        for point in metric.data.data_points:
+        for point in metric_data.data_points:
             labels: dict[str, str] = {}
             for key, value in chain(
                 scope_attrs.items(),

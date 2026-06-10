@@ -63,7 +63,12 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             reader.shutdown()
 
     def verify_text_format(
-        self, metric: Metric, expect_prometheus_text: str, prefix: str = ""
+        self,
+        metric: Metric,
+        expect_prometheus_text: str,
+        prefix: str = "",
+        scope: InstrumentationScope | None = None,
+        scope_info_enabled: bool = False,
     ) -> None:
         metrics_data = MetricsData(
             resource_metrics=[
@@ -71,7 +76,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                     resource=Mock(),
                     scope_metrics=[
                         ScopeMetrics(
-                            scope=Mock(),
+                            scope=scope or Mock(),
                             metrics=[metric],
                             schema_url="schema_url",
                         )
@@ -82,7 +87,9 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         )
 
         collector = _CustomCollector(
-            disable_target_info=True, scope_info_enabled=False, prefix=prefix
+            disable_target_info=True,
+            scope_info_enabled=scope_info_enabled,
+            prefix=prefix,
         )
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
@@ -699,7 +706,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         metrics_data = MetricsData(
             resource_metrics=[
                 ResourceMetrics(
-                    resource=Mock(),
+                    resource=Resource({}),
                     scope_metrics=[
                         ScopeMetrics(
                             scope=scope,
@@ -711,10 +718,12 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 )
             ]
         )
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector()
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
+            if isinstance(prometheus_metric, InfoMetricFamily):
+                continue
             labels = prometheus_metric.samples[0].labels
             self.assertEqual(labels[_OTEL_SCOPE_NAME_LABEL], "library.test")
             self.assertEqual(labels[_OTEL_SCOPE_VERSION_LABEL], "1.2.3")
@@ -723,6 +732,56 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 "schema_url",
             )
             self.assertEqual(labels["env"], "prod")
+
+    def test_scope_info_labels_text_format(self):
+        scope = InstrumentationScope(
+            name="library.test",
+            version="1.2.3",
+        )
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={"env": "prod"},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{env="prod",otel_scope_name="library.test",otel_scope_schema_url="",otel_scope_version="1.2.3"} 42.0
+                """
+            ),
+            scope=scope,
+            scope_info_enabled=True,
+        )
+
+    def test_scope_attributes_text_format(self):
+        scope = InstrumentationScope(
+            name="library.test",
+            version="1.0",
+            schema_url="schema_url",
+            attributes={"region": "us-east-1"},
+        )
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                7,
+                attributes={},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{otel_scope_name="library.test",otel_scope_region="us-east-1",otel_scope_schema_url="schema_url",otel_scope_version="1.0"} 7.0
+                """
+            ),
+            scope=scope,
+            scope_info_enabled=True,
+        )
 
     def test_scope_info_disabled(self):
         scope = InstrumentationScope(name="library.test", version="1.2.3")
