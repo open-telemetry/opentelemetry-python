@@ -55,6 +55,7 @@ import os
 import platform
 import socket
 import sys
+import threading
 import typing
 import uuid
 from collections.abc import Sequence
@@ -279,6 +280,11 @@ _DEFAULT_RESOURCE = Resource(
 )
 
 
+_service_instance_id: str | None = None
+_service_instance_id_pid: int | None = None
+_service_instance_id_lock = threading.Lock()
+
+
 class ResourceDetector(abc.ABC):
     def __init__(self, raise_on_error: bool = False) -> None:
         self.raise_on_error = raise_on_error
@@ -468,14 +474,23 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
 
     Per the OpenTelemetry specification, SDKs SHOULD generate a random v1/v4
     UUID for service.instance.id to uniquely identify each service instance.
+    The ID is shared across all detector instances within the same process and
+    regenerated automatically when the process PID changes (e.g. after a fork).
     """
 
-    def __init__(self, raise_on_error: bool = False) -> None:
-        super().__init__(raise_on_error)
-        self._instance_id = str(uuid.uuid4())
-
     def detect(self) -> "Resource":
-        return Resource({SERVICE_INSTANCE_ID: self._instance_id})
+        # pylint: disable-next=global-statement
+        global _service_instance_id, _service_instance_id_pid
+        with _service_instance_id_lock:
+            current_pid = os.getpid()
+            if (
+                _service_instance_id is None
+                or _service_instance_id_pid != current_pid
+            ):
+                _service_instance_id = str(uuid.uuid4())
+                _service_instance_id_pid = current_pid
+            instance_id = _service_instance_id
+        return Resource({SERVICE_INSTANCE_ID: instance_id})
 
 
 def _build_resource_detectors() -> list["ResourceDetector"]:

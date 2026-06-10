@@ -1,6 +1,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+
+# pylint: disable=too-many-lines
+
 import os
+import subprocess
 import sys
 import unittest
 import uuid
@@ -10,6 +14,7 @@ from os import environ
 from unittest.mock import Mock, patch
 from urllib import parse
 
+import opentelemetry.sdk.resources as _resources_module
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
 )
@@ -916,20 +921,35 @@ class TestHostResourceDetector(unittest.TestCase):
         self.assertIn(HOST_NAME, resource.attributes)
 
 
+# pylint: disable=protected-access
 class TestServiceInstanceIdResourceDetector(unittest.TestCase):
+    def setUp(self) -> None:
+        self._orig_instance_id = _resources_module._service_instance_id
+        self._orig_instance_pid = _resources_module._service_instance_id_pid
+
+    def tearDown(self) -> None:
+        _resources_module._service_instance_id = self._orig_instance_id
+        _resources_module._service_instance_id_pid = self._orig_instance_pid
+
     def test_detect_value_is_valid_uuid4(self):
+        _resources_module._service_instance_id = None
+        _resources_module._service_instance_id_pid = None
         detector = ServiceInstanceIdResourceDetector()
         value = detector.detect().attributes[SERVICE_INSTANCE_ID]
         parsed = uuid.UUID(value)
         self.assertEqual(parsed.version, 4)
 
     def test_detect_stable_within_instance(self):
+        _resources_module._service_instance_id = None
+        _resources_module._service_instance_id_pid = None
         detector = ServiceInstanceIdResourceDetector()
         id1 = detector.detect().attributes[SERVICE_INSTANCE_ID]
         id2 = detector.detect().attributes[SERVICE_INSTANCE_ID]
         self.assertEqual(id1, id2)
 
-    def test_detect_unique_across_instances(self):
+    def test_detect_shared_across_instances(self):
+        _resources_module._service_instance_id = None
+        _resources_module._service_instance_id_pid = None
         id1 = (
             ServiceInstanceIdResourceDetector()
             .detect()
@@ -940,7 +960,68 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
             .detect()
             .attributes[SERVICE_INSTANCE_ID]
         )
-        self.assertNotEqual(id1, id2)
+        self.assertEqual(id1, id2)
+
+    def test_detect_pid_change_generates_new_id(self):
+        _resources_module._service_instance_id = "old-id"
+        _resources_module._service_instance_id_pid = os.getpid() - 1
+        new_id = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
+        self.assertNotEqual(new_id, "old-id")
+        self.assertEqual(
+            _resources_module._service_instance_id_pid, os.getpid()
+        )
+        uuid.UUID(new_id)
+
+    def test_detect_pid_unchanged_returns_same_id(self):
+        known_id = "known-stable-id"
+        _resources_module._service_instance_id = known_id
+        _resources_module._service_instance_id_pid = os.getpid()
+        result = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
+        self.assertEqual(result, known_id)
+
+    @unittest.skipUnless(hasattr(os, "fork"), "requires os.fork")
+    def test_detect_fork_generates_new_id(self):
+        script = """\
+import os
+import sys
+
+from opentelemetry.sdk.resources import ServiceInstanceIdResourceDetector, SERVICE_INSTANCE_ID
+
+parent_id = ServiceInstanceIdResourceDetector().detect().attributes[SERVICE_INSTANCE_ID]
+
+r_fd, w_fd = os.pipe()
+pid = os.fork()
+if not pid:
+    os.close(r_fd)
+    child_id = ServiceInstanceIdResourceDetector().detect().attributes[SERVICE_INSTANCE_ID]
+    with os.fdopen(w_fd, "w") as w:
+        w.write(child_id)
+    os._exit(0)
+else:
+    os.close(w_fd)
+    with os.fdopen(r_fd, "r") as r:
+        child_id = r.read()
+    os.waitpid(pid, 0)
+    print(f"{parent_id}:{child_id}")
+"""
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        parent_id, child_id = result.stdout.strip().split(":")
+        self.assertNotEqual(parent_id, child_id)
+        self.assertEqual(uuid.UUID(parent_id).version, 4)
+        self.assertEqual(uuid.UUID(child_id).version, 4)
 
     @patch.dict(
         environ,
