@@ -92,3 +92,9 @@ class EventsGlobalsTest(unittest.TestCase):
 
     The Events API has been removed; this class does nothing.
     """
+
+    def setUp(self) -> None:
+        super().setUp()
+
+    def tearDown(self) -> None:
+        super().tearDown()
