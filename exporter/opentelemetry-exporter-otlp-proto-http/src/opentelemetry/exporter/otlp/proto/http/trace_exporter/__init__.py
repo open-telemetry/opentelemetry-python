@@ -264,9 +264,7 @@ class OTLPSpanExporter(SpanExporter):
                 if shutdown:
                     _logger.warning("Shutdown in progress, aborting retry.")
                     break
-            return SpanExportResponse(
-                SpanExportResult.FAILURE, export_error
-            )
+            return SpanExportResponse(SpanExportResult.FAILURE, export_error)
 
     def shutdown(self):
         if self._shutdown:

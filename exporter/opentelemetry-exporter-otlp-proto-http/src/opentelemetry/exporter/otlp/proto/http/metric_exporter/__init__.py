@@ -281,9 +281,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 try:
                     resp = self._export(serialized_data, deadline_sec - time())
                     if resp.ok:
-                        return MetricExportResponse(
-                            MetricExportResult.SUCCESS
-                        )
+                        return MetricExportResponse(MetricExportResult.SUCCESS)
                 except requests.exceptions.RequestException as error:
                     reason = error
                     export_error = error
