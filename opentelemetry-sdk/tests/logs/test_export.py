@@ -932,3 +932,13 @@ class TestConsoleLogExporter(unittest.TestCase):
         exporter.export([EMPTY_LOG])
 
         mock_stdout.write.assert_called_once_with(mock_record_str)
+
+    def test_force_flush(self):
+        exporter = ConsoleLogRecordExporter()
+        self.assertTrue(exporter.force_flush())
+
+
+class TestInMemoryLogRecordExporter(unittest.TestCase):
+    def test_force_flush(self):
+        exporter = InMemoryLogRecordExporter()
+        self.assertTrue(exporter.force_flush())
