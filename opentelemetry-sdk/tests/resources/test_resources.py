@@ -1036,20 +1036,14 @@ from opentelemetry.sdk.resources import ServiceInstanceIdResourceDetector, SERVI
 
 parent_id = ServiceInstanceIdResourceDetector().detect().attributes[SERVICE_INSTANCE_ID]
 
-r_fd, w_fd = os.pipe()
 pid = os.fork()
 if not pid:
-    os.close(r_fd)
     child_id = ServiceInstanceIdResourceDetector().detect().attributes[SERVICE_INSTANCE_ID]
-    with os.fdopen(w_fd, "w") as w:
-        w.write(child_id)
+    print(f"child:{child_id}", flush=True)
     os._exit(0)
 else:
-    os.close(w_fd)
-    with os.fdopen(r_fd, "r") as r:
-        child_id = r.read()
     os.waitpid(pid, 0)
-    print(f"{parent_id}:{child_id}")
+    print(f"parent:{parent_id}", flush=True)
 """
         result = subprocess.run(
             [sys.executable, "-c", script],
@@ -1057,7 +1051,10 @@ else:
             text=True,
             check=True,
         )
-        parent_id, child_id = result.stdout.strip().split(":")
+        ids = dict(
+            line.split(":", 1) for line in result.stdout.strip().splitlines()
+        )
+        parent_id, child_id = ids["parent"], ids["child"]
         self.assertNotEqual(parent_id, child_id)
         self.assertEqual(uuid.UUID(parent_id).version, 4)
         self.assertEqual(uuid.UUID(child_id).version, 4)
