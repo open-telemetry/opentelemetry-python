@@ -124,6 +124,14 @@ class LogRecordExporter(abc.ABC):
         """Hint to ensure that the export of any ``ReadableLogRecord`` objects
         the exporter has received prior to the call to ``force_flush`` SHOULD be
         completed as soon as possible, preferably before returning from this method.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for the flush to
+                complete, in milliseconds.
+
+        Returns:
+            ``True`` if the flush completed successfully within the timeout,
+            ``False`` otherwise.
         """
 
 
