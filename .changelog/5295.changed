@@ -1,0 +1,1 @@
+ `opentelemetry-exporter-otlp-proto-http`: Update log, metrics and trace exporters to return response code in addition to success/failure flag
