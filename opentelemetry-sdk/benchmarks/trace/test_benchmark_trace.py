@@ -1,10 +1,12 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import tracemalloc
 from functools import lru_cache
 
 import pytest
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import (
     ReadableSpan,
@@ -192,3 +194,24 @@ def test_read_links(benchmark, num_links):
         span.end()
 
     benchmark(benchmark_read_links)
+
+
+@pytest.mark.parametrize("num_attrs", [1, 10, 50, 128])
+def test_bounded_attribute_iterator(benchmark, num_attrs):
+    attrs = BoundedAttributes(
+        attributes={f"key{i}": f"value{i}" for i in range(num_attrs)}
+    )
+
+    peaks = []
+    for _ in range(200):
+        tracemalloc.start()
+        list(attrs)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
+
+    def benchmark_iter():
+        list(attrs)
+
+    benchmark(benchmark_iter)
