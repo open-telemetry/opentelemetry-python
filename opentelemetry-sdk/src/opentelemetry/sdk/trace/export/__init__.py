@@ -56,13 +56,6 @@ class SpanExportResult(Enum):
 
 @dataclass(frozen=True)
 class SpanExportResponse:
-    """Result of a span export operation.
-
-    Attributes:
-        result: The :class:`SpanExportResult` indicating success or failure.
-        error: The exception raised during export, if any. ``None`` on success.
-    """
-
     result: SpanExportResult
     error: Exception | None = None
 

@@ -78,13 +78,6 @@ class MetricExportResult(Enum):
 
 @dataclass(frozen=True)
 class MetricExportResponse:
-    """Result of a metric export operation.
-
-    Attributes:
-        result: The :class:`MetricExportResult` indicating success or failure.
-        error: The exception raised during export, if any. ``None`` on success.
-    """
-
     result: MetricExportResult
     error: Exception | None = None
 

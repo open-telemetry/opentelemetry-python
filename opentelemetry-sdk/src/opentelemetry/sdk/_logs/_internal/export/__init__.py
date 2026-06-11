@@ -70,13 +70,6 @@ class LogRecordExportResult(enum.Enum):
 
 @dataclass(frozen=True)
 class LogRecordExportResponse:
-    """Result of a log record export operation.
-
-    Attributes:
-        result: The :class:`LogRecordExportResult` indicating success or failure.
-        error: The exception raised during export, if any. ``None`` on success.
-    """
-
     result: LogRecordExportResult
     error: Exception | None = None
 
