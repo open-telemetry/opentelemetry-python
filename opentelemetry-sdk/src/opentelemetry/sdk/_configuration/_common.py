@@ -6,6 +6,8 @@ from __future__ import annotations
 import dataclasses
 import inspect
 import logging
+from collections.abc import Callable
+from typing import Any, Protocol
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.util._importlib_metadata import entry_points
@@ -16,11 +18,11 @@ _logger = logging.getLogger(__name__)
 def _additional_properties(cls):
     """Decorator for dataclasses whose JSON Schema sets additionalProperties.
 
-    Wraps the dataclass-generated ``__init__`` so that unknown keyword
+    Wraps the dataclass-generated ``__init__`` so that extra keyword
     arguments are captured into an ``additional_properties`` instance
-    attribute instead of raising ``TypeError``.  This lets plugin/custom
+    attribute instead of raising ``TypeError``.  This lets user-defined
     component names flow through the config pipeline without modifying
-    the codegen output for known fields.
+    the codegen output for built-in fields.
 
     Applied automatically by the custom template in ``opentelemetry-sdk/codegen/``
     when ``additionalPropertiesType`` is present in the template context
@@ -72,6 +74,66 @@ def load_entry_point(group: str, name: str) -> type:
         ) from exc
 
 
+class _ComponentConfig(Protocol):
+    """Protocol for config dataclasses decorated with @_additional_properties.
+
+    Values in ``additional_properties`` are nested config dicts (suitable
+    for ``**kwargs`` splatting to the user-defined component class) or
+    ``None`` (when the YAML uses ``my_plugin:`` or ``my_plugin: null``).
+
+    Note: the generated models declare ``additional_properties`` as a
+    ``ClassVar`` even though the decorator assigns it as an instance
+    attribute at runtime. This is tolerated by pyright in ``standard``
+    mode but flagged in ``strict`` mode. See #5268.
+    """
+
+    additional_properties: dict[str, dict[str, Any] | None]
+
+
+def _resolve_component(
+    config: _ComponentConfig,
+    registry: dict[str, Callable[[Any], Any]],
+    entry_point_group: str,
+    component_type: str,
+) -> Any:
+    """Resolve a config dataclass to a component instance.
+
+    Checks built-in factories in ``registry`` first (by matching typed
+    field names on ``config``), then falls back to entry point loading
+    for plugin components found in ``config.additional_properties``.
+
+    The JSON schema enforces exactly one component per config block
+    (``minProperties: 1, maxProperties: 1``). If multiple typed fields or
+    ``additional_properties`` entries are set (e.g. when schema validation
+    is bypassed), the first registry match wins.
+
+    Args:
+        config: A dataclass with ``additional_properties`` (from the
+            ``@_additional_properties`` decorator).
+        registry: Mapping of built-in component names to factory
+            callables. Each factory receives the field value from config.
+        entry_point_group: The entry point group name for plugin loading.
+        component_type: Human-readable name for error messages
+            (e.g. "span exporter").
+
+    Returns:
+        The resolved component instance.
+
+    Raises:
+        ConfigurationError: If no component type is specified in config.
+    """
+    for name, factory in registry.items():
+        value = getattr(config, name, None)
+        if value is not None:
+            return factory(value)
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point(entry_point_group, name)(
+            **(plugin_config or {})
+        )
+    raise ConfigurationError(f"No {component_type} type specified in config.")
+
+
 def _parse_headers(
     headers: list | None,
     headers_list: str | None,
@@ -102,3 +164,33 @@ def _parse_headers(
             else:
                 result[pair.name] = pair.value or ""
     return result
+
+
+def _map_compression(
+    value: str | None,
+    compression_enum: type,
+    *,
+    allow_deflate: bool = False,
+) -> object | None:
+    """Map a compression string to the given Compression enum value."""
+    if value is None:
+        return None
+
+    value_lower = value.lower()
+    supports_deflate = hasattr(compression_enum, "Deflate")
+
+    if value_lower == "none":
+        return None
+    if value_lower == "gzip":
+        return compression_enum.Gzip  # type: ignore[attr-defined]
+    if value_lower == "deflate" and allow_deflate and supports_deflate:
+        return compression_enum.Deflate  # type: ignore[attr-defined]
+
+    supported_values = ["'gzip'", "'none'"]
+    if allow_deflate and supports_deflate:
+        supported_values.insert(1, "'deflate'")
+
+    raise ConfigurationError(
+        f"Unsupported compression value '{value}'. Supported values: "
+        f"{', '.join(supported_values)}."
+    )

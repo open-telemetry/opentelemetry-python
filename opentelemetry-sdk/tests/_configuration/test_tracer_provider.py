@@ -207,11 +207,11 @@ class TestCreateSampler(unittest.TestCase):
         self.assertIs(sampler._local_parent_sampled, ALWAYS_ON)
         self.assertIs(sampler._local_parent_not_sampled, ALWAYS_OFF)
 
-    def test_unknown_sampler_raises_configuration_error(self):
+    def test_no_sampler_raises_configuration_error(self):
         with self.assertRaises(ConfigurationError):
             self._make_provider(SamplerConfig())
 
-    def test_plugin_sampler_loaded_via_entry_point(self):
+    def test_user_defined_sampler_loaded_via_entry_point(self):
         mock_sampler = MagicMock(spec=Sampler)
         mock_class = MagicMock(return_value=mock_sampler)
         with patch(
@@ -222,7 +222,7 @@ class TestCreateSampler(unittest.TestCase):
             provider = self._make_provider(SamplerConfig(my_custom_sampler={}))
         self.assertIs(provider.sampler, mock_sampler)
 
-    def test_unknown_plugin_raises_configuration_error(self):
+    def test_user_defined_sampler_not_found_raises_configuration_error(self):
         with patch(
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],
@@ -316,6 +316,32 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             timeout=None,
             compression=None,
         )
+
+    def test_otlp_http_created_with_deflate_compression(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_compression_cls.Deflate = "deflate_val"
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+        mock_http_module = MagicMock()
+        mock_http_module.Compression = mock_compression_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(compression="deflate")
+                )
+            )
+            create_tracer_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertEqual(kwargs["compression"], "deflate_val")
 
     def test_otlp_http_headers_list(self):
         mock_exporter_cls = MagicMock()

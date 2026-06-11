@@ -7,6 +7,7 @@ import logging
 
 from opentelemetry import trace
 from opentelemetry.sdk._configuration._common import (
+    _map_compression,
     _parse_headers,
     load_entry_point,
 )
@@ -83,7 +84,9 @@ def _create_otlp_http_span_exporter(
             "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
         ) from exc
 
-    compression = _map_compression(config.compression, Compression)
+    compression = _map_compression(
+        config.compression, Compression, allow_deflate=True
+    )
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
@@ -92,19 +95,6 @@ def _create_otlp_http_span_exporter(
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
-    )
-
-
-def _map_compression(
-    value: str | None, compression_enum: type
-) -> object | None:
-    """Map a compression string to the given Compression enum value."""
-    if value is None or value.lower() == "none":
-        return None
-    if value.lower() == "gzip":
-        return compression_enum.Gzip  # type: ignore[attr-defined]
-    raise ConfigurationError(
-        f"Unsupported compression value '{value}'. Supported values: 'gzip', 'none'."
     )
 
 
@@ -198,8 +188,8 @@ def _create_span_processor(
 def _create_sampler(config: SamplerConfig) -> Sampler:
     """Create a sampler from config.
 
-    Known sampler types are checked via typed fields on the Sampler
-    dataclass. Unknown sampler names captured in additional_properties
+    Built-in sampler types are checked via typed fields on the Sampler
+    dataclass. User-defined sampler names captured in additional_properties
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_sampler`` entry point group.
     """
@@ -216,7 +206,7 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
         name = next(iter(config.additional_properties))
         return load_entry_point("opentelemetry_sampler", name)()
     raise ConfigurationError(
-        f"Unknown or unsupported sampler type in config: {config!r}. "
+        f"Unsupported sampler type in config: {config!r}. "
         "Supported types: always_on, always_off, trace_id_ratio_based, parent_based."
     )
 
