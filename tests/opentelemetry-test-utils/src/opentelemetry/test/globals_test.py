@@ -34,6 +34,14 @@ def reset_logging_globals() -> None:
     logging_api._PROXY_LOGGER_PROVIDER = logging_api.ProxyLoggerProvider()  # type: ignore[attr-defined]
 
 
+# pylint: disable=protected-access
+def reset_event_globals() -> None:
+    """Deprecated no-op kept for backward compatibility.
+
+    The Events API has been removed; this function does nothing.
+    """
+
+
 class TraceGlobalsTest(unittest.TestCase):
     """Resets trace API globals in setUp/tearDown
 
@@ -77,3 +85,10 @@ class LoggingGlobalsTest(unittest.TestCase):
     def tearDown(self) -> None:
         super().tearDown()
         reset_logging_globals()
+
+
+class EventsGlobalsTest(unittest.TestCase):
+    """Deprecated no-op kept for backward compatibility.
+
+    The Events API has been removed; this class does nothing.
+    """
