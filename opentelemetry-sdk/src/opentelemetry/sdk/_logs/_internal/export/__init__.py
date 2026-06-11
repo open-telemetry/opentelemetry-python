@@ -7,8 +7,9 @@ import enum
 import logging
 import sys
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from os import environ, linesep
-from typing import IO
+from typing import IO, Optional
 
 from typing_extensions import deprecated
 
@@ -65,6 +66,19 @@ _propagate_false_logger.propagate = False
 class LogRecordExportResult(enum.Enum):
     SUCCESS = 0
     FAILURE = 1
+
+
+@dataclass(frozen=True)
+class LogRecordExportResponse:
+    """Result of a log record export operation.
+
+    Attributes:
+        result: The :class:`LogRecordExportResult` indicating success or failure.
+        error: The exception raised during export, if any. ``None`` on success.
+    """
+
+    result: LogRecordExportResult
+    error: Optional[BaseException] = None
 
 
 @deprecated(

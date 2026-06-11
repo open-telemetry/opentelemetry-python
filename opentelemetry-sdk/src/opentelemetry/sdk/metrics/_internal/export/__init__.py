@@ -7,13 +7,14 @@ import os
 import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from enum import Enum
 from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
-from typing import IO
+from typing import IO, Optional
 
 from typing_extensions import final
 
@@ -74,6 +75,12 @@ class MetricExportResult(Enum):
     SUCCESS = 0
     FAILURE = 1
 
+@dataclass(frozen=True)
+class MetricExportResponse:
+    """Response of exporting a metric"""
+
+    result: MetricExportResult
+    error: Optional[BaseException] = None
 
 class MetricExporter(ABC):
     """Interface for exporting metrics.

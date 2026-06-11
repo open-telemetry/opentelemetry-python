@@ -81,6 +81,7 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
     AggregationTemporality,
     Gauge,
     MetricExporter,
+    MetricExportResponse,
     MetricExportResult,
     MetricsData,
     Sum,
@@ -259,7 +260,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         export_request: ExportMetricsServiceRequest,
         deadline_sec: float,
         num_items: int,
-    ) -> MetricExportResult:
+    ) -> MetricExportResponse:
         """Export serialized data with retry logic until success, non-transient error, or exponential backoff maxed out.
 
         Args:
@@ -267,19 +268,22 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             deadline_sec: timestamp deadline for the export
 
         Returns:
-            MetricExportResult: SUCCESS if export succeeded, FAILURE otherwise
+            MetricExportResponse: containing the result and any error encountered.
         """
+        export_error: Exception | None = None
         with self._metrics.export_operation(num_items) as result:
             serialized_data = export_request.SerializeToString()
             deadline_sec = time() + self._timeout
             for retry_num in range(_MAX_RETRYS):
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Exception | None = None
+                export_error = None
                 try:
                     resp = self._export(serialized_data, deadline_sec - time())
                     if resp.ok:
-                        return MetricExportResult.SUCCESS
+                        return MetricExportResponse(
+                            MetricExportResult.SUCCESS
+                        )
                 except requests.exceptions.RequestException as error:
                     reason = error
                     export_error = error
@@ -303,7 +307,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     )
                     result.error = export_error
                     result.error_attrs = error_attrs
-                    return MetricExportResult.FAILURE
+                    return MetricExportResponse(
+                        MetricExportResult.FAILURE, export_error
+                    )
                 if (
                     retry_num + 1 == _MAX_RETRYS
                     or backoff_seconds > (deadline_sec - time())
@@ -320,7 +326,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                     )
                     result.error = export_error
                     result.error_attrs = error_attrs
-                    return MetricExportResult.FAILURE
+                    return MetricExportResponse(
+                        MetricExportResult.FAILURE, export_error
+                    )
 
                 _logger.warning(
                     "Transient error %s encountered while exporting metrics batch, retrying in %.2fs.",
@@ -331,17 +339,19 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 if shutdown:
                     _logger.warning("Shutdown in progress, aborting retry.")
                     break
-            return MetricExportResult.FAILURE
+            return MetricExportResponse(
+                MetricExportResult.FAILURE, export_error
+            )
 
-    def export(
+    def export(  # type: ignore [reportIncompatibleMethodOverride]
         self,
         metrics_data: MetricsData,
         timeout_millis: float | None = 10000,
         **kwargs,
-    ) -> MetricExportResult:
+    ) -> MetricExportResponse:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
-            return MetricExportResult.FAILURE
+            return MetricExportResponse(MetricExportResult.FAILURE)
 
         num_items = 0
         for resource_metrics in metrics_data.resource_metrics:
@@ -369,11 +379,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 deadline_sec,
                 num_items,
             )
-            if export_result != MetricExportResult.SUCCESS:
-                return MetricExportResult.FAILURE
+            if export_result.result != MetricExportResult.SUCCESS:
+                return MetricExportResponse(
+                    MetricExportResult.FAILURE,
+                    export_result.error,
+                )
 
         # Only returns SUCCESS if all batches succeeded
-        return MetricExportResult.SUCCESS
+        return MetricExportResponse(MetricExportResult.SUCCESS)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:

@@ -32,6 +32,7 @@ from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
+    LogRecordExportResponse,
     LogRecordExportResult,
 )
 from opentelemetry.sdk._shared_internal import DuplicateFilter
@@ -191,24 +192,27 @@ class OTLPLogExporter(LogRecordExporter):
             )
         return resp
 
-    def export(
+    def export(  # type: ignore [reportIncompatibleMethodOverride]
         self, batch: Sequence[ReadableLogRecord]
-    ) -> LogRecordExportResult:
+    ) -> LogRecordExportResponse:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
-            return LogRecordExportResult.FAILURE
+            return LogRecordExportResponse(LogRecordExportResult.FAILURE)
 
+        export_error: Exception | None = None
         with self._metrics.export_operation(len(batch)) as result:
             serialized_data = encode_logs(batch).SerializeToString()
             deadline_sec = time() + self._timeout
             for retry_num in range(_MAX_RETRYS):
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Exception | None = None
+                export_error = None
                 try:
                     resp = self._export(serialized_data, deadline_sec - time())
                     if resp.ok:
-                        return LogRecordExportResult.SUCCESS
+                        return LogRecordExportResponse(
+                            LogRecordExportResult.SUCCESS
+                        )
                 except requests.exceptions.RequestException as error:
                     reason = error
                     export_error = error
@@ -232,7 +236,9 @@ class OTLPLogExporter(LogRecordExporter):
                     )
                     result.error = export_error
                     result.error_attrs = error_attrs
-                    return LogRecordExportResult.FAILURE
+                    return LogRecordExportResponse(
+                        LogRecordExportResult.FAILURE, error=export_error
+                    )
 
                 if (
                     retry_num + 1 == _MAX_RETRYS
@@ -250,7 +256,9 @@ class OTLPLogExporter(LogRecordExporter):
                     )
                     result.error = export_error
                     result.error_attrs = error_attrs
-                    return LogRecordExportResult.FAILURE
+                    return LogRecordExportResponse(
+                        LogRecordExportResult.FAILURE, error=export_error
+                    )
                 _logger.warning(
                     "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
                     reason,
@@ -260,7 +268,9 @@ class OTLPLogExporter(LogRecordExporter):
                 if shutdown:
                     _logger.warning("Shutdown in progress, aborting retry.")
                     break
-            return LogRecordExportResult.FAILURE
+            return LogRecordExportResponse(
+                LogRecordExportResult.FAILURE, error=export_error
+            )
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""

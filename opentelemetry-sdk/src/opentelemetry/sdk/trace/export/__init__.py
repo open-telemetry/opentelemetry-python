@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import sys
 import typing
+from dataclasses import dataclass
 from enum import Enum
 from os import environ, linesep
 
@@ -51,6 +52,19 @@ logger = logging.getLogger(__name__)
 class SpanExportResult(Enum):
     SUCCESS = 0
     FAILURE = 1
+
+
+@dataclass(frozen=True)
+class SpanExportResponse:
+    """Result of a span export operation.
+
+    Attributes:
+        result: The :class:`SpanExportResult` indicating success or failure.
+        error: The exception raised during export, if any. ``None`` on success.
+    """
+
+    result: SpanExportResult
+    error: Exception | None = None
 
 
 class SpanExporter:

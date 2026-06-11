@@ -452,7 +452,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         """
 
         self.assertEqual(
-            OTLPLogExporter().export(MagicMock()),
+            OTLPLogExporter().export(MagicMock()).result,
             LogRecordExportResult.SUCCESS,
         )
 
@@ -473,7 +473,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             before = time.time()
             # Set timeout to 1.5 seconds
             self.assertEqual(
-                exporter.export(self._get_sdk_log_data()),
+                exporter.export(self._get_sdk_log_data()).result,
                 LogRecordExportResult.FAILURE,
             )
             after = time.time()
@@ -536,7 +536,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         mock_post.side_effect = ConnectionError(msg)
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                exporter.export(self._get_sdk_log_data()),
+                exporter.export(self._get_sdk_log_data()).result,
                 LogRecordExportResult.FAILURE,
             )
             # Check for greater 2 because the request is on each retry
@@ -559,7 +559,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         mock_post.side_effect = requests.exceptions.RequestException()
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                exporter.export(self._get_sdk_log_data()),
+                exporter.export(self._get_sdk_log_data()).result,
                 LogRecordExportResult.FAILURE,
             )
             self.assertEqual(mock_post.call_count, 1)

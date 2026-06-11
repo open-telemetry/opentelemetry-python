@@ -336,7 +336,7 @@ class TestOTLPMetricExporter(TestCase):
         exporter.set_meter_provider(self.meter_provider)
 
         self.assertEqual(
-            exporter.export(self.metrics["sum_int"]),
+            exporter.export(self.metrics["sum_int"]).result,
             MetricExportResult.SUCCESS,
         )
 
@@ -377,7 +377,7 @@ class TestOTLPMetricExporter(TestCase):
         exporter.set_meter_provider(self.meter_provider)
 
         self.assertEqual(
-            exporter.export(self.metrics["sum_int"]),
+            exporter.export(self.metrics["sum_int"]).result,
             MetricExportResult.FAILURE,
         )
 
@@ -437,7 +437,7 @@ class TestOTLPMetricExporter(TestCase):
         exporter = OTLPMetricExporter()
 
         self.assertEqual(
-            exporter.export(self.metrics["sum_int"]),
+            exporter.export(self.metrics["sum_int"]).result,
             MetricExportResult.SUCCESS,
         )
 
@@ -962,7 +962,7 @@ class TestOTLPMetricExporter(TestCase):
         exporter = OTLPMetricExporter(max_export_batch_size=3)
         result = exporter.export(metrics_data)
 
-        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(result.result, MetricExportResult.SUCCESS)
         self.assertEqual(mock_post.call_count, 1)
         mock_post.assert_called_once()
 
@@ -996,7 +996,7 @@ class TestOTLPMetricExporter(TestCase):
         exporter = OTLPMetricExporter(max_export_batch_size=2)
         result = exporter.export(metrics_data)
 
-        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(result.result, MetricExportResult.SUCCESS)
         self.assertEqual(mock_post.call_count, 2)
 
         for call_args in mock_post.call_args_list:
@@ -1050,7 +1050,7 @@ class TestOTLPMetricExporter(TestCase):
 
         # Export should fail when second batch fails
         result = exporter.export(metrics_data)
-        self.assertEqual(result, MetricExportResult.FAILURE)
+        self.assertEqual(result.result, MetricExportResult.FAILURE)
         self.assertEqual(mock_post.call_count, 2)
 
         # Verify the content of successful first batch
@@ -1088,7 +1088,7 @@ class TestOTLPMetricExporter(TestCase):
 
         # Export should eventually succeed after retry
         result = exporter.export(metrics_data)
-        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(result.result, MetricExportResult.SUCCESS)
         self.assertEqual(
             mock_post.call_count, 3
         )  # First batch + retry of second batch
@@ -1267,7 +1267,7 @@ class TestOTLPMetricExporter(TestCase):
         """
 
         self.assertEqual(
-            OTLPMetricExporter().export(MagicMock()),
+            OTLPMetricExporter().export(MagicMock()).result,
             MetricExportResult.SUCCESS,
         )
 
@@ -1280,7 +1280,7 @@ class TestOTLPMetricExporter(TestCase):
         exporter.set_meter_provider(self.meter_provider)
 
         self.assertEqual(
-            exporter.export(self.metrics["sum_int"]),
+            exporter.export(self.metrics["sum_int"]).result,
             MetricExportResult.SUCCESS,
         )
 
@@ -1317,7 +1317,7 @@ class TestOTLPMetricExporter(TestCase):
         with self.assertLogs(level=WARNING) as warning:
             before = time.time()
             self.assertEqual(
-                exporter.export(self.metrics["sum_int"]),
+                exporter.export(self.metrics["sum_int"]).result,
                 MetricExportResult.FAILURE,
             )
             after = time.time()
@@ -1385,7 +1385,7 @@ class TestOTLPMetricExporter(TestCase):
         mock_post.side_effect = ConnectionError(msg)
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                exporter.export(self.metrics["sum_int"]),
+                exporter.export(self.metrics["sum_int"]).result,
                 MetricExportResult.FAILURE,
             )
             # Check for greater 2 because the request is on each retry
@@ -1403,7 +1403,7 @@ class TestOTLPMetricExporter(TestCase):
         mock_post.side_effect = requests.exceptions.RequestException()
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                exporter.export(self.metrics["sum_int"]),
+                exporter.export(self.metrics["sum_int"]).result,
                 MetricExportResult.FAILURE,
             )
             self.assertEqual(mock_post.call_count, 1)

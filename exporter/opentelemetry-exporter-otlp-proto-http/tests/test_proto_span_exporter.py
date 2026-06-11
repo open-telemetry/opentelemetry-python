@@ -274,7 +274,8 @@ class TestOTLPSpanExporter(unittest.TestCase):
         """
 
         self.assertEqual(
-            OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS
+            OTLPSpanExporter().export(MagicMock()).result,
+            SpanExportResult.SUCCESS,
         )
 
     @patch.dict("os.environ", {}, clear=True)
@@ -283,7 +284,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter(meter_provider=self.meter_provider)
 
         self.assertEqual(
-            exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS
+            exporter.export([BASIC_SPAN]).result, SpanExportResult.SUCCESS
         )
 
         self.assertIsNone(self.metric_reader.get_metrics_data())
@@ -305,7 +306,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             before = time.time()
             # Set timeout to 1.5 seconds
             self.assertEqual(
-                exporter.export([BASIC_SPAN]),
+                exporter.export([BASIC_SPAN]).result,
                 SpanExportResult.FAILURE,
             )
             after = time.time()
@@ -368,7 +369,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         mock_post.side_effect = ConnectionError(msg)
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                exporter.export([BASIC_SPAN]),
+                exporter.export([BASIC_SPAN]).result,
                 SpanExportResult.FAILURE,
             )
             # Check for greater 2 because the request is on each retry
@@ -391,7 +392,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         mock_post.side_effect = requests.exceptions.RequestException()
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(
-                exporter.export([BASIC_SPAN]),
+                exporter.export([BASIC_SPAN]).result,
                 SpanExportResult.FAILURE,
             )
             self.assertEqual(mock_post.call_count, 1)

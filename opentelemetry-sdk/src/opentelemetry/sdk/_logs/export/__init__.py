@@ -8,6 +8,7 @@ from opentelemetry.sdk._logs._internal.export import (
     LogExporter,
     LogExportResult,
     LogRecordExporter,
+    LogRecordExportResponse,
     LogRecordExportResult,
     SimpleLogRecordProcessor,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "LogExporter",
     "LogRecordExporter",
     "LogExportResult",
+    "LogRecordExportResponse",
     "LogRecordExportResult",
     "SimpleLogRecordProcessor",
     "InMemoryLogExporter",

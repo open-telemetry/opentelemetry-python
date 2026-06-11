@@ -50,7 +50,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.trace import ReadableSpan
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.trace.export import (
+    SpanExporter,
+    SpanExportResponse,
+    SpanExportResult,
+)
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
@@ -186,22 +190,25 @@ class OTLPSpanExporter(SpanExporter):
             )
         return resp
 
-    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+    def export(  # type: ignore [reportIncompatibleMethodOverride]
+        self, spans: Sequence[ReadableSpan]
+    ) -> SpanExportResponse:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
-            return SpanExportResult.FAILURE
+            return SpanExportResponse(SpanExportResult.FAILURE)
 
+        export_error: Exception | None = None
         with self._metrics.export_operation(len(spans)) as result:
             serialized_data = encode_spans(spans).SerializePartialToString()
             deadline_sec = time() + self._timeout
             for retry_num in range(_MAX_RETRYS):
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                 backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Exception | None = None
+                export_error = None
                 try:
                     resp = self._export(serialized_data, deadline_sec - time())
                     if resp.ok:
-                        return SpanExportResult.SUCCESS
+                        return SpanExportResponse(SpanExportResult.SUCCESS)
                 except requests.exceptions.RequestException as error:
                     reason = error
                     export_error = error
@@ -225,7 +232,9 @@ class OTLPSpanExporter(SpanExporter):
                     )
                     result.error = export_error
                     result.error_attrs = error_attrs
-                    return SpanExportResult.FAILURE
+                    return SpanExportResponse(
+                        SpanExportResult.FAILURE, error=export_error
+                    )
 
                 if (
                     retry_num + 1 == _MAX_RETRYS
@@ -243,7 +252,9 @@ class OTLPSpanExporter(SpanExporter):
                     )
                     result.error = export_error
                     result.error_attrs = error_attrs
-                    return SpanExportResult.FAILURE
+                    return SpanExportResponse(
+                        SpanExportResult.FAILURE, error=export_error
+                    )
                 _logger.warning(
                     "Transient error %s encountered while exporting span batch, retrying in %.2fs.",
                     reason,
@@ -253,7 +264,9 @@ class OTLPSpanExporter(SpanExporter):
                 if shutdown:
                     _logger.warning("Shutdown in progress, aborting retry.")
                     break
-            return SpanExportResult.FAILURE
+            return SpanExportResponse(
+                SpanExportResult.FAILURE, error=export_error
+            )
 
     def shutdown(self):
         if self._shutdown:
