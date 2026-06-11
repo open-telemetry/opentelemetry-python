@@ -91,6 +91,47 @@ def test_simple_start_span_with_tracer_configurator_rules(
     )
 
 
+@pytest.mark.parametrize("num_attrs", [1, 10, 50, 128])
+def test_set_attribute(benchmark, num_attrs):
+    attrs = {f"key{i}": f"value{i}" for i in range(num_attrs)}
+
+    def benchmark_set_attribute():
+        span = tracer.start_span("benchmarkedSpan")
+        for key, value in attrs.items():
+            span.set_attribute(key, value)
+        span.end()
+
+    benchmark(benchmark_set_attribute)
+
+
+@pytest.mark.parametrize(
+    "attr_type,value",
+    [
+        ("bool", True),
+        ("int", 42),
+        ("float", 3.14),
+        ("str", "hello world"),
+        ("bytes", b"hello world"),
+        ("seq_bool", (True, False, True)),
+        ("seq_int", (1, 2, 3, 4, 5)),
+        ("seq_float", (1.1, 2.2, 3.3)),
+        ("seq_str", ("a", "b", "c", "d", "e")),
+        ("seq_bytes", (b"a", b"b", b"c")),
+    ],
+)
+def test_set_attribute_types(benchmark, attr_type, value):
+    attrs = {f"key{i}": value for i in range(128)}
+
+    def benchmark_set_attribute():
+        for _ in range(5_000):
+            span = tracer.start_span("benchmarkedSpan")
+            for key, val in attrs.items():
+                span.set_attribute(key, val)
+            span.end()
+
+    benchmark(benchmark_set_attribute)
+
+
 def test_simple_start_as_current_span(benchmark):
     def benchmark_start_as_current_span():
         with tracer.start_as_current_span(

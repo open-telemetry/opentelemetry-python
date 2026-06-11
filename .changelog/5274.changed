@@ -1,0 +1,1 @@
+opentelemetry-sdk: remove unnecessary dict in set_attribute method
