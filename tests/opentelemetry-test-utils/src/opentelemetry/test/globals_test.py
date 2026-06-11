@@ -93,8 +93,8 @@ class EventsGlobalsTest(unittest.TestCase):
     The Events API has been removed; this class does nothing.
     """
 
-    def setUp(self) -> None:
+    def setUp(self) -> None:  # pylint: disable=useless-parent-delegation
         super().setUp()
 
-    def tearDown(self) -> None:
+    def tearDown(self) -> None:  # pylint: disable=useless-parent-delegation
         super().tearDown()
