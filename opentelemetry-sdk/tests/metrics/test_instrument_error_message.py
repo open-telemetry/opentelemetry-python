@@ -1,9 +1,7 @@
 import unittest
 
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-
 from opentelemetry.sdk.metrics._internal.instrument import _Synchronous
-
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 class TestInstrumentErrorMessage(unittest.TestCase):
     def test_invalid_name_error_message(self):
