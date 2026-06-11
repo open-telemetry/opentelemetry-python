@@ -9,7 +9,7 @@ import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from os import environ, linesep
-from typing import IO, Optional
+from typing import IO
 
 from typing_extensions import deprecated
 
@@ -78,7 +78,7 @@ class LogRecordExportResponse:
     """
 
     result: LogRecordExportResult
-    error: Optional[BaseException] = None
+    error: Exception | None = None
 
 
 @deprecated(

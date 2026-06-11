@@ -233,7 +233,7 @@ class OTLPSpanExporter(SpanExporter):
                     result.error = export_error
                     result.error_attrs = error_attrs
                     return SpanExportResponse(
-                        SpanExportResult.FAILURE, error=export_error
+                        SpanExportResult.FAILURE, export_error
                     )
 
                 if (
@@ -253,7 +253,7 @@ class OTLPSpanExporter(SpanExporter):
                     result.error = export_error
                     result.error_attrs = error_attrs
                     return SpanExportResponse(
-                        SpanExportResult.FAILURE, error=export_error
+                        SpanExportResult.FAILURE, export_error
                     )
                 _logger.warning(
                     "Transient error %s encountered while exporting span batch, retrying in %.2fs.",
@@ -265,7 +265,7 @@ class OTLPSpanExporter(SpanExporter):
                     _logger.warning("Shutdown in progress, aborting retry.")
                     break
             return SpanExportResponse(
-                SpanExportResult.FAILURE, error=export_error
+                SpanExportResult.FAILURE, export_error
             )
 
     def shutdown(self):

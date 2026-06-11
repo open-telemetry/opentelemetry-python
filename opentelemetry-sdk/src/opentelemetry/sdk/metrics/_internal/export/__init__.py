@@ -14,7 +14,7 @@ from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
-from typing import IO, Optional
+from typing import IO
 
 from typing_extensions import final
 
@@ -75,12 +75,19 @@ class MetricExportResult(Enum):
     SUCCESS = 0
     FAILURE = 1
 
+
 @dataclass(frozen=True)
 class MetricExportResponse:
-    """Response of exporting a metric"""
+    """Result of a metric export operation.
+
+    Attributes:
+        result: The :class:`MetricExportResult` indicating success or failure.
+        error: The exception raised during export, if any. ``None`` on success.
+    """
 
     result: MetricExportResult
-    error: Optional[BaseException] = None
+    error: Exception | None = None
+
 
 class MetricExporter(ABC):
     """Interface for exporting metrics.

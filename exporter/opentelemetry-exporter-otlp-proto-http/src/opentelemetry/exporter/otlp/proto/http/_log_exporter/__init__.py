@@ -237,7 +237,7 @@ class OTLPLogExporter(LogRecordExporter):
                     result.error = export_error
                     result.error_attrs = error_attrs
                     return LogRecordExportResponse(
-                        LogRecordExportResult.FAILURE, error=export_error
+                        LogRecordExportResult.FAILURE, export_error
                     )
 
                 if (
@@ -257,7 +257,7 @@ class OTLPLogExporter(LogRecordExporter):
                     result.error = export_error
                     result.error_attrs = error_attrs
                     return LogRecordExportResponse(
-                        LogRecordExportResult.FAILURE, error=export_error
+                        LogRecordExportResult.FAILURE, export_error
                     )
                 _logger.warning(
                     "Transient error %s encountered while exporting logs batch, retrying in %.2fs.",
@@ -269,7 +269,7 @@ class OTLPLogExporter(LogRecordExporter):
                     _logger.warning("Shutdown in progress, aborting retry.")
                     break
             return LogRecordExportResponse(
-                LogRecordExportResult.FAILURE, error=export_error
+                LogRecordExportResult.FAILURE, export_error
             )
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
