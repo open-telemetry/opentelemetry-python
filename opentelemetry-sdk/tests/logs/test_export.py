@@ -70,6 +70,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             def shutdown(self):
                 pass
 
+            def force_flush(self, timeout_millis: float = 10_000) -> bool:
+                return True
+
             def export(self, batch: Sequence[ReadableLogRecord]):
                 logger = logging.getLogger("any logger..")
                 logger.warning("Something happened.")
