@@ -26,20 +26,33 @@ from django.conf import settings
 
 settings.configure()
 
-# TODO: Is there a better way to do this ? I have to  do this re-import thing
-# in like a dozen
 # Provide AnyValue to a bunch of module's namespaces.
 # "AnyValue" forward reference in opentelemetry.util.types.AnyValue
 # resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
 # BoundedAttributes (whose __globals__ is the attributes module). Docs-only.
 import opentelemetry.attributes  # noqa: E402
 import opentelemetry.metrics  # noqa: E402
+import opentelemetry.sdk.metrics  # noqa: E402
+import opentelemetry.sdk.resources  # noqa: E402
+import opentelemetry.sdk.trace  # noqa: E402
+import opentelemetry.shim.opentracing_shim  # noqa: E402
+import opentelemetry.trace  # noqa: E402
 from opentelemetry.util.types import AnyValue as _AnyValue  # noqa: E402
 
 opentelemetry.metrics._internal.AnyValue = (
     opentelemetry.metrics._internal.instrument.AnyValue
 ) = opentelemetry.metrics._internal.observation.AnyValue = (
+    opentelemetry.sdk.metrics._internal.exemplar.exemplar_reservoir.AnyValue
+) = opentelemetry.sdk.metrics._internal.exemplar.exemplar.AnyValue = (
+    opentelemetry.sdk.metrics._internal.exemplar.exemplar_filter.AnyValue
+) = opentelemetry.trace.span.AnyValue = opentelemetry.trace.AnyValue = (
     opentelemetry.attributes.AnyValue
+) = opentelemetry.sdk.metrics._internal.AnyValue = (
+    opentelemetry.shim.opentracing_shim.AnyValue
+) = opentelemetry.sdk.metrics._internal.point.AnyValue = (
+    opentelemetry.sdk.resources.AnyValue
+) = opentelemetry.sdk.trace.AnyValue = (
+    opentelemetry.sdk.trace.sampling.AnyValue
 ) = _AnyValue
 
 

@@ -17,4 +17,3 @@ AnyValue = AttributeValue = (
     | None
 )
 Attributes = Mapping[str, AnyValue] | None
-
