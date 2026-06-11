@@ -1,8 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import collections.abc
 import threading
-import typing
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -31,7 +31,9 @@ class InMemorySpanExporter(SpanExporter):
         with self._lock:
             return tuple(self._finished_spans)
 
-    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
+    def export(
+        self, spans: collections.abc.Sequence[ReadableSpan]
+    ) -> SpanExportResult:
         """Stores a list of spans in memory."""
         if self._stopped:
             return SpanExportResult.FAILURE
