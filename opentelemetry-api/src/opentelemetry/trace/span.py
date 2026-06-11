@@ -7,6 +7,7 @@ import re
 import types as python_types
 import typing
 import warnings
+from collections.abc import Mapping
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -82,7 +83,7 @@ class Span(abc.ABC):
 
     @abc.abstractmethod
     def set_attributes(
-        self, attributes: typing.Mapping[str, types.AttributeValue]
+        self, attributes: Mapping[str, types.AttributeValue]
     ) -> None:
         """Sets Attributes.
 
@@ -535,9 +536,7 @@ class NonRecordingSpan(Span):
     def end(self, end_time: int | None = None) -> None:
         pass
 
-    def set_attributes(
-        self, attributes: typing.Mapping[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: types.Attributes) -> None:
         pass
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:

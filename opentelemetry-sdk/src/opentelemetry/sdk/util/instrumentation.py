@@ -10,7 +10,6 @@ from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.util.types import (  # TODO: see if we can remove F401 when using new sphinx version # noqa: F401 # pylint: disable=unused-import
     AnyValue,
     Attributes,
-    _ExtendedAttributes,
 )
 
 
@@ -88,14 +87,17 @@ class InstrumentationScope:
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> None:
         self._name = name
         self._version = version
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
-        self._attributes = BoundedAttributes(attributes=attributes)
+        # Attributes cannot be added/removed after creation.
+        self._attributes = BoundedAttributes(
+            attributes=attributes, immutable=True
+        )
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url}, {self._attributes})"

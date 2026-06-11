@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
+    _hash_attributes,
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -101,7 +102,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {frozenset([("c", "d")]): self.mock_created_aggregation},
+            {_hash_attributes({"c": "d"}): self.mock_created_aggregation},
         )
 
         view_instrument_match.consume_measurement(
@@ -117,8 +118,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                frozenset(): self.mock_created_aggregation,
-                frozenset([("c", "d")]): self.mock_created_aggregation,
+                _hash_attributes({}): self.mock_created_aggregation,
+                _hash_attributes({"c": "d"}): self.mock_created_aggregation,
             },
         )
 
@@ -147,8 +148,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                frozenset(
-                    [("c", "d"), ("f", "g")]
+                _hash_attributes(
+                    {"c": "d", "f": "g"}
                 ): self.mock_created_aggregation
             },
         )
@@ -178,7 +179,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {frozenset({}): self.mock_created_aggregation},
+            {_hash_attributes({}): self.mock_created_aggregation},
         )
 
         # Test that a drop aggregation is handled in the same way as any
@@ -207,7 +208,9 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[frozenset({})],
+            view_instrument_match._attributes_aggregation[
+                _hash_attributes({})
+            ],
             _DropAggregation,
         )
 
@@ -515,7 +518,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         self.assertIsInstance(
             view_instrument_match._attributes_aggregation[
-                frozenset({("c", "d")})
+                _hash_attributes({"c": "d"})
             ],
             _LastValueAggregation,
         )

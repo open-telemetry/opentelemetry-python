@@ -127,7 +127,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             JSONAnyValue(
                 kvlist_value=JSONKeyValueList(
                     values=[
-                        JSONKeyValue(key="error"),
+                        JSONKeyValue(key="error", value=JSONAnyValue()),
                         JSONKeyValue(
                             key="array_with_nones",
                             value=JSONAnyValue(
@@ -149,12 +149,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         log = make_log(body=None)
         result = encode_logs([log])
         lr = _get_first_log_record(result)
-        self.assertIsNone(lr.body)
-
-        lr_dict = result.to_dict()["resourceLogs"][0]["scopeLogs"][0][
-            "logRecords"
-        ][0]
-        self.assertNotIn("body", lr_dict)
+        self.assertEqual(lr.body, JSONAnyValue())
 
     def test_encode_log_extended_attributes(self):
         log = make_log(
@@ -184,7 +179,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         self.assertEqual(lr.observed_time_unix_nano, TIME + 1000)
         self.assertIsNone(lr.severity_text)
         self.assertIsNone(lr.severity_number)
-        self.assertIsNone(lr.body)
+        self.assertEqual(lr.body, JSONAnyValue())
         self.assertEqual(lr.attributes, [])
 
     def test_encode_log_event_name(self):

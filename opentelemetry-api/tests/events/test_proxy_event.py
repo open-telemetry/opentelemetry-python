@@ -6,7 +6,7 @@ import unittest
 
 import opentelemetry._events as events
 from opentelemetry.test.globals_test import EventsGlobalsTest
-from opentelemetry.util.types import _ExtendedAttributes
+from opentelemetry.util.types import Attributes
 
 
 class TestProvider(events.NoOpEventLoggerProvider):
@@ -15,7 +15,7 @@ class TestProvider(events.NoOpEventLoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> events.EventLogger:
         return LoggerTest(name)
 

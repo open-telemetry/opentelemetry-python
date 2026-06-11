@@ -4,265 +4,176 @@
 import copy
 import logging
 import threading
-from collections import OrderedDict
+import time
 from collections.abc import Mapping, MutableMapping, Sequence
+from enum import Enum
+from types import MappingProxyType
+from typing import Literal, overload
+
+from typing_extensions import deprecated
 
 from opentelemetry.util import types
 
-# bytes are accepted as a user supplied value for attributes but
-# decoded to strings internally.
-_VALID_ATTR_VALUE_TYPES = (bool, str, bytes, int, float)
-# AnyValue possible values
-_VALID_ANY_VALUE_TYPES = (
-    type(None),
-    bool,
-    bytes,
-    int,
-    float,
-    str,
-    Sequence,
-    Mapping,
-)
+
+class _InvalidAttributeValue(Enum):
+    INVALID_VALUE = 1
 
 
-# TODO: Remove this workaround and revert to the simpler implementation
-# once Python 3.9 support is dropped (planned around May 2026).
-# This exists only to avoid issues caused by deprecated behavior in 3.9.
-def _type_name(t):
-    return getattr(t, "__name__", getattr(t, "_name", repr(t)))
+class _DuplicateFilter(logging.Filter):
+    """Filter out potentially noisy logs"""
+
+    def filter(self, record):
+        current_log = (
+            record.module,
+            record.levelno,
+            record.lineno,
+            time.time() // 60,
+        )
+        if current_log != getattr(self, "last_log", None):
+            self.last_log = current_log  # pylint: disable=attribute-defined-outside-init
+            return True
+        # False means python's `logging` module will no longer process this log.
+        return False
 
 
 _logger = logging.getLogger(__name__)
+_logger.addFilter(_DuplicateFilter())
 
 
-# pylint: disable=too-many-return-statements
-# pylint: disable=too-many-branches
-def _clean_attribute(
-    key: str, value: types.AttributeValue, max_len: int | None
-) -> types.AttributeValue | tuple[str | int | float, ...] | None:
-    """Checks if attribute value is valid and cleans it if required.
+def _clean_attribute_value(  # pylint: disable=too-many-branches, too-many-return-statements
+    value: types.AttributeValue,
+    max_string_value_length: int | None,
+) -> types.AttributeValue | Literal[_InvalidAttributeValue.INVALID_VALUE]:
+    """Recursively checks if an attribute value is valid and cleans it if required.
 
-    The function returns the cleaned value or None if the value is not valid.
+    Byte values are attempted to be decoded to strings using utf-8. If it fails it is left as bytes.
+    String values are truncated to max_string_value_length if provided.
+    Anything that isn't of `types.AttributeValue`, we attempt to cast to `str`.
+    If this fails, the value is dropped. Sequence's are converted to tuples and mappings
+    are converted to MappingProxyType, these are immutable data structures, so if the sequence/map
+    is modified outside of this method, it will not affect the value in this container.
 
-    An attribute value is valid if it is either:
-        - A primitive type: string, boolean, double precision floating
-            point (IEEE 754-1985) or integer.
-        - An array of primitive type values. The array MUST be homogeneous,
-            i.e. it MUST NOT contain values of different types.
-
-    An attribute needs cleansing if:
-        - Its length is greater than the maximum allowed length.
-        - It needs to be encoded/decoded e.g, bytes to strings.
+    Returns:
+        _InvalidAttributeValue.INVALID_VALUE if the top level value is dropped and otherwise
+        returns the cleaned value.
     """
-
-    if not (key and isinstance(key, str)):
-        _logger.warning("invalid key `%s`. must be non-empty string.", key)
-        return None
-
-    if isinstance(value, _VALID_ATTR_VALUE_TYPES):
-        if isinstance(value, bytes):
-            try:
-                value = value.decode()
-            except UnicodeDecodeError:
-                _logger.warning("Byte attribute could not be decoded.")
-                return None
-        if max_len is not None and isinstance(value, str):
-            value = value[:max_len]
+    if isinstance(value, (type(None), bool, int, float)):
         return value
-
-    if isinstance(value, Sequence):
-        sequence_first_valid_type = None
-        cleaned_seq = []
-
-        for element in value:
-            if isinstance(element, bytes):
-                try:
-                    element = element.decode()
-                except UnicodeDecodeError:
-                    _logger.warning("Byte attribute could not be decoded.")
-                    cleaned_seq.append(None)
-                    continue
-            if max_len is not None and isinstance(element, str):
-                element = element[:max_len]
-            elif element is None:
-                cleaned_seq.append(None)
-                continue
-
-            element_type = type(element)
-            # Reject attribute value if sequence contains a value with an incompatible type.
-            if element_type not in _VALID_ATTR_VALUE_TYPES:
-                _logger.warning(
-                    "Invalid type %s in attribute '%s' value sequence. Expected one of "
-                    "%s or None",
-                    element_type.__name__,
-                    key,
-                    [
-                        valid_type.__name__
-                        for valid_type in _VALID_ATTR_VALUE_TYPES
-                    ],
-                )
-                return None
-
-            # The type of the sequence must be homogeneous. The first non-None
-            # element determines the type of the sequence
-            if sequence_first_valid_type is None:
-                sequence_first_valid_type = element_type
-            # use equality instead of isinstance as isinstance(True, int) evaluates to True
-            elif element_type != sequence_first_valid_type:
-                _logger.warning(
-                    "Attribute %r mixes types %s and %s in attribute value sequence",
-                    key,
-                    sequence_first_valid_type.__name__,
-                    type(element).__name__,
-                )
-                return None
-
-            cleaned_seq.append(element)
-
-        # Freeze mutable sequences defensively
-        return tuple(cleaned_seq)
-
-    _logger.warning(
-        "Invalid type %s for attribute '%s' value. Expected one of %s or a "
-        "sequence of those types",
-        type(value).__name__,
-        key,
-        [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
-    )
-    return None
-
-
-def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
-    value: types.AnyValue, max_len: int | None
-) -> types.AnyValue:
-    # for primitive types just return the value and eventually shorten the string length
-    if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
-        if max_len is not None and isinstance(value, str):
-            value = value[:max_len]
-        return value
-
-    if isinstance(value, Mapping):
-        cleaned_dict: dict[str, types.AnyValue] = {}
-        for key, element in value.items():
-            # skip invalid keys
-            if not (key and isinstance(key, str)):
-                _logger.warning(
-                    "invalid key `%s`. must be non-empty string.", key
-                )
-                continue
-
-            cleaned_dict[key] = _clean_extended_attribute(
-                key=key, value=element, max_len=max_len
+    if isinstance(value, bytes):
+        # Attempt to decode bytes into a string using utf-8.
+        # If it fails just leave it as is, as bytes is a valid attribute value type.
+        try:
+            value = value.decode("utf-8")
+        except UnicodeDecodeError:
+            return value
+    if isinstance(value, str):
+        if (
+            max_string_value_length is not None
+            and len(value) > max_string_value_length
+        ):
+            _logger.warning(
+                "String attribute value exceeds max length of %d, truncating.",
+                max_string_value_length,
             )
-
-        return cleaned_dict
-
+            value = value[:max_string_value_length]
+        return value
     if isinstance(value, Sequence):
-        sequence_first_valid_type = None
-        cleaned_seq: list[types.AnyValue] = []
-
-        for element in value:
-            if element is None:
-                cleaned_seq.append(element)
-                continue
-
-            if max_len is not None and isinstance(element, str):
-                element = element[:max_len]
-
-            element_type = type(element)
-            if element_type not in _VALID_ATTR_VALUE_TYPES:
-                element = _clean_extended_attribute_value(
-                    element, max_len=max_len
+        cleaned_sequence = []
+        for val in value:
+            # Drop invalid values.
+            if (
+                cleaned_value := _clean_attribute_value(
+                    val, max_string_value_length
                 )
-                element_type = type(element)  # type: ignore
-
-            # The type of the sequence must be homogeneous. The first non-None
-            # element determines the type of the sequence
-            if sequence_first_valid_type is None:
-                sequence_first_valid_type = element_type
-            # use equality instead of isinstance as isinstance(True, int) evaluates to True
-            elif element_type != sequence_first_valid_type:
+            ) != _InvalidAttributeValue.INVALID_VALUE:
+                cleaned_sequence.append(cleaned_value)
+        return tuple(cleaned_sequence)
+    if isinstance(value, Mapping):
+        cleaned_mapping = {}
+        for key, val in value.items():
+            # skip invalid keys
+            if not key or not isinstance(key, str):
                 _logger.warning(
-                    "Mixed types %s and %s in attribute value sequence",
-                    sequence_first_valid_type.__name__,
-                    type(element).__name__,
+                    "invalid key `%s` inside an attribute value. Must be non-empty string, dropping key/value pair.",
+                    key,
                 )
-                return None
-
-            cleaned_seq.append(element)
-
-        # Freeze mutable sequences defensively
-        return tuple(cleaned_seq)
-
-    # Some applications such as Django add values to log records whose types fall outside the
-    # primitive types and `_VALID_ANY_VALUE_TYPES`, i.e., they are not of type `AnyValue`.
-    # Rather than attempt to whitelist every possible instrumentation, we stringify those values here
-    # so they can still be represented as attributes, falling back to the original TypeError only if
-    # converting to string raises.
+                continue
+            # Drop invalid values.
+            if (
+                cleaned_value := _clean_attribute_value(
+                    val, max_string_value_length
+                )
+            ) != _InvalidAttributeValue.INVALID_VALUE:
+                cleaned_mapping[key] = cleaned_value
+        return MappingProxyType(cleaned_mapping)
+    _logger.warning(
+        "Invalid type %s for attribute value. Expected one of bool, str, None, bytes, int, float or a "
+        "Mapping or Sequence of those types. Attempting to cast type to string, value will be dropped if that fails.",
+        type(value),
+    )
     try:
         return str(value)
-    except Exception:
-        raise TypeError(
-            f"Invalid type {type(value).__name__} for attribute value. "
-            f"Expected one of {[_type_name(valid_type) for valid_type in _VALID_ANY_VALUE_TYPES]} or a "
-            "sequence of those types",
-        )
+    except Exception:  # pylint: disable=broad-exception-caught
+        return _InvalidAttributeValue.INVALID_VALUE
 
 
-def _clean_extended_attribute(
-    key: str, value: types.AnyValue, max_len: int | None
-) -> types.AnyValue:
-    """Checks if attribute value is valid and cleans it if required.
+class BoundedAttributes(MutableMapping):
+    """A dict with a fixed max capacity which cleans and potentially drops values to ensure they are valid attribute values.
 
-    The function returns the cleaned value or None if the value is not valid.
+    Args:
+        maxlen: The maximum number of attributes to store.
+        attributes: The initial attributes to store.
+        immutable: Defaults to true. Whether to allow adding/removing of attributes after the initialisation of the instance.
+        max_value_len: The maximum length of string values.
+        extended_attributes: Deprecated. Kept for backwards compatibility. Extended attributes are now always used for attributes everywhere.
 
-    An attribute value is valid if it is an AnyValue.
-    An attribute needs cleansing if:
-        - Its length is greater than the maximum allowed length.
+    When the dict is full and a new element is added, the oldest element is dropped. Attributes are made to be immutable when set in this container.
+    So passing a mutable list as an attribute value, and then mutating it after will not change it's value in this container.
     """
 
-    if not (key and isinstance(key, str)):
-        _logger.warning("invalid key `%s`. must be non-empty string.", key)
-        return None
+    @overload
+    def __init__(
+        self,
+        maxlen: int | None = None,
+        attributes: types.Attributes = None,
+        immutable: bool = True,
+        max_value_len: int | None = None,
+    ) -> None: ...
 
-    try:
-        return _clean_extended_attribute_value(value, max_len=max_len)
-    except TypeError as exception:
-        _logger.warning("Attribute %s: %s", key, exception)
-        return None
-
-
-class BoundedAttributes(MutableMapping):  # type: ignore
-    """An ordered dict with a fixed max capacity.
-
-    Oldest elements are dropped when the dict is full and a new element is
-    added.
-    """
+    @overload
+    @deprecated(
+        "Creating BoundedAttributes with `extended_attributes` set is deprecated. "
+        "The `extended_attributes` param is no longer used and will be removed "
+        "in a future release. Extended attributes are now always used for attributes everywhere."
+    )
+    def __init__(
+        self,
+        maxlen: int | None = None,
+        attributes: types.Attributes = None,
+        immutable: bool = True,
+        max_value_len: int | None = None,
+        extended_attributes: bool = False,
+    ) -> None: ...
 
     def __init__(
         self,
         maxlen: int | None = None,
-        attributes: types._ExtendedAttributes | None = None,
+        attributes: types.Attributes = None,
         immutable: bool = True,
         max_value_len: int | None = None,
         extended_attributes: bool = False,
-    ):
+    ) -> None:
         if maxlen is not None:
             if not isinstance(maxlen, int) or maxlen < 0:
                 raise ValueError(
                     "maxlen must be valid int greater or equal to 0"
                 )
+        self._dict = {}
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
-        self._extended_attributes = extended_attributes
-        # OrderedDict is not used until the maxlen is reached for efficiency.
-
-        self._dict: (
-            MutableMapping[str, types.AnyValue]
-            | OrderedDict[str, types.AnyValue]
-        ) = {}
         self._lock = threading.RLock()
+        self._immutable = False
         if attributes:
             for key, value in attributes.items():
                 self[key] = value
@@ -271,55 +182,71 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     def __repr__(self) -> str:
         return f"{dict(self._dict)}"
 
-    def __getitem__(self, key: str) -> types.AnyValue:
-        return self._dict[key]
+    def __getitem__(self, key: str) -> types.AttributeValue:
+        with self._lock:
+            return self._dict[key]
 
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
-        if getattr(self, "_immutable", False):  # type: ignore
-            raise TypeError
+        if self._immutable:
+            raise TypeError(
+                "Cannot mutate this instance, as it was created with immutable=True."
+            )
         with self._lock:
-            if self.maxlen is not None and self.maxlen == 0:
+            if self.maxlen == 0:
                 self.dropped += 1
                 return
-
-            if self._extended_attributes:
-                value = _clean_extended_attribute(
-                    key, value, self.max_value_len
+            if not key or not isinstance(key, str):
+                _logger.warning(
+                    "invalid key `%s`. must be non-empty string. Dropping key from attributes.",
+                    key,
                 )
-            else:
-                value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
-                if value is None:
-                    return
-
+                self.dropped += 1
+                return
+            if (
+                cleaned_value := _clean_attribute_value(
+                    value, self.max_value_len
+                )
+            ) is _InvalidAttributeValue.INVALID_VALUE:
+                _logger.warning(
+                    "Invalid value type `%s` for key `%s`. Dropping this key-value pair from attributes.",
+                    type(value).__name__,
+                    key,
+                )
+                self.dropped += 1
+                return
             if key in self._dict:
                 del self._dict[key]
-            elif self.maxlen is not None and len(self._dict) == self.maxlen:
-                if not isinstance(self._dict, OrderedDict):
-                    self._dict = OrderedDict(self._dict)
-                self._dict.popitem(last=False)  # type: ignore
+            if self.maxlen and len(self) >= self.maxlen:
+                _logger.warning(
+                    "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
+                )
+                # In python 3.7+ dictionaries are ordered, this is the recommended way to get the oldest value.
+                del self._dict[next(iter(self._dict.keys()))]
                 self.dropped += 1
 
-            self._dict[key] = value  # type: ignore
+            self._dict[key] = cleaned_value
 
     def __delitem__(self, key: str) -> None:
-        if getattr(self, "_immutable", False):  # type: ignore
-            raise TypeError
+        if self._immutable:
+            raise TypeError(
+                "Cannot mutate this instance, as it was created with immutable=True."
+            )
         with self._lock:
             del self._dict[key]
 
-    def __iter__(self):  # type: ignore
+    def __iter__(self):
         with self._lock:
-            return iter(self._dict.copy())  # type: ignore
+            return iter(list(self._dict.keys()))
 
     def __len__(self) -> int:
-        return len(self._dict)
+        with self._lock:
+            return len(self._dict)
 
     def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
         copy_ = BoundedAttributes(
             maxlen=self.maxlen,
             immutable=self._immutable,
             max_value_len=self.max_value_len,
-            extended_attributes=self._extended_attributes,
         )
         memo[id(self)] = copy_
         with self._lock:
