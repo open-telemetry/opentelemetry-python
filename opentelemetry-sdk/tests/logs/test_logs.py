@@ -408,7 +408,6 @@ class TestLogger(unittest.TestCase):
         original_attributes = BoundedAttributes(
             attributes={"custom": "value"},
             immutable=True,
-            extended_attributes=True,
         )
         log_record = LogRecord(
             observed_timestamp=0,

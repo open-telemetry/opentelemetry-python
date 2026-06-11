@@ -272,7 +272,6 @@ class ReadWriteLogRecord:
             else None,
             immutable=False,
             max_value_len=self.limits.max_attribute_length,
-            extended_attributes=True,
         )
         if self.dropped_attributes > 0:
             warnings.warn(
