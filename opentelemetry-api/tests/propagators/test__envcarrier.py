@@ -105,9 +105,7 @@ class TestEnvironmentGetter(unittest.TestCase):
 
     def test_get_ignores_non_normalized_env_var_name(self):
         """Test that non-normalized environment variable names are ignored."""
-        with patch.dict(
-            os.environ, {"X-B3-TRACEID": "ignored"}, clear=True
-        ):
+        with patch.dict(os.environ, {"X-B3-TRACEID": "ignored"}, clear=True):
             getter = EnvironmentGetter()
             self.assertIsNone(getter.get({}, "x-b3-traceid"))
             self.assertIsNone(getter.get({}, "X_B3_TRACEID"))

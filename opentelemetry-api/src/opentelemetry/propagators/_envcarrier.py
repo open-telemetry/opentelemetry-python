@@ -22,8 +22,7 @@ def _is_normalized_key(key: str) -> bool:
     if "0" <= key[0] <= "9":
         return False
     return all(
-        "A" <= char <= "Z" or "0" <= char <= "9" or char == "_"
-        for char in key
+        "A" <= char <= "Z" or "0" <= char <= "9" or char == "_" for char in key
     )
 
 
