@@ -6,17 +6,12 @@ import logging
 import threading
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
-from enum import Enum
 from types import MappingProxyType
-from typing import Literal, overload
+from typing import overload
 
 from typing_extensions import deprecated
 
 from opentelemetry.util import types
-
-
-class _InvalidAttributeValue(Enum):
-    INVALID_VALUE = 1
 
 
 class _DuplicateFilter(logging.Filter):
@@ -40,22 +35,21 @@ _logger = logging.getLogger(__name__)
 _logger.addFilter(_DuplicateFilter())
 
 
-def _clean_attribute_value(  # pylint: disable=too-many-branches, too-many-return-statements
+def _clean_attribute_value(  # pylint: disable=too-many-return-statements
     value: types.AttributeValue,
     max_string_value_length: int | None,
-) -> types.AttributeValue | Literal[_InvalidAttributeValue.INVALID_VALUE]:
+) -> types.AttributeValue:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
     Byte values are attempted to be decoded to strings using utf-8. If it fails it is left as bytes.
     String values are truncated to max_string_value_length if provided.
     Anything that isn't of `types.AttributeValue`, we attempt to cast to `str`.
-    If this fails, the value is dropped. Sequence's are converted to tuples and mappings
+    If this fails, the value is replaced with None. Sequence's are converted to tuples and mappings
     are converted to MappingProxyType, these are immutable data structures, so if the sequence/map
     is modified outside of this method, it will not affect the value in this container.
 
     Returns:
-        _InvalidAttributeValue.INVALID_VALUE if the top level value is dropped and otherwise
-        returns the cleaned value.
+        The recursively cleaned AttributeValue.
     """
     if isinstance(value, (type(None), bool, int, float)):
         return value
@@ -78,43 +72,36 @@ def _clean_attribute_value(  # pylint: disable=too-many-branches, too-many-retur
             value = value[:max_string_value_length]
         return value
     if isinstance(value, Sequence):
-        cleaned_sequence = []
-        for val in value:
-            # Drop invalid values.
-            if (
-                cleaned_value := _clean_attribute_value(
-                    val, max_string_value_length
-                )
-            ) != _InvalidAttributeValue.INVALID_VALUE:
-                cleaned_sequence.append(cleaned_value)
-        return tuple(cleaned_sequence)
+        return tuple(
+            _clean_attribute_value(v, max_string_value_length) for v in value
+        )
     if isinstance(value, Mapping):
         cleaned_mapping = {}
         for key, val in value.items():
-            # skip invalid keys
-            if not key or not isinstance(key, str):
+            if not isinstance(key, str):
                 _logger.warning(
-                    "invalid key `%s` inside an attribute value. Must be non-empty string, dropping key/value pair.",
+                    "invalid key `%s` inside an attribute value mapping. Must be a string. Will attempt to cast to a string via the __str__ method, will drop the key/value pair if that fails.",
                     key,
                 )
-                continue
-            # Drop invalid values.
-            if (
-                cleaned_value := _clean_attribute_value(
-                    val, max_string_value_length
-                )
-            ) != _InvalidAttributeValue.INVALID_VALUE:
-                cleaned_mapping[key] = cleaned_value
+                try:
+                    key = str(key)
+                except Exception:
+                    continue
+            cleaned_mapping[key] = _clean_attribute_value(
+                val, max_string_value_length
+            )
         return MappingProxyType(cleaned_mapping)
     _logger.warning(
-        "Invalid type %s for attribute value. Expected one of bool, str, None, bytes, int, float or a "
-        "Mapping or Sequence of those types. Attempting to cast type to string, value will be dropped if that fails.",
+        "Invalid type `%s` for attribute value. Expected one of bool, str, None, bytes, int, float or a "
+        "Mapping or Sequence of those types. Value's __str__ method will be called if it exists, otherwise the value will be replaced with None.",
         type(value),
     )
+    # Spec says to convert unknown types to strings if possible.
     try:
         return str(value)
-    except Exception:  # pylint: disable=broad-exception-caught
-        return _InvalidAttributeValue.INVALID_VALUE
+    except Exception:
+        # Fallback to None in accordance with the OpenTelemetry semantic conventions specification, which is converted to an empty AnyType by the OTLP encoder.
+        return None
 
 
 class BoundedAttributes(MutableMapping):
@@ -202,18 +189,6 @@ class BoundedAttributes(MutableMapping):
                 )
                 self.dropped += 1
                 return
-            if (
-                cleaned_value := _clean_attribute_value(
-                    value, self.max_value_len
-                )
-            ) is _InvalidAttributeValue.INVALID_VALUE:
-                _logger.warning(
-                    "Invalid value type `%s` for key `%s`. Dropping this key-value pair from attributes.",
-                    type(value).__name__,
-                    key,
-                )
-                self.dropped += 1
-                return
             if key in self._dict:
                 del self._dict[key]
             if self.maxlen and len(self) >= self.maxlen:
@@ -224,7 +199,7 @@ class BoundedAttributes(MutableMapping):
                 del self._dict[next(iter(self._dict.keys()))]
                 self.dropped += 1
 
-            self._dict[key] = cleaned_value
+            self._dict[key] = _clean_attribute_value(value, self.max_value_len)
 
     def __delitem__(self, key: str) -> None:
         if self._immutable:

@@ -10,13 +10,15 @@ import unittest.mock
 from opentelemetry.attributes import (
     BoundedAttributes,
     _clean_attribute_value,
-    _InvalidAttributeValue,
 )
 
 
-class BadStr:
+class _NoStrObject:
+    def __init__(self):
+        pass
+
     def __str__(self):
-        raise RuntimeError("boom")
+        raise Exception("I am a string that fails to be created!")
 
 
 class TestBoundedAttributes(unittest.TestCase):
@@ -29,10 +31,12 @@ class TestBoundedAttributes(unittest.TestCase):
     }
 
     def test_clean_attribute_value_with_various_params(self):
+        # A python type that isn't a primitive and has no string method
+        # is converted to None.
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             self.assertEqual(
-                _clean_attribute_value(BadStr(), None),
-                _InvalidAttributeValue.INVALID_VALUE,
+                _clean_attribute_value(_NoStrObject(), None),
+                None,
             )
         self.assertEqual(len(cm.output), 1)
         self.assertIn(
@@ -59,42 +63,40 @@ class TestBoundedAttributes(unittest.TestCase):
             "String attribute value exceeds max length", cm.output[0]
         )
 
-        # Sequence of good and bad values mixed, bad values should be removed.
-        with self.assertLogs("opentelemetry", level="WARNING") as cm:
-            self.assertEqual(
-                _clean_attribute_value(
-                    ["a", 2, BadStr(), None, b"\xff"], None
-                ),
-                ("a", 2, None, b"\xff"),
-            )
-        # 1 logs for the 1 bad value that gets dropped.
-        self.assertEqual(len(cm.output), 1)
-
-        # Invalid non-str key in map.
-        with self.assertLogs("opentelemetry", level="WARNING") as cm:
-            self.assertEqual(_clean_attribute_value({2.2: 4.4}, None), {})
-        self.assertEqual(len(cm.output), 1)
-        self.assertIn(
-            f"invalid key `{2.2}` inside an attribute value", cm.output[0]
+        # Sequence of different types of values. Non utf-8 bytes kept as bytes.
+        # List converted to tuple.
+        self.assertEqual(
+            _clean_attribute_value(
+                ["a", 2, _NoStrObject(), None, b"\xff"], None
+            ),
+            ("a", 2, None, None, b"\xff"),
         )
 
-        # Mapping of good and bad values mixed, bad key-value pairs should be removed.
+        # non-str key in map... will be converted to string
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             self.assertEqual(
-                _clean_attribute_value(
-                    {
-                        "a": 1,
-                        "b": BadStr(),
-                        "c": 3,
-                        "d": [2, 3],
-                        "bytes": b"\xff",
-                    },
-                    None,
-                ),
-                {"a": 1, "c": 3, "d": (2, 3), "bytes": b"\xff"},
+                _clean_attribute_value({2.2: 4.4}, None), {"2.2": 4.4}
             )
-        # 1 logs for the 1 bad value that gets dropped.
         self.assertEqual(len(cm.output), 1)
+        self.assertIn(
+            "invalid key `2.2` inside an attribute value mapping.",
+            cm.output[0],
+        )
+
+        # Mapping of values..
+        self.assertEqual(
+            _clean_attribute_value(
+                {
+                    "a": 1,
+                    _NoStrObject(): 2,
+                    "c": 3,
+                    "d": [2, 3],
+                    "bytes": b"\xff",
+                },
+                None,
+            ),
+            {"a": 1, "c": 3, "d": (2, 3), "bytes": b"\xff"},
+        )
 
     def test_same_key_value_overwritten(self):
         bdict = BoundedAttributes(1, {"name": "Firulais"}, immutable=False)
@@ -111,12 +113,6 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertEqual(len(cm.output), 1)
         self.assertIn("invalid key", cm.output[0])
         self.assertNotIn(1, bdict)
-        self.assertEqual(bdict.dropped, 1)
-
-    def test_invalid_value_not_used(self):
-        bdict = BoundedAttributes(50, {}, immutable=False)
-        bdict["good-key"] = BadStr()
-        self.assertNotIn("good-key", bdict)
         self.assertEqual(bdict.dropped, 1)
 
     def test_maxvalue_reached_and_duplicate_logs_filter_works(self):
