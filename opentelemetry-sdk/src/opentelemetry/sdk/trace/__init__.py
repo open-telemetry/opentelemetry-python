@@ -1066,12 +1066,7 @@ class Span(trace_api.Span, ReadableSpan):
         escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
-        # TODO: keep only exception as first argument after baseline is 3.10
-        stacktrace = "".join(
-            traceback.format_exception(
-                type(exception), value=exception, tb=exception.__traceback__
-            )
-        )
+        stacktrace = "".join(traceback.format_exception(exception))
         module = type(exception).__module__
         qualname = type(exception).__qualname__
         exception_type = (
