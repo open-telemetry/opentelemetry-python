@@ -8,7 +8,6 @@ import pytest
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.trace import (
     ReadableSpan,
     SpanProcessor,
@@ -176,8 +175,8 @@ def test_read_events(benchmark, num_events):
     peaks = []
     for _ in range(200):
         span = tp.start_span("benchmarkedSpan")
-        for i in range(num_events):
-            span.add_event(f"event{i}", {"k": "v"})
+        for event in range(num_events):
+            span.add_event(f"event{event}", {"k": "v"})
         tracemalloc.start()
         span.end()
         _, peak = tracemalloc.get_traced_memory()
