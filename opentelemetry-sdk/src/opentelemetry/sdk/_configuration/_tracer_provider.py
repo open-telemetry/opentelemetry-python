@@ -7,6 +7,7 @@ import logging
 
 from opentelemetry import trace
 from opentelemetry.sdk._configuration._common import (
+    _map_compression,
     _parse_headers,
     load_entry_point,
 )
@@ -83,7 +84,9 @@ def _create_otlp_http_span_exporter(
             "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
         ) from exc
 
-    compression = _map_compression(config.compression, Compression)
+    compression = _map_compression(
+        config.compression, Compression, allow_deflate=True
+    )
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
@@ -92,19 +95,6 @@ def _create_otlp_http_span_exporter(
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
-    )
-
-
-def _map_compression(
-    value: str | None, compression_enum: type
-) -> object | None:
-    """Map a compression string to the given Compression enum value."""
-    if value is None or value.lower() == "none":
-        return None
-    if value.lower() == "gzip":
-        return compression_enum.Gzip  # type: ignore[attr-defined]
-    raise ConfigurationError(
-        f"Unsupported compression value '{value}'. Supported values: 'gzip', 'none'."
     )
 
 
@@ -137,14 +127,35 @@ def _create_otlp_grpc_span_exporter(
     )
 
 
+_SPAN_EXPORTER_REGISTRY: dict = {
+    "otlp_http": _create_otlp_http_span_exporter,
+    "otlp_grpc": _create_otlp_grpc_span_exporter,
+    "console": lambda _: ConsoleSpanExporter(),
+}
+
+
 def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
-    """Create a span exporter from config."""
-    if config.otlp_http is not None:
-        return _create_otlp_http_span_exporter(config.otlp_http)
-    if config.otlp_grpc is not None:
-        return _create_otlp_grpc_span_exporter(config.otlp_grpc)
-    if config.console is not None:
-        return ConsoleSpanExporter()
+    """Create a span exporter from config.
+
+    Known exporter types are checked via typed fields on the SpanExporter
+    dataclass. Unknown exporter names captured in additional_properties
+    by the @_additional_properties decorator are loaded via the
+    ``opentelemetry_traces_exporter`` entry point group.
+    """
+    if config.otlp_file_development is not None:
+        raise ConfigurationError(
+            "otlp_file_development span exporter is experimental "
+            "and not yet supported."
+        )
+    for name, factory in _SPAN_EXPORTER_REGISTRY.items():
+        value = getattr(config, name, None)
+        if value is not None:
+            return factory(value)
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_traces_exporter", name)(
+            **(plugin_config or {})
+        )
     raise ConfigurationError(
         "No exporter type specified in span exporter config. "
         "Supported types: otlp_http, otlp_grpc, console."
@@ -177,8 +188,8 @@ def _create_span_processor(
 def _create_sampler(config: SamplerConfig) -> Sampler:
     """Create a sampler from config.
 
-    Known sampler types are checked via typed fields on the Sampler
-    dataclass. Unknown sampler names captured in additional_properties
+    Built-in sampler types are checked via typed fields on the Sampler
+    dataclass. User-defined sampler names captured in additional_properties
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_sampler`` entry point group.
     """
@@ -195,7 +206,7 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
         name = next(iter(config.additional_properties))
         return load_entry_point("opentelemetry_sampler", name)()
     raise ConfigurationError(
-        f"Unknown or unsupported sampler type in config: {config!r}. "
+        f"Unsupported sampler type in config: {config!r}. "
         "Supported types: always_on, always_off, trace_id_ratio_based, parent_based."
     )
 

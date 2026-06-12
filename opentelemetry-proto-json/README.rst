@@ -6,9 +6,9 @@ OpenTelemetry Python Proto JSON
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-proto-json.svg
    :target: https://pypi.org/project/opentelemetry-proto-json/
 
-This library contains the generated code for OpenTelemetry protobuf data model with JSON encoding support. The code in the current package was generated using the v1.9.0 release_ of opentelemetry-proto and includes definitions for the OpenTelemetry JSON Protobuf encoding specification.
+This library contains the generated code for OpenTelemetry protobuf data model with JSON encoding support. The code in the current package was generated using the v1.10.0 release_ of opentelemetry-proto and includes definitions for the OpenTelemetry JSON Protobuf encoding specification.
 
-.. _release: https://github.com/open-telemetry/opentelemetry-proto/releases/tag/v1.9.0
+.. _release: https://github.com/open-telemetry/opentelemetry-proto/releases/tag/v1.10.0
 
 Installation
 ------------
