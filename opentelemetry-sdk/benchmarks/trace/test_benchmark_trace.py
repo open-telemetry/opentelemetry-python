@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import threading
 import tracemalloc
 from functools import lru_cache
 
@@ -17,6 +18,11 @@ from opentelemetry.sdk.trace import (
     _TracerConfig,
     sampling,
 )
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
+from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 from opentelemetry.trace import SpanContext, TraceFlags
 
@@ -215,3 +221,57 @@ def test_bounded_attribute_iterator(benchmark, num_attrs):
         list(attrs)
 
     benchmark(benchmark_iter)
+
+
+@pytest.mark.parametrize("num_items", [1, 10, 50, 128])
+def test_bounded_list_iterator(benchmark, num_items):
+    blist = BoundedList.from_seq(num_items, range(num_items))
+
+    peaks = []
+    for _ in range(200):
+        tracemalloc.start()
+        list(blist)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
+
+    def benchmark_iter():
+        list(blist)
+
+    benchmark(benchmark_iter)
+
+
+# Total span work is fixed at TOTAL_SPANS regardless of thread count so that
+# ideal (GIL-free) parallelism would produce a flat wall-clock time across
+# thread counts. Any increase instead reveals GIL + lock contention.
+_TOTAL_SPANS = 128
+_ATTRS_PER_SPAN = {f"key{i}": f"value{i}" for i in range(50)}
+
+
+@pytest.mark.parametrize("num_threads", [1, 2, 4, 8])
+def test_gil_contention_batch_processor(benchmark, num_threads):
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider(sampler=sampling.DEFAULT_ON)
+    # max_export_batch_size=16 ensures the export threshold is crossed
+    # during the benchmark so _worker_awaken.set() contention is exercised.
+    provider.add_span_processor(
+        BatchSpanProcessor(exporter, max_export_batch_size=16)
+    )
+    tracer = provider.get_tracer("bench")
+    spans_per_thread = _TOTAL_SPANS // num_threads
+
+    def worker():
+        for _ in range(spans_per_thread):
+            span = tracer.start_span("s")
+            span.set_attributes(_ATTRS_PER_SPAN)
+            span.end()
+
+    def benchmark_fn():
+        threads = [threading.Thread(target=worker) for _ in range(num_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+    benchmark(benchmark_fn)

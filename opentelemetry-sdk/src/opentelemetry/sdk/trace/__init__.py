@@ -891,8 +891,9 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Setting attribute on ended span.")
                 return
 
-            for key, value in attributes.items():
-                self._attributes[key] = value
+            with self._attributes._lock:
+                for key, value in attributes.items():
+                    self._attributes._setitem_locked(key, value)
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
@@ -990,6 +991,7 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             self._end_time = end_time if end_time is not None else time_ns()
+            self._attributes._immutable = True
 
         if self._record_end_metrics:
             self._record_end_metrics()

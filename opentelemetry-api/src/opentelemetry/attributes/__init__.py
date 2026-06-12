@@ -278,28 +278,31 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
         with self._lock:
-            if self.maxlen is not None and self.maxlen == 0:
-                self.dropped += 1
+            self._setitem_locked(key, value)
+
+    def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
+        if self.maxlen is not None and self.maxlen == 0:
+            self.dropped += 1
+            return
+
+        if self._extended_attributes:
+            value = _clean_extended_attribute(
+                key, value, self.max_value_len
+            )
+        else:
+            value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
+            if value is None:
                 return
 
-            if self._extended_attributes:
-                value = _clean_extended_attribute(
-                    key, value, self.max_value_len
-                )
-            else:
-                value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
-                if value is None:
-                    return
+        if key in self._dict:
+            del self._dict[key]
+        elif self.maxlen is not None and len(self._dict) == self.maxlen:
+            if not isinstance(self._dict, OrderedDict):
+                self._dict = OrderedDict(self._dict)
+            self._dict.popitem(last=False)  # type: ignore
+            self.dropped += 1
 
-            if key in self._dict:
-                del self._dict[key]
-            elif self.maxlen is not None and len(self._dict) == self.maxlen:
-                if not isinstance(self._dict, OrderedDict):
-                    self._dict = OrderedDict(self._dict)
-                self._dict.popitem(last=False)  # type: ignore
-                self.dropped += 1
-
-            self._dict[key] = value  # type: ignore
+        self._dict[key] = value  # type: ignore
 
     def __delitem__(self, key: str) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
@@ -307,7 +310,9 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         with self._lock:
             del self._dict[key]
 
-    def __iter__(self):  # type: ignore
+    def __iter__(self):
+        if self._immutable:
+            return iter(self._dict)
         with self._lock:
             return iter(list(self._dict))  # type: ignore
 

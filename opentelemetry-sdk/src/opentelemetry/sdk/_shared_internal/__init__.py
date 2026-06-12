@@ -206,7 +206,7 @@ class BatchProcessor(Generic[Telemetry]):
             self._metrics.drop_items(1)
         # This will drop a log from the right side if the queue is at _max_queue_size.
         self._queue.appendleft(data)
-        if len(self._queue) >= self._max_export_batch_size:
+        if len(self._queue) >= self._max_export_batch_size and not self._worker_awaken.is_set():
             self._worker_awaken.set()
 
     def shutdown(self, timeout_millis: int = 30000):
