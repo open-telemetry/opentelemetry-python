@@ -1,0 +1,1 @@
+opentelemetry-sdk: remove generator in the accessor for links/events
