@@ -8,7 +8,9 @@ import os
 import shutil
 import socket
 import subprocess
+import tempfile
 from collections import defaultdict
+from collections.abc import Sequence
 from itertools import chain
 from typing import Any
 
@@ -244,7 +246,15 @@ class WeaverLiveCheck:
         inactivity_timeout: int = 30,
         otlp_port: int = 0,
         admin_port: int = 0,
+        extra_args: Sequence[str] | None = None,
     ):
+        """Build the ``weaver registry live-check`` command.
+
+        ``extra_args`` is appended verbatim to the weaver command after the
+        managed flags (``--registry``, ``--otlp-grpc-port``, etc.) and lets
+        callers pass additional weaver options — for example ``["--quiet"]``
+        or ``["--skip-policies"]`` — without subclassing.
+        """
         weaver_bin = shutil.which("weaver")
         if not weaver_bin:
             raise RuntimeError(
@@ -257,6 +267,8 @@ class WeaverLiveCheck:
         self._ready = False
         self._stopped = False
         self._process: subprocess.Popen[bytes] | None = None
+        self._stdout_path: str | None = None
+        self._stderr_path: str | None = None
 
         command = [
             weaver_bin,
@@ -281,6 +293,9 @@ class WeaverLiveCheck:
 
         command += ["--registry", registry]
 
+        if extra_args:
+            command.extend(extra_args)
+
         self._command = command
         logger.debug("Weaver command: %s", command)
 
@@ -294,11 +309,22 @@ class WeaverLiveCheck:
 
     def start(self) -> "WeaverLiveCheck":
         logger.debug("Starting WeaverLiveCheck process...")
-        self._process = subprocess.Popen(  # pylint: disable=consider-using-with
-            self._command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        # Redirect weaver's stdout/stderr to tempfiles
+        stdout_fd, self._stdout_path = tempfile.mkstemp(
+            prefix="weaver-stdout-", suffix=".log"
         )
+        stderr_fd, self._stderr_path = tempfile.mkstemp(
+            prefix="weaver-stderr-", suffix=".log"
+        )
+        try:
+            self._process = subprocess.Popen(  # pylint: disable=consider-using-with
+                self._command,
+                stdout=stdout_fd,
+                stderr=stderr_fd,
+            )
+        finally:
+            os.close(stdout_fd)
+            os.close(stderr_fd)
         try:
             self._wait_for_ready()
             self._ready = True
@@ -423,8 +449,18 @@ class WeaverLiveCheck:
         try:
             if self._process.poll() is None:
                 self._process.kill()
-            out, err = self._process.communicate()
-            return f"{out.decode()}\n{err.decode()}"
+            try:
+                self._process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+
+            def _read(path: str | None) -> str:
+                if path is None or not os.path.exists(path):
+                    return ""
+                with open(path, "rb") as fp:
+                    return fp.read().decode(errors="replace")
+
+            return f"{_read(self._stdout_path)}\n{_read(self._stderr_path)}"
         except Exception as exc:  # pylint: disable=broad-except
             logger.error("Could not get weaver logs: %s", exc)
             return None
@@ -442,7 +478,6 @@ class WeaverLiveCheck:
             if self._ready:
                 try:
                     self._do_stop(timeout=30)
-                    return  # process already exited cleanly
                 except Exception as exc:  # pylint: disable=broad-except
                     logger.debug("Error stopping weaver during close: %s", exc)
         if self._process and self._process.poll() is None:
@@ -451,3 +486,11 @@ class WeaverLiveCheck:
                 self._process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 self._process.kill()
+        for path in (self._stdout_path, self._stderr_path):
+            if path is not None:
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
+        self._stdout_path = None
+        self._stderr_path = None

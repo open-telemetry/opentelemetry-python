@@ -19,6 +19,7 @@ CallbackT = (
     | Generator[Iterable[Observation], CallbackOptions, None]
 )
 
+
 VCS_CHANGE_COUNT: Final = "vcs.change.count"
 """
 The number of changes (pull requests/merge requests/changelists) in a repository, categorized by their state (e.g. open or merged)

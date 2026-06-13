@@ -10,7 +10,9 @@ from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._common import (
     _additional_properties,
+    _map_compression,
     _parse_headers,
+    _resolve_component,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
@@ -140,6 +142,70 @@ class TestLoadEntryPoint(unittest.TestCase):
                 cls()
 
 
+class _CompressionWithDeflate:
+    Gzip = "gzip"
+    Deflate = "deflate"
+
+
+class _CompressionWithoutDeflate:
+    Gzip = "gzip"
+
+
+class TestMapCompression(unittest.TestCase):
+    def test_none_returns_none(self):
+        self.assertIsNone(_map_compression(None, _CompressionWithDeflate))
+
+    def test_none_string_returns_none(self):
+        self.assertIsNone(_map_compression("none", _CompressionWithDeflate))
+
+    def test_gzip_maps_to_gzip(self):
+        self.assertEqual(
+            _map_compression("gzip", _CompressionWithDeflate), "gzip"
+        )
+
+    def test_deflate_maps_when_enabled(self):
+        self.assertEqual(
+            _map_compression(
+                "deflate", _CompressionWithDeflate, allow_deflate=True
+            ),
+            "deflate",
+        )
+
+    def test_deflate_raises_by_default(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression("deflate", _CompressionWithDeflate)
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'deflate'. Supported values: "
+            "'gzip', 'none'.",
+        )
+
+    def test_deflate_raises_when_http_enum_lacks_support(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression(
+                "deflate", _CompressionWithoutDeflate, allow_deflate=True
+            )
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'deflate'. Supported values: "
+            "'gzip', 'none'.",
+        )
+
+    def test_http_error_message_includes_deflate(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _map_compression(
+                "brotli", _CompressionWithDeflate, allow_deflate=True
+            )
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported compression value 'brotli'. Supported values: "
+            "'gzip', 'deflate', 'none'.",
+        )
+
+
 class TestAdditionalPropertiesSupport(unittest.TestCase):
     def setUp(self):
         @_additional_properties
@@ -224,3 +290,84 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
 
     def test_push_metric_exporter(self):
         self._assert_supports_additional_properties(PushMetricExporter)
+
+
+class TestResolveComponent(unittest.TestCase):
+    def setUp(self):
+        @_additional_properties
+        @dataclass
+        class _Config:
+            builtin_a: dict | None = None
+            builtin_b: str | None = None
+            additional_properties: ClassVar[dict[str, Any]]
+
+        self.cls = _Config
+        self.registry = {
+            "builtin_a": lambda v: ("resolved_a", v),
+            "builtin_b": lambda v: ("resolved_b", v),
+        }
+
+    def test_resolves_builtin_from_registry(self):
+        config = self.cls(builtin_a={"key": "val"})
+        result = _resolve_component(
+            config, self.registry, "test_group", "test component"
+        )
+        self.assertEqual(result, ("resolved_a", {"key": "val"}))
+
+    def test_resolves_plugin_via_entry_point(self):
+        mock_instance = MagicMock()
+        mock_class = MagicMock(return_value=mock_instance)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self.cls(my_plugin={"opt": "val"})
+            result = _resolve_component(
+                config, self.registry, "test_group", "test component"
+            )
+        self.assertIs(result, mock_instance)
+        mock_class.assert_called_once_with(opt="val")
+
+    def test_plugin_with_empty_config(self):
+        mock_instance = MagicMock()
+        mock_class = MagicMock(return_value=mock_instance)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self.cls(my_plugin={})
+            _resolve_component(
+                config, self.registry, "test_group", "test component"
+            )
+        mock_class.assert_called_once_with()
+
+    def test_no_component_raises_configuration_error(self):
+        config = self.cls()
+        with self.assertRaises(ConfigurationError):
+            _resolve_component(
+                config, self.registry, "test_group", "test component"
+            )
+
+    def test_plugin_not_found_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            config = self.cls(missing_plugin={})
+            with self.assertRaises(ConfigurationError):
+                _resolve_component(
+                    config, self.registry, "test_group", "test component"
+                )
+
+    def test_first_registry_match_wins_when_multiple_set(self):
+        """When multiple built-in fields are set (which the schema should
+        prevent), the first registry match wins."""
+        config = self.cls(builtin_a={"a": 1}, builtin_b="b")
+        result = _resolve_component(
+            config, self.registry, "test_group", "test component"
+        )
+        # builtin_a comes first in the registry dict
+        self.assertEqual(result, ("resolved_a", {"a": 1}))
