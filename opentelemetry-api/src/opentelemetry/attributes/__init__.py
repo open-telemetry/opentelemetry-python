@@ -309,7 +309,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
 
     def __iter__(self):  # type: ignore
         with self._lock:
-            return iter(self._dict.copy())  # type: ignore
+            return iter(list(self._dict))  # type: ignore
 
     def __len__(self) -> int:
         return len(self._dict)
