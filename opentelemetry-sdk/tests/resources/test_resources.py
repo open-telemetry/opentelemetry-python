@@ -1,6 +1,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+
+# pylint: disable=too-many-lines
+
 import os
+import subprocess
 import sys
 import unittest
 import uuid
@@ -10,6 +14,7 @@ from os import environ
 from unittest.mock import Mock, patch
 from urllib import parse
 
+import opentelemetry.sdk.resources as _resources_module
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
 )
@@ -34,6 +39,7 @@ from opentelemetry.sdk.resources import (
     PROCESS_RUNTIME_DESCRIPTION,
     PROCESS_RUNTIME_NAME,
     PROCESS_RUNTIME_VERSION,
+    SERVICE_INSTANCE_ID,
     SERVICE_NAME,
     TELEMETRY_SDK_LANGUAGE,
     TELEMETRY_SDK_NAME,
@@ -43,6 +49,7 @@ from opentelemetry.sdk.resources import (
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
+    ServiceInstanceIdResourceDetector,
     _get_process_sensitive_resource,
     _HostResourceDetector,
     get_aggregated_resources,
@@ -81,6 +88,11 @@ class ProcessSensitivityResourceDetector(ResourceDetector):
 class TestResources(unittest.TestCase):
     def setUp(self) -> None:
         environ[OTEL_RESOURCE_ATTRIBUTES] = ""
+        self._service_instance_id = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
 
     def tearDown(self) -> None:
         environ.pop(OTEL_RESOURCE_ATTRIBUTES)
@@ -101,6 +113,7 @@ class TestResources(unittest.TestCase):
             TELEMETRY_SDK_NAME: "opentelemetry",
             TELEMETRY_SDK_LANGUAGE: "python",
             TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
+            SERVICE_INSTANCE_ID: self._service_instance_id,
             SERVICE_NAME: "unknown_service",
         }
 
@@ -127,40 +140,30 @@ class TestResources(unittest.TestCase):
         resource = Resource.get_empty()
         self.assertEqual(resource, _EMPTY_RESOURCE)
 
-        resource = Resource.create(None)
-        self.assertEqual(
-            resource,
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
+        expected_default = _DEFAULT_RESOURCE.merge(
+            Resource(
+                {
+                    SERVICE_INSTANCE_ID: self._service_instance_id,
+                    SERVICE_NAME: "unknown_service",
+                },
+                "",
+            )
         )
+
+        resource = Resource.create(None)
+        self.assertEqual(resource, expected_default)
         self.assertEqual(resource.schema_url, "")
 
         resource = Resource.create(None, None)
-        self.assertEqual(
-            resource,
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
-        )
+        self.assertEqual(resource, expected_default)
         self.assertEqual(resource.schema_url, "")
 
         resource = Resource.create({})
-        self.assertEqual(
-            resource,
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
-        )
+        self.assertEqual(resource, expected_default)
         self.assertEqual(resource.schema_url, "")
 
         resource = Resource.create({}, None)
-        self.assertEqual(
-            resource,
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
-        )
+        self.assertEqual(resource, expected_default)
         self.assertEqual(resource.schema_url, "")
 
     def test_resource_merge(self):
@@ -224,6 +227,7 @@ class TestResources(unittest.TestCase):
             TELEMETRY_SDK_NAME: "opentelemetry",
             TELEMETRY_SDK_LANGUAGE: "python",
             TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
+            SERVICE_INSTANCE_ID: self._service_instance_id,
             SERVICE_NAME: "unknown_service",
         }
 
@@ -279,7 +283,13 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             aggregated_resources,
             _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
+                Resource(
+                    {
+                        SERVICE_INSTANCE_ID: self._service_instance_id,
+                        SERVICE_NAME: "unknown_service",
+                    },
+                    "",
+                )
             ),
         )
 
@@ -330,7 +340,13 @@ class TestResources(unittest.TestCase):
                 [resource_detector1, resource_detector2, resource_detector3]
             ),
             _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
+                Resource(
+                    {
+                        SERVICE_INSTANCE_ID: self._service_instance_id,
+                        SERVICE_NAME: "unknown_service",
+                    },
+                    "",
+                )
             ).merge(
                 Resource(
                     {
@@ -373,7 +389,13 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             get_aggregated_resources([resource_detector1, resource_detector2]),
             _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
+                Resource(
+                    {
+                        SERVICE_INSTANCE_ID: self._service_instance_id,
+                        SERVICE_NAME: "unknown_service",
+                    },
+                    "",
+                )
             ).merge(
                 Resource(
                     {"key1": "value1", "key2": "value2", "key3": "value3"},
@@ -387,7 +409,13 @@ class TestResources(unittest.TestCase):
                     [resource_detector2, resource_detector3]
                 ),
                 _DEFAULT_RESOURCE.merge(
-                    Resource({SERVICE_NAME: "unknown_service"}, "")
+                    Resource(
+                        {
+                            SERVICE_INSTANCE_ID: self._service_instance_id,
+                            SERVICE_NAME: "unknown_service",
+                        },
+                        "",
+                    )
                 ).merge(
                     Resource({"key2": "value2", "key3": "value3"}, "url1")
                 ),
@@ -405,7 +433,13 @@ class TestResources(unittest.TestCase):
                     ]
                 ),
                 _DEFAULT_RESOURCE.merge(
-                    Resource({SERVICE_NAME: "unknown_service"}, "")
+                    Resource(
+                        {
+                            SERVICE_INSTANCE_ID: self._service_instance_id,
+                            SERVICE_NAME: "unknown_service",
+                        },
+                        "",
+                    )
                 ).merge(
                     Resource(
                         {
@@ -429,7 +463,13 @@ class TestResources(unittest.TestCase):
             self.assertEqual(
                 get_aggregated_resources([resource_detector]),
                 _DEFAULT_RESOURCE.merge(
-                    Resource({SERVICE_NAME: "unknown_service"}, "")
+                    Resource(
+                        {
+                            SERVICE_INSTANCE_ID: self._service_instance_id,
+                            SERVICE_NAME: "unknown_service",
+                        },
+                        "",
+                    )
                 ),
             )
 
@@ -491,7 +531,13 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             get_aggregated_resources([resource_detector]),
             _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
+                Resource(
+                    {
+                        SERVICE_INSTANCE_ID: self._service_instance_id,
+                        SERVICE_NAME: "unknown_service",
+                    },
+                    "",
+                )
             ),
         )
         mock_logger.warning.assert_called_with(
@@ -976,3 +1022,113 @@ class TestHostResourceDetector(unittest.TestCase):
             resource.attributes["telemetry.sdk.language"], "python"
         )
         self.assertIn(HOST_NAME, resource.attributes)
+
+
+# pylint: disable=protected-access
+class TestServiceInstanceIdResourceDetector(unittest.TestCase):
+    def setUp(self) -> None:
+        self._orig_instance_id = _resources_module._service_instance_id
+        self._orig_instance_pid = _resources_module._service_instance_id_pid
+
+    def tearDown(self) -> None:
+        _resources_module._service_instance_id = self._orig_instance_id
+        _resources_module._service_instance_id_pid = self._orig_instance_pid
+
+    def test_detect_value_is_valid_uuid4(self):
+        _resources_module._service_instance_id = None
+        _resources_module._service_instance_id_pid = None
+        detector = ServiceInstanceIdResourceDetector()
+        value = detector.detect().attributes[SERVICE_INSTANCE_ID]
+        parsed = uuid.UUID(value)
+        self.assertEqual(parsed.version, 4)
+
+    def test_detect_stable_within_instance(self):
+        _resources_module._service_instance_id = None
+        _resources_module._service_instance_id_pid = None
+        detector = ServiceInstanceIdResourceDetector()
+        id1 = detector.detect().attributes[SERVICE_INSTANCE_ID]
+        id2 = detector.detect().attributes[SERVICE_INSTANCE_ID]
+        self.assertEqual(id1, id2)
+
+    def test_detect_shared_across_instances(self):
+        _resources_module._service_instance_id = None
+        _resources_module._service_instance_id_pid = None
+        id1 = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
+        id2 = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
+        self.assertEqual(id1, id2)
+
+    def test_detect_pid_change_generates_new_id(self):
+        _resources_module._service_instance_id = "old-id"
+        _resources_module._service_instance_id_pid = os.getpid() - 1
+        new_id = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
+        self.assertNotEqual(new_id, "old-id")
+        self.assertEqual(
+            _resources_module._service_instance_id_pid, os.getpid()
+        )
+        uuid.UUID(new_id)
+
+    def test_detect_pid_unchanged_returns_same_id(self):
+        known_id = "known-stable-id"
+        _resources_module._service_instance_id = known_id
+        _resources_module._service_instance_id_pid = os.getpid()
+        result = (
+            ServiceInstanceIdResourceDetector()
+            .detect()
+            .attributes[SERVICE_INSTANCE_ID]
+        )
+        self.assertEqual(result, known_id)
+
+    @unittest.skipUnless(hasattr(os, "fork"), "requires os.fork")
+    def test_detect_fork_generates_new_id(self):
+        script = """\
+import os
+import sys
+
+from opentelemetry.sdk.resources import ServiceInstanceIdResourceDetector, SERVICE_INSTANCE_ID
+
+parent_id = ServiceInstanceIdResourceDetector().detect().attributes[SERVICE_INSTANCE_ID]
+
+pid = os.fork()
+if not pid:
+    child_id = ServiceInstanceIdResourceDetector().detect().attributes[SERVICE_INSTANCE_ID]
+    print(f"child:{child_id}", flush=True)
+    os._exit(0)
+else:
+    os.waitpid(pid, 0)
+    print(f"parent:{parent_id}", flush=True)
+"""
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        ids = dict(
+            line.split(":", 1) for line in result.stdout.strip().splitlines()
+        )
+        parent_id, child_id = ids["parent"], ids["child"]
+        self.assertNotEqual(parent_id, child_id)
+        self.assertEqual(uuid.UUID(parent_id).version, 4)
+        self.assertEqual(uuid.UUID(child_id).version, 4)
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "service_instance"},
+        clear=True,
+    )
+    def test_resource_detector_entry_points_service_instance(self):
+        resource = Resource.create()
+        self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
+        uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID])

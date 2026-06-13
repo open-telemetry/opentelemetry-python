@@ -500,11 +500,11 @@ class ReadableSpan:
 
     @property
     def events(self) -> Sequence[Event]:
-        return tuple(event for event in self._events)
+        return tuple(self._events)
 
     @property
     def links(self) -> Sequence[trace_api.Link]:
-        return tuple(link for link in self._links)
+        return tuple(self._links)
 
     @property
     def resource(self) -> Resource:
