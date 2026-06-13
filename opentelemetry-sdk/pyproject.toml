@@ -74,6 +74,7 @@ otel = "opentelemetry.sdk.resources:OTELResourceDetector"
 process = "opentelemetry.sdk.resources:ProcessResourceDetector"
 os = "opentelemetry.sdk.resources:OsResourceDetector"
 host = "opentelemetry.sdk.resources:_HostResourceDetector"
+service_instance = "opentelemetry.sdk.resources:ServiceInstanceIdResourceDetector"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-sdk"
