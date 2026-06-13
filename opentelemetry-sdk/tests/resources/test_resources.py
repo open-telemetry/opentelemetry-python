@@ -1034,6 +1034,11 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
         _resources_module._service_instance_id = self._orig_instance_id
         _resources_module._service_instance_id_pid = self._orig_instance_pid
 
+    def test_is_process_sensitive(self):
+        self.assertTrue(
+            ServiceInstanceIdResourceDetector().is_process_sensitive()
+        )
+
     def test_detect_value_is_valid_uuid4(self):
         _resources_module._service_instance_id = None
         _resources_module._service_instance_id_pid = None

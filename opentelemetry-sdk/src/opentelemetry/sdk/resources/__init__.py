@@ -496,6 +496,9 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
     regenerated automatically when the process PID changes (e.g. after a fork).
     """
 
+    def is_process_sensitive(self) -> bool:
+        return True
+
     def detect(self) -> "Resource":
         # pylint: disable-next=global-statement
         global _service_instance_id, _service_instance_id_pid
