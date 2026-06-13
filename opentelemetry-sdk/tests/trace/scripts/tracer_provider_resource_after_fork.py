@@ -15,33 +15,33 @@ def main() -> None:
     parent_resource_pid = tracer_provider.resource.attributes[PROCESS_PID]
     parent_tracer_pid = tracer.resource.attributes[PROCESS_PID]
 
-    read_fd, write_fd = os.pipe()
     pid = os.fork()
     if not pid:
-        os.close(read_fd)
         child_pid = os.getpid()
         new_tracer = tracer_provider.get_tracer("new")
         span = tracer.start_span("child")
-        payload = {
-            "child_pid": child_pid,
-            "provider_pid": tracer_provider.resource.attributes[PROCESS_PID],
-            "cached_tracer_pid": tracer.resource.attributes[PROCESS_PID],
-            "new_tracer_pid": new_tracer.resource.attributes[PROCESS_PID],
-            "span_pid": span.resource.attributes[PROCESS_PID],
-        }
-        os.write(write_fd, json.dumps(payload).encode())
-        os.close(write_fd)
+        print(
+            json.dumps(
+                {
+                    "child_pid": child_pid,
+                    "provider_pid": tracer_provider.resource.attributes[
+                        PROCESS_PID
+                    ],
+                    "cached_tracer_pid": tracer.resource.attributes[
+                        PROCESS_PID
+                    ],
+                    "new_tracer_pid": new_tracer.resource.attributes[
+                        PROCESS_PID
+                    ],
+                    "span_pid": span.resource.attributes[PROCESS_PID],
+                }
+            ),
+            flush=True,
+        )
         # pylint: disable-next=protected-access
         os._exit(0)
 
-    os.close(write_fd)
-    child_payload = os.read(read_fd, 4096)
-    os.close(read_fd)
-    _, status = os.waitpid(pid, 0)
-    exit_code = os.waitstatus_to_exitcode(status)
-    if exit_code != 0:
-        raise SystemExit(exit_code)
-
+    os.waitpid(pid, 0)
     print(
         json.dumps(
             {
@@ -54,7 +54,6 @@ def main() -> None:
                 "parent_tracer_pid_after_fork": tracer.resource.attributes[
                     PROCESS_PID
                 ],
-                "child": json.loads(child_payload.decode()),
             }
         ),
         flush=True,

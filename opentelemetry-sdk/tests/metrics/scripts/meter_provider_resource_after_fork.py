@@ -39,38 +39,32 @@ def main() -> None:
         PROCESS_PID
     ]
 
-    read_fd, write_fd = os.pipe()
     pid = os.fork()
     if not pid:
-        os.close(read_fd)
         child_pid = os.getpid()
         new_meter = meter_provider.get_meter("new")
         new_counter = new_meter.create_counter("new_counter")
         counter.add(1)
         new_counter.add(1)
         metrics_data = reader.get_metrics_data()
-        payload = {
-            "child_pid": child_pid,
-            # pylint: disable-next=protected-access
-            "provider_pid": meter_provider._sdk_config.resource.attributes[
-                PROCESS_PID
-            ],
-            "exported_resource_pids": _resource_pids(metrics_data),
-            "metric_names": _metric_names(metrics_data),
-        }
-        os.write(write_fd, json.dumps(payload).encode())
-        os.close(write_fd)
+        print(
+            json.dumps(
+                {
+                    "child_pid": child_pid,
+                    # pylint: disable-next=protected-access
+                    "provider_pid": meter_provider._sdk_config.resource.attributes[
+                        PROCESS_PID
+                    ],
+                    "exported_resource_pids": _resource_pids(metrics_data),
+                    "metric_names": _metric_names(metrics_data),
+                }
+            ),
+            flush=True,
+        )
         # pylint: disable-next=protected-access
         os._exit(0)
 
-    os.close(write_fd)
-    child_payload = os.read(read_fd, 4096)
-    os.close(read_fd)
-    _, status = os.waitpid(pid, 0)
-    exit_code = os.waitstatus_to_exitcode(status)
-    if exit_code != 0:
-        raise SystemExit(exit_code)
-
+    os.waitpid(pid, 0)
     print(
         json.dumps(
             {
@@ -80,7 +74,6 @@ def main() -> None:
                 "parent_resource_pid_after_fork": meter_provider._sdk_config.resource.attributes[
                     PROCESS_PID
                 ],
-                "child": json.loads(child_payload.decode()),
             }
         ),
         flush=True,

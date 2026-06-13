@@ -191,15 +191,21 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
             0,
             f"stdout: {result.stdout}\nstderr: {result.stderr}",
         )
-        payload = json.loads(result.stdout)
-        child_payload = payload["child"]
+        lines = result.stdout.strip().splitlines()
+        child_payload = json.loads(lines[0])
+        parent_payload = json.loads(lines[1])
 
-        self.assertEqual(payload["parent_resource_pid"], payload["parent_pid"])
         self.assertEqual(
-            payload["parent_resource_pid_after_fork"], payload["parent_pid"]
+            parent_payload["parent_resource_pid"], parent_payload["parent_pid"]
+        )
+        self.assertEqual(
+            parent_payload["parent_resource_pid_after_fork"],
+            parent_payload["parent_pid"],
         )
 
-        self.assertNotEqual(child_payload["child_pid"], payload["parent_pid"])
+        self.assertNotEqual(
+            child_payload["child_pid"], parent_payload["parent_pid"]
+        )
         self.assertEqual(
             child_payload["provider_pid"], child_payload["child_pid"]
         )
