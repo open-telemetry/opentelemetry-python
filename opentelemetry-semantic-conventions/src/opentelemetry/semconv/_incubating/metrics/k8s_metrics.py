@@ -1,27 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
-from typing import (
-    Callable,
-    Final,
-    Generator,
-    Iterable,
-    Optional,
-    Sequence,
-    Union,
-)
+from collections.abc import Callable, Generator, Iterable, Sequence
+from typing import Final
 
 from opentelemetry.metrics import (
     CallbackOptions,
@@ -33,88 +15,178 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = Union[
-    Callable[[CallbackOptions], Iterable[Observation]],
-    Generator[Iterable[Observation], CallbackOptions, None],
-]
+CallbackT = (
+    Callable[[CallbackOptions], Iterable[Observation]]
+    | Generator[Iterable[Observation], CallbackOptions, None]
+)
+
 
 K8S_CONTAINER_CPU_LIMIT: Final = "k8s.container.cpu.limit"
 """
-Maximum CPU resource limit set for the container
-Instrument: updowncounter
-Unit: {cpu}
-Note: See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#resourcerequirements-v1-core for details.
+Deprecated: Replaced by `k8s.container.cpu.limit.desired`.
 """
 
 
 def create_k8s_container_cpu_limit(meter: Meter) -> UpDownCounter:
-    """Maximum CPU resource limit set for the container"""
+    """Deprecated, use `k8s.container.cpu.limit.desired` and `k8s.container.cpu.limit.current` instead"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_CPU_LIMIT,
-        description="Maximum CPU resource limit set for the container.",
+        description="Deprecated, use `k8s.container.cpu.limit.desired` and `k8s.container.cpu.limit.current` instead.",
+        unit="{cpu}",
+    )
+
+
+K8S_CONTAINER_CPU_LIMIT_CURRENT: Final = "k8s.container.cpu.limit.current"
+"""
+Maximum CPU resource limit currently configured for a running container
+Instrument: updowncounter
+Unit: {cpu}
+Note: This metric aligns with the limit in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) field of
+[K8s ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core)
+(status.containerStatuses[*].resources). Also see `Actual Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_container_cpu_limit_current(meter: Meter) -> UpDownCounter:
+    """Maximum CPU resource limit currently configured for a running container"""
+    return meter.create_up_down_counter(
+        name=K8S_CONTAINER_CPU_LIMIT_CURRENT,
+        description="Maximum CPU resource limit currently configured for a running container.",
+        unit="{cpu}",
+    )
+
+
+K8S_CONTAINER_CPU_LIMIT_DESIRED: Final = "k8s.container.cpu.limit.desired"
+"""
+Maximum CPU resource limit as defined by the container spec
+Instrument: updowncounter
+Unit: {cpu}
+Note: This metric aligns with the limit in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) field of
+[K8s Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#container-v1-core)
+(spec.containers[*].resources). Also see `Desired Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_container_cpu_limit_desired(meter: Meter) -> UpDownCounter:
+    """Maximum CPU resource limit as defined by the container spec"""
+    return meter.create_up_down_counter(
+        name=K8S_CONTAINER_CPU_LIMIT_DESIRED,
+        description="Maximum CPU resource limit as defined by the container spec.",
         unit="{cpu}",
     )
 
 
 K8S_CONTAINER_CPU_LIMIT_UTILIZATION: Final = (
-    "k8s.container.cpu.limit_utilization"
+    "k8s.container.cpu.limit.utilization"
 )
 """
-The ratio of container CPU usage to its CPU limit
+The ratio of container CPU usage to its current CPU limit
 Instrument: gauge
 Unit: 1
-Note: The value range is [0.0,1.0]. A value of 1.0 means the container is using 100% of its CPU limit. If the CPU limit is not set, this metric SHOULD NOT be emitted for that container.
+Note: The current CPU limit reflects the actual resources applied to the container, as reported by
+[ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core).
+The value range is [0.0,1.0]. A value of 1.0 means the container is using 100% of its actual CPU limit.
+If the CPU limit is not set, this metric SHOULD NOT be emitted for that container.
 """
 
 
 def create_k8s_container_cpu_limit_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
-    """The ratio of container CPU usage to its CPU limit"""
+    """The ratio of container CPU usage to its current CPU limit"""
     return meter.create_observable_gauge(
         name=K8S_CONTAINER_CPU_LIMIT_UTILIZATION,
         callbacks=callbacks,
-        description="The ratio of container CPU usage to its CPU limit.",
+        description="The ratio of container CPU usage to its current CPU limit.",
         unit="1",
     )
 
 
 K8S_CONTAINER_CPU_REQUEST: Final = "k8s.container.cpu.request"
 """
-CPU resource requested for the container
-Instrument: updowncounter
-Unit: {cpu}
-Note: See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#resourcerequirements-v1-core for details.
+Deprecated: Replaced by `k8s.container.cpu.request.desired`.
 """
 
 
 def create_k8s_container_cpu_request(meter: Meter) -> UpDownCounter:
-    """CPU resource requested for the container"""
+    """Deprecated, use `k8s.container.cpu.request.desired` and `k8s.container.cpu.request.current` instead"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_CPU_REQUEST,
-        description="CPU resource requested for the container.",
+        description="Deprecated, use `k8s.container.cpu.request.desired` and `k8s.container.cpu.request.current` instead.",
+        unit="{cpu}",
+    )
+
+
+K8S_CONTAINER_CPU_REQUEST_CURRENT: Final = "k8s.container.cpu.request.current"
+"""
+CPU resource requested currently configured for a running container
+Instrument: updowncounter
+Unit: {cpu}
+Note: This metric aligns with the request in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) field of
+[K8s ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core)
+(status.containerStatuses[*].resources). Also see `Actual Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_container_cpu_request_current(meter: Meter) -> UpDownCounter:
+    """CPU resource requested currently configured for a running container"""
+    return meter.create_up_down_counter(
+        name=K8S_CONTAINER_CPU_REQUEST_CURRENT,
+        description="CPU resource requested currently configured for a running container.",
+        unit="{cpu}",
+    )
+
+
+K8S_CONTAINER_CPU_REQUEST_DESIRED: Final = "k8s.container.cpu.request.desired"
+"""
+CPU resource requested as defined by the container spec
+Instrument: updowncounter
+Unit: {cpu}
+Note: This metric aligns with the request in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) field of
+[K8s Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#container-v1-core)
+(spec.containers[*].resources). Also see `Desired Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_container_cpu_request_desired(meter: Meter) -> UpDownCounter:
+    """CPU resource requested as defined by the container spec"""
+    return meter.create_up_down_counter(
+        name=K8S_CONTAINER_CPU_REQUEST_DESIRED,
+        description="CPU resource requested as defined by the container spec.",
         unit="{cpu}",
     )
 
 
 K8S_CONTAINER_CPU_REQUEST_UTILIZATION: Final = (
-    "k8s.container.cpu.request_utilization"
+    "k8s.container.cpu.request.utilization"
 )
 """
-The ratio of container CPU usage to its CPU request
+The ratio of container CPU usage to its current CPU request
 Instrument: gauge
 Unit: 1
+Note: The current CPU request reflects the request applied to the running container, as reported by
+[ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core).
+The value range is [0.0,1.0]. A value of 1.0 means the container is using 100% of its actual CPU request.
+If the CPU request is not set, this metric SHOULD NOT be emitted for that container.
 """
 
 
 def create_k8s_container_cpu_request_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
-    """The ratio of container CPU usage to its CPU request"""
+    """The ratio of container CPU usage to its current CPU request"""
     return meter.create_observable_gauge(
         name=K8S_CONTAINER_CPU_REQUEST_UTILIZATION,
         callbacks=callbacks,
-        description="The ratio of container CPU usage to its CPU request.",
+        description="The ratio of container CPU usage to its current CPU request.",
         unit="1",
     )
 
@@ -165,36 +237,126 @@ def create_k8s_container_ephemeral_storage_request(
 
 K8S_CONTAINER_MEMORY_LIMIT: Final = "k8s.container.memory.limit"
 """
-Maximum memory resource limit set for the container
-Instrument: updowncounter
-Unit: By
-Note: See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#resourcerequirements-v1-core for details.
+Deprecated: Replaced by `k8s.container.memory.limit.desired`.
 """
 
 
 def create_k8s_container_memory_limit(meter: Meter) -> UpDownCounter:
-    """Maximum memory resource limit set for the container"""
+    """Deprecated, use `k8s.container.memory.limit.desired` and `k8s.container.memory.limit.current` instead"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_MEMORY_LIMIT,
-        description="Maximum memory resource limit set for the container.",
+        description="Deprecated, use `k8s.container.memory.limit.desired` and `k8s.container.memory.limit.current` instead.",
+        unit="By",
+    )
+
+
+K8S_CONTAINER_MEMORY_LIMIT_CURRENT: Final = (
+    "k8s.container.memory.limit.current"
+)
+"""
+Maximum memory resource limit currently configured for a running container
+Instrument: updowncounter
+Unit: By
+Note: This metric aligns with the limit in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) field of
+[K8s ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core)
+(status.containerStatuses[*].resources). Also see `Actual Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_container_memory_limit_current(meter: Meter) -> UpDownCounter:
+    """Maximum memory resource limit currently configured for a running container"""
+    return meter.create_up_down_counter(
+        name=K8S_CONTAINER_MEMORY_LIMIT_CURRENT,
+        description="Maximum memory resource limit currently configured for a running container.",
+        unit="By",
+    )
+
+
+K8S_CONTAINER_MEMORY_LIMIT_DESIRED: Final = (
+    "k8s.container.memory.limit.desired"
+)
+"""
+Maximum memory resource limit as defined by the container spec
+Instrument: updowncounter
+Unit: By
+Note: This metric aligns with the limit in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) field of
+[K8s Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#container-v1-core)
+(spec.containers[*].resources). Also see `Desired Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_container_memory_limit_desired(meter: Meter) -> UpDownCounter:
+    """Maximum memory resource limit as defined by the container spec"""
+    return meter.create_up_down_counter(
+        name=K8S_CONTAINER_MEMORY_LIMIT_DESIRED,
+        description="Maximum memory resource limit as defined by the container spec.",
         unit="By",
     )
 
 
 K8S_CONTAINER_MEMORY_REQUEST: Final = "k8s.container.memory.request"
 """
-Memory resource requested for the container
-Instrument: updowncounter
-Unit: By
-Note: See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.30/#resourcerequirements-v1-core for details.
+Deprecated: Replaced by `k8s.container.memory.request.desired`.
 """
 
 
 def create_k8s_container_memory_request(meter: Meter) -> UpDownCounter:
-    """Memory resource requested for the container"""
+    """Deprecated, use `k8s.container.memory.request.desired` and `k8s.container.memory.request.current` instead"""
     return meter.create_up_down_counter(
         name=K8S_CONTAINER_MEMORY_REQUEST,
-        description="Memory resource requested for the container.",
+        description="Deprecated, use `k8s.container.memory.request.desired` and `k8s.container.memory.request.current` instead.",
+        unit="By",
+    )
+
+
+K8S_CONTAINER_MEMORY_REQUEST_CURRENT: Final = (
+    "k8s.container.memory.request.current"
+)
+"""
+Memory resource request currently configured for a running container
+Instrument: updowncounter
+Unit: By
+Note: This metric aligns with the request in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) field of
+[K8s ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core)
+(status.containerStatuses[*].resources). Also see `Actual Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_container_memory_request_current(meter: Meter) -> UpDownCounter:
+    """Memory resource request currently configured for a running container"""
+    return meter.create_up_down_counter(
+        name=K8S_CONTAINER_MEMORY_REQUEST_CURRENT,
+        description="Memory resource request currently configured for a running container.",
+        unit="By",
+    )
+
+
+K8S_CONTAINER_MEMORY_REQUEST_DESIRED: Final = (
+    "k8s.container.memory.request.desired"
+)
+"""
+Memory resource requested as defined by the container spec
+Instrument: updowncounter
+Unit: By
+Note: This metric aligns with the request in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) field of
+[K8s Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#container-v1-core)
+(spec.containers[*].resources). Also see `Desired Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_container_memory_request_desired(meter: Meter) -> UpDownCounter:
+    """Memory resource requested as defined by the container spec"""
+    return meter.create_up_down_counter(
+        name=K8S_CONTAINER_MEMORY_REQUEST_DESIRED,
+        description="Memory resource requested as defined by the container spec.",
         unit="By",
     )
 
@@ -624,7 +786,7 @@ the `k8s.container.name` attribute MUST be set to identify the specific containe
 
 
 def create_k8s_hpa_metric_target_cpu_average_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Target average utilization, in percentage, for CPU resource in HPA config"""
     return meter.create_observable_gauge(
@@ -650,7 +812,7 @@ the `k8s.container.name` attribute MUST be set to identify the specific containe
 
 
 def create_k8s_hpa_metric_target_cpu_average_value(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Target average value for CPU resource in HPA config"""
     return meter.create_observable_gauge(
@@ -674,7 +836,7 @@ the `k8s.container.name` attribute MUST be set to identify the specific containe
 
 
 def create_k8s_hpa_metric_target_cpu_value(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Target value for CPU resource in HPA config"""
     return meter.create_observable_gauge(
@@ -1090,7 +1252,7 @@ Note: CPU usage of the specific Node on all available CPU cores, averaged over t
 
 
 def create_k8s_node_cpu_usage(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Node's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
@@ -1271,7 +1433,7 @@ Note: Total memory usage of the Node.
 
 
 def create_k8s_node_memory_usage(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Memory usage of the Node"""
     return meter.create_observable_gauge(
@@ -1352,6 +1514,93 @@ def create_k8s_node_pod_allocatable(meter: Meter) -> UpDownCounter:
     )
 
 
+K8S_NODE_SYSTEM_CONTAINER_CPU_TIME: Final = (
+    "k8s.node.system_container.cpu.time"
+)
+"""
+Node's system container CPU time
+Instrument: counter
+Unit: s
+Note: This metric is derived from the [CPUStats.UsageCoreNanoSeconds](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L236) field of the [ContainerStats](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L157C6-L157C20) of [Node.SystemContainers](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L40) of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_system_container_cpu_time(meter: Meter) -> Counter:
+    """Node's system container CPU time"""
+    return meter.create_counter(
+        name=K8S_NODE_SYSTEM_CONTAINER_CPU_TIME,
+        description="Node's system container CPU time.",
+        unit="s",
+    )
+
+
+K8S_NODE_SYSTEM_CONTAINER_CPU_USAGE: Final = (
+    "k8s.node.system_container.cpu.usage"
+)
+"""
+Node's system container CPU usage, measured in cpus
+Instrument: gauge
+Unit: {cpu}
+Note: This metric is derived from the [CPUStats.UsageNanoCores](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L233) field of the [ContainerStats](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L157C6-L157C20) of [Node.SystemContainers](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L40) of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_system_container_cpu_usage(
+    meter: Meter, callbacks: Sequence[CallbackT] | None
+) -> ObservableGauge:
+    """Node's system container CPU usage, measured in cpus"""
+    return meter.create_observable_gauge(
+        name=K8S_NODE_SYSTEM_CONTAINER_CPU_USAGE,
+        callbacks=callbacks,
+        description="Node's system container CPU usage, measured in cpus.",
+        unit="{cpu}",
+    )
+
+
+K8S_NODE_SYSTEM_CONTAINER_MEMORY_USAGE: Final = (
+    "k8s.node.system_container.memory.usage"
+)
+"""
+Node's system container memory usage
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the [MemoryStats.UsageBytes](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L252) field of the [ContainerStats](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L157C6-L157C20) of [Node.SystemContainers](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L40) of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_system_container_memory_usage(
+    meter: Meter,
+) -> UpDownCounter:
+    """Node's system container memory usage"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_SYSTEM_CONTAINER_MEMORY_USAGE,
+        description="Node's system container memory usage.",
+        unit="By",
+    )
+
+
+K8S_NODE_SYSTEM_CONTAINER_MEMORY_WORKING_SET: Final = (
+    "k8s.node.system_container.memory.working_set"
+)
+"""
+The amount of working set memory
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the [MemoryStats.WorkingSetBytes](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L256) field of the [ContainerStats](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L157C6-L157C20) of [Node.SystemContainers](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L40) of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_system_container_memory_working_set(
+    meter: Meter,
+) -> UpDownCounter:
+    """The amount of working set memory"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_SYSTEM_CONTAINER_MEMORY_WORKING_SET,
+        description="The amount of working set memory.",
+        unit="By",
+    )
+
+
 K8S_NODE_UPTIME: Final = "k8s.node.uptime"
 """
 The time the Node has been running
@@ -1363,7 +1612,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 
 
 def create_k8s_node_uptime(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The time the Node has been running"""
     return meter.create_observable_gauge(
@@ -1371,6 +1620,118 @@ def create_k8s_node_uptime(
         callbacks=callbacks,
         description="The time the Node has been running.",
         unit="s",
+    )
+
+
+K8S_PERSISTENTVOLUME_STATUS_PHASE: Final = "k8s.persistentvolume.status.phase"
+"""
+Number of PersistentVolumes in a given phase
+Instrument: updowncounter
+Unit: {persistentvolume}
+Note: All possible phases should be reported at each interval to avoid gaps in the time series.
+This metric is derived from the `.status.phase` field of the
+[K8s PersistentVolumeStatus](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-v1/#PersistentVolumeStatus).
+"""
+
+
+def create_k8s_persistentvolume_status_phase(meter: Meter) -> UpDownCounter:
+    """Number of PersistentVolumes in a given phase"""
+    return meter.create_up_down_counter(
+        name=K8S_PERSISTENTVOLUME_STATUS_PHASE,
+        description="Number of PersistentVolumes in a given phase.",
+        unit="{persistentvolume}",
+    )
+
+
+K8S_PERSISTENTVOLUME_STORAGE_CAPACITY: Final = (
+    "k8s.persistentvolume.storage.capacity"
+)
+"""
+The storage capacity of the PersistentVolume
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the `.spec.capacity.storage` field of the [K8s PersistentVolumeSpec](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-v1/#PersistentVolumeSpec).
+"""
+
+
+def create_k8s_persistentvolume_storage_capacity(
+    meter: Meter,
+) -> UpDownCounter:
+    """The storage capacity of the PersistentVolume"""
+    return meter.create_up_down_counter(
+        name=K8S_PERSISTENTVOLUME_STORAGE_CAPACITY,
+        description="The storage capacity of the PersistentVolume.",
+        unit="By",
+    )
+
+
+K8S_PERSISTENTVOLUMECLAIM_STATUS_PHASE: Final = (
+    "k8s.persistentvolumeclaim.status.phase"
+)
+"""
+Number of PersistentVolumeClaims in a given phase
+Instrument: updowncounter
+Unit: {persistentvolumeclaim}
+Note: All possible phases should be reported at each interval to avoid gaps in the time series.
+This metric is derived from the `.status.phase` field of the
+[K8s PersistentVolumeClaimStatus](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimStatus).
+"""
+
+
+def create_k8s_persistentvolumeclaim_status_phase(
+    meter: Meter,
+) -> UpDownCounter:
+    """Number of PersistentVolumeClaims in a given phase"""
+    return meter.create_up_down_counter(
+        name=K8S_PERSISTENTVOLUMECLAIM_STATUS_PHASE,
+        description="Number of PersistentVolumeClaims in a given phase.",
+        unit="{persistentvolumeclaim}",
+    )
+
+
+K8S_PERSISTENTVOLUMECLAIM_STORAGE_CAPACITY: Final = (
+    "k8s.persistentvolumeclaim.storage.capacity"
+)
+"""
+The actual storage capacity provisioned for the PersistentVolumeClaim
+Instrument: updowncounter
+Unit: By
+Note: Only available when the PVC is bound. May differ from the requested capacity due to provisioner rounding.
+This metric is derived from the `.status.capacity.storage` field of the
+[K8s PersistentVolumeClaimStatus](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimStatus).
+"""
+
+
+def create_k8s_persistentvolumeclaim_storage_capacity(
+    meter: Meter,
+) -> UpDownCounter:
+    """The actual storage capacity provisioned for the PersistentVolumeClaim"""
+    return meter.create_up_down_counter(
+        name=K8S_PERSISTENTVOLUMECLAIM_STORAGE_CAPACITY,
+        description="The actual storage capacity provisioned for the PersistentVolumeClaim.",
+        unit="By",
+    )
+
+
+K8S_PERSISTENTVOLUMECLAIM_STORAGE_REQUEST: Final = (
+    "k8s.persistentvolumeclaim.storage.request"
+)
+"""
+The storage requested by the PersistentVolumeClaim
+Instrument: updowncounter
+Unit: By
+Note: This metric is derived from the `.spec.resources.requests.storage` field of the [K8s PersistentVolumeClaimSpec](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimSpec).
+"""
+
+
+def create_k8s_persistentvolumeclaim_storage_request(
+    meter: Meter,
+) -> UpDownCounter:
+    """The storage requested by the PersistentVolumeClaim"""
+    return meter.create_up_down_counter(
+        name=K8S_PERSISTENTVOLUMECLAIM_STORAGE_REQUEST,
+        description="The storage requested by the PersistentVolumeClaim.",
+        unit="By",
     )
 
 
@@ -1402,7 +1763,7 @@ Note: CPU usage of the specific Pod on all available CPU cores, averaged over th
 
 
 def create_k8s_pod_cpu_usage(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Pod's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
@@ -1545,7 +1906,7 @@ Note: Total memory usage of the Pod.
 
 
 def create_k8s_pod_memory_usage(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Memory usage of the Pod"""
     return meter.create_observable_gauge(
@@ -1658,7 +2019,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 
 
 def create_k8s_pod_uptime(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The time the Pod has been running"""
     return meter.create_observable_gauge(
@@ -2508,7 +2869,7 @@ The `k8s.service.publish_not_ready_addresses` resource attribute indicates this 
 
 
 def create_k8s_service_endpoint_count(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Number of endpoints for a service by condition and address type"""
     return meter.create_observable_gauge(
@@ -2542,7 +2903,7 @@ guarantee that the load balancer is healthy.
 
 
 def create_k8s_service_load_balancer_ingress_count(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Number of load balancer ingress points (external IPs/hostnames) assigned to the service"""
     return meter.create_observable_gauge(

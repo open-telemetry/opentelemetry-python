@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """Configuration file loading and parsing."""
 
@@ -20,6 +9,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from opentelemetry.sdk._configuration._conversion import _dict_to_dataclass
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.file._env_substitution import (
     substitute_env_vars,
@@ -95,7 +85,7 @@ def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
     try:
         with open(path, encoding="utf-8") as config_file:
             content = config_file.read()
-    except (OSError, IOError) as exc:
+    except OSError as exc:
         _logger.exception("Failed to read configuration file: %s", file_path)
         raise ConfigurationError(
             f"Failed to read configuration file: {file_path}"
@@ -183,10 +173,13 @@ def _validate_schema(data: dict) -> None:
 
 
 def _dict_to_model(data: dict[str, Any]) -> OpenTelemetryConfiguration:
-    """Convert dictionary to OpenTelemetryConfiguration model.
+    """Convert a parsed config dictionary to the full typed model tree.
 
-    Uses the generated dataclass from models.py. This provides basic
-    validation through dataclass field types.
+    Walks each field's type annotation, recursively converting nested
+    dicts to their corresponding dataclass types. The resulting
+    ``OpenTelemetryConfiguration`` is fully typed end-to-end, so factory
+    functions can rely on typed attribute access (e.g. ``config.sampler``,
+    ``config.processors[0].batch.exporter``).
 
     Args:
         data: Parsed configuration dictionary.
@@ -198,15 +191,9 @@ def _dict_to_model(data: dict[str, Any]) -> OpenTelemetryConfiguration:
         TypeError: If data doesn't match expected structure.
         ValueError: If values are invalid.
     """
-    # Construct the top-level model from the validated dict. Nested fields
-    # are stored as dicts rather than their dataclass types; factory functions
-    # in later PRs will handle the full recursive conversion when building
-    # SDK objects.
     try:
-        config = OpenTelemetryConfiguration(**data)
-        return config
+        return _dict_to_dataclass(data, OpenTelemetryConfiguration)
     except TypeError as exc:
-        # Provide more helpful error message
         raise TypeError(
             f"Configuration structure is invalid. "
             f"Check that all required fields are present and correctly typed: {exc}"

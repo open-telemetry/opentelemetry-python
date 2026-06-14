@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 """
 The OpenTelemetry logging API describes the classes used to generate logs and events.
 
@@ -39,7 +28,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import Optional, cast, overload
+from typing import cast, overload
 
 from typing_extensions import deprecated
 
@@ -68,14 +57,15 @@ class LogRecord(ABC):
     def __init__(
         self,
         *,
-        timestamp: Optional[int] = None,
-        observed_timestamp: Optional[int] = None,
-        context: Optional[Context] = None,
-        severity_text: Optional[str] = None,
-        severity_number: Optional[SeverityNumber] = None,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
-        attributes: Optional[_ExtendedAttributes] = None,
-        event_name: Optional[str] = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None: ...
 
     @overload
@@ -85,31 +75,32 @@ class LogRecord(ABC):
     def __init__(
         self,
         *,
-        timestamp: Optional[int] = None,
-        observed_timestamp: Optional[int] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
-        trace_flags: Optional[TraceFlags] = None,
-        severity_text: Optional[str] = None,
-        severity_number: Optional[SeverityNumber] = None,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        trace_id: int | None = None,
+        span_id: int | None = None,
+        trace_flags: TraceFlags | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> None: ...
 
     def __init__(
         self,
         *,
-        timestamp: Optional[int] = None,
-        observed_timestamp: Optional[int] = None,
-        context: Optional[Context] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
-        trace_flags: Optional[TraceFlags] = None,
-        severity_text: Optional[str] = None,
-        severity_number: Optional[SeverityNumber] = None,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        trace_id: int | None = None,
+        span_id: int | None = None,
+        trace_flags: TraceFlags | None = None,
+        severity_text: str | None = None,
+        severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
-        attributes: Optional[_ExtendedAttributes] = None,
-        event_name: Optional[str] = None,
+        attributes: _ExtendedAttributes | None = None,
+        event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         if not context:
             context = get_current()
@@ -127,6 +118,7 @@ class LogRecord(ABC):
         self.body = body
         self.attributes = attributes
         self.event_name = event_name
+        self.exception = exception
 
 
 class Logger(ABC):
@@ -135,9 +127,9 @@ class Logger(ABC):
     def __init__(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> None:
         super().__init__()
         self._name = name
@@ -157,6 +149,7 @@ class Logger(ABC):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None: ...
 
     @overload
@@ -178,6 +171,7 @@ class Logger(ABC):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
@@ -200,6 +194,7 @@ class NoOpLogger(Logger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None: ...
 
     @overload
@@ -220,6 +215,7 @@ class NoOpLogger(Logger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         pass
 
@@ -228,15 +224,15 @@ class ProxyLogger(Logger):
     def __init__(  # pylint: disable=super-init-not-called
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ):
         self._name = name
         self._version = version
         self._schema_url = schema_url
         self._attributes = attributes
-        self._real_logger: Optional[Logger] = None
+        self._real_logger: Logger | None = None
         self._noop_logger = NoOpLogger(name)
 
     @property
@@ -266,6 +262,7 @@ class ProxyLogger(Logger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None: ...
 
     @overload
@@ -286,6 +283,7 @@ class ProxyLogger(Logger):
         body: AnyValue | None = None,
         attributes: _ExtendedAttributes | None = None,
         event_name: str | None = None,
+        exception: BaseException | None = None,
     ) -> None:
         if record:
             self._logger.emit(record)
@@ -299,6 +297,7 @@ class ProxyLogger(Logger):
                 body=body,
                 attributes=attributes,
                 event_name=event_name,
+                exception=exception,
             )
 
 
@@ -311,9 +310,9 @@ class LoggerProvider(ABC):
     def get_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -350,9 +349,9 @@ class NoOpLoggerProvider(LoggerProvider):
     def get_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
         return NoOpLogger(
@@ -364,9 +363,9 @@ class ProxyLoggerProvider(LoggerProvider):
     def get_logger(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> Logger:
         if _LOGGER_PROVIDER:
             return _LOGGER_PROVIDER.get_logger(
@@ -384,7 +383,7 @@ class ProxyLoggerProvider(LoggerProvider):
 
 
 _LOGGER_PROVIDER_SET_ONCE = Once()
-_LOGGER_PROVIDER: Optional[LoggerProvider] = None
+_LOGGER_PROVIDER: LoggerProvider | None = None
 _PROXY_LOGGER_PROVIDER = ProxyLoggerProvider()
 
 
@@ -427,9 +426,9 @@ def set_logger_provider(logger_provider: LoggerProvider) -> None:
 def get_logger(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
-    logger_provider: Optional[LoggerProvider] = None,
-    schema_url: Optional[str] = None,
-    attributes: Optional[_ExtendedAttributes] = None,
+    logger_provider: LoggerProvider | None = None,
+    schema_url: str | None = None,
+    attributes: _ExtendedAttributes | None = None,
 ) -> Logger:
     """Returns a `Logger` for use within a python process.
 

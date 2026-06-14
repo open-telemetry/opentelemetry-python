@@ -1,23 +1,11 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import copy
 import logging
 import threading
 from collections import OrderedDict
-from collections.abc import MutableMapping
-from typing import Mapping, Optional, Sequence, Tuple, Union
+from collections.abc import Mapping, MutableMapping, Sequence
 
 from opentelemetry.util import types
 
@@ -47,9 +35,11 @@ def _type_name(t):
 _logger = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-return-statements
+# pylint: disable=too-many-branches
 def _clean_attribute(
-    key: str, value: types.AttributeValue, max_len: Optional[int]
-) -> Optional[Union[types.AttributeValue, Tuple[Union[str, int, float], ...]]]:
+    key: str, value: types.AttributeValue, max_len: int | None
+) -> types.AttributeValue | tuple[str | int | float, ...] | None:
     """Checks if attribute value is valid and cleans it if required.
 
     The function returns the cleaned value or None if the value is not valid.
@@ -70,16 +60,32 @@ def _clean_attribute(
         return None
 
     if isinstance(value, _VALID_ATTR_VALUE_TYPES):
-        return _clean_attribute_value(value, max_len)
+        if isinstance(value, bytes):
+            try:
+                value = value.decode()
+            except UnicodeDecodeError:
+                _logger.warning("Byte attribute could not be decoded.")
+                return None
+        if max_len is not None and isinstance(value, str):
+            value = value[:max_len]
+        return value
 
     if isinstance(value, Sequence):
         sequence_first_valid_type = None
         cleaned_seq = []
 
         for element in value:
-            element = _clean_attribute_value(element, max_len)  # type: ignore
-            if element is None:
-                cleaned_seq.append(element)
+            if isinstance(element, bytes):
+                try:
+                    element = element.decode()
+                except UnicodeDecodeError:
+                    _logger.warning("Byte attribute could not be decoded.")
+                    cleaned_seq.append(None)
+                    continue
+            if max_len is not None and isinstance(element, str):
+                element = element[:max_len]
+            elif element is None:
+                cleaned_seq.append(None)
                 continue
 
             element_type = type(element)
@@ -127,7 +133,7 @@ def _clean_attribute(
 
 
 def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
-    value: types.AnyValue, max_len: Optional[int]
+    value: types.AnyValue, max_len: int | None
 ) -> types.AnyValue:
     # for primitive types just return the value and eventually shorten the string length
     if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
@@ -204,7 +210,7 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
 
 
 def _clean_extended_attribute(
-    key: str, value: types.AnyValue, max_len: Optional[int]
+    key: str, value: types.AnyValue, max_len: int | None
 ) -> types.AnyValue:
     """Checks if attribute value is valid and cleans it if required.
 
@@ -226,24 +232,6 @@ def _clean_extended_attribute(
         return None
 
 
-def _clean_attribute_value(
-    value: types.AttributeValue, limit: Optional[int]
-) -> Optional[types.AttributeValue]:
-    if value is None:
-        return None
-
-    if isinstance(value, bytes):
-        try:
-            value = value.decode()
-        except UnicodeDecodeError:
-            _logger.warning("Byte attribute could not be decoded.")
-            return None
-
-    if limit is not None and isinstance(value, str):
-        value = value[:limit]
-    return value
-
-
 class BoundedAttributes(MutableMapping):  # type: ignore
     """An ordered dict with a fixed max capacity.
 
@@ -253,10 +241,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
 
     def __init__(
         self,
-        maxlen: Optional[int] = None,
-        attributes: Optional[types._ExtendedAttributes] = None,
+        maxlen: int | None = None,
+        attributes: types._ExtendedAttributes | None = None,
         immutable: bool = True,
-        max_value_len: Optional[int] = None,
+        max_value_len: int | None = None,
         extended_attributes: bool = False,
     ):
         if maxlen is not None:
@@ -270,10 +258,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         self._extended_attributes = extended_attributes
         # OrderedDict is not used until the maxlen is reached for efficiency.
 
-        self._dict: Union[
-            MutableMapping[str, types.AnyValue],
-            OrderedDict[str, types.AnyValue],
-        ] = {}
+        self._dict: (
+            MutableMapping[str, types.AnyValue]
+            | OrderedDict[str, types.AnyValue]
+        ) = {}
         self._lock = threading.RLock()
         if attributes:
             for key, value in attributes.items():
@@ -321,7 +309,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
 
     def __iter__(self):  # type: ignore
         with self._lock:
-            return iter(self._dict.copy())  # type: ignore
+            return iter(list(self._dict))  # type: ignore
 
     def __len__(self) -> int:
         return len(self._dict)

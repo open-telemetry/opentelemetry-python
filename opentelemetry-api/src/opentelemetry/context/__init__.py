@@ -1,29 +1,17 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
 import logging
-import typing
+import os
 from contextvars import Token
-from os import environ
 from uuid import uuid4
 
 # pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context, _RuntimeContext  # noqa
+from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
-from opentelemetry.util._importlib_metadata import entry_points
 
 logger = logging.getLogger(__name__)
 
@@ -34,37 +22,29 @@ def _load_runtime_context() -> _RuntimeContext:
     Returns:
         An instance of RuntimeContext.
     """
+    configured_context = os.environ.get(OTEL_PYTHON_CONTEXT)
+    if not configured_context:
+        return ContextVarsRuntimeContext()
 
-    # FIXME use a better implementation of a configuration manager
-    # to avoid having to get configuration values straight from
-    # environment variables
-    default_context = "contextvars_context"
-
-    configured_context = environ.get(OTEL_PYTHON_CONTEXT, default_context)  # type: str
+    # pylint: disable=import-outside-toplevel,no-name-in-module
+    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+        entry_points,
+    )
 
     try:
-        return next(  # type: ignore
-            iter(  # type: ignore
-                entry_points(  # type: ignore
-                    group="opentelemetry_context",
-                    name=configured_context,
+        return next(
+            iter(
+                entry_points(
+                    group="opentelemetry_context", name=configured_context
                 )
             )
         ).load()()
     except Exception:  # pylint: disable=broad-exception-caught
         logger.exception(
-            "Failed to load context: %s, fallback to %s",
+            "Failed to load context: %s, falling back to contextvars_context",
             configured_context,
-            default_context,
         )
-        return next(  # type: ignore
-            iter(  # type: ignore
-                entry_points(  # type: ignore
-                    group="opentelemetry_context",
-                    name=default_context,
-                )
-            )
-        ).load()()
+        return ContextVarsRuntimeContext()
 
 
 _RUNTIME_CONTEXT = _load_runtime_context()
@@ -82,7 +62,7 @@ def create_key(keyname: str) -> str:
     return keyname + "-" + str(uuid4())
 
 
-def get_value(key: str, context: typing.Optional[Context] = None) -> object:
+def get_value(key: str, context: Context | None = None) -> object:
     """To access the local state of a concern, the RuntimeContext API
     provides a function which takes a context and a key as input,
     and returns a value.
@@ -98,7 +78,7 @@ def get_value(key: str, context: typing.Optional[Context] = None) -> object:
 
 
 def set_value(
-    key: str, value: object, context: typing.Optional[Context] = None
+    key: str, value: object, context: Context | None = None
 ) -> Context:
     """To record the local state of a cross-cutting concern, the
     RuntimeContext API provides a function which takes a context, a

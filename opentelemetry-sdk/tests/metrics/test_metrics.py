@@ -1,25 +1,13 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access,no-self-use,too-many-lines
-
 import weakref
-from collections.abc import Callable
-from logging import WARNING
+from collections.abc import Callable, Iterable, Sequence
+from logging import DEBUG, WARNING
 from threading import Lock
 from time import sleep
-from typing import Any, Iterable, Sequence
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.attributes import BoundedAttributes
@@ -45,6 +33,7 @@ from opentelemetry.sdk.metrics._internal import (
     _RuleBasedMeterConfigurator,
 )
 from opentelemetry.sdk.metrics.export import (
+    InMemoryMetricReader,
     Metric,
     MetricExporter,
     MetricExportResult,
@@ -498,6 +487,36 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         gauge.set(1)
 
         sync_consumer_instance.consume_measurement.assert_called()
+
+    def test_addition_of_metric_reader(self):
+        internal_logger = "opentelemetry.sdk.metrics._internal"
+        export_logger = "opentelemetry.sdk.metrics._internal.export"
+
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        # Suppress warnings for calling collect on an unregistered metric reader
+        with self.assertLogs(export_logger, DEBUG):
+            self.assertIsNone(reader.get_metrics_data())
+
+        meter_provider.add_metric_reader(reader)
+        counter.add(1)
+        self.assertIsNotNone(reader.get_metrics_data())
+
+        with self.assertLogs(internal_logger, DEBUG) as cm:
+            meter_provider.add_metric_reader(reader)
+            self.assertIn("has been registered already!", cm.output[0])
+
+        meter_provider.remove_metric_reader(reader)
+        counter.add(1)
+        with self.assertLogs(export_logger, DEBUG):
+            self.assertIsNone(reader.get_metrics_data())
+
+        with self.assertLogs(internal_logger, DEBUG) as cm:
+            meter_provider.remove_metric_reader(reader)
+            self.assertIn("has not been registered!", cm.output[0])
 
 
 class TestMeterConcurrency(ConcurrencyTestBase, TestCase):

@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # AUTO-GENERATED from "opentelemetry/proto/common/v1/common.proto"
 # DO NOT EDIT MANUALLY
@@ -20,13 +9,9 @@ from __future__ import annotations
 import builtins
 import dataclasses
 import functools
-import sys
 import typing
 
-if sys.version_info >= (3, 10):
-    _dataclass = functools.partial(dataclasses.dataclass, slots=True)
-else:
-    _dataclass = dataclasses.dataclass
+_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 
@@ -45,6 +30,7 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     array_value: typing.Optional[ArrayValue] = None
     kvlist_value: typing.Optional[KeyValueList] = None
     bytes_value: typing.Optional[builtins.bytes] = None
+    string_value_strindex: typing.Optional[builtins.int] = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -54,7 +40,9 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
             Dictionary representation following OTLP JSON encoding
         """
         _result = {}
-        if self.bytes_value is not None:
+        if self.string_value_strindex is not None:
+            _result["stringValueStrindex"] = self.string_value_strindex
+        elif self.bytes_value is not None:
             _result["bytesValue"] = opentelemetry.proto_json._json_codec.encode_base64(self.bytes_value)
         elif self.kvlist_value is not None:
             _result["kvlistValue"] = self.kvlist_value.to_dict()
@@ -84,7 +72,10 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
         opentelemetry.proto_json._json_codec.validate_type(data, builtins.dict, "data")
         _args = {}
 
-        if (_value := data.get("bytesValue")) is not None:
+        if (_value := data.get("stringValueStrindex")) is not None:
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "string_value_strindex")
+            _args["string_value_strindex"] = _value
+        elif (_value := data.get("bytesValue")) is not None:
             _args["bytes_value"] = opentelemetry.proto_json._json_codec.decode_base64(_value, "bytes_value")
         elif (_value := data.get("kvlistValue")) is not None:
             _args["kvlist_value"] = KeyValueList.from_dict(_value)
@@ -195,6 +186,7 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
 
     key: typing.Optional[builtins.str] = ""
     value: typing.Optional[AnyValue] = None
+    key_strindex: typing.Optional[builtins.int] = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -208,6 +200,8 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
             _result["key"] = self.key
         if self.value:
             _result["value"] = self.value.to_dict()
+        if self.key_strindex:
+            _result["keyStrindex"] = self.key_strindex
         return _result
 
     @builtins.classmethod
@@ -229,6 +223,9 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
             _args["key"] = _value
         if (_value := data.get("value")) is not None:
             _args["value"] = AnyValue.from_dict(_value)
+        if (_value := data.get("keyStrindex")) is not None:
+            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "key_strindex")
+            _args["key_strindex"] = _value
 
         return cls(**_args)
 

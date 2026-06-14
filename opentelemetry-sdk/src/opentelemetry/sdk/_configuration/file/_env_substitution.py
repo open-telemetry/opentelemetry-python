@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """Environment variable substitution for configuration files."""
 
@@ -81,6 +70,23 @@ def substitute_env_vars(text: str) -> str:
                 f"Environment variable '{var_name}' not found and no default provided"
             )
 
+        # Per spec: "It MUST NOT be possible to inject YAML structures by
+        # environment variables." Newlines are the primary injection vector —
+        # a value like "legit\nmalicious_key: val" would create extra YAML
+        # keys if substituted verbatim. Wrap such values in a YAML
+        # double-quoted scalar so the newline is treated as literal text.
+        # Simple values (no newlines) are returned as-is so that YAML type
+        # coercion still applies per spec ("Node types MUST be interpreted
+        # after environment variable substitution takes place").
+        if "\n" in value or "\r" in value:
+            escaped = (
+                value.replace("\\", "\\\\")
+                .replace('"', '\\"')
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+            )
+            return f'"{escaped}"'
         return value
 
     return re.sub(pattern, replace_var, text)

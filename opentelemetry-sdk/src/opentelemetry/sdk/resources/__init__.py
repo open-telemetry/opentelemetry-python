@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """
 This package implements `OpenTelemetry Resources
@@ -66,11 +55,14 @@ import os
 import platform
 import socket
 import sys
+import threading
 import typing
+import uuid
+from collections.abc import Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import List, Optional, Set, cast
+from typing import cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -79,14 +71,13 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
-from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util._importlib_metadata import (
-    entry_points,  # type: ignore[reportUnknownVariableType]
-    version,
+from opentelemetry.sdk.version import (
+    __version__ as _OPENTELEMETRY_SDK_VERSION,
 )
+from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.util.types import AttributeValue
 
-psutil: Optional[ModuleType] = None
+psutil: ModuleType | None = None
 
 try:
     import psutil as psutil_module
@@ -158,8 +149,6 @@ TELEMETRY_SDK_VERSION = ResourceAttributes.TELEMETRY_SDK_VERSION
 TELEMETRY_AUTO_VERSION = ResourceAttributes.TELEMETRY_AUTO_VERSION
 TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
 
-_OPENTELEMETRY_SDK_VERSION: str = version("opentelemetry-sdk")
-
 
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
@@ -167,9 +156,7 @@ class Resource:
     _attributes: BoundedAttributes
     _schema_url: str
 
-    def __init__(
-        self, attributes: Attributes, schema_url: typing.Optional[str] = None
-    ):
+    def __init__(self, attributes: Attributes, schema_url: str | None = None):
         self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
             schema_url = ""
@@ -177,8 +164,8 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: typing.Optional[Attributes] = None,
-        schema_url: typing.Optional[str] = None,
+        attributes: Attributes | None = None,
+        schema_url: str | None = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -195,49 +182,14 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        otel_experimental_resource_detectors: Set[str] = {"otel"}.union(
-            {
-                otel_experimental_resource_detector.strip()
-                for otel_experimental_resource_detector in environ.get(
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-                ).split(",")
-                if otel_experimental_resource_detector
-            }
-        )
-
-        resource_detectors: List[ResourceDetector] = []
-
-        if "*" in otel_experimental_resource_detectors:
-            otel_experimental_resource_detectors = entry_points(
-                group="opentelemetry_resource_detector"
-            ).names
-
-        for resource_detector in otel_experimental_resource_detectors:
-            try:
-                resource_detectors.append(
-                    next(
-                        iter(
-                            entry_points(
-                                group="opentelemetry_resource_detector",
-                                name=resource_detector.strip(),
-                            )  # type: ignore[reportUnknownArgumentType]
-                        )
-                    ).load()()
-                )
-            except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception(
-                    "Failed to load resource detector '%s', skipping",
-                    resource_detector,
-                )
-                continue
         resource = get_aggregated_resources(
-            resource_detectors, _DEFAULT_RESOURCE
+            _build_resource_detectors(), _DEFAULT_RESOURCE
         ).merge(Resource(attributes, schema_url))
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = cast(
-                Optional[str],
+                str | None,
                 resource.attributes.get(PROCESS_EXECUTABLE_NAME, None),
             )
             if process_executable_name:
@@ -307,7 +259,7 @@ class Resource:
             f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
-    def to_json(self, indent: Optional[int] = 4) -> str:
+    def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
                 "attributes": dict(self.attributes),
@@ -318,6 +270,7 @@ class Resource:
 
 
 _EMPTY_RESOURCE = Resource({})
+
 _DEFAULT_RESOURCE = Resource(
     {
         TELEMETRY_SDK_LANGUAGE: "python",
@@ -325,6 +278,11 @@ _DEFAULT_RESOURCE = Resource(
         TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
     }
 )
+
+
+_service_instance_id: str | None = None
+_service_instance_id_pid: int | None = None
+_service_instance_id_lock = threading.Lock()
 
 
 class ResourceDetector(abc.ABC):
@@ -380,9 +338,16 @@ class ProcessResourceDetector(ResourceDetector):
         _process_pid = os.getpid()
         _process_executable_name = sys.executable
         _process_executable_path = os.path.dirname(_process_executable_name)
-        _process_command = sys.argv[0]
-        _process_command_line = " ".join(sys.argv)
-        _process_command_args = sys.argv
+        # Use sys.orig_argv, which preserves the original arguments received
+        # by the interpreter. This correctly captures ``python -m <module>``
+        # invocations where sys.argv is rewritten to the resolved module path
+        # and the ``-m <module>`` information is lost. sys.orig_argv also
+        # aligns with /proc/<pid>/cmdline, which the OTel semantic
+        # conventions reference for these attributes.
+        _process_argv = list(sys.orig_argv)
+        _process_command = _process_argv[0] if _process_argv else ""
+        _process_command_line = " ".join(_process_argv)
+        _process_command_args = _process_argv
         resource_info = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
@@ -504,9 +469,102 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
         )
 
 
+class ServiceInstanceIdResourceDetector(ResourceDetector):
+    """Detects service.instance.id as a random UUID v4.
+
+    Per the OpenTelemetry specification, SDKs SHOULD generate a random v1/v4
+    UUID for service.instance.id to uniquely identify each service instance.
+    The ID is shared across all detector instances within the same process and
+    regenerated automatically when the process PID changes (e.g. after a fork).
+    """
+
+    def detect(self) -> "Resource":
+        # pylint: disable-next=global-statement
+        global _service_instance_id, _service_instance_id_pid
+        with _service_instance_id_lock:
+            current_pid = os.getpid()
+            if (
+                _service_instance_id is None
+                or _service_instance_id_pid != current_pid
+            ):
+                _service_instance_id = str(uuid.uuid4())
+                _service_instance_id_pid = current_pid
+            instance_id = _service_instance_id
+        return Resource({SERVICE_INSTANCE_ID: instance_id})
+
+
+def _build_resource_detectors() -> list["ResourceDetector"]:
+    """Returns the ordered list of resource detectors to use for Resource.create.
+
+    Fast path: if no extra detectors are configured, returns only the two
+    built-in detectors without scanning entry_points.
+
+    "service_instance" (ServiceInstanceIdResourceDetector) and "otel"
+    (OTELResourceDetector) are always appended as defaults. "otel" is last so
+    that OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge
+    priority, but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
+    is respected for either name.
+    """
+    detector_names: list[str] = list(
+        dict.fromkeys(
+            [
+                name.strip()
+                for name in environ.get(
+                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
+                ).split(",")
+                if name.strip()
+            ]
+            + ["service_instance", "otel"]
+        )
+    )
+
+    # Fast path: only the two built-in detectors — no entry_points scan needed.
+    if detector_names == ["service_instance", "otel"]:
+        return [ServiceInstanceIdResourceDetector(), OTELResourceDetector()]
+
+    # pylint: disable=import-outside-toplevel
+    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+        entry_points,  # type: ignore[reportUnknownVariableType]
+    )
+
+    if "*" in detector_names:
+        registered = set(
+            name
+            for name in entry_points(
+                group="opentelemetry_resource_detector"
+            ).names  # type: ignore[reportUnknownArgumentType]
+            if name != "otel"
+        )
+        expansion = sorted(registered - set(detector_names))
+        idx = detector_names.index("*")
+        detector_names = (
+            detector_names[:idx] + expansion + detector_names[idx + 1 :]
+        )
+
+    detectors: list[ResourceDetector] = []
+    for name in detector_names:
+        try:
+            detectors.append(
+                next(
+                    iter(
+                        entry_points(
+                            group="opentelemetry_resource_detector",
+                            name=name,
+                        )  # type: ignore[reportUnknownArgumentType]
+                    )
+                ).load()()
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception(
+                "Failed to load resource detector '%s', skipping",
+                name,
+            )
+    return detectors
+
+
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"],
-    initial_resource: typing.Optional[Resource] = None,
+    detectors: Sequence["ResourceDetector"],
+    initial_resource: Resource | None = None,
     timeout: int = 5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed

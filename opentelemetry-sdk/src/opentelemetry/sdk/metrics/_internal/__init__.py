@@ -1,25 +1,14 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import weakref
 from atexit import register, unregister
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import Callable, Optional, Sequence
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -63,9 +52,9 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
-    _InstrumentationScopePredicateT,
 )
 from opentelemetry.util._once import Once
 from opentelemetry.util.types import (
@@ -104,7 +93,7 @@ class Meter(APIMeter):
         instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
         *,
-        _meter_config: Optional[_MeterConfig] = None,
+        _meter_config: _MeterConfig | None = None,
     ):
         super().__init__(
             name=instrumentation_scope.name,
@@ -238,7 +227,7 @@ class Meter(APIMeter):
         unit: str = "",
         description: str = "",
         *,
-        explicit_bucket_boundaries_advisory: Optional[Sequence[float]] = None,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> APIHistogram:
         if explicit_bucket_boundaries_advisory is not None:
             invalid_advisory = False
@@ -414,9 +403,7 @@ def _get_exemplar_filter(exemplar_filter: str) -> ExemplarFilter:
 
 
 _MeterConfiguratorT = Callable[[InstrumentationScope], _MeterConfig]
-_MeterConfiguratorRulesT = Sequence[
-    tuple[_InstrumentationScopePredicateT, _MeterConfig]
-]
+_RuleBasedMeterConfigurator = RuleBasedConfigurator[_MeterConfig]
 
 
 def _default_meter_configurator(
@@ -429,27 +416,6 @@ def _disable_meter_configurator(
     _meter_scope: InstrumentationScope,
 ) -> _MeterConfig:
     return _MeterConfig(is_enabled=False)
-
-
-class _RuleBasedMeterConfigurator:
-    def __init__(
-        self,
-        *,
-        rules: _MeterConfiguratorRulesT,
-        default_config: _MeterConfig,
-    ):
-        self._rules = rules
-        self._default_config = default_config
-
-    def __call__(self, meter_scope: InstrumentationScope) -> _MeterConfig:
-        for predicate, meter_config in self._rules:
-            if predicate(meter_scope):
-                return meter_config
-        # by default return default config
-        return self._default_config
-
-    def update_rules(self, rules: _MeterConfiguratorRulesT) -> None:
-        self._rules = rules
 
 
 class MeterProvider(APIMeterProvider):
@@ -504,12 +470,12 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[
             "opentelemetry.sdk.metrics.export.MetricReader"
         ] = (),
-        resource: Optional[Resource] = None,
-        exemplar_filter: Optional[ExemplarFilter] = None,
+        resource: Resource | None = None,
+        exemplar_filter: ExemplarFilter | None = None,
         shutdown_on_exit: bool = True,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
         *,
-        _meter_configurator: Optional[_MeterConfiguratorT] = None,
+        _meter_configurator: _MeterConfiguratorT | None = None,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
@@ -524,11 +490,12 @@ class MeterProvider(APIMeterProvider):
                 )
             ),
             resource=resource,
-            metric_readers=metric_readers,
             views=views,
         )
+        self._metric_readers = metric_readers
         self._measurement_consumer = SynchronousMeasurementConsumer(
-            sdk_config=self._sdk_config
+            sdk_config=self._sdk_config,
+            metric_readers=metric_readers,
         )
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
@@ -543,7 +510,7 @@ class MeterProvider(APIMeterProvider):
             _meter_configurator or _default_meter_configurator
         )
 
-        for metric_reader in self._sdk_config.metric_readers:
+        for metric_reader in self._metric_readers:
             with self._all_metric_readers_lock:
                 if metric_reader in self._all_metric_readers:
                     # pylint: disable=broad-exception-raised
@@ -594,7 +561,7 @@ class MeterProvider(APIMeterProvider):
 
         metric_reader_error = {}
 
-        for metric_reader in self._sdk_config.metric_readers:
+        for metric_reader in self._metric_readers:
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
@@ -639,7 +606,7 @@ class MeterProvider(APIMeterProvider):
 
         metric_reader_error = {}
 
-        for metric_reader in self._sdk_config.metric_readers:
+        for metric_reader in self._metric_readers:
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
@@ -677,9 +644,9 @@ class MeterProvider(APIMeterProvider):
     def get_meter(
         self,
         name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-        attributes: Optional[Attributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: Attributes | None = None,
     ) -> APIMeter:
         if self._disabled:
             return NoOpMeter(name, version=version, schema_url=schema_url)
@@ -709,3 +676,36 @@ class MeterProvider(APIMeterProvider):
                     ),
                 )
             return self._meters[instrumentation_scope]
+
+    def add_metric_reader(
+        self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader"
+    ) -> None:
+        with self._all_metric_readers_lock:
+            if metric_reader in self._all_metric_readers:
+                _logger.warning(
+                    "MetricReader '%s' has been registered already!",
+                    metric_reader,
+                )
+                return
+            self._measurement_consumer.add_metric_reader(metric_reader)
+            # pylint: disable-next=protected-access
+            metric_reader._set_collect_callback(
+                self._measurement_consumer.collect
+            )
+            self._all_metric_readers.add(metric_reader)
+
+    def remove_metric_reader(
+        self,
+        metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
+    ) -> None:
+        with self._all_metric_readers_lock:
+            if metric_reader not in self._all_metric_readers:
+                _logger.warning(
+                    "MetricReader '%s' has not been registered!", metric_reader
+                )
+                return
+            self._measurement_consumer.remove_metric_reader(metric_reader)
+            # pylint: disable-next=protected-access
+            metric_reader._set_collect_callback(None)
+            metric_reader.shutdown()
+            self._all_metric_readers.remove(metric_reader)

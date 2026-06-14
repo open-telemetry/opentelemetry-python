@@ -1,23 +1,11 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-lines
 import threading
 import time
 from logging import WARNING
 from os import environ
-from typing import List
 from unittest import TestCase
 from unittest.mock import ANY, MagicMock, Mock, patch
 
@@ -69,10 +57,12 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
+    MeterProvider,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
@@ -80,6 +70,7 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    InMemoryMetricReader,
     MetricExportResult,
     MetricsData,
     ResourceMetrics,
@@ -104,10 +95,14 @@ OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
 OS_ENV_TIMEOUT = "30"
 
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 class TestOTLPMetricExporter(TestCase):
     # pylint: disable=too-many-public-methods
     def setUp(self):
+        self.metric_reader = InMemoryMetricReader()
+        self.meter_provider = MeterProvider(
+            metric_readers=[self.metric_reader]
+        )
         self.metrics = {
             "sum_int": MetricsData(
                 resource_metrics=[
@@ -328,6 +323,9 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             )
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
+    )
     @patch.object(Session, "post")
     def test_success(self, mock_post):
         resp = Response()
@@ -335,12 +333,40 @@ class TestOTLPMetricExporter(TestCase):
         mock_post.return_value = resp
 
         exporter = OTLPMetricExporter()
+        exporter.set_meter_provider(self.meter_provider)
 
         self.assertEqual(
             exporter.export(self.metrics["sum_int"]),
             MetricExportResult.SUCCESS,
         )
 
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        self.assertEqual(
+            metrics[0].name, "otel.sdk.exporter.metric_data_point.exported"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[0].data.data_points[0].attributes
+        )
+        self.assertEqual(
+            metrics[1].name, "otel.sdk.exporter.metric_data_point.inflight"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[1].data.data_points[0].attributes
+        )
+        self.assertEqual(
+            metrics[2].name, "otel.sdk.exporter.operation.duration"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[2].data.data_points[0].attributes
+        )
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     @patch.object(Session, "post")
     def test_failure(self, mock_post):
         resp = Response()
@@ -348,10 +374,58 @@ class TestOTLPMetricExporter(TestCase):
         mock_post.return_value = resp
 
         exporter = OTLPMetricExporter()
+        exporter.set_meter_provider(self.meter_provider)
 
         self.assertEqual(
             exporter.export(self.metrics["sum_int"]),
             MetricExportResult.FAILURE,
+        )
+
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        self.assertEqual(
+            metrics[0].name, "otel.sdk.exporter.metric_data_point.exported"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[0].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "error.type", metrics[0].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "http.response.status_code",
+            metrics[0].data.data_points[0].attributes,
+        )
+        self.assertEqual(
+            metrics[1].name, "otel.sdk.exporter.metric_data_point.inflight"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[1].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "error.type", metrics[1].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "http.response.status_code",
+            metrics[1].data.data_points[0].attributes,
+        )
+        self.assertEqual(
+            metrics[2].name, "otel.sdk.exporter.operation.duration"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[2].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "error.type", metrics[2].data.data_points[0].attributes
+        )
+        self.assertEqual(
+            metrics[2]
+            .data.data_points[0]
+            .attributes["http.response.status_code"],
+            401,
         )
 
     @patch.object(Session, "post")
@@ -399,7 +473,7 @@ class TestOTLPMetricExporter(TestCase):
                 ),
             ]
         )
-        split_metrics_data: List[ExportMetricsServiceRequest] = list(
+        split_metrics_data: list[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -478,7 +552,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
-        split_metrics_data: List[ExportMetricsServiceRequest] = list(
+        split_metrics_data: list[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -570,7 +644,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
-        split_metrics_data: List[ExportMetricsServiceRequest] = list(
+        split_metrics_data: list[ExportMetricsServiceRequest] = list(
             # pylint: disable=protected-access
             _split_metrics_data(
                 metrics_data=metrics_data,
@@ -1197,6 +1271,21 @@ class TestOTLPMetricExporter(TestCase):
             MetricExportResult.SUCCESS,
         )
 
+    @patch.dict("os.environ", {}, clear=True)
+    @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
+    def test_exporter_metrics_disabled_after_set_meter_provider(
+        self, _mock_export
+    ):
+        exporter = OTLPMetricExporter()
+        exporter.set_meter_provider(self.meter_provider)
+
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.SUCCESS,
+        )
+
+        self.assertIsNone(self.metric_reader.get_metrics_data())
+
     def test_preferred_aggregation_override(self):
         histogram_aggregation = ExplicitBucketHistogramAggregation(
             boundaries=[0.05, 0.1, 0.5, 1, 5, 10],
@@ -1212,9 +1301,14 @@ class TestOTLPMetricExporter(TestCase):
             exporter._preferred_aggregation[Histogram], histogram_aggregation
         )
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     @patch.object(Session, "post")
     def test_retry_timeout(self, mock_post):
-        exporter = OTLPMetricExporter(timeout=1.5)
+        exporter = OTLPMetricExporter(
+            timeout=1.5, meter_provider=self.meter_provider
+        )
 
         resp = Response()
         resp.status_code = 503
@@ -1236,6 +1330,53 @@ class TestOTLPMetricExporter(TestCase):
                 "Transient error UNAVAILABLE encountered while exporting metrics batch, retrying in",
                 warning.records[0].message,
             )
+
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        self.assertEqual(
+            metrics[0].name, "otel.sdk.exporter.metric_data_point.exported"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[0].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "error.type", metrics[0].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "http.response.status_code",
+            metrics[0].data.data_points[0].attributes,
+        )
+        self.assertEqual(
+            metrics[1].name, "otel.sdk.exporter.metric_data_point.inflight"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[1].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "error.type", metrics[1].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "http.response.status_code",
+            metrics[1].data.data_points[0].attributes,
+        )
+        self.assertEqual(
+            metrics[2].name, "otel.sdk.exporter.operation.duration"
+        )
+        self.assert_standard_metric_attrs(
+            metrics[2].data.data_points[0].attributes
+        )
+        self.assertNotIn(
+            "error.type", metrics[2].data.data_points[0].attributes
+        )
+        self.assertEqual(
+            metrics[2]
+            .data.data_points[0]
+            .attributes["http.response.status_code"],
+            503,
+        )
 
     @patch.object(Session, "post")
     def test_export_no_collector_available_retryable(self, mock_post):
@@ -1316,9 +1457,21 @@ class TestOTLPMetricExporter(TestCase):
 
             assert after - before < 0.2
 
+    def assert_standard_metric_attrs(self, attributes):
+        self.assertEqual(
+            attributes["otel.component.type"], "otlp_http_metric_exporter"
+        )
+        self.assertTrue(
+            attributes["otel.component.name"].startswith(
+                "otlp_http_metric_exporter/"
+            )
+        )
+        self.assertEqual(attributes["server.address"], "localhost")
+        self.assertEqual(attributes["server.port"], 4318)
+
 
 def _resource_metrics(
-    index: int, scope_metrics: List[pb2.ScopeMetrics]
+    index: int, scope_metrics: list[pb2.ScopeMetrics]
 ) -> pb2.ResourceMetrics:
     return pb2.ResourceMetrics(
         resource={
@@ -1329,7 +1482,7 @@ def _resource_metrics(
     )
 
 
-def _scope_metrics(index: int, metrics: List[pb2.Metric]) -> pb2.ScopeMetrics:
+def _scope_metrics(index: int, metrics: list[pb2.Metric]) -> pb2.ScopeMetrics:
     return pb2.ScopeMetrics(
         scope=InstrumentationScope(name=f"scope_{index}"),
         schema_url=f"scope_url_{index}",
@@ -1337,7 +1490,7 @@ def _scope_metrics(index: int, metrics: List[pb2.Metric]) -> pb2.ScopeMetrics:
     )
 
 
-def _gauge(index: int, data_points: List[pb2.NumberDataPoint]) -> pb2.Metric:
+def _gauge(index: int, data_points: list[pb2.NumberDataPoint]) -> pb2.Metric:
     return pb2.Metric(
         name=f"gauge_{index}",
         description="description",
