@@ -51,7 +51,6 @@ API
 ---
 """
 
-from collections import deque
 from collections.abc import Iterable, Sequence
 from itertools import chain
 from json import dumps
@@ -172,14 +171,14 @@ class _CustomCollector:
 
     def __init__(self, disable_target_info: bool = False, prefix: str = ""):
         self._callback = None
-        self._metrics_datas: deque[MetricsData] = deque()
+        self._metrics_data: MetricsData | None = None
         self._disable_target_info = disable_target_info
         self._target_info = None
         self._prefix = prefix
 
     def add_metrics_data(self, metrics_data: MetricsData) -> None:
         """Add metrics to Prometheus data"""
-        self._metrics_datas.append(metrics_data)
+        self._metrics_data = metrics_data
 
     def collect(self) -> Iterable[PrometheusMetric]:
         """Collect fetches the metrics from OpenTelemetry
@@ -190,29 +189,29 @@ class _CustomCollector:
         if self._callback is not None:
             self._callback()
 
+        metrics_data = self._metrics_data
+        self._metrics_data = None
+
+        if metrics_data is None:
+            return
+
         metric_family_id_metric_family = {}
 
-        if len(self._metrics_datas):
-            if not self._disable_target_info:
-                if self._target_info is None:
-                    attributes: Attributes = {}
-                    for res in self._metrics_datas[0].resource_metrics:
-                        attributes = {**attributes, **res.resource.attributes}
+        if not self._disable_target_info:
+            if self._target_info is None:
+                attributes: Attributes = {}
+                for res in metrics_data.resource_metrics:
+                    attributes = {**attributes, **res.resource.attributes}
 
-                    self._target_info = self._create_info_metric(
-                        _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
-                    )
-                metric_family_id_metric_family[_TARGET_INFO_NAME] = (
-                    self._target_info
+                self._target_info = self._create_info_metric(
+                    _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                 )
+            metric_family_id_metric_family[_TARGET_INFO_NAME] = self._target_info
 
-        while self._metrics_datas:
-            self._translate_to_prometheus(
-                self._metrics_datas.popleft(), metric_family_id_metric_family
-            )
+        self._translate_to_prometheus(metrics_data, metric_family_id_metric_family)
 
-            if metric_family_id_metric_family:
-                yield from metric_family_id_metric_family.values()
+        if metric_family_id_metric_family:
+            yield from metric_family_id_metric_family.values()
 
     # pylint: disable=too-many-locals,too-many-branches
     def _translate_to_prometheus(
