@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from time import perf_counter
@@ -32,6 +31,7 @@ from opentelemetry.semconv.attributes.server_attributes import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from typing import Literal
     from urllib.parse import ParseResult as UrlParseResult
 

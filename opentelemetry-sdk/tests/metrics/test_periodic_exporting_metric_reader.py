@@ -8,7 +8,7 @@ import math
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from unittest.mock import Mock, patch
 
 import pytest
@@ -23,7 +23,6 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics._internal.point import (
-    HistogramDataPoint,
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
@@ -45,6 +44,9 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.metrics._internal.point import HistogramDataPoint
 
 
 class FakeMetricsExporter(MetricExporter):
@@ -343,7 +345,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         metric = reader_metrics[0]
 
         point = metric.data.data_points[0]
-        histogram = cast(HistogramDataPoint, point)
+        histogram = cast("HistogramDataPoint", point)
         self.assertEqual(histogram.count, 1)
         attrs = histogram.attributes
         assert attrs is not None

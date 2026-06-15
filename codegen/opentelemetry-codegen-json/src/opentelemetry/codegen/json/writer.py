@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
 from contextlib import contextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Generator, Iterable
 
 
 # pylint: disable-next=too-many-public-methods

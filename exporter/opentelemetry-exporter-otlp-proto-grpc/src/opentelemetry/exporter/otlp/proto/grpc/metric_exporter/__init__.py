@@ -3,13 +3,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from collections.abc import Sequence as TypingSequence
 from dataclasses import replace
 from logging import getLogger
 from os import environ
+from typing import TYPE_CHECKING
 
-from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
 )
@@ -22,7 +20,6 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     environ_to_compression,
     get_resource_data,
 )
-from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -44,7 +41,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
 )
-from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     AggregationTemporality,
     DataPointT,
@@ -66,6 +62,14 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from collections.abc import Sequence as TypingSequence
+
+    from grpc import ChannelCredentials, Compression, StatusCode
+    from opentelemetry.metrics import MeterProvider
+    from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 
 _logger = getLogger(__name__)
 

@@ -3,14 +3,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
-from opentelemetry.context import Context
-from opentelemetry.trace import Link, SpanKind, TraceState
-from opentelemetry.util.types import Attributes
+from typing import TYPE_CHECKING
 
 from ._composable import ComposableSampler, SamplingIntent
 from ._util import INVALID_THRESHOLD
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from opentelemetry.context import Context
+    from opentelemetry.trace import Link, SpanKind, TraceState
+    from opentelemetry.util.types import Attributes
 
 _intent = SamplingIntent(threshold=INVALID_THRESHOLD, threshold_reliable=False)
 

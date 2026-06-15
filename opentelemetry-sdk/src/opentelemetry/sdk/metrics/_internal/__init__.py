@@ -9,9 +9,9 @@ from logging import getLogger
 from os import environ
 from threading import Lock
 from time import time_ns
+from typing import TYPE_CHECKING
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk.metrics
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import Meter as APIMeter
@@ -60,6 +60,9 @@ from opentelemetry.util._once import Once
 from opentelemetry.util.types import (
     Attributes,
 )
+
+if TYPE_CHECKING:
+    import opentelemetry.sdk.metrics
 
 _logger = getLogger(__name__)
 

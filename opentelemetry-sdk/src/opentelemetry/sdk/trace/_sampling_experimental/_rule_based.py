@@ -4,14 +4,15 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Protocol
-
-from opentelemetry.context import Context
-from opentelemetry.trace import Link, SpanKind, TraceState
-from opentelemetry.util.types import AnyValue, Attributes
+from typing import TYPE_CHECKING, Protocol
 
 from ._composable import ComposableSampler, SamplingIntent
 from ._util import INVALID_THRESHOLD
+
+if TYPE_CHECKING:
+    from opentelemetry.context import Context
+    from opentelemetry.trace import Link, SpanKind, TraceState
+    from opentelemetry.util.types import AnyValue, Attributes
 
 
 class PredicateT(Protocol):

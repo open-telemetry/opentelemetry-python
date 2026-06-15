@@ -16,6 +16,7 @@ from os import environ
 from threading import Lock
 from time import time_ns
 from typing import (  # noqa
+    TYPE_CHECKING,
     Any,
     Callable,
     Sequence,
@@ -39,7 +40,6 @@ from opentelemetry._logs import (
 )
 from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
 from opentelemetry.context import get_current
-from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._logs._internal._exceptions import (
     _copy_log_record_with_exception,
@@ -71,7 +71,10 @@ from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+
+if TYPE_CHECKING:
+    from opentelemetry.context.context import Context
+    from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 
 # pylint: disable=too-many-lines
 

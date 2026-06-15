@@ -3,15 +3,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
-from opentelemetry.context import Context
-from opentelemetry.trace import Link, SpanKind, TraceState
-from opentelemetry.util.types import Attributes
+from typing import TYPE_CHECKING
 
 from ._composable import ComposableSampler, SamplingIntent
 from ._trace_state import serialize_th
 from ._util import INVALID_THRESHOLD, MAX_THRESHOLD, calculate_threshold
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from opentelemetry.context import Context
+    from opentelemetry.trace import Link, SpanKind, TraceState
+    from opentelemetry.util.types import Attributes
 
 
 class ComposableTraceIDRatioBased(ComposableSampler):

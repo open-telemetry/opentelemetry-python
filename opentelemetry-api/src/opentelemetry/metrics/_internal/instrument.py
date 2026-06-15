@@ -10,17 +10,20 @@ from dataclasses import dataclass
 from logging import getLogger
 from re import compile as re_compile
 from typing import (
+    TYPE_CHECKING,
     Generic,
     TypeVar,
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
-from opentelemetry import metrics
 from opentelemetry.context import Context
 from opentelemetry.metrics._internal.observation import Observation
 from opentelemetry.util.types import (
     Attributes,
 )
+
+if TYPE_CHECKING:
+    from opentelemetry import metrics
 
 _logger = getLogger(__name__)
 

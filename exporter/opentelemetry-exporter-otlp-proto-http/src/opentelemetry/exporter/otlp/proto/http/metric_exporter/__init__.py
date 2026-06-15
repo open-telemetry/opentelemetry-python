@@ -8,11 +8,11 @@ import os
 import random
 import threading
 import zlib
-from collections.abc import Callable, Iterable
 from io import BytesIO
 from os import environ
 from time import time
 from typing import (  # noqa: F401
+    TYPE_CHECKING,
     Any,
     Optional,
 )
@@ -42,7 +42,6 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
 )
-from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
     ExportMetricsServiceRequest,
 )
@@ -55,9 +54,6 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 )
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
-from opentelemetry.proto.resource.v1.resource_pb2 import (
-    Resource as PB2Resource,
-)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -76,7 +72,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
-from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     AggregationTemporality,
     Gauge,
@@ -96,6 +91,16 @@ from opentelemetry.semconv.attributes.http_attributes import (
     HTTP_RESPONSE_STATUS_CODE,
 )
 from opentelemetry.util.re import parse_env_headers
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from opentelemetry.metrics import MeterProvider
+    from opentelemetry.proto.resource.v1.resource_pb2 import (
+        Resource as PB2Resource,
+    )
+    from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
+    from opentelemetry.sdk.resources import Resource as SDKResource
 
 _logger = logging.getLogger(__name__)
 

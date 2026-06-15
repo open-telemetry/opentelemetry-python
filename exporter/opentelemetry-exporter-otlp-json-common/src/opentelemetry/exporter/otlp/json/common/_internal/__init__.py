@@ -7,10 +7,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Collection, Mapping, Sequence
-from typing import (
-    Any,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, cast
 
 from opentelemetry.proto_json.common.v1.common import AnyValue as JSONAnyValue
 from opentelemetry.proto_json.common.v1.common import (
@@ -26,11 +23,13 @@ from opentelemetry.proto_json.common.v1.common import (
 from opentelemetry.proto_json.resource.v1.resource import (
     Resource as JSONResource,
 )
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+    from opentelemetry.util.types import Attributes
 
 
 def _encode_instrumentation_scope(
@@ -69,10 +68,10 @@ def _encode_value(value: Any, allow_null: bool = False) -> JSONAnyValue | None:
         return JSONAnyValue(
             array_value=JSONArrayValue(
                 values=cast(
-                    list[JSONAnyValue],
+                    '"list"["JSONAnyValue"]',
                     _encode_array(value, allow_null=allow_null),
                 )
-            )
+            )  # noqa: TC006
         )
     if isinstance(value, Mapping):
         return JSONAnyValue(

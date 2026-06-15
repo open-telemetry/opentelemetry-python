@@ -6,8 +6,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Collection
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_attributes,
@@ -27,8 +26,12 @@ from opentelemetry.proto_json.logs.v1.logs import (
 from opentelemetry.proto_json.logs.v1.logs import (
     ScopeLogs as JSONScopeLogs,
 )
-from opentelemetry.sdk._logs import ReadableLogRecord
-from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
+
+    from opentelemetry.sdk._logs import ReadableLogRecord
+    from opentelemetry.util.types import Attributes
 
 
 def encode_logs(
@@ -55,7 +58,7 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> JSONLogRecord:
         ),
         severity_text=readable_log_record.log_record.severity_text,
         attributes=_encode_attributes(
-            cast(Attributes, readable_log_record.log_record.attributes),
+            cast("Attributes", readable_log_record.log_record.attributes),
             allow_null=True,
         ),
         dropped_attributes_count=readable_log_record.dropped_attributes,

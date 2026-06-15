@@ -8,8 +8,7 @@ import fnmatch
 import logging
 import os
 import uuid
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib import parse
 
 from opentelemetry.sdk._configuration._common import load_entry_point
@@ -29,7 +28,11 @@ from opentelemetry.sdk.resources import (
     Resource,
     _HostResourceDetector,
 )
-from opentelemetry.util.types import AttributeValue
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from opentelemetry.util.types import AttributeValue
 
 _logger = logging.getLogger(__name__)
 

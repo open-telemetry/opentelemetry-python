@@ -6,11 +6,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from opentelemetry.context import Context
-from opentelemetry.util.types import Attributes
-
 if TYPE_CHECKING:
+    from opentelemetry.context import Context
     from opentelemetry.sdk.metrics._internal.instrument import _Instrument
+    from opentelemetry.util.types import Attributes
 
 
 @dataclass(frozen=True)

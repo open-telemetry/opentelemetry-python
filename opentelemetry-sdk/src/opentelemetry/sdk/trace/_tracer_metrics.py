@@ -3,10 +3,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
-from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.trace.sampling import Decision
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_SPAN_PARENT_ORIGIN,
@@ -17,7 +15,12 @@ from opentelemetry.semconv._incubating.metrics.otel_metrics import (
     create_otel_sdk_span_live,
     create_otel_sdk_span_started,
 )
-from opentelemetry.trace.span import SpanContext
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from opentelemetry import metrics as metrics_api
+    from opentelemetry.trace.span import SpanContext
 
 
 class TracerMetricsT(Protocol):

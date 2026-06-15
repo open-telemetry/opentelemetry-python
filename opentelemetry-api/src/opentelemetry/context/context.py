@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from contextvars import Token
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from contextvars import Token
 
 
 class Context(dict[str, object]):

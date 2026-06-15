@@ -5,13 +5,16 @@ from __future__ import annotations
 
 import logging
 import os
-from contextvars import Token
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 # pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context, _RuntimeContext  # noqa
 from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
+
+if TYPE_CHECKING:
+    from contextvars import Token
 
 logger = logging.getLogger(__name__)
 
