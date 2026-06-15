@@ -2,10 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access,no-self-use,too-many-lines
-
 import weakref
 from collections.abc import Callable, Iterable, Sequence
-from logging import WARNING
+from logging import DEBUG, WARNING
 from threading import Lock
 from time import sleep
 from typing import Any
@@ -34,6 +33,7 @@ from opentelemetry.sdk.metrics._internal import (
     _RuleBasedMeterConfigurator,
 )
 from opentelemetry.sdk.metrics.export import (
+    InMemoryMetricReader,
     Metric,
     MetricExporter,
     MetricExportResult,
@@ -488,6 +488,36 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
 
         sync_consumer_instance.consume_measurement.assert_called()
 
+    def test_addition_of_metric_reader(self):
+        internal_logger = "opentelemetry.sdk.metrics._internal"
+        export_logger = "opentelemetry.sdk.metrics._internal.export"
+
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider()
+        meter = meter_provider.get_meter(__name__)
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        # Suppress warnings for calling collect on an unregistered metric reader
+        with self.assertLogs(export_logger, DEBUG):
+            self.assertIsNone(reader.get_metrics_data())
+
+        meter_provider.add_metric_reader(reader)
+        counter.add(1)
+        self.assertIsNotNone(reader.get_metrics_data())
+
+        with self.assertLogs(internal_logger, DEBUG) as cm:
+            meter_provider.add_metric_reader(reader)
+            self.assertIn("has been registered already!", cm.output[0])
+
+        meter_provider.remove_metric_reader(reader)
+        counter.add(1)
+        with self.assertLogs(export_logger, DEBUG):
+            self.assertIsNone(reader.get_metrics_data())
+
+        with self.assertLogs(internal_logger, DEBUG) as cm:
+            meter_provider.remove_metric_reader(reader)
+            self.assertIn("has not been registered!", cm.output[0])
+
 
 class TestMeterConcurrency(ConcurrencyTestBase, TestCase):
     def test_create_instrument_concurrency(self):
@@ -548,9 +578,7 @@ class TestMeter(TestCase):
     def setUp(self):
         self.meter = Meter(Mock(), Mock())
 
-    # TODO: convert to assertNoLogs instead of mocking logger when 3.10 is baseline
-    @patch("opentelemetry.sdk.metrics._internal._logger")
-    def test_repeated_instrument_names(self, logger_mock):
+    def test_repeated_instrument_names(self):
         with self.assertNotRaises(Exception):
             self.meter.create_counter("counter")
             self.meter.create_up_down_counter("up_down_counter")
@@ -572,18 +600,24 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            getattr(self.meter, f"create_{instrument_name}")(instrument_name)
-            logger_mock.warning.assert_not_called()
+            with self.assertNoLogs(
+                "opentelemetry.sdk.metrics._internal", level="WARNING"
+            ):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name
+                )
 
         for instrument_name in [
             "observable_counter",
             "observable_gauge",
             "observable_up_down_counter",
         ]:
-            getattr(self.meter, f"create_{instrument_name}")(
-                instrument_name, callbacks=[Mock()]
-            )
-            logger_mock.warning.assert_not_called()
+            with self.assertNoLogs(
+                "opentelemetry.sdk.metrics._internal", level="WARNING"
+            ):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name, callbacks=[Mock()]
+                )
 
     def test_repeated_instrument_names_with_different_advisory(self):
         with self.assertNotRaises(Exception):

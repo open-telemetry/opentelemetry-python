@@ -212,4 +212,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr edit ${{ steps.create_main_pr.outputs.pr_url }}  --add-label "prepare-release"
+          gh pr edit ${{ steps.create_main_pr.outputs.pr_url }}  --add-label "prepare-release" --add-label "Skip Changelog"

@@ -497,11 +497,11 @@ class ReadableSpan:
 
     @property
     def events(self) -> Sequence[Event]:
-        return tuple(event for event in self._events)
+        return tuple(self._events)
 
     @property
     def links(self) -> Sequence[trace_api.Link]:
-        return tuple(link for link in self._links)
+        return tuple(self._links)
 
     @property
     def resource(self) -> Resource:
@@ -895,7 +895,12 @@ class Span(trace_api.Span, ReadableSpan):
                 self._attributes[key] = value
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        return self.set_attributes({key: value})
+        with self._lock:
+            if self._end_time is not None:
+                logger.warning("Setting attribute on ended span.")
+                return
+
+            self._attributes[key] = value
 
     @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
@@ -1061,12 +1066,7 @@ class Span(trace_api.Span, ReadableSpan):
         escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
-        # TODO: keep only exception as first argument after baseline is 3.10
-        stacktrace = "".join(
-            traceback.format_exception(
-                type(exception), value=exception, tb=exception.__traceback__
-            )
-        )
+        stacktrace = "".join(traceback.format_exception(exception))
         module = type(exception).__module__
         qualname = type(exception).__qualname__
         exception_type = (
@@ -1225,7 +1225,12 @@ class Tracer(trace_api.Tracer):
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
 
-        if self.id_generator.is_trace_id_random():
+        if parent_span_context is None:
+            random_trace_id = self.id_generator.is_trace_id_random()
+        else:
+            random_trace_id = parent_span_context.trace_flags.random_trace_id
+
+        if random_trace_id:
             trace_flags = trace_api.TraceFlags(
                 trace_flags | trace_api.TraceFlags.RANDOM_TRACE_ID
             )
@@ -1251,7 +1256,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent_span_context,
                 sampler=self.sampler,
                 resource=self.resource,
-                attributes=sampling_result.attributes.copy(),
+                attributes=sampling_result.attributes,
                 span_processor=self.span_processor,
                 kind=kind,
                 links=links,
