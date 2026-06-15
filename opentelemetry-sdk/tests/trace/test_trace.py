@@ -899,21 +899,24 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-in-both"], "span-attr")
 
     def test_invalid_attribute_values(self):
-        class BadStr:
-            def __str__(self):
-                raise RuntimeError("cannot do string conversion")
+        # This class has no __str__ or __repr__ method, so BoundedAttributes does
+        # not attempt to convert it to a string and defaults to returning None.
+        class NoStrNoRepr:
+            def __init__(self):
+                pass
 
         with self.tracer.start_as_current_span("root") as root:
             with self.assertLogs(level=WARNING):
                 root.set_attributes(
                     {
                         "correct-value": "foo",
-                        "bad-type": BadStr(),
+                        "bad-type": NoStrNoRepr(),
                     }
                 )
 
-            self.assertEqual(len(root.attributes), 1)
+            self.assertEqual(len(root.attributes), 2)
             self.assertEqual(root.attributes["correct-value"], "foo")
+            self.assertIsNone(root.attributes["bad-type"])
 
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:

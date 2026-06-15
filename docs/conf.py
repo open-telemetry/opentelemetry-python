@@ -31,11 +31,11 @@ settings.configure()
 # modules that import it only under TYPE_CHECKING hit a NameError.
 # TODO: this can be removed by importing AnyValue at runtime in the
 # modules that annotate with it
-from opentelemetry.util.types import AnyValue
-import builtins
+import builtins  # noqa: E402
+
+from opentelemetry.util.types import AnyValue  # noqa: E402
 
 builtins.AnyValue = AnyValue
-
 
 
 source_dirs = [

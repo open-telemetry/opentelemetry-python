@@ -4,44 +4,23 @@
 import copy
 import logging
 import threading
-import time
 from collections.abc import Mapping, MutableMapping, Sequence
-from types import MappingProxyType
+from types import MappingProxyType, NoneType
 from typing import overload
 
 from typing_extensions import deprecated
 
 from opentelemetry.util import types
 
-
-class _DuplicateFilter(logging.Filter):
-    """Filter out potentially noisy logs"""
-
-    def filter(self, record):
-        current_log = (
-            record.module,
-            record.levelno,
-            record.lineno,
-            time.time() // 60,
-        )
-        if current_log != getattr(self, "last_log", None):
-            self.last_log = current_log  # pylint: disable=attribute-defined-outside-init
-            return True
-        # False means python's `logging` module will no longer process this log.
-        return False
-
-
 _logger = logging.getLogger(__name__)
-_logger.addFilter(_DuplicateFilter())
 
 
-def _clean_attribute_value(  # pylint: disable=too-many-return-statements
+def _clean_attribute_value(
     value: types.AttributeValue,
     max_string_value_length: int | None,
 ) -> types.AttributeValue:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
-    Byte values are attempted to be decoded to strings using utf-8. If it fails it is left as bytes.
     String values are truncated to max_string_value_length if provided.
     Anything that isn't of `types.AttributeValue`, we attempt to cast to `str`.
     If this fails, the value is replaced with None. Sequence's are converted to tuples and mappings
@@ -51,15 +30,8 @@ def _clean_attribute_value(  # pylint: disable=too-many-return-statements
     Returns:
         The recursively cleaned AttributeValue.
     """
-    if isinstance(value, (type(None), bool, int, float)):
+    if isinstance(value, (NoneType, bool, int, float, bytes)):
         return value
-    if isinstance(value, bytes):
-        # Attempt to decode bytes into a string using utf-8.
-        # If it fails just leave it as is, as bytes is a valid attribute value type.
-        try:
-            value = value.decode("utf-8")
-        except UnicodeDecodeError:
-            return value
     if isinstance(value, str):
         if (
             max_string_value_length is not None
@@ -78,14 +50,22 @@ def _clean_attribute_value(  # pylint: disable=too-many-return-statements
     if isinstance(value, Mapping):
         cleaned_mapping = {}
         for key, val in value.items():
+            # Spec says to convert unknown types to strings if possible (here and below too).
             if not isinstance(key, str):
                 _logger.warning(
-                    "invalid key `%s` inside an attribute value mapping. Must be a string. Will attempt to cast to a string via the __str__ method, will drop the key/value pair if that fails.",
+                    "Invalid type `%s` for attribute key `%s`, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
+                    type(key),
                     key,
                 )
-                try:
+                # Calling str(x) will use an object's `__str__` method if it exists, otherwise it will use it's `__repr__` method.
+                # If neither is defined it uses the base class's `object.__repr__` method, which returns a string that is hard to understand.
+                # So in that case we drop the key/value pair.
+                if (
+                    type(key).__str__ is not object.__str__
+                    or type(key).__repr__ is not object.__repr__
+                ):
                     key = str(key)
-                except Exception:
+                else:
                     continue
             cleaned_mapping[key] = _clean_attribute_value(
                 val, max_string_value_length
@@ -96,12 +76,12 @@ def _clean_attribute_value(  # pylint: disable=too-many-return-statements
         "Mapping or Sequence of those types. Value's __str__ method will be called if it exists, otherwise the value will be replaced with None.",
         type(value),
     )
-    # Spec says to convert unknown types to strings if possible.
-    try:
+    if (
+        type(value).__str__ is not object.__str__
+        or type(value).__repr__ is not object.__repr__
+    ):
         return str(value)
-    except Exception:
-        # Fallback to None in accordance with the OpenTelemetry semantic conventions specification, which is converted to an empty AnyType by the OTLP encoder.
-        return None
+    return None
 
 
 class BoundedAttributes(MutableMapping):

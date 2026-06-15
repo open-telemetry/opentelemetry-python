@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import unittest
+import uuid
 from concurrent.futures import TimeoutError
 from logging import ERROR, WARNING
 from os import environ
@@ -234,15 +235,17 @@ class TestResources(unittest.TestCase):
         )
 
     def test_invalid_resource_attribute_values(self):
-        class BadStr:
-            def __str__(self):
-                raise ValueError("Invalid value")
+        # This class has no __str__ or __repr__ method, so BoundedAttributes does
+        # not attempt to convert it to a string and defaults to returning None.
+        class NoStrNoRepr:
+            def __init__(self):
+                pass
 
         with self.assertLogs(level=WARNING):
             resource = Resource(
                 {
                     SERVICE_NAME: "test",
-                    "invalid-type-attribute": BadStr(),
+                    "bad-type": NoStrNoRepr(),
                     "": "empty-key-value",
                 }
             )
@@ -250,9 +253,10 @@ class TestResources(unittest.TestCase):
             resource.attributes,
             {
                 SERVICE_NAME: "test",
+                "bad-type": None,
             },
         )
-        self.assertEqual(len(resource.attributes), 1)
+        self.assertEqual(len(resource.attributes), 2)
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = get_aggregated_resources([])

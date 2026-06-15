@@ -13,12 +13,9 @@ from opentelemetry.attributes import (
 )
 
 
-class _NoStrObject:
+class _NoStrNoReprObject:
     def __init__(self):
         pass
-
-    def __str__(self):
-        raise Exception("I am a string that fails to be created!")
 
 
 class TestBoundedAttributes(unittest.TestCase):
@@ -31,11 +28,10 @@ class TestBoundedAttributes(unittest.TestCase):
     }
 
     def test_clean_attribute_value_with_various_params(self):
-        # A python type that isn't a primitive and has no string method
-        # is converted to None.
+        # A python object that isn't a primitive and has no string/repr method is converted to None.
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             self.assertEqual(
-                _clean_attribute_value(_NoStrObject(), None),
+                _clean_attribute_value(_NoStrNoReprObject(), None),
                 None,
             )
         self.assertEqual(len(cm.output), 1)
@@ -53,21 +49,20 @@ class TestBoundedAttributes(unittest.TestCase):
                 _clean_attribute_value(valid_primitive, None), valid_primitive
             )
 
-        # Strings too long
+        self.assertEqual(_clean_attribute_value(b"hello", 4), b"hello")
+
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
-            # valid utf-8 bytes are converted to strings and truncated according to max_string_value_length.
-            self.assertEqual(_clean_attribute_value(b"hello", 4), "hell")
+            # String is truncated.
             self.assertEqual(_clean_attribute_value("a" * 1000, 5), "aaaaa")
         self.assertEqual(len(cm.output), 1)
         self.assertIn(
             "String attribute value exceeds max length", cm.output[0]
         )
 
-        # Sequence of different types of values. Non utf-8 bytes kept as bytes.
-        # List converted to tuple.
+        # Sequence of different types of values. List converted to tuple.
         self.assertEqual(
             _clean_attribute_value(
-                ["a", 2, _NoStrObject(), None, b"\xff"], None
+                ["a", 2, _NoStrNoReprObject(), None, b"\xff"], None
             ),
             ("a", 2, None, None, b"\xff"),
         )
@@ -79,16 +74,17 @@ class TestBoundedAttributes(unittest.TestCase):
             )
         self.assertEqual(len(cm.output), 1)
         self.assertIn(
-            "invalid key `2.2` inside an attribute value mapping.",
+            "Invalid type",
             cm.output[0],
         )
 
         # Mapping of values..
+        # Non string key without a string conversion method is dropped.
         self.assertEqual(
             _clean_attribute_value(
                 {
                     "a": 1,
-                    _NoStrObject(): 2,
+                    _NoStrNoReprObject(): 2,
                     "c": 3,
                     "d": [2, 3],
                     "bytes": b"\xff",
@@ -115,19 +111,16 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertNotIn(1, bdict)
         self.assertEqual(bdict.dropped, 1)
 
-    def test_maxvalue_reached_and_duplicate_logs_filter_works(self):
+    def test_maxlen_reached(self):
         bdict = BoundedAttributes(1, {"first": "value"}, immutable=False)
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             bdict["second"] = "another"
-            # Same log should be filtered out..
-            bdict["third"] = "another"
-        self.assertEqual(len(cm.output), 1)
         self.assertIn(
             "Attributes dict is full. Dropping the oldest", cm.output[0]
         )
         self.assertNotIn("first", bdict)
-        self.assertEqual(bdict["third"], "another")
-        self.assertEqual(bdict.dropped, 2)
+        self.assertEqual(bdict["second"], "another")
+        self.assertEqual(bdict.dropped, 1)
 
     def test_negative_maxlen_not_allowed(self):
         with self.assertRaises(ValueError):
