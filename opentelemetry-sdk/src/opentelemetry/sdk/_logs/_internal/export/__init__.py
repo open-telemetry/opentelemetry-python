@@ -119,6 +119,21 @@ class LogRecordExporter(abc.ABC):
         Called when the SDK is shut down.
         """
 
+    @abc.abstractmethod
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Hint to ensure that the export of any ``ReadableLogRecord`` objects
+        the exporter has received prior to the call to ``force_flush`` SHOULD be
+        completed as soon as possible, preferably before returning from this method.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for the flush to
+                complete, in milliseconds.
+
+        Returns:
+            ``True`` if the flush completed successfully within the timeout,
+            ``False`` otherwise.
+        """
+
 
 @deprecated(
     "Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
@@ -153,6 +168,9 @@ class ConsoleLogRecordExporter(LogRecordExporter):
 
     def shutdown(self):
         pass
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
 
 
 @deprecated(
