@@ -14,6 +14,7 @@ from opentelemetry.context import Context, get_current
 from opentelemetry.propagators._envcarrier import (
     EnvironmentGetter,
     EnvironmentSetter,
+    _is_normalized_key,
     _normalize_key,
 )
 from opentelemetry.trace.propagation.tracecontext import (
@@ -41,6 +42,24 @@ class TestNormalizeKey(unittest.TestCase):
 
     def test_empty_string(self):
         self.assertEqual(_normalize_key(""), "")
+
+
+class TestIsNormalizedKey(unittest.TestCase):
+    """Unit tests for _is_normalized_key."""
+
+    def test_normalized_keys(self):
+        self.assertTrue(_is_normalized_key("TRACEPARENT"))
+        self.assertTrue(_is_normalized_key("X_B3_TRACEID"))
+        self.assertTrue(_is_normalized_key("H_LLO"))
+        self.assertTrue(_is_normalized_key("_1ABC"))
+
+    def test_non_normalized_keys(self):
+        self.assertFalse(_is_normalized_key(""))
+        self.assertFalse(_is_normalized_key("traceparent"))
+        self.assertFalse(_is_normalized_key("TraceParent"))
+        self.assertFalse(_is_normalized_key("X-B3-TRACEID"))
+        self.assertFalse(_is_normalized_key("1ABC"))
+        self.assertFalse(_is_normalized_key("héllo"))
 
 
 class TestEnvironmentGetter(unittest.TestCase):
@@ -84,14 +103,44 @@ class TestEnvironmentGetter(unittest.TestCase):
             result = getter.get({}, "test_key")
             self.assertEqual(result, ["value with spaces and !@#$%"])
 
+    def test_get_ignores_non_normalized_env_var_name(self):
+        """Test that non-normalized environment variable names are ignored."""
+        with patch.dict(os.environ, {"X-B3-TRACEID": "ignored"}, clear=True):
+            getter = EnvironmentGetter()
+            self.assertIsNone(getter.get({}, "x-b3-traceid"))
+            self.assertIsNone(getter.get({}, "X_B3_TRACEID"))
+
+    def test_get_prefers_normalized_env_var_name(self):
+        """Test deterministic lookup when normalized names collide."""
+        with patch.dict(
+            os.environ,
+            {"X_B3_TRACEID": "expected", "X-B3-TRACEID": "ignored"},
+            clear=True,
+        ):
+            getter = EnvironmentGetter()
+            self.assertEqual(getter.get({}, "x-b3-traceid"), ["expected"])
+
     def test_keys(self):
         """Test getting all environment variable keys."""
-        test_env = {"KEY1": "value1", "KEY2": "value2", "key3": "value3"}
+        test_env = {"KEY1": "value1", "KEY2": "value2", "KEY3": "value3"}
         with patch.dict(os.environ, test_env, clear=True):
             getter = EnvironmentGetter()
             keys = getter.keys({})
             expected_keys = {"KEY1", "KEY2", "KEY3"}
             self.assertEqual(set(keys), expected_keys)
+
+    def test_keys_ignores_non_normalized_env_var_names(self):
+        """Test that keys returns only already-normalized names."""
+        test_env = {
+            "KEY1": "value1",
+            "X-B3-TRACEID": "ignored",
+            "1START": "ignored",
+            "_1START": "value2",
+        }
+        with patch.dict(os.environ, test_env, clear=True):
+            getter = EnvironmentGetter()
+            keys = getter.keys({})
+            self.assertEqual(set(keys), {"KEY1", "_1START"})
 
     def test_keys_empty_environment(self):
         """Test getting keys when environment is empty."""
@@ -248,6 +297,21 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
         span_context = trace.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_state.get("vendor1"), "value1")
         self.assertEqual(span_context.trace_state.get("vendor2"), "value2")
+
+    @unittest.skipIf(
+        os.name == "nt",
+        "Windows environment variable names are case-insensitive",
+    )
+    def test_extract_ignores_lowercase_trace_context_names(self):
+        """Test extraction ignores non-normalized trace context env names."""
+        traceparent = f"00-{self.TRACE_ID:032x}-{self.SPAN_ID:016x}-01"
+
+        ctx = self._extract_with_env(
+            {"traceparent": traceparent, "tracestate": "vendor=value"}
+        )
+
+        span_context = trace.get_current_span(ctx).get_span_context()
+        self.assertFalse(span_context.is_valid)
 
     def test_extract_invalid_traceparent(self):
         """Test that invalid traceparent formats are handled gracefully.
