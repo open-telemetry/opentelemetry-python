@@ -277,23 +277,40 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
-        with self._lock:
-            self._setitem_locked(key, value)
-
-    def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
         if self.maxlen is not None and self.maxlen == 0:
-            self.dropped += 1
+            with self._lock:
+                self.dropped += 1
             return
-
         if self._extended_attributes:
-            value = _clean_extended_attribute(
-                key, value, self.max_value_len
-            )
+            value = _clean_extended_attribute(key, value, self.max_value_len)
         else:
             value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
             if value is None:
                 return
+        with self._lock:
+            self._setitem_locked(key, value)
 
+    def _set_many(self, attributes: "types._ExtendedAttributes") -> None:
+        if getattr(self, "_immutable", False):  # type: ignore
+            raise TypeError
+        if self.maxlen is not None and self.maxlen == 0:
+            with self._lock:
+                self.dropped += len(attributes)
+            return
+        cleaned = []
+        for key, value in attributes.items():
+            if self._extended_attributes:
+                cv = _clean_extended_attribute(key, value, self.max_value_len)
+            else:
+                cv = _clean_attribute(key, value, self.max_value_len)  # type: ignore
+                if cv is None:
+                    continue
+            cleaned.append((key, cv))
+        with self._lock:
+            for key, cv in cleaned:
+                self._setitem_locked(key, cv)
+
+    def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
         if key in self._dict:
             del self._dict[key]
         elif self.maxlen is not None and len(self._dict) == self.maxlen:
