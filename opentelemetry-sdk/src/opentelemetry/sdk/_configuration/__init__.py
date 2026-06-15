@@ -541,10 +541,13 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 def _import_opamp(
     name: Literal["pre_sdk_init_function", "post_sdk_init_function"],
 ) -> Callable[[Resource], None] | None:
-    # this in development, at the moment we are looking for a callable that takes
-    # the resource and instantiate an OpAMP agent.
-    # Since configuration is not specified every implementers may have its own.
-    # Refer to opentelemetry-opamp-client package on how to setup the OpAMP agent.
+    """Helper for OpAMP entry points loading
+
+    This in development, at the moment we are looking for a callable that takes
+    the resource and instantiate an OpAMP agent.
+    Since configuration is not specified every implementer may have its own.
+    Refer to the opentelemetry-opamp-client package on how to setup the OpAMP agent.
+    """
     entry_point = None
     try:
         entry_point = next(
