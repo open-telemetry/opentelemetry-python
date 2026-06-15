@@ -51,9 +51,9 @@ def _encode_resource(resource: Resource) -> PB2Resource:
     return PB2Resource(attributes=_encode_attributes(resource.attributes))
 
 
-def _encode_value(value: Any, allow_null: bool = False) -> PB2AnyValue | None:
-    if allow_null is True and value is None:
-        return None
+def _encode_value(value: Any) -> PB2AnyValue:
+    if value is None:
+        return PB2AnyValue()
     if isinstance(value, bool):
         return PB2AnyValue(bool_value=value)
     if isinstance(value, str):
@@ -66,45 +66,19 @@ def _encode_value(value: Any, allow_null: bool = False) -> PB2AnyValue | None:
         return PB2AnyValue(bytes_value=value)
     if isinstance(value, Sequence):
         return PB2AnyValue(
-            array_value=PB2ArrayValue(
-                values=_encode_array(value, allow_null=allow_null)
-            )
+            array_value=PB2ArrayValue(values=[_encode_value(v) for v in value])
         )
-    elif isinstance(value, Mapping):
+    if isinstance(value, Mapping):
         return PB2AnyValue(
             kvlist_value=PB2KeyValueList(
-                values=[
-                    _encode_key_value(str(k), v, allow_null=allow_null)
-                    for k, v in value.items()
-                ]
+                values=[_encode_key_value(str(k), v) for k, v in value.items()]
             )
         )
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
 
-def _encode_key_value(
-    key: str, value: Any, allow_null: bool = False
-) -> PB2KeyValue:
-    return PB2KeyValue(
-        key=key, value=_encode_value(value, allow_null=allow_null)
-    )
-
-
-def _encode_array(
-    array: Sequence[Any], allow_null: bool = False
-) -> Sequence[PB2AnyValue]:
-    if not allow_null:
-        # Let the exception get raised by _encode_value()
-        return [_encode_value(v, allow_null=allow_null) for v in array]
-
-    return [
-        _encode_value(v, allow_null=allow_null)
-        if v is not None
-        # Use an empty AnyValue to represent None in an array. Behavior may change pending
-        # https://github.com/open-telemetry/opentelemetry-specification/issues/4392
-        else PB2AnyValue()
-        for v in array
-    ]
+def _encode_key_value(key: str, value: Any) -> PB2KeyValue:
+    return PB2KeyValue(key=key, value=_encode_value(value))
 
 
 def _encode_span_id(span_id: int) -> bytes:
@@ -115,22 +89,16 @@ def _encode_trace_id(trace_id: int) -> bytes:
     return trace_id.to_bytes(length=16, byteorder="big", signed=False)
 
 
-def _encode_attributes(
-    attributes: _ExtendedAttributes,
-    allow_null: bool = False,
-) -> list[PB2KeyValue] | None:
-    if attributes:
-        pb2_attributes = []
-        for key, value in attributes.items():
-            # pylint: disable=broad-exception-caught
-            try:
-                pb2_attributes.append(
-                    _encode_key_value(key, value, allow_null=allow_null)
-                )
-            except Exception as error:
-                _logger.exception("Failed to encode key %s: %s", key, error)
-    else:
-        pb2_attributes = None
+def _encode_attributes(attributes: _ExtendedAttributes) -> list[PB2KeyValue]:
+    if not attributes:
+        return []
+    pb2_attributes = []
+    for key, value in attributes.items():
+        # pylint: disable=broad-exception-caught
+        try:
+            pb2_attributes.append(_encode_key_value(key, value))
+        except Exception as error:
+            _logger.exception("Failed to encode key %s: %s", key, error)
     return pb2_attributes
 
 
