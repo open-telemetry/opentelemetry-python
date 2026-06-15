@@ -457,6 +457,20 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter(timeout=0.4)
         exporter.export([BASIC_SPAN])
 
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter.encode_spans",
+        side_effect=ValueError("encoding failed"),
+    )
+    def test_encoding_error_returns_failure(self, _mock_encode):
+        exporter = OTLPSpanExporter(meter_provider=self.meter_provider)
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.proto.http.trace_exporter",
+            level="ERROR",
+        ) as log:
+            result = exporter.export([BASIC_SPAN])
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertIn("Failed to encode span batch", log.records[0].message)
+
     @patch.object(Session, "post")
     def test_shutdown_interrupts_retry_backoff(self, mock_post):
         exporter = OTLPSpanExporter(timeout=1.5)

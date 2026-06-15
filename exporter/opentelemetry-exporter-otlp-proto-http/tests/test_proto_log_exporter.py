@@ -625,6 +625,20 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         exporter = OTLPLogExporter(timeout=0.4)
         exporter.export(self._get_sdk_log_data())
 
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter.encode_logs",
+        side_effect=ValueError("encoding failed"),
+    )
+    def test_encoding_error_returns_failure(self, _mock_encode):
+        exporter = OTLPLogExporter(meter_provider=self.meter_provider)
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.proto.http._log_exporter",
+            level="ERROR",
+        ) as log:
+            result = exporter.export(self._get_sdk_log_data())
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertIn("Failed to encode logs batch", log.records[0].message)
+
     @patch.object(Session, "post")
     def test_shutdown_interrupts_retry_backoff(self, mock_post):
         exporter = OTLPLogExporter(timeout=1.5)
