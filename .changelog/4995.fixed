@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: Fix stale `requests.Session` after `fork()` in all OTLP HTTP exporters (traces, metrics, logs) by resetting the session in the child process, re-using the credential provider when configured
