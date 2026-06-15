@@ -211,7 +211,7 @@ class BoundedAttributes(MutableMapping):
 
     def __iter__(self):
         with self._lock:
-            return iter(list(self._dict.keys()))
+            return iter(list(self._dict))  # type: ignore
 
     def __len__(self) -> int:
         with self._lock:
