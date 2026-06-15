@@ -604,6 +604,8 @@ class LoggingHandler(logging.Handler):
             # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
             if not record.args and not isinstance(record.msg, str):
                 #  if record.msg is not a value we can export, cast it to string
+                # TODO: https://github.com/open-telemetry/opentelemetry-python/issues/5304 - do something better
+                # than just casting to a string.
                 if not isinstance(
                     record.msg,
                     (

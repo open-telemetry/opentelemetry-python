@@ -29,7 +29,8 @@ settings.configure()
 # Docs-only: resolves the "AnyValue" forward reference wherever
 # get_type_hints() evaluates it. AnyValue is a recursive alias, so
 # modules that import it only under TYPE_CHECKING hit a NameError.
-# TODO: this can be removed by importing AnyValue at runtime in the
+# TODO: https://github.com/open-telemetry/opentelemetry-python/issues/5304
+# this can be removed by importing AnyValue at runtime in the
 # modules that annotate with it
 import builtins  # noqa: E402
 
