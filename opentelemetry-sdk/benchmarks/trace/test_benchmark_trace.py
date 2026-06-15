@@ -293,9 +293,9 @@ def test_gil_contention_batch_processor(benchmark, num_threads):
 
     def benchmark_fn():
         threads = [threading.Thread(target=worker) for _ in range(num_threads)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
 
     benchmark(benchmark_fn)
