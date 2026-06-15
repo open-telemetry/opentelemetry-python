@@ -3,7 +3,12 @@
 
 # pylint: disable=protected-access
 
+import json
+import os
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord, SeverityNumber
@@ -23,7 +28,10 @@ from opentelemetry.sdk._logs._internal import (
     _RuleBasedLoggerConfigurator,
     create_logger_metrics,
 )
-from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+    OTEL_SDK_DISABLED,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
@@ -50,6 +58,98 @@ class TestLoggerProvider(unittest.TestCase):
 
         resource = Resource({"key": "value"})
         self.assertIs(LoggerProvider(resource=resource).resource, resource)
+
+    def test_update_resource(self):
+        initial_resource = Resource({"one": "one", "two": "old"})
+        updating_resource = Resource({"two": "new", "three": "three"})
+        logger_provider = LoggerProvider(resource=initial_resource)
+        logger = logger_provider.get_logger("name")
+        other_logger = logger_provider.get_logger(
+            "other", attributes={"key": "value"}
+        )
+        processor_mock = Mock()
+        logger_provider.add_log_record_processor(processor_mock)
+
+        logger_provider._update_resource(updating_resource)
+
+        self.assertEqual(
+            logger_provider.resource.attributes,
+            {"one": "one", "two": "new", "three": "three"},
+        )
+        self.assertIs(logger.resource, logger_provider.resource)
+        self.assertIs(other_logger.resource, logger_provider.resource)
+
+        logger.emit(LogRecord(observed_timestamp=0, body="a log line"))
+        log_data = processor_mock.on_emit.call_args.args[0]
+        self.assertIs(log_data.resource, logger_provider.resource)
+
+        new_logger = logger_provider.get_logger("new")
+        self.assertIs(new_logger.resource, logger_provider.resource)
+
+    @unittest.skipUnless(
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "requires os.fork and os.register_at_fork",
+    )
+    def test_logger_provider_updates_process_sensitive_resource_after_fork(
+        self,
+    ):
+        script_path = (
+            Path(__file__).parent
+            / "scripts"
+            / "logger_provider_resource_after_fork.py"
+        )
+
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            check=False,
+            text=True,
+            env={
+                **os.environ,
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "process",
+            },
+        )
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"stdout: {result.stdout}\nstderr: {result.stderr}",
+        )
+        lines = result.stdout.strip().splitlines()
+        child_payload = json.loads(lines[0])
+        parent_payload = json.loads(lines[1])
+
+        self.assertEqual(
+            parent_payload["parent_resource_pid"], parent_payload["parent_pid"]
+        )
+        self.assertEqual(
+            parent_payload["parent_logger_pid"], parent_payload["parent_pid"]
+        )
+        self.assertEqual(
+            parent_payload["parent_resource_pid_after_fork"],
+            parent_payload["parent_pid"],
+        )
+        self.assertEqual(
+            parent_payload["parent_logger_pid_after_fork"],
+            parent_payload["parent_pid"],
+        )
+
+        self.assertNotEqual(
+            child_payload["child_pid"], parent_payload["parent_pid"]
+        )
+        self.assertEqual(
+            child_payload["provider_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(
+            child_payload["cached_logger_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(
+            child_payload["new_logger_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(
+            child_payload["exported_resource_pids"],
+            [child_payload["child_pid"], child_payload["child_pid"]],
+        )
+        self.assertEqual(child_payload["log_bodies"], ["cached", "new"])
 
     def test_get_logger(self):
         """
