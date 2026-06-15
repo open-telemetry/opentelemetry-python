@@ -89,7 +89,9 @@ def _encode_trace_id(trace_id: int) -> bytes:
     return trace_id.to_bytes(length=16, byteorder="big", signed=False)
 
 
-def _encode_attributes(attributes: _ExtendedAttributes) -> list[JSONKeyValue]:
+def _encode_attributes(
+    attributes: _ExtendedAttributes | None,
+) -> list[JSONKeyValue]:
     if not attributes:
         return []
     json_attributes = []

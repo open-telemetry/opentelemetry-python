@@ -89,7 +89,9 @@ def _encode_trace_id(trace_id: int) -> bytes:
     return trace_id.to_bytes(length=16, byteorder="big", signed=False)
 
 
-def _encode_attributes(attributes: _ExtendedAttributes) -> list[PB2KeyValue]:
+def _encode_attributes(
+    attributes: _ExtendedAttributes | None,
+) -> list[PB2KeyValue]:
     if not attributes:
         return []
     pb2_attributes = []
