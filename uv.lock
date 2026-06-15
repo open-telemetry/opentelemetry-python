@@ -13,6 +13,7 @@ members = [
     "opentelemetry-codegen-json",
     "opentelemetry-exporter-otlp",
     "opentelemetry-exporter-otlp-json-common",
+    "opentelemetry-exporter-otlp-json-file",
     "opentelemetry-exporter-otlp-proto-common",
     "opentelemetry-exporter-otlp-proto-grpc",
     "opentelemetry-exporter-otlp-proto-http",
@@ -869,6 +870,20 @@ requires-dist = [
 ]
 
 [[package]]
+name = "opentelemetry-exporter-otlp-json-file"
+source = { editable = "exporter/opentelemetry-exporter-otlp-json-file" }
+dependencies = [
+    { name = "opentelemetry-exporter-otlp-json-common" },
+    { name = "opentelemetry-sdk" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "opentelemetry-exporter-otlp-json-common", editable = "exporter/opentelemetry-exporter-otlp-json-common" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+]
+
+[[package]]
 name = "opentelemetry-exporter-otlp-proto-common"
 source = { editable = "exporter/opentelemetry-exporter-otlp-proto-common" }
 dependencies = [
@@ -1020,6 +1035,7 @@ dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-codegen-json" },
     { name = "opentelemetry-exporter-otlp-json-common" },
+    { name = "opentelemetry-exporter-otlp-json-file" },
     { name = "opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
@@ -1048,6 +1064,7 @@ requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-codegen-json", editable = "codegen/opentelemetry-codegen-json" },
     { name = "opentelemetry-exporter-otlp-json-common", editable = "exporter/opentelemetry-exporter-otlp-json-common" },
+    { name = "opentelemetry-exporter-otlp-json-file", editable = "exporter/opentelemetry-exporter-otlp-json-file" },
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", editable = "exporter/opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http", editable = "exporter/opentelemetry-exporter-otlp-proto-http" },

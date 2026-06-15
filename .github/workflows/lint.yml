@@ -271,6 +271,25 @@ jobs:
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-otlp-combined
 
+  lint-opentelemetry-exporter-otlp-json-file:
+    name: opentelemetry-exporter-otlp-json-file
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e lint-opentelemetry-exporter-otlp-json-file
+
   lint-opentelemetry-exporter-otlp-proto-grpc-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest
     runs-on: ubuntu-latest
