@@ -484,6 +484,136 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         self.assertEqual(len(list(result)), 3)
 
+    def test_consume_measurement_with_list_attributes(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={
+                    "key": "value",
+                    "tags": [1, 2, 3],
+                },
+            )
+        )
+
+        expected_key = frozenset([("key", "value"), ("tags", (1, 2, 3))])
+        self.assertIn(
+            expected_key, view_instrument_match._attributes_aggregation
+        )
+
+    def test_consume_measurement_list_and_tuple_produce_same_key(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"tags": [1, 2]},
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=2,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"tags": (1, 2)},
+            )
+        )
+
+        self.assertEqual(len(view_instrument_match._attributes_aggregation), 1)
+
+    def test_consume_measurement_string_attributes_not_converted(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"name": "hello"},
+            )
+        )
+
+        expected_key = frozenset([("name", "hello")])
+        self.assertIn(
+            expected_key, view_instrument_match._attributes_aggregation
+        )
+
+    def test_consume_measurement_with_list_attributes_and_view_filter(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                attribute_keys={"tags"},
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"tags": ["a", "b"], "extra": "dropped"},
+            )
+        )
+
+        expected_key = frozenset([("tags", ("a", "b"))])
+        self.assertIn(
+            expected_key, view_instrument_match._attributes_aggregation
+        )
+
     def test_setting_aggregation(self):
         instrument1 = _Counter(
             name="instrument1",
