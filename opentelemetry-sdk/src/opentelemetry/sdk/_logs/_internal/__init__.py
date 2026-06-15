@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from os import environ
 from threading import Lock
 from time import time_ns
+from types import NoneType
 from typing import (  # noqa
     Any,
     Callable,
@@ -603,11 +604,10 @@ class LoggingHandler(logging.Handler):
             # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
             if not record.args and not isinstance(record.msg, str):
                 #  if record.msg is not a value we can export, cast it to string
-                # This check is not very good, because Sequence/Mapping can contain bad types..
                 if not isinstance(
                     record.msg,
                     (
-                        type(None),
+                        NoneType,
                         bool,
                         bytes,
                         int,
@@ -617,10 +617,6 @@ class LoggingHandler(logging.Handler):
                         Mapping,
                     ),
                 ):
-                    _logger.warning(
-                        "LogRecord.msg is of type %s which is not a valid AnyValue, attempting to cast it to a string.",
-                        type(record.msg),
-                    )
                     body = str(record.msg)
                 else:
                     body = record.msg
