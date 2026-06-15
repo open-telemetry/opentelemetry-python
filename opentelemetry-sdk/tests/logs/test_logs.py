@@ -73,6 +73,27 @@ class TestLoggerProvider(unittest.TestCase):
             logger._instrumentation_scope.attributes, {"key": "value"}
         )
 
+    def test_get_logger_with_instrumentation_scope(self):
+        """
+        `LoggerProvider.get_logger` uses an explicitly provided
+        `InstrumentationScope` object on the created `Logger`.
+        """
+        instrumentation_scope = InstrumentationScope(
+            "instrument_name",
+            "instrument_version",
+            "instrument_schema_url",
+            {"instrument_key": "instrument_value"},
+        )
+        logger = LoggerProvider().get_logger(
+            "name",
+            version="version",
+            schema_url="schema_url",
+            attributes={"key": "value"},
+            instrumentation_scope=instrumentation_scope,
+        )
+
+        self.assertEqual(logger._instrumentation_scope, instrumentation_scope)
+
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_logger_with_sdk_disabled(self):
         logger = LoggerProvider().get_logger(Mock())
