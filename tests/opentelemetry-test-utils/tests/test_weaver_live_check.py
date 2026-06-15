@@ -8,7 +8,6 @@ Requires the `weaver` binary on PATH:
 """
 
 import os
-import platform
 import shutil
 import unittest
 
@@ -42,11 +41,6 @@ def _make_provider(otlp_endpoint: str) -> TracerProvider:
     return provider
 
 
-@unittest.skipIf(
-    platform.python_implementation() == "PyPy",
-    "weaver tests are skipped on PyPy: the weaver binary's gRPC C core crashes with "
-    "epoll_wait EBADF under PyPy subprocesses (see issue #5176)",
-)
 @unittest.skipUnless(
     _HAS_GRPC,
     "grpc exporter not installed",
@@ -170,11 +164,6 @@ class TestSDKInitLiveCheck(unittest.TestCase):
         )
 
 
-@unittest.skipIf(
-    platform.python_implementation() == "PyPy",
-    "weaver tests are skipped on PyPy: the weaver binary's gRPC C core crashes with "
-    "epoll_wait EBADF under PyPy subprocesses (see issue #5176)",
-)
 @unittest.skipUnless(
     _HAS_GRPC,
     "grpc exporter not installed",
