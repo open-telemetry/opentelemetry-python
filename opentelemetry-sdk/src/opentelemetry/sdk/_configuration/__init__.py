@@ -597,7 +597,7 @@ def _initialize_components(
     # OpAMP is a system created to configure OpenTelemetry SDKs with a remote config.
     # This is different than other init helpers because setting up OpAMP requires distro
     # provided code as it's not strictly specified. We have two entry points for OpAMP:
-    # one called early people that want it blocking to get an updated config before
+    # one called early for people that want it blocking to get an updated config before
     # setting up the rest of the SDK and the other after for people that want the
     # SDK already setup.
     _init_opamp = _import_opamp("pre_sdk_init_function")
