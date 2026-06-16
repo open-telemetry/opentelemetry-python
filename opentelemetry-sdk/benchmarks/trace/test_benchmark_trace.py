@@ -172,6 +172,18 @@ def test_read_events(benchmark, num_events):
     provider.add_span_processor(_EventsReadingProcessor())
     tp = provider.get_tracer("bench")
 
+    peaks = []
+    for _ in range(200):
+        span = tp.start_span("benchmarkedSpan")
+        for event in range(num_events):
+            span.add_event(f"event{event}", {"k": "v"})
+        tracemalloc.start()
+        span.end()
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
+
     def benchmark_read_events():
         span = tp.start_span("benchmarkedSpan")
         for event in range(num_events):
@@ -186,6 +198,18 @@ def test_read_links(benchmark, num_links):
     provider = TracerProvider(sampler=sampling.DEFAULT_ON)
     provider.add_span_processor(_LinksReadingProcessor())
     tp = provider.get_tracer("bench")
+
+    peaks = []
+    for _ in range(200):
+        span = tp.start_span("benchmarkedSpan")
+        for _ in range(num_links):
+            span.add_link(_link_context)
+        tracemalloc.start()
+        span.end()
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
 
     def benchmark_read_links():
         span = tp.start_span("benchmarkedSpan")
