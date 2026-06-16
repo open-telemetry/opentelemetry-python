@@ -891,7 +891,7 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Setting attribute on ended span.")
                 return
 
-            self._attributes._set_items(attributes) # pylint: disable=protected-access
+            self._attributes._set_items(attributes)  # pylint: disable=protected-access
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
@@ -989,7 +989,7 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             self._end_time = end_time if end_time is not None else time_ns()
-            self._attributes._immutable = True # pylint: disable=protected-access
+            self._attributes._immutable = True  # pylint: disable=protected-access
 
         if self._record_end_metrics:
             self._record_end_metrics()
