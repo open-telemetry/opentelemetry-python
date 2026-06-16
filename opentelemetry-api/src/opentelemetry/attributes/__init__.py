@@ -290,7 +290,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         with self._lock:
             self._setitem_locked(key, value)
 
-    def _set_many(self, attributes: "types._ExtendedAttributes") -> None:
+    def _set_items(self, attributes: "types._ExtendedAttributes") -> None:
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
         if self.maxlen is not None and self.maxlen == 0:
