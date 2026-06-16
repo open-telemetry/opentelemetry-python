@@ -1642,8 +1642,8 @@ jobs:
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-http-transport-latest -- -ra
 
-  py310-test-opentelemetry-exporter-otlp-common-oldest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.10 Ubuntu
+  py310-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.10 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1659,10 +1659,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py310-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py310-test-opentelemetry-exporter-otlp-common-latest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.10 Ubuntu
+  py310-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.10 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1678,10 +1678,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py310-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py311-test-opentelemetry-exporter-otlp-common-oldest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.11 Ubuntu
+  py311-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.11 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1697,10 +1697,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py311-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py311-test-opentelemetry-exporter-otlp-common-latest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.11 Ubuntu
+  py311-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.11 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1716,10 +1716,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py311-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py312-test-opentelemetry-exporter-otlp-common-oldest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.12 Ubuntu
+  py312-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.12 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1735,10 +1735,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py312-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py312-test-opentelemetry-exporter-otlp-common-latest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.12 Ubuntu
+  py312-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.12 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1754,10 +1754,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py312-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py313-test-opentelemetry-exporter-otlp-common-oldest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.13 Ubuntu
+  py313-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.13 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1773,10 +1773,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py313-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py313-test-opentelemetry-exporter-otlp-common-latest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.13 Ubuntu
+  py313-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.13 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1792,10 +1792,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py313-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py314-test-opentelemetry-exporter-otlp-common-oldest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.14 Ubuntu
+  py314-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.14 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1811,10 +1811,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py314-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py314-test-opentelemetry-exporter-otlp-common-latest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.14 Ubuntu
+  py314-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.14 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1830,10 +1830,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py314-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-common-oldest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.14t Ubuntu
+  py314t-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.14t Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1849,10 +1849,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314t-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py314t-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-common-latest_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.14t Ubuntu
+  py314t-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.14t Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1868,7 +1868,7 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314t-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py314t-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
   py310-test-opentelemetry-exporter-opencensus_ubuntu-latest:
     name: opentelemetry-exporter-opencensus 3.10 Ubuntu
@@ -5508,8 +5508,8 @@ jobs:
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-exporter-http-transport-latest -- -ra
 
-  py310-test-opentelemetry-exporter-otlp-common-oldest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.10 Windows
+  py310-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.10 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5527,10 +5527,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py310-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py310-test-opentelemetry-exporter-otlp-common-latest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.10 Windows
+  py310-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.10 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5548,10 +5548,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py310-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py311-test-opentelemetry-exporter-otlp-common-oldest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.11 Windows
+  py311-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.11 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5569,10 +5569,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py311-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py311-test-opentelemetry-exporter-otlp-common-latest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.11 Windows
+  py311-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.11 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5590,10 +5590,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py311-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py312-test-opentelemetry-exporter-otlp-common-oldest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.12 Windows
+  py312-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.12 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5611,10 +5611,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py312-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py312-test-opentelemetry-exporter-otlp-common-latest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.12 Windows
+  py312-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.12 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5632,10 +5632,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py312-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py313-test-opentelemetry-exporter-otlp-common-oldest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.13 Windows
+  py313-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.13 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5653,10 +5653,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py313-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py313-test-opentelemetry-exporter-otlp-common-latest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.13 Windows
+  py313-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.13 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5674,10 +5674,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py313-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py314-test-opentelemetry-exporter-otlp-common-oldest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.14 Windows
+  py314-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.14 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5695,10 +5695,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py314-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py314-test-opentelemetry-exporter-otlp-common-latest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.14 Windows
+  py314-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.14 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5716,10 +5716,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py314-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-common-oldest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-oldest 3.14t Windows
+  py314t-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.14t Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5737,10 +5737,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314t-test-opentelemetry-exporter-otlp-common-oldest -- -ra
+        run: tox -e py314t-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-common-latest_windows-latest:
-    name: opentelemetry-exporter-otlp-common-latest 3.14t Windows
+  py314t-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.14t Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5758,7 +5758,7 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314t-test-opentelemetry-exporter-otlp-common-latest -- -ra
+        run: tox -e py314t-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
   py310-test-opentelemetry-exporter-opencensus_windows-latest:
     name: opentelemetry-exporter-opencensus 3.10 Windows
