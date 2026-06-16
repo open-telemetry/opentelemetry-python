@@ -9,9 +9,13 @@ from opentelemetry import trace
 from opentelemetry.sdk._configuration._common import (
     _map_compression,
     _parse_headers,
+    _parse_otlp_file_output_stream,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
+)
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
@@ -127,10 +131,30 @@ def _create_otlp_grpc_span_exporter(
     )
 
 
+def _create_otlp_file_development_span_exporter(
+    config: ExperimentalOtlpFileExporterConfig,
+) -> SpanExporter:
+    """Create an OTLP file (JSON Lines) span exporter from config."""
+    try:
+        # pylint: disable=import-outside-toplevel,no-name-in-module
+        from opentelemetry.exporter.otlp.json.file.trace_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+            FileSpanExporter,
+        )
+    except ImportError as exc:
+        raise ConfigurationError(
+            "otlp_file_development span exporter requires 'opentelemetry-exporter-otlp-json-file'. "
+            "Install it with: pip install opentelemetry-exporter-otlp-json-file"
+        ) from exc
+
+    path = _parse_otlp_file_output_stream(config.output_stream)
+    return FileSpanExporter(path) if path is not None else FileSpanExporter()
+
+
 _SPAN_EXPORTER_REGISTRY: dict = {
     "otlp_http": _create_otlp_http_span_exporter,
     "otlp_grpc": _create_otlp_grpc_span_exporter,
     "console": lambda _: ConsoleSpanExporter(),
+    "otlp_file_development": _create_otlp_file_development_span_exporter,
 }
 
 
@@ -142,11 +166,6 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_traces_exporter`` entry point group.
     """
-    if config.otlp_file_development is not None:
-        raise ConfigurationError(
-            "otlp_file_development span exporter is experimental "
-            "and not yet supported."
-        )
     for name, factory in _SPAN_EXPORTER_REGISTRY.items():
         value = getattr(config, name, None)
         if value is not None:
@@ -158,7 +177,7 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
         )
     raise ConfigurationError(
         "No exporter type specified in span exporter config. "
-        "Supported types: otlp_http, otlp_grpc, console."
+        "Supported types: otlp_http, otlp_grpc, console, otlp_file_development."
     )
 
 
