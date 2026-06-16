@@ -721,8 +721,7 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
-        config_file = environ.get(OTEL_CONFIG_FILE)
-        if config_file:
+        if config_file := environ.get(OTEL_CONFIG_FILE):
             # Imported lazily so that the SDK does not require the optional
             # file-configuration extras (pyyaml, jsonschema) unless a config
             # file is actually requested.
