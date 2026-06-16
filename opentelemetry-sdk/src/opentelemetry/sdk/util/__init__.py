@@ -63,7 +63,7 @@ class BoundedList(Sequence):
 
     def __iter__(self):
         with self._lock:
-            return iter(deque(self._dq))
+            return iter(list(self._dq))
 
     def append(self, item):
         with self._lock:
