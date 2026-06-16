@@ -124,7 +124,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             },
         )
 
-        # None attribute_keys (default) will keep all attributes
+        # setup new instrument match without `attribute_keys` set, defaults to keeping
+        # all attributes.
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
@@ -151,7 +152,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             {json.dumps({"c": "d", "f": "g"}): self.mock_created_aggregation},
         )
 
-        # empty set attribute_keys will drop all labels and aggregate
+        # empty set attribute_keys will drop all attributes and aggregate
         # everything together
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
@@ -171,7 +172,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 time_unix_nano=time_ns(),
                 instrument=instrument1,
                 context=Context(),
-                attributes=None,
+                attributes={"a": 1, "b": 2},
             )
         )
         self.assertEqual(
@@ -274,7 +275,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             ),
         )
 
-        attributes = {"key": "original"}
+        attributes = {"key": "original", "mutable_value": [1, 2, 3]}
         view_instrument_match.consume_measurement(
             Measurement(
                 value=1,
@@ -287,13 +288,16 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         # Mutate the original dict after recording
         attributes["key"] = "mutated"
-
+        attributes["mutable_value"].append(4)
         number_data_points = view_instrument_match.collect(
             AggregationTemporality.CUMULATIVE, 0
         )
         number_data_points = list(number_data_points)
         self.assertEqual(len(number_data_points), 1)
-        self.assertEqual(number_data_points[0].attributes, {"key": "original"})
+        self.assertEqual(
+            number_data_points[0].attributes,
+            {"key": "original", "mutable_value": [1, 2, 3]},
+        )
 
     @patch(
         "opentelemetry.sdk.metrics._internal._view_instrument_match.time_ns",

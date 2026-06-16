@@ -56,7 +56,7 @@ class _ViewInstrumentMatch:
         self._view = view
         self._instrument = instrument
         self._attributes_aggregation: dict[
-            str | _HashedAttributes, _Aggregation
+            _HashedAttributes, _Aggregation
         ] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
@@ -130,7 +130,7 @@ class _ViewInstrumentMatch:
             aggr_key = json.dumps(attributes, sort_keys=True, default=str)
         # Raises a TypeError when dictionary keys are not all strings because sort_keys cannot compare
         # values of different types. This should be a very rare case because dictionary keys are supposed
-        # to be strings according to the spec.
+        # to be strings (and are eventually coerced to strings by the OTLP json/proto encoders) according to the spec.
         except TypeError:
             aggr_key = _hash_attributes(attributes)
 
