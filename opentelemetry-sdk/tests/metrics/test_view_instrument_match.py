@@ -559,7 +559,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
 
     def test_json_dumps_works_as_stable_hash_key(self):
-        d = {
+        attributes = {
             "a": [1, 2],
             "b": [2, 1],
             "c": b"1234asf",
@@ -568,8 +568,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             "f": {1: 2, 2: (1, 2, 3), 3: "a", 4: "bc"},
         }
         self.assertEqual(
-            json.dumps(d, sort_keys=True, default=str),
-            json.dumps(d, sort_keys=True, default=str),
+            json.dumps(attributes, sort_keys=True, default=str),
+            json.dumps(attributes, sort_keys=True, default=str),
         )
 
         self.assertNotEqual(
