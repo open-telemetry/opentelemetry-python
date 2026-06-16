@@ -150,8 +150,7 @@ class BoundedAttributes(MutableMapping):
         return f"{dict(self._dict)}"
 
     def __getitem__(self, key: str) -> types.AttributeValue:
-        with self._lock:
-            return self._dict[key]
+        return self._dict[key]
 
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
         if self._immutable:
@@ -186,16 +185,14 @@ class BoundedAttributes(MutableMapping):
             raise TypeError(
                 "Cannot mutate this instance, as it was created with immutable=True."
             )
-        with self._lock:
-            del self._dict[key]
+        del self._dict[key]
 
     def __iter__(self):
         with self._lock:
             return iter(list(self._dict))
 
     def __len__(self) -> int:
-        with self._lock:
-            return len(self._dict)
+        return len(self._dict)
 
     def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
         copy_ = BoundedAttributes(

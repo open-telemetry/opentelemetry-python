@@ -4,6 +4,7 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Sequence
 from time import time_ns
 from unittest import TestCase
@@ -102,7 +103,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {_hash_attributes({"c": "d"}): self.mock_created_aggregation},
+            {json.dumps({"c": "d"}): self.mock_created_aggregation},
         )
 
         view_instrument_match.consume_measurement(
@@ -118,8 +119,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                _hash_attributes({}): self.mock_created_aggregation,
-                _hash_attributes({"c": "d"}): self.mock_created_aggregation,
+                json.dumps({}): self.mock_created_aggregation,
+                json.dumps({"c": "d"}): self.mock_created_aggregation,
             },
         )
 
@@ -147,11 +148,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {
-                _hash_attributes(
-                    {"c": "d", "f": "g"}
-                ): self.mock_created_aggregation
-            },
+            {json.dumps({"c": "d", "f": "g"}): self.mock_created_aggregation},
         )
 
         # empty set attribute_keys will drop all labels and aggregate
@@ -179,7 +176,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {_hash_attributes({}): self.mock_created_aggregation},
+            {json.dumps({}): self.mock_created_aggregation},
         )
 
         # Test that a drop aggregation is handled in the same way as any
@@ -208,9 +205,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[
-                _hash_attributes({})
-            ],
+            view_instrument_match._attributes_aggregation[json.dumps({})],
             _DropAggregation,
         )
 
@@ -518,9 +513,64 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         self.assertIsInstance(
             view_instrument_match._attributes_aggregation[
-                _hash_attributes({"c": "d"})
+                json.dumps({"c": "d"})
             ],
             _LastValueAggregation,
+        )
+
+    def test_attributes_hash_fallsback_to_hash_attributes_value_function(self):
+        instrument1 = _Counter(
+            name="instrument1",
+            instrumentation_scope=Mock(),
+            measurement_consumer=Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation={_Counter: LastValueAggregation()},
+        )
+
+        # this will fail with json.dumps because dictionary keys are not all strings
+        attributes = {"c": 1, 22: 3, (1,): 2}
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=Mock(name="instrument1"),
+                context=Context(),
+                attributes=attributes,
+            )
+        )
+        self.assertIn(
+            _hash_attributes(attributes),
+            view_instrument_match._attributes_aggregation,
+        )
+
+    def test_json_dumps_works_as_stable_hash_key(self):
+        d = {
+            "a": [1, 2],
+            "b": [2, 1],
+            "c": b"1234asf",
+            "d": 1.2324124,
+            "e": -2.32323124,
+            "f": {1: 2, 2: (1, 2, 3), 3: "a", 4: "bc"},
+        }
+        self.assertEqual(
+            json.dumps(d, sort_keys=True, default=str),
+            json.dumps(d, sort_keys=True, default=str),
+        )
+
+        self.assertNotEqual(
+            json.dumps({"1": (1, "2", 3, "4")}, sort_keys=True, default=str),
+            json.dumps({"1": ("1", 2, "3", 4)}, sort_keys=True, default=str),
         )
 
 
