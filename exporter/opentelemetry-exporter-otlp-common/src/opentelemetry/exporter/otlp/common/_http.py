@@ -17,7 +17,6 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Final, Literal
 
 if TYPE_CHECKING:
-    # pylint: disable-next=import-error
     from opentelemetry.exporter.http.transport._base import (
         BaseHTTPResult,
         BaseHTTPTransport,
@@ -113,6 +112,10 @@ class OTLPHTTPClient:
             shutdown_event if shutdown_event is not None else threading.Event()
         )
         self._headers = dict(headers) if headers is not None else {}
+        if self._compression is not Compression.NONE and not any(
+            key.lower() == "content-encoding" for key in self._headers
+        ):
+            self._headers["Content-Encoding"] = self._compression.value
         self._kind = kind
         self._jitter = min(max(jitter, 0.0), 1.0)
         self._logger = logger if logger is not None else _logger

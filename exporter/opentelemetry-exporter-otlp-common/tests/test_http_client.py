@@ -172,21 +172,12 @@ class TestOTLPHTTPClient(unittest.TestCase):
 
     def test_export_compresses_payload(self):
         cases = (
-            (
-                Compression.NONE,
-                lambda data: data,
-            ),
-            (
-                Compression.GZIP,
-                gzip.decompress,
-            ),
-            (
-                Compression.DEFLATE,
-                zlib.decompress,
-            ),
+            (Compression.NONE, lambda data: data, None),
+            (Compression.GZIP, gzip.decompress, "gzip"),
+            (Compression.DEFLATE, zlib.decompress, "deflate"),
         )
 
-        for compression, decompress in cases:
+        for compression, decompress, expected_encoding in cases:
             with self.subTest(compression=compression):
                 transport = _TestHTTPTransport(
                     _TestHTTPResult(status_code=200, reason="OK")
@@ -199,6 +190,13 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 self.assertEqual(
                     decompress(transport.requests[0]["data"]), b"payload"
                 )
+                headers = transport.requests[0]["headers"]
+                if expected_encoding is None:
+                    self.assertNotIn("Content-Encoding", headers)
+                else:
+                    self.assertEqual(
+                        headers["Content-Encoding"], expected_encoding
+                    )
 
     def test_export_retryable_status_codes(self):
         cases = (
