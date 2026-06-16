@@ -76,7 +76,7 @@ OTLP/HTTP. The source is available :scm_web:`here
         - batch:
             exporter:
               otlp_http:
-                endpoint: https://otlp.example.com:4318/v1/traces
+                endpoint: https://example.com:4318/v1/traces
                 headers:
                   - name: api-key
                     value: ${OTLP_API_KEY}
@@ -91,7 +91,7 @@ OTLP/HTTP. The source is available :scm_web:`here
             interval: 60000
             exporter:
               otlp_http:
-                endpoint: https://otlp.example.com:4318/v1/metrics
+                endpoint: https://example.com:4318/v1/metrics
                 headers:
                   - name: api-key
                     value: ${OTLP_API_KEY}
@@ -101,7 +101,7 @@ OTLP/HTTP. The source is available :scm_web:`here
         - batch:
             exporter:
               otlp_http:
-                endpoint: https://otlp.example.com:4318/v1/logs
+                endpoint: https://example.com:4318/v1/logs
                 headers:
                   - name: api-key
                     value: ${OTLP_API_KEY}
