@@ -66,10 +66,11 @@ def _get_temporality(
         case _:
             if temporality_preference != "CUMULATIVE":
                 _logger.warning(
-                    "Unrecognized OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
-                    " value found: "
-                    "%s, "
-                    "using CUMULATIVE",
+                    (
+                        "Invalid value for %s: %s, using cumulative "
+                        "temporality aggregation"
+                    ),
+                    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
                     temporality_preference,
                 )
             instrument_class_temporality: dict[
