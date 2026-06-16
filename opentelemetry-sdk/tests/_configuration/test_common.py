@@ -220,6 +220,37 @@ class TestParseOtlpFileOutputStream(unittest.TestCase):
             "/tmp/traces.jsonl",
         )
 
+    def test_file_uri_localhost_host_returns_path(self):
+        self.assertEqual(
+            _parse_otlp_file_output_stream(
+                "file://localhost/tmp/traces.jsonl"
+            ),
+            "/tmp/traces.jsonl",
+        )
+
+    def test_file_uri_with_other_host_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _parse_otlp_file_output_stream("file://otherhost/tmp/traces.jsonl")
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported output_stream 'file://otherhost/tmp/traces.jsonl' "
+            "for otlp_file_development exporter. Supported values: stdout, "
+            "file://<path>.",
+        )
+
+    def test_file_uri_empty_path_raises(self):
+        with self.assertRaises(ConfigurationError):
+            _parse_otlp_file_output_stream("file://")
+
+    def test_file_uri_with_query_raises(self):
+        with self.assertRaises(ConfigurationError):
+            _parse_otlp_file_output_stream("file:///tmp/traces.jsonl?foo=bar")
+
+    def test_file_uri_with_fragment_raises(self):
+        with self.assertRaises(ConfigurationError):
+            _parse_otlp_file_output_stream("file:///tmp/traces.jsonl#frag")
+
     def test_unsupported_scheme_raises(self):
         with self.assertRaises(ConfigurationError) as ctx:
             _parse_otlp_file_output_stream("http://example")

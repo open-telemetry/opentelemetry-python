@@ -212,7 +212,13 @@ def _parse_otlp_file_output_stream(output_stream: str | None) -> str | None:
             f"Failed to parse output_stream '{output_stream}' for "
             f"otlp_file_development exporter: {exc}"
         ) from exc
-    if parsed.scheme == "file":
+    is_local_file_uri = (
+        parsed.scheme == "file"
+        and parsed.netloc in ("", "localhost")
+        and bool(parsed.path)
+    )
+    has_extra_components = parsed.params or parsed.query or parsed.fragment
+    if is_local_file_uri and not has_extra_components:
         return parsed.path
     raise ConfigurationError(
         f"Unsupported output_stream '{output_stream}' for otlp_file_development "
