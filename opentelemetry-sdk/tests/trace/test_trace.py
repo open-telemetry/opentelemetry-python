@@ -517,6 +517,35 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
+    def test_start_span_preserves_parent_random_trace_id_flag(self):
+        tracer = new_tracer()
+
+        for parent_trace_flags in (
+            trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+            trace_api.TraceFlags(
+                trace_api.TraceFlags.SAMPLED
+                | trace_api.TraceFlags.RANDOM_TRACE_ID
+            ),
+        ):
+            with self.subTest(parent_trace_flags=parent_trace_flags):
+                parent_context = trace_api.SpanContext(
+                    trace_id=0x000000000000000000000000DEADBEEF,
+                    span_id=0x00000000DEADBEF0,
+                    is_remote=True,
+                    trace_flags=parent_trace_flags,
+                )
+                context = trace_api.set_span_in_context(
+                    trace_api.NonRecordingSpan(parent_context)
+                )
+
+                child = tracer.start_span("child", context)
+                child_trace_flags = child.get_span_context().trace_flags
+
+                self.assertEqual(
+                    parent_trace_flags.random_trace_id,
+                    child_trace_flags.random_trace_id,
+                )
+
     def test_start_as_current_span_implicit(self):
         tracer = new_tracer()
 

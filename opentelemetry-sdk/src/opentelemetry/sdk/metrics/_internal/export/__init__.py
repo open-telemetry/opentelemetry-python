@@ -223,13 +223,16 @@ class MetricReader(ABC):
         *,
         otel_component_type: OtelComponentTypeValues | None = None,
     ) -> None:
-        self._collect: Callable[
-            [
-                opentelemetry.sdk.metrics.export.MetricReader,
-                AggregationTemporality,
-            ],
-            Iterable[opentelemetry.sdk.metrics.export.Metric],
-        ] = None
+        self._collect: (
+            Callable[
+                [
+                    opentelemetry.sdk.metrics.export.MetricReader,
+                    AggregationTemporality,
+                ],
+                Iterable[opentelemetry.sdk.metrics.export.Metric],
+            ]
+            | None
+        ) = None
 
         self._instrument_class_temporality = {
             _Counter: AggregationTemporality.CUMULATIVE,
@@ -374,7 +377,8 @@ class MetricReader(ABC):
                 AggregationTemporality,
             ],
             MetricsData,
-        ],
+        ]
+        | None,
     ) -> None:
         """This function is internal to the SDK. It should not be called or overridden by users"""
         self._collect = func
