@@ -28,6 +28,11 @@ from opentelemetry.sdk._configuration.models import (
     TracerProvider as TracerProviderConfig,
 )
 from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+)
+from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 
 
 class TestConfigLoader(unittest.TestCase):
@@ -299,9 +304,19 @@ tracer_provider:
             BatchSpanProcessorConfig,
         )
 
+    # pylint: disable=protected-access
     def test_typed_config_feeds_factory_function(self):
         config = self._load()
 
         provider = create_tracer_provider(config.tracer_provider)
 
         self.assertIsInstance(provider, SdkTracerProvider)
+        # Sampler wiring from the YAML: parent_based(trace_id_ratio_based(0.5)).
+        self.assertIsInstance(provider.sampler, ParentBased)
+        self.assertIsInstance(provider.sampler._root, TraceIdRatioBased)
+        self.assertEqual(provider.sampler._root.rate, 0.5)
+        # Span processor wiring from the YAML: batch(console).
+        processors = provider._active_span_processor._span_processors
+        self.assertEqual(len(processors), 1)
+        self.assertIsInstance(processors[0], BatchSpanProcessor)
+        self.assertIsInstance(processors[0].span_exporter, ConsoleSpanExporter)
