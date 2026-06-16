@@ -1,12 +1,16 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import tracemalloc
 from functools import lru_cache
 
 import pytest
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import (
+    ReadableSpan,
+    SpanProcessor,
     TracerProvider,
     _default_tracer_configurator,
     _RuleBasedTracerConfigurator,
@@ -14,6 +18,7 @@ from opentelemetry.sdk.trace import (
     sampling,
 )
 from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
+from opentelemetry.trace import SpanContext, TraceFlags
 
 tracer_provider = TracerProvider(
     sampler=sampling.DEFAULT_ON,
@@ -141,3 +146,96 @@ def test_simple_start_as_current_span(benchmark):
             span.add_event("benchmarkEvent")
 
     benchmark(benchmark_start_as_current_span)
+
+
+class _EventsReadingProcessor(SpanProcessor):
+    def on_end(self, span: ReadableSpan) -> None:
+        _ = span.events
+
+
+class _LinksReadingProcessor(SpanProcessor):
+    def on_end(self, span: ReadableSpan) -> None:
+        _ = span.links
+
+
+_link_context = SpanContext(
+    trace_id=0x000000000000000000000000DEADBEEF,
+    span_id=0x00000000DEADBEF0,
+    is_remote=True,
+    trace_flags=TraceFlags(TraceFlags.SAMPLED),
+)
+
+
+@pytest.mark.parametrize("num_events", [1, 10, 50, 128])
+def test_read_events(benchmark, num_events):
+    provider = TracerProvider(sampler=sampling.DEFAULT_ON)
+    provider.add_span_processor(_EventsReadingProcessor())
+    tp = provider.get_tracer("bench")
+
+    peaks = []
+    for _ in range(200):
+        span = tp.start_span("benchmarkedSpan")
+        for event in range(num_events):
+            span.add_event(f"event{event}", {"k": "v"})
+        tracemalloc.start()
+        span.end()
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
+
+    def benchmark_read_events():
+        span = tp.start_span("benchmarkedSpan")
+        for event in range(num_events):
+            span.add_event(f"event{event}", {"k": "v"})
+        span.end()
+
+    benchmark(benchmark_read_events)
+
+
+@pytest.mark.parametrize("num_links", [1, 10, 50, 128])
+def test_read_links(benchmark, num_links):
+    provider = TracerProvider(sampler=sampling.DEFAULT_ON)
+    provider.add_span_processor(_LinksReadingProcessor())
+    tp = provider.get_tracer("bench")
+
+    peaks = []
+    for _ in range(200):
+        span = tp.start_span("benchmarkedSpan")
+        for _ in range(num_links):
+            span.add_link(_link_context)
+        tracemalloc.start()
+        span.end()
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
+
+    def benchmark_read_links():
+        span = tp.start_span("benchmarkedSpan")
+        for _ in range(num_links):
+            span.add_link(_link_context)
+        span.end()
+
+    benchmark(benchmark_read_links)
+
+
+@pytest.mark.parametrize("num_attrs", [1, 10, 50, 128])
+def test_bounded_attribute_iterator(benchmark, num_attrs):
+    attrs = BoundedAttributes(
+        attributes={f"key{i}": f"value{i}" for i in range(num_attrs)}
+    )
+
+    peaks = []
+    for _ in range(200):
+        tracemalloc.start()
+        list(attrs)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
+
+    def benchmark_iter():
+        list(attrs)
+
+    benchmark(benchmark_iter)

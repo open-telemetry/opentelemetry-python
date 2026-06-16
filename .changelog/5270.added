@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add `configure_sdk(config)` to the declarative configuration API. Single entry point that takes a parsed `OpenTelemetryConfiguration`, builds the resource, and applies the tracer/meter/logger providers and propagator globally. Honors the top-level `disabled` flag.
