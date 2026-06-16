@@ -76,10 +76,10 @@ OTLP/HTTP. The source is available :scm_web:`here
         - batch:
             exporter:
               otlp_http:
-                endpoint: https://api.honeycomb.io/v1/traces
+                endpoint: https://otlp.example.com:4318/v1/traces
                 headers:
-                  - name: x-honeycomb-team
-                    value: ${HONEYCOMB_API_KEY}
+                  - name: api-key
+                    value: ${OTLP_API_KEY}
       sampler:
         parent_based:
           root:
@@ -91,20 +91,20 @@ OTLP/HTTP. The source is available :scm_web:`here
             interval: 60000
             exporter:
               otlp_http:
-                endpoint: https://api.honeycomb.io/v1/metrics
+                endpoint: https://otlp.example.com:4318/v1/metrics
                 headers:
-                  - name: x-honeycomb-team
-                    value: ${HONEYCOMB_API_KEY}
+                  - name: api-key
+                    value: ${OTLP_API_KEY}
 
     logger_provider:
       processors:
         - batch:
             exporter:
               otlp_http:
-                endpoint: https://api.honeycomb.io/v1/logs
+                endpoint: https://otlp.example.com:4318/v1/logs
                 headers:
-                  - name: x-honeycomb-team
-                    value: ${HONEYCOMB_API_KEY}
+                  - name: api-key
+                    value: ${OTLP_API_KEY}
 
 Environment variable substitution
 ----------------------------------
@@ -118,7 +118,7 @@ is parsed.
 * ``${VAR:-default}`` — replaced with ``VAR`` if set, otherwise ``default``.
 * ``$$`` — a literal ``$``.
 
-In the example above, ``${HONEYCOMB_API_KEY}`` is required, while
+In the example above, ``${OTLP_API_KEY}`` is required, while
 ``${DEPLOYMENT_ENVIRONMENT:-development}`` falls back to ``development`` when
 unset.
 
