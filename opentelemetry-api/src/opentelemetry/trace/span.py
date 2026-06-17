@@ -393,6 +393,7 @@ class TraceState(typing.Mapping[str, str]):
         pairs = {}  # type: dict[str, str]
         for header in header_list:
             members: list[str] = re.split(_delimiter_pattern, header)
+            current_header_keys: set[str] = set()
             for member in members:
                 # empty members are valid, but no need to process further.
                 if not member:
@@ -406,9 +407,12 @@ class TraceState(typing.Mapping[str, str]):
                     return cls()
                 groups: tuple[str, ...] = match.groups()
                 key, _eq, value = groups
-                # duplicate keys are not legal in header
-                if key in pairs:
+                # duplicate keys within a single header are not legal
+                if key in current_header_keys:
                     return cls()
+                current_header_keys.add(key)
+                # per W3C spec, when the same key appears across multiple
+                # headers the last value wins
                 pairs[key] = value
         return cls(list(pairs.items()))
 

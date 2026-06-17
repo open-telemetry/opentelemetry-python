@@ -86,6 +86,16 @@ class TestTraceContextFormat(unittest.TestCase):
         prev_first_place = entries.index(("1a-2f@foo", "bar1"))  # type: ignore
         self.assertLessEqual(foo_place, prev_first_place)
 
+    def test_from_header_duplicate_key_across_headers_last_wins(self):
+        # W3C spec: when the same key appears in multiple headers, last wins
+        state = TraceState.from_header(["vendora=value1", "vendora=value2"])
+        self.assertEqual(state.get("vendora"), "value2")
+
+    def test_from_header_duplicate_key_within_header_returns_empty(self):
+        # duplicate keys within a single header are still illegal
+        state = TraceState.from_header(["vendora=value1,vendora=value2"])
+        self.assertEqual(len(state), 0)
+
     def test_trace_contains(self):
         entries = [
             "1a-2f@foo=bar1",
