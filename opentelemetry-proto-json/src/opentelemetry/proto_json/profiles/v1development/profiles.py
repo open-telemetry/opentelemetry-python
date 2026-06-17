@@ -97,7 +97,7 @@ class ProfilesData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     resource_profiles: builtins.list[ResourceProfiles] = dataclasses.field(default_factory=builtins.list)
-    dictionary: typing.Optional[ProfilesDictionary] = None
+    dictionary: ProfilesDictionary | None = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -142,9 +142,9 @@ class ResourceProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ResourceProfiles
     """
 
-    resource: typing.Optional[opentelemetry.proto_json.resource.v1.resource.Resource] = None
+    resource: opentelemetry.proto_json.resource.v1.resource.Resource | None = None
     scope_profiles: builtins.list[ScopeProfiles] = dataclasses.field(default_factory=builtins.list)
-    schema_url: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -194,9 +194,9 @@ class ScopeProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ScopeProfiles
     """
 
-    scope: typing.Optional[opentelemetry.proto_json.common.v1.common.InstrumentationScope] = None
+    scope: opentelemetry.proto_json.common.v1.common.InstrumentationScope | None = None
     profiles: builtins.list[Profile] = dataclasses.field(default_factory=builtins.list)
-    schema_url: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -246,16 +246,16 @@ class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message Profile
     """
 
-    sample_type: typing.Optional[ValueType] = None
+    sample_type: ValueType | None = None
     samples: builtins.list[Sample] = dataclasses.field(default_factory=builtins.list)
-    time_unix_nano: typing.Optional[builtins.int] = 0
-    duration_nano: typing.Optional[builtins.int] = 0
-    period_type: typing.Optional[ValueType] = None
-    period: typing.Optional[builtins.int] = 0
-    profile_id: typing.Optional[builtins.bytes] = b""
-    dropped_attributes_count: typing.Optional[builtins.int] = 0
-    original_payload_format: typing.Optional[builtins.str] = ""
-    original_payload: typing.Optional[builtins.bytes] = b""
+    time_unix_nano: builtins.int | None = 0
+    duration_nano: builtins.int | None = 0
+    period_type: ValueType | None = None
+    period: builtins.int | None = 0
+    profile_id: builtins.bytes | None = b""
+    dropped_attributes_count: builtins.int | None = 0
+    original_payload_format: builtins.str | None = ""
+    original_payload: builtins.bytes | None = b""
     attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
@@ -339,8 +339,8 @@ class Link(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message Link
     """
 
-    trace_id: typing.Optional[builtins.bytes] = b""
-    span_id: typing.Optional[builtins.bytes] = b""
+    trace_id: builtins.bytes | None = b""
+    span_id: builtins.bytes | None = b""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -385,8 +385,8 @@ class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ValueType
     """
 
-    type_strindex: typing.Optional[builtins.int] = 0
-    unit_strindex: typing.Optional[builtins.int] = 0
+    type_strindex: builtins.int | None = 0
+    unit_strindex: builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -433,9 +433,9 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message Sample
     """
 
-    stack_index: typing.Optional[builtins.int] = 0
+    stack_index: builtins.int | None = 0
     attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
-    link_index: typing.Optional[builtins.int] = 0
+    link_index: builtins.int | None = 0
     values: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
     timestamps_unix_nano: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
@@ -496,10 +496,10 @@ class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message Mapping
     """
 
-    memory_start: typing.Optional[builtins.int] = 0
-    memory_limit: typing.Optional[builtins.int] = 0
-    file_offset: typing.Optional[builtins.int] = 0
-    filename_strindex: typing.Optional[builtins.int] = 0
+    memory_start: builtins.int | None = 0
+    memory_limit: builtins.int | None = 0
+    file_offset: builtins.int | None = 0
+    filename_strindex: builtins.int | None = 0
     attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
@@ -599,8 +599,8 @@ class Location(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message Location
     """
 
-    mapping_index: typing.Optional[builtins.int] = 0
-    address: typing.Optional[builtins.int] = 0
+    mapping_index: builtins.int | None = 0
+    address: builtins.int | None = 0
     lines: builtins.list[Line] = dataclasses.field(default_factory=builtins.list)
     attribute_indices: builtins.list[builtins.int] = dataclasses.field(default_factory=builtins.list)
 
@@ -656,9 +656,9 @@ class Line(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message Line
     """
 
-    function_index: typing.Optional[builtins.int] = 0
-    line: typing.Optional[builtins.int] = 0
-    column: typing.Optional[builtins.int] = 0
+    function_index: builtins.int | None = 0
+    line: builtins.int | None = 0
+    column: builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -708,10 +708,10 @@ class Function(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message Function
     """
 
-    name_strindex: typing.Optional[builtins.int] = 0
-    system_name_strindex: typing.Optional[builtins.int] = 0
-    filename_strindex: typing.Optional[builtins.int] = 0
-    start_line: typing.Optional[builtins.int] = 0
+    name_strindex: builtins.int | None = 0
+    system_name_strindex: builtins.int | None = 0
+    filename_strindex: builtins.int | None = 0
+    start_line: builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -767,9 +767,9 @@ class KeyValueAndUnit(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message KeyValueAndUnit
     """
 
-    key_strindex: typing.Optional[builtins.int] = 0
-    value: typing.Optional[opentelemetry.proto_json.common.v1.common.AnyValue] = None
-    unit_strindex: typing.Optional[builtins.int] = 0
+    key_strindex: builtins.int | None = 0
+    value: opentelemetry.proto_json.common.v1.common.AnyValue | None = None
+    unit_strindex: builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """

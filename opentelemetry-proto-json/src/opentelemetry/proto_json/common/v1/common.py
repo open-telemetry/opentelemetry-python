@@ -23,14 +23,14 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message AnyValue
     """
 
-    string_value: typing.Optional[builtins.str] = None
-    bool_value: typing.Optional[builtins.bool] = None
-    int_value: typing.Optional[builtins.int] = None
-    double_value: typing.Optional[builtins.float] = None
-    array_value: typing.Optional[ArrayValue] = None
-    kvlist_value: typing.Optional[KeyValueList] = None
-    bytes_value: typing.Optional[builtins.bytes] = None
-    string_value_strindex: typing.Optional[builtins.int] = None
+    string_value: builtins.str | None = None
+    bool_value: builtins.bool | None = None
+    int_value: builtins.int | None = None
+    double_value: builtins.float | None = None
+    array_value: ArrayValue | None = None
+    kvlist_value: KeyValueList | None = None
+    bytes_value: builtins.bytes | None = None
+    string_value_strindex: builtins.int | None = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -184,9 +184,9 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message KeyValue
     """
 
-    key: typing.Optional[builtins.str] = ""
-    value: typing.Optional[AnyValue] = None
-    key_strindex: typing.Optional[builtins.int] = 0
+    key: builtins.str | None = ""
+    value: AnyValue | None = None
+    key_strindex: builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -237,10 +237,10 @@ class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message InstrumentationScope
     """
 
-    name: typing.Optional[builtins.str] = ""
-    version: typing.Optional[builtins.str] = ""
+    name: builtins.str | None = ""
+    version: builtins.str | None = ""
     attributes: builtins.list[KeyValue] = dataclasses.field(default_factory=builtins.list)
-    dropped_attributes_count: typing.Optional[builtins.int] = 0
+    dropped_attributes_count: builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -296,8 +296,8 @@ class EntityRef(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message EntityRef
     """
 
-    schema_url: typing.Optional[builtins.str] = ""
-    type: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
+    type: builtins.str | None = ""
     id_keys: builtins.list[builtins.str] = dataclasses.field(default_factory=builtins.list)
     description_keys: builtins.list[builtins.str] = dataclasses.field(default_factory=builtins.list)
 
