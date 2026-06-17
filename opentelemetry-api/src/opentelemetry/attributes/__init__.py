@@ -88,10 +88,10 @@ class BoundedAttributes(MutableMapping):
     """A dict with a fixed max capacity which cleans and potentially drops values to ensure they are valid attribute values.
 
     Args:
-        maxlen: The maximum number of attributes to store.
+        maxlen: The maximum number of attributes to store, use None for no limit.
         attributes: The initial attributes to store.
         immutable: Defaults to true. Whether to allow adding/removing of attributes after the initialisation of the instance.
-        max_value_len: The maximum length of string values.
+        max_value_len: The maximum length of string values, use None for no limit.
         extended_attributes: Deprecated. Kept for backwards compatibility. Extended attributes are now always used for attributes everywhere.
 
     When the dict is full and a new element is added, the oldest element is dropped. Attributes are made to be immutable when set in this container.
