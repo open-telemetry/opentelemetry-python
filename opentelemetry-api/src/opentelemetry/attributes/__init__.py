@@ -157,29 +157,49 @@ class BoundedAttributes(MutableMapping):
             raise TypeError(
                 "Cannot mutate this instance, as it was created with immutable=True."
             )
+        if self.maxlen is not None and self.maxlen == 0:
+            with self._lock:
+                self.dropped += 1
+                return
+        if not key or not isinstance(key, str):
+            _logger.warning(
+                "invalid key `%s`. must be non-empty string. Dropping key from attributes.",
+                key,
+            )
+            self.dropped += 1
+            return
         with self._lock:
-            if self.maxlen == 0:
-                self.dropped += 1
-                return
-            if not key or not isinstance(key, str):
-                _logger.warning(
-                    "invalid key `%s`. must be non-empty string. Dropping key from attributes.",
-                    key,
-                )
-                self.dropped += 1
-                return
-            if key in self._dict:
-                del self._dict[key]
-            if self.maxlen and len(self) >= self.maxlen:
-                _logger.warning(
-                    "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
-                )
-                # In python 3.7+ dictionaries are ordered, this is the recommended way to get the oldest value.
-                del self._dict[next(iter(self._dict.keys()))]
-                self.dropped += 1
+            self._setitem_locked(key, _clean_attribute_value(value, self.max_value_len))
 
-            self._dict[key] = _clean_attribute_value(value, self.max_value_len)
+    def _set_items(self, attributes: "types._ExtendedAttributes") -> None:
+        if self._immutable:
+            raise TypeError(
+                "Cannot mutate this instance, as it was created with immutable=True."
+            )
+        if self.maxlen is not None and self.maxlen == 0:
+            with self._lock:
+                self.dropped += len(attributes)
+            return
+        with self._lock:
+            for key, value in attributes.items():
+                self._setitem_locked(key, _clean_attribute_value(value, self.max_value_len))
 
+
+    def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
+        if key in self._dict:
+            del self._dict[key]
+        if self.maxlen is not None and len(self._dict) >= self.maxlen:
+            _logger.warning(
+                "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
+            )
+            # Dictionaries are insertion ordered in Python, this is the recommended way to get the oldest value.
+            del self._dict[next(iter(self._dict.keys()))]
+            self.dropped += 1
+
+        self._dict[key] = value  # type: ignore
+
+
+    
     def __delitem__(self, key: str) -> None:
         if self._immutable:
             raise TypeError(
@@ -188,6 +208,8 @@ class BoundedAttributes(MutableMapping):
         del self._dict[key]
 
     def __iter__(self):
+        if self._immutable:
+            return iter(self._dict)
         with self._lock:
             return iter(list(self._dict))
 
