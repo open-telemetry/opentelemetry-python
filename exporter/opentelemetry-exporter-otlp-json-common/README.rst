@@ -6,9 +6,7 @@ OpenTelemetry JSON Encoding
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-otlp-json-common.svg
    :target: https://pypi.org/project/opentelemetry-exporter-otlp-json-common/
 
-This library is provided as a convenience to encode to OTLP JSON. Currently used by:
-
--
+This library is provided as a convenience to encode to OTLP JSON.
 
 Installation
 ------------
