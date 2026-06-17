@@ -264,7 +264,7 @@ class TestConfigLoaderEndToEnd(unittest.TestCase):
     """
 
     _YAML = """
-file_format: '1.0-rc.1'
+file_format: '1.0'
 tracer_provider:
   processors:
     - batch:

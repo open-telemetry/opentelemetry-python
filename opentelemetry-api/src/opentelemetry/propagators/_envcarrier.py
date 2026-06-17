@@ -3,8 +3,7 @@
 
 import os
 import re
-import typing
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 
 from opentelemetry.propagators.textmap import Getter, Setter
 
@@ -26,7 +25,7 @@ def _is_normalized_key(key: str) -> bool:
     )
 
 
-class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
+class EnvironmentGetter(Getter[Mapping[str, str]]):
     """Getter implementation for extracting context and baggage from environment variables.
 
     EnvironmentGetter creates a lookup from the current environment variables
@@ -49,9 +48,7 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
             k: v for k, v in os.environ.items() if _is_normalized_key(k)
         }
 
-    def get(
-        self, carrier: typing.Mapping[str, str], key: str
-    ) -> list[str] | None:
+    def get(self, carrier: Mapping[str, str], key: str) -> list[str] | None:
         """Get a value from the environment carrier for the given key.
 
         Args:
@@ -66,7 +63,7 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
             return None
         return [val]
 
-    def keys(self, carrier: typing.Mapping[str, str]) -> list[str]:
+    def keys(self, carrier: Mapping[str, str]) -> list[str]:
         """Get all keys from the environment carrier.
 
         Args:
