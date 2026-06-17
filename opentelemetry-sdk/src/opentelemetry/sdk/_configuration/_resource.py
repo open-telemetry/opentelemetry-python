@@ -7,7 +7,6 @@ import dataclasses
 import fnmatch
 import logging
 import os
-import uuid
 from collections.abc import Callable
 from typing import Any
 from urllib import parse
@@ -23,10 +22,10 @@ from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     OTEL_SERVICE_NAME,
-    SERVICE_INSTANCE_ID,
     SERVICE_NAME,
     ProcessResourceDetector,
     Resource,
+    ServiceInstanceIdResourceDetector,
     _HostResourceDetector,
 )
 from opentelemetry.util.types import AttributeValue
@@ -140,9 +139,9 @@ def create_resource(config: ResourceConfig | None) -> Resource:
 
 def _detect_service(_config: Any) -> dict[str, AttributeValue]:
     """Service detector: generates instance ID and reads OTEL_SERVICE_NAME."""
-    attrs: dict[str, AttributeValue] = {
-        SERVICE_INSTANCE_ID: str(uuid.uuid4()),
-    }
+    attrs: dict[str, AttributeValue] = dict(
+        ServiceInstanceIdResourceDetector().detect().attributes
+    )
     if service_name := os.environ.get(OTEL_SERVICE_NAME):
         attrs[SERVICE_NAME] = service_name
     return attrs
