@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: Add fork-safety to metrics `SynchronousMeasurementConsumer` by registering a post-fork child hook, lazily reinitializing metric reader storages on first use in the child process, and clearing asynchronous instruments to avoid duplicated state after `fork()`
