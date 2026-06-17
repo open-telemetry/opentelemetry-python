@@ -6,6 +6,7 @@
 import importlib.resources
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +51,9 @@ def _get_schema() -> dict:
 _logger = logging.getLogger(__name__)
 
 
-def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
+def load_config_file(
+    file_path: str | os.PathLike[str],
+) -> OpenTelemetryConfiguration:
     """Load and parse an OpenTelemetry configuration file.
 
     Supports YAML and JSON formats. Performs environment variable substitution
