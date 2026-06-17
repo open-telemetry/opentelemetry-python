@@ -1,0 +1,1 @@
+`opentelemetry-exporter-prometheus`: add support to configure Resource attributes as metric labels
