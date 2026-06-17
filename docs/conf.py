@@ -191,6 +191,9 @@ nitpick_ignore = [
         "_ExtendedAttributes",
     ),
     ("py:class", "Token"),
+    # ``from os import PathLike`` renders as the bare name ``PathLike`` in the
+    # file exporter type hints, which sphinx cannot resolve to os.PathLike.
+    ("py:class", "PathLike"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
