@@ -1,0 +1,1 @@
+`opentelemetry-api`: fix `TraceState.from_header` to use last-wins for duplicate keys across multiple headers per W3C spec
