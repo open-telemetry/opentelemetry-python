@@ -130,11 +130,8 @@ class BoundedAttributes(MutableMapping):
         max_value_len: int | None = None,
         extended_attributes: bool = False,
     ) -> None:
-        if maxlen is not None:
-            if not isinstance(maxlen, int) or maxlen < 0:
-                raise ValueError(
-                    "maxlen must be valid int greater or equal to 0"
-                )
+        if maxlen is not None and (not isinstance(maxlen, int) or maxlen < 0):
+            raise ValueError("maxlen must be valid int greater or equal to 0")
         self._dict = {}
         self.maxlen = maxlen
         self.dropped = 0
@@ -169,9 +166,11 @@ class BoundedAttributes(MutableMapping):
             self.dropped += 1
             return
         with self._lock:
-            self._setitem_locked(key, _clean_attribute_value(value, self.max_value_len))
+            self._setitem_locked(
+                key, _clean_attribute_value(value, self.max_value_len)
+            )
 
-    def _set_items(self, attributes: "types._ExtendedAttributes") -> None:
+    def _set_items(self, attributes: Mapping[str, types.AnyValue]) -> None:
         if self._immutable:
             raise TypeError(
                 "Cannot mutate this instance, as it was created with immutable=True."
@@ -182,8 +181,9 @@ class BoundedAttributes(MutableMapping):
             return
         with self._lock:
             for key, value in attributes.items():
-                self._setitem_locked(key, _clean_attribute_value(value, self.max_value_len))
-
+                self._setitem_locked(
+                    key, _clean_attribute_value(value, self.max_value_len)
+                )
 
     def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
         if key in self._dict:
@@ -196,10 +196,8 @@ class BoundedAttributes(MutableMapping):
             del self._dict[next(iter(self._dict.keys()))]
             self.dropped += 1
 
-        self._dict[key] = value  # type: ignore
+        self._dict[key] = value
 
-
-    
     def __delitem__(self, key: str) -> None:
         if self._immutable:
             raise TypeError(
@@ -230,5 +228,5 @@ class BoundedAttributes(MutableMapping):
             copy_.dropped = self.dropped
         return copy_
 
-    def copy(self):  # type: ignore
-        return self._dict.copy()  # type: ignore
+    def copy(self):
+        return self._dict.copy()

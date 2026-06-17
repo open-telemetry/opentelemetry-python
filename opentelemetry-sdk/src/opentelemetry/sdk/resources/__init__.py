@@ -85,8 +85,6 @@ try:
 except ImportError:
     pass
 
-LabelValue = AttributeValue
-Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
