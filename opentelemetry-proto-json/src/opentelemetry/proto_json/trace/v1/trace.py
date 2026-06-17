@@ -78,9 +78,9 @@ class ResourceSpans(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ResourceSpans
     """
 
-    resource: typing.Optional[opentelemetry.proto_json.resource.v1.resource.Resource] = None
+    resource: opentelemetry.proto_json.resource.v1.resource.Resource | None = None
     scope_spans: builtins.list[ScopeSpans] = dataclasses.field(default_factory=builtins.list)
-    schema_url: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -130,9 +130,9 @@ class ScopeSpans(opentelemetry.proto_json._json_codec.JsonMessage):
     Generated from protobuf message ScopeSpans
     """
 
-    scope: typing.Optional[opentelemetry.proto_json.common.v1.common.InstrumentationScope] = None
+    scope: opentelemetry.proto_json.common.v1.common.InstrumentationScope | None = None
     spans: builtins.list[Span] = dataclasses.field(default_factory=builtins.list)
-    schema_url: typing.Optional[builtins.str] = ""
+    schema_url: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -202,10 +202,10 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
         Generated from protobuf message Event
         """
 
-        time_unix_nano: typing.Optional[builtins.int] = 0
-        name: typing.Optional[builtins.str] = ""
+        time_unix_nano: builtins.int | None = 0
+        name: builtins.str | None = ""
         attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-        dropped_attributes_count: typing.Optional[builtins.int] = 0
+        dropped_attributes_count: builtins.int | None = 0
 
         def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
             """
@@ -259,12 +259,12 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
         Generated from protobuf message Link
         """
 
-        trace_id: typing.Optional[builtins.bytes] = b""
-        span_id: typing.Optional[builtins.bytes] = b""
-        trace_state: typing.Optional[builtins.str] = ""
+        trace_id: builtins.bytes | None = b""
+        span_id: builtins.bytes | None = b""
+        trace_state: builtins.str | None = ""
         attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-        dropped_attributes_count: typing.Optional[builtins.int] = 0
-        flags: typing.Optional[builtins.int] = 0
+        dropped_attributes_count: builtins.int | None = 0
+        flags: builtins.int | None = 0
 
         def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
             """
@@ -320,22 +320,22 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
 
             return cls(**_args)
 
-    trace_id: typing.Optional[builtins.bytes] = b""
-    span_id: typing.Optional[builtins.bytes] = b""
-    trace_state: typing.Optional[builtins.str] = ""
-    parent_span_id: typing.Optional[builtins.bytes] = b""
-    flags: typing.Optional[builtins.int] = 0
-    name: typing.Optional[builtins.str] = ""
-    kind: typing.Union[Span.SpanKind, builtins.int, None] = 0
-    start_time_unix_nano: typing.Optional[builtins.int] = 0
-    end_time_unix_nano: typing.Optional[builtins.int] = 0
+    trace_id: builtins.bytes | None = b""
+    span_id: builtins.bytes | None = b""
+    trace_state: builtins.str | None = ""
+    parent_span_id: builtins.bytes | None = b""
+    flags: builtins.int | None = 0
+    name: builtins.str | None = ""
+    kind: Span.SpanKind | builtins.int | None = 0
+    start_time_unix_nano: builtins.int | None = 0
+    end_time_unix_nano: builtins.int | None = 0
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-    dropped_attributes_count: typing.Optional[builtins.int] = 0
+    dropped_attributes_count: builtins.int | None = 0
     events: builtins.list[Span.Event] = dataclasses.field(default_factory=builtins.list)
-    dropped_events_count: typing.Optional[builtins.int] = 0
+    dropped_events_count: builtins.int | None = 0
     links: builtins.list[Span.Link] = dataclasses.field(default_factory=builtins.list)
-    dropped_links_count: typing.Optional[builtins.int] = 0
-    status: typing.Optional[Status] = None
+    dropped_links_count: builtins.int | None = 0
+    status: Status | None = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -453,8 +453,8 @@ class Status(opentelemetry.proto_json._json_codec.JsonMessage):
         STATUS_CODE_OK = 1
         STATUS_CODE_ERROR = 2
 
-    message: typing.Optional[builtins.str] = ""
-    code: typing.Union[Status.StatusCode, builtins.int, None] = 0
+    message: builtins.str | None = ""
+    code: Status.StatusCode | builtins.int | None = 0
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """

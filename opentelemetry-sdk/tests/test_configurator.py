@@ -1255,7 +1255,7 @@ class TestMetricsInit(TestCase):
             provider._sdk_config.resource.attributes.get("service.name"),
             "otlp-service",
         )
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertIsInstance(reader, DummyMetricReader)
         self.assertIsInstance(reader.exporter, DummyOTLPMetricExporter)
 
@@ -1268,7 +1268,7 @@ class TestMetricsInit(TestCase):
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyMeterProvider)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertIsInstance(reader, DummyMetricReaderPullExporter)
 
     def test_metrics_init_exporter_uses_exporter_args_map(self):
@@ -1282,7 +1282,7 @@ class TestMetricsInit(TestCase):
             },
         )
         provider = self.set_provider_mock.call_args[0][0]
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertEqual(reader.exporter.compression, "gzip")
 
     def test_metrics_init_meter_configurator_none_by_default(self):
@@ -1565,3 +1565,118 @@ class TestClearLoggingHandlers(TestCase):
         self.assertEqual(logging.config.dictConfig.__name__, "dictConfig")
         self.assertEqual(logging.basicConfig.__name__, "basicConfig")
         self.assertEqual(logging.config.fileConfig.__name__, "fileConfig")
+
+
+class TestOpAMPInit(TestCase):
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch("opentelemetry.sdk._configuration.Resource")
+    def test_pre_sdk_init_function_found(
+        self,
+        mock_resource,
+        mock_entry_points,
+        mock_logging,
+        mock_tracing,
+        mock_metrics,
+    ):
+        init_function = mock.Mock()
+        mock_entry_points.side_effect = [
+            [IterEntryPoint("pre_sdk_init_function", init_function)],
+            [],
+        ]
+
+        _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
+        )
+        init_function.assert_called_once_with(
+            mock_resource.create.return_value
+        )
+
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch("opentelemetry.sdk._configuration.Resource")
+    def test_post_sdk_init_function_found(
+        self,
+        mock_resource,
+        mock_entry_points,
+        mock_logging,
+        mock_tracing,
+        mock_metrics,
+    ):
+        init_function = mock.Mock()
+        mock_entry_points.side_effect = [
+            [],
+            [IterEntryPoint("post_sdk_init_function", init_function)],
+        ]
+
+        _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="post_sdk_init_function"
+                )
+            ]
+        )
+        init_function.assert_called_once_with(
+            mock_resource.create.return_value
+        )
+
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_init_function_load_failure(
+        self, mock_entry_points, mock_logging, mock_tracing, mock_metrics
+    ):
+        entry_point_mock = mock.Mock()
+        entry_point_mock.load.side_effect = AttributeError(
+            "module 'foo' has no attribute 'OpampInit'"
+        )
+        mock_entry_points.configure_mock(
+            return_value=[entry_point_mock],
+        )
+        entry_point_mock.__str__ = lambda x: "<EntryPoint>"
+
+        with self.assertLogs(level="WARNING") as cm:
+            _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
+        )
+
+        self.assertIn(
+            "WARNING:opentelemetry.sdk._configuration:Failed to load OpAMP init function from entry point,"
+            " <EntryPoint>: module 'foo' has no attribute 'OpampInit'",
+            cm.output,
+        )
+
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_init_function_not_found(
+        self, mock_entry_points, mock_logging, mock_tracing, mock_metrics
+    ):
+        mock_entry_points.configure_mock(return_value=[])
+
+        with self.assertLogs(level="DEBUG") as cm:
+            _initialize_components(id_generator=1)
+        self.assertIn(
+            "DEBUG:opentelemetry.sdk._configuration:No OpAMP init function found",
+            cm.output,
+        )
