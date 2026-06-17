@@ -675,9 +675,7 @@ class TestMeter(TestCase):
     def setUp(self):
         self.meter = Meter(Mock(), Mock())
 
-    # TODO: convert to assertNoLogs instead of mocking logger when 3.10 is baseline
-    @patch("opentelemetry.sdk.metrics._internal._logger")
-    def test_repeated_instrument_names(self, logger_mock):
+    def test_repeated_instrument_names(self):
         with self.assertNotRaises(Exception):
             self.meter.create_counter("counter")
             self.meter.create_up_down_counter("up_down_counter")
@@ -699,18 +697,24 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            getattr(self.meter, f"create_{instrument_name}")(instrument_name)
-            logger_mock.warning.assert_not_called()
+            with self.assertNoLogs(
+                "opentelemetry.sdk.metrics._internal", level="WARNING"
+            ):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name
+                )
 
         for instrument_name in [
             "observable_counter",
             "observable_gauge",
             "observable_up_down_counter",
         ]:
-            getattr(self.meter, f"create_{instrument_name}")(
-                instrument_name, callbacks=[Mock()]
-            )
-            logger_mock.warning.assert_not_called()
+            with self.assertNoLogs(
+                "opentelemetry.sdk.metrics._internal", level="WARNING"
+            ):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name, callbacks=[Mock()]
+                )
 
     def test_repeated_instrument_names_with_different_advisory(self):
         with self.assertNotRaises(Exception):

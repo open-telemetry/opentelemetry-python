@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: update declarative config to use `ServiceInstanceIdResourceDetector`
