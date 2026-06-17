@@ -25,7 +25,7 @@ class ExportProfilesServiceRequest(opentelemetry.proto_json._json_codec.JsonMess
     """
 
     resource_profiles: builtins.list[opentelemetry.proto_json.profiles.v1development.profiles.ResourceProfiles] = dataclasses.field(default_factory=builtins.list)
-    dictionary: typing.Optional[opentelemetry.proto_json.profiles.v1development.profiles.ProfilesDictionary] = None
+    dictionary: opentelemetry.proto_json.profiles.v1development.profiles.ProfilesDictionary | None = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -70,7 +70,7 @@ class ExportProfilesServiceResponse(opentelemetry.proto_json._json_codec.JsonMes
     Generated from protobuf message ExportProfilesServiceResponse
     """
 
-    partial_success: typing.Optional[ExportProfilesPartialSuccess] = None
+    partial_success: ExportProfilesPartialSuccess | None = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -111,8 +111,8 @@ class ExportProfilesPartialSuccess(opentelemetry.proto_json._json_codec.JsonMess
     Generated from protobuf message ExportProfilesPartialSuccess
     """
 
-    rejected_profiles: typing.Optional[builtins.int] = 0
-    error_message: typing.Optional[builtins.str] = ""
+    rejected_profiles: builtins.int | None = 0
+    error_message: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
