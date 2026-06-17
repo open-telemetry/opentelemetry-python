@@ -75,9 +75,9 @@ The exported metric includes labels such as
 ``environment="production"``.
 
 To omit instrumentation scope labels from exported metrics, set
-``without_scope_info`` to ``True``::
+``scope_info_enabled`` to ``False``::
 
-    reader = PrometheusMetricReader(without_scope_info=True)
+    reader = PrometheusMetricReader(scope_info_enabled=False)
 
 Configuration
 -------------

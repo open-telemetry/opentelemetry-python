@@ -91,7 +91,6 @@ from opentelemetry.sdk.metrics import (
 from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
-    DataPointT,
     DataT,
     Gauge,
     Histogram,
@@ -253,7 +252,7 @@ class PrometheusMetricReader(MetricReader):
 
     Args:
         disable_target_info: Whether to disable the ``target_info`` metric.
-        scope_info_enabled: Whether to omit instrumentation scope labels from
+        scope_info_enabled: Whether to include instrumentation scope labels on
             exported metrics. Scope labels are exported by default.
         prefix: Prefix added to exported Prometheus metric names.
     """
@@ -448,10 +447,10 @@ class _CustomCollector:
         self,
         metric_data: DataT,
         scope_attrs: dict[str, AttributeValue],
-    ) -> tuple[list[str], list[list[str]], list[DataPointT]]:
+    ) -> tuple[list[str], list[list[str]], list[float | dict[str, Any]]]:
         keys: set[str] = set()
         rows: list[dict[str, str]] = []
-        values: list[DataPointT] = []
+        values: list[float | dict[str, Any]] = []
 
         for point in metric_data.data_points:
             labels: dict[str, str] = {}
