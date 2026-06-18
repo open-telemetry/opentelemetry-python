@@ -19,7 +19,6 @@ from time import time_ns
 from types import NoneType
 from typing import (  # noqa
     Any,
-    Callable,
     Mapping,
     Sequence,
     Tuple,

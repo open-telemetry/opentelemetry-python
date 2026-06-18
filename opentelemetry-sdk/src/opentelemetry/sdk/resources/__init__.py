@@ -86,7 +86,7 @@ except ImportError:
     pass
 
 logger = logging.getLogger(__name__)
-
+LabelValue = AttributeValue
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
 CLOUD_REGION = ResourceAttributes.CLOUD_REGION
