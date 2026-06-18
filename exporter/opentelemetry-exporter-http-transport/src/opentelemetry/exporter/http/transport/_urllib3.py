@@ -5,9 +5,8 @@ from __future__ import annotations
 
 import functools
 import json
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 # pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._base import (
@@ -16,8 +15,10 @@ from opentelemetry.exporter.http.transport._base import (
 )
 
 if TYPE_CHECKING:
-    from typing import Self
+    from collections.abc import Mapping
+    from typing import Any
 
+    from typing_extensions import Self
     from urllib3 import BaseHTTPResponse
 
 
