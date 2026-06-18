@@ -1,1 +1,1 @@
-opentelemetry-sdk: make 'consume_measurment' lock free
+`opentelemetry-sdk`: make `SynchronousMeasurementConsumer.consume_measurement` lock free to avoid deadlocks
