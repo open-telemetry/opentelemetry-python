@@ -44,7 +44,7 @@ from opentelemetry.sdk.metrics.view import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import _ExtendedAttributes
+from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
 
