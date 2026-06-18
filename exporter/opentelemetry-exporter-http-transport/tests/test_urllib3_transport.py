@@ -303,3 +303,45 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
             transport = Urllib3HTTPTransport()
             transport.close()
         mock_pm.return_value.clear.assert_called_once()
+
+    def test_create_returns_transport_instance(self):
+        with patch("urllib3.PoolManager"):
+            transport = Urllib3HTTPTransport.create(True, None)
+        self.assertIsInstance(transport, Urllib3HTTPTransport)
+
+    def test_create_forwards_verify(self):
+        cases = [
+            (True, "CERT_REQUIRED", None),
+            (False, "CERT_NONE", None),
+            ("/path/to/ca.pem", "CERT_REQUIRED", "/path/to/ca.pem"),
+        ]
+        for verify, expected_cert_reqs, expected_ca_certs in cases:
+            with self.subTest(verify=verify):
+                with patch("urllib3.PoolManager") as mock_pm:
+                    Urllib3HTTPTransport.create(verify, None)
+                kwargs = mock_pm.call_args.kwargs
+                self.assertEqual(kwargs["cert_reqs"], expected_cert_reqs)
+                if expected_ca_certs is not None:
+                    self.assertEqual(kwargs["ca_certs"], expected_ca_certs)
+                else:
+                    self.assertNotIn("ca_certs", kwargs)
+
+    def test_create_forwards_cert(self):
+        cases = [
+            ("/path/to/cert.pem", "/path/to/cert.pem", None),
+            (
+                ("/path/to/cert.pem", "/path/to/key.pem"),
+                "/path/to/cert.pem",
+                "/path/to/key.pem",
+            ),
+        ]
+        for cert, expected_cert_file, expected_key_file in cases:
+            with self.subTest(cert=cert):
+                with patch("urllib3.PoolManager") as mock_pm:
+                    Urllib3HTTPTransport.create(True, cert)
+                kwargs = mock_pm.call_args.kwargs
+                self.assertEqual(kwargs["cert_file"], expected_cert_file)
+                if expected_key_file is not None:
+                    self.assertEqual(kwargs["key_file"], expected_key_file)
+                else:
+                    self.assertNotIn("key_file", kwargs)

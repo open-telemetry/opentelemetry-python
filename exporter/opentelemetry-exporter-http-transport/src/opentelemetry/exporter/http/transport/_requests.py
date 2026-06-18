@@ -15,6 +15,8 @@ from opentelemetry.exporter.http.transport._base import (
 )
 
 if TYPE_CHECKING:
+    from typing import Self
+
     import requests
     from requests import Response
 
@@ -60,6 +62,15 @@ class RequestsHTTPResult(BaseHTTPResult):
 
 
 class RequestsHTTPTransport(BaseHTTPTransport):
+    @classmethod
+    def create(
+        cls,
+        verify: bool | str,
+        cert: str | tuple[str, str] | None,
+        **kwargs: Any,
+    ) -> Self:
+        return cls(verify=verify, cert=cert, **kwargs)
+
     def __init__(
         self,
         *,

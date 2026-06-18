@@ -16,6 +16,8 @@ from opentelemetry.exporter.http.transport._base import (
 )
 
 if TYPE_CHECKING:
+    from typing import Self
+
     from urllib3 import BaseHTTPResponse
 
 
@@ -65,6 +67,15 @@ class Urllib3HTTPResult(BaseHTTPResult):
 
 
 class Urllib3HTTPTransport(BaseHTTPTransport):
+    @classmethod
+    def create(
+        cls,
+        verify: bool | str,
+        cert: str | tuple[str, str] | None,
+        **kwargs: Any,
+    ) -> Self:
+        return cls(verify=verify, cert=cert, **kwargs)
+
     def __init__(
         self,
         *,
