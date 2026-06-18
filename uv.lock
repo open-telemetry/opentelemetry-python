@@ -1061,7 +1061,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "protobuf", specifier = ">=5.0,<7.0" }]
+requires-dist = [{ name = "protobuf", specifier = ">=5.0,<8.0" }]
 
 [[package]]
 name = "opentelemetry-proto-json"

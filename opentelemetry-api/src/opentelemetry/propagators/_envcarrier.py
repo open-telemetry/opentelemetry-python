@@ -3,8 +3,7 @@
 
 import os
 import re
-import typing
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 
 from opentelemetry.propagators.textmap import Getter, Setter
 
@@ -16,11 +15,22 @@ def _normalize_key(key: str) -> str:
     return result
 
 
-class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
+def _is_normalized_key(key: str) -> bool:
+    if not key:
+        return False
+    if "0" <= key[0] <= "9":
+        return False
+    return all(
+        "A" <= char <= "Z" or "0" <= char <= "9" or char == "_" for char in key
+    )
+
+
+class EnvironmentGetter(Getter[Mapping[str, str]]):
     """Getter implementation for extracting context and baggage from environment variables.
 
-    EnvironmentGetter creates a normalized lookup from the current environment
-    variables at initialization time and provides simple data access without validation.
+    EnvironmentGetter creates a lookup from the current environment variables
+    whose names are already normalized at initialization time and provides
+    simple data access without validation.
 
     Per the OpenTelemetry specification, environment variables are treated as immutable
     within a process. For environments where context-carrying environment variables
@@ -33,20 +43,17 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
     """
 
     def __init__(self):
-        # Create a normalized lookup from current environment
-        # Per spec: "creates an in-memory copy of the current environment variables"
+        # Per spec, Get reads only normalized environment variable names.
         self.carrier: dict[str, str] = {
-            _normalize_key(k): v for k, v in os.environ.items()
+            k: v for k, v in os.environ.items() if _is_normalized_key(k)
         }
 
-    def get(
-        self, carrier: typing.Mapping[str, str], key: str
-    ) -> list[str] | None:
+    def get(self, carrier: Mapping[str, str], key: str) -> list[str] | None:
         """Get a value from the environment carrier for the given key.
 
         Args:
             carrier: Not used; maintained for interface compatibility with Getter[CarrierT]
-            key: The key to look up (case-insensitive)
+            key: The key to look up (will be normalized)
 
         Returns:
             A list with a single string value if the key exists, None otherwise.
@@ -56,14 +63,14 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
             return None
         return [val]
 
-    def keys(self, carrier: typing.Mapping[str, str]) -> list[str]:
+    def keys(self, carrier: Mapping[str, str]) -> list[str]:
         """Get all keys from the environment carrier.
 
         Args:
             carrier: Not used; maintained for interface compatibility with Getter[CarrierT]
 
         Returns:
-            List of all environment variable keys (normalized).
+            List of all already-normalized environment variable keys.
         """
         return list(self.carrier.keys())
 
