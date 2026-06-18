@@ -119,7 +119,7 @@ line2: value2"""
             {"SERVICE_NAME": "legit-service\nmalicious_key: injected_value"},
         ):
             result = substitute_env_vars(
-                "file_format: '0.1'\nservice_name: ${SERVICE_NAME}"
+                "file_format: '1.0'\nservice_name: ${SERVICE_NAME}"
             )
         parsed = yaml.safe_load(result)
         self.assertNotIn("malicious_key", parsed)
