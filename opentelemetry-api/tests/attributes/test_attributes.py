@@ -4,6 +4,8 @@
 # type: ignore
 
 import copy
+import logging
+import threading
 import unittest
 import unittest.mock
 from collections.abc import MutableSequence
@@ -282,6 +284,48 @@ class TestBoundedAttributes(unittest.TestCase):
 
         for num in range(100):
             self.assertEqual(bdict[str(num)], num)
+
+    def test_no_deadlock_on_reentrant_logging(self):
+        """Regression test for #3858.
+
+        The deadlock scenario: a logging handler intercepts the warning
+        emitted by _clean_attribute for an invalid value and calls __setitem__
+        on the same BoundedAttributes instance from the same thread.
+        With _clean_attribute called inside the lock this caused a deadlock.
+        With _clean_attribute called before the lock is acquired, no deadlock
+        occurs.
+        """
+        bdict = BoundedAttributes(immutable=False)
+
+        class ReentrantHandler(logging.Handler):
+            def emit(self, _record):
+                # Simulates Sentry intercepting the OTel warning and writing
+                # back into the same BoundedAttributes on the same thread.
+                bdict["reentrant.key"] = "set_by_handler"
+
+        otel_logger = logging.getLogger("opentelemetry.attributes")
+        handler = ReentrantHandler()
+        otel_logger.addHandler(handler)
+        try:
+            completed = threading.Event()
+
+            def run():
+                # None is an invalid attribute value and triggers _logger.warning
+                # in _clean_attribute, which fires the ReentrantHandler above.
+                bdict["trigger.key"] = None
+                completed.set()
+
+            t = threading.Thread(target=run, daemon=True)
+            t.start()
+            t.join(timeout=2.0)
+
+            self.assertTrue(
+                completed.is_set(),
+                "Deadlock detected: __setitem__ did not complete within 2s",
+            )
+            self.assertEqual(bdict.get("reentrant.key"), "set_by_handler")
+        finally:
+            otel_logger.removeHandler(handler)
 
     # pylint: disable=no-self-use
     def test_extended_attributes(self):
