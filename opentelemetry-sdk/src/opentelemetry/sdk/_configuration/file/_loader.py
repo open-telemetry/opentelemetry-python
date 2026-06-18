@@ -211,7 +211,7 @@ def _validate_file_format(data: dict) -> None:
     try:
         major = int(parts[0])
         minor = int(parts[1]) if len(parts) > 1 else 0
-    except (ValueError, IndexError) as exc:
+    except ValueError as exc:
         raise ConfigurationError(
             f"Invalid file_format '{file_format}': expected MAJOR.MINOR "
             f"version numbers"
