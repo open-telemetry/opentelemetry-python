@@ -14,7 +14,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
 
 
-class CannotEncode:
+class CallingStrRaisesException:
     def __str__(self):
         raise ValueError("Cannot encode")
 
@@ -85,7 +85,7 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
     def test_encode_attributes_error_logs_key(self):
         with self.assertLogs(level=ERROR) as error:
             result = _encode_attributes(
-                {"a": 1, "bad_key": CannotEncode(), "b": 2}
+                {"a": 1, "bad_key": CallingStrRaisesException(), "b": 2}
             )
 
         self.assertEqual(len(error.records), 1)

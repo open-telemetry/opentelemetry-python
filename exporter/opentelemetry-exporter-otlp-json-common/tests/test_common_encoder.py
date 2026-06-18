@@ -56,7 +56,7 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 _COMMON_LOGGER_NAME = "opentelemetry.exporter.otlp.json.common._internal"
 
 
-class CannotEncode:
+class CallingStrRaisesException:
     def __str__(self):
         raise ValueError("Cannot encode")
 
@@ -161,14 +161,17 @@ class TestCommonEncoder(unittest.TestCase):
 
     def test_encode_array_with_nulls(self):
         result = _encode_value([1, None, 2])
-        self.assertEqual(
-            result.array_value.values,
-            [
-                JSONAnyValue(int_value=1),
-                JSONAnyValue(),
-                JSONAnyValue(int_value=2),
-            ],
+        expected = JSONAnyValue(
+            array_value=JSONArrayValue(
+                values=[
+                    JSONAnyValue(int_value=1),
+                    JSONAnyValue(),
+                    JSONAnyValue(int_value=2),
+                ]
+            )
         )
+        self.assertEqual(result, expected)
+        self.assertEqual(result.array_value.values[1].to_dict(), {})
 
     def test_encode_key_value(self):
         result = _encode_key_value("mykey", "myval")
@@ -250,7 +253,7 @@ class TestCommonEncoder(unittest.TestCase):
     def test_encode_attributes_error_skips_bad_key(self):
         with self.assertLogs(level=ERROR) as error:
             result = _encode_attributes(
-                {"a": 1, "bad_key": CannotEncode(), "b": 2}
+                {"a": 1, "bad_key": CallingStrRaisesException(), "b": 2}
             )
 
         self.assertEqual(len(error.records), 1)
@@ -265,10 +268,14 @@ class TestCommonEncoder(unittest.TestCase):
             ],
         )
 
-    def test_encode_attributes_error_list_unencodable(self):
+    def test_encode_attributes_error_list_unencodable_item(self):
         with self.assertLogs(level=ERROR) as error:
             result = _encode_attributes(
-                {"a": 1, "bad_key": ["test", CannotEncode(), "test"], "b": 2}
+                {
+                    "a": 1,
+                    "bad_key": ["test", CallingStrRaisesException(), "test"],
+                    "b": 2,
+                }
             )
 
         self.assertEqual(len(error.records), 1)

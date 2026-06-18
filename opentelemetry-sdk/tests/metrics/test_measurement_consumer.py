@@ -193,6 +193,31 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
 
 class TestSynchronousMeasurementConsumerConcurrency(TestCase):
+    def test_consume_measurement_does_not_acquire_lock(self):
+        """consume_measurement must stay lock free on the hot path."""
+        with patch(
+            "opentelemetry.sdk.metrics._internal."
+            "measurement_consumer.MetricReaderStorage"
+        ):
+            consumer = SynchronousMeasurementConsumer(
+                SdkConfiguration(
+                    exemplar_filter=Mock(
+                        should_sample=Mock(return_value=False)
+                    ),
+                    resource=Mock(),
+                    views=Mock(),
+                ),
+                metric_readers=[Mock()],
+            )
+
+        mock_lock = MagicMock()
+        # pylint: disable-next=protected-access
+        consumer._lock = mock_lock
+
+        consumer.consume_measurement(Mock())
+
+        mock_lock.__enter__.assert_not_called()
+
     def test_concurrent_changes_to_metric_readers(self):
         timeout = 1
         failure = None
@@ -221,17 +246,8 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
             yield from iterable
 
         class HookedDict(dict):
-            def __iter__(self):
-                return _hooked_iter(super().__iter__())
-
-            def keys(self):
-                return _hooked_iter(super().keys())
-
             def values(self):
                 return _hooked_iter(super().values())
-
-            def items(self):
-                return _hooked_iter(super().items())
 
         with patch.object(
             consumer,
@@ -247,6 +263,7 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
                     failure = iteration_timeout_error
                 # pylint: disable-next=protected-access
                 consumer._reader_storages.clear()
+                mutation_done.set()
 
             # Verify that test setup works (direct mutation with no synchronization fails)
             with self.assertRaises(RuntimeError) as cm:
@@ -259,24 +276,37 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
             self.assertEqual(
                 "dictionary changed size during iteration", str(cm.exception)
             )
+            self.assertIsNone(failure)
+
+        # Reset the events for the second scenario
+        iteration_started.clear()
+        mutation_done.clear()
+        failure = None
+
+        with patch.object(
+            consumer,
+            "_reader_storages",
+            # pylint: disable-next=protected-access
+            HookedDict(consumer._reader_storages),
+        ):
 
             def add_and_remove_readers():
-                """Modifies _reader_storages after iteration starts"""
+                """Mutate via the public API while consume_measurement runs"""
                 nonlocal failure
                 if not iteration_started.wait(timeout):
                     failure = iteration_timeout_error
                 reader = MagicMock()
                 consumer.add_metric_reader(reader)
                 consumer.remove_metric_reader(reader)
+                mutation_done.set()
 
-            # Verify the API calls do not attempt concurrent modification of reader storages
+            # The copy-on-write API never mutates the mapping being
+            # iterated, so `consume_measurement` completes without raising even
+            # though add/remove run concurrently mid-iteration.
             t = Thread(target=add_and_remove_readers)
             t.start()
             try:
-                consumer.add_metric_reader(MagicMock())
-                consumer.consume_measurement(
-                    MagicMock(attributes={"test": "test"})
-                )
+                consumer.consume_measurement(MagicMock())
             finally:
                 t.join()
-            self.assertEqual(mutation_timeout_error, failure)
+            self.assertIsNone(failure)

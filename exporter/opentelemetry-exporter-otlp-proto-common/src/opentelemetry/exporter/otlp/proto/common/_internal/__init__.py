@@ -89,17 +89,17 @@ def _encode_trace_id(trace_id: int) -> bytes:
     return trace_id.to_bytes(length=16, byteorder="big", signed=False)
 
 
-def _encode_attributes(attributes: Attributes) -> list[PB2KeyValue] | None:
-    if attributes:
-        pb2_attributes = []
-        for key, value in attributes.items():
-            # pylint: disable=broad-exception-caught
-            try:
-                pb2_attributes.append(_encode_key_value(key, value))
-            except Exception as error:
-                _logger.exception("Failed to encode key %s: %s", key, error)
-        return pb2_attributes
-    return None
+def _encode_attributes(attributes: Attributes) -> list[PB2KeyValue]:
+    if not attributes:
+        return []
+    pb2_attributes = []
+    for key, value in attributes.items():
+        # pylint: disable=broad-exception-caught
+        try:
+            pb2_attributes.append(_encode_key_value(key, value))
+        except Exception as error:
+            _logger.exception("Failed to encode key %s: %s", key, error)
+    return pb2_attributes
 
 
 def _get_resource_data(
