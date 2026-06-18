@@ -1,11 +1,16 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import json
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Any, Self
 
 
 @dataclass(frozen=True, slots=True)

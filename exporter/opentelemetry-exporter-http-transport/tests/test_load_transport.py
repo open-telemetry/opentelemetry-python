@@ -6,11 +6,9 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.exporter.http.transport import _load_http_transport_class
-
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
 )
-
 from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
@@ -21,10 +19,14 @@ _ENTRY_POINTS_TARGET = "opentelemetry.util._importlib_metadata.entry_points"
 # pylint: disable=no-self-use
 class TestLoadHTTPTransportClass(unittest.TestCase):
     def test_returns_requests_transport(self):
-        self.assertIs(_load_http_transport_class("requests"), RequestsHTTPTransport)
+        self.assertIs(
+            _load_http_transport_class("requests"), RequestsHTTPTransport
+        )
 
     def test_returns_urllib3_transport(self):
-        self.assertIs(_load_http_transport_class("urllib3"), Urllib3HTTPTransport)
+        self.assertIs(
+            _load_http_transport_class("urllib3"), Urllib3HTTPTransport
+        )
 
     def test_known_transport_does_not_call_entry_points(self):
         with patch(_ENTRY_POINTS_TARGET) as mock_ep:
@@ -48,4 +50,6 @@ class TestLoadHTTPTransportClass(unittest.TestCase):
 
     def test_unknown_transport_raises_value_error(self):
         with patch(_ENTRY_POINTS_TARGET, return_value=[]):
-            self.assertRaises(ValueError, _load_http_transport_class, "nonexistent")
+            self.assertRaises(
+                ValueError, _load_http_transport_class, "nonexistent"
+            )
