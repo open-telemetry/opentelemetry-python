@@ -1,8 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import collections.abc
 import threading
-import typing
 
 from typing_extensions import deprecated
 
@@ -35,7 +35,7 @@ class InMemoryLogRecordExporter(LogRecordExporter):
             return tuple(self._logs)
 
     def export(
-        self, batch: typing.Sequence[ReadableLogRecord]
+        self, batch: collections.abc.Sequence[ReadableLogRecord]
     ) -> LogRecordExportResult:
         if self._stopped:
             return LogRecordExportResult.FAILURE
