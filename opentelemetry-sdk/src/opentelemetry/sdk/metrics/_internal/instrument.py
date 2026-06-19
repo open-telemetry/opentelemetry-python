@@ -4,6 +4,7 @@
 # pylint: disable=too-many-ancestors, unused-import
 from __future__ import annotations
 
+import math
 from collections.abc import Generator, Iterable, Sequence
 from logging import getLogger
 from time import time_ns
@@ -163,6 +164,12 @@ class _Asynchronous(_Instrument, Asynchronous):
         for callback in self._callbacks:
             try:
                 for api_measurement in callback(callback_options):
+                    if math.isnan(api_measurement.value):
+                        _logger.warning(
+                            "Callback returned NaN for instrument %s, ignoring measurement.",
+                            self.name,
+                        )
+                        continue
                     yield Measurement(
                         api_measurement.value,
                         time_unix_nano=time_ns(),
@@ -192,6 +199,12 @@ class Counter(_Synchronous, APICounter):
             super().add(amount, attributes=attributes, context=context)
             return
 
+        if math.isnan(amount):
+            _logger.warning(
+                "Add amount is NaN on Counter %s, ignoring measurement.",
+                self.name,
+            )
+            return
         if amount < 0:
             _logger.warning(
                 "Add amount must be non-negative on Counter %s.", self.name
@@ -225,6 +238,12 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
             super().add(amount, attributes=attributes, context=context)
             return
 
+        if math.isnan(amount):
+            _logger.warning(
+                "Add amount is NaN on UpDownCounter %s, ignoring measurement.",
+                self.name,
+            )
+            return
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
             Measurement(
@@ -294,6 +313,12 @@ class Histogram(_Synchronous, APIHistogram):
             super().record(amount, attributes=attributes, context=context)
             return
 
+        if math.isnan(amount):
+            _logger.warning(
+                "Record amount is NaN on Histogram %s, ignoring measurement.",
+                self.name,
+            )
+            return
         if amount < 0:
             _logger.warning(
                 "Record amount must be non-negative on Histogram %s.",
@@ -328,6 +353,12 @@ class Gauge(_Synchronous, APIGauge):
             super().set(amount, attributes=attributes, context=context)
             return
 
+        if math.isnan(amount):
+            _logger.warning(
+                "Set amount is NaN on Gauge %s, ignoring measurement.",
+                self.name,
+            )
+            return
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
             Measurement(

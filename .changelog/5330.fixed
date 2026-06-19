@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: drop NaN measurements at the instrument level to prevent permanent aggregation poisoning
