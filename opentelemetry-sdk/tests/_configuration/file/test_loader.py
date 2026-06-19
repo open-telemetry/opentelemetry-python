@@ -264,7 +264,7 @@ class TestConfigLoaderEndToEnd(unittest.TestCase):
     """
 
     _YAML = """
-file_format: '1.0-rc.1'
+file_format: '1.0'
 tracer_provider:
   processors:
     - batch:
@@ -320,3 +320,50 @@ tracer_provider:
         self.assertEqual(len(processors), 1)
         self.assertIsInstance(processors[0], BatchSpanProcessor)
         self.assertIsInstance(processors[0].span_exporter, ConsoleSpanExporter)
+
+
+class TestFileFormatValidation(unittest.TestCase):
+    """Validate the file_format version per the configuration spec."""
+
+    @staticmethod
+    def _load(file_format: str) -> OpenTelemetryConfiguration:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", delete=False
+        ) as fh:
+            fh.write(f'file_format: "{file_format}"')
+            path = fh.name
+        try:
+            return load_config_file(path)
+        finally:
+            os.unlink(path)
+
+    def test_supported_version_is_accepted(self):
+        config = self._load("1.0")
+        self.assertEqual(config.file_format, "1.0")
+
+    def test_pre_release_meta_tag_is_accepted(self):
+        # The meta tag is stripped; "1.0-rc.2" is treated as 1.0.
+        config = self._load("1.0-rc.2")
+        self.assertEqual(config.file_format, "1.0-rc.2")
+
+    def test_newer_minor_is_accepted_with_warning(self):
+        with self.assertLogs(
+            "opentelemetry.sdk._configuration.file._loader", level="WARNING"
+        ) as logs:
+            config = self._load("1.1")
+        self.assertEqual(config.file_format, "1.1")
+        self.assertTrue(
+            any("newer minor version" in message for message in logs.output)
+        )
+
+    def test_unsupported_major_is_rejected(self):
+        for version in ("2.0", "0.4"):
+            with self.subTest(version=version):
+                with self.assertRaises(ConfigurationError) as ctx:
+                    self._load(version)
+                self.assertIn("file_format", str(ctx.exception))
+
+    def test_malformed_version_is_rejected(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            self._load("not-a-version")
+        self.assertIn("file_format", str(ctx.exception))

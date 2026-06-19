@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import typing
+import collections.abc
 import urllib.parse
 
 from opentelemetry import baggage, trace
@@ -122,7 +122,7 @@ def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
 
 
 def _extract_first_element(
-    items: typing.Iterable[CarrierT],
+    items: collections.abc.Iterable[CarrierT],
 ) -> CarrierT | None:
     if items is None:
         return None
@@ -130,7 +130,7 @@ def _extract_first_element(
 
 
 def _parse_trace_id_header(
-    items: typing.Iterable[CarrierT],
+    items: collections.abc.Iterable[CarrierT],
 ) -> tuple[int]:
     invalid_header_result = (trace.INVALID_TRACE_ID, trace.INVALID_SPAN_ID, 0)
 

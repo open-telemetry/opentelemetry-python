@@ -12,16 +12,13 @@ import os
 import threading
 import traceback
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from os import environ
 from threading import Lock
 from time import time_ns
 from typing import (  # noqa
     Any,
-    Callable,
-    Sequence,
-    Tuple,
-    Union,
     cast,
     overload,
 )
@@ -385,7 +382,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
-        self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
+        self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
 
     def add_log_record_processor(
@@ -445,7 +442,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     def __init__(self, max_workers: int = 2):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
-        self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
+        self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=max_workers
