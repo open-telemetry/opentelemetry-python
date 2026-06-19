@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import logging
-import re
 from collections.abc import Sequence
+from fnmatch import fnmatchcase
 from typing import Protocol
 
 from opentelemetry.context import Context
@@ -162,10 +162,10 @@ class AttributePatternsPredicate:
 
     def _matches_value(self, value: str) -> bool:
         included = not self._included or any(
-            _glob_matches(value, pattern) for pattern in self._included
+            fnmatchcase(value, pattern) for pattern in self._included
         )
         excluded = any(
-            _glob_matches(value, pattern) for pattern in self._excluded
+            fnmatchcase(value, pattern) for pattern in self._excluded
         )
         return included and not excluded
 
@@ -226,18 +226,6 @@ def _attribute_values(value):
     ):
         return value
     return (value,)
-
-
-def _glob_matches(value: str, glob_pattern: str) -> bool:
-    pattern_parts = []
-    for char in glob_pattern:
-        if char == "*":
-            pattern_parts.append(".*")
-        elif char == "?":
-            pattern_parts.append(".")
-        else:
-            pattern_parts.append(re.escape(char))
-    return re.fullmatch("".join(pattern_parts), value) is not None
 
 
 RulesT = Sequence[tuple[PredicateT, ComposableSampler]]
