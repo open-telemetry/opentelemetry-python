@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: validate the declarative config `file_format` version — reject an unsupported major version and warn on a newer minor version, per the configuration spec versioning rules

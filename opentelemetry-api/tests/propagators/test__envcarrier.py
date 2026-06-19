@@ -41,7 +41,7 @@ class TestNormalizeKey(unittest.TestCase):
         self.assertEqual(_normalize_key("ALREADY_VALID"), "ALREADY_VALID")
 
     def test_empty_string(self):
-        self.assertEqual(_normalize_key(""), "")
+        self.assertEqual(_normalize_key(""), "_")
 
 
 class TestIsNormalizedKey(unittest.TestCase):
@@ -93,6 +93,13 @@ class TestEnvironmentGetter(unittest.TestCase):
             getter = EnvironmentGetter()
             result = getter.get({}, "empty_key")
             self.assertEqual(result, [""])
+
+    def test_get_empty_key_maps_to_underscore(self):
+        """Test empty key lookup uses the normalized underscore name."""
+        with patch.dict(os.environ, {"_": "underscore_value"}, clear=True):
+            getter = EnvironmentGetter()
+            result = getter.get({}, "")
+            self.assertEqual(result, ["underscore_value"])
 
     def test_get_with_special_characters(self):
         """Test environment variables with special characters."""
@@ -233,6 +240,13 @@ class TestEnvironmentSetter(unittest.TestCase):
         carrier = {}
         setter.set(carrier, "empty_key", "")
         self.assertEqual(carrier, {"EMPTY_KEY": ""})
+
+    def test_set_empty_key_maps_to_underscore(self):
+        """Test setting an empty key uses the normalized underscore name."""
+        setter = EnvironmentSetter()
+        carrier = {}
+        setter.set(carrier, "", "value")
+        self.assertEqual(carrier, {"_": "value"})
 
     def test_does_not_modify_os_environ(self):
         """Test that setter does not modify os.environ."""
