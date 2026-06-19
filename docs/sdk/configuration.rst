@@ -24,34 +24,16 @@ File configuration relies on optional dependencies (``pyyaml`` and
 Enabling with an environment variable
 -------------------------------------
 
-The simplest way to use declarative configuration is to point the SDK at a
-file with the ``OTEL_CONFIG_FILE`` environment variable. When it is set, the
-file is the sole source of configuration and other ``OTEL_*`` variables are
-ignored (except where referenced inside the file — see
+Point the SDK at a file with the ``OTEL_CONFIG_FILE`` environment variable.
+When it is set, the file is the sole source of SDK construction. Spec-defined
+``OTEL_*`` variables with schema equivalents are ignored. Environment variables
+can still be read via ``${env:VAR}`` substitution inside the file (see
 `Environment variable substitution`_).
 
 .. code-block:: sh
 
     export OTEL_CONFIG_FILE=/etc/otel/otel-config.yaml
     opentelemetry-instrument python app.py
-
-Configuring programmatically
-----------------------------
-
-You can also load and apply a configuration file directly. This is useful when
-you want to construct or inspect the configuration in code:
-
-.. code-block:: python
-
-    from opentelemetry.sdk.configuration import configure_sdk, load_config_file
-
-    config = load_config_file("otel-config.yaml")
-    configure_sdk(config)
-
-``load_config_file`` parses and validates the file and returns a typed
-``OpenTelemetryConfiguration`` object; ``configure_sdk`` applies it to the
-global tracer, meter, and logger providers and the global propagator. A failure
-to read, parse, or validate the file raises ``ConfigurationError``.
 
 Example configuration
 ---------------------
@@ -113,10 +95,10 @@ Values in the file may reference environment variables, which keeps secrets
 such as API keys out of the file itself. Substitution happens before the file
 is parsed.
 
-* ``${VAR}`` — replaced with the value of ``VAR``. If ``VAR`` is unset, loading
+* ``${VAR}``: replaced with the value of ``VAR``. If ``VAR`` is unset, loading
   fails with an error.
-* ``${VAR:-default}`` — replaced with ``VAR`` if set, otherwise ``default``.
-* ``$$`` — a literal ``$``.
+* ``${VAR:-default}``: replaced with ``VAR`` if set, otherwise ``default``.
+* ``$$``: a literal ``$``.
 
 In the example above, ``${OTLP_API_KEY}`` is required, while
 ``${DEPLOYMENT_ENVIRONMENT:-development}`` falls back to ``development`` when
@@ -125,8 +107,11 @@ unset.
 Behavior notes
 --------------
 
-* When ``OTEL_CONFIG_FILE`` is set, the file is authoritative; other ``OTEL_*``
-  environment variables are not consulted.
+* When ``OTEL_CONFIG_FILE`` is set, the file is authoritative for SDK
+  construction; spec-defined ``OTEL_*`` variables with schema equivalents are
+  not consulted. Environment variables can still be read indirectly by
+  components the file enables (for example resource detectors) and via
+  ``${env:VAR}`` substitution.
 * Sections omitted from the file leave the corresponding global provider
   unset (a no-op provider), per the specification.
 * Setting ``disabled: true`` at the top level turns the SDK into a no-op.
@@ -136,4 +121,4 @@ See also
 
 * `OpenTelemetry configuration specification
   <https://opentelemetry.io/docs/specs/otel/configuration/>`_
-* :doc:`environment_variables` — the environment-variable configuration path
+* :doc:`environment_variables`: the environment-variable configuration path

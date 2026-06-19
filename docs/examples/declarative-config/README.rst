@@ -9,11 +9,13 @@ The source files of this example are available :scm_web:`here
 <docs/examples/declarative-config/>`.
 
 Install the SDK with the ``file-configuration`` extra (it pulls in ``pyyaml``
-and ``jsonschema``) along with the OTLP/HTTP exporter:
+and ``jsonschema``), the auto-instrumentation entry point, and the OTLP/HTTP
+exporter:
 
 .. code-block:: sh
 
     pip install "opentelemetry-sdk[file-configuration]" \
+        opentelemetry-distro \
         opentelemetry-exporter-otlp-proto-http
 
 Start an OTLP-capable backend locally so there is somewhere to send data. Write
@@ -54,35 +56,18 @@ Then start the Collector:
         otel/opentelemetry-collector:latest \
         --config=/etc/otel-collector-config.yaml
 
-Apply the configuration programmatically
-----------------------------------------
+Run the example
+---------------
 
-``app.py`` loads ``otel-config.yaml`` and applies it with ``configure_sdk``:
-
-.. code-block:: python
-
-    from opentelemetry.sdk.configuration import configure_sdk, load_config_file
-
-    configure_sdk(load_config_file("otel-config.yaml"))
-
-Run it:
-
-.. code-block:: sh
-
-    python app.py
-
-You should see the exported span in the Collector's debug output.
-
-Apply the configuration with an environment variable
-----------------------------------------------------
-
-Alternatively, point the SDK at the file with ``OTEL_CONFIG_FILE`` and let
-auto-instrumentation apply it — no configuration code in your application:
+Point the SDK at ``otel-config.yaml`` with ``OTEL_CONFIG_FILE`` and let
+auto-instrumentation apply it. No configuration code lives in ``app.py``:
 
 .. code-block:: sh
 
     export OTEL_CONFIG_FILE=$(pwd)/otel-config.yaml
     opentelemetry-instrument python app.py
+
+You should see the exported span in the Collector's debug output.
 
 Environment variable substitution
 ----------------------------------

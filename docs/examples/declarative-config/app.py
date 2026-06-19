@@ -1,20 +1,16 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-"""Configure the OpenTelemetry SDK from a declarative configuration file.
+"""A minimal application driven by declarative configuration.
 
-Run an OTLP-capable backend (for example the OpenTelemetry Collector) on
-localhost:4318, then run this script to emit a span using the configuration
-in ``otel-config.yaml``.
+The SDK is configured entirely from ``otel-config.yaml`` via the
+``OTEL_CONFIG_FILE`` environment variable. Run with
+``opentelemetry-instrument`` so the configurator picks up the env var:
+
+    OTEL_CONFIG_FILE=$(pwd)/otel-config.yaml opentelemetry-instrument python app.py
 """
 
-from pathlib import Path
-
 from opentelemetry import trace
-from opentelemetry.sdk.configuration import configure_sdk, load_config_file
-
-config_path = Path(__file__).parent / "otel-config.yaml"
-configure_sdk(load_config_file(config_path))
 
 tracer = trace.get_tracer("declarative-config-example")
 
