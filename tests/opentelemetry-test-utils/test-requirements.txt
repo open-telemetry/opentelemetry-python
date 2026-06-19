@@ -11,9 +11,8 @@ wrapt==1.16.0
 -e opentelemetry-sdk
 -e opentelemetry-semantic-conventions
 -e tests/opentelemetry-test-utils
-# these are required for weaver integration tests
-# excluded on PyPy + Windows: there's no grpcio PyPy wheel and the gRPC C core
-# fails to build from source with MSVC (test skips via _HAS_GRPC guard)
-./opentelemetry-proto ; platform_python_implementation != 'PyPy' or platform_system != 'Windows'
-./exporter/opentelemetry-exporter-otlp-proto-common ; platform_python_implementation != 'PyPy' or platform_system != 'Windows'
-./exporter/opentelemetry-exporter-otlp-proto-grpc ; platform_python_implementation != 'PyPy' or platform_system != 'Windows'
+# these are required for weaver integration tests, we're running that only on linux / CPython
+# because of lack of support for gRPC wheels on some platforms
+./opentelemetry-proto ; platform_python_implementation != 'PyPy'
+./exporter/opentelemetry-exporter-otlp-proto-common ; platform_python_implementation != 'PyPy'
+./exporter/opentelemetry-exporter-otlp-proto-grpc ; platform_python_implementation != 'PyPy'

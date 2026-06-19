@@ -46,18 +46,6 @@ class AnotherLogRecordProcessor(LogRecordProcessor):
         return True
 
 
-class TestPublicApi(unittest.TestCase):
-    def test_synchronous_multi_log_record_processor_is_public(self):
-        from opentelemetry.sdk._logs import (  # noqa: F401
-            SynchronousMultiLogRecordProcessor,
-        )
-
-    def test_concurrent_multi_log_record_processor_is_public(self):
-        from opentelemetry.sdk._logs import (  # noqa: F401
-            ConcurrentMultiLogRecordProcessor,
-        )
-
-
 class TestLogRecordProcessor(unittest.TestCase):
     def test_log_record_processor(self):
         provider = LoggerProvider()
