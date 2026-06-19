@@ -98,6 +98,14 @@ class _ViewInstrumentMatch:
         else:
             attributes = {}
 
+        if self._view._exclude_attribute_keys is not None:
+            if attributes is not None:
+                attributes = {
+                    key: value
+                    for key, value in attributes.items()
+                    if key not in self._view._exclude_attribute_keys
+                }
+
         aggr_key = frozenset(attributes.items())
 
         if aggr_key not in self._attributes_aggregation:
