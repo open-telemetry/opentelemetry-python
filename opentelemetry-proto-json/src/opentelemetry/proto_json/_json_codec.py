@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import abc
 import base64
+import collections.abc
 import json
 import math
 import typing
@@ -101,7 +102,7 @@ def encode_float(value: float) -> float | str:
 
 def encode_repeated(
     values: list[T] | None,
-    map_fn: typing.Callable[[T], typing.Any],
+    map_fn: collections.abc.Callable[[T], typing.Any],
 ) -> list[typing.Any]:
     """
     Helper to serialize repeated fields with a mapping function.
@@ -207,7 +208,7 @@ def decode_float(value: float | int | str | None, field_name: str) -> float:
 
 def decode_repeated(
     values: list[typing.Any] | None,
-    item_parser: typing.Callable[[typing.Any], T],
+    item_parser: collections.abc.Callable[[typing.Any], T],
     field_name: str,
 ) -> list[T]:
     """
