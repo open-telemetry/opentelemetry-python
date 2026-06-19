@@ -68,7 +68,7 @@ class RequestsHTTPTransport(BaseHTTPTransport):
         cls,
         verify: bool | str,
         cert: str | tuple[str, str] | None,
-        **kwargs: Any,
+        **kwargs: dict[str, Any],
     ) -> Self:
         return cls(verify=verify, cert=cert, **kwargs)
 
@@ -78,6 +78,7 @@ class RequestsHTTPTransport(BaseHTTPTransport):
         verify: bool | str = True,
         cert: str | tuple[str, str] | None = None,
         session: requests.Session | None = None,
+        **kwargs: dict[str, Any],
     ) -> None:
         # pylint: disable-next=import-outside-toplevel
         import requests  # noqa: PLC0415

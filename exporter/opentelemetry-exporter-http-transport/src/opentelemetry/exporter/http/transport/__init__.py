@@ -65,4 +65,15 @@ def _load_http_transport_class(name: str) -> type[BaseHTTPTransport]:
             "Install the corresponding extra or register an entry point "
             "under the 'opentelemetry_http_transport' group."
         )
-    return ep.load()
+    cls = ep.load()
+    # pylint: disable-next=import-outside-toplevel,import-error
+    from opentelemetry.exporter.http.transport._base import (  # noqa: PLC0415
+        BaseHTTPTransport,
+    )
+
+    if not isinstance(cls, type) or not issubclass(cls, BaseHTTPTransport):
+        raise TypeError(
+            f"Transport {name!r} loaded from entry point does not subclass "
+            f"BaseHTTPTransport (got {cls!r})."
+        )
+    return cls
