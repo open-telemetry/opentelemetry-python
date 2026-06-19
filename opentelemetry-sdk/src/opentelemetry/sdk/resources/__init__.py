@@ -55,8 +55,9 @@ import os
 import platform
 import socket
 import sys
-import typing
-from collections.abc import Sequence
+import threading
+import uuid
+from collections.abc import Mapping, Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
@@ -85,7 +86,7 @@ except ImportError:
     pass
 
 LabelValue = AttributeValue
-Attributes = typing.Mapping[str, LabelValue]
+Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -278,6 +279,11 @@ _DEFAULT_RESOURCE = Resource(
 )
 
 
+_service_instance_id: str | None = None
+_service_instance_id_pid: int | None = None
+_service_instance_id_lock = threading.Lock()
+
+
 class ResourceDetector(abc.ABC):
     def __init__(self, raise_on_error: bool = False) -> None:
         self.raise_on_error = raise_on_error
@@ -462,15 +468,41 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
         )
 
 
+class ServiceInstanceIdResourceDetector(ResourceDetector):
+    """Detects service.instance.id as a random UUID v4.
+
+    Per the OpenTelemetry specification, SDKs SHOULD generate a random v1/v4
+    UUID for service.instance.id to uniquely identify each service instance.
+    The ID is shared across all detector instances within the same process and
+    regenerated automatically when the process PID changes (e.g. after a fork).
+    """
+
+    def detect(self) -> "Resource":
+        # pylint: disable-next=global-statement
+        global _service_instance_id, _service_instance_id_pid
+        with _service_instance_id_lock:
+            current_pid = os.getpid()
+            if (
+                _service_instance_id is None
+                or _service_instance_id_pid != current_pid
+            ):
+                _service_instance_id = str(uuid.uuid4())
+                _service_instance_id_pid = current_pid
+            instance_id = _service_instance_id
+        return Resource({SERVICE_INSTANCE_ID: instance_id})
+
+
 def _build_resource_detectors() -> list["ResourceDetector"]:
     """Returns the ordered list of resource detectors to use for Resource.create.
 
-    Fast path: if no extra detectors are configured, returns only
-    OTELResourceDetector without scanning entry_points.
+    Fast path: if no extra detectors are configured, returns only the two
+    built-in detectors without scanning entry_points.
 
-    "otel" (OTELResourceDetector) defaults to last position so that
-    OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge priority,
-    but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS is respected.
+    "service_instance" (ServiceInstanceIdResourceDetector) and "otel"
+    (OTELResourceDetector) are always appended as defaults. "otel" is last so
+    that OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge
+    priority, but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
+    is respected for either name.
     """
     detector_names: list[str] = list(
         dict.fromkeys(
@@ -481,13 +513,13 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
                 ).split(",")
                 if name.strip()
             ]
-            + ["otel"]
+            + ["service_instance", "otel"]
         )
     )
 
-    # Fast path: only the built-in "otel" detector — no entry_points scan needed.
-    if detector_names == ["otel"]:
-        return [OTELResourceDetector()]
+    # Fast path: only the two built-in detectors — no entry_points scan needed.
+    if detector_names == ["service_instance", "otel"]:
+        return [ServiceInstanceIdResourceDetector(), OTELResourceDetector()]
 
     # pylint: disable=import-outside-toplevel
     from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415

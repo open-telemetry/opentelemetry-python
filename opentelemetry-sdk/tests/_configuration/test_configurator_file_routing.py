@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Tests access private members of SDK classes to assert correct configuration.
-# pylint: disable=protected-access
+# pylint: disable=protected-access,no-self-use
 
 import unittest
 from unittest.mock import patch
@@ -13,18 +13,14 @@ from opentelemetry.sdk.environment_variables import OTEL_CONFIG_FILE
 
 
 class TestConfiguratorFileRouting(unittest.TestCase):
-    def setUp(self):
-        # _BaseConfigurator caches instances via a singleton; reset so each
-        # test sees a clean state and doesn't poison MRO lookups for sibling
-        # tests (e.g. test_configurator.py's CustomConfigurator subclass).
-        _OTelSDKConfigurator._instance = None
-
     def tearDown(self):
+        # _BaseConfigurator caches instances via a singleton; reset so sibling
+        # tests (e.g. test_configurator.py's CustomConfigurator subclass) are
+        # not affected by this class's singleton state.
         _OTelSDKConfigurator._instance = None
 
     @patch.dict("os.environ", {}, clear=True)
     @patch("opentelemetry.sdk._configuration._initialize_components")
-    # pylint: disable=no-self-use
     def test_env_var_unset_runs_env_var_path(self, mock_init_components):
         _OTelSDKConfigurator()._configure(auto_instrumentation_version="X")
         mock_init_components.assert_called_once_with(
@@ -35,7 +31,6 @@ class TestConfiguratorFileRouting(unittest.TestCase):
     @patch("opentelemetry.sdk._configuration._sdk.configure_sdk")
     @patch("opentelemetry.sdk._configuration.file._loader.load_config_file")
     @patch("opentelemetry.sdk._configuration._initialize_components")
-    # pylint: disable=no-self-use
     def test_env_var_set_routes_to_declarative_path(
         self, mock_init_components, mock_load, mock_configure_sdk
     ):
@@ -50,7 +45,6 @@ class TestConfiguratorFileRouting(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/does/not/exist.yaml"})
     @patch("opentelemetry.sdk._configuration._initialize_components")
-    # pylint: disable=no-self-use
     def test_env_var_set_missing_file_propagates(self, mock_init_components):
         with self.assertRaises(ConfigurationError):
             _OTelSDKConfigurator()._configure()

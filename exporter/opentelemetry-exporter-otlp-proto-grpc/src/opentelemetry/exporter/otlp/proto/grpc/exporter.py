@@ -29,7 +29,6 @@ from typing import (  # noqa: F401
     NewType,
     Optional,
     TypeVar,
-    Union,
 )
 from urllib.parse import urlparse
 

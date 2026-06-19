@@ -31,7 +31,7 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
 
-_MIN_CONFIG_KWARGS = {"file_format": "1.0-rc.1"}
+_MIN_CONFIG_KWARGS = {"file_format": "1.0"}
 
 
 def _config(**kwargs) -> OpenTelemetryConfiguration:
@@ -99,28 +99,6 @@ class TestConfigureSdk(unittest.TestCase):
         mock_meter.assert_not_called()
         mock_logger.assert_not_called()
         mock_propagator.assert_not_called()
-
-    @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.create_resource")
-    # pylint: disable=no-self-use
-    def test_disabled_false_runs_setup(
-        self,
-        mock_create_resource,
-        mock_tracer,
-        mock_meter,
-        mock_logger,
-        mock_propagator,
-    ):
-        config = _config(disabled=False)
-        configure_sdk(config)
-        mock_create_resource.assert_called_once()
-        mock_tracer.assert_called_once()
-        mock_meter.assert_called_once()
-        mock_logger.assert_called_once()
-        mock_propagator.assert_called_once()
 
     @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
     @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")

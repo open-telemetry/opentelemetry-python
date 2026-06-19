@@ -50,3 +50,25 @@ opentelemetry.exporter.otlp.proto.grpc
     :members:
     :undoc-members:
     :show-inheritance:
+
+opentelemetry.exporter.otlp.json.file
+---------------------------------------
+
+.. automodule:: opentelemetry.exporter.otlp.json.file
+    :no-members:
+    :no-undoc-members:
+
+.. automodule:: opentelemetry.exporter.otlp.json.file.trace_exporter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.otlp.json.file.metric_exporter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.otlp.json.file._log_exporter
+    :members:
+    :undoc-members:
+    :show-inheritance:
