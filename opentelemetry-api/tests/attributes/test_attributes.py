@@ -315,9 +315,9 @@ class TestBoundedAttributes(unittest.TestCase):
                 bdict["trigger.key"] = None
                 completed.set()
 
-            t = threading.Thread(target=run, daemon=True)
-            t.start()
-            t.join(timeout=2.0)
+            thread = threading.Thread(target=run, daemon=True)
+            thread.start()
+            thread.join(timeout=2.0)
 
             self.assertTrue(
                 completed.is_set(),
