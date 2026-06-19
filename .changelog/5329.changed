@@ -1,1 +1,1 @@
-opentelemetry-sdk: revert RLock back to Lock
+opentelemetry-sdk: revert BoundedAttributes RLock back to Lock
