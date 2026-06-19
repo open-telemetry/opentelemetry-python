@@ -1,10 +1,10 @@
 [package]
-name = "opentelemetry-profiles-context"
+name = "opentelemetry-process-context"
 version = "0.1.0"
 edition = "2024"
 
 [lib]
-name = "opentelemetry_profiles_context"
+name = "opentelemetry_process_context"
 crate-type = ["cdylib"]
 
 [dependencies]

@@ -3,9 +3,9 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "opentelemetry-profiles-context"
+name = "opentelemetry-process-context"
 version = "0.64b0.dev"
-description = "OpenTelemetry Profiles Context"
+description = "OpenTelemetry Process Context"
 readme = "README.rst"
 license = "Apache-2.0"
 requires-python = ">=3.10"
@@ -31,12 +31,12 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/profiles/opentelemetry-profiles-context"
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/popentelemetry-process-context"
 Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.maturin]
 python-source = "src"
-module-name = "opentelemetry.profiles.context._rs"
+module-name = "opentelemetry.process_context._rs"
 
 [tool.uv]
 cache-keys = [

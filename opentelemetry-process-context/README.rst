@@ -1,10 +1,10 @@
-OpenTelemetry Profiles Context
+OpenTelemetry Process Context
 ======================================
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-profiles-context.svg
-   :target: https://pypi.org/project/opentelemetry-profiles-context/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-process-context.svg
+   :target: https://pypi.org/project/opentelemetry-process-context/
 
 TODO: Update README
 
