@@ -775,6 +775,7 @@ class TestCreateViews(unittest.TestCase):
             )
         )
         self.assertEqual(view._attribute_keys, {"key1", "key2"})
+
     def test_stream_attribute_keys_excluded_is_applied(self):
         config = self._make_view_config(
             stream_kwargs={"attribute_keys": IncludeExclude(excluded=["key1"])}
@@ -785,6 +786,7 @@ class TestCreateViews(unittest.TestCase):
         view = views[0]
         self.assertEqual(view._exclude_attribute_keys, frozenset({"key1"}))
         self.assertIsNone(view._attribute_keys)
+
     def test_stream_aggregation_drop(self):
         view = self._get_view(
             self._make_view_config(
