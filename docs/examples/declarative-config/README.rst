@@ -1,6 +1,13 @@
 Declarative Configuration
 =========================
 
+.. note::
+
+   Declarative configuration support is new in this release and may still
+   have rough edges. If you hit a problem, please open an issue on the
+   `opentelemetry-python tracker
+   <https://github.com/open-telemetry/opentelemetry-python/issues>`_.
+
 This example configures the OpenTelemetry SDK from a single YAML file using
 :doc:`declarative configuration </sdk/configuration>` instead of environment
 variables or hand-written provider setup.
