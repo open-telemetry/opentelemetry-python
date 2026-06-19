@@ -1,10 +1,12 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::proto::common::v1::{any_value, AnyValue, ArrayValue, KeyValue, KeyValueList};
+use prost::Message;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyDict, PyFloat, PyInt, PyString};
+use crate::proto::common::v1::{any_value, AnyValue, ArrayValue, KeyValue, KeyValueList};
+use crate::proto::processcontext::v1development::ProcessContext;
 use crate::proto::resource::v1::Resource;
 
 fn any_value_from_py(val: &Bound<'_, PyAny>) -> PyResult<AnyValue> {
@@ -89,4 +91,12 @@ pub fn resource_from_py(
         attributes,
         ..Default::default()
     })
+}
+
+pub fn encode_process_context(resource: Resource) -> Vec<u8> {
+    ProcessContext {
+        resource: Some(resource),
+        attributes: vec![],
+    }
+    .encode_to_vec()
 }

@@ -6,21 +6,19 @@ pub(crate) mod proto;
 mod publish;
 
 use pyo3::prelude::*;
+use crate::convert::{encode_process_context, resource_from_py};
 
 #[pyfunction]
 fn publish_context(resource: &Bound<'_, PyAny>) -> PyResult<()> {
-    let _resource = convert::resource_from_py(resource)?;
-    // TODO(phase 2): encode the ProcessContext { resource, attributes } payload
-    // and publish the real bytes instead of an empty payload.
-    publish::publish(&[])?;
+    let resource = resource_from_py(resource)?;
+    publish::publish(encode_process_context(resource))?;
     Ok(())
 }
 
 #[pyfunction]
 fn update_context(resource: &Bound<'_, PyAny>) -> PyResult<()> {
-    let _resource = convert::resource_from_py(resource)?;
-    // TODO(phase 2): encode the ProcessContext { resource, attributes } payload.
-    publish::update(&[])?;
+    let resource = resource_from_py(resource)?;
+    publish::update(encode_process_context(resource))?;
     Ok(())
 }
 

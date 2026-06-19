@@ -99,7 +99,7 @@ impl From<PublishError> for PyErr {
 ///
 /// The context is a per-process singleton: calling this a second time without a
 /// prior teardown returns [`PublishError::AlreadyPublished`].
-pub fn publish(payload: &[u8]) -> Result<(), PublishError> {
+pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
     let mut guard = MAPPING.lock().expect("process context mutex poisoned");
     if guard.is_some() {
         return Err(PublishError::AlreadyPublished);
@@ -110,11 +110,11 @@ pub fn publish(payload: &[u8]) -> Result<(), PublishError> {
 
     let timestamp = get_boottime_ns()?;
 
-    let payload_buf = payload.to_vec();
+    let payload_buf = payload;
 
-    // SAFETY: `ptr` points to a freshly mapped, zero-initialized, page-aligned
+    // SAFETY: `ptr` points to a freshly mapped, zero initialized, page aligned
     // region of exactly `HEADER_SIZE` bytes. The payload lives in `payload_buf`
-    // on the heap; the header's `payload` field stores a pointer into it.
+    // on the heap and the header's `payload` field stores a pointer into it.
     unsafe {
         let header = ptr.as_ptr().cast::<Header>();
 
@@ -123,8 +123,7 @@ pub fn publish(payload: &[u8]) -> Result<(), PublishError> {
         std::ptr::addr_of_mut!((*header).payload_size).write(payload_buf.len() as u32);
         std::ptr::addr_of_mut!((*header).payload).write(payload_buf.as_ptr() as u64);
 
-        // Write the timestamp last with release ordering. This publishes every
-        // store above to any reader that observes the (non-zero) timestamp.
+        // Write the timestamp last with release ordering.
         let published_at = &*std::ptr::addr_of!((*header).monotonic_published_at_ns);
         published_at.store(timestamp, Ordering::Release);
     }
@@ -140,14 +139,14 @@ pub fn publish(payload: &[u8]) -> Result<(), PublishError> {
 /// Update the published process context with a new payload.
 ///
 /// Follows the spec's Updating Protocol: zeros the timestamp (Release) to signal
-/// readers that an update is in progress, rewrites the payload fields, then
+/// readers that an update is in progress, rewrites the payload fields and then
 /// publishes the new timestamp (Release) to signal completion. The old payload
 /// buffer is dropped after the new timestamp is live.
-pub fn update(payload: &[u8]) -> Result<(), PublishError> {
+pub fn update(payload: Vec<u8>) -> Result<(), PublishError> {
     let mut guard = MAPPING.lock().expect("process context mutex poisoned");
     let region = guard.as_mut().ok_or(PublishError::NotPublished)?;
 
-    let new_buf = payload.to_vec();
+    let new_buf = payload;
     let timestamp = get_boottime_ns()?;
 
     // SAFETY: `region.ptr` points to the live header mapping with exactly
@@ -194,9 +193,6 @@ pub fn unpublish() -> Result<(), PublishError> {
         published_at.store(0, Ordering::Release);
     }
 
-    // Remove the mapping. The memfd fd was already closed in try_memfd_mapping()
-    // so nothing extra to close here; munmap releases the kernel's last reference
-    // to the backing store. The payload Vec drops with `region` at end of scope.
     unsafe { nix::sys::mman::munmap(region.ptr, HEADER_SIZE) }
         .map_err(|_| PublishError::Munmap)
 }
@@ -239,8 +235,7 @@ fn get_boottime_ns() -> Result<u64, PublishError> {
     Ok(ns.max(1))
 }
 
-/// Prevent child processes from inheriting (stale) context memory. No-op off
-/// Linux, where `MADV_DONTFORK` does not exist.
+/// Prevent child processes from inheriting (stale) context memory.
 #[cfg(target_os = "linux")]
 fn advise_dontfork(ptr: NonNull<c_void>, len: usize) -> Result<(), PublishError> {
     // SAFETY: `ptr`/`len` describe the mapping we just created.
@@ -253,8 +248,7 @@ fn advise_dontfork(_ptr: NonNull<c_void>, _len: usize) -> Result<(), PublishErro
     Ok(())
 }
 
-/// Name the mapping `OTEL_CTX` via `prctl(PR_SET_VMA_ANON_NAME)`. No-op off
-/// Linux. Failures (e.g. kernels without `CONFIG_ANON_VMA_NAME`) are ignored.
+/// Name the mapping `OTEL_CTX` via `prctl(PR_SET_VMA_ANON_NAME)`.
 #[cfg(target_os = "linux")]
 fn name_mapping(ptr: NonNull<c_void>, len: usize) {
     linux::name_mapping(ptr, len);
