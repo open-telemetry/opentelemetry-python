@@ -1,8 +1,15 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from opentelemetry.profiles.context._rs import sum_as_string
+import unittest
+
+from opentelemetry.profiles.context._rs import publish_context
+from opentelemetry.sdk.resources import Resource
 
 
-def test_sum_as_string():
-    assert sum_as_string(1, 2) == "3"
+class TestPublishContext(unittest.TestCase):
+    def test_publish_context_does_not_raise(self):
+        resource = Resource(
+            {"service.name": "test", "version": 1, "pi": 3.14, "active": True}
+        )
+        publish_context(resource)

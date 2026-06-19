@@ -16,3 +16,5 @@ features = ["abi3-py39"]
 
 [build-dependencies]
 prost-build = "0.13"
+ureq = { version = "2", features = ["tls"] }
+backon = "1"

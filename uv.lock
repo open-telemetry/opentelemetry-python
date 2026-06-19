@@ -1014,6 +1014,16 @@ requires-dist = [
 name = "opentelemetry-profiles-context"
 version = "0.64b0.dev0"
 source = { editable = "profiles/opentelemetry-profiles-context" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-sdk" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+]
 
 [[package]]
 name = "opentelemetry-propagator-b3"

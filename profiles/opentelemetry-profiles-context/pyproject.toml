@@ -25,7 +25,10 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = []
+dependencies = [
+  "opentelemetry-api ~= 1.15",
+  "opentelemetry-sdk ~= 1.15",
+]
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/profiles/opentelemetry-profiles-context"
