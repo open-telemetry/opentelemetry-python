@@ -1,0 +1,43 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "opentelemetry-profiles-context"
+version = "0.64b0.dev"
+description = "OpenTelemetry Profiles Context"
+readme = "README.rst"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+  { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Profiles",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/profiles/opentelemetry-profiles-context"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
+
+[tool.maturin]
+python-source = "src"
+module-name = "opentelemetry.profiles.context._rs"
+
+[tool.uv]
+cache-keys = [
+  { file = "rust/Cargo.toml" },
+  { file = "rust/Cargo.lock" },
+  { file = "rust/src/**" },
+]

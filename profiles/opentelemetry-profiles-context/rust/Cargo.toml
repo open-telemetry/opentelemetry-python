@@ -1,0 +1,18 @@
+[package]
+name = "opentelemetry-profiles-context"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "opentelemetry_profiles_context"
+crate-type = ["cdylib"]
+
+[dependencies]
+prost = "0.13"
+
+[dependencies.pyo3]
+version = "0.28.2"
+features = ["abi3-py39"]
+
+[build-dependencies]
+prost-build = "0.13"

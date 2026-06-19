@@ -20,6 +20,7 @@ members = [
     "opentelemetry-exporter-otlp-proto-http",
     "opentelemetry-exporter-prometheus",
     "opentelemetry-exporter-zipkin-json",
+    "opentelemetry-profiles-context",
     "opentelemetry-propagator-b3",
     "opentelemetry-propagator-jaeger",
     "opentelemetry-proto",
@@ -1010,6 +1011,11 @@ requires-dist = [
 ]
 
 [[package]]
+name = "opentelemetry-profiles-context"
+version = "0.64b0.dev0"
+source = { editable = "profiles/opentelemetry-profiles-context" }
+
+[[package]]
 name = "opentelemetry-propagator-b3"
 source = { editable = "propagator/opentelemetry-propagator-b3" }
 dependencies = [
@@ -1062,6 +1068,7 @@ dependencies = [
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-exporter-prometheus" },
     { name = "opentelemetry-exporter-zipkin-json" },
+    { name = "opentelemetry-profiles-context" },
     { name = "opentelemetry-propagator-b3" },
     { name = "opentelemetry-propagator-jaeger" },
     { name = "opentelemetry-proto" },
@@ -1092,6 +1099,7 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp-proto-http", editable = "exporter/opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-exporter-prometheus", editable = "exporter/opentelemetry-exporter-prometheus" },
     { name = "opentelemetry-exporter-zipkin-json", editable = "exporter/opentelemetry-exporter-zipkin-json" },
+    { name = "opentelemetry-profiles-context", editable = "profiles/opentelemetry-profiles-context" },
     { name = "opentelemetry-propagator-b3", editable = "propagator/opentelemetry-propagator-b3" },
     { name = "opentelemetry-propagator-jaeger", editable = "propagator/opentelemetry-propagator-jaeger" },
     { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
