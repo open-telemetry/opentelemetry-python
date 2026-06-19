@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 prost = "0.13"
+nix = { version = "0.31", features = ["mman", "fs", "time"] }
 
 [dependencies.pyo3]
 version = "0.28.2"
