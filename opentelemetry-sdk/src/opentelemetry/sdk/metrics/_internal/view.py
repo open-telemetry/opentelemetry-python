@@ -88,6 +88,12 @@ class View:
         instrument_unit: This is an instrument matching attribute: the unit the
             instrument must have to match the view.
 
+        exclude_attribute_keys: This is a metric stream customizing attribute: this is
+            a set of attribute keys. If not `None` then measurement attributes whose
+            keys are in ``exclude_attribute_keys`` will be removed before identifying
+            the metric stream. Applied after ``attribute_keys`` if both are provided.
+
+
     This class is not intended to be subclassed by the user.
     """
 
@@ -109,6 +115,7 @@ class View:
         ]
         | None = None,
         instrument_unit: str | None = None,
+        exclude_attribute_keys: set[str] | None = None,
     ):
         if (
             instrument_type
@@ -152,6 +159,7 @@ class View:
         self._exemplar_reservoir_factory = (
             exemplar_reservoir_factory or _default_reservoir_factory
         )
+        self._exclude_attribute_keys = exclude_attribute_keys
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
