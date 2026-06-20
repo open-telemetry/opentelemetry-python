@@ -62,13 +62,17 @@ class TestInMemorySpanExporter(unittest.TestCase):
         # after shutdown export should fail
         ret = memory_exporter.export(span_list)
         self.assertEqual(ret, export.SpanExportResult.FAILURE)
+
     def test_max_spans_limit(self):
         """Test that max_spans limits memory usage by dropping oldest spans."""
         exporter = InMemorySpanExporter(max_spans=2)
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
-        exporter.export([span, span, span])
+        span1 = trace._Span("span1", mock.Mock(spec=trace_api.SpanContext))
+        span2 = trace._Span("span2", mock.Mock(spec=trace_api.SpanContext))
+        span3 = trace._Span("span3", mock.Mock(spec=trace_api.SpanContext))
+        exporter.export([span1, span2, span3])
         span_list = exporter.get_finished_spans()
         self.assertEqual(len(span_list), 2)
+        self.assertSequenceEqual((span2, span3), span_list)
 
     def test_max_spans_none_is_unlimited(self):
         """Test that max_spans=None (default) imposes no limit."""

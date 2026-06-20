@@ -3,7 +3,6 @@
 
 import collections.abc
 import threading
-import typing
 from collections import deque
 
 from opentelemetry.sdk.trace import ReadableSpan
@@ -23,7 +22,7 @@ class InMemorySpanExporter(SpanExporter):
             (default), there is no limit.
     """
 
-    def __init__(self, max_spans: typing.Optional[int] = None) -> None:
+    def __init__(self, max_spans: int | None = None) -> None:
         self._finished_spans: deque[ReadableSpan] = deque(maxlen=max_spans)
         self._stopped = False
         self._lock = threading.Lock()
