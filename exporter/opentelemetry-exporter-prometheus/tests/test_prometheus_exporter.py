@@ -13,6 +13,10 @@ from prometheus_client.core import (
 )
 
 from opentelemetry.exporter.prometheus import (
+    _OTEL_SCOPE_ATTR_PREFIX,
+    _OTEL_SCOPE_NAME_LABEL,
+    _OTEL_SCOPE_SCHEMA_URL_LABEL,
+    _OTEL_SCOPE_VERSION_LABEL,
     PrometheusMetricReader,
     _CustomCollector,
 )
@@ -28,6 +32,7 @@ from opentelemetry.sdk.metrics.export import (
     ScopeMetrics,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
     _generate_histogram,
@@ -58,7 +63,12 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             reader.shutdown()
 
     def verify_text_format(
-        self, metric: Metric, expect_prometheus_text: str, prefix: str = ""
+        self,
+        metric: Metric,
+        expect_prometheus_text: str,
+        prefix: str = "",
+        scope: InstrumentationScope | None = None,
+        scope_info_enabled: bool = False,
     ) -> None:
         metrics_data = MetricsData(
             resource_metrics=[
@@ -66,7 +76,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                     resource=Mock(),
                     scope_metrics=[
                         ScopeMetrics(
-                            scope=Mock(),
+                            scope=scope or Mock(),
                             metrics=[metric],
                             schema_url="schema_url",
                         )
@@ -76,7 +86,11 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True, prefix=prefix)
+        collector = _CustomCollector(
+            disable_target_info=True,
+            scope_info_enabled=scope_info_enabled,
+            prefix=prefix,
+        )
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
@@ -160,7 +174,9 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(
+            disable_target_info=True, scope_info_enabled=False
+        )
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -206,7 +222,9 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(
+            disable_target_info=True, scope_info_enabled=False
+        )
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -251,7 +269,9 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             ]
         )
 
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(
+            disable_target_info=True, scope_info_enabled=False
+        )
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -303,7 +323,9 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 )
             ]
         )
-        collector = _CustomCollector(disable_target_info=True)
+        collector = _CustomCollector(
+            disable_target_info=True, scope_info_enabled=False
+        )
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -667,6 +689,183 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 """
             ),
         )
+
+    def test_scope_info_labels_default(self):
+        scope = InstrumentationScope(
+            name="library.test",
+            version="1.2.3",
+            schema_url="schema_url",
+        )
+        metric = _generate_gauge(
+            "test_gauge",
+            42,
+            attributes={"env": "prod"},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource({}),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=scope,
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector()
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            if isinstance(prometheus_metric, InfoMetricFamily):
+                continue
+            labels = prometheus_metric.samples[0].labels
+            self.assertEqual(labels[_OTEL_SCOPE_NAME_LABEL], "library.test")
+            self.assertEqual(labels[_OTEL_SCOPE_VERSION_LABEL], "1.2.3")
+            self.assertEqual(
+                labels[_OTEL_SCOPE_SCHEMA_URL_LABEL],
+                "schema_url",
+            )
+            self.assertEqual(labels["env"], "prod")
+
+    def test_scope_info_labels_text_format(self):
+        scope = InstrumentationScope(
+            name="library.test",
+            version="1.2.3",
+        )
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={"env": "prod"},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{env="prod",otel_scope_name="library.test",otel_scope_schema_url="",otel_scope_version="1.2.3"} 42.0
+                """
+            ),
+            scope=scope,
+            scope_info_enabled=True,
+        )
+
+    def test_scope_attributes_text_format(self):
+        scope = InstrumentationScope(
+            name="library.test",
+            version="1.0",
+            schema_url="schema_url",
+            attributes={"region": "us-east-1"},
+        )
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                7,
+                attributes={},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{otel_scope_name="library.test",otel_scope_region="us-east-1",otel_scope_schema_url="schema_url",otel_scope_version="1.0"} 7.0
+                """
+            ),
+            scope=scope,
+            scope_info_enabled=True,
+        )
+
+    def test_scope_info_disabled(self):
+        scope = InstrumentationScope(name="library.test", version="1.2.3")
+        metric = _generate_gauge(
+            "test_gauge",
+            42,
+            attributes={"env": "prod"},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=scope,
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector(
+            disable_target_info=True, scope_info_enabled=False
+        )
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            labels = prometheus_metric.samples[0].labels
+            self.assertNotIn(_OTEL_SCOPE_NAME_LABEL, labels)
+            self.assertNotIn(_OTEL_SCOPE_VERSION_LABEL, labels)
+            self.assertNotIn(_OTEL_SCOPE_SCHEMA_URL_LABEL, labels)
+            self.assertNotIn(_OTEL_SCOPE_ATTR_PREFIX + "region", labels)
+
+    def test_scope_attributes_labels(self):
+        scope = InstrumentationScope(
+            name="library.test",
+            version="1.0",
+            schema_url="schema_url",
+            attributes={
+                "region": "us-east-1",
+                "name": "should-be-dropped",
+                "version": "should-be-dropped",
+                "schema_url": "should-be-dropped",
+            },
+        )
+        metric = _generate_gauge(
+            "test_gauge",
+            7,
+            attributes={},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=scope,
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector(disable_target_info=True)
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            labels = prometheus_metric.samples[0].labels
+            self.assertEqual(
+                labels[_OTEL_SCOPE_ATTR_PREFIX + "region"], "us-east-1"
+            )
+            self.assertEqual(labels[_OTEL_SCOPE_NAME_LABEL], "library.test")
+            self.assertEqual(labels[_OTEL_SCOPE_VERSION_LABEL], "1.0")
+            self.assertEqual(
+                labels[_OTEL_SCOPE_SCHEMA_URL_LABEL], "schema_url"
+            )
 
     def test_multiple_data_points_with_different_label_sets(self):
         hist_point_1 = HistogramDataPoint(
