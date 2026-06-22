@@ -37,6 +37,7 @@ from opentelemetry.sdk.metrics.view import (
     LastValueAggregation,
     View,
 )
+from opentelemetry.sdk.util import get_dict_as_key
 
 
 def generalized_reservoir_factory(
@@ -101,7 +102,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {frozenset([("c", "d")]): self.mock_created_aggregation},
+            {get_dict_as_key({"c": "d"}): self.mock_created_aggregation},
         )
 
         view_instrument_match.consume_measurement(
@@ -117,8 +118,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                frozenset(): self.mock_created_aggregation,
-                frozenset([("c", "d")]): self.mock_created_aggregation,
+                get_dict_as_key({}): self.mock_created_aggregation,
+                get_dict_as_key({"c": "d"}): self.mock_created_aggregation,
             },
         )
 
@@ -147,8 +148,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                frozenset(
-                    [("c", "d"), ("f", "g")]
+                get_dict_as_key(
+                    {"c": "d", "f": "g"}
                 ): self.mock_created_aggregation
             },
         )
@@ -178,7 +179,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {frozenset({}): self.mock_created_aggregation},
+            {get_dict_as_key({}): self.mock_created_aggregation},
         )
 
         # Test that a drop aggregation is handled in the same way as any
@@ -207,7 +208,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[frozenset({})],
+            view_instrument_match._attributes_aggregation[get_dict_as_key({})],
             _DropAggregation,
         )
 
@@ -296,6 +297,53 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         number_data_points = list(number_data_points)
         self.assertEqual(len(number_data_points), 1)
         self.assertEqual(number_data_points[0].attributes, {"key": "original"})
+
+    def test_consume_measurement_with_sequence_attributes(self):
+        instrument1 = _Counter(
+            "instrument1",
+            Mock(),
+            Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        attributes = {
+            "list_attr": ["value"],
+            "tuple_attr": ("another", "value"),
+        }
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes=attributes,
+            )
+        )
+
+        self.assertIn(
+            get_dict_as_key(attributes),
+            view_instrument_match._attributes_aggregation,
+        )
+
+        number_data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+        number_data_points = list(number_data_points)
+        self.assertEqual(len(number_data_points), 1)
+        self.assertEqual(number_data_points[0].attributes, attributes)
 
     @patch(
         "opentelemetry.sdk.metrics._internal._view_instrument_match.time_ns",
@@ -515,7 +563,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         self.assertIsInstance(
             view_instrument_match._attributes_aggregation[
-                frozenset({("c", "d")})
+                get_dict_as_key({"c": "d"})
             ],
             _LastValueAggregation,
         )
