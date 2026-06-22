@@ -9,7 +9,7 @@ from collections.abc import Callable, Sequence
 from enum import IntEnum
 from functools import partial
 from logging import getLogger
-from math import inf
+from math import inf, isfinite
 from threading import Lock
 from typing import (
     Generic,
@@ -475,6 +475,11 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             instrument_aggregation_temporality
         )
         self._start_time_unix_nano = start_time_unix_nano
+        for b in boundaries:
+            if not isfinite(b):
+                raise ValueError(
+                    f"boundaries must be finite, got {b}"
+                )
         for i in range(1, len(boundaries)):
             if boundaries[i - 1] >= boundaries[i]:
                 raise ValueError(
