@@ -39,5 +39,8 @@ fn main() {
     let process_context_proto = proto_root
         .join("opentelemetry/proto/processcontext/v1development/process_context.proto");
 
-    prost_build::compile_protos(&[process_context_proto], &[proto_root]).unwrap();
+    prost_build::Config::new()
+        .protoc_executable(protoc_bin_vendored::protoc_bin_path().unwrap())
+        .compile_protos(&[process_context_proto], &[proto_root])
+        .unwrap();
 }
