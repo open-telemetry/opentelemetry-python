@@ -1,9 +1,11 @@
 from collections import defaultdict
 from pathlib import Path
 from re import compile as re_compile
+from re import fullmatch
 
 from jinja2 import Environment, FileSystemLoader
 from tox.config.cli.parse import get_options
+from tox.config.main import Config
 from tox.config.sets import CoreConfigSet
 from tox.config.source.tox_ini import ToxIni
 from tox.session.state import State
@@ -18,7 +20,7 @@ _tox_contrib_env_regex = re_compile(
 )
 
 
-def get_tox_envs(tox_ini_path: Path) -> list:
+def get_core_config_set(tox_ini_path: Path) -> tuple[Config, CoreConfigSet]:
     tox_ini = ToxIni(tox_ini_path)
 
     conf = State(get_options(), []).conf
@@ -40,11 +42,39 @@ def get_tox_envs(tox_ini_path: Path) -> list:
         )
     )
 
-    return core_config_set.load("env_list")
+    return conf, core_config_set
 
 
-def get_test_job_datas(tox_envs: list, operating_systems: list) -> list:
+def get_tox_envs(tox_ini_path: Path) -> list:
+    return get_core_config_set(tox_ini_path)[1].load("env_list")
+
+
+def get_env_platforms(tox_ini_path: Path) -> dict[str, str]:
+    conf, core_config_set = get_core_config_set(tox_ini_path)
+
+    platforms = {}
+
+    for env_name in core_config_set.load("env_list"):
+        env_config_set = conf.get_env(env_name)
+        env_config_set.add_config(
+            keys=["platform"],
+            of_type=str,
+            default="",
+            desc="platform constraint regex",
+        )
+        platforms[env_name] = env_config_set.load("platform")
+
+    return platforms
+
+
+def get_test_job_datas(
+    tox_envs: list, operating_systems: list, env_platforms: dict[str, str]
+) -> list:
     os_alias = {"ubuntu-latest": "Ubuntu", "windows-latest": "Windows"}
+    os_sys_platform = {
+        "ubuntu-latest": "linux",
+        "windows-latest": "win32",
+    }
 
     python_version_alias = {
         "pypy3": "pypy-3.10",
@@ -59,10 +89,15 @@ def get_test_job_datas(tox_envs: list, operating_systems: list) -> list:
     test_job_datas = []
 
     for operating_system in operating_systems:
+        sys_platform = os_sys_platform[operating_system]
+
         for tox_env in tox_envs:
             tox_test_env_match = _tox_test_env_regex.match(tox_env)
 
             if tox_test_env_match is None:
+                continue
+
+            if (platform := env_platforms.get(tox_env, "")) and not fullmatch(platform, sys_platform):
                 continue
 
             groups = tox_test_env_match.groupdict()
@@ -156,7 +191,11 @@ def generate_test_workflow(
     tox_ini_path: Path, workflow_directory_path: Path, operating_systems
 ) -> None:
     _generate_workflow(
-        get_test_job_datas(get_tox_envs(tox_ini_path), operating_systems),
+        get_test_job_datas(
+            get_tox_envs(tox_ini_path),
+            operating_systems,
+            get_env_platforms(tox_ini_path),
+        ),
         "test",
         workflow_directory_path,
     )

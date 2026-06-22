@@ -17,6 +17,7 @@ classifiers = [
   "Framework :: OpenTelemetry",
   "Framework :: OpenTelemetry :: Profiles",
   "Intended Audience :: Developers",
+  "Operating System :: POSIX :: Linux",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
