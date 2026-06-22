@@ -1,0 +1,34 @@
+file_format: "1.0"
+
+resource:
+  attributes:
+    - name: service.name
+      value: my-service
+    - name: deployment.environment.name
+      value: ${DEPLOYMENT_ENVIRONMENT:-development}
+
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: http://localhost:4318/v1/traces
+  sampler:
+    parent_based:
+      root:
+        always_on: {}
+
+meter_provider:
+  readers:
+    - periodic:
+        interval: 60000
+        exporter:
+          otlp_http:
+            endpoint: http://localhost:4318/v1/metrics
+
+logger_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: http://localhost:4318/v1/logs

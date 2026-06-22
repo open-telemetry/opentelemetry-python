@@ -9,6 +9,8 @@ from opentelemetry.propagators.textmap import Getter, Setter
 
 
 def _normalize_key(key: str) -> str:
+    if not key:
+        return "_"
     result = re.sub(r"[^A-Za-z0-9_]", "_", key).upper()
     if result and result[0].isdigit():
         result = "_" + result
@@ -95,7 +97,7 @@ class EnvironmentSetter(Setter[MutableMapping[str, str]]):
 
         Args:
             carrier: Dictionary to store environment variables
-            key: The key to set (will be converted to uppercase)
+            key: The key to set (normalized)
             value: The value to set
         """
         carrier[_normalize_key(key)] = value
