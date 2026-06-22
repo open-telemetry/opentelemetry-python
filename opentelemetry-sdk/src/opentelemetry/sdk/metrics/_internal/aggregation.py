@@ -475,6 +475,11 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             instrument_aggregation_temporality
         )
         self._start_time_unix_nano = start_time_unix_nano
+        for i in range(1, len(boundaries)):
+            if boundaries[i - 1] >= boundaries[i]:
+                raise ValueError(
+                    f"boundaries must be in increasing order, got {list(boundaries)}"
+                )
         self._boundaries = tuple(boundaries)
         self._record_min_max = record_min_max
 
