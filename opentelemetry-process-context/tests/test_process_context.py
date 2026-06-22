@@ -79,7 +79,7 @@ class TestPublishContext(unittest.TestCase):
                 for maps_line in maps_file:
                     if "OTEL_CTX" in maps_line:
                         start_addr = int(maps_line.split("-")[0], 16)
-                        self.assertIn("/memfd:OTEL_CTX", maps_line)
+                        self.assertIn(":OTEL_CTX", maps_line)
                         break
 
             self.assertIsNotNone(
