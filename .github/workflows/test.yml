@@ -3200,25 +3200,6 @@ jobs:
       - name: Run tests
         run: tox -e py314t-test-opentelemetry-process-context -- -ra
 
-  pypy3-test-opentelemetry-process-context_ubuntu-latest:
-    name: opentelemetry-process-context pypy-3.10 Ubuntu
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python pypy-3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "pypy-3.10"
-
-      - name: Install tox
-        run: pip install tox-uv
-
-      - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-process-context -- -ra
-
   py310-test-opentelemetry-propagator-b3_ubuntu-latest:
     name: opentelemetry-propagator-b3 3.10 Ubuntu
     runs-on: ubuntu-latest
