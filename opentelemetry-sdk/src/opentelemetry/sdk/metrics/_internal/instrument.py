@@ -164,9 +164,9 @@ class _Asynchronous(_Instrument, Asynchronous):
         for callback in self._callbacks:
             try:
                 for api_measurement in callback(callback_options):
-                    if math.isnan(api_measurement.value):
+                    if not math.isfinite(api_measurement.value):
                         _logger.warning(
-                            "Callback returned NaN for instrument %s, ignoring measurement.",
+                            "Callback returned a non-finite value for instrument %s, ignoring measurement.",
                             self.name,
                         )
                         continue
@@ -199,9 +199,9 @@ class Counter(_Synchronous, APICounter):
             super().add(amount, attributes=attributes, context=context)
             return
 
-        if math.isnan(amount):
+        if not math.isfinite(amount):
             _logger.warning(
-                "Add amount is NaN on Counter %s, ignoring measurement.",
+                "Add amount is not finite on Counter %s, ignoring measurement.",
                 self.name,
             )
             return
@@ -238,9 +238,9 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
             super().add(amount, attributes=attributes, context=context)
             return
 
-        if math.isnan(amount):
+        if not math.isfinite(amount):
             _logger.warning(
-                "Add amount is NaN on UpDownCounter %s, ignoring measurement.",
+                "Add amount is not finite on UpDownCounter %s, ignoring measurement.",
                 self.name,
             )
             return
@@ -313,9 +313,9 @@ class Histogram(_Synchronous, APIHistogram):
             super().record(amount, attributes=attributes, context=context)
             return
 
-        if math.isnan(amount):
+        if not math.isfinite(amount):
             _logger.warning(
-                "Record amount is NaN on Histogram %s, ignoring measurement.",
+                "Record amount is not finite on Histogram %s, ignoring measurement.",
                 self.name,
             )
             return
@@ -353,9 +353,9 @@ class Gauge(_Synchronous, APIGauge):
             super().set(amount, attributes=attributes, context=context)
             return
 
-        if math.isnan(amount):
+        if not math.isfinite(amount):
             _logger.warning(
-                "Set amount is NaN on Gauge %s, ignoring measurement.",
+                "Set amount is not finite on Gauge %s, ignoring measurement.",
                 self.name,
             )
             return
