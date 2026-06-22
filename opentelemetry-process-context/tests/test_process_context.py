@@ -48,7 +48,7 @@ class TestPublishContext(unittest.TestCase):
             unpublish_context()
 
     def test_cross_process_memory_region(self):
-        """Spawn a child that publishes a fixed context; read and validate its memory region."""
+        """Spawn a child that publishes a fixed context and read/validate its memory region."""
         child_script = textwrap.dedent("""\
             import sys
             from opentelemetry.sdk.resources import Resource
@@ -73,7 +73,7 @@ class TestPublishContext(unittest.TestCase):
 
             pid = proc.pid
 
-            # Locate the OTEL_CTX mapping and verify the memfd name.
+            # Locate the OTEL_CTX mapping and verify the name.
             start_addr = None
             with open(f"/proc/{pid}/maps", encoding="utf-8") as maps_file:
                 for maps_line in maps_file:
@@ -87,8 +87,6 @@ class TestPublishContext(unittest.TestCase):
                 f"OTEL_CTX mapping not found in /proc/{pid}/maps",
             )
 
-            # Read the 32-byte header and the variable-length payload in one
-            # open so there is no TOCTOU window between the two reads.
             with open(f"/proc/{pid}/mem", "rb") as mem:
                 mem.seek(start_addr)
                 header_bytes = mem.read(32)
@@ -107,9 +105,6 @@ class TestPublishContext(unittest.TestCase):
             self.assertGreater(payload_size, 0)
             self.assertGreater(timestamp_ns, 0)
             self.assertNotEqual(payload_ptr, 0)
-
-            # Protobuf string fields are length-prefixed raw UTF-8, so the
-            # attribute key and value appear verbatim in the serialised payload.
             self.assertIn(b"service.name", payload_bytes)
             self.assertIn(b"otel-test-service", payload_bytes)
 
