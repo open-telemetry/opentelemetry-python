@@ -29,20 +29,21 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       # opentelemetry-process-context is a maturin/PyO3 abi3 extension, its Cargo
-      # manifest lives in the rust/ subdirectory, so --manifest-path is required.
+      # manifest lives in the rust/ subdirectory. maturin-action runs from the
+      # repo root and has no working-directory input, so point --manifest-path at
+      # the full path; maturin locates pyproject.toml by walking up from there.
       - name: Build wheels
         uses: PyO3/maturin-action@fdd104694b233054d6e985e29b3af9f126af7ac6 # v1.9.0
         with:
-          working-directory: opentelemetry-process-context
           target: ${{ matrix.platform.target }}
           manylinux: ${{ matrix.platform.manylinux }}
-          args: --release --out dist --manifest-path rust/Cargo.toml
+          args: --release --out dist --manifest-path opentelemetry-process-context/rust/Cargo.toml
           sccache: 'true'
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: process-context-wheels-${{ matrix.platform.target }}-${{ matrix.platform.manylinux }}
-          path: opentelemetry-process-context/dist
+          path: dist
 
   build-process-context-sdist:
     name: process-context sdist
@@ -53,14 +54,13 @@ jobs:
       - name: Build sdist
         uses: PyO3/maturin-action@fdd104694b233054d6e985e29b3af9f126af7ac6 # v1.9.0
         with:
-          working-directory: opentelemetry-process-context
           command: sdist
-          args: --out dist --manifest-path rust/Cargo.toml
+          args: --out dist --manifest-path opentelemetry-process-context/rust/Cargo.toml
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: process-context-sdist
-          path: opentelemetry-process-context/dist
+          path: dist
 
   release:
     needs: [build-process-context-wheels, build-process-context-sdist]
