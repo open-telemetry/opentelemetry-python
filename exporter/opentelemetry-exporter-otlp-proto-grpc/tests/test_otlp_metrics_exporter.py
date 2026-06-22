@@ -1,22 +1,10 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-lines
 from logging import WARNING
 from os import environ
 from os.path import dirname
-from typing import List
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -345,7 +333,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
         # WHEN
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: list[MetricsData] = list(
             # pylint: disable=protected-access
             OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
                 metrics_data=metrics_data,
@@ -424,7 +412,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
         # WHEN
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: list[MetricsData] = list(
             # pylint: disable=protected-access
             OTLPMetricExporter(max_export_batch_size=3)._split_metrics_data(
                 metrics_data=metrics_data,
@@ -515,7 +503,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
         # WHEN
-        split_metrics_data: List[MetricsData] = list(
+        split_metrics_data: list[MetricsData] = list(
             # pylint: disable=protected-access
             OTLPMetricExporter(max_export_batch_size=2)._split_metrics_data(
                 metrics_data=metrics_data,
@@ -589,6 +577,69 @@ class TestOTLPMetricExporter(TestCase):
             ],
             split_metrics_data,
         )
+
+    def test_count_metrics_data(self):
+        # GIVEN
+        metrics_data = MetricsData(
+            resource_metrics=[
+                _resource_metrics(
+                    index=1,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=1,
+                            metrics=[
+                                _gauge(
+                                    index=1,
+                                    data_points=[
+                                        _number_data_point(11),
+                                    ],
+                                ),
+                                _gauge(
+                                    index=2,
+                                    data_points=[
+                                        _number_data_point(12),
+                                    ],
+                                ),
+                            ],
+                        ),
+                        _scope_metrics(
+                            index=2,
+                            metrics=[
+                                _gauge(
+                                    index=3,
+                                    data_points=[
+                                        _number_data_point(13),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                _resource_metrics(
+                    index=2,
+                    scope_metrics=[
+                        _scope_metrics(
+                            index=3,
+                            metrics=[
+                                _gauge(
+                                    index=4,
+                                    data_points=[
+                                        _number_data_point(14),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        # WHEN
+        # pylint: disable=protected-access
+        count = OTLPMetricExporter(max_export_batch_size=2)._count_data(
+            metrics_data,
+        )
+        # THEN
+        self.assertEqual(count, 4)
 
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_insecure_https_endpoint(self, mock_secure_channel):
@@ -766,7 +817,7 @@ class TestOTLPMetricExporter(TestCase):
 
 
 def _resource_metrics(
-    index: int, scope_metrics: List[ScopeMetrics]
+    index: int, scope_metrics: list[ScopeMetrics]
 ) -> ResourceMetrics:
     return ResourceMetrics(
         resource=Resource(
@@ -778,7 +829,7 @@ def _resource_metrics(
     )
 
 
-def _scope_metrics(index: int, metrics: List[Metric]) -> ScopeMetrics:
+def _scope_metrics(index: int, metrics: list[Metric]) -> ScopeMetrics:
     return ScopeMetrics(
         scope=InstrumentationScope(name=f"scope_{index}"),
         schema_url=f"scope_url_{index}",
@@ -786,7 +837,7 @@ def _scope_metrics(index: int, metrics: List[Metric]) -> ScopeMetrics:
     )
 
 
-def _gauge(index: int, data_points: List[NumberDataPoint]) -> Metric:
+def _gauge(index: int, data_points: list[NumberDataPoint]) -> Metric:
     return Metric(
         name=f"gauge_{index}",
         description="description",

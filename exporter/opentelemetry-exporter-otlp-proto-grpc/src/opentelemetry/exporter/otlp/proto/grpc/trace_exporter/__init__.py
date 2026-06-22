@@ -1,24 +1,14 @@
 # Copyright The OpenTelemetry Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """OTLP Span Exporter"""
 
 import logging
+from collections.abc import Iterable, Sequence
+from collections.abc import Sequence as TypingSequence
 from os import environ
-from typing import Dict, Optional, Sequence, Tuple, Union
-from typing import Sequence as TypingSequence
 
-from grpc import ChannelCredentials, Compression
+from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -28,6 +18,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     environ_to_compression,
     get_resource_data,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
 )
@@ -58,6 +49,9 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,15 +80,19 @@ class OTLPSpanExporter(
 
     def __init__(
         self,
-        endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
-        credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
-        ] = None,
-        timeout: Optional[float] = None,
-        compression: Optional[Compression] = None,
-        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        endpoint: str | None = None,
+        insecure: bool | None = None,
+        credentials: ChannelCredentials | None = None,
+        headers: TypingSequence[tuple[str, str]]
+        | dict[str, str]
+        | str
+        | None = None,
+        timeout: float | None = None,
+        compression: Compression | None = None,
+        channel_options: tuple[tuple[str, str]] | None = None,
+        retryable_error_codes: Iterable[StatusCode] | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         insecure_spans = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
         if insecure is None and insecure_spans is not None:
@@ -135,12 +133,19 @@ class OTLPSpanExporter(
             timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
+            retryable_error_codes=retryable_error_codes,
+            component_type=OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER,
+            signal="traces",
+            meter_provider=meter_provider,
         )
 
     def _translate_data(
         self, data: Sequence[ReadableSpan]
     ) -> ExportTraceServiceRequest:
         return encode_spans(data)
+
+    def _count_data(self, data: Sequence[ReadableSpan]):
+        return len(data)
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)

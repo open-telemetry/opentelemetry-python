@@ -1,16 +1,6 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+
 
 """
 For general information about sampling, see `the specification <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#sampling>`_.
@@ -132,12 +122,14 @@ In order to configure you application with a custom sampler's entry point, set t
 above sampler, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES_SAMPLER_ARG=0.5``.
 """
 
+from __future__ import annotations
+
 import abc
 import enum
 import os
+from collections.abc import Sequence
 from logging import getLogger
 from types import MappingProxyType
-from typing import Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
@@ -184,8 +176,8 @@ class SamplingResult:
     def __init__(
         self,
         decision: Decision,
-        attributes: "Attributes" = None,
-        trace_state: Optional["TraceState"] = None,
+        attributes: Attributes = None,
+        trace_state: TraceState | None = None,
     ) -> None:
         self.decision = decision
         if attributes is None:
@@ -199,14 +191,14 @@ class Sampler(abc.ABC):
     @abc.abstractmethod
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         pass
 
     @abc.abstractmethod
@@ -217,19 +209,19 @@ class Sampler(abc.ABC):
 class StaticSampler(Sampler):
     """Sampler that always returns the same decision."""
 
-    def __init__(self, decision: "Decision") -> None:
+    def __init__(self, decision: Decision) -> None:
         self._decision = decision
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         if self._decision is Decision.DROP:
             attributes = None
         return SamplingResult(
@@ -283,14 +275,14 @@ class TraceIdRatioBased(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
             decision = Decision.RECORD_AND_SAMPLE
@@ -338,14 +330,14 @@ class ParentBased(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
-        kind: Optional[SpanKind] = None,
+        kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Optional[Sequence["Link"]] = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
@@ -445,8 +437,8 @@ def _get_from_env_or_default() -> Sampler:
 
 
 def _get_parent_trace_state(
-    parent_context: Optional[Context],
-) -> Optional["TraceState"]:
+    parent_context: Context | None,
+) -> TraceState | None:
     parent_span_context = get_current_span(parent_context).get_span_context()
     if parent_span_context is None or not parent_span_context.is_valid:
         return None

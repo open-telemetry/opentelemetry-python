@@ -1,41 +1,35 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
-"""OTLP Exporter"""
+"""OTLP Exporter
 
+This module provides a mixin class for OTLP exporters that send telemetry data
+to an OTLP-compatible receiver via gRPC. It includes a configurable reconnection
+logic to handle transient collector outages.
+
+"""
+
+import os
 import random
 import threading
 from abc import ABC, abstractmethod
-from collections.abc import Sequence  # noqa: F401
+from collections.abc import (
+    Callable,
+    Iterable,
+    Sequence,  # noqa: F401
+)
+from collections.abc import Sequence as TypingSequence
 from logging import getLogger
 from os import environ
 from time import time
 from typing import (  # noqa: F401
     Any,
-    Callable,
-    Dict,
     Generic,
-    List,
     Literal,
     NewType,
     Optional,
-    Tuple,
-    Type,
     TypeVar,
-    Union,
 )
-from typing import Sequence as TypingSequence
 from urllib.parse import urlparse
 
 from google.rpc.error_details_pb2 import RetryInfo
@@ -50,12 +44,16 @@ from grpc import (
     secure_channel,
     ssl_channel_credentials,
 )
+from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+    create_exporter_metrics,
+)
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
@@ -85,6 +83,7 @@ from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -93,11 +92,18 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
+from opentelemetry.semconv._incubating.attributes.rpc_attributes import (
+    RPC_RESPONSE_STATUS_CODE,
+)
 from opentelemetry.util._importlib_metadata import entry_points
 from opentelemetry.util.re import parse_env_headers
 
@@ -149,13 +155,11 @@ _ENVIRON_TO_COMPRESSION = {
 class InvalidCompressionValueException(Exception):
     def __init__(self, environ_key: str, environ_value: str):
         super().__init__(
-            'Invalid value "{}" for compression envvar {}'.format(
-                environ_value, environ_key
-            )
+            f'Invalid value "{environ_value}" for compression envvar {environ_key}'
         )
 
 
-def environ_to_compression(environ_key: str) -> Optional[Compression]:
+def environ_to_compression(environ_key: str) -> Compression | None:
     environ_value = (
         environ[environ_key].lower().strip()
         if environ_key in environ
@@ -173,14 +177,14 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
     "Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead. Deprecated since version 1.18.0.",
 )
 def get_resource_data(
-    sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
+    sdk_resource_scope_data: dict[SDKResource, ResourceDataT],
     resource_class: Callable[..., TypingResourceT],
     name: str,
-) -> List[TypingResourceT]:
+) -> list[TypingResourceT]:
     return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
-def _read_file(file_path: str) -> Optional[bytes]:
+def _read_file(file_path: str) -> bytes | None:
     try:
         with open(file_path, "rb") as file:
             return file.read()
@@ -193,9 +197,9 @@ def _read_file(file_path: str) -> Optional[bytes]:
 
 
 def _load_credentials(
-    certificate_file: Optional[str],
-    client_key_file: Optional[str],
-    client_certificate_file: Optional[str],
+    certificate_file: str | None,
+    client_key_file: str | None,
+    client_certificate_file: str | None,
 ) -> ChannelCredentials:
     root_certificates = (
         _read_file(certificate_file) if certificate_file else None
@@ -215,7 +219,7 @@ def _load_credentials(
 
 
 def _get_credentials(
-    creds: Optional[ChannelCredentials],
+    creds: ChannelCredentials | None,
     credential_entry_point_env_key: str,
     certificate_file_env_key: str,
     client_key_file_env_key: str,
@@ -251,9 +255,11 @@ def _get_credentials(
     if certificate_file:
         client_key_file = environ.get(client_key_file_env_key)
         client_certificate_file = environ.get(client_certificate_file_env_key)
-        return _load_credentials(
+        credentials = _load_credentials(
             certificate_file, client_key_file, client_certificate_file
         )
+        if credentials is not None:
+            return credentials
     return ssl_channel_credentials()
 
 
@@ -261,10 +267,15 @@ def _get_credentials(
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT, ExportStubT]
 ):
-    """OTLP span exporter
+    """OTLP gRPC exporter mixin.
+
+    This class provides the base functionality for OTLP exporters that send
+    telemetry data (spans or metrics) to an OTLP-compatible receiver via gRPC.
+    It includes a configurable reconnection mechanism to handle transient
+    receiver outages.
 
     Args:
-        endpoint: OpenTelemetry Collector receiver endpoint
+        endpoint: OTLP-compatible receiver endpoint
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         headers: Headers to send when exporting
@@ -277,15 +288,21 @@ class OTLPExporterMixin(
         self,
         stub: ExportStubT,
         result: ExportResultT,
-        endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
-        credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
-        ] = None,
-        timeout: Optional[float] = None,
-        compression: Optional[Compression] = None,
-        channel_options: Optional[Tuple[Tuple[str, str]]] = None,
+        endpoint: str | None = None,
+        insecure: bool | None = None,
+        credentials: ChannelCredentials | None = None,
+        headers: TypingSequence[tuple[str, str]]
+        | dict[str, str]
+        | str
+        | None = None,
+        timeout: float | None = None,
+        compression: Compression | None = None,
+        channel_options: tuple[tuple[str, str]] | None = None,
+        retryable_error_codes: Iterable[StatusCode] | None = None,
+        *,
+        component_type: OtelComponentTypeValues | None = None,
+        signal: Literal["traces", "metrics", "logs"] = "traces",
+        meter_provider: MeterProvider | None = None,
     ):
         super().__init__()
         self._result = result
@@ -308,6 +325,8 @@ class OTLPExporterMixin(
         if parsed_url.netloc:
             self._endpoint = parsed_url.netloc
 
+        self._insecure = insecure
+        self._credentials = credentials
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
             temp_headers = parse_env_headers(self._headers, liberal=True)
@@ -336,42 +355,94 @@ class OTLPExporterMixin(
         )
         self._collector_kwargs = None
 
-        compression = (
+        self._compression = (
             environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
             if compression is None
             else compression
         ) or Compression.NoCompression
 
-        if insecure:
-            self._channel = insecure_channel(
-                self._endpoint,
-                compression=compression,
-                options=self._channel_options,
+        self._retryable_error_codes = retryable_error_codes or os.environ.get(
+            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES
+        )
+        if isinstance(self._retryable_error_codes, str):
+            self._retryable_error_codes = frozenset(
+                StatusCode[code.strip().upper()]
+                for code in self._retryable_error_codes.split(",")
+                if code.strip()
+            )
+        elif self._retryable_error_codes is not None:
+            self._retryable_error_codes = frozenset(
+                self._retryable_error_codes
             )
         else:
+            self._retryable_error_codes = _RETRYABLE_ERROR_CODES
+
+        self._channel = None
+        self._client = None
+
+        self._shutdown_in_progress = threading.Event()
+        self._shutdown = False
+
+        if not self._insecure:
             self._credentials = _get_credentials(
-                credentials,
+                self._credentials,
                 _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
                 OTEL_EXPORTER_OTLP_CERTIFICATE,
                 OTEL_EXPORTER_OTLP_CLIENT_KEY,
                 OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
             )
+
+        self._component_type = component_type
+        self._signal: Literal["traces", "metrics", "logs"] = signal
+        self._parsed_url = parsed_url
+        self._metrics = create_exporter_metrics(
+            self._component_type,
+            signal,
+            parsed_url,
+            meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
+        )
+
+        self._initialize_channel_and_stub()
+
+    def _initialize_channel_and_stub(self):
+        """
+        Create a new gRPC channel and stub.
+
+        This method is used during initialization and by the reconnection
+        mechanism to reinitialize the channel on transient errors.
+        """
+        if self._insecure:
+            self._channel = insecure_channel(
+                self._endpoint,
+                compression=self._compression,
+                options=self._channel_options,
+            )
+        else:
+            assert self._credentials is not None
             self._channel = secure_channel(
                 self._endpoint,
                 self._credentials,
-                compression=compression,
+                compression=self._compression,
                 options=self._channel_options,
             )
         self._client = self._stub(self._channel)  # type: ignore [reportCallIssue]
-
-        self._shutdown_in_progress = threading.Event()
-        self._shutdown = False
 
     @abstractmethod
     def _translate_data(
         self,
         data: SDKDataT,
     ) -> ExportServiceRequestT:
+        pass
+
+    @abstractmethod
+    def _count_data(
+        self,
+        data: SDKDataT,
+    ) -> int:
         pass
 
     def _export(
@@ -382,66 +453,105 @@ class OTLPExporterMixin(
             logger.warning("Exporter already shutdown, ignoring batch")
             return self._result.FAILURE  # type: ignore [reportReturnType]
 
-        # FIXME remove this check if the export type for traces
-        # gets updated to a class that represents the proto
-        # TracesData and use the code below instead.
-        deadline_sec = time() + self._timeout
-        for retry_num in range(_MAX_RETRYS):
-            try:
-                self._client.Export(
-                    request=self._translate_data(data),
-                    metadata=self._headers,
-                    timeout=deadline_sec - time(),
-                )
-                return self._result.SUCCESS  # type: ignore [reportReturnType]
-            except RpcError as error:
-                retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
-                    "google.rpc.retryinfo-bin"  # type: ignore [reportArgumentType]
-                )
-                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                if retry_info_bin is not None:
-                    retry_info = RetryInfo()
-                    retry_info.ParseFromString(retry_info_bin)
-                    backoff_seconds = (
-                        retry_info.retry_delay.seconds
-                        + retry_info.retry_delay.nanos / 1.0e9
+        with self._metrics.export_operation(self._count_data(data)) as result:
+            # FIXME remove this check if the export type for traces
+            # gets updated to a class that represents the proto
+            # TracesData and use the code below instead.
+            deadline_sec = time() + self._timeout
+            for retry_num in range(_MAX_RETRYS):
+                try:
+                    if self._client is None:
+                        return self._result.FAILURE
+                    self._client.Export(
+                        request=self._translate_data(data),
+                        metadata=self._headers,
+                        timeout=deadline_sec - time(),
                     )
-                if (
-                    error.code() not in _RETRYABLE_ERROR_CODES  # type: ignore [reportAttributeAccessIssue]
-                    or retry_num + 1 == _MAX_RETRYS
-                    or backoff_seconds > (deadline_sec - time())
-                    or self._shutdown
-                ):
-                    logger.error(
-                        "Failed to export %s to %s, error code: %s",
+                    return self._result.SUCCESS  # type: ignore [reportReturnType]
+                except RpcError as error:
+                    retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
+                        "google.rpc.retryinfo-bin"  # type: ignore [reportArgumentType]
+                    )
+                    # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
+                    backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+                    if retry_info_bin is not None:
+                        retry_info = RetryInfo()
+                        retry_info.ParseFromString(retry_info_bin)
+                        backoff_seconds = (
+                            retry_info.retry_delay.seconds
+                            + retry_info.retry_delay.nanos / 1.0e9
+                        )
+
+                    # For UNAVAILABLE errors, reinitialize the channel to force reconnection
+                    if (
+                        error.code() == StatusCode.UNAVAILABLE
+                        and retry_num == 0
+                    ):  # type: ignore
+                        logger.debug(
+                            "Reinitializing gRPC channel for %s exporter due to UNAVAILABLE error",
+                            self._exporting,
+                        )
+                        try:
+                            if self._channel:
+                                self._channel.close()
+                        except Exception as e:
+                            logger.debug(
+                                "Error closing channel for %s exporter to %s: %s",
+                                self._exporting,
+                                self._endpoint,
+                                str(e),
+                            )
+                        # Enable channel reconnection for subsequent calls
+                        self._initialize_channel_and_stub()
+
+                    if (
+                        error.code() not in self._retryable_error_codes  # type: ignore [reportAttributeAccessIssue]
+                        or retry_num + 1 == _MAX_RETRYS
+                        or backoff_seconds > (deadline_sec - time())
+                        or self._shutdown
+                    ):
+                        logger.error(
+                            "Failed to export %s to %s, error code: %s, error details: %s",
+                            self._exporting,
+                            self._endpoint,
+                            error.code(),  # type: ignore [reportAttributeAccessIssue]
+                            error.details(),
+                            exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
+                        )
+                        result.error = error
+                        result.error_attrs = {
+                            RPC_RESPONSE_STATUS_CODE: error.code().name
+                        }
+                        return self._result.FAILURE  # type: ignore [reportReturnType]
+                    logger.warning(
+                        "Transient error %s encountered while exporting %s to %s, retrying in %.2fs. Error details: %s",
+                        error.code(),  # type: ignore [reportAttributeAccessIssue]
                         self._exporting,
                         self._endpoint,
-                        error.code(),  # type: ignore [reportAttributeAccessIssue]
-                        exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
+                        backoff_seconds,
+                        error.details(),
                     )
-                    return self._result.FAILURE  # type: ignore [reportReturnType]
-                logger.warning(
-                    "Transient error %s encountered while exporting %s to %s, retrying in %.2fs.",
-                    error.code(),  # type: ignore [reportAttributeAccessIssue]
-                    self._exporting,
-                    self._endpoint,
-                    backoff_seconds,
-                )
-            shutdown = self._shutdown_in_progress.wait(backoff_seconds)
-            if shutdown:
-                logger.warning("Shutdown in progress, aborting retry.")
-                break
-        # Not possible to reach here but the linter is complaining.
-        return self._result.FAILURE  # type: ignore [reportReturnType]
+                shutdown = self._shutdown_in_progress.wait(backoff_seconds)
+                if shutdown:
+                    logger.warning("Shutdown in progress, aborting retry.")
+                    break
+            # Not possible to reach here but the linter is complaining.
+            return self._result.FAILURE  # type: ignore [reportReturnType]
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        """
+        Shut down the exporter.
+
+        Args:
+            timeout_millis: Timeout in milliseconds for shutting down the exporter.
+        """
         if self._shutdown:
             logger.warning("Exporter already shutdown, ignoring call")
             return
         self._shutdown = True
         self._shutdown_in_progress.set()
-        self._channel.close()
+        if self._channel:
+            self._channel.close()
 
     @property
     @abstractmethod
@@ -451,3 +561,15 @@ class OTLPExporterMixin(
         warning messages.
         """
         pass
+
+    def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
+        self._metrics = create_exporter_metrics(
+            self._component_type,
+            self._signal,
+            self._parsed_url,
+            meter_provider,
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
+            .strip()
+            .lower()
+            == "true",
+        )

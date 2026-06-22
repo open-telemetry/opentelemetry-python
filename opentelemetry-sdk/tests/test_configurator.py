@@ -1,25 +1,15 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+
 # type: ignore
 # pylint: skip-file
 from __future__ import annotations
 
 import logging
 import logging.config
+from collections.abc import Iterable, Sequence
 from logging import WARNING, getLogger
 from os import environ
-from typing import Iterable, Optional, Sequence
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
@@ -34,25 +24,41 @@ from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP_PROTO_HTTP,
     _get_exporter_names,
     _get_id_generator,
+    _get_logger_configurator,
+    _get_meter_configurator,
     _get_sampler,
+    _get_tracer_configurator,
     _import_config_components,
     _import_exporters,
     _import_id_generator,
+    _import_logger_configurator,
+    _import_meter_configurator,
     _import_sampler,
+    _import_tracer_configurator,
     _init_logging,
     _init_metrics,
     _init_tracing,
     _initialize_components,
     _OTelSDKConfigurator,
 )
-from opentelemetry.sdk._logs import LoggingHandler
+from opentelemetry.sdk._logs import LoggingHandler, LogRecordProcessor
+from opentelemetry.sdk._logs._internal import _RuleBasedLoggerConfigurator
 from opentelemetry.sdk._logs._internal.export import LogRecordExporter
-from opentelemetry.sdk._logs.export import ConsoleLogRecordExporter
+from opentelemetry.sdk._logs.export import (
+    ConsoleLogRecordExporter,
+    SimpleLogRecordProcessor,
+)
 from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_LOGGER_CONFIGURATOR,
+    OTEL_PYTHON_METER_CONFIGURATOR,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics._internal import (
+    _default_meter_configurator,
+    _RuleBasedMeterConfigurator,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     ConsoleMetricExporter,
@@ -62,7 +68,11 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+from opentelemetry.sdk.trace import SpanProcessor, _RuleBasedTracerConfigurator
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_ON,
@@ -79,26 +89,35 @@ from opentelemetry.util.types import Attributes
 
 
 class Provider:
-    def __init__(self, resource=None, sampler=None, id_generator=None):
+    def __init__(
+        self,
+        resource=None,
+        sampler=None,
+        id_generator=None,
+        *,
+        _tracer_configurator=None,
+    ):
         self.sampler = sampler
         self.id_generator = id_generator
-        self.processor = None
+        self.processors = []
+        self._tracer_configurator = _tracer_configurator
         self.resource = resource or Resource.create({})
 
     def add_span_processor(self, processor):
-        self.processor = processor
+        self.processors.append(processor)
 
 
 class DummyLoggerProvider:
-    def __init__(self, resource=None):
+    def __init__(self, resource=None, *, _logger_configurator=None):
         self.resource = resource
-        self.processor = DummyLogRecordProcessor(DummyOTLPLogExporter())
+        self.processors = []
+        self._logger_configurator = _logger_configurator
 
     def add_log_record_processor(self, processor):
-        self.processor = processor
+        self.processors.append(processor)
 
     def get_logger(self, name, *args, **kwargs):
-        return DummyLogger(name, self.resource, self.processor)
+        return DummyLogger(name, self.resource, self.processors)
 
     def force_flush(self, *args, **kwargs):
         pass
@@ -109,10 +128,10 @@ class DummyMeterProvider(MeterProvider):
 
 
 class DummyLogger:
-    def __init__(self, name, resource, processor):
+    def __init__(self, name, resource, processors):
         self.name = name
         self.resource = resource
-        self.processor = processor
+        self.processors = processors
 
     def emit(
         self,
@@ -127,7 +146,8 @@ class DummyLogger:
         attributes=None,
         event_name=None,
     ):
-        self.processor.emit(record)
+        for processor in self.processors:
+            processor.emit(record)
 
 
 class DummyLogRecordProcessor:
@@ -242,14 +262,14 @@ class CustomSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence[Link] = None,
         trace_state: TraceState = None,
-    ) -> "SamplingResult":
+    ) -> SamplingResult:
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,
             None,
@@ -271,14 +291,14 @@ class CustomRatioSampler(TraceIdRatioBased):
 
     def should_sample(
         self,
-        parent_context: "Context" | None,
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
-    ) -> "SamplingResult":
+    ) -> SamplingResult:
         return SamplingResult(
             Decision.RECORD_AND_SAMPLE,
             None,
@@ -306,6 +326,9 @@ class CustomIdGenerator(IdGenerator):
 
     def generate_trace_id(self):
         pass
+
+    def is_trace_id_random(self):
+        return False
 
 
 class TestTraceInit(TestCase):
@@ -351,10 +374,11 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
         self.assertIsInstance(provider.id_generator, RandomIdGenerator)
-        self.assertIsInstance(provider.processor, Processor)
-        self.assertIsInstance(provider.processor.exporter, Exporter)
+        self.assertEqual(len(provider.processors), 1)
+        self.assertIsInstance(provider.processors[0], Processor)
+        self.assertIsInstance(provider.processors[0].exporter, Exporter)
         self.assertEqual(
-            provider.processor.exporter.service_name, "my-test-service"
+            provider.processors[0].exporter.service_name, "my-test-service"
         )
         self.assertEqual(
             provider.resource.attributes.get("telemetry.auto.version"),
@@ -374,8 +398,11 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
         self.assertIsInstance(provider.id_generator, RandomIdGenerator)
-        self.assertIsInstance(provider.processor, Processor)
-        self.assertIsInstance(provider.processor.exporter, OTLPSpanExporter)
+        self.assertEqual(len(provider.processors), 1)
+        self.assertIsInstance(provider.processors[0], Processor)
+        self.assertIsInstance(
+            provider.processors[0].exporter, OTLPSpanExporter
+        )
         self.assertIsInstance(provider.resource, Resource)
         self.assertEqual(
             provider.resource.attributes.get("service.name"),
@@ -393,8 +420,25 @@ class TestTraceInit(TestCase):
         )
 
         provider = self.set_provider_mock.call_args[0][0]
-        exporter = provider.processor.exporter
+        self.assertEqual(len(provider.processors), 1)
+        exporter = provider.processors[0].exporter
         self.assertEqual(exporter.compression, "gzip")
+
+    def test_trace_init_custom_span_processors(self):
+        span_processor = mock.Mock(spec=SpanProcessor)
+        _init_tracing(
+            {"otlp": OTLPSpanExporter},
+            id_generator=RandomIdGenerator(),
+            span_processors=[span_processor],
+            export_span_processor=SimpleSpanProcessor,
+        )
+
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertEqual(len(provider.processors), 2)
+        self.assertEqual(provider.processors[0], span_processor)
+        self.assertTrue(
+            isinstance(provider.processors[1], SimpleSpanProcessor)
+        )
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
@@ -597,6 +641,50 @@ class TestTraceInit(TestCase):
         # pylint: disable=protected-access
         self.assertEqual(tracer_provider.sampler._root, ALWAYS_ON)
 
+    @patch.dict(
+        "os.environ",
+        {"OTEL_PYTHON_TRACER_CONFIGURATOR": "non_existent_entry_point"},
+    )
+    def test_trace_init_custom_tracer_configurator_with_env_non_existent_entry_point(
+        self,
+    ):
+        tracer_configurator_name = _get_tracer_configurator()
+        with self.assertLogs(level=WARNING):
+            tracer_configurator = _import_tracer_configurator(
+                tracer_configurator_name
+            )
+        _init_tracing({}, tracer_configurator=tracer_configurator)
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch.dict(
+        "os.environ",
+        {"OTEL_PYTHON_TRACER_CONFIGURATOR": "custom_tracer_configurator"},
+    )
+    def test_trace_init_custom_tracer_configurator_with_env(
+        self, mock_entry_points
+    ):
+        def custom_tracer_configurator(tracer_scope):
+            return mock.Mock(spec=_RuleBasedTracerConfigurator)(tracer_scope)
+
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_tracer_configurator",
+                    custom_tracer_configurator,
+                )
+            ]
+        )
+
+        tracer_configurator_name = _get_tracer_configurator()
+        tracer_configurator = _import_tracer_configurator(
+            tracer_configurator_name
+        )
+        _init_tracing({}, tracer_configurator=tracer_configurator)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertEqual(
+            provider._tracer_configurator, custom_tracer_configurator
+        )
+
 
 class TestLoggingInit(TestCase):
     def setUp(self):
@@ -684,12 +772,16 @@ class TestLoggingInit(TestCase):
                 provider.resource.attributes.get("service.name"),
                 "otlp-service",
             )
-            self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+            self.assertEqual(len(provider.processors), 1)
             self.assertIsInstance(
-                provider.processor.exporter, DummyOTLPLogExporter
+                provider.processors[0], DummyLogRecordProcessor
+            )
+            self.assertIsInstance(
+                provider.processors[0].exporter, DummyOTLPLogExporter
             )
             getLogger(__name__).error("hello")
-            self.assertTrue(provider.processor.exporter.export_called)
+            self.assertEqual(len(provider.processors), 1)
+            self.assertTrue(provider.processors[0].exporter.export_called)
 
     def test_logging_init_exporter_uses_exporter_args_map(self):
         with ResetGlobalLoggingState():
@@ -704,7 +796,27 @@ class TestLoggingInit(TestCase):
             )
             self.assertEqual(self.set_provider_mock.call_count, 1)
             provider = self.set_provider_mock.call_args[0][0]
-            self.assertEqual(provider.processor.exporter.compression, "gzip")
+            self.assertEqual(len(provider.processors), 1)
+            self.assertEqual(
+                provider.processors[0].exporter.compression, "gzip"
+            )
+
+    def test_logging_init_custom_log_record_processors(self):
+        log_record_processor = mock.Mock(spec=LogRecordProcessor)
+        with ResetGlobalLoggingState():
+            resource = Resource.create({})
+            _init_logging(
+                {"otlp": DummyOTLPLogExporter},
+                resource=resource,
+                log_record_processors=[log_record_processor],
+                export_log_record_processor=SimpleLogRecordProcessor,
+            )
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertEqual(len(provider.processors), 2)
+            self.assertEqual(provider.processors[0], log_record_processor)
+            self.assertIsInstance(
+                provider.processors[1], SimpleLogRecordProcessor
+            )
 
     @patch.dict(
         environ,
@@ -725,12 +837,26 @@ class TestLoggingInit(TestCase):
             provider.resource.attributes.get("service.name"),
             "otlp-service",
         )
-        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
+        self.assertEqual(len(provider.processors), 1)
+        self.assertIsInstance(provider.processors[0], DummyLogRecordProcessor)
         self.assertIsInstance(
-            provider.processor.exporter, DummyOTLPLogExporter
+            provider.processors[0].exporter, DummyOTLPLogExporter
         )
         getLogger(__name__).error("hello")
-        self.assertFalse(provider.processor.exporter.export_called)
+        self.assertFalse(provider.processors[0].exporter.export_called)
+
+    def test_logging_init_with_setup_logging_handler_to_true_warns(self):
+        resource = Resource.create({})
+        with self.assertWarnsRegex(
+            DeprecationWarning,
+            "and the `LoggingHandler` in `opentelemetry-sdk` that it controls are deprecated",
+        ):
+            with ResetGlobalLoggingState():
+                _init_logging(
+                    {"otlp": DummyOTLPLogExporter},
+                    resource=resource,
+                    setup_logging_handler=True,
+                )
 
     @patch.dict(
         environ,
@@ -742,7 +868,13 @@ class TestLoggingInit(TestCase):
         _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, False, exporter_args_map=None
+            mock.ANY,
+            mock.ANY,
+            False,
+            exporter_args_map=None,
+            log_record_processors=None,
+            export_log_record_processor=None,
+            logger_configurator=None,
         )
 
     @patch.dict(
@@ -758,7 +890,13 @@ class TestLoggingInit(TestCase):
         with self.assertLogs(level=WARNING):
             _initialize_components(auto_instrumentation_version="auto-version")
         logging_mock.assert_called_once_with(
-            mock.ANY, mock.ANY, True, exporter_args_map=None
+            mock.ANY,
+            mock.ANY,
+            True,
+            exporter_args_map=None,
+            log_record_processors=None,
+            export_log_record_processor=None,
+            logger_configurator=None,
         )
         self.assertEqual(tracing_mock.call_count, 1)
 
@@ -785,7 +923,7 @@ class TestLoggingInit(TestCase):
         _, _, kwargs = tracing_mock.mock_calls[0]
         tracing_resource = kwargs["resource"]
         _, args, _ = metrics_mock.mock_calls[0]
-        metrics_resource = args[1]
+        metrics_resource = kwargs["resource"]
         self.assertEqual(logging_resource, tracing_resource)
         self.assertEqual(logging_resource, metrics_resource)
         self.assertEqual(tracing_resource, metrics_resource)
@@ -843,6 +981,12 @@ class TestLoggingInit(TestCase):
             "id_generator": "TEST_GENERATOR",
             "setup_logging_handler": True,
             "exporter_args_map": {1: {"compression": "gzip"}},
+            "export_log_record_processor": SimpleLogRecordProcessor,
+            "export_span_processor": SimpleSpanProcessor,
+            "log_record_processors": [],
+            "span_processors": [],
+            "tracer_configurator": "tracer_configurator_test",
+            "meter_configurator": "meter_configurator_test",
         }
         _initialize_components(**kwargs)
 
@@ -877,17 +1021,24 @@ class TestLoggingInit(TestCase):
             sampler="TEST_SAMPLER",
             resource="TEST_RESOURCE",
             exporter_args_map={1: {"compression": "gzip"}},
+            span_processors=[],
+            export_span_processor=SimpleSpanProcessor,
+            tracer_configurator="tracer_configurator_test",
         )
         metrics_mock.assert_called_once_with(
-            "TEST_METRICS_EXPORTERS_DICT",
-            "TEST_RESOURCE",
+            exporters_or_readers="TEST_METRICS_EXPORTERS_DICT",
+            resource="TEST_RESOURCE",
             exporter_args_map={1: {"compression": "gzip"}},
+            meter_configurator="meter_configurator_test",
         )
         logging_mock.assert_called_once_with(
             "TEST_LOG_EXPORTERS_DICT",
             "TEST_RESOURCE",
             True,
             exporter_args_map={1: {"compression": "gzip"}},
+            log_record_processors=[],
+            export_log_record_processor=SimpleLogRecordProcessor,
+            logger_configurator=None,
         )
 
     def test_basicConfig_works_with_otel_handler(self):
@@ -986,6 +1137,67 @@ class TestLoggingInit(TestCase):
                 "Should still have exactly one OpenTelemetry LoggingHandler",
             )
 
+    def test_logging_init_logger_configurator_none_by_default(self):
+        with ResetGlobalLoggingState():
+            _init_logging({})
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertIsNone(provider._logger_configurator)
+
+    def test_logging_init_logger_configurator_passed_directly(self):
+        mock_configurator = Mock()
+        with ResetGlobalLoggingState():
+            _init_logging({}, logger_configurator=mock_configurator)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertIsInstance(provider, DummyLoggerProvider)
+            self.assertEqual(provider._logger_configurator, mock_configurator)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_LOGGER_CONFIGURATOR: "non_existent_entry_point"},
+    )
+    def test_logging_init_custom_logger_configurator_with_env_non_existent_entry_point(
+        self,
+    ):
+        logger_configurator_name = _get_logger_configurator()
+        with self.assertLogs(level=WARNING):
+            logger_configurator = _import_logger_configurator(
+                logger_configurator_name
+            )
+        with ResetGlobalLoggingState():
+            _init_logging({}, logger_configurator=logger_configurator)
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_LOGGER_CONFIGURATOR: "custom_logger_configurator"},
+    )
+    def test_logging_init_custom_logger_configurator_with_env(
+        self, mock_entry_points
+    ):
+        def custom_logger_configurator(logger_scope):
+            return mock.Mock(spec=_RuleBasedLoggerConfigurator)(logger_scope)
+
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_logger_configurator",
+                    custom_logger_configurator,
+                )
+            ]
+        )
+
+        logger_configurator_name = _get_logger_configurator()
+        logger_configurator = _import_logger_configurator(
+            logger_configurator_name
+        )
+        with ResetGlobalLoggingState():
+            _init_logging({}, logger_configurator=logger_configurator)
+            provider = self.set_provider_mock.call_args[0][0]
+            self.assertEqual(
+                provider._logger_configurator, custom_logger_configurator
+            )
+
 
 class TestMetricsInit(TestCase):
     def setUp(self):
@@ -1043,7 +1255,7 @@ class TestMetricsInit(TestCase):
             provider._sdk_config.resource.attributes.get("service.name"),
             "otlp-service",
         )
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertIsInstance(reader, DummyMetricReader)
         self.assertIsInstance(reader.exporter, DummyOTLPMetricExporter)
 
@@ -1056,7 +1268,7 @@ class TestMetricsInit(TestCase):
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyMeterProvider)
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertIsInstance(reader, DummyMetricReaderPullExporter)
 
     def test_metrics_init_exporter_uses_exporter_args_map(self):
@@ -1070,8 +1282,67 @@ class TestMetricsInit(TestCase):
             },
         )
         provider = self.set_provider_mock.call_args[0][0]
-        reader = provider._sdk_config.metric_readers[0]
+        reader = provider._metric_readers[0]
         self.assertEqual(reader.exporter.compression, "gzip")
+
+    def test_metrics_init_meter_configurator_none_by_default(self):
+        _init_metrics({})
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyMeterProvider)
+        self.assertEqual(
+            provider._meter_configurator, _default_meter_configurator
+        )
+
+    def test_metrics_init_meter_configurator_passed_directly(self):
+        mock_configurator = Mock()
+        _init_metrics({}, meter_configurator=mock_configurator)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyMeterProvider)
+        self.assertEqual(provider._meter_configurator, mock_configurator)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_METER_CONFIGURATOR: "non_existent_entry_point"},
+    )
+    def test_metrics_init_custom_meter_configurator_with_env_non_existent_entry_point(
+        self,
+    ):
+        meter_configurator_name = _get_meter_configurator()
+        with self.assertLogs(level=WARNING):
+            meter_configurator = _import_meter_configurator(
+                meter_configurator_name
+            )
+        _init_metrics({}, meter_configurator=meter_configurator)
+
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch.dict(
+        "os.environ",
+        {OTEL_PYTHON_METER_CONFIGURATOR: "custom_meter_configurator"},
+    )
+    def test_metrics_init_custom_meter_configurator_with_env(
+        self, mock_entry_points
+    ):
+        def custom_meter_configurator(meter_scope):
+            return mock.Mock(spec=_RuleBasedMeterConfigurator)(meter_scope)
+
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_meter_configurator",
+                    custom_meter_configurator,
+                )
+            ]
+        )
+
+        meter_configurator_name = _get_meter_configurator()
+        meter_configurator = _import_meter_configurator(
+            meter_configurator_name
+        )
+        _init_metrics({}, meter_configurator=meter_configurator)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertEqual(
+            provider._meter_configurator, custom_meter_configurator
+        )
 
 
 class TestExporterNames(TestCase):
@@ -1294,3 +1565,118 @@ class TestClearLoggingHandlers(TestCase):
         self.assertEqual(logging.config.dictConfig.__name__, "dictConfig")
         self.assertEqual(logging.basicConfig.__name__, "basicConfig")
         self.assertEqual(logging.config.fileConfig.__name__, "fileConfig")
+
+
+class TestOpAMPInit(TestCase):
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch("opentelemetry.sdk._configuration.Resource")
+    def test_pre_sdk_init_function_found(
+        self,
+        mock_resource,
+        mock_entry_points,
+        mock_logging,
+        mock_tracing,
+        mock_metrics,
+    ):
+        init_function = mock.Mock()
+        mock_entry_points.side_effect = [
+            [IterEntryPoint("pre_sdk_init_function", init_function)],
+            [],
+        ]
+
+        _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
+        )
+        init_function.assert_called_once_with(
+            mock_resource.create.return_value
+        )
+
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    @patch("opentelemetry.sdk._configuration.Resource")
+    def test_post_sdk_init_function_found(
+        self,
+        mock_resource,
+        mock_entry_points,
+        mock_logging,
+        mock_tracing,
+        mock_metrics,
+    ):
+        init_function = mock.Mock()
+        mock_entry_points.side_effect = [
+            [],
+            [IterEntryPoint("post_sdk_init_function", init_function)],
+        ]
+
+        _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="post_sdk_init_function"
+                )
+            ]
+        )
+        init_function.assert_called_once_with(
+            mock_resource.create.return_value
+        )
+
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_init_function_load_failure(
+        self, mock_entry_points, mock_logging, mock_tracing, mock_metrics
+    ):
+        entry_point_mock = mock.Mock()
+        entry_point_mock.load.side_effect = AttributeError(
+            "module 'foo' has no attribute 'OpampInit'"
+        )
+        mock_entry_points.configure_mock(
+            return_value=[entry_point_mock],
+        )
+        entry_point_mock.__str__ = lambda x: "<EntryPoint>"
+
+        with self.assertLogs(level="WARNING") as cm:
+            _initialize_components(id_generator=1)
+
+        mock_entry_points.assert_has_calls(
+            [
+                mock.call(
+                    group="_opentelemetry_opamp", name="pre_sdk_init_function"
+                )
+            ]
+        )
+
+        self.assertIn(
+            "WARNING:opentelemetry.sdk._configuration:Failed to load OpAMP init function from entry point,"
+            " <EntryPoint>: module 'foo' has no attribute 'OpampInit'",
+            cm.output,
+        )
+
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_init_function_not_found(
+        self, mock_entry_points, mock_logging, mock_tracing, mock_metrics
+    ):
+        mock_entry_points.configure_mock(return_value=[])
+
+        with self.assertLogs(level="DEBUG") as cm:
+            _initialize_components(id_generator=1)
+        self.assertIn(
+            "DEBUG:opentelemetry.sdk._configuration:No OpAMP init function found",
+            cm.output,
+        )

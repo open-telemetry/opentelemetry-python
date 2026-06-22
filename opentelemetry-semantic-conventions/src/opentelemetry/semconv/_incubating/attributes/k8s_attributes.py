@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 from typing import Final
@@ -325,9 +314,109 @@ K8S_NODE_NAME: Final = "k8s.node.name"
 The name of the Node.
 """
 
+K8S_NODE_SYSTEM_CONTAINER_NAME: Final = "k8s.node.system_container.name"
+"""
+The name of the system container running on the K8s Node.
+"""
+
 K8S_NODE_UID: Final = "k8s.node.uid"
 """
 The UID of the Node.
+"""
+
+K8S_PERSISTENTVOLUME_ANNOTATION_TEMPLATE: Final = (
+    "k8s.persistentvolume.annotation"
+)
+"""
+The annotation placed on the PersistentVolume, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+Note: Examples:
+
+- An annotation `pv.kubernetes.io/provisioned-by` with value `kubernetes.io/aws-ebs` SHOULD be recorded as
+  the `k8s.persistentvolume.annotation.pv.kubernetes.io/provisioned-by` attribute with value `"kubernetes.io/aws-ebs"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.persistentvolume.annotation.data` attribute with value `""`.
+"""
+
+K8S_PERSISTENTVOLUME_LABEL_TEMPLATE: Final = "k8s.persistentvolume.label"
+"""
+The label placed on the PersistentVolume, the `<key>` being the label name, the value being the label value, even if the value is empty.
+Note: Examples:
+
+- A label `type` with value `ssd` SHOULD be recorded as
+  the `k8s.persistentvolume.label.type` attribute with value `"ssd"`.
+- A label `data` with empty string value SHOULD be recorded as
+  the `k8s.persistentvolume.label.data` attribute with value `""`.
+"""
+
+K8S_PERSISTENTVOLUME_NAME: Final = "k8s.persistentvolume.name"
+"""
+The name of the PersistentVolume.
+"""
+
+K8S_PERSISTENTVOLUME_RECLAIM_POLICY: Final = (
+    "k8s.persistentvolume.reclaim_policy"
+)
+"""
+The reclaim policy of the PersistentVolume.
+Note: This attribute aligns with the `persistentVolumeReclaimPolicy` field of the
+[K8s PersistentVolumeSpec](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-v1/#PersistentVolumeSpec).
+"""
+
+K8S_PERSISTENTVOLUME_STATUS_PHASE: Final = "k8s.persistentvolume.status.phase"
+"""
+The phase of the PersistentVolume.
+Note: This attribute aligns with the `phase` field of the
+[K8s PersistentVolumeStatus](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-v1/#PersistentVolumeStatus).
+"""
+
+K8S_PERSISTENTVOLUME_UID: Final = "k8s.persistentvolume.uid"
+"""
+The UID of the PersistentVolume.
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_ANNOTATION_TEMPLATE: Final = (
+    "k8s.persistentvolumeclaim.annotation"
+)
+"""
+The annotation placed on the PersistentVolumeClaim, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+Note: Examples:
+
+- An annotation `volume.beta.kubernetes.io/storage-provisioner` with value `kubernetes.io/aws-ebs` SHOULD be recorded as
+  the `k8s.persistentvolumeclaim.annotation.volume.beta.kubernetes.io/storage-provisioner` attribute with value `"kubernetes.io/aws-ebs"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.persistentvolumeclaim.annotation.data` attribute with value `""`.
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_LABEL_TEMPLATE: Final = (
+    "k8s.persistentvolumeclaim.label"
+)
+"""
+The label placed on the PersistentVolumeClaim, the `<key>` being the label name, the value being the label value, even if the value is empty.
+Note: Examples:
+
+- A label `app` with value `my-app` SHOULD be recorded as
+  the `k8s.persistentvolumeclaim.label.app` attribute with value `"my-app"`.
+- A label `data` with empty string value SHOULD be recorded as
+  the `k8s.persistentvolumeclaim.label.data` attribute with value `""`.
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_NAME: Final = "k8s.persistentvolumeclaim.name"
+"""
+The name of the PersistentVolumeClaim.
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_STATUS_PHASE: Final = (
+    "k8s.persistentvolumeclaim.status.phase"
+)
+"""
+The phase of the PersistentVolumeClaim.
+Note: This attribute aligns with the `phase` field of the
+[K8s PersistentVolumeClaimStatus](https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/persistent-volume-claim-v1/#PersistentVolumeClaimStatus).
+"""
+
+K8S_PERSISTENTVOLUMECLAIM_UID: Final = "k8s.persistentvolumeclaim.uid"
+"""
+The UID of the PersistentVolumeClaim.
 """
 
 K8S_POD_ANNOTATION_TEMPLATE: Final = "k8s.pod.annotation"
@@ -341,6 +430,24 @@ Note: Examples:
   the `k8s.pod.annotation.mycompany.io/arch` attribute with value `"x64"`.
 - An annotation `data` with empty string value SHOULD be recorded as
   the `k8s.pod.annotation.data` attribute with value `""`.
+"""
+
+K8S_POD_HOSTNAME: Final = "k8s.pod.hostname"
+"""
+Specifies the hostname of the Pod.
+Note: The K8s Pod spec has an optional hostname field, which can be used to specify a hostname.
+Refer to [K8s docs](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-hostname-and-subdomain-field)
+for more information about this field.
+
+This attribute aligns with the `hostname` field of the
+[K8s PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podspec-v1-core).
+"""
+
+K8S_POD_IP: Final = "k8s.pod.ip"
+"""
+IP address allocated to the Pod.
+Note: This attribute aligns with the `podIP` field of the
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podstatus-v1-core).
 """
 
 K8S_POD_LABEL_TEMPLATE: Final = "k8s.pod.label"
@@ -364,6 +471,17 @@ Deprecated: Replaced by `k8s.pod.label`.
 K8S_POD_NAME: Final = "k8s.pod.name"
 """
 The name of the Pod.
+"""
+
+K8S_POD_START_TIME: Final = "k8s.pod.start_time"
+"""
+The start timestamp of the Pod.
+Note: Date and time at which the object was acknowledged by the Kubelet.
+This is before the Kubelet pulled the container image(s) for the pod.
+
+This attribute aligns with the `startTime` field of the
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#podstatus-v1-core),
+in ISO 8601 (RFC 3339 compatible) format.
 """
 
 K8S_POD_STATUS_PHASE: Final = "k8s.pod.status.phase"
@@ -437,6 +555,113 @@ Note: The value for this attribute can be either the full `count/<resource>[.<gr
 K8S_RESOURCEQUOTA_UID: Final = "k8s.resourcequota.uid"
 """
 The UID of the resource quota.
+"""
+
+K8S_SERVICE_ANNOTATION_TEMPLATE: Final = "k8s.service.annotation"
+"""
+The annotation placed on the Service, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
+Note: Examples:
+
+- An annotation `prometheus.io/scrape` with value `true` SHOULD be recorded as
+  the `k8s.service.annotation.prometheus.io/scrape` attribute with value `"true"`.
+- An annotation `data` with empty string value SHOULD be recorded as
+  the `k8s.service.annotation.data` attribute with value `""`.
+"""
+
+K8S_SERVICE_ENDPOINT_ADDRESS_TYPE: Final = "k8s.service.endpoint.address_type"
+"""
+The address type of the service endpoint.
+Note: The network address family or type of the endpoint.
+This attribute aligns with the `addressType` field of the
+[K8s EndpointSlice](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/).
+It is used to differentiate metrics when a Service is backed by multiple address types
+(e.g., in dual-stack clusters).
+"""
+
+K8S_SERVICE_ENDPOINT_CONDITION: Final = "k8s.service.endpoint.condition"
+"""
+The condition of the service endpoint.
+Note: The current operational condition of the service endpoint.
+An endpoint can have multiple conditions set at once (e.g., both `serving` and `terminating` during rollout).
+This attribute aligns with the condition fields in the [K8s EndpointSlice](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/).
+"""
+
+K8S_SERVICE_ENDPOINT_ZONE: Final = "k8s.service.endpoint.zone"
+"""
+The zone of the service endpoint.
+Note: The zone where the endpoint is located, typically corresponding to a failure domain.
+This attribute aligns with the `zone` field of endpoints in the
+[K8s EndpointSlice](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/).
+It enables zone-aware monitoring of service endpoint distribution and supports
+features like [Topology Aware Routing](https://kubernetes.io/docs/concepts/services-networking/topology-aware-routing/).
+
+If the zone is not populated (e.g., nodes without the `topology.kubernetes.io/zone` label),
+the attribute value will be an empty string.
+"""
+
+K8S_SERVICE_LABEL_TEMPLATE: Final = "k8s.service.label"
+"""
+The label placed on the Service, the `<key>` being the label name, the value being the label value, even if the value is empty.
+Note: Examples:
+
+- A label `app` with value `my-service` SHOULD be recorded as
+  the `k8s.service.label.app` attribute with value `"my-service"`.
+- A label `data` with empty string value SHOULD be recorded as
+  the `k8s.service.label.data` attribute with value `""`.
+"""
+
+K8S_SERVICE_NAME: Final = "k8s.service.name"
+"""
+The name of the Service.
+"""
+
+K8S_SERVICE_PUBLISH_NOT_READY_ADDRESSES: Final = (
+    "k8s.service.publish_not_ready_addresses"
+)
+"""
+Whether the Service publishes not-ready endpoints.
+Note: Whether the Service is configured to publish endpoints before the pods are ready.
+This attribute is typically used to indicate that a Service (such as a headless
+Service for a StatefulSet) allows peer discovery before pods pass their readiness probes.
+It aligns with the `publishNotReadyAddresses` field of the
+[K8s ServiceSpec](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceSpec).
+"""
+
+K8S_SERVICE_SELECTOR_TEMPLATE: Final = "k8s.service.selector"
+"""
+The selector key-value pair placed on the Service, the `<key>` being the selector key, the value being the selector value.
+Note: These selectors are used to correlate with pod labels. Each selector key-value pair becomes a separate attribute.
+
+Examples:
+
+- A selector `app=my-app` SHOULD be recorded as
+  the `k8s.service.selector.app` attribute with value `"my-app"`.
+- A selector `version=v1` SHOULD be recorded as
+  the `k8s.service.selector.version` attribute with value `"v1"`.
+"""
+
+K8S_SERVICE_TRAFFIC_DISTRIBUTION: Final = "k8s.service.traffic_distribution"
+"""
+The traffic distribution policy for the Service.
+Note: Specifies how traffic is distributed to endpoints for this Service.
+This attribute aligns with the `trafficDistribution` field of the
+[K8s ServiceSpec](https://kubernetes.io/docs/reference/networking/virtual-ips/#traffic-distribution).
+Known values include `PreferSameZone` (prefer endpoints in the same zone as the client) and
+`PreferSameNode` (prefer endpoints on the same node, fallback to same zone, then cluster-wide).
+If this field is not set on the Service, the attribute SHOULD NOT be emitted.
+When not set, Kubernetes distributes traffic evenly across all endpoints cluster-wide.
+"""
+
+K8S_SERVICE_TYPE: Final = "k8s.service.type"
+"""
+The type of the Kubernetes Service.
+Note: This attribute aligns with the `type` field of the
+[K8s ServiceSpec](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceSpec).
+"""
+
+K8S_SERVICE_UID: Final = "k8s.service.uid"
+"""
+The UID of the Service.
 """
 
 K8S_STATEFULSET_ANNOTATION_TEMPLATE: Final = "k8s.statefulset.annotation"
@@ -546,6 +771,37 @@ class K8sNodeConditionTypeValues(Enum):
     """The network for the node is not correctly configured."""
 
 
+class K8sPersistentvolumeReclaimPolicyValues(Enum):
+    DELETE = "Delete"
+    """The volume will be deleted when released from its claim."""
+    RECYCLE = "Recycle"
+    """The volume will be recycled (basic scrub) when released from its claim."""
+    RETAIN = "Retain"
+    """The volume will be retained when released from its claim."""
+
+
+class K8sPersistentvolumeStatusPhaseValues(Enum):
+    AVAILABLE = "Available"
+    """The volume is available and not yet bound to a claim."""
+    BOUND = "Bound"
+    """The volume is bound to a claim."""
+    FAILED = "Failed"
+    """The volume has failed its automatic reclamation."""
+    PENDING = "Pending"
+    """The volume is being provisioned."""
+    RELEASED = "Released"
+    """The claim has been deleted but the volume is not yet available."""
+
+
+class K8sPersistentvolumeclaimStatusPhaseValues(Enum):
+    BOUND = "Bound"
+    """The claim is bound to a volume."""
+    LOST = "Lost"
+    """The claim has lost its underlying volume (the volume does not exist anymore)."""
+    PENDING = "Pending"
+    """The claim has not yet been bound to a volume."""
+
+
 class K8sPodStatusPhaseValues(Enum):
     PENDING = "Pending"
     """The pod has been accepted by the system, but one or more of the containers has not been started. This includes time before being bound to a node, as well as time spent pulling images onto the host."""
@@ -570,6 +826,35 @@ class K8sPodStatusReasonValues(Enum):
     """The node is shutdown."""
     UNEXPECTED_ADMISSION_ERROR = "UnexpectedAdmissionError"
     """The pod was rejected admission to the node because of an error during admission that could not be categorized."""
+
+
+class K8sServiceEndpointAddressTypeValues(Enum):
+    IPV4 = "IPv4"
+    """IPv4 address type."""
+    IPV6 = "IPv6"
+    """IPv6 address type."""
+    FQDN = "FQDN"
+    """FQDN address type."""
+
+
+class K8sServiceEndpointConditionValues(Enum):
+    READY = "ready"
+    """The endpoint is ready to receive new connections."""
+    SERVING = "serving"
+    """The endpoint is currently handling traffic."""
+    TERMINATING = "terminating"
+    """The endpoint is in the process of shutting down."""
+
+
+class K8sServiceTypeValues(Enum):
+    CLUSTER_IP = "ClusterIP"
+    """ClusterIP service type."""
+    NODE_PORT = "NodePort"
+    """NodePort service type."""
+    LOAD_BALANCER = "LoadBalancer"
+    """LoadBalancer service type."""
+    EXTERNAL_NAME = "ExternalName"
+    """ExternalName service type."""
 
 
 class K8sVolumeTypeValues(Enum):

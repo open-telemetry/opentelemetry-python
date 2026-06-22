@@ -11,7 +11,7 @@ jobs:
   sdk-benchmarks:
     permissions:
       contents: write # required for pushing to gh-pages
-    runs-on: oracle-bare-metal-64cpu-512gb-x86-64
+    runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
     container:
       image: python:3.13-slim
     steps:

@@ -1,41 +1,26 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-lines
 
 from abc import ABC, abstractmethod
 from bisect import bisect_left
+from collections.abc import Callable, Sequence
 from enum import IntEnum
 from functools import partial
 from logging import getLogger
 from math import inf
 from threading import Lock
 from typing import (
-    Callable,
     Generic,
-    List,
-    Optional,
-    Sequence,
-    Type,
     TypeVar,
+    cast,
 )
 
 from opentelemetry.metrics import (
     Asynchronous,
     Counter,
     Histogram,
-    Instrument,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
@@ -59,6 +44,7 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.exponent_
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm_mapping import (
     LogarithmMapping,
 )
+from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
@@ -117,7 +103,7 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> Optional[_DataPointVarT]:
+    ) -> _DataPointVarT | None:
         pass
 
     def _collect_exemplars(self) -> Sequence[Exemplar]:
@@ -158,7 +144,7 @@ class _DropAggregation(_Aggregation):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> Optional[_DataPointVarT]:
+    ) -> _DataPointVarT | None:
         pass
 
 
@@ -199,7 +185,7 @@ class _SumAggregation(_Aggregation[Sum]):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> Optional[NumberDataPoint]:
+    ) -> NumberDataPoint | None:
         """
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
@@ -424,7 +410,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> Optional[_DataPointVarT]:
+    ) -> _DataPointVarT | None:
         """
         Atomically return a point for the current value of the metric.
         """
@@ -471,7 +457,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         instrument_aggregation_temporality: AggregationTemporality,
         start_time_unix_nano: int,
         reservoir_builder: ExemplarReservoirBuilder,
-        boundaries: Optional[Sequence[float]] = None,
+        boundaries: Sequence[float] | None = None,
         record_min_max: bool = True,
     ):
         if boundaries is None:
@@ -504,7 +490,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._previous_collection_start_nano = self._start_time_unix_nano
 
-    def _get_empty_bucket_counts(self) -> List[int]:
+    def _get_empty_bucket_counts(self) -> list[int]:
         return [0] * (len(self._boundaries) + 1)
 
     def aggregate(
@@ -530,7 +516,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> Optional[_DataPointVarT]:
+    ) -> _DataPointVarT | None:
         """
         Atomically return a point for the current value of the metric.
         """
@@ -825,7 +811,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> Optional[_DataPointVarT]:
+    ) -> _DataPointVarT | None:
         """
         Atomically return a point for the current value of the metric.
         """
@@ -967,6 +953,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     value_negative = self._previous_value_negative.copy_empty()
                 if scale is None and self._previous_scale is not None:
                     scale = self._previous_scale
+
+                # here self._previous_value_negative and self._previous_value_positive are not Optional anymore
+                self._previous_value_negative = cast(
+                    Buckets, self._previous_value_negative
+                )
+                self._previous_value_positive = cast(
+                    Buckets, self._previous_value_positive
+                )
 
                 min_scale = min(self._previous_scale, scale)
 
@@ -1200,10 +1194,10 @@ class Aggregation(ABC):
     @abstractmethod
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1231,10 +1225,10 @@ class DefaultAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1323,10 +1317,10 @@ class ExponentialBucketHistogramAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1364,7 +1358,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
     def __init__(
         self,
-        boundaries: Optional[Sequence[float]] = None,
+        boundaries: Sequence[float] | None = None,
         record_min_max: bool = True,
     ) -> None:
         self._boundaries = boundaries
@@ -1372,10 +1366,10 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1390,7 +1384,13 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         if self._boundaries is not None:
             boundaries = self._boundaries
         else:
-            boundaries = instrument._advisory.explicit_bucket_boundaries
+            # guard for usage with instruments without advisory
+            advisory = getattr(instrument, "_advisory", None)
+            boundaries = (
+                advisory.explicit_bucket_boundaries
+                if advisory is not None
+                else None
+            )
 
         return _ExplicitBucketHistogramAggregation(
             attributes,
@@ -1410,10 +1410,10 @@ class SumAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1444,10 +1444,10 @@ class LastValueAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:
@@ -1462,10 +1462,10 @@ class DropAggregation(Aggregation):
 
     def _create_aggregation(
         self,
-        instrument: Instrument,
+        instrument: _Instrument,
         attributes: Attributes,
         reservoir_factory: Callable[
-            [Type[_Aggregation]], ExemplarReservoirBuilder
+            [type[_Aggregation]], ExemplarReservoirBuilder
         ],
         start_time_unix_nano: int,
     ) -> _Aggregation:

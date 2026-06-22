@@ -1,24 +1,14 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import abc
 import enum
 import logging
 import sys
+from collections.abc import Callable, Sequence
 from os import environ, linesep
-from typing import IO, Callable, Optional, Sequence
+from typing import IO
 
 from typing_extensions import deprecated
 
@@ -30,21 +20,35 @@ from opentelemetry.context import (
     get_value,
     set_value,
 )
+from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._logs import (
     LogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor, DuplicateFilter
+from opentelemetry.sdk._shared_internal import (
+    BatchProcessor,
+    DuplicateFilter,
+)
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    create_processor_metrics,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BLRP_MAX_QUEUE_SIZE,
     OTEL_BLRP_SCHEDULE_DELAY,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
-_DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
+_DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
@@ -73,10 +77,20 @@ class LogExportResult(enum.Enum):
 
 class LogRecordExporter(abc.ABC):
     """Interface for exporting logs.
+
     Interface to be implemented by services that want to export logs received
     in their own format.
-    To export data this MUST be registered to the :class`opentelemetry.sdk._logs.Logger` using a
-    log processor.
+
+    To export data this MUST be registered to the :class:`opentelemetry.sdk._logs.Logger`
+    using a log processor.
+
+    Important
+    ---------
+    The ``export()`` method may raise exceptions (e.g., network errors,
+    timeouts, serialization errors). It is the responsibility of the
+    ``LogRecordProcessor`` calling this exporter to handle these exceptions
+    appropriately to prevent application crashes. See ``LogRecordProcessor``
+    for guidance on implementing proper error handling.
     """
 
     @abc.abstractmethod
@@ -84,10 +98,18 @@ class LogRecordExporter(abc.ABC):
         self, batch: Sequence[ReadableLogRecord]
     ) -> LogRecordExportResult:
         """Exports a batch of logs.
+
         Args:
-            batch: The list of `ReadableLogRecord` objects to be exported
+            batch: The list of ``ReadableLogRecord`` objects to be exported.
+
         Returns:
-            The result of the export
+            The result of the export.
+
+        Raises:
+            Exception: This method may raise exceptions on network errors,
+                timeouts, or other failures. Callers (i.e., log processors)
+                should handle these exceptions to comply with OpenTelemetry
+                error handling principles.
         """
 
     @abc.abstractmethod
@@ -116,9 +138,9 @@ class ConsoleLogRecordExporter(LogRecordExporter):
     def __init__(
         self,
         out: IO = sys.stdout,
-        formatter: Callable[
-            [ReadableLogRecord], str
-        ] = lambda record: record.to_json() + linesep,
+        formatter: Callable[[ReadableLogRecord], str] = lambda record: (
+            record.to_json() + linesep
+        ),
     ):
         self.out = out
         self.formatter = formatter
@@ -141,13 +163,33 @@ class ConsoleLogExporter(ConsoleLogRecordExporter):
 
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
-    """This is an implementation of LogRecordProcessor which passes
-    received logs directly to the configured LogRecordExporter, as soon as they are emitted.
+    """Implementation of LogRecordProcessor that exports logs synchronously.
+
+    This processor passes received logs directly to the configured
+    ``LogRecordExporter`` as soon as they are emitted.
+
+    This class serves as a reference implementation for custom log processors,
+    demonstrating proper error handling. Note how the ``on_emit`` method wraps
+    the exporter call in a try/except block to prevent exceptions from
+    propagating to the application.
     """
 
-    def __init__(self, exporter: LogRecordExporter):
+    def __init__(
+        self,
+        exporter: LogRecordExporter,
+        *,
+        meter_provider: MeterProvider | None = None,
+    ):
         self._exporter = exporter
         self._shutdown = False
+        self._metrics = create_processor_metrics(
+            "logs",
+            OtelComponentTypeValues.SIMPLE_LOG_PROCESSOR,
+            meter_provider or get_meter_provider(),
+            enabled=parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
+        )
 
     def on_emit(self, log_record: ReadWriteLogRecord):
         # Prevent entering a recursive loop.
@@ -168,6 +210,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),  # pyright: ignore[reportOperatorIssue]
             )
         )
+        error: Exception | None = None
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
@@ -186,9 +229,11 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 limits=log_record.limits,
             )
             self._exporter.export((readable_log_record,))
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            error = err
             _logger.exception("Exception while exporting logs.")
         finally:
+            self._metrics.finish_items(1, error)
             detach(token)
 
     def shutdown(self):
@@ -221,6 +266,8 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         max_export_batch_size: int | None = None,
         export_timeout_millis: float | None = None,
         max_queue_size: int | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchLogRecordProcessor._default_max_queue_size()
@@ -251,6 +298,15 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             export_timeout_millis,
             max_queue_size,
             "Log",
+            create_processor_metrics(
+                "logs",
+                OtelComponentTypeValues.BATCHING_LOG_PROCESSOR,
+                meter_provider or get_meter_provider(),
+                capacity=max_queue_size,
+                enabled=parse_boolean_environment_variable(
+                    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+                ),
+            ),
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
@@ -272,7 +328,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod

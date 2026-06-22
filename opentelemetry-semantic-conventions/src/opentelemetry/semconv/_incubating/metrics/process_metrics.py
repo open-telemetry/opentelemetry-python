@@ -1,27 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
-from typing import (
-    Callable,
-    Final,
-    Generator,
-    Iterable,
-    Optional,
-    Sequence,
-    Union,
-)
+from collections.abc import Callable, Generator, Iterable, Sequence
+from typing import Final
 
 from opentelemetry.metrics import (
     CallbackOptions,
@@ -33,10 +15,11 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = Union[
-    Callable[[CallbackOptions], Iterable[Observation]],
-    Generator[Iterable[Observation], CallbackOptions, None],
-]
+CallbackT = (
+    Callable[[CallbackOptions], Iterable[Observation]]
+    | Generator[Iterable[Observation], CallbackOptions, None]
+)
+
 
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
 """
@@ -57,17 +40,17 @@ def create_process_context_switches(meter: Meter) -> Counter:
 
 PROCESS_CPU_TIME: Final = "process.cpu.time"
 """
-Total CPU seconds broken down by different states
+Total CPU seconds broken down by different CPU modes
 Instrument: counter
 Unit: s
 """
 
 
 def create_process_cpu_time(meter: Meter) -> Counter:
-    """Total CPU seconds broken down by different states"""
+    """Total CPU seconds broken down by different CPU modes"""
     return meter.create_counter(
         name=PROCESS_CPU_TIME,
-        description="Total CPU seconds broken down by different states.",
+        description="Total CPU seconds broken down by different CPU modes.",
         unit="s",
     )
 
@@ -81,7 +64,7 @@ Unit: 1
 
 
 def create_process_cpu_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process"""
     return meter.create_observable_gauge(
@@ -164,17 +147,15 @@ PROCESS_OPEN_FILE_DESCRIPTOR_COUNT: Final = (
     "process.open_file_descriptor.count"
 )
 """
-Number of file descriptors in use by the process
-Instrument: updowncounter
-Unit: {file_descriptor}
+Deprecated: Replaced by `process.unix.file_descriptor.count`.
 """
 
 
 def create_process_open_file_descriptor_count(meter: Meter) -> UpDownCounter:
-    """Number of file descriptors in use by the process"""
+    """Deprecated, use `process.unix.file_descriptor.count` instead"""
     return meter.create_up_down_counter(
         name=PROCESS_OPEN_FILE_DESCRIPTOR_COUNT,
-        description="Number of file descriptors in use by the process.",
+        description="Deprecated, use `process.unix.file_descriptor.count` instead.",
         unit="{file_descriptor}",
     )
 
@@ -213,6 +194,25 @@ def create_process_thread_count(meter: Meter) -> UpDownCounter:
     )
 
 
+PROCESS_UNIX_FILE_DESCRIPTOR_COUNT: Final = (
+    "process.unix.file_descriptor.count"
+)
+"""
+Number of unix file descriptors in use by the process
+Instrument: updowncounter
+Unit: {file_descriptor}
+"""
+
+
+def create_process_unix_file_descriptor_count(meter: Meter) -> UpDownCounter:
+    """Number of unix file descriptors in use by the process"""
+    return meter.create_up_down_counter(
+        name=PROCESS_UNIX_FILE_DESCRIPTOR_COUNT,
+        description="Number of unix file descriptors in use by the process.",
+        unit="{file_descriptor}",
+    )
+
+
 PROCESS_UPTIME: Final = "process.uptime"
 """
 The time the process has been running
@@ -224,7 +224,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 
 
 def create_process_uptime(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The time the process has been running"""
     return meter.create_observable_gauge(
@@ -232,4 +232,21 @@ def create_process_uptime(
         callbacks=callbacks,
         description="The time the process has been running.",
         unit="s",
+    )
+
+
+PROCESS_WINDOWS_HANDLE_COUNT: Final = "process.windows.handle.count"
+"""
+Number of handles held by the process
+Instrument: updowncounter
+Unit: {handle}
+"""
+
+
+def create_process_windows_handle_count(meter: Meter) -> UpDownCounter:
+    """Number of handles held by the process"""
+    return meter.create_up_down_counter(
+        name=PROCESS_WINDOWS_HANDLE_COUNT,
+        description="Number of handles held by the process.",
+        unit="{handle}",
     )

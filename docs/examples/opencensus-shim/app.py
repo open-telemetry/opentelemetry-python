@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import sqlite3
 
@@ -31,7 +20,7 @@ DB = "example.db"
 
 # Set up OpenTelemetry
 tracer_provider = TracerProvider(
-    resource=Resource(
+    resource=Resource.create(
         {
             "service.name": "opencensus-shim-example-flask",
         }
@@ -90,9 +79,10 @@ setup_db()
 @app.route("/")
 def hello_world():
     lines = []
-    with tracer.start_as_current_span("query movies from db"), sqlite3.connect(
-        DB
-    ) as con:
+    with (
+        tracer.start_as_current_span("query movies from db"),
+        sqlite3.connect(DB) as con,
+    ):
         cur = con.cursor()
         for title, year in cur.execute("SELECT title, year from movie"):
             lines.append(f"<li>{title} is from the year {year}</li>")

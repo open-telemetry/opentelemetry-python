@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import unittest
 from logging import ERROR
@@ -23,6 +12,11 @@ from opentelemetry.proto.common.v1.common_pb2 import (
     ArrayValue as PB2ArrayValue,
 )
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
+
+
+class CallingStrRaisesException:
+    def __str__(self):
+        raise ValueError("Cannot encode")
 
 
 class TestOTLPAttributeEncoder(unittest.TestCase):
@@ -88,27 +82,11 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
             ],
         )
 
-    def test_encode_attributes_error_list_none(self):
-        with self.assertLogs(level=ERROR) as error:
-            result = _encode_attributes(
-                {"a": 1, "bad_key": ["test", None, "test"], "b": 2}
-            )
-
-        self.assertEqual(len(error.records), 1)
-        self.assertEqual(error.records[0].msg, "Failed to encode key %s: %s")
-        self.assertEqual(error.records[0].args[0], "bad_key")
-        self.assertIsInstance(error.records[0].args[1], Exception)
-        self.assertEqual(
-            result,
-            [
-                PB2KeyValue(key="a", value=PB2AnyValue(int_value=1)),
-                PB2KeyValue(key="b", value=PB2AnyValue(int_value=2)),
-            ],
-        )
-
     def test_encode_attributes_error_logs_key(self):
         with self.assertLogs(level=ERROR) as error:
-            result = _encode_attributes({"a": 1, "bad_key": None, "b": 2})
+            result = _encode_attributes(
+                {"a": 1, "bad_key": CallingStrRaisesException(), "b": 2}
+            )
 
         self.assertEqual(len(error.records), 1)
         self.assertEqual(error.records[0].msg, "Failed to encode key %s: %s")
