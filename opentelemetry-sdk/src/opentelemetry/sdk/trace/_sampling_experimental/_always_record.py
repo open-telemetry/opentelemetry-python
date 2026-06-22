@@ -26,7 +26,7 @@ class AlwaysRecordSampler(Sampler):
     This sampler will return the sampling result of the provided `_root_sampler`, unless the
     sampling result contains the sampling decision `Decision.DROP`, in which case, a
     new sampling result will be returned that is functionally equivalent to the original, except that
-    it contains the sampling decision `SamplingDecision.RECORD_ONLY`. This ensures that all
+    it contains the sampling decision `Decision.RECORD_ONLY`. This ensures that all
     spans are recorded, with no change to sampling.
 
     The intended use case of this sampler is to provide a means of sending all spans to a
@@ -38,7 +38,7 @@ class AlwaysRecordSampler(Sampler):
     _root_sampler: Sampler
 
     def __init__(self, root_sampler: Sampler):
-        if not root_sampler:
+        if root_sampler is None:
             raise ValueError("root_sampler must not be None")
         self._root_sampler = root_sampler
 
@@ -62,20 +62,9 @@ class AlwaysRecordSampler(Sampler):
             trace_state,
         )
         if result.decision is Decision.DROP:
-            result = _wrap_result_with_record_only_result(result, attributes)
+            result = SamplingResult(Decision.RECORD_ONLY, result.attributes, result.trace_state)
+
         return result
 
     def get_description(self):
-        return (
-            "AlwaysRecordSampler{" + self._root_sampler.get_description() + "}"
-        )
-
-
-def _wrap_result_with_record_only_result(
-    result: SamplingResult, attributes: Attributes
-) -> SamplingResult:
-    return SamplingResult(
-        Decision.RECORD_ONLY,
-        attributes,
-        result.trace_state,
-    )
+        return f"AlwaysRecordSampler{{{self._root_sampler.get_description()}}}"
