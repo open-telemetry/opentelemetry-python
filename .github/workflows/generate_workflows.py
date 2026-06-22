@@ -97,7 +97,9 @@ def get_test_job_datas(
             if tox_test_env_match is None:
                 continue
 
-            if (platform := env_platforms.get(tox_env, "")) and not fullmatch(platform, sys_platform):
+            if (platform := env_platforms.get(tox_env, "")) and not fullmatch(
+                platform, sys_platform
+            ):
                 continue
 
             groups = tox_test_env_match.groupdict()
