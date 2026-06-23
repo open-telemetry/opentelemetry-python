@@ -9,7 +9,7 @@ from collections.abc import Callable, Sequence
 from enum import IntEnum
 from functools import partial
 from logging import getLogger
-from math import inf, isfinite
+from math import inf, isnan
 from threading import Lock
 from typing import (
     Generic,
@@ -464,6 +464,21 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             boundaries = (
                 _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
             )
+        if boundaries:
+            if isnan(boundaries[0]):
+                raise ValueError("invalid boundary: NaN")
+            if boundaries[0] == -inf:
+                raise ValueError("invalid boundary: -Inf")
+            for i in range(1, len(boundaries)):
+                if isnan(boundaries[i]):
+                    raise ValueError("invalid boundary: NaN")
+                if boundaries[i - 1] >= boundaries[i]:
+                    raise ValueError(
+                        f"boundaries must be strictly increasing:"
+                        f" {boundaries[i - 1]} >= {boundaries[i]}"
+                    )
+            if boundaries[-1] == inf:
+                raise ValueError("invalid boundary: +Inf")
         super().__init__(
             attributes,
             reservoir_builder=partial(
@@ -475,16 +490,6 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             instrument_aggregation_temporality
         )
         self._start_time_unix_nano = start_time_unix_nano
-        for b in boundaries:
-            if not isfinite(b):
-                raise ValueError(
-                    f"boundaries must be finite, got {b}"
-                )
-        for i in range(1, len(boundaries)):
-            if boundaries[i - 1] >= boundaries[i]:
-                raise ValueError(
-                    f"boundaries must be in increasing order, got {list(boundaries)}"
-                )
         self._boundaries = tuple(boundaries)
         self._record_min_max = record_min_max
 
