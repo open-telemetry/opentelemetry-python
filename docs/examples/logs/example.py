@@ -51,6 +51,10 @@ logging.getLogger().addHandler(handler)
 logger1 = logging.getLogger("myapp.area1")
 logger2 = logging.getLogger("myapp.area2")
 
+# Ensure log records propagate to root logger so the handler picks them up
+logger1.propagate = True
+logger2.propagate = True
+
 logger1.debug("Quick zephyrs blow, vexing daft Jim.")
 logger1.info("How quickly daft jumping zebras vex.")
 logger2.warning("Jail zesty vixen who grabbed pay from quack.")
