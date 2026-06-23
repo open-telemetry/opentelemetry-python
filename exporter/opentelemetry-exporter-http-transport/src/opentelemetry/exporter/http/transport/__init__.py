@@ -3,40 +3,41 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+
+# pylint: disable-next=import-error
+from opentelemetry.exporter.http.transport._requests import (
+    RequestsHTTPTransport as _RequestsHTTPTransport,
+)
+
+# pylint: disable-next=import-error
+from opentelemetry.exporter.http.transport._urllib3 import (
+    Urllib3HTTPTransport as _Urllib3HTTPTransport,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from typing import Any, Protocol
 
     from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
 
-
-def _load_requests_transport() -> type[BaseHTTPTransport]:
-    # pylint: disable-next=import-outside-toplevel,import-error
-    from opentelemetry.exporter.http.transport._requests import (  # noqa: PLC0415
-        RequestsHTTPTransport,
-    )
-
-    return RequestsHTTPTransport
-
-
-def _load_urllib3_transport() -> type[BaseHTTPTransport]:
-    # pylint: disable-next=import-outside-toplevel,import-error
-    from opentelemetry.exporter.http.transport._urllib3 import (  # noqa: PLC0415
-        Urllib3HTTPTransport,
-    )
-
-    return Urllib3HTTPTransport
+    class BaseHTTPTransportFactory(Protocol):
+        def __call__(
+            self,
+            *,
+            verify: bool | str,
+            cert: str | tuple[str, str] | None,
+            **kwargs: Any,
+        ) -> BaseHTTPTransport: ...
 
 
-_KNOWN_TRANSPORTS: dict[str, Callable[[], type[BaseHTTPTransport]]] = {
-    "requests": _load_requests_transport,
-    "urllib3": _load_urllib3_transport,
+_KNOWN_TRANSPORTS: dict[str, BaseHTTPTransportFactory] = {
+    "requests": _RequestsHTTPTransport,
+    "urllib3": _Urllib3HTTPTransport,
 }
 
 
-def _load_http_transport_class(name: str) -> type[BaseHTTPTransport]:
-    """Return the transport class registered under *name*.
+def _load_http_transport_factory(name: str) -> BaseHTTPTransportFactory:
+    """Return the transport factory registered under *name*.
 
     Checks the built-in transport registry first to avoid the overhead of an
     entry-point scan for built-in transports. Falls back to standard entry-point
@@ -44,12 +45,13 @@ def _load_http_transport_class(name: str) -> type[BaseHTTPTransport]:
     ``opentelemetry_http_transport`` group.
 
     :param name: Entry point name, e.g. ``"requests"`` or ``"urllib3"``.
-    :returns: The :class:`~opentelemetry.exporter.http.transport._base.BaseHTTPTransport`
-        subclass registered under *name*.
+    :returns: A callable with signature
+        ``(*, verify, cert, **kwargs) -> BaseHTTPTransport``.
     :raises ValueError: If no transport is registered under *name*.
+    :raises TypeError: If the loaded entry point is not callable.
     """
     if name in _KNOWN_TRANSPORTS:
-        return _KNOWN_TRANSPORTS[name]()
+        return _KNOWN_TRANSPORTS[name]
     # pylint: disable-next=import-outside-toplevel,import-error
     from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
         entry_points,
@@ -65,15 +67,10 @@ def _load_http_transport_class(name: str) -> type[BaseHTTPTransport]:
             "Install the corresponding extra or register an entry point "
             "under the 'opentelemetry_http_transport' group."
         )
-    cls = ep.load()
-    # pylint: disable-next=import-outside-toplevel,import-error
-    from opentelemetry.exporter.http.transport._base import (  # noqa: PLC0415
-        BaseHTTPTransport,
-    )
-
-    if not isinstance(cls, type) or not issubclass(cls, BaseHTTPTransport):
+    factory = ep.load()
+    if not callable(factory):
         raise TypeError(
-            f"Transport {name!r} loaded from entry point does not subclass "
-            f"BaseHTTPTransport (got {cls!r})."
+            f"Transport {name!r} loaded from entry point is not callable "
+            f"(got {factory!r})."
         )
-    return cls
+    return cast("BaseHTTPTransportFactory", factory)

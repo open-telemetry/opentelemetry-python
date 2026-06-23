@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 
     import requests
     from requests import Response
-    from typing_extensions import Self
 
 
 @functools.cache
@@ -63,15 +62,6 @@ class RequestsHTTPResult(BaseHTTPResult):
 
 
 class RequestsHTTPTransport(BaseHTTPTransport):
-    @classmethod
-    def create(
-        cls,
-        verify: bool | str,
-        cert: str | tuple[str, str] | None,
-        **kwargs: Any,
-    ) -> Self:
-        return cls(verify=verify, cert=cert, **kwargs)
-
     def __init__(
         self,
         *,

@@ -12,8 +12,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from typing import Any
 
-    from typing_extensions import Self
-
 
 @dataclass(frozen=True, slots=True)
 class BaseHTTPResult(ABC):
@@ -63,30 +61,6 @@ class BaseHTTPResult(ABC):
 
 class BaseHTTPTransport(ABC):
     """Abstract HTTP transport interface used by HTTP exporters."""
-
-    @classmethod
-    @abstractmethod
-    def create(
-        cls,
-        verify: bool | str,
-        cert: str | tuple[str, str] | None,
-        **kwargs: Any,
-    ) -> Self:
-        """Create a new transport instance.
-
-        :param verify: Controls TLS certificate verification. ``True`` verifies
-            the server certificate against the system CA bundle, ``False``
-            disables verification, a string is interpreted as a path to a CA
-            bundle file to use instead of the system bundle.
-        :param cert: Client certificate for mutual TLS. Pass a string path to a
-            PEM-encoded certificate file (the file must contain both the
-            certificate and the key), or a ``(cert_file, key_file)`` tuple when
-            the private key is in a separate file. Pass ``None`` to disable
-            client side authentication.
-        :param kwargs: Additional keyword arguments forwarded to the transport
-            implementation.
-        :returns: A new transport instance.
-        """
 
     @abstractmethod
     def request(
