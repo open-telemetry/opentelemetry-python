@@ -1,12 +1,27 @@
 OpenTelemetry Logs SDK
 ======================
 
-.. warning::
-   OpenTelemetry Python logs are in an experimental state. The APIs within
-   :mod:`opentelemetry.sdk._logs` are subject to change in minor/patch releases and make no
-   backward compatibility guarantees at this time.
-
 The source files of these examples are available :scm_web:`here <docs/examples/logs/>`.
+
+.. note::
+
+   ``LoggingHandler`` has moved from the SDK to the
+   ``opentelemetry-instrumentation-logging`` package in the contrib repo
+   and is no longer available in ``opentelemetry-sdk``.
+
+
+Installation
+------------
+
+.. code-block:: sh
+
+    pip install opentelemetry-api
+    pip install opentelemetry-sdk
+    pip install opentelemetry-exporter-otlp-proto-grpc
+    pip install opentelemetry-instrumentation-logging
+
+Run the Example
+---------------
 
 Start the Collector locally to see data being exported. Write the following file:
 
