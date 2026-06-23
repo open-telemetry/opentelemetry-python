@@ -166,7 +166,8 @@ class _Asynchronous(_Instrument, Asynchronous):
                 for api_measurement in callback(callback_options):
                     if not math.isfinite(api_measurement.value):
                         _logger.warning(
-                            "Callback returned a non-finite value for instrument %s, ignoring measurement.",
+                            "Callback returned a non-finite value %s for instrument %s, ignoring measurement.",
+                            api_measurement.value,
                             self.name,
                         )
                         continue
@@ -201,7 +202,8 @@ class Counter(_Synchronous, APICounter):
 
         if not math.isfinite(amount):
             _logger.warning(
-                "Add amount is not finite on Counter %s, ignoring measurement.",
+                "Add amount %s is not finite on Counter %s, ignoring measurement.",
+                amount,
                 self.name,
             )
             return
@@ -240,7 +242,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
         if not math.isfinite(amount):
             _logger.warning(
-                "Add amount is not finite on UpDownCounter %s, ignoring measurement.",
+                "Add amount %s is not finite on UpDownCounter %s, ignoring measurement.",
+                amount,
                 self.name,
             )
             return
@@ -315,7 +318,8 @@ class Histogram(_Synchronous, APIHistogram):
 
         if not math.isfinite(amount):
             _logger.warning(
-                "Record amount is not finite on Histogram %s, ignoring measurement.",
+                "Record amount %s is not finite on Histogram %s, ignoring measurement.",
+                amount,
                 self.name,
             )
             return
@@ -355,7 +359,8 @@ class Gauge(_Synchronous, APIGauge):
 
         if not math.isfinite(amount):
             _logger.warning(
-                "Set amount is not finite on Gauge %s, ignoring measurement.",
+                "Set amount %s is not finite on Gauge %s, ignoring measurement.",
+                amount,
                 self.name,
             )
             return
