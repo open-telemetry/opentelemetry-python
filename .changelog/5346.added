@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add a declarative configuration spec conformance matrix at `opentelemetry-sdk/src/opentelemetry/sdk/_configuration/spec-conformance.md`. Tracks which fields of the configuration schema the SDK actually applies at runtime, with links to tracking issues for gaps. Mirrors the equivalent JS doc.
