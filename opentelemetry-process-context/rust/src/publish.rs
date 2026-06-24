@@ -157,7 +157,8 @@ pub fn update(payload: Vec<u8>) -> Result<(), PublishError> {
 
         // Zero timestamp with Release ensuring the previous payload state is
         // visible to readers that observe the "update in progress" signal.
-        published_at.store(0, Ordering::Release);
+        published_at.store(0, Ordering::Relaxed);
+        std::sync::atomic::fence(Ordering::Release);
 
         // Rewrite payload fields between the two Release stores.
         std::ptr::addr_of_mut!((*header).payload_size).write(new_buf.len() as u32);
