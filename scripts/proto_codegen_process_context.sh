@@ -59,8 +59,8 @@ fi
 )
 
 # Regenerate from scratch.
-rm -f "$out_dir"/*.rs
 mkdir -p "$out_dir"
+rm -f "$out_dir"/*.rs
 protoc \
     -I "$PROTO_REPO_DIR" \
     --prost_out="$out_dir" \
