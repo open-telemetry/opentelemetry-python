@@ -12,7 +12,6 @@ import unittest
 from opentelemetry.process_context import (
     publish_context,
     unpublish_context,
-    update_context,
 )
 from opentelemetry.sdk.resources import Resource
 
@@ -29,19 +28,11 @@ class TestPublishContext(unittest.TestCase):
             {"service.name": "test", "version": 1, "pi": 3.14, "active": True}
         )
         self.assertIsNone(publish_context(resource))
-
-        with self.assertRaises(RuntimeError):
-            publish_context(resource)
-
-        self.assertIsNone(update_context(resource))
-        self.assertIsNone(update_context(resource))
+        self.assertIsNone(publish_context(resource))
+        self.assertIsNone(publish_context(resource))
 
         self.assertIsNone(unpublish_context())
         self.assertIsNone(publish_context(resource))
-
-    def test_update_before_publish_raises(self):
-        with self.assertRaises(RuntimeError):
-            update_context(Resource({}))
 
     def test_unpublish_before_publish_raises(self):
         with self.assertRaises(RuntimeError):

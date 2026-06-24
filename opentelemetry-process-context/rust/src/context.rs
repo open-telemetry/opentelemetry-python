@@ -56,10 +56,6 @@ static MAPPING: Mutex<Option<Region>> = Mutex::new(None);
 
 #[derive(Debug)]
 pub enum PublishError {
-    /// A process context has already been published for this process.
-    AlreadyPublished,
-    /// `update()` was called before any context was published.
-    NotPublished,
     /// The backing memory region could not be allocated.
     Alloc,
     /// `madvise(MADV_DONTFORK)` failed.
@@ -68,17 +64,13 @@ pub enum PublishError {
     Clock,
     /// `munmap` of the header mapping failed during unpublish.
     Munmap,
+    /// `unpublish()` was called before any context was published.
+    NotPublished,
 }
 
 impl From<PublishError> for PyErr {
     fn from(err: PublishError) -> Self {
         match err {
-            PublishError::AlreadyPublished => {
-                PyRuntimeError::new_err("a process context has already been published")
-            }
-            PublishError::NotPublished => {
-                PyRuntimeError::new_err("no process context has been published yet")
-            }
             PublishError::Alloc => {
                 PyOSError::new_err("failed to allocate the process context mapping")
             }
@@ -91,40 +83,34 @@ impl From<PublishError> for PyErr {
             PublishError::Munmap => {
                 PyOSError::new_err("munmap of the process context mapping failed")
             }
+            PublishError::NotPublished => {
+                PyRuntimeError::new_err("no process context has been published yet")
+            }
         }
     }
 }
 
-/// Publish `payload` as the process context.
-///
-/// The context is a per-process singleton: calling this a second time without a
-/// prior teardown returns [`PublishError::AlreadyPublished`].
-pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
-    let mut guard = MAPPING.lock().expect("process context mutex poisoned");
-    if guard.is_some() {
-        return Err(PublishError::AlreadyPublished);
-    }
-
+/// Allocate the mapping and write the initial header. Called with the mutex held
+/// and `guard` confirmed to be `None`.
+fn publish_new(guard: &mut Option<Region>, payload: Vec<u8>) -> Result<(), PublishError> {
     let ptr = alloc_region()?;
     advise_dontfork(ptr, HEADER_SIZE)?;
 
     let timestamp = get_boottime_ns()?;
 
-    let payload_buf = payload;
-
     // SAFETY: `ptr` points to a freshly mapped, zero initialized, page aligned
-    // region of exactly `HEADER_SIZE` bytes. The payload lives in `payload_buf`
-    // on the heap and the header's `payload` field stores a pointer into it.
+    // region of exactly `HEADER_SIZE` bytes. The payload lives in `payload` on
+    // the heap and the header's `payload` field stores a pointer into it.
     unsafe {
         let header = ptr.as_ptr().cast::<Header>();
 
         std::ptr::addr_of_mut!((*header).signature).write(SIGNATURE);
         std::ptr::addr_of_mut!((*header).version).write(VERSION);
-        std::ptr::addr_of_mut!((*header).payload_size).write(payload_buf.len() as u32);
-        std::ptr::addr_of_mut!((*header).payload).write(payload_buf.as_ptr() as u64);
+        std::ptr::addr_of_mut!((*header).payload_size).write(payload.len() as u32);
+        std::ptr::addr_of_mut!((*header).payload).write(payload.as_ptr() as u64);
 
         // Write the timestamp last with release ordering, ensuring that
-        // all writes above are not reordered after the timestamp store
+        // all writes above are not reordered after the timestamp store.
         let published_at = &*std::ptr::addr_of!((*header).monotonic_published_at_ns);
         published_at.store(timestamp, Ordering::Release);
     }
@@ -133,21 +119,18 @@ pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
     // path, failures are ignored per the spec.
     name_mapping(ptr, HEADER_SIZE);
 
-    *guard = Some(Region { ptr, payload: payload_buf });
+    *guard = Some(Region { ptr, payload });
     Ok(())
 }
 
-/// Update the published process context with a new payload.
+/// Rewrite the payload of an existing mapping in place. Called with the mutex
+/// held and `region` confirmed to be live.
 ///
-/// Follows the spec's Updating Protocol: zeros the timestamp (Release) to signal
-/// readers that an update is in progress, rewrites the payload fields and then
-/// publishes the new timestamp (Release) to signal completion. The old payload
-/// buffer is dropped after the new timestamp is live.
-pub fn update(payload: Vec<u8>) -> Result<(), PublishError> {
-    let mut guard = MAPPING.lock().expect("process context mutex poisoned");
-    let region = guard.as_mut().ok_or(PublishError::NotPublished)?;
-
-    let new_buf = payload;
+/// Follows the spec's Updating Protocol: zeros the timestamp to signal readers
+/// that an update is in progress, rewrites the payload fields, then publishes
+/// the new timestamp. The old payload buffer is dropped after the new timestamp
+/// is live.
+fn publish_existing(region: &mut Region, payload: Vec<u8>) -> Result<(), PublishError> {
     let timestamp = get_boottime_ns()?;
 
     // SAFETY: `region.ptr` points to the live header mapping with exactly
@@ -156,7 +139,7 @@ pub fn update(payload: Vec<u8>) -> Result<(), PublishError> {
         let header = region.ptr.as_ptr().cast::<Header>();
         let published_at = &*std::ptr::addr_of!((*header).monotonic_published_at_ns);
 
-        // Zero timestamp signal the "update in progress" state.
+        // Zero timestamp signals the "update in progress" state.
         published_at.store(0, Ordering::Relaxed);
         // An `Ordering::Release` fence is needed here to ensure that the
         // preceding "update in progress" write above is not reordered with
@@ -164,8 +147,8 @@ pub fn update(payload: Vec<u8>) -> Result<(), PublishError> {
         std::sync::atomic::fence(Ordering::Release);
 
         // Rewrite payload fields between the two Release stores.
-        std::ptr::addr_of_mut!((*header).payload_size).write(new_buf.len() as u32);
-        std::ptr::addr_of_mut!((*header).payload).write(new_buf.as_ptr() as u64);
+        std::ptr::addr_of_mut!((*header).payload_size).write(payload.len() as u32);
+        std::ptr::addr_of_mut!((*header).payload).write(payload.as_ptr() as u64);
 
         // Publish new timestamp with Release ensuring the new payload fields
         // are visible to readers that observe the "update complete" signal.
@@ -175,9 +158,24 @@ pub fn update(payload: Vec<u8>) -> Result<(), PublishError> {
     // Rename the mapping unconditionally (failures ignored per spec).
     name_mapping(region.ptr, HEADER_SIZE);
 
-    // Drop the old payload only after the new timestamp is live
-    region.payload = new_buf;
+    // Drop the old payload only after the new timestamp is live.
+    region.payload = payload;
     Ok(())
+}
+
+/// Publish or update the process context.
+///
+/// Creates the named memory mapping on the first call. On subsequent calls the
+/// existing mapping is updated in-place using the spec's Updating Protocol
+/// (zero timestamp → rewrite payload fields → restore timestamp), so no new
+/// mapping is allocated and the header pointer remains stable across updates.
+pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
+    let mut guard = MAPPING.lock().expect("process context mutex poisoned");
+    if guard.is_none() {
+        publish_new(&mut guard, payload)
+    } else {
+        publish_existing(guard.as_mut().unwrap(), payload)
+    }
 }
 
 /// Remove the published process context.
