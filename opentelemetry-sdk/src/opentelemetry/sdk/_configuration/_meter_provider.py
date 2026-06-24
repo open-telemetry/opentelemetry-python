@@ -423,7 +423,10 @@ def _create_prometheus_metric_reader(
             "Install it with: pip install opentelemetry-exporter-prometheus"
         ) from exc
 
-    disable_target_info = config.target_info_enabled_development is not None and not config.target_info_enabled_development
+    disable_target_info = (
+        config.target_info_enabled_development is not None
+        and not config.target_info_enabled_development
+    )
 
     if config.scope_info_enabled is not None:
         _logger.warning(
