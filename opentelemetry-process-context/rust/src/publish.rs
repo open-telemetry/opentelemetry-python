@@ -123,7 +123,8 @@ pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
         std::ptr::addr_of_mut!((*header).payload_size).write(payload_buf.len() as u32);
         std::ptr::addr_of_mut!((*header).payload).write(payload_buf.as_ptr() as u64);
 
-        // Write the timestamp last with release ordering.
+        // Write the timestamp last with release ordering, ensuring that
+        // all writes above are not reordered after the timestamp store
         let published_at = &*std::ptr::addr_of!((*header).monotonic_published_at_ns);
         published_at.store(timestamp, Ordering::Release);
     }
@@ -155,9 +156,11 @@ pub fn update(payload: Vec<u8>) -> Result<(), PublishError> {
         let header = region.ptr.as_ptr().cast::<Header>();
         let published_at = &*std::ptr::addr_of!((*header).monotonic_published_at_ns);
 
-        // Zero timestamp with Release ensuring the previous payload state is
-        // visible to readers that observe the "update in progress" signal.
+        // Zero timestamp signal the "update in progress" state.
         published_at.store(0, Ordering::Relaxed);
+        // An `Ordering::Release` fence is needed here to ensure that the
+        // preceding "update in progress" write above is not reordered with
+        // any of the proceeding writes that update the region.
         std::sync::atomic::fence(Ordering::Release);
 
         // Rewrite payload fields between the two Release stores.
@@ -186,12 +189,15 @@ pub fn unpublish() -> Result<(), PublishError> {
     let mut guard = MAPPING.lock().expect("process context mutex poisoned");
     let region = guard.take().ok_or(PublishError::NotPublished)?;
 
-    // Zero the timestamp with Release before removing the mapping so any
-    // reader still observing it sees an invalid (zero) state.
+    // Zero the timestamp and remove the mapping.
     unsafe {
         let header = region.ptr.as_ptr().cast::<Header>();
         let published_at = &*std::ptr::addr_of!((*header).monotonic_published_at_ns);
-        published_at.store(0, Ordering::Release);
+        // No ordering constraint is required because regardless of ordering,
+        // a reader can observe a valid timestamp before the store and subsequently
+        // attempt to read from the header or payload pointer after it has already
+        // deallocated/unmapped.
+        published_at.store(0, Ordering::Relaxed);
     }
 
     unsafe { nix::sys::mman::munmap(region.ptr, HEADER_SIZE) }
