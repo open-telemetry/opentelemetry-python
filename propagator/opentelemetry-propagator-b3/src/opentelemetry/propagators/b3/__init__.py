@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import typing
+import collections.abc
 from re import compile as re_compile
 
 from typing_extensions import deprecated
@@ -191,7 +191,7 @@ class B3Format(B3MultiFormat):
 
 
 def _extract_first_element(
-    items: typing.Iterable[CarrierT],
+    items: collections.abc.Iterable[CarrierT],
 ) -> CarrierT | None:
     if items is None:
         return None

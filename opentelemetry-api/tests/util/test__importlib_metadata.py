@@ -1,7 +1,15 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import unittest
+import warnings
 from unittest import TestCase
+
+try:
+    # pylint: disable-next=no-name-in-module
+    from importlib.metadata import SelectableGroups as _SelectableGroups
+except ImportError:
+    _SelectableGroups = None
 
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.util._importlib_metadata import (
@@ -114,6 +122,24 @@ class TestEntryPoints(TestCase):
         selectable_groups = {"gp": [ep1, ep2]}
 
         normalized = _as_entry_points(selectable_groups)
+        self.assertIsInstance(normalized, EntryPoints)
+        self.assertEqual(len(normalized), 2)
+        self.assertEqual(list(normalized), [ep1, ep2])
+
+    @unittest.skipIf(
+        _SelectableGroups is None,
+        "SelectableGroups not available on this Python version",
+    )
+    def test_as_entry_points_selectable_groups_no_deprecation_warning(self):
+        ep1 = EntryPoint(name="foo", value="bar:baz", group="gp")
+        ep2 = EntryPoint(name="foo2", value="bar2:baz2", group="gp")
+
+        sg = _SelectableGroups({"gp": [ep1, ep2]})  # type: ignore
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            normalized = _as_entry_points(sg)
+
         self.assertIsInstance(normalized, EntryPoints)
         self.assertEqual(len(normalized), 2)
         self.assertEqual(list(normalized), [ep1, ep2])

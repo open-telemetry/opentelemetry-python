@@ -37,6 +37,7 @@ from opentelemetry.sdk._logs.export import (
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_CONFIG_FILE,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -538,6 +539,34 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
+def _import_opamp(
+    name: Literal["pre_sdk_init_function", "post_sdk_init_function"],
+) -> Callable[[Resource], None] | None:
+    """Helper for OpAMP entry points loading
+
+    This in development, at the moment we are looking for a callable that takes
+    the resource and instantiate an OpAMP agent.
+    Since configuration is not specified every implementer may have its own.
+    Refer to the opentelemetry-opamp-client package on how to setup the OpAMP agent.
+    """
+    entry_point = None
+    try:
+        entry_point = next(
+            iter(entry_points(group="_opentelemetry_opamp", name=name))
+        )
+        return entry_point.load()
+    except StopIteration:
+        _logger.debug("No OpAMP init function found")
+    except AttributeError as exc:
+        _logger.warning(
+            "Failed to load OpAMP init function from entry point, %s: %s",
+            entry_point,
+            exc,
+        )
+
+    return None
+
+
 def _initialize_components(
     auto_instrumentation_version: str | None = None,
     trace_exporter_names: list[str] | None = None,
@@ -557,7 +586,28 @@ def _initialize_components(
     meter_configurator: _MeterConfiguratorT | None = None,
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-branches
+    if resource_attributes is None:
+        resource_attributes = {}
+    # populate version if using auto-instrumentation
+    if auto_instrumentation_version:
+        resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (  # type: ignore[reportIndexIssue]
+            auto_instrumentation_version
+        )
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    resource = Resource.create(resource_attributes)
+
+    # OpAMP is a system created to configure OpenTelemetry SDKs with a remote config.
+    # This is different than other init helpers because setting up OpAMP requires distro
+    # provided code as it's not strictly specified. We have two entry points for OpAMP:
+    # one called early for people that want it blocking to get an updated config before
+    # setting up the rest of the SDK and the other after for people that want the
+    # SDK already setup.
+    _init_opamp = _import_opamp("pre_sdk_init_function")
+    if _init_opamp is not None:
+        _init_opamp(resource)
+
     if trace_exporter_names is None:
         trace_exporter_names = []
     if metric_exporter_names is None:
@@ -575,13 +625,7 @@ def _initialize_components(
     if id_generator is None:
         id_generator_name = _get_id_generator()
         id_generator = _import_id_generator(id_generator_name)
-    if resource_attributes is None:
-        resource_attributes = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        resource_attributes[ResourceAttributes.TELEMETRY_AUTO_VERSION] = (  # type: ignore[reportIndexIssue]
-            auto_instrumentation_version
-        )
+
     if tracer_configurator is None:
         tracer_configurator_name = _get_tracer_configurator()
         tracer_configurator = _import_tracer_configurator(
@@ -597,10 +641,6 @@ def _initialize_components(
         logger_configurator = _import_logger_configurator(
             logger_configurator_name
         )
-
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    resource = Resource.create(resource_attributes)
 
     _init_tracing(
         exporters=span_exporters,
@@ -636,6 +676,10 @@ def _initialize_components(
         export_log_record_processor=export_log_record_processor,
         logger_configurator=logger_configurator,
     )
+
+    _init_opamp = _import_opamp("post_sdk_init_function")
+    if _init_opamp is not None:
+        _init_opamp(resource)
 
 
 class _BaseConfigurator(ABC):
@@ -677,4 +721,24 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
+        if config_file := environ.get(OTEL_CONFIG_FILE):
+            # Imported lazily so that the SDK does not require the optional
+            # file-configuration extras (pyyaml, jsonschema) unless a config
+            # file is actually requested.
+            # pylint: disable=import-outside-toplevel
+            from opentelemetry.sdk._configuration._sdk import (  # noqa: PLC0415
+                configure_sdk,
+            )
+            from opentelemetry.sdk._configuration.file._loader import (  # noqa: PLC0415
+                load_config_file,
+            )
+
+            if kwargs:
+                _logger.warning(
+                    "%s is set; ignoring configurator kwargs: %s",
+                    OTEL_CONFIG_FILE,
+                    sorted(kwargs),
+                )
+            configure_sdk(load_config_file(config_file))
+            return
         _initialize_components(**kwargs)
