@@ -1,6 +1,11 @@
 OpenTelemetry Logs SDK
 ======================
 
+.. warning::
+   OpenTelemetry Python logs are in an experimental state. The APIs within
+   :mod:`opentelemetry.sdk._logs` are subject to change in minor/patch releases and make no
+   backward compatibility guarantees at this time.
+
 The source files of these examples are available :scm_web:`here <docs/examples/logs/>`.
 
 .. note::
