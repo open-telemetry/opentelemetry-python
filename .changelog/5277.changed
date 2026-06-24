@@ -1,1 +1,0 @@
-Remove typing aliases deprecated in python 3.9 and replace all usages of `typing.Union` and `typing.Optional` with `|`.

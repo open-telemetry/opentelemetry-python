@@ -1,1 +1,0 @@
-opentelemetry-sdk: reduce lock contention in attributes
