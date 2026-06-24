@@ -26,8 +26,8 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "opentelemetry-proto-json == 0.64b0.dev",
-  "opentelemetry-sdk ~= 1.43.0.dev",
+  "opentelemetry-proto-json == 0.64b0",
+  "opentelemetry-sdk ~= 1.43.0",
 ]
 
 [project.urls]
