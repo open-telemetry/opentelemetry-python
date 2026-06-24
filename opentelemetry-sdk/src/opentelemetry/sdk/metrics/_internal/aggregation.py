@@ -465,20 +465,11 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
             )
         if boundaries:
-            if isnan(boundaries[0]):
-                raise ValueError("invalid boundary: NaN")
-            if boundaries[0] == -inf:
-                raise ValueError("invalid boundary: -Inf")
-            for i in range(1, len(boundaries)):
-                if isnan(boundaries[i]):
-                    raise ValueError("invalid boundary: NaN")
-                if boundaries[i - 1] >= boundaries[i]:
-                    raise ValueError(
-                        f"boundaries must be strictly increasing:"
-                        f" {boundaries[i - 1]} >= {boundaries[i]}"
-                    )
-            if boundaries[-1] == inf:
-                raise ValueError("invalid boundary: +Inf")
+            for i, x in enumerate(boundaries):
+                if not math.isfinite(x):
+                    raise ValueError(f"invalid boundary: {x!r}")
+                if i and boundaries[i - 1] >= x:
+                    raise ValueError("boundaries must be strictly increasing")
         super().__init__(
             attributes,
             reservoir_builder=partial(
