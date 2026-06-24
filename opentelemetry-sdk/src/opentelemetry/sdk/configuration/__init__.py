@@ -21,36 +21,41 @@ Construct a configuration programmatically and apply it:
 
 Loading from a file requires the optional ``[file-configuration]`` extras
 (``pyyaml`` and ``jsonschema``). ``configure_sdk`` itself has no extra
-dependencies — callers that construct an ``OpenTelemetryConfiguration``
+dependencies: callers that construct an ``OpenTelemetryConfiguration``
 directly can use it without installing the extras.
 """
+
+from __future__ import annotations
+
+import os
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration._sdk import configure_sdk
 from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
 
 
-def __getattr__(name: str):
-    # ``load_config_file`` lives behind the optional file-configuration
-    # extras (pyyaml, jsonschema). Resolve it lazily so importing this
-    # module does not require those extras for callers that only use
-    # ``configure_sdk`` with a programmatically built configuration.
-    if name == "load_config_file":
-        # pylint: disable=import-outside-toplevel
-        from opentelemetry.sdk._configuration.file._loader import (  # noqa: PLC0415
-            load_config_file,
-        )
+def load_config_file(
+    file_path: str | os.PathLike[str],
+) -> OpenTelemetryConfiguration:
+    """Load and parse an OpenTelemetry configuration file.
 
-        return load_config_file
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    Thin wrapper that defers importing the file loader until first call so
+    the optional ``[file-configuration]`` extras (``pyyaml``, ``jsonschema``)
+    are not required just to import this module. See
+    :func:`opentelemetry.sdk._configuration.file._loader.load_config_file`
+    for the full behaviour and error contract.
+    """
+    # pylint: disable=import-outside-toplevel
+    from opentelemetry.sdk._configuration.file._loader import (  # noqa: PLC0415
+        load_config_file as _load_config_file,
+    )
+
+    return _load_config_file(file_path)
 
 
-# ``load_config_file`` is exposed via ``__getattr__`` rather than a module-level
-# binding so the file-configuration extras stay optional. Pylint's static
-# analysis doesn't see ``__getattr__`` and flags it as undefined; suppress.
 __all__ = [
     "ConfigurationError",
     "OpenTelemetryConfiguration",
     "configure_sdk",
-    "load_config_file",  # pylint: disable=undefined-all-variable
+    "load_config_file",
 ]
