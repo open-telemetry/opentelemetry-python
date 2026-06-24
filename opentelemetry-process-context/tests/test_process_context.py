@@ -43,7 +43,7 @@ class TestPublishContext(unittest.TestCase):
         child_script = textwrap.dedent("""\
             import sys
             from opentelemetry.sdk.resources import Resource
-            from opentelemetry.process_context._rs import publish_context
+            from opentelemetry.process_context import publish_context
 
             resource = Resource({"service.name": "otel-test-service", "version": 42})
             publish_context(resource)
