@@ -17,7 +17,7 @@ if not pid:
     try:
         publish_context(resource)
         unpublish_context()
-    except:
+    except:  # noqa: E722
         os._exit(1)
     os._exit(0)
 
@@ -29,6 +29,6 @@ if not (os.WIFEXITED(status) and os.WEXITSTATUS(status) == 0):
 try:
     publish_context(resource)
     unpublish_context()
-except:
+except:  # noqa: E722
     sys.exit(1)
 sys.exit(0)
