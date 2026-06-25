@@ -8,7 +8,6 @@ import unittest
 from unittest.mock import patch
 
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk.environment_variables import OTEL_CONFIG_FILE
 
 
@@ -28,8 +27,8 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         )
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
-    @patch("opentelemetry.sdk._configuration._sdk.configure_sdk")
-    @patch("opentelemetry.sdk._configuration.file._loader.load_config_file")
+    @patch("opentelemetry.sdk.configuration.configure_sdk")
+    @patch("opentelemetry.sdk.configuration.load_config_file")
     @patch("opentelemetry.sdk._configuration._initialize_components")
     def test_env_var_set_routes_to_declarative_path(
         self, mock_init_components, mock_load, mock_configure_sdk
@@ -43,16 +42,25 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         mock_configure_sdk.assert_called_once_with(sentinel_config)
         mock_init_components.assert_not_called()
 
-    @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/does/not/exist.yaml"})
+    @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
+    @patch.dict(
+        "sys.modules", {"opentelemetry.sdk.configuration": None}, clear=False
+    )
     @patch("opentelemetry.sdk._configuration._initialize_components")
-    def test_env_var_set_missing_file_propagates(self, mock_init_components):
-        with self.assertRaises(ConfigurationError):
+    def test_env_var_set_but_package_missing_raises(self, mock_init_components):
+        # When opentelemetry-sdk-configuration is not installed but the env
+        # var is set, surface a clear RuntimeError instead of a bare
+        # ImportError so users know which package to install.
+        with self.assertRaises(RuntimeError) as ctx:
             _OTelSDKConfigurator()._configure()
+        self.assertIn(
+            "opentelemetry-sdk-configuration", str(ctx.exception)
+        )
         mock_init_components.assert_not_called()
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
-    @patch("opentelemetry.sdk._configuration._sdk.configure_sdk")
-    @patch("opentelemetry.sdk._configuration.file._loader.load_config_file")
+    @patch("opentelemetry.sdk.configuration.configure_sdk")
+    @patch("opentelemetry.sdk.configuration.load_config_file")
     def test_env_var_set_with_kwargs_warns_and_ignores(
         self, mock_load, mock_configure_sdk
     ):

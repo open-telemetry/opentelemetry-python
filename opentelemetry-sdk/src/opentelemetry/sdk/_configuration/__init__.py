@@ -722,16 +722,23 @@ class _OTelSDKConfigurator(_BaseConfigurator):
 
     def _configure(self, **kwargs):
         if config_file := environ.get(OTEL_CONFIG_FILE):
-            # Imported lazily so that the SDK does not require the optional
-            # file-configuration extras (pyyaml, jsonschema) unless a config
-            # file is actually requested.
-            # pylint: disable=import-outside-toplevel
-            from opentelemetry.sdk._configuration._sdk import (  # noqa: PLC0415
-                configure_sdk,
-            )
-            from opentelemetry.sdk._configuration.file._loader import (  # noqa: PLC0415
-                load_config_file,
-            )
+            # Declarative configuration lives in the separate
+            # ``opentelemetry-sdk-configuration`` package. Import lazily so the
+            # SDK has no runtime dependency on it; users who don't set
+            # ``OTEL_CONFIG_FILE`` never pay the import cost.
+            try:
+                # pylint: disable=import-outside-toplevel
+                from opentelemetry.sdk.configuration import (  # noqa: PLC0415
+                    configure_sdk,
+                    load_config_file,
+                )
+            except ImportError as exc:
+                raise RuntimeError(
+                    f"{OTEL_CONFIG_FILE} is set but "
+                    "opentelemetry-sdk-configuration is not installed. "
+                    "Install it with: pip install "
+                    "'opentelemetry-sdk-configuration[file-configuration]'"
+                ) from exc
 
             if kwargs:
                 _logger.warning(
