@@ -1138,26 +1138,21 @@ requires-dist = [
 name = "opentelemetry-sdk-configuration"
 source = { editable = "opentelemetry-sdk-configuration" }
 dependencies = [
+    { name = "jsonschema" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-sdk" },
-    { name = "typing-extensions" },
-]
-
-[package.optional-dependencies]
-file-configuration = [
-    { name = "jsonschema" },
     { name = "pyyaml" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "jsonschema", marker = "extra == 'file-configuration'", specifier = ">=4.0" },
+    { name = "jsonschema", specifier = ">=4.0" },
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
-    { name = "pyyaml", marker = "extra == 'file-configuration'", specifier = ">=6.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
-provides-extras = ["file-configuration"]
 
 [[package]]
 name = "opentelemetry-semantic-conventions"

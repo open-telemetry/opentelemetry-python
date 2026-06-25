@@ -736,8 +736,7 @@ class _OTelSDKConfigurator(_BaseConfigurator):
                 raise RuntimeError(
                     f"{OTEL_CONFIG_FILE} is set but "
                     "opentelemetry-sdk-configuration is not installed. "
-                    "Install it with: pip install "
-                    "'opentelemetry-sdk-configuration[file-configuration]'"
+                    "Install it with: pip install opentelemetry-sdk-configuration"
                 ) from exc
 
             if kwargs:

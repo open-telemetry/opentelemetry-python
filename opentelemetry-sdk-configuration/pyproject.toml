@@ -29,10 +29,6 @@ dependencies = [
   "opentelemetry-api == 1.44.0.dev",
   "opentelemetry-sdk == 1.44.0.dev",
   "typing-extensions >= 4.5.0",
-]
-
-[project.optional-dependencies]
-file-configuration = [
   "pyyaml >= 6.0",
   "jsonschema >= 4.0",
 ]

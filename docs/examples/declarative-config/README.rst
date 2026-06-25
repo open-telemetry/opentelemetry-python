@@ -15,13 +15,12 @@ variables or hand-written provider setup.
 The source files of this example are available :scm_web:`here
 <docs/examples/declarative-config/>`.
 
-Install the SDK with the ``file-configuration`` extra (it pulls in ``pyyaml``
-and ``jsonschema``), the auto-instrumentation entry point, and the OTLP/HTTP
-exporter:
+Install the declarative-config package, the auto-instrumentation entry point,
+and the OTLP/HTTP exporter:
 
 .. code-block:: sh
 
-    pip install "opentelemetry-sdk[file-configuration]" \
+    pip install opentelemetry-sdk-configuration \
         opentelemetry-distro \
         opentelemetry-exporter-otlp-proto-http
 

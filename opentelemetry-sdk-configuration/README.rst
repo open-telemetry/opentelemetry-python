@@ -30,23 +30,12 @@ For programmatic use:
     config = load_config_file("otel-config.yaml")
     configure_sdk(config)
 
-Loading from a file requires the optional ``[file-configuration]`` extras
-(``pyyaml`` and ``jsonschema``). ``configure_sdk`` itself has no extra
-dependencies; callers that build an ``OpenTelemetryConfiguration`` directly can
-use it without installing the extras.
-
 Installation
 ------------
 
 ::
 
     pip install opentelemetry-sdk-configuration
-
-To load a file:
-
-::
-
-    pip install "opentelemetry-sdk-configuration[file-configuration]"
 
 References
 ----------

@@ -21,12 +21,11 @@ configuration schema, and applies it globally.
 Installing
 ----------
 
-File configuration relies on optional dependencies (``pyyaml`` and
-``jsonschema``). Install them with the ``file-configuration`` extra:
+Declarative configuration lives in a separate, experimental package:
 
 .. code-block:: sh
 
-    pip install "opentelemetry-sdk[file-configuration]"
+    pip install opentelemetry-sdk-configuration
 
 Enabling with an environment variable
 -------------------------------------
