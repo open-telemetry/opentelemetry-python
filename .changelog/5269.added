@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: declarative config loader now recursively converts parsed dicts into typed dataclass instances, including nested dataclasses, lists of dataclasses, and enum values. End-to-end YAML/JSON → SDK configuration now works via the factory functions.

@@ -846,6 +846,9 @@ wheels = [
 [[package]]
 name = "opentelemetry-exporter-http-transport"
 source = { editable = "exporter/opentelemetry-exporter-http-transport" }
+dependencies = [
+    { name = "opentelemetry-api" },
+]
 
 [package.optional-dependencies]
 requests = [
@@ -857,6 +860,7 @@ urllib3 = [
 
 [package.metadata]
 requires-dist = [
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "requests", marker = "extra == 'requests'", specifier = "~=2.25" },
     { name = "urllib3", marker = "extra == 'urllib3'", specifier = ">=1.26" },
 ]
