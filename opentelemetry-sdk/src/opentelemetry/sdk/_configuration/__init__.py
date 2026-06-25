@@ -37,6 +37,7 @@ from opentelemetry.sdk._logs.export import (
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_CONFIG_FILE,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -706,4 +707,24 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
+        if config_file := environ.get(OTEL_CONFIG_FILE):
+            # Imported lazily so that the SDK does not require the optional
+            # file-configuration extras (pyyaml, jsonschema) unless a config
+            # file is actually requested.
+            # pylint: disable=import-outside-toplevel
+            from opentelemetry.sdk._configuration._sdk import (  # noqa: PLC0415
+                configure_sdk,
+            )
+            from opentelemetry.sdk._configuration.file._loader import (  # noqa: PLC0415
+                load_config_file,
+            )
+
+            if kwargs:
+                _logger.warning(
+                    "%s is set; ignoring configurator kwargs: %s",
+                    OTEL_CONFIG_FILE,
+                    sorted(kwargs),
+                )
+            configure_sdk(load_config_file(config_file))
+            return
         _initialize_components(**kwargs)
