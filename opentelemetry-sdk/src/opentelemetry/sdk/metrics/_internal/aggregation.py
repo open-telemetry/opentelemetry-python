@@ -9,7 +9,13 @@ from collections.abc import Callable, Sequence
 from enum import IntEnum
 from functools import partial
 from logging import getLogger
-from math import inf, isnan
+import math
+from abc import ABC, abstractmethod
+from bisect import bisect_left
+from collections.abc import Callable, Sequence
+from enum import IntEnum
+from functools import partial
+from logging import getLogger
 from threading import Lock
 from typing import (
     Generic,
