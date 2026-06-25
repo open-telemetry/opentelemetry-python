@@ -465,10 +465,10 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
             )
         if boundaries:
-            for i, x in enumerate(boundaries):
-                if not math.isfinite(x):
-                    raise ValueError(f"invalid boundary: {x!r}")
-                if i and boundaries[i - 1] >= x:
+            for idx, bound in enumerate(boundaries):
+                if not math.isfinite(bound):
+                    raise ValueError(f"invalid boundary: {bound!r}")
+                if idx and boundaries[idx - 1] >= bound:
                     raise ValueError("boundaries must be strictly increasing")
         super().__init__(
             attributes,
@@ -485,13 +485,13 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._record_min_max = record_min_max
 
         self._value = None
-        self._min = inf
-        self._max = -inf
+        self._min = math.inf
+        self._max = -math.inf
         self._sum = 0
 
         self._previous_value = None
-        self._previous_min = inf
-        self._previous_max = -inf
+        self._previous_min = math.inf
+        self._previous_max = -math.inf
         self._previous_sum = 0
 
         self._previous_collection_start_nano = self._start_time_unix_nano
@@ -535,8 +535,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             self._value = None
             self._sum = 0
-            self._min = inf
-            self._max = -inf
+            self._min = math.inf
+            self._max = -math.inf
 
             if (
                 self._instrument_aggregation_temporality
@@ -680,8 +680,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._value_positive = None
         self._value_negative = None
-        self._min = inf
-        self._max = -inf
+        self._min = math.inf
+        self._max = -math.inf
         self._sum = 0
         self._count = 0
         self._zero_count = 0
@@ -689,8 +689,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._previous_value_positive = None
         self._previous_value_negative = None
-        self._previous_min = inf
-        self._previous_max = -inf
+        self._previous_min = math.inf
+        self._previous_max = -math.inf
         self._previous_sum = 0
         self._previous_count = 0
         self._previous_zero_count = 0
@@ -836,8 +836,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             self._value_positive = None
             self._value_negative = None
             self._sum = 0
-            self._min = inf
-            self._max = -inf
+            self._min = math.inf
+            self._max = -math.inf
             self._count = 0
             self._zero_count = 0
             self._scale = None
@@ -1349,7 +1349,7 @@ class ExponentialBucketHistogramAggregation(Aggregation):
 
 
 class ExplicitBucketHistogramAggregation(Aggregation):
-    """This aggregation informs the SDK to collect:
+    """This aggregation math.informs the SDK to collect:
 
     - Count of Measurement values falling within explicit bucket boundaries.
     - Arithmetic sum of Measurement values in population. This SHOULD NOT be collected when used with instruments that record negative measurements, e.g. UpDownCounter or ObservableGauge.
@@ -1409,7 +1409,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
 
 class SumAggregation(Aggregation):
-    """This aggregation informs the SDK to collect:
+    """This aggregation math.informs the SDK to collect:
 
     - The arithmetic sum of Measurement values.
     """
@@ -1442,7 +1442,7 @@ class SumAggregation(Aggregation):
 
 class LastValueAggregation(Aggregation):
     """
-    This aggregation informs the SDK to collect:
+    This aggregation math.informs the SDK to collect:
 
     - The last Measurement.
     - The timestamp of the last Measurement.
