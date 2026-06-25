@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import inspect
+import tempfile
 import unittest
 from dataclasses import dataclass
 from types import SimpleNamespace
@@ -270,6 +271,39 @@ class TestParseOtlpFileOutputStream(unittest.TestCase):
             "Failed to parse output_stream 'file://[::1' for "
             "otlp_file_development exporter",
             str(ctx.exception),
+        )
+
+    def test_relative_path_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _parse_otlp_file_output_stream("file:traces.jsonl")
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported output_stream 'file:traces.jsonl' for "
+            "otlp_file_development exporter. Path must be absolute.",
+        )
+
+    def test_directory_path_raises(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with self.assertRaises(ConfigurationError) as ctx:
+                _parse_otlp_file_output_stream(f"file://{tmpdir}")
+
+            self.assertEqual(
+                str(ctx.exception),
+                f"Unsupported output_stream 'file://{tmpdir}' for "
+                "otlp_file_development exporter. Path must be a file, "
+                "not a directory.",
+            )
+
+    def test_trailing_slash_path_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _parse_otlp_file_output_stream("file:///tmp/output/")
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported output_stream 'file:///tmp/output/' for "
+            "otlp_file_development exporter. Path must be a file, "
+            "not a directory.",
         )
 
 

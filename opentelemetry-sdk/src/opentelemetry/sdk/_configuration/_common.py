@@ -6,6 +6,7 @@ from __future__ import annotations
 import dataclasses
 import inspect
 import logging
+import os
 from collections.abc import Callable
 from typing import Any, Protocol
 from urllib.parse import urlparse
@@ -219,7 +220,19 @@ def _parse_otlp_file_output_stream(output_stream: str | None) -> str | None:
     )
     has_extra_components = parsed.params or parsed.query or parsed.fragment
     if is_local_file_uri and not has_extra_components:
-        return parsed.path
+        path = parsed.path
+        if not os.path.isabs(path):
+            raise ConfigurationError(
+                f"Unsupported output_stream '{output_stream}' for "
+                "otlp_file_development exporter. Path must be absolute."
+            )
+        if path.endswith(("/", os.sep)) or os.path.isdir(path):
+            raise ConfigurationError(
+                f"Unsupported output_stream '{output_stream}' for "
+                "otlp_file_development exporter. Path must be a file, "
+                "not a directory."
+            )
+        return path
     raise ConfigurationError(
         f"Unsupported output_stream '{output_stream}' for otlp_file_development "
         "exporter. Supported values: stdout, file://<path>."
