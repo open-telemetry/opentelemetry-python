@@ -6,9 +6,11 @@
 import importlib.resources
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
+from opentelemetry.sdk._configuration._conversion import _dict_to_dataclass
 from opentelemetry.sdk._configuration._exceptions import (
     ConfigurationError,
     MissingDependencyError,
@@ -38,6 +40,14 @@ except ImportError as exc:
         extras="file-configuration",
     ) from exc
 
+# Schema version vendored in schema.json. ``file_format`` values are accepted
+# per the configuration spec's versioning rules: the major version must match,
+# and a minor version newer than the one this SDK targets is accepted with a
+# warning. See
+# https://github.com/open-telemetry/opentelemetry-configuration/blob/main/VERSIONING.md
+_SUPPORTED_SCHEMA_MAJOR = 1
+_SUPPORTED_SCHEMA_MINOR = 0
+
 _schema_cache: list[dict] = []
 
 
@@ -56,7 +66,9 @@ def _get_schema() -> dict:
 _logger = logging.getLogger(__name__)
 
 
-def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
+def load_config_file(
+    file_path: str | os.PathLike[str],
+) -> OpenTelemetryConfiguration:
     """Load and parse an OpenTelemetry configuration file.
 
     Supports YAML and JSON formats. Performs environment variable substitution
@@ -138,6 +150,7 @@ def load_config_file(file_path: str) -> OpenTelemetryConfiguration:
         )
 
     _validate_schema(data)
+    _validate_file_format(data)
 
     # Convert to OpenTelemetryConfiguration model
     try:
@@ -178,11 +191,63 @@ def _validate_schema(data: dict) -> None:
         ) from exc
 
 
-def _dict_to_model(data: dict[str, Any]) -> OpenTelemetryConfiguration:
-    """Convert dictionary to OpenTelemetryConfiguration model.
+def _validate_file_format(data: dict) -> None:
+    """Validate the ``file_format`` version per the configuration spec.
 
-    Uses the generated dataclass from models.py. This provides basic
-    validation through dataclass field types.
+    The spec requires implementations to fail on an unsupported major version
+    (a breaking-change boundary) and to accept, with a warning, a minor version
+    newer than the one this SDK targets. See
+    https://github.com/open-telemetry/opentelemetry-configuration/blob/main/VERSIONING.md
+
+    Raises:
+        ConfigurationError: If ``file_format`` is malformed or its major
+            version is not supported.
+    """
+    file_format = data.get("file_format")
+    # file_format is required and typed as a string by the schema, which is
+    # validated before this runs; guard defensively regardless.
+    if not isinstance(file_format, str):
+        raise ConfigurationError(
+            f"Invalid file_format: expected a version string, "
+            f"got {file_format!r}"
+        )
+
+    # Drop any pre-release / meta tag, e.g. "1.0-rc.2" -> "1.0".
+    version = file_format.split("-", 1)[0]
+    parts = version.split(".")
+    try:
+        major = int(parts[0])
+        minor = int(parts[1]) if len(parts) > 1 else 0
+    except ValueError as exc:
+        raise ConfigurationError(
+            f"Invalid file_format '{file_format}': expected MAJOR.MINOR "
+            f"version numbers"
+        ) from exc
+
+    if major != _SUPPORTED_SCHEMA_MAJOR:
+        raise ConfigurationError(
+            f"Unsupported file_format '{file_format}': this SDK supports "
+            f"schema version {_SUPPORTED_SCHEMA_MAJOR}.x"
+        )
+
+    if minor > _SUPPORTED_SCHEMA_MINOR:
+        _logger.warning(
+            "Configuration file_format '%s' has a newer minor version than "
+            "this SDK supports (%d.%d); some settings may be ignored.",
+            file_format,
+            _SUPPORTED_SCHEMA_MAJOR,
+            _SUPPORTED_SCHEMA_MINOR,
+        )
+
+
+def _dict_to_model(data: dict[str, Any]) -> OpenTelemetryConfiguration:
+    """Convert a parsed config dictionary to the full typed model tree.
+
+    Walks each field's type annotation, recursively converting nested
+    dicts to their corresponding dataclass types. The resulting
+    ``OpenTelemetryConfiguration`` is fully typed end-to-end, so factory
+    functions can rely on typed attribute access (e.g. ``config.sampler``,
+    ``config.processors[0].batch.exporter``).
 
     Args:
         data: Parsed configuration dictionary.
@@ -194,15 +259,9 @@ def _dict_to_model(data: dict[str, Any]) -> OpenTelemetryConfiguration:
         TypeError: If data doesn't match expected structure.
         ValueError: If values are invalid.
     """
-    # Construct the top-level model from the validated dict. Nested fields
-    # are stored as dicts rather than their dataclass types; factory functions
-    # in later PRs will handle the full recursive conversion when building
-    # SDK objects.
     try:
-        config = OpenTelemetryConfiguration(**data)
-        return config
+        return _dict_to_dataclass(data, OpenTelemetryConfiguration)
     except TypeError as exc:
-        # Provide more helpful error message
         raise TypeError(
             f"Configuration structure is invalid. "
             f"Check that all required fields are present and correctly typed: {exc}"

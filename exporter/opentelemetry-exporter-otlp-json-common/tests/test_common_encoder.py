@@ -6,9 +6,9 @@
 import base64
 import unittest
 from logging import ERROR
+from unittest.mock import patch
 
 from opentelemetry.exporter.otlp.json.common._internal import (
-    _encode_array,
     _encode_attributes,
     _encode_instrumentation_scope,
     _encode_key_value,
@@ -16,6 +16,8 @@ from opentelemetry.exporter.otlp.json.common._internal import (
     _encode_span_id,
     _encode_trace_id,
     _encode_value,
+    _get_aggregation,
+    _get_temporality,
 )
 from opentelemetry.proto_json.common.v1.common import AnyValue as JSONAnyValue
 from opentelemetry.proto_json.common.v1.common import (
@@ -31,8 +33,32 @@ from opentelemetry.proto_json.common.v1.common import (
 from opentelemetry.proto_json.resource.v1.resource import (
     Resource as JSONResource,
 )
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+)
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
+from opentelemetry.sdk.metrics.export import AggregationTemporality
+from opentelemetry.sdk.metrics.view import (
+    ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+
+_COMMON_LOGGER_NAME = "opentelemetry.exporter.otlp.json.common._internal"
+
+
+class CallingStrRaisesException:
+    def __str__(self):
+        raise ValueError("Cannot encode")
 
 
 class TestCommonEncoder(unittest.TestCase):
@@ -129,29 +155,23 @@ class TestCommonEncoder(unittest.TestCase):
         result_dict = result.to_dict()
         self.assertIn("kvlistValue", result_dict)
 
-    def test_encode_value_none_not_allowed(self):
-        with self.assertRaises(TypeError):
-            _encode_value(None)
-
-    def test_encode_value_none_allowed(self):
-        result = _encode_value(None, allow_null=True)
-        self.assertIsNone(result)
+    def test_encode_null(self):
+        result = _encode_value(None)
+        self.assertEqual(result, JSONAnyValue())
 
     def test_encode_array_with_nulls(self):
-        result = _encode_array([1, None, 2], allow_null=True)
-        self.assertEqual(
-            result,
-            [
-                JSONAnyValue(int_value=1),
-                JSONAnyValue(),
-                JSONAnyValue(int_value=2),
-            ],
+        result = _encode_value([1, None, 2])
+        expected = JSONAnyValue(
+            array_value=JSONArrayValue(
+                values=[
+                    JSONAnyValue(int_value=1),
+                    JSONAnyValue(),
+                    JSONAnyValue(int_value=2),
+                ]
+            )
         )
-        self.assertEqual(result[1].to_dict(), {})
-
-    def test_encode_array_none_raises(self):
-        with self.assertRaises(TypeError):
-            _encode_array([1, None, 2], allow_null=False)
+        self.assertEqual(result, expected)
+        self.assertEqual(result.array_value.values[1].to_dict(), {})
 
     def test_encode_key_value(self):
         result = _encode_key_value("mykey", "myval")
@@ -232,7 +252,9 @@ class TestCommonEncoder(unittest.TestCase):
 
     def test_encode_attributes_error_skips_bad_key(self):
         with self.assertLogs(level=ERROR) as error:
-            result = _encode_attributes({"a": 1, "bad_key": None, "b": 2})
+            result = _encode_attributes(
+                {"a": 1, "bad_key": CallingStrRaisesException(), "b": 2}
+            )
 
         self.assertEqual(len(error.records), 1)
         self.assertEqual(error.records[0].msg, "Failed to encode key %s: %s")
@@ -246,10 +268,14 @@ class TestCommonEncoder(unittest.TestCase):
             ],
         )
 
-    def test_encode_attributes_error_list_none(self):
+    def test_encode_attributes_error_list_unencodable_item(self):
         with self.assertLogs(level=ERROR) as error:
             result = _encode_attributes(
-                {"a": 1, "bad_key": ["test", None, "test"], "b": 2}
+                {
+                    "a": 1,
+                    "bad_key": ["test", CallingStrRaisesException(), "test"],
+                    "b": 2,
+                }
             )
 
         self.assertEqual(len(error.records), 1)
@@ -326,3 +352,124 @@ class TestCommonEncoder(unittest.TestCase):
         result = _encode_instrumentation_scope(None)
         self.assertEqual(result, JSONInstrumentationScope())
         self.assertEqual(result.to_dict(), {})
+
+
+class TestGetTemporality(unittest.TestCase):
+    def test_temporality_default_is_cumulative(self):
+        result = _get_temporality(None)
+        for instrument_class in (
+            Counter,
+            UpDownCounter,
+            Histogram,
+            ObservableCounter,
+            ObservableUpDownCounter,
+            ObservableGauge,
+        ):
+            with self.subTest(instrument=instrument_class.__name__):
+                self.assertEqual(
+                    result[instrument_class],
+                    AggregationTemporality.CUMULATIVE,
+                )
+
+    def test_temporality_delta_env(self):
+        delta_cases = {
+            Counter: AggregationTemporality.DELTA,
+            UpDownCounter: AggregationTemporality.CUMULATIVE,
+            Histogram: AggregationTemporality.DELTA,
+            ObservableCounter: AggregationTemporality.DELTA,
+            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
+        with patch.dict(
+            "os.environ",
+            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
+        ):
+            result = _get_temporality(None)
+        for instrument_class, expected in delta_cases.items():
+            with self.subTest(instrument=instrument_class.__name__):
+                self.assertEqual(result[instrument_class], expected)
+
+    def test_temporality_lowmemory_env(self):
+        lowmemory_cases = {
+            Counter: AggregationTemporality.DELTA,
+            UpDownCounter: AggregationTemporality.CUMULATIVE,
+            Histogram: AggregationTemporality.DELTA,
+            ObservableCounter: AggregationTemporality.CUMULATIVE,
+            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
+        with patch.dict(
+            "os.environ",
+            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "LOWMEMORY"},
+        ):
+            result = _get_temporality(None)
+        for instrument_class, expected in lowmemory_cases.items():
+            with self.subTest(instrument=instrument_class.__name__):
+                self.assertEqual(result[instrument_class], expected)
+
+    def test_temporality_invalid_env_logs_warning(self):
+        with patch.dict(
+            "os.environ",
+            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "INVALID"},
+        ):
+            with self.assertLogs(_COMMON_LOGGER_NAME, level="WARNING"):
+                result = _get_temporality(None)
+        self.assertEqual(
+            result[Counter],
+            AggregationTemporality.CUMULATIVE,
+        )
+
+    def test_temporality_override_takes_precedence(self):
+        with patch.dict(
+            "os.environ",
+            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
+        ):
+            result = _get_temporality({Counter: AggregationTemporality.DELTA})
+        self.assertEqual(result[Counter], AggregationTemporality.DELTA)
+
+
+class TestGetAggregation(unittest.TestCase):
+    def test_aggregation_default_is_explicit_bucket(self):
+        result = _get_aggregation(None)
+        self.assertIsInstance(
+            result[Histogram],
+            ExplicitBucketHistogramAggregation,
+        )
+
+    def test_aggregation_exponential_env(self):
+        with patch.dict(
+            "os.environ",
+            {
+                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "base2_exponential_bucket_histogram"
+            },
+        ):
+            result = _get_aggregation(None)
+        self.assertIsInstance(
+            result[Histogram],
+            ExponentialBucketHistogramAggregation,
+        )
+
+    def test_aggregation_invalid_env_logs_warning(self):
+        with patch.dict(
+            "os.environ",
+            {
+                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "unknown_aggregation"
+            },
+        ):
+            with self.assertLogs(_COMMON_LOGGER_NAME, level="WARNING"):
+                result = _get_aggregation(None)
+        self.assertIsInstance(
+            result[Histogram],
+            ExplicitBucketHistogramAggregation,
+        )
+
+    def test_aggregation_override_takes_precedence(self):
+        custom_aggregation = ExponentialBucketHistogramAggregation()
+        with patch.dict(
+            "os.environ",
+            {
+                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "explicit_bucket_histogram"
+            },
+        ):
+            result = _get_aggregation({Histogram: custom_aggregation})
+        self.assertIs(result[Histogram], custom_aggregation)
