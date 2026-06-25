@@ -38,6 +38,9 @@ class TestPublishContext(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             unpublish_context()
 
+    @unittest.skipUnless(
+        sys.platform.startswith("linux"), "requires /proc/<pid>/{maps,mem}"
+    )
     def test_cross_process_memory_region(self):
         """Spawn a child that publishes a fixed context and read/validate its memory region."""
         child_script = textwrap.dedent("""\

@@ -171,10 +171,10 @@ fn publish_existing(region: &mut Region, payload: Vec<u8>) -> Result<(), Publish
 /// mapping is allocated and the header pointer remains stable across updates.
 pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
     let mut guard = MAPPING.lock().expect("process context mutex poisoned");
-    if guard.is_none() {
-        publish_new(&mut guard, payload)
+    if let Some(region) = guard.as_mut() {
+        publish_existing(region, payload)
     } else {
-        publish_existing(guard.as_mut().unwrap(), payload)
+        publish_new(&mut guard, payload)
     }
 }
 
