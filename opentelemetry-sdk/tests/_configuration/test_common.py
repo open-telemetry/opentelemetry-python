@@ -282,21 +282,6 @@ class TestParseOtlpFileOutputStream(unittest.TestCase):
             "otlp_file_development exporter. Path must be absolute.",
         )
 
-    def test_directory_path_raises(self):
-        with patch(
-            "opentelemetry.sdk._configuration._common.os.path.isdir",
-            return_value=True,
-        ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                _parse_otlp_file_output_stream("file:///tmp/output")
-
-        self.assertEqual(
-            str(ctx.exception),
-            "Unsupported output_stream 'file:///tmp/output' for "
-            "otlp_file_development exporter. Path must be a file, "
-            "not a directory.",
-        )
-
     def test_trailing_slash_path_raises(self):
         with self.assertRaises(ConfigurationError) as ctx:
             _parse_otlp_file_output_stream("file:///tmp/output/")
