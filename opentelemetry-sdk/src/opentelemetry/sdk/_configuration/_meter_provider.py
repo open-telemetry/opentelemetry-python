@@ -457,16 +457,19 @@ def _create_prometheus_metric_reader(
             "Install it with: pip install opentelemetry-exporter-prometheus"
         ) from exc
 
-    disable_target_info = bool(config.without_target_info_development)
+    disable_target_info = (
+        config.target_info_enabled_development is not None
+        and not config.target_info_enabled_development
+    )
 
-    if config.without_scope_info is not None:
+    if config.scope_info_enabled is not None:
         _logger.warning(
-            "without_scope_info is not yet supported for "
+            "scope_info_enabled is not yet supported for "
             "Prometheus metric exporter and will be ignored."
         )
-    if config.with_resource_constant_labels is not None:
+    if config.resource_constant_labels is not None:
         _logger.warning(
-            "with_resource_constant_labels is not yet supported for "
+            "resource_constant_labels is not yet supported for "
             "Prometheus metric exporter and will be ignored."
         )
 

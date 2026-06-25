@@ -436,7 +436,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                                 prometheus_development=PrometheusMetricExporterConfig(
                                     host="0.0.0.0",
                                     port=9090,
-                                    without_target_info_development=True,
+                                    target_info_enabled_development=False,
                                 )
                             )
                         )
