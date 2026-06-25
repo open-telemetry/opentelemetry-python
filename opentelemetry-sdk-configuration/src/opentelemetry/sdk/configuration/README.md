@@ -9,11 +9,12 @@ This package implements [OpenTelemetry file-based configuration](https://opentel
 
 ## Updating the schema
 
-1. Download the new schema from the [opentelemetry-configuration releases](https://github.com/open-telemetry/opentelemetry-configuration/releases):
+1. Pick the desired tag from the [opentelemetry-configuration releases](https://github.com/open-telemetry/opentelemetry-configuration/releases) and download the schema:
 
    ```sh
+   TAG=v1.1.0
    curl -o opentelemetry-sdk-configuration/src/opentelemetry/sdk/configuration/schema.json \
-     https://raw.githubusercontent.com/open-telemetry/opentelemetry-configuration/refs/tags/vX.Y.Z/opentelemetry_configuration.json
+     "https://raw.githubusercontent.com/open-telemetry/opentelemetry-configuration/refs/tags/${TAG}/opentelemetry_configuration.json"
    ```
 
 2. Regenerate `models.py`:

@@ -727,8 +727,8 @@ class _OTelSDKConfigurator(_BaseConfigurator):
             # SDK has no runtime dependency on it; users who don't set
             # ``OTEL_CONFIG_FILE`` never pay the import cost.
             try:
-                # pylint: disable=import-outside-toplevel
-                from opentelemetry.sdk.configuration import (  # noqa: PLC0415
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.sdk.configuration import (  # type: ignore[import-not-found]  # noqa: PLC0415
                     configure_sdk,
                     load_config_file,
                 )
