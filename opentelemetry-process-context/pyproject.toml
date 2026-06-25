@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "opentelemetry-process-context"
-version = "0.64b0.dev"
+version = "0.65b0.dev"
 description = "OpenTelemetry Process Context"
 readme = "README.rst"
 license = "Apache-2.0"

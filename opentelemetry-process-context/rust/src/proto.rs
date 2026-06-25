@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-#![allow(dead_code)]
+#![allow(dead_code, clippy::all)]
 
 pub(crate) mod common {
     pub(crate) mod v1 {

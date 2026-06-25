@@ -1,12 +1,12 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+mod context;
 mod convert;
 pub(crate) mod proto;
-mod context;
 
-use pyo3::prelude::*;
 use crate::convert::{encode_process_context, resource_from_py};
+use pyo3::prelude::*;
 
 #[pyfunction]
 fn publish_context(resource: &Bound<'_, PyAny>) -> PyResult<()> {
@@ -24,7 +24,7 @@ fn unpublish_context() -> PyResult<()> {
 #[pymodule]
 #[pyo3(name = "_rs")]
 fn init(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    context::register_fork_handlers();
     m.add_wrapped(wrap_pyfunction!(publish_context))?;
-    m.add_wrapped(wrap_pyfunction!(unpublish_context))?;
-    Ok(())
+    m.add_wrapped(wrap_pyfunction!(unpublish_context))
 }

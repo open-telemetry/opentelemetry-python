@@ -1,32 +1,32 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Publication of the process context to a memory region that out-of-process
+//! Publication of the process context to a memory region that out of process
 //! readers (e.g. the OpenTelemetry eBPF Profiler) can discover and read.
 //!
 //! The layout follows the OpenTelemetry "Process Context" specification: a fixed
 //! 32-byte header mapping named `OTEL_CTX` and backed by a `memfd` on Linux
-//! (visible in `/proc/<pid>/maps`), with the payload living out-of-band in a
-//! heap-allocated buffer. This means the header mapping never needs resizing:
-//! updates only swap the payload buffer and rewrite the header pointer fields.
+//! (visible in `/proc/<pid>/maps`), with the payload living out of band in a
+//! heap allocated buffer.
 
 use std::ffi::c_void;
 use std::num::NonZeroUsize;
 use std::ptr::NonNull;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
 
-use nix::sys::mman::{mmap_anonymous, MapFlags, ProtFlags};
-use nix::time::{clock_gettime, ClockId};
-use pyo3::exceptions::{PyOSError, PyRuntimeError};
+use parking_lot::Mutex;
+
+use nix::sys::mman::{MapFlags, ProtFlags, mmap_anonymous};
+use nix::time::{ClockId, clock_gettime};
 use pyo3::PyErr;
+use pyo3::exceptions::{PyOSError, PyRuntimeError};
 
 /// 8 byte signature stamped at the start of the header.
 const SIGNATURE: [u8; 8] = *b"OTEL_CTX";
 /// Format version. `2` is the first stable version (`1` is for development).
 const VERSION: u32 = 2;
 /// Size of the header mapping in bytes. The payload lives on the heap.
-const HEADER_SIZE: usize = 32;
+const HEADER_SIZE: usize = std::mem::size_of::<Header>();
 
 /// The process context header.
 #[repr(C)]
@@ -38,12 +38,10 @@ struct Header {
     payload: u64,
 }
 
-const _: () = assert!(std::mem::size_of::<Header>() == HEADER_SIZE);
-
 /// A published mapping.
-#[allow(dead_code)]
 struct Region {
     ptr: NonNull<c_void>,
+    #[allow(unused)]
     payload: Vec<u8>,
 }
 
@@ -53,6 +51,64 @@ unsafe impl Send for Region {}
 
 /// The single active process context for this process, if any.
 static MAPPING: Mutex<Option<Region>> = Mutex::new(None);
+
+/// Register the `pthread_atfork` handlers that keep [`MAPPING`] fork-safe.
+///
+/// Idempotent: only the first call registers the handlers. Without these, a
+/// forked child inherits the parent's `MAPPING` state while the underlying
+/// header mapping is gone (stripped by `MADV_DONTFORK` on Linux, or merely
+/// stale elsewhere), so a `publish()` in the child would dereference a pointer
+/// into an unmapped region and crash.
+pub fn register_fork_handlers() {
+    static REGISTERED: std::sync::Once = std::sync::Once::new();
+    REGISTERED.call_once(|| {
+        // SAFETY: the handlers are valid `'static` `extern "C"` functions.
+        unsafe {
+            nix::libc::pthread_atfork(
+                Some(before_fork),
+                Some(after_fork_parent),
+                Some(after_fork_child),
+            );
+        }
+    });
+}
+
+/// `pthread_atfork` prepare handler: acquire the mapping mutex so no other
+/// thread holds it across the fork, then forget the guard so the lock stays
+/// held into the parent/child handlers, which release it via `force_unlock`.
+extern "C" fn before_fork() {
+    std::mem::forget(MAPPING.lock());
+}
+
+/// `pthread_atfork` parent handler: release the lock taken in [`before_fork`].
+extern "C" fn after_fork_parent() {
+    // SAFETY: `before_fork` acquired the lock and forgot its guard, so this
+    // thread logically owns the lock — the precondition for `force_unlock`.
+    unsafe { MAPPING.force_unlock() };
+}
+
+/// `pthread_atfork` child handler: discard the inherited mapping (the child
+/// never received the live header mapping) so the child starts from the
+/// pristine "never published" state, then release the lock.
+extern "C" fn after_fork_child() {
+    // SAFETY: the child is single threaded here and the lock is held from
+    // `before_fork`, so this is exclusive access to the protected data.
+    let mapping = unsafe { &mut *MAPPING.data_ptr() };
+    if let Some(region) = mapping.take() {
+        // On non-Linux the mapping was inherited (no `MADV_DONTFORK`), so unmap
+        // it. On Linux the child never received the mapping, so the pointer is
+        // simply abandoned.
+        #[cfg(not(target_os = "linux"))]
+        // SAFETY: `region.ptr`/`HEADER_SIZE` describe the inherited mapping.
+        unsafe {
+            let _ = nix::sys::mman::munmap(region.ptr, HEADER_SIZE);
+        }
+        // `region.payload` (the inherited `Vec<u8>` copy) is dropped here.
+        drop(region);
+    }
+    // SAFETY: release the lock acquired (and forgotten) in `before_fork`.
+    unsafe { MAPPING.force_unlock() };
+}
 
 #[derive(Debug)]
 pub enum PublishError {
@@ -170,7 +226,7 @@ fn publish_existing(region: &mut Region, payload: Vec<u8>) -> Result<(), Publish
 /// (zero timestamp → rewrite payload fields → restore timestamp), so no new
 /// mapping is allocated and the header pointer remains stable across updates.
 pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
-    let mut guard = MAPPING.lock().expect("process context mutex poisoned");
+    let mut guard = MAPPING.lock();
     if let Some(region) = guard.as_mut() {
         publish_existing(region, payload)
     } else {
@@ -184,7 +240,7 @@ pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
 /// invalid state, then `munmap`s the header and drops the payload buffer.
 /// After a successful call, `publish()` may be called again.
 pub fn unpublish() -> Result<(), PublishError> {
-    let mut guard = MAPPING.lock().expect("process context mutex poisoned");
+    let mut guard = MAPPING.lock();
     let region = guard.take().ok_or(PublishError::NotPublished)?;
 
     // Zero the timestamp and remove the mapping.
@@ -198,8 +254,7 @@ pub fn unpublish() -> Result<(), PublishError> {
         published_at.store(0, Ordering::Relaxed);
     }
 
-    unsafe { nix::sys::mman::munmap(region.ptr, HEADER_SIZE) }
-        .map_err(|_| PublishError::Munmap)
+    unsafe { nix::sys::mman::munmap(region.ptr, HEADER_SIZE) }.map_err(|_| PublishError::Munmap)
 }
 
 /// Allocate the 32-byte header mapping: a `memfd`-backed mapping on Linux (so
@@ -263,56 +318,4 @@ fn name_mapping(ptr: NonNull<c_void>, len: usize) {
 fn name_mapping(_ptr: NonNull<c_void>, _len: usize) {}
 
 #[cfg(target_os = "linux")]
-mod linux {
-    use std::ffi::c_void;
-    use std::num::NonZeroUsize;
-    use std::ptr::NonNull;
-
-    use nix::sys::memfd::{memfd_create, MFdFlags};
-    use nix::sys::mman::{mmap, MapFlags, ProtFlags};
-
-    // `prctl` options for naming an anonymous VMA.
-    const PR_SET_VMA: nix::libc::c_int = 0x53564d41;
-    const PR_SET_VMA_ANON_NAME: nix::libc::c_ulong = 0;
-
-    /// Create a `memfd`, size it, and map it `MAP_PRIVATE`. Returns `None` if any
-    /// step fails so the caller can fall back to an anonymous mapping.
-    pub(super) fn try_memfd_mapping(len: NonZeroUsize) -> Option<NonNull<c_void>> {
-        let base = MFdFlags::MFD_CLOEXEC | MFdFlags::MFD_ALLOW_SEALING;
-        // `MFD_NOEXEC_SEAL` is a newer flag not exposed by `nix`, request it but
-        // fall back without it on kernels/libc that lack it.
-        let noexec_seal = MFdFlags::from_bits_retain(nix::libc::MFD_NOEXEC_SEAL as _);
-        let fd = memfd_create(c"OTEL_CTX", base | noexec_seal)
-            .or_else(|_| memfd_create(c"OTEL_CTX", base))
-            .ok()?;
-
-        nix::unistd::ftruncate(&fd, len.get() as nix::libc::off_t).ok()?;
-
-        // SAFETY: `fd` is a valid, sized memfd and `len` is non-zero.
-        let ptr = unsafe {
-            mmap(
-                None,
-                len,
-                ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
-                MapFlags::MAP_PRIVATE,
-                &fd,
-                0,
-            )
-        }
-        .ok()?;
-        Some(ptr)
-    }
-
-    pub(super) fn name_mapping(ptr: NonNull<c_void>, len: usize) {
-        const NAME: &core::ffi::CStr = c"OTEL_CTX";
-        unsafe {
-            let _ = nix::libc::prctl(
-                PR_SET_VMA,
-                PR_SET_VMA_ANON_NAME,
-                ptr.as_ptr() as nix::libc::c_ulong,
-                len as nix::libc::c_ulong,
-                NAME.as_ptr() as nix::libc::c_ulong,
-            );
-        }
-    }
-}
+mod linux;

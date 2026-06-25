@@ -1016,7 +1016,7 @@ requires-dist = [
 
 [[package]]
 name = "opentelemetry-process-context"
-version = "0.64b0.dev0"
+version = "0.65b0.dev0"
 source = { editable = "opentelemetry-process-context" }
 dependencies = [
     { name = "opentelemetry-api" },
