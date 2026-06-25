@@ -26,6 +26,7 @@ members = [
     "opentelemetry-proto-json",
     "opentelemetry-python",
     "opentelemetry-sdk",
+    "opentelemetry-sdk-configuration",
     "opentelemetry-semantic-conventions",
     "opentelemetry-test-utils",
 ]
@@ -1071,6 +1072,7 @@ dependencies = [
     { name = "opentelemetry-proto" },
     { name = "opentelemetry-proto-json" },
     { name = "opentelemetry-sdk" },
+    { name = "opentelemetry-sdk-configuration" },
     { name = "opentelemetry-semantic-conventions" },
     { name = "opentelemetry-test-utils" },
 ]
@@ -1101,6 +1103,7 @@ requires-dist = [
     { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
     { name = "opentelemetry-proto-json", editable = "opentelemetry-proto-json" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+    { name = "opentelemetry-sdk-configuration", editable = "opentelemetry-sdk-configuration" },
     { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
     { name = "opentelemetry-test-utils", editable = "tests/opentelemetry-test-utils" },
 ]
@@ -1124,6 +1127,22 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 
+[package.metadata]
+requires-dist = [
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
+    { name = "typing-extensions", specifier = ">=4.5.0" },
+]
+
+[[package]]
+name = "opentelemetry-sdk-configuration"
+source = { editable = "opentelemetry-sdk-configuration" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-sdk" },
+    { name = "typing-extensions" },
+]
+
 [package.optional-dependencies]
 file-configuration = [
     { name = "jsonschema" },
@@ -1134,7 +1153,7 @@ file-configuration = [
 requires-dist = [
     { name = "jsonschema", marker = "extra == 'file-configuration'", specifier = ">=4.0" },
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
-    { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
     { name = "pyyaml", marker = "extra == 'file-configuration'", specifier = ">=6.0" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
