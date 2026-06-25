@@ -1,1 +1,0 @@
- `opentelemetry-exporter-otlp-proto-common`, `opentelemetry-exporter-otlp-json-common`: encoders now always accept null, and encode it as an empty `AnyValue` in accordance with the spec.
