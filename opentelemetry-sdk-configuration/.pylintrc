@@ -1,0 +1,40 @@
+# Pylint config for opentelemetry-sdk-configuration. Extends the repo root
+# `.pylintrc` (which pylint discovers by walking upward from each file) and
+# adds disables that only apply to this package.
+#
+# `opentelemetry-sdk-configuration` extends the `opentelemetry.sdk.*`
+# namespace owned by `opentelemetry-sdk`. At runtime PEP 420 namespace
+# package merging makes `opentelemetry.sdk.configuration.*` resolvable, but
+# astroid (pylint's resolver) does not follow editable-install namespace
+# extensions across separate distributions, so it reports false positive
+# `import-error` / `no-name-in-module` on every import that crosses the
+# package boundary. These two messages are silenced for this package only.
+
+[MASTER]
+# Skip the codegen'd models.py (datamodel-code-generator output).
+ignore-patterns=^models\.py$
+# Run with multiple processes.
+jobs=0
+# Match the global pylintrc's no-self-use extension.
+load-plugins=pylint.extensions.no_self_use
+
+[MESSAGES CONTROL]
+disable=missing-docstring,
+      fixme,
+      too-few-public-methods,
+      too-many-instance-attributes,
+      too-many-arguments,
+      too-many-positional-arguments,
+      duplicate-code,
+      ungrouped-imports,
+      wrong-import-order,
+      line-too-long,
+      exec-used,
+      super-with-arguments,
+      isinstance-second-argument-not-valid-type,
+      raise-missing-from,
+      unused-argument,
+      redefined-builtin,
+      cyclic-import,
+      import-error,
+      no-name-in-module,
