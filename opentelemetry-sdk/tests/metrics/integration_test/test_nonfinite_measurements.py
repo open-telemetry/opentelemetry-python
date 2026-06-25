@@ -27,9 +27,9 @@ class TestNonFiniteMeasurements(TestCase):
         metrics = self.reader.get_metrics_data()
         for rm in metrics.resource_metrics:
             for sm in rm.scope_metrics:
-                for m in sm.metrics:
-                    if m.name == metric_name:
-                        return m.data.data_points[0]
+                for metric in sm.metrics:
+                    if metric.name == metric_name:
+                        return metric.data.data_points[0]
         return None
 
     def test_counter_nan_does_not_corrupt_sum(self):
