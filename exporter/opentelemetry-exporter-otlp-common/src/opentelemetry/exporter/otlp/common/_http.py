@@ -99,7 +99,6 @@ class OTLPHTTPClient:
         kind: Literal["spans", "logs", "metrics"],
         timeout: float = _DEFAULT_TIMEOUT,
         compression: Compression = Compression.NONE,
-        shutdown_event: threading.Event | None = None,
         headers: Mapping[str, str] | None = None,
         jitter: float = _DEFAULT_JITTER,
         logger: logging.Logger | None = None,
@@ -108,9 +107,6 @@ class OTLPHTTPClient:
         self._endpoint = endpoint
         self._timeout = timeout
         self._compression = compression
-        self._shutdown_event = (
-            shutdown_event if shutdown_event is not None else threading.Event()
-        )
         self._headers = dict(headers) if headers is not None else {}
         if self._compression is not Compression.NONE and not any(
             key.lower() == "content-encoding" for key in self._headers
@@ -119,6 +115,8 @@ class OTLPHTTPClient:
         self._kind = kind
         self._jitter = min(max(jitter, 0.0), 1.0)
         self._logger = logger if logger is not None else _logger
+        self._shutdown = False
+        self._shutdown_event = threading.Event()
 
     def _compute_backoff(self, retry: int) -> float:
         return 2**retry * random.uniform(1 - self._jitter, 1 + self._jitter)
@@ -234,6 +232,11 @@ class OTLPHTTPClient:
 
         return ExportResult(False, None, None, None)
 
-    def close(self) -> None:
-        """Close the underlying transport and release its resources."""
+    def shutdown(self) -> None:
+        """Shutdown the client."""
+        if self._shutdown:
+            self._logger.warning("OTLP client already shutdown, ignoring call")
+            return
+        self._shutdown = True
+        self._shutdown_event.set()
         self._transport.close()

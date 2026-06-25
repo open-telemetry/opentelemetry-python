@@ -40,11 +40,10 @@ def _get_temporality(
         .strip()
     )
 
+    instrument_class_temporality: dict[type, AggregationTemporality]
     match temporality_preference:
         case "DELTA":
-            instrument_class_temporality: dict[
-                type, AggregationTemporality
-            ] = {
+            instrument_class_temporality = {
                 Counter: AggregationTemporality.DELTA,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
                 Histogram: AggregationTemporality.DELTA,
@@ -53,9 +52,7 @@ def _get_temporality(
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
         case "LOWMEMORY":
-            instrument_class_temporality: dict[
-                type, AggregationTemporality
-            ] = {
+            instrument_class_temporality = {
                 Counter: AggregationTemporality.DELTA,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
                 Histogram: AggregationTemporality.DELTA,
@@ -73,9 +70,7 @@ def _get_temporality(
                     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
                     temporality_preference,
                 )
-            instrument_class_temporality: dict[
-                type, AggregationTemporality
-            ] = {
+            instrument_class_temporality = {
                 Counter: AggregationTemporality.CUMULATIVE,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
                 Histogram: AggregationTemporality.CUMULATIVE,
@@ -84,8 +79,7 @@ def _get_temporality(
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
 
-    instrument_class_temporality.update(preferred_temporality or {})
-    return instrument_class_temporality
+    return instrument_class_temporality | (preferred_temporality or {})
 
 
 def _get_aggregation(
@@ -100,9 +94,10 @@ def _get_aggregation(
         .strip()
     )
 
+    instrument_class_aggregation: dict[type, Aggregation]
     match default_histogram_aggregation:
         case "BASE2_EXPONENTIAL_BUCKET_HISTOGRAM":
-            instrument_class_aggregation: dict[type, Aggregation] = {
+            instrument_class_aggregation = {
                 Histogram: ExponentialBucketHistogramAggregation(),
             }
         case _:
@@ -116,9 +111,8 @@ def _get_aggregation(
                     default_histogram_aggregation,
                 )
 
-            instrument_class_aggregation: dict[type, Aggregation] = {
+            instrument_class_aggregation = {
                 Histogram: ExplicitBucketHistogramAggregation(),
             }
 
-    instrument_class_aggregation.update(preferred_aggregation or {})
-    return instrument_class_aggregation
+    return instrument_class_aggregation | (preferred_aggregation or {})

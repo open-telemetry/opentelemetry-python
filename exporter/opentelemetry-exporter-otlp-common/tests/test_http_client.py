@@ -110,7 +110,6 @@ class TestOTLPHTTPClient(unittest.TestCase):
         *,
         timeout=5.0,
         compression=Compression.NONE,
-        shutdown_event=None,
         jitter=0.0,
     ):
         return OTLPHTTPClient(
@@ -118,7 +117,6 @@ class TestOTLPHTTPClient(unittest.TestCase):
             endpoint="http://example.test/v1/traces",
             timeout=timeout,
             compression=compression,
-            shutdown_event=shutdown_event or threading.Event(),
             headers={"content-type": "application/x-protobuf"},
             kind="spans",
             jitter=jitter,
@@ -218,10 +216,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
                     ),
                     _TestHTTPResult(status_code=200, reason="OK"),
                 )
-                client = self._client(
-                    transport,
-                    shutdown_event=shutdown_event,
-                )
+                client = self._client(transport)
+                # pylint: disable-next=protected-access
+                client._shutdown_event = shutdown_event
 
                 result = client.export(b"payload")
 
@@ -309,7 +306,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
         transport = _TestHTTPTransport(
             _TestHTTPResult(status_code=503, reason="Service Unavailable")
         )
-        client = self._client(transport, shutdown_event=shutdown_event)
+        client = self._client(transport)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
 
         result = client.export(b"payload")
 
@@ -318,11 +317,11 @@ class TestOTLPHTTPClient(unittest.TestCase):
         self.assertEqual(result.reason, "Service Unavailable")
         shutdown_event.wait.assert_not_called()
 
-    def test_close_closes_transport(self):
+    def test_shutdown_closes_transport(self):
         transport = _TestHTTPTransport()
         client = self._client(transport)
 
-        client.close()
+        client.shutdown()
 
         self.assertTrue(transport.closed)
 
@@ -334,9 +333,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
             _TestHTTPResult(status_code=503, reason="Service Unavailable"),
             _TestHTTPResult(status_code=200, reason="OK"),
         )
-        client = self._client(
-            transport, timeout=10.0, jitter=0.0, shutdown_event=shutdown_event
-        )
+        client = self._client(transport, timeout=10.0, jitter=0.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
 
         with _mock_clock(shutdown_event):
             result = client.export(b"payload")
@@ -356,9 +355,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
         )
         # timeout=1.5: retry=0 backoff=1.0 fits -> wait(1.0) -> time=1.0
         # retry=1 backoff=2.0 > 0.5 remaining -> give up
-        client = self._client(
-            transport, timeout=1.5, jitter=0.0, shutdown_event=shutdown_event
-        )
+        client = self._client(transport, timeout=1.5, jitter=0.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
 
         with _mock_clock(shutdown_event):
             result = client.export(b"payload")
@@ -375,12 +374,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
             *[_TestHTTPResult(status_code=503, reason="Service Unavailable")]
             * 6
         )
-        client = self._client(
-            transport,
-            timeout=1000.0,
-            jitter=0.0,
-            shutdown_event=shutdown_event,
-        )
+        client = self._client(transport, timeout=1000.0, jitter=0.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
 
         with _mock_clock(shutdown_event):
             result = client.export(b"payload")
@@ -427,9 +423,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
             ),
             _TestHTTPResult(status_code=200, reason="OK"),
         )
-        client = self._client(
-            transport, timeout=60.0, shutdown_event=shutdown_event
-        )
+        client = self._client(transport, timeout=60.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
 
         result = client.export(b"payload")
 
@@ -447,9 +443,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 response_headers={"retry-after": "10"},
             ),
         )
-        client = self._client(
-            transport, timeout=3.0, jitter=0.0, shutdown_event=shutdown_event
-        )
+        client = self._client(transport, timeout=3.0, jitter=0.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
 
         with _mock_clock(shutdown_event):
             result = client.export(b"payload")
