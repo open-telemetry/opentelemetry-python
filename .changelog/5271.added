@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: the SDK configurator now honors the `OTEL_CONFIG_FILE` environment variable. When set, the SDK loads and applies the referenced declarative configuration file (YAML or JSON) in place of the env-var-based init path.
