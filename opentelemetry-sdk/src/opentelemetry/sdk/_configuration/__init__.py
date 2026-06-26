@@ -727,7 +727,11 @@ class _OTelSDKConfigurator(_BaseConfigurator):
             # SDK has no runtime dependency on it; users who don't set
             # ``OTEL_CONFIG_FILE`` never pay the import cost.
             try:
-                # pylint: disable=import-outside-toplevel
+                # opentelemetry-configuration is an optional runtime dep
+                # and is not installed in this package's lint env, so
+                # silence the static-analysis no-name-in-module on the
+                # conditional import.
+                # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.configuration import (  # noqa: PLC0415
                     configure_sdk,
                     load_config_file,
