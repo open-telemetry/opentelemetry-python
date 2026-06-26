@@ -91,7 +91,7 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
         return
 
     if config.log_level is not None:
-        level = _SEVERITY_TO_LOGGING_LEVEL[config.log_level]
+        level = _SEVERITY_TO_LOGGING_LEVEL.get(config.log_level, logging.INFO)
         logging.getLogger("opentelemetry").setLevel(level)
 
     resource = create_resource(config.resource)
