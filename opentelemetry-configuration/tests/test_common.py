@@ -3,9 +3,9 @@
 
 import inspect
 import unittest
-from dataclasses import dataclass
+from dataclasses import dataclass, field, fields
 from types import SimpleNamespace
-from typing import Any, ClassVar
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.configuration._common import (
@@ -301,7 +301,9 @@ class TestAdditionalPropertiesSupport(unittest.TestCase):
         class _SampleConfig:
             known_field: dict | None = None
             another_field: str | None = None
-            additional_properties: ClassVar[dict[str, Any]]
+            additional_properties: dict[str, dict[str, Any] | None] = field(
+                default_factory=dict, init=False
+            )
 
         self.cls = _SampleConfig
 
@@ -353,11 +355,23 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
     def _assert_supports_additional_properties(self, model_cls):
         # pylint: disable=unexpected-keyword-arg
         obj = model_cls(_test_plugin_key={})
+        other = model_cls()
         self.assertTrue(
             hasattr(obj, "additional_properties"),
             f"{model_cls.__name__} missing additional_properties attribute",
         )
         self.assertIn("_test_plugin_key", obj.additional_properties)
+        self.assertEqual(other.additional_properties, {})
+        self.assertIsNot(
+            obj.additional_properties, other.additional_properties
+        )
+
+        additional_properties_field = next(
+            field
+            for field in fields(model_cls)
+            if field.name == "additional_properties"
+        )
+        self.assertFalse(additional_properties_field.init)
 
     def test_sampler(self):
         self._assert_supports_additional_properties(Sampler)
@@ -387,7 +401,9 @@ class TestResolveComponent(unittest.TestCase):
         class _Config:
             builtin_a: dict | None = None
             builtin_b: str | None = None
-            additional_properties: ClassVar[dict[str, Any]]
+            additional_properties: dict[str, dict[str, Any] | None] = field(
+                default_factory=dict, init=False
+            )
 
         self.cls = _Config
         self.registry = {
