@@ -21,6 +21,16 @@ use nix::time::{ClockId, clock_gettime};
 use pyo3::PyErr;
 use pyo3::exceptions::{PyOSError, PyRuntimeError};
 
+#[cfg(target_os = "linux")]
+use nix::sys::memfd::{MFdFlags, memfd_create};
+#[cfg(target_os = "linux")]
+use nix::sys::mman::mmap;
+
+#[cfg(target_os = "linux")]
+const PR_SET_VMA: nix::libc::c_int = 0x53564d41;
+#[cfg(target_os = "linux")]
+const PR_SET_VMA_ANON_NAME: nix::libc::c_ulong = 0;
+
 /// 8 byte signature stamped at the start of the header.
 const SIGNATURE: [u8; 8] = *b"OTEL_CTX";
 /// Format version. `2` is the first stable version (`1` is for development).
@@ -83,7 +93,7 @@ extern "C" fn before_fork() {
 /// `pthread_atfork` parent handler: release the lock taken in [`before_fork`].
 extern "C" fn after_fork_parent() {
     // SAFETY: `before_fork` acquired the lock and forgot its guard, so this
-    // thread logically owns the lock — the precondition for `force_unlock`.
+    // thread logically owns the lock.
     unsafe { MAPPING.force_unlock() };
 }
 
@@ -223,8 +233,6 @@ fn publish_existing(region: &mut Region, payload: Vec<u8>) -> Result<(), Publish
 ///
 /// Creates the named memory mapping on the first call. On subsequent calls the
 /// existing mapping is updated in-place using the spec's Updating Protocol
-/// (zero timestamp → rewrite payload fields → restore timestamp), so no new
-/// mapping is allocated and the header pointer remains stable across updates.
 pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
     let mut guard = MAPPING.lock();
     if let Some(region) = guard.as_mut() {
@@ -262,8 +270,7 @@ pub fn unpublish() -> Result<(), PublishError> {
 fn alloc_region() -> Result<NonNull<c_void>, PublishError> {
     let len = NonZeroUsize::new(HEADER_SIZE).unwrap();
 
-    #[cfg(target_os = "linux")]
-    if let Some(ptr) = linux::try_memfd_mapping(len) {
+    if let Some(ptr) = try_memfd_mapping(len) {
         return Ok(ptr);
     }
 
@@ -308,14 +315,99 @@ fn advise_dontfork(_ptr: NonNull<c_void>, _len: usize) -> Result<(), PublishErro
     Ok(())
 }
 
+/// Create a `memfd`, size it, and map it `MAP_PRIVATE`. Returns `None` if any
+/// step fails so the caller can fall back to an anonymous mapping.
+#[cfg(target_os = "linux")]
+fn try_memfd_mapping(len: NonZeroUsize) -> Option<NonNull<c_void>> {
+    let base = MFdFlags::MFD_CLOEXEC | MFdFlags::MFD_ALLOW_SEALING;
+    // `MFD_NOEXEC_SEAL` is a newer flag not exposed by `nix`, request it but
+    // fall back without it on kernels/libc that lack it.
+    let noexec_seal = MFdFlags::from_bits_retain(nix::libc::MFD_NOEXEC_SEAL as _);
+    let fd = memfd_create(c"OTEL_CTX", base | noexec_seal)
+        .or_else(|_| memfd_create(c"OTEL_CTX", base))
+        .ok()?;
+
+    nix::unistd::ftruncate(&fd, len.get() as nix::libc::off_t).ok()?;
+
+    // SAFETY: `fd` is a valid, sized memfd and `len` is non-zero.
+    let ptr = unsafe {
+        mmap(
+            None,
+            len,
+            ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
+            MapFlags::MAP_PRIVATE,
+            &fd,
+            0,
+        )
+    }
+    .ok()?;
+    Some(ptr)
+}
+
+#[cfg(not(target_os = "linux"))]
+fn try_memfd_mapping(_len: NonZeroUsize) -> Option<NonNull<c_void>> {
+    None
+}
+
 /// Name the mapping `OTEL_CTX` via `prctl(PR_SET_VMA_ANON_NAME)`.
 #[cfg(target_os = "linux")]
 fn name_mapping(ptr: NonNull<c_void>, len: usize) {
-    linux::name_mapping(ptr, len);
+    const NAME: &core::ffi::CStr = c"OTEL_CTX";
+    unsafe {
+        let _ = nix::libc::prctl(
+            PR_SET_VMA,
+            PR_SET_VMA_ANON_NAME,
+            ptr.as_ptr() as nix::libc::c_ulong,
+            len as nix::libc::c_ulong,
+            NAME.as_ptr() as nix::libc::c_ulong,
+        );
+    }
 }
 
 #[cfg(not(target_os = "linux"))]
 fn name_mapping(_ptr: NonNull<c_void>, _len: usize) {}
 
-#[cfg(target_os = "linux")]
-mod linux;
+#[cfg(test)]
+mod tests {
+    use super::{PublishError, publish, unpublish};
+    use serial_test::serial;
+
+    #[test]
+    fn get_boottime_ns_is_nonzero() {
+        let ns = super::get_boottime_ns().unwrap();
+        assert!(ns >= 1);
+    }
+
+    #[test]
+    #[serial]
+    fn unpublish_without_publish_returns_not_published() {
+        let _ = unpublish();
+        assert!(matches!(unpublish(), Err(PublishError::NotPublished)));
+    }
+
+    #[test]
+    #[serial]
+    fn publish_then_unpublish_succeeds() {
+        let _ = unpublish();
+        publish(b"test".to_vec()).unwrap();
+        unpublish().unwrap();
+    }
+
+    #[test]
+    #[serial]
+    fn double_unpublish_returns_not_published() {
+        let _ = unpublish();
+        publish(b"test".to_vec()).unwrap();
+        unpublish().unwrap();
+        assert!(matches!(unpublish(), Err(PublishError::NotPublished)));
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn try_memfd_mapping_returns_some() {
+        use std::num::NonZeroUsize;
+        let len = NonZeroUsize::new(32).unwrap();
+        let ptr = super::try_memfd_mapping(len).expect("memfd_create + mmap should succeed");
+        unsafe { nix::sys::mman::munmap(ptr, 32).unwrap() };
+    }
+}

@@ -9,9 +9,14 @@ crate-type = ["cdylib"]
 
 [dependencies]
 prost = "0.13"
-nix = { version = "0.31", features = ["mman", "fs", "time"] }
-parking_lot = "0.12"
 
 [dependencies.pyo3]
 version = "0.28.2"
 features = ["abi3-py39"]
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.31", features = ["mman", "fs", "time"] }
+parking_lot = "0.12"
+
+[dev-dependencies]
+serial_test = "3"
