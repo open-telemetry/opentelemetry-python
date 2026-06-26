@@ -10,6 +10,7 @@ from opentelemetry.sdk._configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _resolve_component,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
@@ -24,6 +25,9 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    IdGenerator as IdGeneratorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -84,6 +88,7 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanExporter,
 )
+from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
@@ -348,6 +353,26 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     )
 
 
+_ID_GENERATOR_REGISTRY: dict = {
+    "random": lambda _: RandomIdGenerator(),
+}
+
+
+def _create_id_generator(config: IdGeneratorConfig) -> IdGenerator:
+    """Create an IdGenerator from config.
+
+    Built-in ``random`` resolves to ``RandomIdGenerator``; unknown names
+    load from the ``opentelemetry_id_generator`` entry point group (the
+    same group ``OTEL_PYTHON_ID_GENERATOR`` uses today).
+    """
+    return _resolve_component(
+        config,
+        _ID_GENERATOR_REGISTRY,
+        "opentelemetry_id_generator",
+        "id_generator",
+    )
+
+
 def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
     """Create a ParentBased sampler from config, applying SDK defaults for absent delegates."""
     root = (
@@ -431,6 +456,11 @@ def create_tracer_provider(
         if config is not None and config.sampler is not None
         else _DEFAULT_SAMPLER
     )
+    id_generator = (
+        _create_id_generator(config.id_generator)
+        if config is not None and config.id_generator is not None
+        else None
+    )
     span_limits = (
         _create_span_limits(config.limits)
         if config is not None and config.limits is not None
@@ -447,6 +477,7 @@ def create_tracer_provider(
         resource=resource,
         sampler=sampler,
         span_limits=span_limits,
+        id_generator=id_generator,
     )
 
     if config is not None:
