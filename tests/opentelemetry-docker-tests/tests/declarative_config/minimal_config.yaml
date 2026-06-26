@@ -1,0 +1,12 @@
+file_format: "1.0"
+disabled: false
+resource:
+  attributes:
+    - name: "service.name"
+      value: "e2e-docker-test-service"
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp:
+            endpoint: "http://localhost:4317"
