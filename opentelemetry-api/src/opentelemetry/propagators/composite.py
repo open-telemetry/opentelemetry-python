@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+import collections.abc
 import logging
-import typing
 
 from typing_extensions import deprecated
 
@@ -20,7 +20,7 @@ class CompositePropagator(textmap.TextMapPropagator):
     """
 
     def __init__(
-        self, propagators: typing.Sequence[textmap.TextMapPropagator]
+        self, propagators: collections.abc.Sequence[textmap.TextMapPropagator]
     ) -> None:
         self._propagators = propagators
 

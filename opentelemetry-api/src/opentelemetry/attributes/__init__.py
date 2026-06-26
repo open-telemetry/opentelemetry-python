@@ -277,29 +277,49 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
-        with self._lock:
-            if self.maxlen is not None and self.maxlen == 0:
+        if self.maxlen is not None and self.maxlen == 0:
+            with self._lock:
                 self.dropped += 1
+            return
+        if self._extended_attributes:
+            value = _clean_extended_attribute(key, value, self.max_value_len)
+        else:
+            value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
+            if value is None:
                 return
+        with self._lock:
+            self._setitem_locked(key, value)
 
+    def _set_items(self, attributes: "types._ExtendedAttributes") -> None:
+        if getattr(self, "_immutable", False):  # type: ignore
+            raise TypeError
+        if self.maxlen is not None and self.maxlen == 0:
+            with self._lock:
+                self.dropped += len(attributes)
+            return
+        cleaned = []
+        for key, value in attributes.items():
             if self._extended_attributes:
-                value = _clean_extended_attribute(
-                    key, value, self.max_value_len
-                )
+                cv = _clean_extended_attribute(key, value, self.max_value_len)
             else:
-                value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
-                if value is None:
-                    return
+                cv = _clean_attribute(key, value, self.max_value_len)  # type: ignore
+                if cv is None:
+                    continue
+            cleaned.append((key, cv))
+        with self._lock:
+            for key, cv in cleaned:
+                self._setitem_locked(key, cv)
 
-            if key in self._dict:
-                del self._dict[key]
-            elif self.maxlen is not None and len(self._dict) == self.maxlen:
-                if not isinstance(self._dict, OrderedDict):
-                    self._dict = OrderedDict(self._dict)
-                self._dict.popitem(last=False)  # type: ignore
-                self.dropped += 1
+    def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
+        if key in self._dict:
+            del self._dict[key]
+        elif self.maxlen is not None and len(self._dict) == self.maxlen:
+            if not isinstance(self._dict, OrderedDict):
+                self._dict = OrderedDict(self._dict)
+            self._dict.popitem(last=False)  # type: ignore
+            self.dropped += 1
 
-            self._dict[key] = value  # type: ignore
+        self._dict[key] = value  # type: ignore
 
     def __delitem__(self, key: str) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
@@ -307,9 +327,11 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         with self._lock:
             del self._dict[key]
 
-    def __iter__(self):  # type: ignore
+    def __iter__(self):
+        if self._immutable:
+            return iter(self._dict)
         with self._lock:
-            return iter(self._dict.copy())  # type: ignore
+            return iter(list(self._dict))
 
     def __len__(self) -> int:
         return len(self._dict)

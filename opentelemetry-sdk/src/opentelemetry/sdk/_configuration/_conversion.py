@@ -16,7 +16,7 @@ import enum
 import types
 import typing
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, get_args, get_origin
+from typing import Any, TypeVar, get_args, get_origin
 
 _T = TypeVar("_T")
 
@@ -24,10 +24,10 @@ _T = TypeVar("_T")
 def _unwrap_optional(type_hint: Any) -> Any:
     """Strip ``None`` from a ``X | None`` / ``Optional[X]`` annotation.
 
-    Returns the unwrapped type, or the original hint if not a Union with None.
+    Returns the unwrapped type, or the original hint if not a union with None.
     """
     origin = get_origin(type_hint)
-    if origin is Union or origin is types.UnionType:
+    if origin is types.UnionType or origin is typing.Union:
         non_none = [t for t in get_args(type_hint) if t is not type(None)]
         if len(non_none) == 1:
             return non_none[0]

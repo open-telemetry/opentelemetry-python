@@ -1,34 +1,34 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# pylint: disable=unsubscriptable-object
-
-import json
 import unittest
 
 from opentelemetry._logs import LogRecord, SeverityNumber
-from opentelemetry.exporter.otlp.json.common._internal import (
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _encode_attributes,
     _encode_span_id,
     _encode_trace_id,
+    _encode_value,
 )
-from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
-from opentelemetry.proto_json.collector.logs.v1.logs_service import (
-    ExportLogsServiceRequest as JSONExportLogsServiceRequest,
+from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
+from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsServiceRequest,
 )
-from opentelemetry.proto_json.common.v1.common import AnyValue as JSONAnyValue
-from opentelemetry.proto_json.common.v1.common import (
-    ArrayValue as JSONArrayValue,
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    InstrumentationScope as PB2InstrumentationScope,
 )
-from opentelemetry.proto_json.common.v1.common import KeyValue as JSONKeyValue
-from opentelemetry.proto_json.common.v1.common import (
-    KeyValueList as JSONKeyValueList,
+from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
+from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
+from opentelemetry.proto.logs.v1.logs_pb2 import (
+    ResourceLogs as PB2ResourceLogs,
 )
-from opentelemetry.sdk._logs import (
-    LogRecordLimits,
-    ReadableLogRecord,
-    ReadWriteLogRecord,
+from opentelemetry.proto.logs.v1.logs_pb2 import ScopeLogs as PB2ScopeLogs
+from opentelemetry.proto.resource.v1.resource_pb2 import (
+    Resource as PB2Resource,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk._logs import LogRecordLimits, ReadWriteLogRecord
+from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import (
     NonRecordingSpan,
@@ -36,326 +36,270 @@ from opentelemetry.trace import (
     TraceFlags,
     set_span_in_context,
 )
-from tests import (
-    SPAN_ID,
-    TIME,
-    TRACE_ID,
-    assert_proto_json_equal,
-    make_log,
-    make_log_context,
+
+_CONTEXT_LOG = set_span_in_context(
+    NonRecordingSpan(
+        SpanContext(
+            89564621134313219400156819398935297684,
+            1312458408527513268,
+            False,
+            TraceFlags(0x01),
+        )
+    )
 )
 
 
-def _get_first_log_record(result):
-    return result.resource_logs[0].scope_logs[0].log_records[0]
-
-
 class TestOTLPLogEncoder(unittest.TestCase):
-    def test_encode_single_log(self):
-        log = make_log()
-        result = encode_logs([log])
-
-        self.assertEqual(len(result.resource_logs), 1)
-        self.assertEqual(len(result.resource_logs[0].scope_logs), 1)
-        self.assertEqual(
-            len(result.resource_logs[0].scope_logs[0].log_records), 1
-        )
-
-        lr = _get_first_log_record(result)
-        self.assertEqual(lr.time_unix_nano, TIME)
-        self.assertEqual(lr.observed_time_unix_nano, TIME + 1000)
-        self.assertEqual(lr.severity_text, "INFO")
-        self.assertEqual(lr.severity_number, SeverityNumber.INFO.value)
-        self.assertEqual(
-            lr.body, JSONAnyValue(string_value="test log message")
-        )
-
-    def test_encode_log_with_trace_context(self):
-        ctx = make_log_context()
-        log = make_log(context=ctx)
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
-
-        self.assertEqual(lr.trace_id, _encode_trace_id(TRACE_ID))
-        self.assertEqual(lr.span_id, _encode_span_id(SPAN_ID))
-        self.assertEqual(lr.flags, int(TraceFlags(0x01)))
-
-    def test_encode_log_zero_span_trace_id(self):
-        ctx = set_span_in_context(NonRecordingSpan(SpanContext(0, 0, False)))
-        log = make_log(context=ctx)
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
-
-        self.assertIsNone(lr.span_id)
-        self.assertIsNone(lr.trace_id)
-
-        lr_dict = result.to_dict()["resourceLogs"][0]["scopeLogs"][0][
-            "logRecords"
-        ][0]
-        self.assertNotIn("traceId", lr_dict)
-        self.assertNotIn("spanId", lr_dict)
-
-    def test_encode_log_severity_numbers(self):
-        cases = [
-            ("WARN", SeverityNumber.WARN),
-            ("DEBUG", SeverityNumber.DEBUG),
-            ("INFO", SeverityNumber.INFO),
-            ("ERROR", SeverityNumber.ERROR),
-            ("FATAL", SeverityNumber.FATAL),
-        ]
-        for text, number in cases:
-            with self.subTest(severity=text):
-                log = make_log(severity_text=text, severity_number=number)
-                result = encode_logs([log])
-                lr = _get_first_log_record(result)
-                self.assertEqual(lr.severity_text, text)
-                self.assertEqual(lr.severity_number, number.value)
-
-    def test_encode_log_string_body(self):
-        log = make_log(body="hello world")
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
-        self.assertEqual(lr.body, JSONAnyValue(string_value="hello world"))
-
-    def test_encode_log_dict_body_with_nulls(self):
-        log = make_log(body={"error": None, "array_with_nones": [1, None, 2]})
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
-
-        self.assertEqual(
-            lr.body,
-            JSONAnyValue(
-                kvlist_value=JSONKeyValueList(
-                    values=[
-                        JSONKeyValue(key="error"),
-                        JSONKeyValue(
-                            key="array_with_nones",
-                            value=JSONAnyValue(
-                                array_value=JSONArrayValue(
-                                    values=[
-                                        JSONAnyValue(int_value=1),
-                                        JSONAnyValue(),
-                                        JSONAnyValue(int_value=2),
-                                    ]
-                                )
-                            ),
-                        ),
-                    ]
-                )
+    def test_encode_basic_log_record(self):
+        basic_log_record = ReadWriteLogRecord(
+            LogRecord(
+                timestamp=1644650195189786880,
+                observed_timestamp=1644650195189786881,
+                context=_CONTEXT_LOG,
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
+                attributes={"a": 1, "b": "c"},
+            ),
+            resource=SDKResource(
+                {"first_resource": "value"},
+                "resource_schema_url",
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "first_name", "first_version"
             ),
         )
-
-    def test_encode_log_no_body(self):
-        log = make_log(body=None)
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
-        self.assertIsNone(lr.body)
-
-        lr_dict = result.to_dict()["resourceLogs"][0]["scopeLogs"][0][
-            "logRecords"
-        ][0]
-        self.assertNotIn("body", lr_dict)
-
-    def test_encode_log_extended_attributes(self):
-        log = make_log(
-            attributes={
-                "extended": {"sequence": [{"inner": "mapping", "none": None}]}
-            }
+        pb2_service_request = ExportLogsServiceRequest(
+            resource_logs=[
+                PB2ResourceLogs(
+                    resource=PB2Resource(
+                        attributes=[
+                            PB2KeyValue(
+                                key="first_resource",
+                                value=PB2AnyValue(string_value="value"),
+                            )
+                        ]
+                    ),
+                    scope_logs=[
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
+                                name="first_name", version="first_version"
+                            ),
+                            log_records=[
+                                PB2LogRecord(
+                                    time_unix_nano=1644650195189786880,
+                                    observed_time_unix_nano=1644650195189786881,
+                                    trace_id=_encode_trace_id(
+                                        89564621134313219400156819398935297684
+                                    ),
+                                    span_id=_encode_span_id(
+                                        1312458408527513268
+                                    ),
+                                    flags=int(TraceFlags(0x01)),
+                                    severity_text="WARN",
+                                    severity_number=SeverityNumber.WARN.value,
+                                    body=_encode_value(
+                                        "Do not go gentle into that good night. Rage, rage against the dying of the light"
+                                    ),
+                                    attributes=_encode_attributes(
+                                        {"a": 1, "b": "c"}
+                                    ),
+                                )
+                            ],
+                        ),
+                    ],
+                    schema_url="resource_schema_url",
+                )
+            ]
         )
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
+        self.assertEqual(encode_logs([basic_log_record]), pb2_service_request)
 
-        self.assertIsNotNone(lr.attributes)
-        self.assertEqual(len(lr.attributes), 1)
-        self.assertEqual(lr.attributes[0].key, "extended")
-        self.assertIsNotNone(lr.attributes[0].value.kvlist_value)
-
-    def test_encode_log_empty_record(self):
-        ctx = make_log_context()
-        log = ReadableLogRecord(
-            LogRecord(observed_timestamp=TIME + 1000, context=ctx),
-            resource=Resource({}),
-            instrumentation_scope=InstrumentationScope("test", "1.0"),
+    def test_encode_log_record_with_no_instrumentation_scope_and_dict_body(
+        self,
+    ):
+        log_record_with_no_instrumentation_scope_and_dict_body = (
+            ReadWriteLogRecord(
+                LogRecord(
+                    timestamp=1644650427658989056,
+                    observed_timestamp=1644650427658989057,
+                    context=_CONTEXT_LOG,
+                    severity_text="DEBUG",
+                    severity_number=SeverityNumber.DEBUG,
+                    body={"error": None, "array_with_nones": [1, None, 2]},
+                    attributes={"a": 1, "b": "c"},
+                ),
+                resource=SDKResource({"second_resource": "CASE"}),
+                instrumentation_scope=None,
+            )
         )
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
+        pb2_resource_logs = PB2ResourceLogs(
+            resource=PB2Resource(
+                attributes=[
+                    PB2KeyValue(
+                        key="second_resource",
+                        value=PB2AnyValue(string_value="CASE"),
+                    )
+                ]
+            ),
+            scope_logs=[
+                PB2ScopeLogs(
+                    scope=PB2InstrumentationScope(),
+                    log_records=[
+                        PB2LogRecord(
+                            time_unix_nano=1644650427658989056,
+                            observed_time_unix_nano=1644650427658989057,
+                            trace_id=_encode_trace_id(
+                                89564621134313219400156819398935297684
+                            ),
+                            span_id=_encode_span_id(1312458408527513268),
+                            flags=int(TraceFlags(0x01)),
+                            severity_text="DEBUG",
+                            severity_number=SeverityNumber.DEBUG.value,
+                            body=_encode_value(
+                                {
+                                    "error": None,
+                                    "array_with_nones": [1, None, 2],
+                                }
+                            ),
+                            attributes=_encode_attributes({"a": 1, "b": "c"}),
+                        )
+                    ],
+                )
+            ],
+        )
+        self.assertEqual(
+            encode_logs(
+                [log_record_with_no_instrumentation_scope_and_dict_body]
+            ),
+            ExportLogsServiceRequest(resource_logs=[pb2_resource_logs]),
+        )
 
-        self.assertIsNone(lr.time_unix_nano)
-        self.assertEqual(lr.observed_time_unix_nano, TIME + 1000)
-        self.assertIsNone(lr.severity_text)
-        self.assertIsNone(lr.severity_number)
-        self.assertIsNone(lr.body)
-        self.assertEqual(lr.attributes, [])
-
-    def test_encode_log_event_name(self):
-        log = make_log(body="event happened", event_name="my.event")
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
-        self.assertEqual(lr.event_name, "my.event")
-
-        lr_dict = result.to_dict()["resourceLogs"][0]["scopeLogs"][0][
-            "logRecords"
-        ][0]
-        self.assertEqual(lr_dict["eventName"], "my.event")
+    def test_encode_log_record_with_empty_resource_and_dict_attribute_value(
+        self,
+    ):
+        log_record_with_empty_resource_and_dict_attribute_value = ReadWriteLogRecord(
+            LogRecord(
+                timestamp=1644650584292683033,
+                observed_timestamp=1644650584292683033,
+                context=_CONTEXT_LOG,
+                severity_text="FATAL",
+                severity_number=SeverityNumber.FATAL,
+                body="This instrumentation scope has a schema url and attributes",
+                attributes={
+                    "extended": {
+                        "sequence": [{"inner": "mapping", "none": None}]
+                    }
+                },
+            ),
+            resource=SDKResource({}),
+            instrumentation_scope=InstrumentationScope(
+                "scope_with_attributes",
+                "scope_with_attributes_version",
+                "instrumentation_schema_url",
+                {"one": 1, "two": "2"},
+            ),
+        )
+        pb2_resource_logs = PB2ResourceLogs(
+            resource=PB2Resource(attributes=[]),
+            scope_logs=[
+                PB2ScopeLogs(
+                    scope=PB2InstrumentationScope(
+                        name="scope_with_attributes",
+                        version="scope_with_attributes_version",
+                        attributes=_encode_attributes({"one": 1, "two": "2"}),
+                    ),
+                    log_records=[
+                        PB2LogRecord(
+                            time_unix_nano=1644650584292683033,
+                            observed_time_unix_nano=1644650584292683033,
+                            trace_id=_encode_trace_id(
+                                89564621134313219400156819398935297684
+                            ),
+                            span_id=_encode_span_id(1312458408527513268),
+                            flags=int(TraceFlags(0x01)),
+                            severity_text="FATAL",
+                            severity_number=SeverityNumber.FATAL.value,
+                            body=_encode_value(
+                                "This instrumentation scope has a schema url and attributes"
+                            ),
+                            attributes=_encode_attributes(
+                                {
+                                    "extended": {
+                                        "sequence": [
+                                            {"inner": "mapping", "none": None}
+                                        ]
+                                    }
+                                }
+                            ),
+                        )
+                    ],
+                    schema_url="instrumentation_schema_url",
+                )
+            ],
+        )
+        self.assertEqual(
+            encode_logs(
+                [log_record_with_empty_resource_and_dict_attribute_value]
+            ),
+            ExportLogsServiceRequest(resource_logs=[pb2_resource_logs]),
+        )
 
     def test_dropped_attributes_count(self):
-        ctx = make_log_context()
-        # ReadWriteLogRecord applies limits via __post_init__
-        log = ReadWriteLogRecord(
+        sdk_logs = self._get_test_logs_dropped_attributes()
+        encoded_logs = encode_logs(sdk_logs)
+        self.assertTrue(hasattr(sdk_logs[0], "dropped_attributes"))
+        self.assertEqual(
+            # pylint:disable=no-member
+            encoded_logs.resource_logs[0]
+            .scope_logs[0]
+            .log_records[0]
+            .dropped_attributes_count,
+            2,
+        )
+
+    @staticmethod
+    def _get_test_logs_dropped_attributes() -> list[ReadWriteLogRecord]:
+        ctx_log1 = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    89564621134313219400156819398935297684,
+                    1312458408527513268,
+                    False,
+                    TraceFlags(0x01),
+                )
+            )
+        )
+        log1 = ReadWriteLogRecord(
             LogRecord(
-                timestamp=TIME,
-                context=ctx,
+                timestamp=1644650195189786880,
+                context=ctx_log1,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
-                body="test",
+                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
                 attributes={"a": 1, "b": "c", "user_id": "B121092"},
             ),
-            resource=Resource({}),
+            resource=SDKResource({"first_resource": "value"}),
             limits=LogRecordLimits(max_attributes=1),
-            instrumentation_scope=InstrumentationScope("test", "1.0"),
+            instrumentation_scope=InstrumentationScope(
+                "first_name", "first_version"
+            ),
         )
-        result = encode_logs([log])
-        lr = _get_first_log_record(result)
-        self.assertEqual(lr.dropped_attributes_count, 2)
-
-    def test_encode_log_grouping_by_resource(self):
-        r1 = Resource({"service": "svc1"})
-        r2 = Resource({"service": "svc2"})
-        log1 = make_log(body="r1", resource=r1)
-        log2 = make_log(body="r2", resource=r2)
-
-        result = encode_logs([log1, log2])
-        self.assertEqual(len(result.resource_logs), 2)
-
-        groups = {}
-        # pylint: disable-next=not-an-iterable
-        for rl in result.resource_logs:
-            svc_val = rl.resource.attributes[0].value.string_value
-            bodies = [
-                lr.body.string_value
-                for sl in rl.scope_logs
-                for lr in sl.log_records
-            ]
-            groups[svc_val] = bodies
-
-        self.assertEqual(groups["svc1"], ["r1"])
-        self.assertEqual(groups["svc2"], ["r2"])
-
-    def test_encode_log_grouping_by_scope(self):
-        resource = Resource({"svc": "test"})
-        scope1 = InstrumentationScope("lib1", "1.0")
-        scope2 = InstrumentationScope("lib2", "2.0")
-
-        logs = [
-            make_log(
-                body="s1a",
-                resource=resource,
-                instrumentation_scope=scope1,
-            ),
-            make_log(
-                body="s1b",
-                resource=resource,
-                instrumentation_scope=scope1,
-            ),
-            make_log(
-                body="s2",
-                resource=resource,
-                instrumentation_scope=scope2,
-            ),
-        ]
-        result = encode_logs(logs)
-        self.assertEqual(len(result.resource_logs), 1)
-        scope_logs = result.resource_logs[0].scope_logs
-        self.assertEqual(len(scope_logs), 2)
-
-        groups = {
-            sl.scope.name: [lr.body.string_value for lr in sl.log_records]
-            for sl in scope_logs
-        }
-        self.assertEqual(groups["lib1"], ["s1a", "s1b"])
-        self.assertEqual(groups["lib2"], ["s2"])
-        self.assertEqual(scope_logs[0].scope.version, "1.0")
-        self.assertEqual(scope_logs[1].scope.version, "2.0")
-
-    def test_encode_log_scope_schema_url(self):
-        scope = InstrumentationScope("my_scope", "1.0", "schema_url_value")
-        log = make_log(instrumentation_scope=scope)
-        result = encode_logs([log])
-        self.assertEqual(
-            result.resource_logs[0].scope_logs[0].schema_url,
-            "schema_url_value",
+        ctx_log2 = set_span_in_context(
+            NonRecordingSpan(SpanContext(0, 0, False))
         )
-
-    def test_encode_log_scope_attributes(self):
-        scope = InstrumentationScope(
-            "my_scope",
-            "1.0",
-            attributes={"scope_key": 42},
-        )
-        log = make_log(instrumentation_scope=scope)
-        result = encode_logs([log])
-        encoded_scope = result.resource_logs[0].scope_logs[0].scope
-        self.assertEqual(encoded_scope.name, "my_scope")
-        self.assertEqual(len(encoded_scope.attributes), 1)
-        self.assertEqual(encoded_scope.attributes[0].key, "scope_key")
-
-    def test_encode_log_none_scope(self):
-        log = make_log(instrumentation_scope=None)
-        result = encode_logs([log])
-        encoded_scope = result.resource_logs[0].scope_logs[0].scope
-        self.assertFalse(encoded_scope.name)
-        self.assertFalse(encoded_scope.version)
-        self.assertEqual(encoded_scope.to_dict(), {})
-
-    def test_encode_logs_to_dict(self):
-        ctx = make_log_context()
-        log = make_log(context=ctx, attributes={"key": "val"})
-        result = encode_logs([log])
-        result_dict = result.to_dict()
-
-        self.assertIn("resourceLogs", result_dict)
-        lr = result_dict["resourceLogs"][0]["scopeLogs"][0]["logRecords"][0]
-
-        self.assertIsInstance(lr["traceId"], str)
-        self.assertEqual(len(lr["traceId"]), 32)
-        self.assertIsInstance(lr["spanId"], str)
-        self.assertEqual(len(lr["spanId"]), 16)
-        self.assertIsInstance(lr["timeUnixNano"], str)
-        self.assertIsInstance(lr["observedTimeUnixNano"], str)
-        self.assertIn("severityText", lr)
-        self.assertIn("severityNumber", lr)
-
-    def test_encode_logs_json_roundtrip(self):
-        ctx1 = make_log_context()
-        ctx2 = make_log_context(trace_id=12345678, span_id=87654321)
-        logs = [
-            make_log(
-                body="log with context",
-                context=ctx1,
-                attributes={"a": 1},
-                resource=Resource({"r": "v"}, "resource_schema"),
-                instrumentation_scope=InstrumentationScope(
-                    "lib",
-                    "1.0",
-                    "scope_schema",
-                    {"sk": "sv"},
-                ),
-            ),
-            make_log(
-                body={"dict_body": [1, None, 2]},
-                context=ctx2,
-                resource=Resource({}),
-            ),
-            make_log(
-                body=None,
+        log2 = ReadWriteLogRecord(
+            LogRecord(
+                timestamp=1644650249738562048,
+                context=ctx_log2,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
-                event_name="my.event",
+                body="Cooper, this is no time for caution!",
+                attributes={},
             ),
-        ]
-        result = encode_logs(logs)
-        json_str = result.to_json()
-        roundtripped = JSONExportLogsServiceRequest.from_dict(
-            json.loads(json_str)
+            resource=SDKResource({"second_resource": "CASE"}),
+            instrumentation_scope=InstrumentationScope(
+                "second_name", "second_version"
+            ),
         )
-        assert_proto_json_equal(self, result, roundtripped)
+
+        return [log1, log2]

@@ -311,10 +311,10 @@ class TestServiceResourceDetector(unittest.TestCase):
         resource = create_resource(self._config_with_service())
         self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
 
-    def test_service_instance_id_is_unique_per_call(self):
+    def test_service_instance_id_is_stable_within_process(self):
         r1 = create_resource(self._config_with_service())
         r2 = create_resource(self._config_with_service())
-        self.assertNotEqual(
+        self.assertEqual(
             r1.attributes[SERVICE_INSTANCE_ID],
             r2.attributes[SERVICE_INSTANCE_ID],
         )

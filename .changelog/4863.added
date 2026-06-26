@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: add `add_metric_reader` / `remove_metric_reader` public APIs to register / unregister metric readers at runtime.
