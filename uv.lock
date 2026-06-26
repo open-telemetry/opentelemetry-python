@@ -11,6 +11,7 @@ resolution-markers = [
 members = [
     "opentelemetry-api",
     "opentelemetry-codegen-json",
+    "opentelemetry-configuration",
     "opentelemetry-exporter-http-transport",
     "opentelemetry-exporter-otlp",
     "opentelemetry-exporter-otlp-json-common",
@@ -26,7 +27,6 @@ members = [
     "opentelemetry-proto-json",
     "opentelemetry-python",
     "opentelemetry-sdk",
-    "opentelemetry-sdk-configuration",
     "opentelemetry-semantic-conventions",
     "opentelemetry-test-utils",
 ]
@@ -830,6 +830,26 @@ requires-dist = [
 ]
 
 [[package]]
+name = "opentelemetry-configuration"
+source = { editable = "opentelemetry-configuration" }
+dependencies = [
+    { name = "jsonschema" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-sdk" },
+    { name = "pyyaml" },
+    { name = "typing-extensions" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "jsonschema", specifier = ">=4.0" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "typing-extensions", specifier = ">=4.5.0" },
+]
+
+[[package]]
 name = "opentelemetry-exporter-credential-provider-gcp"
 version = "0.62b0"
 source = { registry = "https://pypi.org/simple" }
@@ -1059,6 +1079,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-codegen-json" },
+    { name = "opentelemetry-configuration" },
     { name = "opentelemetry-exporter-http-transport" },
     { name = "opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-exporter-otlp-json-file" },
@@ -1072,7 +1093,6 @@ dependencies = [
     { name = "opentelemetry-proto" },
     { name = "opentelemetry-proto-json" },
     { name = "opentelemetry-sdk" },
-    { name = "opentelemetry-sdk-configuration" },
     { name = "opentelemetry-semantic-conventions" },
     { name = "opentelemetry-test-utils" },
 ]
@@ -1090,6 +1110,7 @@ dev = [
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-codegen-json", editable = "codegen/opentelemetry-codegen-json" },
+    { name = "opentelemetry-configuration", editable = "opentelemetry-configuration" },
     { name = "opentelemetry-exporter-http-transport", editable = "exporter/opentelemetry-exporter-http-transport" },
     { name = "opentelemetry-exporter-otlp-json-common", editable = "exporter/opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-exporter-otlp-json-file", editable = "exporter/opentelemetry-exporter-otlp-json-file" },
@@ -1103,7 +1124,6 @@ requires-dist = [
     { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
     { name = "opentelemetry-proto-json", editable = "opentelemetry-proto-json" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
-    { name = "opentelemetry-sdk-configuration", editable = "opentelemetry-sdk-configuration" },
     { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
     { name = "opentelemetry-test-utils", editable = "tests/opentelemetry-test-utils" },
 ]
@@ -1131,26 +1151,6 @@ dependencies = [
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
-    { name = "typing-extensions", specifier = ">=4.5.0" },
-]
-
-[[package]]
-name = "opentelemetry-sdk-configuration"
-source = { editable = "opentelemetry-sdk-configuration" }
-dependencies = [
-    { name = "jsonschema" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-sdk" },
-    { name = "pyyaml" },
-    { name = "typing-extensions" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "jsonschema", specifier = ">=4.0" },
-    { name = "opentelemetry-api", editable = "opentelemetry-api" },
-    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
-    { name = "pyyaml", specifier = ">=6.0" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
 

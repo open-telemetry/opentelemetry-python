@@ -20,7 +20,7 @@ and the OTLP/HTTP exporter:
 
 .. code-block:: sh
 
-    pip install opentelemetry-sdk-configuration \
+    pip install opentelemetry-configuration \
         opentelemetry-distro \
         opentelemetry-exporter-otlp-proto-http
 

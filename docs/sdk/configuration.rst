@@ -25,7 +25,7 @@ Declarative configuration lives in a separate, experimental package:
 
 .. code-block:: sh
 
-    pip install opentelemetry-sdk-configuration
+    pip install opentelemetry-configuration
 
 Enabling with an environment variable
 -------------------------------------

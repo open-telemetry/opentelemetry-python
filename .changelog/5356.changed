@@ -1,1 +1,1 @@
-`opentelemetry-sdk-configuration`: declarative configuration moves from `opentelemetry.sdk._configuration` into the new public `opentelemetry-sdk-configuration` package (`opentelemetry.sdk.configuration` namespace), published experimentally and versioned independently of the SDK.
+`opentelemetry-configuration`: declarative configuration moves from `opentelemetry.sdk._configuration` into the new public `opentelemetry-configuration` package (`opentelemetry.configuration` namespace), published experimentally and versioned independently of the SDK.

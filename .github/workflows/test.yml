@@ -923,8 +923,8 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-sdk -- -ra
 
-  py310-test-opentelemetry-sdk-configuration_ubuntu-latest:
-    name: opentelemetry-sdk-configuration 3.10 Ubuntu
+  py310-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration 3.10 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -940,10 +940,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py310-test-opentelemetry-configuration -- -ra
 
-  py311-test-opentelemetry-sdk-configuration_ubuntu-latest:
-    name: opentelemetry-sdk-configuration 3.11 Ubuntu
+  py311-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration 3.11 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -959,10 +959,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py311-test-opentelemetry-configuration -- -ra
 
-  py312-test-opentelemetry-sdk-configuration_ubuntu-latest:
-    name: opentelemetry-sdk-configuration 3.12 Ubuntu
+  py312-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration 3.12 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -978,10 +978,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py312-test-opentelemetry-configuration -- -ra
 
-  py313-test-opentelemetry-sdk-configuration_ubuntu-latest:
-    name: opentelemetry-sdk-configuration 3.13 Ubuntu
+  py313-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration 3.13 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -997,10 +997,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py313-test-opentelemetry-configuration -- -ra
 
-  py314-test-opentelemetry-sdk-configuration_ubuntu-latest:
-    name: opentelemetry-sdk-configuration 3.14 Ubuntu
+  py314-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration 3.14 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1016,10 +1016,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py314-test-opentelemetry-configuration -- -ra
 
-  py314t-test-opentelemetry-sdk-configuration_ubuntu-latest:
-    name: opentelemetry-sdk-configuration 3.14t Ubuntu
+  py314t-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration 3.14t Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1035,10 +1035,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314t-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py314t-test-opentelemetry-configuration -- -ra
 
-  pypy3-test-opentelemetry-sdk-configuration_ubuntu-latest:
-    name: opentelemetry-sdk-configuration pypy-3.10 Ubuntu
+  pypy3-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration pypy-3.10 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1054,7 +1054,7 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e pypy3-test-opentelemetry-configuration -- -ra
 
   py310-test-opentelemetry-semantic-conventions_ubuntu-latest:
     name: opentelemetry-semantic-conventions 3.10 Ubuntu
@@ -4622,8 +4622,8 @@ jobs:
       - name: Run tests
         run: tox -e pypy3-test-opentelemetry-sdk -- -ra
 
-  py310-test-opentelemetry-sdk-configuration_windows-latest:
-    name: opentelemetry-sdk-configuration 3.10 Windows
+  py310-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration 3.10 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4641,10 +4641,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py310-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py310-test-opentelemetry-configuration -- -ra
 
-  py311-test-opentelemetry-sdk-configuration_windows-latest:
-    name: opentelemetry-sdk-configuration 3.11 Windows
+  py311-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration 3.11 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4662,10 +4662,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py311-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py311-test-opentelemetry-configuration -- -ra
 
-  py312-test-opentelemetry-sdk-configuration_windows-latest:
-    name: opentelemetry-sdk-configuration 3.12 Windows
+  py312-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration 3.12 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4683,10 +4683,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py312-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py312-test-opentelemetry-configuration -- -ra
 
-  py313-test-opentelemetry-sdk-configuration_windows-latest:
-    name: opentelemetry-sdk-configuration 3.13 Windows
+  py313-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration 3.13 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4704,10 +4704,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py313-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py313-test-opentelemetry-configuration -- -ra
 
-  py314-test-opentelemetry-sdk-configuration_windows-latest:
-    name: opentelemetry-sdk-configuration 3.14 Windows
+  py314-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration 3.14 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4725,10 +4725,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py314-test-opentelemetry-configuration -- -ra
 
-  py314t-test-opentelemetry-sdk-configuration_windows-latest:
-    name: opentelemetry-sdk-configuration 3.14t Windows
+  py314t-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration 3.14t Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4746,10 +4746,10 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e py314t-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e py314t-test-opentelemetry-configuration -- -ra
 
-  pypy3-test-opentelemetry-sdk-configuration_windows-latest:
-    name: opentelemetry-sdk-configuration pypy-3.10 Windows
+  pypy3-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration pypy-3.10 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4767,7 +4767,7 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e pypy3-test-opentelemetry-sdk-configuration -- -ra
+        run: tox -e pypy3-test-opentelemetry-configuration -- -ra
 
   py310-test-opentelemetry-semantic-conventions_windows-latest:
     name: opentelemetry-semantic-conventions 3.10 Windows

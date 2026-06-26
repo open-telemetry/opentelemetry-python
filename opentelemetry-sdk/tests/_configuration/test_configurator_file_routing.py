@@ -13,14 +13,14 @@ from opentelemetry.sdk.environment_variables import OTEL_CONFIG_FILE
 
 
 def _fake_configuration_module():
-    """Build a stub `opentelemetry.sdk.configuration` module.
+    """Build a stub `opentelemetry.configuration` module.
 
     The SDK lazy-imports this package at runtime when OTEL_CONFIG_FILE is set,
-    but the SDK's test env does not depend on opentelemetry-sdk-configuration.
+    but the SDK's test env does not depend on opentelemetry-configuration.
     Injecting a stub into sys.modules lets these tests exercise the routing
     without installing the downstream package.
     """
-    module = types.ModuleType("opentelemetry.sdk.configuration")
+    module = types.ModuleType("opentelemetry.configuration")
     module.configure_sdk = MagicMock()
     module.load_config_file = MagicMock()
     return module
@@ -51,7 +51,7 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         fake.load_config_file.return_value = sentinel_config
 
         with patch.dict(
-            "sys.modules", {"opentelemetry.sdk.configuration": fake}
+            "sys.modules", {"opentelemetry.configuration": fake}
         ):
             _OTelSDKConfigurator()._configure()
 
@@ -61,18 +61,18 @@ class TestConfiguratorFileRouting(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
     @patch.dict(
-        "sys.modules", {"opentelemetry.sdk.configuration": None}, clear=False
+        "sys.modules", {"opentelemetry.configuration": None}, clear=False
     )
     @patch("opentelemetry.sdk._configuration._initialize_components")
     def test_env_var_set_but_package_missing_raises(
         self, mock_init_components
     ):
-        # When opentelemetry-sdk-configuration is not installed but the env
+        # When opentelemetry-configuration is not installed but the env
         # var is set, surface a clear RuntimeError instead of a bare
         # ImportError so users know which package to install.
         with self.assertRaises(RuntimeError) as ctx:
             _OTelSDKConfigurator()._configure()
-        self.assertIn("opentelemetry-sdk-configuration", str(ctx.exception))
+        self.assertIn("opentelemetry-configuration", str(ctx.exception))
         mock_init_components.assert_not_called()
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
@@ -81,7 +81,7 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         fake.load_config_file.return_value = object()
 
         with patch.dict(
-            "sys.modules", {"opentelemetry.sdk.configuration": fake}
+            "sys.modules", {"opentelemetry.configuration": fake}
         ):
             with self.assertLogs(
                 "opentelemetry.sdk._configuration", level="WARNING"

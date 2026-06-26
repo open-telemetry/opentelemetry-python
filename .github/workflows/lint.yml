@@ -119,8 +119,8 @@ jobs:
       - name: Run tests
         run: tox -e lint-opentelemetry-sdk
 
-  lint-opentelemetry-sdk-configuration:
-    name: opentelemetry-sdk-configuration
+  lint-opentelemetry-configuration:
+    name: opentelemetry-configuration
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -136,7 +136,7 @@ jobs:
         run: pip install tox-uv
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-sdk-configuration
+        run: tox -e lint-opentelemetry-configuration
 
   lint-opentelemetry-semantic-conventions:
     name: opentelemetry-semantic-conventions

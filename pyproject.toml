@@ -5,7 +5,7 @@ requires-python = ">=3.10"
 dependencies = [
   "opentelemetry-api",
   "opentelemetry-sdk",
-  "opentelemetry-sdk-configuration",
+  "opentelemetry-configuration",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
   "opentelemetry-proto-json",
@@ -31,7 +31,7 @@ required-version = ">=0.6.0"
 [tool.uv.sources]
 opentelemetry-api = { workspace = true}
 opentelemetry-sdk = { workspace = true }
-opentelemetry-sdk-configuration = { workspace = true }
+opentelemetry-configuration = { workspace = true }
 opentelemetry-proto = { workspace = true }
 opentelemetry-proto-json = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
@@ -52,7 +52,7 @@ opentelemetry-codegen-json = { workspace = true }
 members = [
   "opentelemetry-api",
   "opentelemetry-sdk",
-  "opentelemetry-sdk-configuration",
+  "opentelemetry-configuration",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
   "opentelemetry-proto-json",
@@ -104,7 +104,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**/*.*" = ["PLE"]
-"opentelemetry-sdk-configuration/tests/test_models.py" = ["E402", "PLC0415"]
+"opentelemetry-configuration/tests/test_models.py" = ["E402", "PLC0415"]
 "shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
 
 [tool.ruff.lint.isort]
@@ -161,9 +161,9 @@ strict = [
 ]
 
 [tool.datamodel-codegen]
-input = "opentelemetry-sdk-configuration/src/opentelemetry/sdk/configuration/schema.json"
+input = "opentelemetry-configuration/src/opentelemetry/configuration/schema.json"
 input-file-type = "jsonschema"
-output = "opentelemetry-sdk-configuration/src/opentelemetry/sdk/configuration/models.py"
+output = "opentelemetry-configuration/src/opentelemetry/configuration/models.py"
 output-model-type = "dataclasses.dataclass"
 field-constraints = true
 formatters = ["ruff-format", "ruff-check"]
@@ -172,8 +172,8 @@ use-schema-description = true
 use-title-as-name = true
 use-union-operator = true
 target-python-version = "3.10"
-custom-template-dir = "opentelemetry-sdk-configuration/codegen"
-additional-imports = "typing.ClassVar,opentelemetry.sdk.configuration._common._additional_properties"
+custom-template-dir = "opentelemetry-configuration/codegen"
+additional-imports = "typing.ClassVar,opentelemetry.configuration._common._additional_properties"
 
 [tool.towncrier]
 directory = ".changelog"
