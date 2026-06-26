@@ -1349,7 +1349,7 @@ class ExponentialBucketHistogramAggregation(Aggregation):
 
 
 class ExplicitBucketHistogramAggregation(Aggregation):
-    """This aggregation math.informs the SDK to collect:
+    """This aggregation informs the SDK to collect:
 
     - Count of Measurement values falling within explicit bucket boundaries.
     - Arithmetic sum of Measurement values in population. This SHOULD NOT be collected when used with instruments that record negative measurements, e.g. UpDownCounter or ObservableGauge.
