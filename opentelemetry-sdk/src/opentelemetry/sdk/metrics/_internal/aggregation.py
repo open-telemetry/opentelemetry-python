@@ -1409,7 +1409,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
 
 class SumAggregation(Aggregation):
-    """This aggregation math.informs the SDK to collect:
+    """This aggregation informs the SDK to collect:
 
     - The arithmetic sum of Measurement values.
     """
@@ -1442,7 +1442,7 @@ class SumAggregation(Aggregation):
 
 class LastValueAggregation(Aggregation):
     """
-    This aggregation math.informs the SDK to collect:
+    This aggregation informs the SDK to collect:
 
     - The last Measurement.
     - The timestamp of the last Measurement.
