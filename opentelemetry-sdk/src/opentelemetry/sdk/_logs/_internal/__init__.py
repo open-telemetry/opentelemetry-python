@@ -123,7 +123,7 @@ class LogRecordLimits:
     This class does not enforce any limits itself. It only provides a way to read limits from env,
     default values and from user provided arguments.
 
-    All limit arguments must be either a non-negative integer or ``None``.
+    All limit arguments must be either a non-negative integer, ``None`` or ``LogRecordLimits.UNSET``.
 
     - All limit arguments are optional.
     - If a limit argument is not set, the class will try to read its value from the corresponding
@@ -150,6 +150,8 @@ class LogRecordLimits:
             Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT``
             Falls back to ``max_attribute_length`` when unset.
     """
+
+    UNSET = -1
 
     def __init__(
         self,
@@ -193,6 +195,9 @@ class LogRecordLimits:
 
     @classmethod
     def _from_env_if_absent(cls, value: int | None, env_var: str, default: int | None = None) -> int | None:
+        if value == cls.UNSET:
+            return None
+
         err_msg = "{} must be a non-negative integer but got {}"
 
         # if no value is provided for the limit, try to load it from env
@@ -310,11 +315,13 @@ class ReadWriteLogRecord:
         record: LogRecord,
         resource: Resource,
         instrumentation_scope: InstrumentationScope | None = None,
+        limits: LogRecordLimits | None = None,
     ) -> ReadWriteLogRecord:
         return cls(
             log_record=record,
             resource=resource,
             instrumentation_scope=instrumentation_scope,
+            **({} if limits is None else {"limits": limits}),
         )
 
 
@@ -682,6 +689,7 @@ class Logger(APILogger):
         instrumentation_scope: InstrumentationScope,
         *,
         logger_metrics: LoggerMetricsT,
+        log_record_limits: LogRecordLimits | None = None,
         _logger_config: _LoggerConfig,
     ):
         super().__init__(
@@ -695,6 +703,7 @@ class Logger(APILogger):
         self._instrumentation_scope = instrumentation_scope
         self._logger_metrics = logger_metrics
         self._logger_config = _logger_config
+        self._log_record_limits = log_record_limits or LogRecordLimits()
 
     def _is_enabled(self) -> bool:
         return self._logger_config.is_enabled
@@ -743,6 +752,7 @@ class Logger(APILogger):
                     record=record,
                     resource=self._resource,
                     instrumentation_scope=self._instrumentation_scope,
+                    limits=self._log_record_limits,
                 )
             else:
                 _set_log_record_exception_attributes(record.log_record)
@@ -765,6 +775,7 @@ class Logger(APILogger):
                 record=log_record,
                 resource=self._resource,
                 instrumentation_scope=self._instrumentation_scope,
+                limits=self._log_record_limits,
             )
 
         self._logger_metrics.emit_log()
@@ -797,6 +808,7 @@ class LoggerProvider(APILoggerProvider):
         | None = None,
         *,
         meter_provider: MeterProvider | None = None,
+        log_record_limits: LogRecordLimits | None = None,
         _logger_configurator: _LoggerConfiguratorT | None = None,
     ):
         if resource is None:
@@ -811,6 +823,7 @@ class LoggerProvider(APILoggerProvider):
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
         self._logger_configurator = _logger_configurator or _default_logger_configurator
+        self._log_record_limits = log_record_limits or LogRecordLimits()
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
@@ -858,6 +871,7 @@ class LoggerProvider(APILoggerProvider):
             scope,
             logger_metrics=self._logger_metrics,
             _logger_config=self._apply_logger_configurator(scope),
+            log_record_limits=self._log_record_limits,
         )
 
     def _get_logger_cached(
