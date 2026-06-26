@@ -22,6 +22,8 @@ jobs:
     uses: ./.github/workflows/misc.yml
   lint:
     uses: ./.github/workflows/lint.yml
+  rust:
+    uses: ./.github/workflows/rust.yml
   tests:
     uses: ./.github/workflows/test.yml
   contrib:
@@ -39,6 +41,7 @@ jobs:
     needs:
       - misc
       - lint
+      - rust
       - tests
       - contrib
     runs-on: ubuntu-latest
