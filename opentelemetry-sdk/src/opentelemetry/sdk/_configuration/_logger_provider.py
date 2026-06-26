@@ -18,9 +18,6 @@ from opentelemetry.sdk._configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
-    LogRecordLimits as LogRecordLimitsConfig,
-)
-from opentelemetry.sdk._configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -28,6 +25,9 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     LogRecordExporter as LogRecordExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    LogRecordLimits as LogRecordLimitsConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
@@ -255,7 +255,9 @@ def _create_log_record_limits(
 
     attribute_value_length_limit = config.attribute_value_length_limit
     if attribute_value_length_limit is None and global_limits is not None:
-        attribute_value_length_limit = global_limits.attribute_value_length_limit
+        attribute_value_length_limit = (
+            global_limits.attribute_value_length_limit
+        )
 
     return LogRecordLimits(
         max_attributes=(
@@ -295,7 +297,9 @@ def create_logger_provider(
             LogRecordLimitsConfig(), global_attribute_limits
         )
 
-    provider = LoggerProvider(resource=resource, log_record_limits=log_record_limits)
+    provider = LoggerProvider(
+        resource=resource, log_record_limits=log_record_limits
+    )
 
     if config is None:
         return provider

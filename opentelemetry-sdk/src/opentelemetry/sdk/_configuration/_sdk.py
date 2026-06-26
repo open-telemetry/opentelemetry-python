@@ -23,8 +23,10 @@ from opentelemetry.sdk._configuration._resource import create_resource
 from opentelemetry.sdk._configuration._tracer_provider import (
     configure_tracer_provider,
 )
-from opentelemetry.sdk._configuration.models import AttributeLimits
-from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
+from opentelemetry.sdk._configuration.models import (
+    AttributeLimits,
+    OpenTelemetryConfiguration,
+)
 
 _logger = logging.getLogger(__name__)
 

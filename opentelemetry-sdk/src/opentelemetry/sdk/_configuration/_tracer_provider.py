@@ -14,6 +14,9 @@ from opentelemetry.sdk._configuration._common import (
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
+    AttributeLimits,
+)
+from opentelemetry.sdk._configuration.models import (
     ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -39,9 +42,6 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     SpanExporter as SpanExporterConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    AttributeLimits,
 )
 from opentelemetry.sdk._configuration.models import (
     SpanLimits as SpanLimitsConfig,
@@ -392,7 +392,9 @@ def _create_span_limits(
 
     attribute_value_length_limit = config.attribute_value_length_limit
     if attribute_value_length_limit is None and global_limits is not None:
-        attribute_value_length_limit = global_limits.attribute_value_length_limit
+        attribute_value_length_limit = (
+            global_limits.attribute_value_length_limit
+        )
 
     return SpanLimits(
         max_span_attributes=(
@@ -450,7 +452,9 @@ def create_tracer_provider(
         else _DEFAULT_SAMPLER
     )
     if config is not None and config.limits is not None:
-        span_limits = _create_span_limits(config.limits, global_attribute_limits)
+        span_limits = _create_span_limits(
+            config.limits, global_attribute_limits
+        )
     else:
         span_limits = _create_span_limits(
             SpanLimitsConfig(), global_attribute_limits

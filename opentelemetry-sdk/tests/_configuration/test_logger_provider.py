@@ -23,6 +23,10 @@ from opentelemetry.sdk._configuration._logger_provider import (
 )
 from opentelemetry.sdk._configuration.file._loader import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
+    AttributeLimits,
+    NameStringValuePair,
+)
+from opentelemetry.sdk._configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -39,9 +43,6 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    NameStringValuePair,
 )
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -485,22 +486,22 @@ class TestLogRecordLimits(unittest.TestCase):
         self.assertEqual(provider._log_record_limits.max_attribute_length, 256)
 
     def test_global_attribute_count_limit_used_when_no_per_signal_limits(self):
-        from opentelemetry.sdk._configuration.models import AttributeLimits
-
         global_limits = AttributeLimits(attribute_count_limit=42)
-        provider = create_logger_provider(None, global_attribute_limits=global_limits)
+        provider = create_logger_provider(
+            None, global_attribute_limits=global_limits
+        )
         self.assertEqual(provider._log_record_limits.max_attributes, 42)
 
-    def test_global_attribute_value_length_limit_used_when_no_per_signal_limits(self):
-        from opentelemetry.sdk._configuration.models import AttributeLimits
-
+    def test_global_attribute_value_length_limit_used_when_no_per_signal_limits(
+        self,
+    ):
         global_limits = AttributeLimits(attribute_value_length_limit=64)
-        provider = create_logger_provider(None, global_attribute_limits=global_limits)
+        provider = create_logger_provider(
+            None, global_attribute_limits=global_limits
+        )
         self.assertEqual(provider._log_record_limits.max_attribute_length, 64)
 
     def test_per_signal_limits_override_global(self):
-        from opentelemetry.sdk._configuration.models import AttributeLimits
-
         global_limits = AttributeLimits(
             attribute_count_limit=100, attribute_value_length_limit=200
         )
