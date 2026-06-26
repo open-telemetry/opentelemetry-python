@@ -8,7 +8,6 @@ permissions:
 jobs:
   build-process-context-wheels:
     name: process-context wheels (${{ matrix.platform.target }} ${{ matrix.platform.manylinux }})
-    if: startsWith(github.ref_name, 'release/')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -27,6 +26,12 @@ jobs:
           - { target: aarch64, manylinux: musllinux_1_2 }
           - { target: armv7,   manylinux: musllinux_1_2 }
     steps:
+      - run: |
+          if [[ $GITHUB_REF_NAME != release/* ]]; then
+            echo this workflow should only be run against release branches
+            exit 1
+          fi
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Build wheels
@@ -44,9 +49,14 @@ jobs:
 
   build-process-context-sdist:
     name: process-context sdist
-    if: startsWith(github.ref_name, 'release/')
     runs-on: ubuntu-latest
     steps:
+      - run: |
+          if [[ $GITHUB_REF_NAME != release/* ]]; then
+            echo this workflow should only be run against release branches
+            exit 1
+          fi
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Build sdist
