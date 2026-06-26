@@ -37,6 +37,9 @@ from opentelemetry.sdk.configuration.models import (
     ExperimentalComposableSampler as ComposableSamplerConfig,
 )
 from opentelemetry.sdk.configuration.models import (
+    ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
+)
+from opentelemetry.sdk.configuration.models import (
     ExperimentalSpanParent as SpanParentConfig,
 )
 from opentelemetry.sdk.configuration.models import (
@@ -661,6 +664,89 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertEqual(
             kwargs["headers"], {"x-api-key": "secret", "env": "prod"}
         )
+
+    def test_otlp_file_development_missing_package_raises(self):
+        config = self._make_batch_config(
+            SpanExporterConfig(
+                otlp_file_development=ExperimentalOtlpFileExporterConfig()
+            )
+        )
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.trace_exporter": None,
+            },
+        ):
+            with self.assertRaises(ConfigurationError) as ctx:
+                create_tracer_provider(config)
+        self.assertIn(
+            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
+        )
+
+    def test_otlp_file_development_default_stdout(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.trace_exporter": mock_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileExporterConfig()
+                )
+            )
+            create_tracer_provider(config)
+
+        mock_exporter_cls.assert_called_once_with()
+
+    def test_otlp_file_development_file_uri(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.trace_exporter": mock_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileExporterConfig(
+                        output_stream="file:///tmp/traces.jsonl"
+                    )
+                )
+            )
+            create_tracer_provider(config)
+
+        mock_exporter_cls.assert_called_once_with("/tmp/traces.jsonl")
+
+    def test_otlp_file_development_unsupported_output_stream_raises(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.trace_exporter": mock_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileExporterConfig(
+                        output_stream="http://example"
+                    )
+                )
+            )
+            with self.assertRaises(ConfigurationError) as ctx:
+                create_tracer_provider(config)
+        self.assertIn("output_stream", str(ctx.exception))
+        mock_exporter_cls.assert_not_called()
 
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_batch_config(

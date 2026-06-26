@@ -12,6 +12,7 @@ from opentelemetry.sdk.configuration._common import (
     _additional_properties,
     _map_compression,
     _parse_headers,
+    _parse_otlp_file_output_stream,
     _resolve_component,
     load_entry_point,
 )
@@ -203,6 +204,93 @@ class TestMapCompression(unittest.TestCase):
             str(ctx.exception),
             "Unsupported compression value 'brotli'. Supported values: "
             "'gzip', 'deflate', 'none'.",
+        )
+
+
+class TestParseOtlpFileOutputStream(unittest.TestCase):
+    def test_none_returns_none(self):
+        self.assertIsNone(_parse_otlp_file_output_stream(None))
+
+    def test_stdout_returns_none(self):
+        self.assertIsNone(_parse_otlp_file_output_stream("stdout"))
+
+    def test_file_uri_returns_path(self):
+        self.assertEqual(
+            _parse_otlp_file_output_stream("file:///tmp/traces.jsonl"),
+            "/tmp/traces.jsonl",
+        )
+
+    def test_file_uri_localhost_host_returns_path(self):
+        self.assertEqual(
+            _parse_otlp_file_output_stream(
+                "file://localhost/tmp/traces.jsonl"
+            ),
+            "/tmp/traces.jsonl",
+        )
+
+    def test_file_uri_with_other_host_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _parse_otlp_file_output_stream("file://otherhost/tmp/traces.jsonl")
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported output_stream 'file://otherhost/tmp/traces.jsonl' "
+            "for otlp_file_development exporter. Supported values: stdout, "
+            "file://<path>.",
+        )
+
+    def test_file_uri_empty_path_raises(self):
+        with self.assertRaises(ConfigurationError):
+            _parse_otlp_file_output_stream("file://")
+
+    def test_file_uri_with_query_raises(self):
+        with self.assertRaises(ConfigurationError):
+            _parse_otlp_file_output_stream("file:///tmp/traces.jsonl?foo=bar")
+
+    def test_file_uri_with_fragment_raises(self):
+        with self.assertRaises(ConfigurationError):
+            _parse_otlp_file_output_stream("file:///tmp/traces.jsonl#frag")
+
+    def test_unsupported_scheme_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _parse_otlp_file_output_stream("http://example")
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported output_stream 'http://example' for "
+            "otlp_file_development exporter. Supported values: stdout, "
+            "file://<path>.",
+        )
+
+    def test_malformed_uri_raises_configuration_error(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _parse_otlp_file_output_stream("file://[::1")
+
+        self.assertIn(
+            "Failed to parse output_stream 'file://[::1' for "
+            "otlp_file_development exporter",
+            str(ctx.exception),
+        )
+
+    def test_relative_path_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _parse_otlp_file_output_stream("file:traces.jsonl")
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported output_stream 'file:traces.jsonl' for "
+            "otlp_file_development exporter. Path must be absolute.",
+        )
+
+    def test_trailing_slash_path_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _parse_otlp_file_output_stream("file:///tmp/output/")
+
+        self.assertEqual(
+            str(ctx.exception),
+            "Unsupported output_stream 'file:///tmp/output/' for "
+            "otlp_file_development exporter. Path must be a file, "
+            "not a directory.",
         )
 
 

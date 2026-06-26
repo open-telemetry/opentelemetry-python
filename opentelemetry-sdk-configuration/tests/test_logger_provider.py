@@ -9,12 +9,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry._logs import get_logger_provider
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs._internal.export import (
-    BatchLogRecordProcessor,
-    ConsoleLogRecordExporter,
-    SimpleLogRecordProcessor,
-)
 from opentelemetry.sdk.configuration._logger_provider import (
     _DEFAULT_EXPORT_TIMEOUT_MILLIS,
     _DEFAULT_MAX_EXPORT_BATCH_SIZE,
@@ -30,6 +24,9 @@ from opentelemetry.sdk.configuration._logger_provider import (
 from opentelemetry.sdk.configuration.file._loader import ConfigurationError
 from opentelemetry.sdk.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
+)
+from opentelemetry.sdk.configuration.models import (
+    ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
 from opentelemetry.sdk.configuration.models import (
     LoggerProvider as LoggerProviderConfig,
@@ -54,6 +51,12 @@ from opentelemetry.sdk.configuration.models import (
 )
 from opentelemetry.sdk.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
+)
+from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs._internal.export import (
+    BatchLogRecordProcessor,
+    ConsoleLogRecordExporter,
+    SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.resources import Resource
 
@@ -273,6 +276,86 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         ):
             with self.assertRaises(ConfigurationError):
                 _create_log_record_exporter(config)
+
+    def test_otlp_file_development_missing_package_raises(self):
+        config = LogRecordExporterConfig(
+            otlp_file_development=ExperimentalOtlpFileExporterConfig()
+        )
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file._log_exporter": None,
+            },
+        ):
+            with self.assertRaises(ConfigurationError) as ctx:
+                _create_log_record_exporter(config)
+        self.assertIn(
+            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
+        )
+
+    def test_otlp_file_development_default_stdout(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileLogExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+            },
+        ):
+            config = LogRecordExporterConfig(
+                otlp_file_development=ExperimentalOtlpFileExporterConfig()
+            )
+            _create_log_record_exporter(config)
+
+        mock_exporter_cls.assert_called_once()
+        self.assertEqual(mock_exporter_cls.call_args.args, ())
+        self.assertEqual(mock_exporter_cls.call_args.kwargs, {})
+
+    def test_otlp_file_development_file_uri(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileLogExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+            },
+        ):
+            config = LogRecordExporterConfig(
+                otlp_file_development=ExperimentalOtlpFileExporterConfig(
+                    output_stream="file:///tmp/logs.jsonl"
+                )
+            )
+            _create_log_record_exporter(config)
+
+        mock_exporter_cls.assert_called_once()
+        self.assertEqual(
+            mock_exporter_cls.call_args.args, ("/tmp/logs.jsonl",)
+        )
+
+    def test_otlp_file_development_unsupported_output_stream_raises(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileLogExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+            },
+        ):
+            config = LogRecordExporterConfig(
+                otlp_file_development=ExperimentalOtlpFileExporterConfig(
+                    output_stream="http://example"
+                )
+            )
+            with self.assertRaises(ConfigurationError) as ctx:
+                _create_log_record_exporter(config)
+        self.assertIn("output_stream", str(ctx.exception))
+        mock_exporter_cls.assert_not_called()
 
     def test_otlp_http_exporter_endpoint(self):
         mock_exporter_cls = MagicMock()
