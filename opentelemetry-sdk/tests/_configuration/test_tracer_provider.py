@@ -43,6 +43,9 @@ from opentelemetry.sdk._configuration.models import (
     ExperimentalSpanParent as SpanParentConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    IdGenerator as IdGeneratorConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -82,6 +85,7 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleSpanProcessor,
 )
+from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
@@ -852,3 +856,54 @@ class TestCreateSpanLimits(unittest.TestCase):
             provider = self._create_with_limits(SpanLimitsConfig())
         self.assertEqual(provider._span_limits.max_span_attributes, 128)
         self.assertEqual(provider._span_limits.max_events, 128)
+
+
+class TestCreateIdGenerator(unittest.TestCase):
+    """Tests for _create_id_generator and id_generator wiring in create_tracer_provider."""
+
+    @staticmethod
+    def _make_provider(id_generator_config):
+        return create_tracer_provider(
+            TracerProviderConfig(
+                processors=[], id_generator=id_generator_config
+            )
+        )
+
+    def test_absent_id_generator_uses_sdk_default(self):
+        """When id_generator is omitted, the SDK's default RandomIdGenerator is used."""
+        provider = create_tracer_provider(TracerProviderConfig(processors=[]))
+        self.assertIsInstance(provider.id_generator, RandomIdGenerator)
+
+    def test_builtin_random_id_generator(self):
+        """Built-in 'random' id_generator resolves to RandomIdGenerator."""
+        provider = self._make_provider(IdGeneratorConfig(random={}))
+        self.assertIsInstance(provider.id_generator, RandomIdGenerator)
+
+    def test_plugin_id_generator_loaded_via_entry_point(self):
+        """Unknown id_generator name is loaded from opentelemetry_id_generator entry point group."""
+        mock_generator = MagicMock()
+        mock_class = MagicMock(return_value=mock_generator)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            # pylint: disable=unexpected-keyword-arg
+            provider = self._make_provider(
+                IdGeneratorConfig(my_custom_generator={})
+            )
+        self.assertIs(provider.id_generator, mock_generator)
+
+    def test_unknown_id_generator_raises_configuration_error(self):
+        """Unknown id_generator name with no matching entry point raises ConfigurationError."""
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            with self.assertRaises(ConfigurationError):
+                # pylint: disable=unexpected-keyword-arg
+                self._make_provider(IdGeneratorConfig(no_such_generator={}))
+
+    def test_empty_id_generator_raises_configuration_error(self):
+        """Empty IdGenerator config (no type specified) raises ConfigurationError."""
+        with self.assertRaises(ConfigurationError):
+            self._make_provider(IdGeneratorConfig())
