@@ -17,6 +17,9 @@ from opentelemetry.configuration._exceptions import (
     MissingDependencyError,
 )
 from opentelemetry.configuration.models import (
+    AttributeLimits,
+)
+from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
 from opentelemetry.configuration.models import (
@@ -27,6 +30,9 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     LogRecordExporter as LogRecordExporterConfig,
+)
+from opentelemetry.configuration.models import (
+    LogRecordLimits as LogRecordLimitsConfig,
 )
 from opentelemetry.configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
@@ -41,6 +47,7 @@ from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
 from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs._internal import LogRecordLimits
 from opentelemetry.sdk._logs._internal.export import (
     BatchLogRecordProcessor,
     ConsoleLogRecordExporter,
@@ -50,6 +57,8 @@ from opentelemetry.sdk._logs._internal.export import (
 from opentelemetry.sdk.resources import Resource
 
 _logger = logging.getLogger(__name__)
+
+_DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT = 128
 
 # BatchLogRecordProcessor defaults per OTel spec (milliseconds).
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
@@ -235,9 +244,44 @@ def _create_log_record_processor(
     )
 
 
+def _create_log_record_limits(
+    config: LogRecordLimitsConfig,
+    global_limits: AttributeLimits | None = None,
+) -> LogRecordLimits:
+    """Create LogRecordLimits from config.
+
+    Absent fields fall back to global_limits (if provided), then to OTel spec
+    defaults (128 for counts, unlimited for lengths).
+    Explicit values suppress env-var reading — matching Java SDK behavior.
+    """
+    attribute_count_limit = config.attribute_count_limit
+    if attribute_count_limit is None and global_limits is not None:
+        attribute_count_limit = global_limits.attribute_count_limit
+
+    attribute_value_length_limit = config.attribute_value_length_limit
+    if attribute_value_length_limit is None and global_limits is not None:
+        attribute_value_length_limit = (
+            global_limits.attribute_value_length_limit
+        )
+
+    return LogRecordLimits(
+        max_attributes=(
+            attribute_count_limit
+            if attribute_count_limit is not None
+            else _DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT
+        ),
+        max_attribute_length=(
+            attribute_value_length_limit
+            if attribute_value_length_limit is not None
+            else LogRecordLimits.UNSET
+        ),
+    )
+
+
 def create_logger_provider(
     config: LoggerProviderConfig | None,
     resource: Resource | None = None,
+    global_attribute_limits: AttributeLimits | None = None,
 ) -> LoggerProvider:
     """Create an SDK LoggerProvider from declarative config.
 
@@ -247,20 +291,27 @@ def create_logger_provider(
     Args:
         config: LoggerProvider config from the parsed config file, or None.
         resource: Resource to attach to the provider.
+        global_attribute_limits: Top-level attribute_limits from the root config,
+            used as a fallback when per-signal limits are not specified.
 
     Returns:
         A configured LoggerProvider.
     """
-    provider = LoggerProvider(resource=resource)
+    if config is not None and config.limits is not None:
+        log_record_limits = _create_log_record_limits(
+            config.limits, global_attribute_limits
+        )
+    else:
+        log_record_limits = _create_log_record_limits(
+            LogRecordLimitsConfig(), global_attribute_limits
+        )
+
+    provider = LoggerProvider(
+        resource=resource, log_record_limits=log_record_limits
+    )
 
     if config is None:
         return provider
-
-    if config.limits is not None:
-        _logger.warning(
-            "log_record_limits are specified in config but are not supported "
-            "by the Python SDK LoggerProvider constructor; limits will be ignored."
-        )
 
     for processor_config in config.processors:
         provider.add_log_record_processor(
@@ -273,6 +324,7 @@ def create_logger_provider(
 def configure_logger_provider(
     config: LoggerProviderConfig | None,
     resource: Resource | None = None,
+    global_attribute_limits: AttributeLimits | None = None,
 ) -> None:
     """Configure the global LoggerProvider from declarative config.
 
@@ -282,7 +334,11 @@ def configure_logger_provider(
     Args:
         config: LoggerProvider config from the parsed config file, or None.
         resource: Resource to attach to the provider.
+        global_attribute_limits: Top-level attribute_limits from the root config,
+            used as a fallback when per-signal limits are not specified.
     """
     if config is None:
         return
-    set_logger_provider(create_logger_provider(config, resource))
+    set_logger_provider(
+        create_logger_provider(config, resource, global_attribute_limits)
+    )
