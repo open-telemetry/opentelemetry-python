@@ -103,9 +103,12 @@ def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
     kwargs: dict[str, Any] = {}
 
     for key, value in data.items():
-        if key in known_fields:
-            type_hint = hints.get(key)
-            kwargs[key] = _convert_value(value, type_hint)
+        # Schema keys like "otlp_file/development" use "/" as a namespace
+        # separator; Python field names use "_".  Normalise before lookup.
+        field_key = key.replace("/", "_")
+        if field_key in known_fields:
+            type_hint = hints.get(field_key)
+            kwargs[field_key] = _convert_value(value, type_hint)
         else:
             # Unknown key — @_additional_properties decorator will capture it.
             kwargs[key] = value
