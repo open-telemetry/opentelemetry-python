@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: wire top-level `attribute_limits` into per-signal providers via declarative config; add `log_record_limits` support to `LoggerProvider`
