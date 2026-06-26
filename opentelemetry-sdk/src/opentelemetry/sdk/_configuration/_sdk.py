@@ -20,6 +20,9 @@ from opentelemetry.sdk._configuration._meter_provider import (
 )
 from opentelemetry.sdk._configuration._propagator import configure_propagator
 from opentelemetry.sdk._configuration._resource import create_resource
+from opentelemetry.sdk._configuration._instrumentation import (
+    configure_instrumentation,
+)
 from opentelemetry.sdk._configuration._tracer_provider import (
     configure_tracer_provider,
 )
@@ -62,3 +65,4 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     configure_meter_provider(config.meter_provider, resource)
     configure_logger_provider(config.logger_provider, resource)
     configure_propagator(config.propagator)
+    configure_instrumentation(config.instrumentation_development)
