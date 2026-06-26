@@ -2,9 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Tests access private members of SDK classes to assert correct configuration.
-# `no-member` is disabled because the fake module's attributes are set
-# dynamically and pylint cannot introspect them.
-# pylint: disable=protected-access,no-self-use,no-member
+# pylint: disable=protected-access,no-self-use
 
 import types
 import unittest
@@ -14,18 +12,23 @@ from opentelemetry.sdk._configuration import _OTelSDKConfigurator
 from opentelemetry.sdk.environment_variables import OTEL_CONFIG_FILE
 
 
-def _fake_configuration_module():
-    """Build a stub `opentelemetry.configuration` module.
+class _FakeConfigurationModule(types.ModuleType):
+    """Stub `opentelemetry.configuration` module.
 
     The SDK lazy-imports this package at runtime when OTEL_CONFIG_FILE is set,
     but the SDK's test env does not depend on opentelemetry-configuration.
-    Injecting a stub into sys.modules lets these tests exercise the routing
-    without installing the downstream package.
+    Injecting an instance into sys.modules lets these tests exercise the
+    routing without installing the downstream package. Declaring the attrs
+    at class level lets pylint introspect them without a no-member disable.
     """
-    module = types.ModuleType("opentelemetry.configuration")
-    module.configure_sdk = MagicMock()
-    module.load_config_file = MagicMock()
-    return module
+
+    configure_sdk: MagicMock
+    load_config_file: MagicMock
+
+    def __init__(self) -> None:
+        super().__init__("opentelemetry.configuration")
+        self.configure_sdk = MagicMock()
+        self.load_config_file = MagicMock()
 
 
 class TestConfiguratorFileRouting(unittest.TestCase):
@@ -48,7 +51,7 @@ class TestConfiguratorFileRouting(unittest.TestCase):
     def test_env_var_set_routes_to_declarative_path(
         self, mock_init_components
     ):
-        fake = _fake_configuration_module()
+        fake = _FakeConfigurationModule()
         sentinel_config = object()
         fake.load_config_file.return_value = sentinel_config
 
@@ -77,7 +80,7 @@ class TestConfiguratorFileRouting(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
     def test_env_var_set_with_kwargs_warns_and_ignores(self):
-        fake = _fake_configuration_module()
+        fake = _FakeConfigurationModule()
         fake.load_config_file.return_value = object()
 
         with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
