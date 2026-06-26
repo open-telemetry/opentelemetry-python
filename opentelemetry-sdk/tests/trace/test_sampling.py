@@ -4,6 +4,7 @@
 import contextlib
 import sys
 import unittest
+import unittest.mock
 
 from opentelemetry import context as context_api
 from opentelemetry import trace
@@ -524,3 +525,66 @@ class TestSampler(unittest.TestCase):
             context_api.detach(token)
 
         self.exec_parent_based(implicit_parent_context)
+
+
+class TestAlwaysRecordSampler(unittest.TestCase):
+    def setUp(self):
+        self.mock_sampler: sampling.Sampler = unittest.mock.MagicMock()
+        self.sampler: sampling.Sampler = sampling.AlwaysRecordSampler(
+            self.mock_sampler
+        )
+
+    def test_get_description(self):
+        static_sampler: sampling.Sampler = sampling.StaticSampler(
+            sampling.Decision.DROP
+        )
+        test_sampler: sampling.Sampler = sampling.AlwaysRecordSampler(
+            static_sampler
+        )
+        self.assertEqual(
+            "AlwaysRecordSampler{AlwaysOffSampler}",
+            test_sampler.get_description(),
+        )
+
+    def test_record_and_sample_sampling_decision(self):
+        self.validate_should_sample(
+            sampling.Decision.RECORD_AND_SAMPLE,
+            sampling.Decision.RECORD_AND_SAMPLE,
+        )
+
+    def test_record_only_sampling_decision(self):
+        self.validate_should_sample(
+            sampling.Decision.RECORD_ONLY, sampling.Decision.RECORD_ONLY
+        )
+
+    def test_drop_sampling_decision(self):
+        self.validate_should_sample(
+            sampling.Decision.DROP, sampling.Decision.RECORD_ONLY
+        )
+
+    def validate_should_sample(
+        self,
+        root_decision: sampling.Decision,
+        expected_decision: sampling.Decision,
+    ):
+        trace_state: trace.TraceState = trace.TraceState()
+        trace_state.add("key", root_decision.name)
+        root_result: sampling.SamplingResult = sampling.SamplingResult(
+            attributes={"key", root_decision.name},
+            decision=root_decision,
+            trace_state=trace_state,
+        )
+        self.mock_sampler.should_sample.return_value = root_result
+
+        actual_result: sampling.SamplingResult = self.sampler.should_sample(
+            parent_context=context_api.Context(),
+            trace_id=0,
+            name="name",
+            kind=trace.SpanKind.CLIENT,
+            attributes={"key": root_decision.name},
+            trace_state=trace.TraceState(),
+        )
+
+        self.assertEqual(actual_result.decision, expected_decision)
+        self.assertEqual(actual_result.attributes, root_result.attributes)
+        self.assertEqual(actual_result.trace_state, root_result.trace_state)
