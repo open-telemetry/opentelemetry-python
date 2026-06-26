@@ -10,7 +10,6 @@ from opentelemetry.sdk._configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
-    _resolve_component,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
@@ -353,11 +352,6 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     )
 
 
-_ID_GENERATOR_REGISTRY: dict = {
-    "random": lambda _: RandomIdGenerator(),
-}
-
-
 def _create_id_generator(config: IdGeneratorConfig) -> IdGenerator:
     """Create an IdGenerator from config.
 
@@ -365,11 +359,14 @@ def _create_id_generator(config: IdGeneratorConfig) -> IdGenerator:
     load from the ``opentelemetry_id_generator`` entry point group (the
     same group ``OTEL_PYTHON_ID_GENERATOR`` uses today).
     """
-    return _resolve_component(
-        config,
-        _ID_GENERATOR_REGISTRY,
-        "opentelemetry_id_generator",
-        "id_generator",
+    if config.random is not None:
+        return RandomIdGenerator()
+    if config.additional_properties:
+        name = next(iter(config.additional_properties))
+        return load_entry_point("opentelemetry_id_generator", name)()
+    raise ConfigurationError(
+        "No id_generator type specified in config. "
+        "Supported built-in types: random."
     )
 
 
