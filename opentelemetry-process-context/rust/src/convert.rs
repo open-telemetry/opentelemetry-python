@@ -7,7 +7,7 @@ use crate::proto::resource::v1::Resource;
 use prost::Message;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
-use pyo3::types::{PyBool, PyDict, PyFloat, PyInt, PyString};
+use pyo3::types::{PyBool, PyByteArray, PyBytes, PyDict, PyFloat, PyInt, PyString};
 
 fn any_value_from_py(val: &Bound<'_, PyAny>) -> PyResult<AnyValue> {
     if val.is_none() {
@@ -31,6 +31,13 @@ fn any_value_from_py(val: &Bound<'_, PyAny>) -> PyResult<AnyValue> {
     if val.is_instance_of::<PyString>() {
         return Ok(AnyValue {
             value: Some(any_value::Value::StringValue(val.extract()?)),
+        });
+    }
+    // `bytes`/`bytearray` are `Sequence`s, so this must precede the Sequence
+    // branch below or they would be expanded into an array of integers.
+    if val.is_instance_of::<PyBytes>() || val.is_instance_of::<PyByteArray>() {
+        return Ok(AnyValue {
+            value: Some(any_value::Value::BytesValue(val.extract()?)),
         });
     }
 
@@ -146,6 +153,28 @@ mod tests {
         assert!(matches!(
             attrs[0].value.as_ref().unwrap().value,
             Some(any_value::Value::StringValue(ref s)) if s == "my-service"
+        ));
+    }
+
+    #[test]
+    fn encode_resource_with_bytes_attribute_roundtrip() {
+        let resource = Resource {
+            attributes: vec![KeyValue {
+                key: "raw".into(),
+                value: Some(AnyValue {
+                    value: Some(any_value::Value::BytesValue(vec![1, 2, 3])),
+                }),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        let bytes = encode_process_context(resource);
+        let ctx = ProcessContext::decode(bytes.as_slice()).unwrap();
+        let attrs = ctx.resource.unwrap().attributes;
+        assert_eq!(attrs.len(), 1);
+        assert!(matches!(
+            attrs[0].value.as_ref().unwrap().value,
+            Some(any_value::Value::BytesValue(ref b)) if b == &[1, 2, 3]
         ));
     }
 }

@@ -159,10 +159,19 @@ impl From<PublishError> for PyErr {
 /// Allocate the mapping and write the initial header. Called with the mutex held
 /// and `guard` confirmed to be `None`.
 fn publish_new(guard: &mut Option<Region>, payload: Vec<u8>) -> Result<(), PublishError> {
-    let ptr = alloc_region()?;
-    advise_dontfork(ptr, HEADER_SIZE)?;
-
     let timestamp = get_boottime_ns()?;
+
+    let ptr = alloc_region()?;
+
+    // `ptr` is now a live mapping we own but have not yet stored in `guard`.
+    // If advising fails, unmap it before propagating so it does not leak.
+    if let Err(err) = advise_dontfork(ptr, HEADER_SIZE) {
+        // SAFETY: `ptr`/`HEADER_SIZE` describe the mapping we just created.
+        unsafe {
+            let _ = nix::sys::mman::munmap(ptr, HEADER_SIZE);
+        }
+        return Err(err);
+    }
 
     // SAFETY: `ptr` points to a freshly mapped, zero initialized, page aligned
     // region of exactly `HEADER_SIZE` bytes. The payload lives in `payload` on
