@@ -84,7 +84,7 @@ def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
       ``@_additional_properties`` will capture them on the instance's
       ``additional_properties`` attribute.
 
-    ``ClassVar`` fields (e.g. the ``additional_properties`` annotation on
+    Non-init fields (e.g. the generated ``additional_properties`` field on
     decorated dataclasses) are ignored as expected.
 
     Raises:
@@ -99,7 +99,7 @@ def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
     hints: dict[str, Any] = dict(
         typing.get_type_hints(cls, include_extras=False)
     )
-    known_fields = {f.name for f in dataclasses.fields(cls)}
+    known_fields = {f.name for f in dataclasses.fields(cls) if f.init}
     kwargs: dict[str, Any] = {}
 
     for key, value in data.items():
