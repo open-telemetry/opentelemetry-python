@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Tests access private members of SDK classes to assert correct configuration.
-# pylint: disable=protected-access,no-self-use
+# `no-member` is disabled because the fake module's attributes are set
+# dynamically and pylint cannot introspect them.
+# pylint: disable=protected-access,no-self-use,no-member
 
 import types
 import unittest
@@ -50,9 +52,7 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         sentinel_config = object()
         fake.load_config_file.return_value = sentinel_config
 
-        with patch.dict(
-            "sys.modules", {"opentelemetry.configuration": fake}
-        ):
+        with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
             _OTelSDKConfigurator()._configure()
 
         fake.load_config_file.assert_called_once_with("/tmp/otel.yaml")
@@ -80,9 +80,7 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         fake = _fake_configuration_module()
         fake.load_config_file.return_value = object()
 
-        with patch.dict(
-            "sys.modules", {"opentelemetry.configuration": fake}
-        ):
+        with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
             with self.assertLogs(
                 "opentelemetry.sdk._configuration", level="WARNING"
             ) as captured:

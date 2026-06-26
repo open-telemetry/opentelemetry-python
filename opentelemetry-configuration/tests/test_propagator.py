@@ -9,8 +9,6 @@ from unittest.mock import MagicMock, patch
 # We access it here to assert composition correctness.
 # pylint: disable=protected-access
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
-from opentelemetry.environment_variables import OTEL_PROPAGATORS
-from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration._propagator import (
     configure_propagator,
@@ -22,6 +20,8 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     TextMapPropagator as TextMapPropagatorConfig,
 )
+from opentelemetry.environment_variables import OTEL_PROPAGATORS
+from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )

@@ -4,9 +4,6 @@
 from __future__ import annotations
 
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
-from opentelemetry.propagate import set_global_textmap
-from opentelemetry.propagators.composite import CompositePropagator
-from opentelemetry.propagators.textmap import TextMapPropagator
 from opentelemetry.configuration._common import load_entry_point
 from opentelemetry.configuration.models import (
     Propagator as PropagatorConfig,
@@ -14,6 +11,9 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     TextMapPropagator as TextMapPropagatorConfig,
 )
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.propagators.composite import CompositePropagator
+from opentelemetry.propagators.textmap import TextMapPropagator
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
