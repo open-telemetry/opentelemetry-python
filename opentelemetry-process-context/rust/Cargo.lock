@@ -132,7 +132,6 @@ name = "opentelemetry-process-context"
 version = "0.1.0"
 dependencies = [
  "nix",
- "parking_lot",
  "prost",
  "pyo3",
  "serial_test",

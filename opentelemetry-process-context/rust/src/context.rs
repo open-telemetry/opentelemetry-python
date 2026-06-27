@@ -12,9 +12,8 @@
 use std::ffi::c_void;
 use std::num::NonZeroUsize;
 use std::ptr::NonNull;
+use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
-
-use parking_lot::Mutex;
 
 use nix::sys::mman::{MapFlags, ProtFlags, mmap_anonymous};
 use nix::time::{ClockId, clock_gettime};
@@ -51,6 +50,9 @@ struct Header {
 /// A published mapping.
 struct Region {
     ptr: NonNull<c_void>,
+    /// PID of the process that created this region. Used to detect a region
+    /// inherited across a `fork`, whose `ptr` must not be dereferenced.
+    owner_pid: u32,
     #[allow(unused)]
     payload: Vec<u8>,
 }
@@ -62,62 +64,29 @@ unsafe impl Send for Region {}
 /// The single active process context for this process, if any.
 static MAPPING: Mutex<Option<Region>> = Mutex::new(None);
 
-/// Register the `pthread_atfork` handlers that keep [`MAPPING`] fork-safe.
-///
-/// Idempotent: only the first call registers the handlers. Without these, a
-/// forked child inherits the parent's `MAPPING` state while the underlying
-/// header mapping is gone (stripped by `MADV_DONTFORK` on Linux, or merely
-/// stale elsewhere), so a `publish()` in the child would dereference a pointer
-/// into an unmapped region and crash.
-pub fn register_fork_handlers() {
-    static REGISTERED: std::sync::Once = std::sync::Once::new();
-    REGISTERED.call_once(|| {
-        // SAFETY: the handlers are valid `'static` `extern "C"` functions.
-        unsafe {
-            nix::libc::pthread_atfork(
-                Some(before_fork),
-                Some(after_fork_parent),
-                Some(after_fork_child),
-            );
-        }
-    });
+/// Lock [`MAPPING`], recovering the guard if a previous holder panicked. The
+/// protected data is a plain `Option<Region>` with no broken invariants on
+/// panic, so ignoring poisoning is safe and keeps the API usable.
+fn lock_mapping() -> std::sync::MutexGuard<'static, Option<Region>> {
+    MAPPING
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
-/// `pthread_atfork` prepare handler: acquire the mapping mutex so no other
-/// thread holds it across the fork, then forget the guard so the lock stays
-/// held into the parent/child handlers, which release it via `force_unlock`.
-extern "C" fn before_fork() {
-    std::mem::forget(MAPPING.lock());
-}
-
-/// `pthread_atfork` parent handler: release the lock taken in [`before_fork`].
-extern "C" fn after_fork_parent() {
-    // SAFETY: `before_fork` acquired the lock and forgot its guard, so this
-    // thread logically owns the lock.
-    unsafe { MAPPING.force_unlock() };
-}
-
-/// `pthread_atfork` child handler: discard the inherited mapping (the child
-/// never received the live header mapping) so the child starts from the
-/// pristine "never published" state, then release the lock.
-extern "C" fn after_fork_child() {
-    // SAFETY: the child is single threaded here and the lock is held from
-    // `before_fork`, so this is exclusive access to the protected data.
-    let mapping = unsafe { &mut *MAPPING.data_ptr() };
-    if let Some(region) = mapping.take() {
-        // On non-Linux the mapping was inherited (no `MADV_DONTFORK`), so unmap
-        // it. On Linux the child never received the mapping, so the pointer is
-        // simply abandoned.
-        #[cfg(not(target_os = "linux"))]
-        // SAFETY: `region.ptr`/`HEADER_SIZE` describe the inherited mapping.
-        unsafe {
-            let _ = nix::sys::mman::munmap(region.ptr, HEADER_SIZE);
-        }
-        // `region.payload` (the inherited `Vec<u8>` copy) is dropped here.
-        drop(region);
+/// Discard a `Region` inherited from a parent process across a `fork`. On Linux
+/// the header mapping was never inherited (`MADV_DONTFORK`), so `region.ptr`
+/// points to unmapped memory and is simply abandoned. Elsewhere the child
+/// inherited a private copy, so unmap it to avoid leaking. The inherited
+/// `payload` Vec is dropped in both cases.
+fn discard_inherited(region: Region) {
+    #[cfg(not(target_os = "linux"))]
+    // SAFETY: on non-Linux the child holds a private copy of the mapping at
+    // `region.ptr` spanning `HEADER_SIZE` bytes.
+    unsafe {
+        let _ = nix::sys::mman::munmap(region.ptr, HEADER_SIZE);
     }
-    // SAFETY: release the lock acquired (and forgotten) in `before_fork`.
-    unsafe { MAPPING.force_unlock() };
+    // Explicit drop for readability
+    drop(region);
 }
 
 #[derive(Debug)]
@@ -158,7 +127,11 @@ impl From<PublishError> for PyErr {
 
 /// Allocate the mapping and write the initial header. Called with the mutex held
 /// and `guard` confirmed to be `None`.
-fn publish_new(guard: &mut Option<Region>, payload: Vec<u8>) -> Result<(), PublishError> {
+fn publish_new(
+    guard: &mut Option<Region>,
+    payload: Vec<u8>,
+    owner_pid: u32,
+) -> Result<(), PublishError> {
     let timestamp = get_boottime_ns()?;
 
     let ptr = alloc_region()?;
@@ -194,7 +167,11 @@ fn publish_new(guard: &mut Option<Region>, payload: Vec<u8>) -> Result<(), Publi
     // path, failures are ignored per the spec.
     name_mapping(ptr, HEADER_SIZE);
 
-    *guard = Some(Region { ptr, payload });
+    *guard = Some(Region {
+        ptr,
+        owner_pid,
+        payload,
+    });
     Ok(())
 }
 
@@ -243,11 +220,19 @@ fn publish_existing(region: &mut Region, payload: Vec<u8>) -> Result<(), Publish
 /// Creates the named memory mapping on the first call. On subsequent calls the
 /// existing mapping is updated in-place using the spec's Updating Protocol
 pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
-    let mut guard = MAPPING.lock();
+    let current_pid = std::process::id();
+    let mut guard = lock_mapping();
+
+    // A region whose owner PID differs from ours was inherited across a fork.
+    // Drop it so the stale parent pointer is never dereferenced.
+    if guard.as_ref().is_some_and(|r| r.owner_pid != current_pid) {
+        discard_inherited(guard.take().unwrap());
+    }
+
     if let Some(region) = guard.as_mut() {
         publish_existing(region, payload)
     } else {
-        publish_new(&mut guard, payload)
+        publish_new(&mut guard, payload, current_pid)
     }
 }
 
@@ -257,7 +242,16 @@ pub fn publish(payload: Vec<u8>) -> Result<(), PublishError> {
 /// invalid state, then `munmap`s the header and drops the payload buffer.
 /// After a successful call, `publish()` may be called again.
 pub fn unpublish() -> Result<(), PublishError> {
-    let mut guard = MAPPING.lock();
+    let current_pid = std::process::id();
+    let mut guard = lock_mapping();
+
+    // A region inherited across a fork was never published by this process.
+    // Discard it and report that nothing was published here.
+    if guard.as_ref().is_some_and(|r| r.owner_pid != current_pid) {
+        discard_inherited(guard.take().unwrap());
+        return Err(PublishError::NotPublished);
+    }
+
     let region = guard.take().ok_or(PublishError::NotPublished)?;
 
     // Zero the timestamp and remove the mapping.

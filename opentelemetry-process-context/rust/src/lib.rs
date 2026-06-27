@@ -41,8 +41,6 @@ fn unpublish_context() -> PyResult<()> {
 #[pymodule]
 #[pyo3(name = "_rs")]
 fn init(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    #[cfg(all(unix, target_has_atomic = "64"))]
-    context::register_fork_handlers();
     m.add_wrapped(wrap_pyfunction!(publish_context))?;
     m.add_wrapped(wrap_pyfunction!(unpublish_context))
 }

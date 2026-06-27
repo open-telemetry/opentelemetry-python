@@ -123,6 +123,20 @@ class TestPublishContext(unittest.TestCase):
             "fork/re-publish script did not exit cleanly",
         )
 
+    @unittest.skipUnless(hasattr(os, "fork"), "requires os.fork")
+    def test_unpublish_in_forked_child_without_publish(self):
+        """A child that inherits the parent's region but never publishes must
+        get NotPublished from unpublish (not a crash), and the parent stays
+        usable."""
+        result = subprocess.run(
+            _script_cmd("fork_unpublish_without_publish.py"), check=False
+        )
+        self.assertEqual(
+            result.returncode,
+            0,
+            "fork/unpublish-without-publish script did not exit cleanly",
+        )
+
     @unittest.skipUnless(
         sys.platform.startswith("linux"), "requires /proc/<pid>/{maps,mem}"
     )
