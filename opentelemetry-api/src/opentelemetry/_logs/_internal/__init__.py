@@ -175,6 +175,23 @@ class Logger(ABC):
     ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        """Returns whether the logger is enabled for the given arguments.
+
+        Instrumentation should call this before performing expensive work to
+        construct a log record, and skip that work if ``False`` is returned.
+
+        The returned value may change over time and should be checked each time
+        before emitting a log record.
+        """
+        return True
+
 
 class NoOpLogger(Logger):
     """The default Logger used when no Logger implementation is available.
@@ -218,6 +235,15 @@ class NoOpLogger(Logger):
         exception: BaseException | None = None,
     ) -> None:
         pass
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return False
 
 
 class ProxyLogger(Logger):
@@ -299,6 +325,19 @@ class ProxyLogger(Logger):
                 event_name=event_name,
                 exception=exception,
             )
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return self._logger.enabled(
+            context=context,
+            severity_number=severity_number,
+            event_name=event_name,
+        )
 
 
 class LoggerProvider(ABC):
