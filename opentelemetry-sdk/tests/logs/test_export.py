@@ -70,7 +70,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             def shutdown(self):
                 pass
 
-            def force_flush(self, timeout_millis: float = 10_000) -> bool:
+            def force_flush(self, timeout_millis: int = 10_000) -> bool:
                 return True
 
             def export(self, batch: Sequence[ReadableLogRecord]):
