@@ -80,7 +80,7 @@ class ProcessSensitivityResourceDetector(ResourceDetector):
     def detect(self) -> Resource:
         return self.resource
 
-    def is_process_sensitive(self) -> bool:
+    def is_process_dependent(self) -> bool:
         return self.process_sensitive
 
 
@@ -482,10 +482,10 @@ class TestResources(unittest.TestCase):
         )
 
     def test_resource_detector_is_not_process_sensitive_by_default(self):
-        self.assertFalse(DefaultResourceDetector().is_process_sensitive())
+        self.assertFalse(DefaultResourceDetector().is_process_dependent())
 
     def test_process_resource_detector_is_process_sensitive(self):
-        self.assertTrue(ProcessResourceDetector().is_process_sensitive())
+        self.assertTrue(ProcessResourceDetector().is_process_dependent())
 
     @patch("opentelemetry.sdk.resources._build_resource_detectors")
     def test_get_process_sensitive_resource(
@@ -1036,7 +1036,7 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
 
     def test_is_process_sensitive(self):
         self.assertTrue(
-            ServiceInstanceIdResourceDetector().is_process_sensitive()
+            ServiceInstanceIdResourceDetector().is_process_dependent()
         )
 
     def test_detect_value_is_valid_uuid4(self):

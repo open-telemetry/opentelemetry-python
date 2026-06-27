@@ -294,7 +294,7 @@ class ResourceDetector(abc.ABC):
         raise NotImplementedError()
 
     # pylint: disable-next=no-self-use
-    def is_process_sensitive(self) -> bool:
+    def is_process_dependent(self) -> bool:
         """Return whether this detector depends on the current process identity.
 
         Process sensitive detectors may return resource attributes that become
@@ -337,7 +337,7 @@ class OTELResourceDetector(ResourceDetector):
 
 class ProcessResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
-    def is_process_sensitive(self) -> bool:
+    def is_process_dependent(self) -> bool:
         return True
 
     def detect(self) -> "Resource":
@@ -495,7 +495,7 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
     regenerated automatically when the process PID changes (e.g. after a fork).
     """
 
-    def is_process_sensitive(self) -> bool:
+    def is_process_dependent(self) -> bool:
         return True
 
     def detect(self) -> "Resource":
@@ -587,7 +587,7 @@ def _get_process_sensitive_resource() -> Resource:  # pyright: ignore[reportUnus
         [
             detector
             for detector in _build_resource_detectors()
-            if detector.is_process_sensitive()
+            if detector.is_process_dependent()
         ],
         Resource.get_empty(),
     )
