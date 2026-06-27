@@ -451,3 +451,62 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(
             attributes[exception_attributes.EXCEPTION_TYPE], "RuntimeError"
         )
+
+    def test_enabled_with_no_processors_returns_false(self):
+        provider = LoggerProvider()
+        logger = provider.get_logger("test")
+        self.assertFalse(logger.enabled())
+
+    def test_enabled_with_processor_returns_true(self):
+        provider = LoggerProvider()
+        provider.add_log_record_processor(Mock())
+        logger = provider.get_logger("test")
+        self.assertTrue(logger.enabled())
+
+    def test_enabled_disabled_logger_returns_false(self):
+        provider = LoggerProvider(
+            _logger_configurator=_disable_logger_configurator
+        )
+        provider.add_log_record_processor(Mock())
+        logger = provider.get_logger("test")
+        self.assertFalse(logger.enabled())
+
+    def test_enabled_passes_args_to_processor(self):
+        provider = LoggerProvider()
+        processor_mock = Mock()
+        processor_mock.enabled.return_value = True
+        provider.add_log_record_processor(processor_mock)
+        logger = provider.get_logger("test")
+
+        logger.enabled(
+            severity_number=SeverityNumber.INFO, event_name="my.event"
+        )
+
+        processor_mock.enabled.assert_called_once_with(
+            context=None,
+            instrumentation_scope=logger._instrumentation_scope,
+            severity_number=SeverityNumber.INFO,
+            event_name="my.event",
+        )
+
+    def test_enabled_all_processors_disabled_returns_false(self):
+        provider = LoggerProvider()
+        p1 = Mock()
+        p1.enabled.return_value = False
+        p2 = Mock()
+        p2.enabled.return_value = False
+        provider.add_log_record_processor(p1)
+        provider.add_log_record_processor(p2)
+        logger = provider.get_logger("test")
+        self.assertFalse(logger.enabled())
+
+    def test_enabled_one_processor_enabled_returns_true(self):
+        provider = LoggerProvider()
+        p1 = Mock()
+        p1.enabled.return_value = False
+        p2 = Mock()
+        p2.enabled.return_value = True
+        provider.add_log_record_processor(p1)
+        provider.add_log_record_processor(p2)
+        logger = provider.get_logger("test")
+        self.assertTrue(logger.enabled())
