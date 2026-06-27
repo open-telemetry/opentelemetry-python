@@ -349,7 +349,17 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 for metric in scope_metrics.metrics:
                     num_items += len(metric.data.data_points)
 
-        export_request = encode_metrics(metrics_data)
+        try:
+            export_request = encode_metrics(metrics_data)
+        except Exception as error:
+            with self._metrics.export_operation(num_items) as result:
+                _logger.exception(
+                    "Failed to encode metrics batch: %s",
+                    error,
+                )
+                result.error = error
+            return MetricExportResult.FAILURE
+
         deadline_sec = time() + self._timeout
 
         # If no batch size configured, export as single batch with retries as configured

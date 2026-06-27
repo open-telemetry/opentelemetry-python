@@ -454,6 +454,17 @@ class OTLPExporterMixin(
             return self._result.FAILURE  # type: ignore [reportReturnType]
 
         with self._metrics.export_operation(self._count_data(data)) as result:
+            try:
+                request = self._translate_data(data)
+            except Exception as error:
+                logger.exception(
+                    "Failed to encode %s batch: %s",
+                    self._exporting,
+                    error,
+                )
+                result.error = error
+                return self._result.FAILURE  # type: ignore [reportReturnType]
+
             # FIXME remove this check if the export type for traces
             # gets updated to a class that represents the proto
             # TracesData and use the code below instead.
@@ -463,7 +474,7 @@ class OTLPExporterMixin(
                     if self._client is None:
                         return self._result.FAILURE
                     self._client.Export(
-                        request=self._translate_data(data),
+                        request=request,
                         metadata=self._headers,
                         timeout=deadline_sec - time(),
                     )
