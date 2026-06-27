@@ -10,6 +10,8 @@ import zlib
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from email.utils import format_datetime
 from unittest.mock import Mock, patch
 
 # pylint: disable-next=import-error
@@ -22,6 +24,7 @@ from opentelemetry.exporter.http.transport._base import (
 from opentelemetry.exporter.otlp.common._http import (
     Compression,
     OTLPHTTPClient,
+    _extract_retry_after,
 )
 
 
@@ -454,3 +457,109 @@ class TestOTLPHTTPClient(unittest.TestCase):
         self.assertEqual(result.status_code, 503)
         self.assertEqual(len(transport.requests), 1)
         shutdown_event.wait.assert_not_called()
+
+    def test_export_retry_after_http_date(self):
+        base = 1_700_000_000.0
+        shutdown_event = Mock(spec=threading.Event)
+        shutdown_event.is_set.return_value = False
+        shutdown_event.wait.return_value = False
+        retry_at = format_datetime(
+            datetime.fromtimestamp(base + 30, timezone.utc), usegmt=True
+        )
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(
+                status_code=503,
+                reason="Service Unavailable",
+                response_headers={"retry-after": retry_at},
+            ),
+            _TestHTTPResult(status_code=200, reason="OK"),
+        )
+        client = self._client(transport, timeout=120.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
+
+        with patch(
+            "opentelemetry.exporter.otlp.common._http.time.time",
+            return_value=base,
+        ):
+            result = client.export(b"payload")
+
+        self.assertTrue(result.success)
+        self.assertEqual(len(transport.requests), 2)
+        shutdown_event.wait.assert_called_once_with(30.0)
+
+    def test_export_retry_after_http_date_in_past(self):
+        base = 1_700_000_000.0
+        shutdown_event = Mock(spec=threading.Event)
+        shutdown_event.is_set.return_value = False
+        shutdown_event.wait.return_value = False
+        retry_at = format_datetime(
+            datetime.fromtimestamp(base - 30, timezone.utc), usegmt=True
+        )
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(
+                status_code=429,
+                reason="Too Many Requests",
+                response_headers={"retry-after": retry_at},
+            ),
+            _TestHTTPResult(status_code=200, reason="OK"),
+        )
+        client = self._client(transport, timeout=120.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
+
+        with patch(
+            "opentelemetry.exporter.otlp.common._http.time.time",
+            return_value=base,
+        ):
+            result = client.export(b"payload")
+
+        self.assertTrue(result.success)
+        self.assertEqual(len(transport.requests), 2)
+        shutdown_event.wait.assert_called_once_with(0.0)
+
+    def test_export_retry_after_malformed(self):
+        shutdown_event = Mock(spec=threading.Event)
+        shutdown_event.is_set.return_value = False
+        shutdown_event.wait.return_value = False
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(
+                status_code=503,
+                reason="Service Unavailable",
+                response_headers={"retry-after": "not-a-date"},
+            ),
+            _TestHTTPResult(status_code=200, reason="OK"),
+        )
+        client = self._client(transport, timeout=60.0, jitter=0.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
+
+        result = client.export(b"payload")
+
+        self.assertTrue(result.success)
+        self.assertEqual(len(transport.requests), 2)
+        # No usable Retry-After -> exponential backoff: 2**0 * uniform(1, 1).
+        shutdown_event.wait.assert_called_once_with(1.0)
+
+    def test_extract_retry_after_edge_cases(self):
+        cases = (
+            ("5", 5.0),
+            ("  7  ", 7.0),
+            ("-3", 0.0),
+            ("nan", None),
+            ("inf", None),
+            ("garbage", None),
+        )
+        for value, expected in cases:
+            with self.subTest(value=value):
+                self.assertEqual(
+                    _extract_retry_after(
+                        _TestHTTPResult(
+                            response_headers={"retry-after": value}
+                        )
+                    ),
+                    expected,
+                )
+
+        with self.subTest(value="absent"):
+            self.assertIsNone(_extract_retry_after(_TestHTTPResult()))

@@ -6,12 +6,15 @@ from __future__ import annotations
 import enum
 import gzip
 import logging
+import math
 import random
 import threading
 import time
 import zlib
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import timezone
+from email.utils import parsedate_to_datetime
 from http import HTTPStatus
 from io import BytesIO
 from typing import TYPE_CHECKING, Final, Literal
@@ -44,14 +47,32 @@ def _is_retryable(status_code: int | None) -> bool:
 
 
 def _extract_retry_after(result: BaseHTTPResult) -> float | None:
+    """Parse the ``Retry-After`` header (RFC 7231)."""
     try:
         value = result.headers().get("retry-after")
-        if value is not None:
-            return float(value)
     # pylint: disable-next=broad-exception-caught
     except Exception:
+        return None
+    if value is None:
+        return None
+    value = value.strip()
+
+    # delay-seconds: a non-negative decimal integer.
+    try:
+        seconds = float(value)
+    except ValueError:
         pass
-    return None
+    else:
+        return max(seconds, 0.0) if math.isfinite(seconds) else None
+
+    # HTTP-date: wait until the indicated absolute time.
+    try:
+        retry_at = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if retry_at.tzinfo is None:
+        retry_at = retry_at.replace(tzinfo=timezone.utc)
+    return max(retry_at.timestamp() - time.time(), 0.0)
 
 
 class Compression(enum.Enum):
