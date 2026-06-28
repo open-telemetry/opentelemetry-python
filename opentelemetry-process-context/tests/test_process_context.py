@@ -75,6 +75,16 @@ class TestPublishContext(unittest.TestCase):
         self.assertIsNone(unpublish_context())
         self.assertIsNone(publish_context(resource))
 
+    def test_publish_context_with_attributes(self):
+        resource = Resource({"service.name": "test"})
+        self.assertIsNone(
+            publish_context(resource, {"deployment.environment": "prod"})
+        )
+        self.assertIsNone(
+            publish_context(resource, {"k": 1, "nested": {"a": 2}})
+        )
+        self.assertIsNone(publish_context(resource))
+
     def test_unpublish_before_publish_raises(self):
         with self.assertRaises(RuntimeError):
             unpublish_context()
@@ -164,6 +174,8 @@ class TestPublishContext(unittest.TestCase):
             self.assertNotEqual(header["payload_ptr"], 0)
             self.assertIn(b"service.name", header["payload"])
             self.assertIn(b"otel-test-service", header["payload"])
+            self.assertIn(b"deployment.environment", header["payload"])
+            self.assertIn(b"otel-test-env", header["payload"])
 
     @unittest.skipUnless(
         sys.platform.startswith("linux"), "requires /proc/<pid>/{maps,mem}"

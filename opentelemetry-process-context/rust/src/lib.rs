@@ -9,16 +9,24 @@ pub(crate) mod proto;
 use pyo3::prelude::*;
 
 #[pyfunction]
-fn publish_context(resource: &Bound<'_, PyAny>) -> PyResult<()> {
+#[pyo3(signature = (resource, attributes = None))]
+fn publish_context(
+    resource: &Bound<'_, PyAny>,
+    attributes: Option<&Bound<'_, PyAny>>,
+) -> PyResult<()> {
     #[cfg(all(unix, target_has_atomic = "64"))]
     {
-        let resource = crate::convert::resource_from_py(resource)?;
-        context::publish(crate::convert::encode_process_context(resource))?;
+        let resource = convert::resource_from_py(resource)?;
+        let attributes = match attributes {
+            Some(attributes) => convert::key_values_from_py(attributes)?,
+            None => Vec::new(),
+        };
+        context::publish(convert::encode_process_context(resource, attributes))?;
         Ok(())
     }
     #[cfg(not(all(unix, target_has_atomic = "64")))]
     {
-        let _ = resource;
+        let _ = (resource, attributes);
         Err(pyo3::exceptions::PyRuntimeError::new_err(
             "process context publication requires a Unix-like OS with 64 bit atomic support",
         ))

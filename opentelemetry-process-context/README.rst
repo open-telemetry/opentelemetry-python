@@ -55,6 +55,10 @@ Call ``unpublish_context`` on shutdown to remove it explicitly.
 
     publish_context(resource)
 
+    # Optionally publish supplementary attributes that are not part of the
+    # standard Resource.
+    publish_context(resource, {"deployment.environment": "prod"})
+
     # On shutdown (optional):
     unpublish_context()
 

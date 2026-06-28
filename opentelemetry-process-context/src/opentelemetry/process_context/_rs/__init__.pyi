@@ -1,9 +1,14 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Mapping
+from typing import Any
+
 from opentelemetry.sdk.resources import Resource
 
-def publish_context(resource: Resource) -> None:
+def publish_context(
+    resource: Resource, attributes: Mapping[str, Any] | None = None
+) -> None:
     """Publish or update the process context for the given resource.
 
     Encodes ``resource`` as a protobuf ``ProcessContext`` message and writes it
@@ -16,6 +21,8 @@ def publish_context(resource: Resource) -> None:
     remains stable across updates.
 
     :param resource: The SDK resource whose attributes are to be published.
+    :param attributes: Optional supplementary attributes to share with external
+        readers.
     :raises OSError: If the memory mapping or clock could not be initialized.
     """
 
