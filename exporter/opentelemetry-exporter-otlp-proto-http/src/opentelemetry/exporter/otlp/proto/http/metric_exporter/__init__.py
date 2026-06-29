@@ -367,7 +367,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             export_result = self._export_with_retries(
                 split_metrics_data,
                 deadline_sec,
-                num_items,
+                _count_data_points(split_metrics_data),
             )
             if export_result != MetricExportResult.SUCCESS:
                 return MetricExportResult.FAILURE
@@ -402,6 +402,18 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             .lower()
             == "true",
         )
+
+
+def _count_data_points(export_request: ExportMetricsServiceRequest) -> int:
+    """Count the number of data points in an encoded metrics export request."""
+    count = 0
+    for resource_metrics in export_request.resource_metrics:
+        for scope_metrics in resource_metrics.scope_metrics:
+            for metric in scope_metrics.metrics:
+                field_name = metric.WhichOneof("data")
+                if field_name:
+                    count += len(getattr(metric, field_name).data_points)
+    return count
 
 
 def _split_metrics_data(
