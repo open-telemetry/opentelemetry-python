@@ -51,7 +51,6 @@ API
 ---
 """
 
-from collections import deque
 from collections.abc import Callable, Iterable, Sequence
 from itertools import chain
 from json import dumps
@@ -314,7 +313,7 @@ class _CustomCollector:
         scope_info_enabled: bool = True,
     ):
         self._callback = None
-        self._metrics_datas: deque[MetricsData] = deque()
+        self._metrics_data: MetricsData | None = None
         self._disable_target_info = disable_target_info
         self._scope_info_enabled = scope_info_enabled
         self._target_info = None
@@ -322,7 +321,7 @@ class _CustomCollector:
 
     def add_metrics_data(self, metrics_data: MetricsData) -> None:
         """Add metrics to Prometheus data"""
-        self._metrics_datas.append(metrics_data)
+        self._metrics_data = metrics_data
 
     def collect(self) -> Iterable[PrometheusMetric]:
         """Collect fetches the metrics from OpenTelemetry
@@ -335,27 +334,28 @@ class _CustomCollector:
 
         metric_family_id_metric_family = {}
 
-        if len(self._metrics_datas):
-            if not self._disable_target_info:
-                if self._target_info is None:
-                    attributes: Attributes = {}
-                    for res in self._metrics_datas[0].resource_metrics:
-                        attributes = {**attributes, **res.resource.attributes}
+        if self._metrics_data is None:
+            return
 
-                    self._target_info = self._create_info_metric(
-                        _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
-                    )
-                metric_family_id_metric_family[_TARGET_INFO_NAME] = (
-                    self._target_info
+        if not self._disable_target_info:
+            if self._target_info is None:
+                attributes: Attributes = {}
+                for res in self._metrics_data.resource_metrics:
+                    attributes = {**attributes, **res.resource.attributes}
+
+                self._target_info = self._create_info_metric(
+                    _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                 )
-
-        while self._metrics_datas:
-            self._translate_to_prometheus(
-                self._metrics_datas.popleft(), metric_family_id_metric_family
+            metric_family_id_metric_family[_TARGET_INFO_NAME] = (
+                self._target_info
             )
 
-            if metric_family_id_metric_family:
-                yield from metric_family_id_metric_family.values()
+        self._translate_to_prometheus(
+            self._metrics_data, metric_family_id_metric_family
+        )
+
+        if metric_family_id_metric_family:
+            yield from metric_family_id_metric_family.values()
 
     def _translate_to_prometheus(
         self,
