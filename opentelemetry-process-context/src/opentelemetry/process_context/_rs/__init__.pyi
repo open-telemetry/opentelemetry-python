@@ -1,14 +1,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Mapping
-from typing import Any
-
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.util.types import Attributes
 
-def publish_context(
-    resource: Resource, attributes: Mapping[str, Any] | None = None
-) -> None:
+def publish_context(resource: Resource, attributes: Attributes = None) -> None:
     """Publish or update the process context for the given resource.
 
     Encodes ``resource`` as a protobuf ``ProcessContext`` message and writes it
