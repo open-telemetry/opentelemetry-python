@@ -1,0 +1,48 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "opentelemetry-process-context"
+version = "0.65b0.dev"
+description = "OpenTelemetry Process Context"
+readme = "README.rst"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+  { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: OpenTelemetry",
+  "Framework :: OpenTelemetry :: Profiles",
+  "Intended Audience :: Developers",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "opentelemetry-api ~= 1.15",
+  "opentelemetry-sdk ~= 1.15",
+]
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-process-context"
+Repository = "https://github.com/open-telemetry/opentelemetry-python"
+
+[tool.maturin]
+python-source = "src"
+module-name = "opentelemetry.process_context._rs"
+manifest-path = "rust/Cargo.toml"
+
+[tool.uv]
+cache-keys = [
+  { file = "rust/Cargo.toml" },
+  { file = "rust/Cargo.lock" },
+  { file = "rust/src/**" },
+]
