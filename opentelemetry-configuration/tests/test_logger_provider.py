@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry._logs import get_logger_provider
-from opentelemetry.sdk._configuration._logger_provider import (
+from opentelemetry.configuration._logger_provider import (
     _DEFAULT_EXPORT_TIMEOUT_MILLIS,
     _DEFAULT_MAX_EXPORT_BATCH_SIZE,
     _DEFAULT_MAX_QUEUE_SIZE,
@@ -21,35 +21,35 @@ from opentelemetry.sdk._configuration._logger_provider import (
     configure_logger_provider,
     create_logger_provider,
 )
-from opentelemetry.sdk._configuration.file._loader import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.file._loader import ConfigurationError
+from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     LoggerProvider as LoggerProviderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     LogRecordExporter as LogRecordExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     LogRecordLimits as LogRecordLimitsConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     NameStringValuePair,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
 from opentelemetry.sdk._logs import LoggerProvider
@@ -229,7 +229,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         mock_exporter = MagicMock()
         mock_class = MagicMock(return_value=mock_exporter)
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             # pylint: disable=unexpected-keyword-arg
@@ -240,7 +240,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
 
     def test_unknown_log_exporter_raises_configuration_error(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             with self.assertRaises(ConfigurationError):
@@ -473,7 +473,7 @@ class TestLogRecordLimits(unittest.TestCase):
             limits=LogRecordLimitsConfig(attribute_count_limit=64),
         )
         with self.assertLogs(
-            "opentelemetry.sdk._configuration._logger_provider",
+            "opentelemetry.configuration._logger_provider",
             level="WARNING",
         ) as cm:
             create_logger_provider(config)
@@ -486,7 +486,7 @@ class TestLogRecordLimits(unittest.TestCase):
     def test_no_limits_no_warning():
         config = LoggerProviderConfig(processors=[])
         with patch(
-            "opentelemetry.sdk._configuration._logger_provider._logger"
+            "opentelemetry.configuration._logger_provider._logger"
         ) as mock_logger:
             create_logger_provider(config)
             mock_logger.warning.assert_not_called()

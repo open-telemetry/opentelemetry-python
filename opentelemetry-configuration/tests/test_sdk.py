@@ -7,26 +7,26 @@
 import unittest
 from unittest.mock import patch
 
-from opentelemetry.sdk._configuration._sdk import configure_sdk
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration._sdk import configure_sdk
+from opentelemetry.configuration.models import (
     OpenTelemetryConfiguration,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     Propagator as PropagatorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     Resource as ResourceConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SimpleSpanProcessor as SimpleSpanProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanExporter as SpanExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanProcessor as SpanProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     TracerProvider as TracerProviderConfig,
 )
 from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
@@ -39,11 +39,11 @@ def _config(**kwargs) -> OpenTelemetryConfiguration:
 
 
 class TestConfigureSdk(unittest.TestCase):
-    @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    @patch("opentelemetry.configuration._sdk.configure_propagator")
+    @patch("opentelemetry.configuration._sdk.configure_logger_provider")
+    @patch("opentelemetry.configuration._sdk.configure_meter_provider")
+    @patch("opentelemetry.configuration._sdk.configure_tracer_provider")
+    @patch("opentelemetry.configuration._sdk.create_resource")
     # pylint: disable=no-self-use
     def test_calls_each_signal_with_resource(
         self,
@@ -73,11 +73,11 @@ class TestConfigureSdk(unittest.TestCase):
         mock_logger.assert_called_once_with(None, sentinel_resource)
         mock_propagator.assert_called_once_with(propagator_cfg)
 
-    @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    @patch("opentelemetry.configuration._sdk.configure_propagator")
+    @patch("opentelemetry.configuration._sdk.configure_logger_provider")
+    @patch("opentelemetry.configuration._sdk.configure_meter_provider")
+    @patch("opentelemetry.configuration._sdk.configure_tracer_provider")
+    @patch("opentelemetry.configuration._sdk.create_resource")
     # pylint: disable=no-self-use
     def test_disabled_skips_everything(
         self,
@@ -100,11 +100,11 @@ class TestConfigureSdk(unittest.TestCase):
         mock_logger.assert_not_called()
         mock_propagator.assert_not_called()
 
-    @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    @patch("opentelemetry.configuration._sdk.configure_propagator")
+    @patch("opentelemetry.configuration._sdk.configure_logger_provider")
+    @patch("opentelemetry.configuration._sdk.configure_meter_provider")
+    @patch("opentelemetry.configuration._sdk.configure_tracer_provider")
+    @patch("opentelemetry.configuration._sdk.create_resource")
     def test_absent_sections_pass_none(
         self,
         mock_create_resource,  # noqa: ARG002
@@ -126,7 +126,7 @@ class TestConfigureSdkIntegration(unittest.TestCase):
     """End-to-end: build a real OpenTelemetryConfiguration and apply it."""
 
     @patch(
-        "opentelemetry.sdk._configuration._tracer_provider.trace.set_tracer_provider"
+        "opentelemetry.configuration._tracer_provider.trace.set_tracer_provider"
     )
     def test_applies_tracer_provider_globally(self, mock_set_tracer):
         config = _config(

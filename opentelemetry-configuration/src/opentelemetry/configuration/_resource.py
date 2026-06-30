@@ -11,17 +11,17 @@ from collections.abc import Callable
 from typing import Any
 from urllib import parse
 
-from opentelemetry.sdk._configuration._common import load_entry_point
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration._common import load_entry_point
+from opentelemetry.configuration.models import (
     AttributeNameValue,
     AttributeType,
     ExperimentalResourceDetector,
     IncludeExclude,
 )
-from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
+from opentelemetry.configuration.models import Resource as ResourceConfig
+from opentelemetry.sdk.environment_variables import OTEL_SERVICE_NAME
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
-    OTEL_SERVICE_NAME,
     SERVICE_NAME,
     ProcessResourceDetector,
     Resource,

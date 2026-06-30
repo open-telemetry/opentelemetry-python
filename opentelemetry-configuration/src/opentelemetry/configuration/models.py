@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, ClassVar, TypeAlias
 
-from opentelemetry.sdk._configuration._common import _additional_properties
+from opentelemetry.configuration._common import _additional_properties
 
 AlwaysOffSampler: TypeAlias = dict[str, Any] | None
 

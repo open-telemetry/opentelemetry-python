@@ -7,24 +7,24 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from opentelemetry.sdk._configuration._tracer_provider import (
+from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
 )
-from opentelemetry.sdk._configuration.file import (
+from opentelemetry.configuration.file import (
     ConfigurationError,
     load_config_file,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import OpenTelemetryConfiguration
+from opentelemetry.configuration.models import (
     ParentBasedSampler as ParentBasedSamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanProcessor as SpanProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     TracerProvider as TracerProviderConfig,
 )
 from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
@@ -348,7 +348,7 @@ class TestFileFormatValidation(unittest.TestCase):
 
     def test_newer_minor_is_accepted_with_warning(self):
         with self.assertLogs(
-            "opentelemetry.sdk._configuration.file._loader", level="WARNING"
+            "opentelemetry.configuration.file._loader", level="WARNING"
         ) as logs:
             config = self._load("1.1")
         self.assertEqual(config.file_format, "1.1")

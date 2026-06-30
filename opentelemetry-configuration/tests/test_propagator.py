@@ -9,19 +9,19 @@ from unittest.mock import MagicMock, patch
 # We access it here to assert composition correctness.
 # pylint: disable=protected-access
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
-from opentelemetry.environment_variables import OTEL_PROPAGATORS
-from opentelemetry.propagators.composite import CompositePropagator
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration._propagator import (
+from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration._propagator import (
     configure_propagator,
     create_propagator,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     Propagator as PropagatorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     TextMapPropagator as TextMapPropagatorConfig,
 )
+from opentelemetry.environment_variables import OTEL_PROPAGATORS
+from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
@@ -78,7 +78,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_propagator
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -95,7 +95,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_propagator
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -107,7 +107,7 @@ class TestCreatePropagator(unittest.TestCase):
 
     def test_b3_not_installed_raises_configuration_error(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             config = PropagatorConfig(
@@ -124,7 +124,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             result = create_propagator(config)
@@ -147,7 +147,7 @@ class TestCreatePropagator(unittest.TestCase):
             return []
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             side_effect=fake_entry_points,
         ):
             config = PropagatorConfig(composite_list="tracecontext,baggage")
@@ -171,7 +171,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(composite_list=" tracecontext ")
@@ -184,7 +184,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.side_effect = RuntimeError("package broken")
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(composite_list="broken-prop")
@@ -199,7 +199,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_tc
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -218,7 +218,7 @@ class TestCreatePropagator(unittest.TestCase):
 
     def test_unknown_composite_list_propagator_raises(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             config = PropagatorConfig(composite_list="nonexistent")
@@ -231,7 +231,7 @@ class TestCreatePropagator(unittest.TestCase):
         mock_ep.load.return_value = lambda: mock_propagator
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             config = PropagatorConfig(
@@ -247,7 +247,7 @@ class TestCreatePropagator(unittest.TestCase):
 
     def test_unknown_composite_propagator_raises(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             config = PropagatorConfig(
@@ -263,7 +263,7 @@ class TestCreatePropagator(unittest.TestCase):
 class TestConfigurePropagator(unittest.TestCase):
     def test_configure_propagator_calls_set_global_textmap(self):
         with patch(
-            "opentelemetry.sdk._configuration._propagator.set_global_textmap"
+            "opentelemetry.configuration._propagator.set_global_textmap"
         ) as mock_set:
             configure_propagator(None)
             mock_set.assert_called_once()
@@ -275,7 +275,7 @@ class TestConfigurePropagator(unittest.TestCase):
             composite=[TextMapPropagatorConfig(tracecontext={})]
         )
         with patch(
-            "opentelemetry.sdk._configuration._propagator.set_global_textmap"
+            "opentelemetry.configuration._propagator.set_global_textmap"
         ) as mock_set:
             configure_propagator(config)
             mock_set.assert_called_once()
@@ -290,7 +290,7 @@ class TestConfigurePropagator(unittest.TestCase):
             composite=[TextMapPropagatorConfig(tracecontext={})]
         )
         with patch(
-            "opentelemetry.sdk._configuration._propagator.set_global_textmap"
+            "opentelemetry.configuration._propagator.set_global_textmap"
         ) as mock_set:
             configure_propagator(config)
             propagator = mock_set.call_args[0][0]

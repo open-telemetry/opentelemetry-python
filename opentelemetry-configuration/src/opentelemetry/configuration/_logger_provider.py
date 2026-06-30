@@ -6,35 +6,35 @@ from __future__ import annotations
 import logging
 
 from opentelemetry._logs import set_logger_provider
-from opentelemetry.sdk._configuration._common import (
+from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
     load_entry_point,
 )
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     LoggerProvider as LoggerProviderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     LogRecordExporter as LogRecordExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
 from opentelemetry.sdk._logs import LoggerProvider

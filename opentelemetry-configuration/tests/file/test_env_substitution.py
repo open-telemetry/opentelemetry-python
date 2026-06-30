@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import yaml
 
-from opentelemetry.sdk._configuration.file import (
+from opentelemetry.configuration.file import (
     EnvSubstitutionError,
     substitute_env_vars,
 )

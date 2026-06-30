@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from typing import Any, ClassVar
 from unittest.mock import MagicMock, patch
 
-from opentelemetry.sdk._configuration._common import (
+from opentelemetry.configuration._common import (
     _additional_properties,
     _map_compression,
     _parse_headers,
@@ -16,8 +16,8 @@ from opentelemetry.sdk._configuration._common import (
     _resolve_component,
     load_entry_point,
 )
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
     LogRecordExporter,
     PushMetricExporter,
@@ -96,7 +96,7 @@ class TestLoadEntryPoint(unittest.TestCase):
         mock_ep = MagicMock()
         mock_ep.load.return_value = mock_class
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             result = load_entry_point("some_group", "some_name")
@@ -104,7 +104,7 @@ class TestLoadEntryPoint(unittest.TestCase):
 
     def test_raises_when_not_found(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             with self.assertRaises(ConfigurationError) as ctx:
@@ -116,7 +116,7 @@ class TestLoadEntryPoint(unittest.TestCase):
         mock_ep = MagicMock()
         mock_ep.load.side_effect = ImportError("bad import")
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             with self.assertRaises(ConfigurationError) as ctx:
@@ -131,7 +131,7 @@ class TestLoadEntryPoint(unittest.TestCase):
         mock_ep = MagicMock()
         mock_ep.load.return_value = mock_class
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             cls = load_entry_point("some_group", "some_name")
@@ -406,7 +406,7 @@ class TestResolveComponent(unittest.TestCase):
         mock_instance = MagicMock()
         mock_class = MagicMock(return_value=mock_instance)
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             # pylint: disable=unexpected-keyword-arg
@@ -421,7 +421,7 @@ class TestResolveComponent(unittest.TestCase):
         mock_instance = MagicMock()
         mock_class = MagicMock(return_value=mock_instance)
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             # pylint: disable=unexpected-keyword-arg
@@ -440,7 +440,7 @@ class TestResolveComponent(unittest.TestCase):
 
     def test_plugin_not_found_raises_configuration_error(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             # pylint: disable=unexpected-keyword-arg

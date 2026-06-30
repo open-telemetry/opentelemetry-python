@@ -10,28 +10,15 @@ import os
 from pathlib import Path
 from typing import Any
 
-from opentelemetry.sdk._configuration._conversion import _dict_to_dataclass
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration.file._env_substitution import (
+import jsonschema
+import yaml
+
+from opentelemetry.configuration._conversion import _dict_to_dataclass
+from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration.file._env_substitution import (
     substitute_env_vars,
 )
-from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
-
-try:
-    import yaml
-except ImportError as exc:
-    raise ImportError(
-        "File configuration requires pyyaml. "
-        "Install with: pip install opentelemetry-sdk[file-configuration]"
-    ) from exc
-
-try:
-    import jsonschema
-except ImportError as exc:
-    raise ImportError(
-        "File configuration requires jsonschema. "
-        "Install with: pip install opentelemetry-sdk[file-configuration]"
-    ) from exc
+from opentelemetry.configuration.models import OpenTelemetryConfiguration
 
 # Schema version vendored in schema.json. ``file_format`` values are accepted
 # per the configuration spec's versioning rules: the major version must match,
@@ -47,7 +34,7 @@ _schema_cache: list[dict] = []
 def _get_schema() -> dict:
     if not _schema_cache:
         schema_path = (
-            importlib.resources.files("opentelemetry.sdk._configuration")
+            importlib.resources.files("opentelemetry.configuration")
             / "schema.json"
         )
         _schema_cache.append(

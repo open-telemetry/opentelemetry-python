@@ -12,18 +12,18 @@ from __future__ import annotations
 
 import logging
 
-from opentelemetry.sdk._configuration._logger_provider import (
+from opentelemetry.configuration._logger_provider import (
     configure_logger_provider,
 )
-from opentelemetry.sdk._configuration._meter_provider import (
+from opentelemetry.configuration._meter_provider import (
     configure_meter_provider,
 )
-from opentelemetry.sdk._configuration._propagator import configure_propagator
-from opentelemetry.sdk._configuration._resource import create_resource
-from opentelemetry.sdk._configuration._tracer_provider import (
+from opentelemetry.configuration._propagator import configure_propagator
+from opentelemetry.configuration._resource import create_resource
+from opentelemetry.configuration._tracer_provider import (
     configure_tracer_provider,
 )
-from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
+from opentelemetry.configuration.models import OpenTelemetryConfiguration
 
 _logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
             ``load_config_file``).
 
     Example:
-        >>> from opentelemetry.sdk._configuration.file import (
+        >>> from opentelemetry.configuration.file import (
         ...     load_config_file, configure_sdk,
         ... )
         >>> config = load_config_file("otel-config.yaml")

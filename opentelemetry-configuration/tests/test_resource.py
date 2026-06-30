@@ -7,16 +7,16 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration._resource import create_resource
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration._resource import create_resource
+from opentelemetry.configuration.models import (
     AttributeNameValue,
     AttributeType,
     ExperimentalResourceDetection,
     ExperimentalResourceDetector,
     IncludeExclude,
 )
-from opentelemetry.sdk._configuration.models import Resource as ResourceConfig
+from opentelemetry.configuration.models import Resource as ResourceConfig
 from opentelemetry.sdk.resources import (
     CONTAINER_ID,
     HOST_ARCH,
@@ -289,7 +289,7 @@ class TestCreateResourceAttributesList(unittest.TestCase):
 
     def test_attributes_list_invalid_pair_skipped(self):
         with self.assertLogs(
-            "opentelemetry.sdk._configuration._resource", level="WARNING"
+            "opentelemetry.configuration._resource", level="WARNING"
         ) as cm:
             config = ResourceConfig(attributes_list="no-equals,foo=bar")
             resource = create_resource(config)
@@ -471,7 +471,7 @@ class TestContainerResourceDetector(unittest.TestCase):
     def test_container_detector_raises_when_package_missing(self):
         """ConfigurationError is raised when the contrib entry point is not found."""
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             with self.assertRaises(ConfigurationError):
@@ -486,7 +486,7 @@ class TestContainerResourceDetector(unittest.TestCase):
         mock_ep.load.return_value = mock_detector
 
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             resource = create_resource(self._config_with_container())
@@ -510,7 +510,7 @@ class TestContainerResourceDetector(unittest.TestCase):
             ),
         )
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             resource = create_resource(config)
@@ -600,7 +600,7 @@ class TestPluginResourceDetector(unittest.TestCase):
             )
         )
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
             resource = create_resource(config)
@@ -615,7 +615,7 @@ class TestPluginResourceDetector(unittest.TestCase):
             )
         )
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             with self.assertRaises(ConfigurationError):

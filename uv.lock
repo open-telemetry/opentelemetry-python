@@ -11,6 +11,7 @@ resolution-markers = [
 members = [
     "opentelemetry-api",
     "opentelemetry-codegen-json",
+    "opentelemetry-configuration",
     "opentelemetry-exporter-http-transport",
     "opentelemetry-exporter-otlp",
     "opentelemetry-exporter-otlp-json-common",
@@ -829,6 +830,24 @@ requires-dist = [
 ]
 
 [[package]]
+name = "opentelemetry-configuration"
+source = { editable = "opentelemetry-configuration" }
+dependencies = [
+    { name = "jsonschema" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-sdk" },
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "jsonschema", specifier = ">=4.0" },
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+    { name = "pyyaml", specifier = ">=5.4" },
+]
+
+[[package]]
 name = "opentelemetry-exporter-credential-provider-gcp"
 version = "0.62b0"
 source = { registry = "https://pypi.org/simple" }
@@ -1058,6 +1077,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-codegen-json" },
+    { name = "opentelemetry-configuration" },
     { name = "opentelemetry-exporter-http-transport" },
     { name = "opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-exporter-otlp-json-file" },
@@ -1088,6 +1108,7 @@ dev = [
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-codegen-json", editable = "codegen/opentelemetry-codegen-json" },
+    { name = "opentelemetry-configuration", editable = "opentelemetry-configuration" },
     { name = "opentelemetry-exporter-http-transport", editable = "exporter/opentelemetry-exporter-http-transport" },
     { name = "opentelemetry-exporter-otlp-json-common", editable = "exporter/opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-exporter-otlp-json-file", editable = "exporter/opentelemetry-exporter-otlp-json-file" },
@@ -1124,21 +1145,12 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 
-[package.optional-dependencies]
-file-configuration = [
-    { name = "jsonschema" },
-    { name = "pyyaml" },
-]
-
 [package.metadata]
 requires-dist = [
-    { name = "jsonschema", marker = "extra == 'file-configuration'", specifier = ">=4.0" },
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-semantic-conventions", editable = "opentelemetry-semantic-conventions" },
-    { name = "pyyaml", marker = "extra == 'file-configuration'", specifier = ">=6.0" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
-provides-extras = ["file-configuration"]
 
 [[package]]
 name = "opentelemetry-semantic-conventions"

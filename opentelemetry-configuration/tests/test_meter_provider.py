@@ -9,33 +9,33 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
-from opentelemetry.sdk._configuration._meter_provider import (
+from opentelemetry.configuration._meter_provider import (
     configure_meter_provider,
     create_meter_provider,
 )
-from opentelemetry.sdk._configuration.file._loader import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.file._loader import ConfigurationError
+from opentelemetry.configuration.models import (
     Aggregation as AggregationConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     Base2ExponentialBucketHistogramAggregation as Base2Config,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ConsoleMetricExporter as ConsoleMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExplicitBucketHistogramAggregation as ExplicitBucketConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExporterDefaultHistogramAggregation,
     ExporterTemporalityPreference,
     IncludeExclude,
@@ -43,31 +43,31 @@ from opentelemetry.sdk._configuration.models import (
     ViewSelector,
     ViewStream,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     MeterProvider as MeterProviderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     MetricReader as MetricReaderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpGrpcMetricExporter as OtlpGrpcMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpHttpMetricExporter as OtlpHttpMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     PeriodicMetricReader as PeriodicMetricReaderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     PullMetricExporter as PullMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     PullMetricReader as PullMetricReaderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     PushMetricExporter as PushMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     View as ViewConfig,
 )
 from opentelemetry.sdk.metrics import (
@@ -159,7 +159,7 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
     def test_configure_with_config_sets_global(self):
         config = MeterProviderConfig(readers=[])
         with patch(
-            "opentelemetry.sdk._configuration._meter_provider.metrics.set_meter_provider"
+            "opentelemetry.configuration._meter_provider.metrics.set_meter_provider"
         ) as mock_set:
             configure_meter_provider(config)
             mock_set.assert_called_once()
@@ -516,7 +516,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             return_value=[MagicMock(**{"load.return_value": mock_class})]
         )
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             mock_entry_points,
         ):
             config = MeterProviderConfig(
@@ -541,7 +541,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
 
     def test_pull_plugin_not_found_raises(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             config = MeterProviderConfig(
@@ -579,7 +579,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 ]
             )
             with self.assertLogs(
-                "opentelemetry.sdk._configuration._meter_provider",
+                "opentelemetry.configuration._meter_provider",
                 level="WARNING",
             ) as cm:
                 create_meter_provider(config)
@@ -605,7 +605,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 ]
             )
             with self.assertLogs(
-                "opentelemetry.sdk._configuration._meter_provider",
+                "opentelemetry.configuration._meter_provider",
                 level="WARNING",
             ) as cm:
                 create_meter_provider(config)
@@ -639,7 +639,7 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
         mock_exporter = MagicMock()
         mock_class = MagicMock(return_value=mock_exporter)
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             # pylint: disable=unexpected-keyword-arg
@@ -651,7 +651,7 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
 
     def test_unknown_metric_exporter_raises_configuration_error(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             # pylint: disable=unexpected-keyword-arg
@@ -886,7 +886,7 @@ class TestCreateViews(unittest.TestCase):
             stream_kwargs={"attribute_keys": IncludeExclude(excluded=["key1"])}
         )
         with self.assertLogs(
-            "opentelemetry.sdk._configuration._meter_provider", level="WARNING"
+            "opentelemetry.configuration._meter_provider", level="WARNING"
         ) as log:
             create_meter_provider(config)
         self.assertTrue(any("excluded" in msg for msg in log.output))

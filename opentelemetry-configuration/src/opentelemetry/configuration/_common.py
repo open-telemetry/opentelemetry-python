@@ -10,7 +10,7 @@ from collections.abc import Callable
 from typing import Any, Protocol
 from urllib.parse import urlparse
 
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.util._importlib_metadata import entry_points
 
 _logger = logging.getLogger(__name__)

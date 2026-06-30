@@ -5,6 +5,7 @@ requires-python = ">=3.10"
 dependencies = [
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "opentelemetry-configuration",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
   "opentelemetry-proto-json",
@@ -30,6 +31,7 @@ required-version = ">=0.6.0"
 [tool.uv.sources]
 opentelemetry-api = { workspace = true}
 opentelemetry-sdk = { workspace = true }
+opentelemetry-configuration = { workspace = true }
 opentelemetry-proto = { workspace = true }
 opentelemetry-proto-json = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
@@ -50,6 +52,7 @@ opentelemetry-codegen-json = { workspace = true }
 members = [
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "opentelemetry-configuration",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
   "opentelemetry-proto-json",
@@ -101,7 +104,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**/*.*" = ["PLE"]
-"opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
+"opentelemetry-configuration/tests/test_models.py" = ["E402", "PLC0415"]
 "shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
 
 [tool.ruff.lint.isort]
@@ -122,6 +125,7 @@ include = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "opentelemetry-configuration",
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-json-file",
   "exporter/opentelemetry-exporter-http-transport",
@@ -133,6 +137,7 @@ include = [
 
 exclude = [
   "opentelemetry-sdk/tests",
+  "opentelemetry-configuration/tests",
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/__init__.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",
@@ -158,9 +163,9 @@ strict = [
 ]
 
 [tool.datamodel-codegen]
-input = "opentelemetry-sdk/src/opentelemetry/sdk/_configuration/schema.json"
+input = "opentelemetry-configuration/src/opentelemetry/configuration/schema.json"
 input-file-type = "jsonschema"
-output = "opentelemetry-sdk/src/opentelemetry/sdk/_configuration/models.py"
+output = "opentelemetry-configuration/src/opentelemetry/configuration/models.py"
 output-model-type = "dataclasses.dataclass"
 field-constraints = true
 formatters = ["ruff-format", "ruff-check"]
@@ -169,8 +174,8 @@ use-schema-description = true
 use-title-as-name = true
 use-union-operator = true
 target-python-version = "3.10"
-custom-template-dir = "opentelemetry-sdk/codegen"
-additional-imports = "typing.ClassVar,opentelemetry.sdk._configuration._common._additional_properties"
+custom-template-dir = "opentelemetry-configuration/codegen"
+additional-imports = "typing.ClassVar,opentelemetry.configuration._common._additional_properties"
 
 [tool.towncrier]
 directory = ".changelog"

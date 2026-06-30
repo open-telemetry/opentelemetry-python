@@ -6,47 +6,47 @@ from __future__ import annotations
 import logging
 
 from opentelemetry import trace
-from opentelemetry.sdk._configuration._common import (
+from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
     load_entry_point,
 )
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration.models import (
     ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalComposableRuleBasedSamplerRule as RuleBasedSamplerRuleConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalComposableSampler as ComposableSamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ParentBasedSampler as ParentBasedSamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     Sampler as SamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanExporter as SpanExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanLimits as SpanLimitsConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanProcessor as SpanProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     TracerProvider as TracerProviderConfig,
 )
 from opentelemetry.sdk.resources import Resource

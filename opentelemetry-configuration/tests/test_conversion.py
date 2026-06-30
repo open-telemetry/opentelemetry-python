@@ -8,9 +8,9 @@ import unittest
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from opentelemetry.sdk._configuration._common import _additional_properties
-from opentelemetry.sdk._configuration._conversion import _dict_to_dataclass
-from opentelemetry.sdk._configuration.models import ExemplarFilter
+from opentelemetry.configuration._common import _additional_properties
+from opentelemetry.configuration._conversion import _dict_to_dataclass
+from opentelemetry.configuration.models import ExemplarFilter
 
 
 @dataclass

@@ -10,69 +10,69 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk._configuration._tracer_provider import (
+from opentelemetry.configuration._tracer_provider import (
     configure_tracer_provider,
     create_tracer_provider,
 )
-from opentelemetry.sdk._configuration.file._loader import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.file._loader import ConfigurationError
+from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalComposableProbabilitySampler as ComposableProbabilityConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalComposableRuleBasedSamplerRule as RuleBasedSamplerRuleConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalComposableRuleBasedSamplerRuleAttributePatterns as RuleAttributePatternsConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalComposableRuleBasedSamplerRuleAttributeValues as RuleAttributeValuesConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalComposableSampler as ComposableSamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalSpanParent as SpanParentConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ParentBasedSampler as ParentBasedSamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     Sampler as SamplerConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SimpleSpanProcessor as SimpleSpanProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanExporter as SpanExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanKind as SpanKindConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanLimits as SpanLimitsConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     SpanProcessor as SpanProcessorConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     TraceIdRatioBasedSampler as TraceIdRatioBasedConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     TracerProvider as TracerProviderConfig,
 )
 from opentelemetry.sdk.resources import Resource
@@ -141,7 +141,7 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
     def test_configure_with_config_sets_global(self):
         config = TracerProviderConfig(processors=[])
         with patch(
-            "opentelemetry.sdk._configuration._tracer_provider.trace.set_tracer_provider"
+            "opentelemetry.configuration._tracer_provider.trace.set_tracer_provider"
         ) as mock_set:
             configure_tracer_provider(config)
             mock_set.assert_called_once()
@@ -249,7 +249,7 @@ class TestCreateSampler(unittest.TestCase):
         mock_sampler = MagicMock(spec=Sampler)
         mock_class = MagicMock(return_value=mock_sampler)
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             # pylint: disable=unexpected-keyword-arg
@@ -258,7 +258,7 @@ class TestCreateSampler(unittest.TestCase):
 
     def test_user_defined_sampler_not_found_raises_configuration_error(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             with self.assertRaises(ConfigurationError):
@@ -777,7 +777,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         mock_exporter = MagicMock()
         mock_class = MagicMock(return_value=mock_exporter)
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             config = self._make_batch_config(
@@ -791,7 +791,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_unknown_span_exporter_raises_configuration_error(self):
         with patch(
-            "opentelemetry.sdk._configuration._common.entry_points",
+            "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
             config = self._make_batch_config(

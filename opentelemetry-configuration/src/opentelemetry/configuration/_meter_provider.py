@@ -6,58 +6,58 @@ from __future__ import annotations
 import logging
 
 from opentelemetry import metrics
-from opentelemetry.sdk._configuration._common import (
+from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
     load_entry_point,
 )
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration.models import (
     Aggregation as AggregationConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ConsoleMetricExporter as ConsoleMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     ExporterDefaultHistogramAggregation,
     ExporterTemporalityPreference,
     InstrumentType,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     MeterProvider as MeterProviderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     MetricReader as MetricReaderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpGrpcMetricExporter as OtlpGrpcMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     OtlpHttpMetricExporter as OtlpHttpMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     PeriodicMetricReader as PeriodicMetricReaderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     PullMetricExporter as PullMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     PullMetricReader as PullMetricReaderConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     PushMetricExporter as PushMetricExporterConfig,
 )
-from opentelemetry.sdk._configuration.models import (
+from opentelemetry.configuration.models import (
     View as ViewConfig,
 )
 from opentelemetry.sdk.metrics import (
