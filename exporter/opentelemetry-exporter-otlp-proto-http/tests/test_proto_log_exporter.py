@@ -17,6 +17,9 @@ from requests.models import Response
 
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _resolve_endpoint_to_signal,
+)
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
@@ -258,6 +261,38 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             },
         )
         self.assertIsInstance(exporter._session, requests.Session)
+
+    def test_endpoint_base_url_no_path(self):
+        exporter = OTLPLogExporter(endpoint="http://collector:4318")
+        self.assertEqual(exporter._endpoint, "http://collector:4318/v1/logs")
+
+    def test_endpoint_base_url_trailing_slash(self):
+        exporter = OTLPLogExporter(endpoint="http://collector:4318/")
+        self.assertEqual(exporter._endpoint, "http://collector:4318/v1/logs")
+
+    def test_endpoint_full_url_unchanged(self):
+        exporter = OTLPLogExporter(endpoint="http://collector:4318/v1/logs")
+        self.assertEqual(exporter._endpoint, "http://collector:4318/v1/logs")
+
+    def test_endpoint_custom_path_unchanged(self):
+        exporter = OTLPLogExporter(endpoint="http://collector:4318/custom")
+        self.assertEqual(exporter._endpoint, "http://collector:4318/custom")
+
+    def test_endpoint_unparsable_url_unchanged(self):
+        # Unclosed IPv6 bracket makes urlparse raise ValueError; the
+        # helper must pass the endpoint through unchanged.
+        self.assertEqual(
+            _resolve_endpoint_to_signal(
+                "http://[invalid:4318", DEFAULT_LOGS_EXPORT_PATH
+            ),
+            "http://[invalid:4318",
+        )
+
+    def test_endpoint_schemeless_host_port_unchanged(self):
+        # Without a scheme, urlparse reads "collector" as the scheme and
+        # "4318" as the path, so the endpoint is left untouched.
+        exporter = OTLPLogExporter(endpoint="collector:4318")
+        self.assertEqual(exporter._endpoint, "collector:4318")
 
     @staticmethod
     def export_log_and_deserialize(log):
