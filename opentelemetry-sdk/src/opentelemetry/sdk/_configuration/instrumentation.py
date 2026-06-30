@@ -46,11 +46,14 @@ def configure_instrumentation(
             cls = load_entry_point("opentelemetry_instrumentor", name)
             configuration_cls = getattr(cls, "config_dataclass", None)
             if configuration_cls is not None:
-                configuration_obj = _dict_to_dataclass(options, configuration_cls)
+                configuration_obj = _dict_to_dataclass(
+                    options, configuration_cls
+                )
                 options = {
-                    f.name: v
+                    f.name: value
                     for f in fields(configuration_obj)
-                    if (v := getattr(configuration_obj, f.name)) is not None
+                    if (value := getattr(configuration_obj, f.name))
+                    is not None
                 }
             cls().instrument(**options)
             _logger.debug("Instrumented '%s' via declarative config", name)

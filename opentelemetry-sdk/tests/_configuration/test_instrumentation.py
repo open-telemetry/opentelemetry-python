@@ -1,9 +1,9 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import dataclasses
-import logging
-import unittest
+from dataclasses import dataclass
+from logging import ERROR, WARNING
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
@@ -22,7 +22,7 @@ def _make_instrumentor_class(instance, config_dataclass=None):
     return cls
 
 
-class TestConfigureInstrumentation(unittest.TestCase):
+class TestConfigureInstrumentation(TestCase):  # pylint: disable=no-self-use
     def test_none_config_is_noop(self):
         configure_instrumentation(None)
 
@@ -33,7 +33,7 @@ class TestConfigureInstrumentation(unittest.TestCase):
     def test_unknown_instrumentor_logs_warning(self, _mock_load):
         with self.assertLogs(
             "opentelemetry.sdk._configuration.instrumentation",
-            level=logging.WARNING,
+            level=WARNING,
         ) as cm:
             configure_instrumentation(
                 ExperimentalInstrumentation(python={"unknown_lib": {}})
@@ -52,11 +52,15 @@ class TestConfigureInstrumentation(unittest.TestCase):
             ExperimentalInstrumentation(python={"requests": {}})
         )
 
-        mock_load.assert_called_once_with("opentelemetry_instrumentor", "requests")
+        mock_load.assert_called_once_with(
+            "opentelemetry_instrumentor", "requests"
+        )
         instrumentor.instrument.assert_called_once_with()
 
     @patch(_LOAD_EP)
-    def test_forwards_kwargs_to_instrumentor_without_config_dataclass(self, mock_load):
+    def test_forwards_kwargs_to_instrumentor_without_config_dataclass(
+        self, mock_load
+    ):
         instrumentor = MagicMock()
         mock_load.return_value = _make_instrumentor_class(instrumentor)
 
@@ -137,7 +141,7 @@ class TestConfigureInstrumentation(unittest.TestCase):
 
         with self.assertLogs(
             "opentelemetry.sdk._configuration.instrumentation",
-            level=logging.ERROR,
+            level=ERROR,
         ):
             configure_instrumentation(
                 ExperimentalInstrumentation(python={"broken": {}, "ok": {}})
@@ -147,7 +151,7 @@ class TestConfigureInstrumentation(unittest.TestCase):
 
     @patch(_LOAD_EP)
     def test_config_dataclass_coerces_opts(self, mock_load):
-        @dataclasses.dataclass
+        @dataclass
         class RequestsConfig:
             excluded_urls: str | None = None
             capture_headers: bool | None = None
@@ -159,7 +163,12 @@ class TestConfigureInstrumentation(unittest.TestCase):
 
         configure_instrumentation(
             ExperimentalInstrumentation(
-                python={"requests": {"excluded_urls": "/health", "capture_headers": True}}
+                python={
+                    "requests": {
+                        "excluded_urls": "/health",
+                        "capture_headers": True,
+                    }
+                }
             )
         )
 
@@ -169,7 +178,7 @@ class TestConfigureInstrumentation(unittest.TestCase):
 
     @patch(_LOAD_EP)
     def test_config_dataclass_none_fields_not_forwarded(self, mock_load):
-        @dataclasses.dataclass
+        @dataclass
         class FlaskConfig:
             excluded_urls: str | None = None
             propagate_headers: bool | None = None
@@ -190,7 +199,7 @@ class TestConfigureInstrumentation(unittest.TestCase):
 
     @patch(_LOAD_EP)
     def test_config_dataclass_unknown_field_raises(self, mock_load):
-        @dataclasses.dataclass
+        @dataclass
         class StrictConfig:
             excluded_urls: str | None = None
 
@@ -201,11 +210,13 @@ class TestConfigureInstrumentation(unittest.TestCase):
 
         with self.assertLogs(
             "opentelemetry.sdk._configuration.instrumentation",
-            level=logging.ERROR,
+            level=ERROR,
         ):
             configure_instrumentation(
                 ExperimentalInstrumentation(
-                    python={"mylib": {"excluded_urls": "/ok", "typo_field": "bad"}}
+                    python={
+                        "mylib": {"excluded_urls": "/ok", "typo_field": "bad"}
+                    }
                 )
             )
 
