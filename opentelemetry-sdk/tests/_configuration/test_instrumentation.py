@@ -7,12 +7,12 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
-from opentelemetry.sdk._configuration._instrumentation import (
+from opentelemetry.sdk._configuration.instrumentation import (
     configure_instrumentation,
 )
 from opentelemetry.sdk._configuration.models import ExperimentalInstrumentation
 
-_LOAD_EP = "opentelemetry.sdk._configuration._instrumentation.load_entry_point"
+_LOAD_EP = "opentelemetry.sdk._configuration.instrumentation.load_entry_point"
 
 
 def _make_instrumentor_class(instance, config_dataclass=None):
@@ -32,7 +32,7 @@ class TestConfigureInstrumentation(unittest.TestCase):
     @patch(_LOAD_EP, side_effect=ConfigurationError("not found"))
     def test_unknown_instrumentor_logs_warning(self, _mock_load):
         with self.assertLogs(
-            "opentelemetry.sdk._configuration._instrumentation",
+            "opentelemetry.sdk._configuration.instrumentation",
             level=logging.WARNING,
         ) as cm:
             configure_instrumentation(
@@ -136,7 +136,7 @@ class TestConfigureInstrumentation(unittest.TestCase):
         mock_load.side_effect = _side_effect
 
         with self.assertLogs(
-            "opentelemetry.sdk._configuration._instrumentation",
+            "opentelemetry.sdk._configuration.instrumentation",
             level=logging.ERROR,
         ):
             configure_instrumentation(
@@ -200,7 +200,7 @@ class TestConfigureInstrumentation(unittest.TestCase):
         )
 
         with self.assertLogs(
-            "opentelemetry.sdk._configuration._instrumentation",
+            "opentelemetry.sdk._configuration.instrumentation",
             level=logging.ERROR,
         ):
             configure_instrumentation(
