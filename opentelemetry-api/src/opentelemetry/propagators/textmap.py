@@ -3,6 +3,7 @@
 
 import abc
 import typing
+from collections.abc import Iterable, Mapping, MutableMapping
 
 from opentelemetry.context.context import Context
 
@@ -59,9 +60,9 @@ class Setter(abc.ABC, typing.Generic[CarrierT]):
         """
 
 
-class DefaultGetter(Getter[typing.Mapping[str, CarrierValT]]):
+class DefaultGetter(Getter[Mapping[str, CarrierValT]]):
     def get(
-        self, carrier: typing.Mapping[str, CarrierValT], key: str
+        self, carrier: Mapping[str, CarrierValT], key: str
     ) -> list[str] | None:
         """Getter implementation to retrieve a value from a dictionary.
 
@@ -74,11 +75,11 @@ class DefaultGetter(Getter[typing.Mapping[str, CarrierValT]]):
         val = carrier.get(key, None)
         if val is None:
             return None
-        if isinstance(val, typing.Iterable) and not isinstance(val, str):
+        if isinstance(val, Iterable) and not isinstance(val, str):
             return list(val)
         return [val]
 
-    def keys(self, carrier: typing.Mapping[str, CarrierValT]) -> list[str]:
+    def keys(self, carrier: Mapping[str, CarrierValT]) -> list[str]:
         """Keys implementation that returns all keys from a dictionary."""
         return list(carrier.keys())
 
@@ -86,10 +87,10 @@ class DefaultGetter(Getter[typing.Mapping[str, CarrierValT]]):
 default_getter: Getter[CarrierT] = DefaultGetter()  # type: ignore
 
 
-class DefaultSetter(Setter[typing.MutableMapping[str, CarrierValT]]):
+class DefaultSetter(Setter[MutableMapping[str, CarrierValT]]):
     def set(
         self,
-        carrier: typing.MutableMapping[str, CarrierValT],
+        carrier: MutableMapping[str, CarrierValT],
         key: str,
         value: CarrierValT,
     ) -> None:

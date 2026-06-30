@@ -497,11 +497,11 @@ class ReadableSpan:
 
     @property
     def events(self) -> Sequence[Event]:
-        return tuple(event for event in self._events)
+        return tuple(self._events)
 
     @property
     def links(self) -> Sequence[trace_api.Link]:
-        return tuple(link for link in self._links)
+        return tuple(self._links)
 
     @property
     def resource(self) -> Resource:
@@ -891,8 +891,7 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Setting attribute on ended span.")
                 return
 
-            for key, value in attributes.items():
-                self._attributes[key] = value
+            self._attributes._set_items(attributes)  # pylint: disable=protected-access
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         with self._lock:
@@ -990,6 +989,7 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             self._end_time = end_time if end_time is not None else time_ns()
+            self._attributes._immutable = True  # pylint: disable=protected-access
 
         if self._record_end_metrics:
             self._record_end_metrics()
@@ -1066,12 +1066,7 @@ class Span(trace_api.Span, ReadableSpan):
         escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
-        # TODO: keep only exception as first argument after baseline is 3.10
-        stacktrace = "".join(
-            traceback.format_exception(
-                type(exception), value=exception, tb=exception.__traceback__
-            )
-        )
+        stacktrace = "".join(traceback.format_exception(exception))
         module = type(exception).__module__
         qualname = type(exception).__qualname__
         exception_type = (
