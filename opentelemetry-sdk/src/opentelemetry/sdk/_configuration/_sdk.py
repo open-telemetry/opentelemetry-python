@@ -20,7 +20,7 @@ from opentelemetry.sdk._configuration._meter_provider import (
 )
 from opentelemetry.sdk._configuration._propagator import configure_propagator
 from opentelemetry.sdk._configuration._resource import create_resource
-from opentelemetry.sdk._configuration._instrumentation import (
+from opentelemetry.sdk._configuration.instrumentation import (
     configure_instrumentation,
 )
 from opentelemetry.sdk._configuration._tracer_provider import (
