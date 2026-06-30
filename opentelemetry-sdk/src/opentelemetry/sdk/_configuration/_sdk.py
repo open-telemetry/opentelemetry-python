@@ -10,7 +10,7 @@ entry point for "apply this config" on the declarative path.
 
 from __future__ import annotations
 
-import logging
+from logging import getLogger
 
 from opentelemetry.sdk._configuration._logger_provider import (
     configure_logger_provider,
@@ -20,15 +20,15 @@ from opentelemetry.sdk._configuration._meter_provider import (
 )
 from opentelemetry.sdk._configuration._propagator import configure_propagator
 from opentelemetry.sdk._configuration._resource import create_resource
-from opentelemetry.sdk._configuration.instrumentation import (
-    configure_instrumentation,
-)
 from opentelemetry.sdk._configuration._tracer_provider import (
     configure_tracer_provider,
 )
+from opentelemetry.sdk._configuration.instrumentation import (
+    configure_instrumentation,
+)
 from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
 
-_logger = logging.getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 def configure_sdk(config: OpenTelemetryConfiguration) -> None:
