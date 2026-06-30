@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix `TypeError` when metric attribute values are lists or other non-hashable sequences
