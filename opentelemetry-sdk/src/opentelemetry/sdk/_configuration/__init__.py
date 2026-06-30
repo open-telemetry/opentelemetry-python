@@ -30,7 +30,10 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecordProcessor,
 )
-from opentelemetry.sdk._logs._internal import _LoggerConfiguratorT
+from opentelemetry.sdk._logs._internal import (
+    _configure_otel_log_level,
+    _LoggerConfiguratorT,
+)
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     LogRecordExporter,
@@ -587,6 +590,7 @@ def _initialize_components(
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
     # pylint: disable=too-many-locals,too-many-branches
+    _configure_otel_log_level()
     if resource_attributes is None:
         resource_attributes = {}
     # populate version if using auto-instrumentation
