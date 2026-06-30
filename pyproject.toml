@@ -125,6 +125,7 @@ include = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "opentelemetry-configuration",
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-json-file",
   "exporter/opentelemetry-exporter-http-transport",
@@ -136,6 +137,7 @@ include = [
 
 exclude = [
   "opentelemetry-sdk/tests",
+  "opentelemetry-configuration/tests",
   "opentelemetry-sdk/src/opentelemetry/sdk/_events",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/__init__.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",

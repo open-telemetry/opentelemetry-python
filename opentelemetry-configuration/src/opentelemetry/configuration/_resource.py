@@ -19,9 +19,9 @@ from opentelemetry.configuration.models import (
     IncludeExclude,
 )
 from opentelemetry.configuration.models import Resource as ResourceConfig
+from opentelemetry.sdk.environment_variables import OTEL_SERVICE_NAME
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
-    OTEL_SERVICE_NAME,
     SERVICE_NAME,
     ProcessResourceDetector,
     Resource,
