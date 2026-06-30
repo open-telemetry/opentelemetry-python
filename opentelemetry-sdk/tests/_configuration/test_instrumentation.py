@@ -22,7 +22,8 @@ def _make_instrumentor_class(instance, config_dataclass=None):
     return cls
 
 
-class TestConfigureInstrumentation(TestCase):  # pylint: disable=no-self-use
+class TestConfigureInstrumentation(TestCase):
+    # pylint: disable=no-self-use
     def test_none_config_is_noop(self):
         configure_instrumentation(None)
 
