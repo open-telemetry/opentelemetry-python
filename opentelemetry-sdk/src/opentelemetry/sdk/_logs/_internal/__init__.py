@@ -94,13 +94,13 @@ _logger = logging.getLogger(__name__)
 
 
 def _configure_otel_log_level() -> None:
-    """Apply OTEL_LOG_LEVEL to the ``opentelemetry.sdk`` logger hierarchy."""
+    """Apply OTEL_LOG_LEVEL to the ``opentelemetry`` logger hierarchy."""
     otel_log_level_raw = environ.get(OTEL_LOG_LEVEL)
     if not otel_log_level_raw:
         return
     otel_log_level = otel_log_level_raw.lower()
     if otel_log_level in _OTEL_LOG_LEVEL_TO_PYTHON:
-        logging.getLogger("opentelemetry.sdk").setLevel(
+        logging.getLogger("opentelemetry").setLevel(
             _OTEL_LOG_LEVEL_TO_PYTHON[otel_log_level]
         )
     else:
