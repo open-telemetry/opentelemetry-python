@@ -11,12 +11,11 @@ corresponding dataclass types.
 
 from __future__ import annotations
 
-import dataclasses
-import enum
-import types
-import typing
 from collections.abc import Mapping
-from typing import Any, TypeVar, get_args, get_origin
+from dataclasses import fields, is_dataclass
+from enum import Enum
+from types import UnionType
+from typing import Any, TypeVar, Union, get_args, get_origin, get_type_hints
 
 _T = TypeVar("_T")
 
@@ -27,7 +26,7 @@ def _unwrap_optional(type_hint: Any) -> Any:
     Returns the unwrapped type, or the original hint if not a union with None.
     """
     origin = get_origin(type_hint)
-    if origin is types.UnionType or origin is typing.Union:
+    if origin is UnionType or origin is Union:
         non_none = [t for t in get_args(type_hint) if t is not type(None)]
         if len(non_none) == 1:
             return non_none[0]
@@ -58,7 +57,7 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
     # Direct dataclass type — recurse
     if (
         isinstance(unwrapped, type)
-        and dataclasses.is_dataclass(unwrapped)
+        and is_dataclass(unwrapped)
         and isinstance(value, dict)
     ):
         return _dict_to_dataclass(value, unwrapped)
@@ -66,7 +65,7 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
     # Enum type — coerce string/value to the Enum member
     if (
         isinstance(unwrapped, type)
-        and issubclass(unwrapped, enum.Enum)
+        and issubclass(unwrapped, Enum)
         and not isinstance(value, unwrapped)
     ):
         return unwrapped(value)
@@ -90,22 +89,28 @@ def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
     Raises:
         TypeError: If ``cls`` is not a dataclass type.
     """
-    if not dataclasses.is_dataclass(cls):
+    if not is_dataclass(cls):
         raise TypeError(f"{cls.__name__} is not a dataclass")
 
     # Annotated as ``dict[str, Any]`` so astroid stops tracing into
-    # ``typing.get_type_hints`` — under pylint 3.x that path leads into
+    # ``get_type_hints`` — under pylint 3.x that path leads into
     # Python 3.14's ``annotationlib`` (which uses t-strings) and crashes.
-    hints: dict[str, Any] = dict(
-        typing.get_type_hints(cls, include_extras=False)
-    )
-    known_fields = {f.name for f in dataclasses.fields(cls)}
+    hints: dict[str, Any] = dict(get_type_hints(cls, include_extras=False))
+    known_fields = {f.name for f in fields(cls)}
     kwargs: dict[str, Any] = {}
 
     for key, value in data.items():
-        if key in known_fields:
-            type_hint = hints.get(key)
-            kwargs[key] = _convert_value(value, type_hint)
+        # The OTel configuration schema uses "/" as a namespace separator for
+        # development/experimental features (e.g. "otlp_file/development",
+        # "instrumentation/development").  Python identifiers cannot contain
+        # "/", so the corresponding dataclass fields use "_" instead (e.g.
+        # "otlp_file_development").  Without this normalisation the key would
+        # not match any known field and would fall through to
+        # additional_properties, causing the factory lookup to fail silently.
+        field_key = key.replace("/", "_")
+        if field_key in known_fields:
+            type_hint = hints.get(field_key)
+            kwargs[field_key] = _convert_value(value, type_hint)
         else:
             # Unknown key — @_additional_properties decorator will capture it.
             kwargs[key] = value
