@@ -68,9 +68,11 @@ class TestConfigureSdk(unittest.TestCase):
         configure_sdk(config)
 
         mock_create_resource.assert_called_once_with(resource_cfg)
-        mock_tracer.assert_called_once_with(tracer_cfg, sentinel_resource)
+        mock_tracer.assert_called_once_with(
+            tracer_cfg, sentinel_resource, None
+        )
         mock_meter.assert_called_once_with(None, sentinel_resource)
-        mock_logger.assert_called_once_with(None, sentinel_resource)
+        mock_logger.assert_called_once_with(None, sentinel_resource, None)
         mock_propagator.assert_called_once_with(propagator_cfg)
 
     @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")

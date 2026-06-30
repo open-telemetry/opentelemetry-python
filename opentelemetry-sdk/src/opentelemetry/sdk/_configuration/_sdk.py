@@ -23,7 +23,10 @@ from opentelemetry.sdk._configuration._resource import create_resource
 from opentelemetry.sdk._configuration._tracer_provider import (
     configure_tracer_provider,
 )
-from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
+from opentelemetry.sdk._configuration.models import (
+    AttributeLimits,
+    OpenTelemetryConfiguration,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -57,8 +60,13 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
         )
         return
 
+    global_attribute_limits: AttributeLimits | None = config.attribute_limits
     resource = create_resource(config.resource)
-    configure_tracer_provider(config.tracer_provider, resource)
+    configure_tracer_provider(
+        config.tracer_provider, resource, global_attribute_limits
+    )
     configure_meter_provider(config.meter_provider, resource)
-    configure_logger_provider(config.logger_provider, resource)
+    configure_logger_provider(
+        config.logger_provider, resource, global_attribute_limits
+    )
     configure_propagator(config.propagator)

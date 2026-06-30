@@ -23,6 +23,10 @@ from opentelemetry.sdk._configuration._logger_provider import (
 )
 from opentelemetry.sdk._configuration.file._loader import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
+    AttributeLimits,
+    NameStringValuePair,
+)
+from opentelemetry.sdk._configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -39,9 +43,6 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
-)
-from opentelemetry.sdk._configuration.models import (
-    NameStringValuePair,
 )
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -467,29 +468,55 @@ class TestCreateLogRecordExporters(unittest.TestCase):
 
 
 class TestLogRecordLimits(unittest.TestCase):
-    def test_limits_logs_warning(self):
+    def test_default_limits(self):
+        provider = create_logger_provider(None)
+        self.assertEqual(provider._log_record_limits.max_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_attribute_length)
+
+    def test_limits_from_config(self):
         config = LoggerProviderConfig(
             processors=[],
-            limits=LogRecordLimitsConfig(attribute_count_limit=64),
+            limits=LogRecordLimitsConfig(
+                attribute_count_limit=64,
+                attribute_value_length_limit=256,
+            ),
         )
-        with self.assertLogs(
-            "opentelemetry.sdk._configuration._logger_provider",
-            level="WARNING",
-        ) as cm:
-            create_logger_provider(config)
-        self.assertTrue(
-            any("limits" in msg for msg in cm.output),
-            "Expected warning about unsupported limits",
-        )
+        provider = create_logger_provider(config)
+        self.assertEqual(provider._log_record_limits.max_attributes, 64)
+        self.assertEqual(provider._log_record_limits.max_attribute_length, 256)
 
-    @staticmethod
-    def test_no_limits_no_warning():
-        config = LoggerProviderConfig(processors=[])
-        with patch(
-            "opentelemetry.sdk._configuration._logger_provider._logger"
-        ) as mock_logger:
-            create_logger_provider(config)
-            mock_logger.warning.assert_not_called()
+    def test_global_attribute_count_limit_used_when_no_per_signal_limits(self):
+        global_limits = AttributeLimits(attribute_count_limit=42)
+        provider = create_logger_provider(
+            None, global_attribute_limits=global_limits
+        )
+        self.assertEqual(provider._log_record_limits.max_attributes, 42)
+
+    def test_global_attribute_value_length_limit_used_when_no_per_signal_limits(
+        self,
+    ):
+        global_limits = AttributeLimits(attribute_value_length_limit=64)
+        provider = create_logger_provider(
+            None, global_attribute_limits=global_limits
+        )
+        self.assertEqual(provider._log_record_limits.max_attribute_length, 64)
+
+    def test_per_signal_limits_override_global(self):
+        global_limits = AttributeLimits(
+            attribute_count_limit=100, attribute_value_length_limit=200
+        )
+        config = LoggerProviderConfig(
+            processors=[],
+            limits=LogRecordLimitsConfig(
+                attribute_count_limit=7,
+                attribute_value_length_limit=16,
+            ),
+        )
+        provider = create_logger_provider(
+            config, global_attribute_limits=global_limits
+        )
+        self.assertEqual(provider._log_record_limits.max_attributes, 7)
+        self.assertEqual(provider._log_record_limits.max_attribute_length, 16)
 
 
 if __name__ == "__main__":
