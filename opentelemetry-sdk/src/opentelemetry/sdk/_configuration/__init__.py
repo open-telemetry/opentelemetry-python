@@ -589,9 +589,8 @@ def _initialize_components(
     meter_configurator: _MeterConfiguratorT | None = None,
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
-    # pylint: disable=too-many-locals
-    _configure_otel_log_level()
     # pylint: disable=too-many-locals,too-many-branches
+    _configure_otel_log_level()
     if resource_attributes is None:
         resource_attributes = {}
     # populate version if using auto-instrumentation
