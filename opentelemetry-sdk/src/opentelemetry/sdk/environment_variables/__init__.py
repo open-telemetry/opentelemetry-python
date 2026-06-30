@@ -154,7 +154,7 @@ OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT = "OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"
 """
 .. envvar:: OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
 
-The :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed attribute length.
+The :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed attribute value length for string attribute values.
 """
 
 OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = "OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT"
@@ -187,8 +187,7 @@ OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT = (
 """
 .. envvar:: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT
 
-The :envvar:`OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed length
-span attribute values can have. This takes precedence over :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`.
+The :envvar:`OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed attribute value length for string span attribute values. This takes precedence over :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`.
 """
 
 OTEL_SPAN_EVENT_COUNT_LIMIT = "OTEL_SPAN_EVENT_COUNT_LIMIT"

@@ -18,7 +18,7 @@ from opentelemetry.environment_variables import (
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
 
@@ -37,7 +37,7 @@ class Event(LogRecord):
         trace_flags: TraceFlags | None = None,
         body: AnyValue | None = None,
         severity_number: SeverityNumber | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ):
         attributes = attributes or {}
         event_attributes = {
@@ -66,7 +66,7 @@ class EventLogger(ABC):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ):
         self._name = name
         self._version = version
@@ -97,7 +97,7 @@ class ProxyEventLogger(EventLogger):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ):
         super().__init__(
             name=name,
@@ -138,7 +138,7 @@ class EventLoggerProvider(ABC):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> EventLogger:
         """Returns an EventLoggerProvider for use."""
 
@@ -153,7 +153,7 @@ class NoOpEventLoggerProvider(EventLoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> EventLogger:
         return NoOpEventLogger(
             name, version=version, schema_url=schema_url, attributes=attributes
@@ -170,7 +170,7 @@ class ProxyEventLoggerProvider(EventLoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> EventLogger:
         if _EVENT_LOGGER_PROVIDER:
             return _EVENT_LOGGER_PROVIDER.get_event_logger(
@@ -244,7 +244,7 @@ def get_event_logger(
     name: str,
     version: str | None = None,
     schema_url: str | None = None,
-    attributes: _ExtendedAttributes | None = None,
+    attributes: Attributes = None,
     event_logger_provider: EventLoggerProvider | None = None,
 ) -> EventLogger:
     if event_logger_provider is None:
