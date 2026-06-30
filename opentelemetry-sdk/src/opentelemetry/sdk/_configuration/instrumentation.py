@@ -21,7 +21,7 @@ def configure_instrumentation(
 
     For each entry in ``configuration.python`` the matching
     ``opentelemetry_instrumentor`` entry point is loaded.  If the instrumentor
-    class exposes a ``config_dataclass`` attribute, the raw options are
+    class exposes a ``configuration`` attribute, the raw options are
     validated through ``_dict_to_dataclass`` before being forwarded to
     ``instrument()``.  An ``enabled: false`` value suppresses instrumentation
     without raising.
@@ -44,7 +44,7 @@ def configure_instrumentation(
 
         try:
             cls = load_entry_point("opentelemetry_instrumentor", name)
-            configuration_cls = getattr(cls, "config_dataclass", None)
+            configuration_cls = getattr(cls, "configuration", None)
             if configuration_cls is not None:
                 configuration_obj = _dict_to_dataclass(
                     options, configuration_cls

@@ -15,10 +15,10 @@ from opentelemetry.sdk._configuration.models import ExperimentalInstrumentation
 _LOAD_EP = "opentelemetry.sdk._configuration.instrumentation.load_entry_point"
 
 
-def _make_instrumentor_class(instance, config_dataclass=None):
+def _make_instrumentor_class(instance, configuration=None):
     """Return a class mock whose constructor returns ``instance``."""
     cls = MagicMock(return_value=instance)
-    cls.config_dataclass = config_dataclass
+    cls.configuration = configuration
     return cls
 
 
@@ -59,7 +59,7 @@ class TestConfigureInstrumentation(TestCase):
         instrumentor.instrument.assert_called_once_with()
 
     @patch(_LOAD_EP)
-    def test_forwards_kwargs_to_instrumentor_without_config_dataclass(
+    def test_forwards_kwargs_to_instrumentor_without_configuration(
         self, mock_load
     ):
         instrumentor = MagicMock()
@@ -151,7 +151,7 @@ class TestConfigureInstrumentation(TestCase):
         ok_inst.instrument.assert_called_once_with()
 
     @patch(_LOAD_EP)
-    def test_config_dataclass_coerces_opts(self, mock_load):
+    def test_configuration_coerces_opts(self, mock_load):
         @dataclass
         class RequestsConfig:
             excluded_urls: str | None = None
@@ -159,7 +159,7 @@ class TestConfigureInstrumentation(TestCase):
 
         instrumentor = MagicMock()
         mock_load.return_value = _make_instrumentor_class(
-            instrumentor, config_dataclass=RequestsConfig
+            instrumentor, configuration=RequestsConfig
         )
 
         configure_instrumentation(
@@ -178,7 +178,7 @@ class TestConfigureInstrumentation(TestCase):
         )
 
     @patch(_LOAD_EP)
-    def test_config_dataclass_none_fields_not_forwarded(self, mock_load):
+    def test_configuration_none_fields_not_forwarded(self, mock_load):
         @dataclass
         class FlaskConfig:
             excluded_urls: str | None = None
@@ -186,7 +186,7 @@ class TestConfigureInstrumentation(TestCase):
 
         instrumentor = MagicMock()
         mock_load.return_value = _make_instrumentor_class(
-            instrumentor, config_dataclass=FlaskConfig
+            instrumentor, configuration=FlaskConfig
         )
 
         configure_instrumentation(
@@ -199,14 +199,14 @@ class TestConfigureInstrumentation(TestCase):
         instrumentor.instrument.assert_called_once_with(excluded_urls="/ok")
 
     @patch(_LOAD_EP)
-    def test_config_dataclass_unknown_field_raises(self, mock_load):
+    def test_configuration_unknown_field_raises(self, mock_load):
         @dataclass
         class StrictConfig:
             excluded_urls: str | None = None
 
         instrumentor = MagicMock()
         mock_load.return_value = _make_instrumentor_class(
-            instrumentor, config_dataclass=StrictConfig
+            instrumentor, configuration=StrictConfig
         )
 
         with self.assertLogs(
