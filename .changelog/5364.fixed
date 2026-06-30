@@ -1,0 +1,3 @@
+`opentelemetry-sdk`: `ProcessResourceDetector` no longer collects or emits
+`process.command_args` and `process.command_line` by default. Users who depend
+on these resource attributes must pass `include_command_args=True`.
