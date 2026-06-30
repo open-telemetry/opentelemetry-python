@@ -28,7 +28,7 @@ classifiers = [
 dependencies = [
   "opentelemetry-api == 1.44.0.dev",
   "opentelemetry-sdk == 1.44.0.dev",
-  "pyyaml >= 6.0",
+  "pyyaml >= 5.4",
   "jsonschema >= 4.0",
 ]
 

@@ -844,7 +844,7 @@ requires-dist = [
     { name = "jsonschema", specifier = ">=4.0" },
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
-    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "pyyaml", specifier = ">=5.4" },
 ]
 
 [[package]]
