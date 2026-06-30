@@ -168,7 +168,7 @@
               "minItems": 1
             }
           ],
-          "description": "The attribute value.\nThe type of value must match .type.\nProperty is required and must be non-null.\n"
+          "description": "The attribute value.\nThe type of value must match .type.\nProperty must be present, but if null the entry is ignored.\n"
         },
         "type": {
           "$ref": "#/$defs/AttributeType",
@@ -592,7 +592,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Configure list of value patterns to include.\nValues are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, all values are included.\n"
+          "description": "Configure list of value patterns to include.\nMatching is case-sensitive. Values are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, all values are included.\n"
         },
         "excluded": {
           "type": "array",
@@ -600,7 +600,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Configure list of value patterns to exclude. Applies after .included (i.e. excluded has higher priority than included).\nValues are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, .included attributes are included.\n"
+          "description": "Configure list of value patterns to exclude. Applies after .included (i.e. excluded has higher priority than included).\nMatching is case-sensitive. Values are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, .included attributes are included.\n"
         }
       },
       "required": [
@@ -678,6 +678,13 @@
           "description": "Configure database semantic convention version and migration behavior.\n\nThis property takes precedence over the .instrumentation/development.general.stability_opt_in_list setting.\n\nSee database migration: https://opentelemetry.io/docs/specs/semconv/database/\nIf omitted, uses the general stability_opt_in_list setting, or instrumentations continue emitting their default semantic convention version if not set.\n"
         }
       }
+    },
+    "ExperimentalEventToSpanEventBridgeLogRecordProcessor": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false
     },
     "ExperimentalGenAiInstrumentation": {
       "type": "object",
@@ -962,7 +969,7 @@
           "type": [
             "string"
           ],
-          "description": "Configure logger names to match, evaluated as follows:\n\n * If the logger name exactly matches.\n * If the logger name matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nProperty is required and must be non-null.\n"
+          "description": "Configure logger names to match. Matching is case-sensitive, evaluated as follows:\n\n * If the logger name exactly matches.\n * If the logger name matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nProperty is required and must be non-null.\n"
         },
         "config": {
           "$ref": "#/$defs/ExperimentalLoggerConfig",
@@ -1028,7 +1035,7 @@
           "type": [
             "string"
           ],
-          "description": "Configure meter names to match, evaluated as follows:\n\n * If the meter name exactly matches.\n * If the meter name matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nProperty is required and must be non-null.\n"
+          "description": "Configure meter names to match. Matching is case-sensitive, evaluated as follows:\n\n * If the meter name exactly matches.\n * If the meter name matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nProperty is required and must be non-null.\n"
         },
         "config": {
           "$ref": "#/$defs/ExperimentalMeterConfig",
@@ -1126,21 +1133,21 @@
           ],
           "description": "Configure port.\nIf omitted or null, 9464 is used.\n"
         },
-        "without_scope_info": {
+        "scope_info_enabled": {
           "type": [
             "boolean",
             "null"
           ],
-          "description": "Configure Prometheus Exporter to produce metrics without scope labels.\nIf omitted or null, false is used.\n"
+          "description": "Configure Prometheus Exporter to produce metrics with scope labels.\nIf omitted or null, true is used.\n"
         },
-        "without_target_info/development": {
+        "target_info_enabled/development": {
           "type": [
             "boolean",
             "null"
           ],
-          "description": "Configure Prometheus Exporter to produce metrics without a target info metric for the resource.\nIf omitted or null, false is used.\n"
+          "description": "Configure Prometheus Exporter to produce metrics with a target info metric for the resource.\nIf omitted or null, true is used.\n"
         },
-        "with_resource_constant_labels": {
+        "resource_constant_labels": {
           "$ref": "#/$defs/IncludeExclude",
           "description": "Configure Prometheus Exporter to add resource attributes as metrics attributes, where the resource attribute keys match the patterns.\nIf omitted, no resource attributes are added.\n"
         },
@@ -1319,7 +1326,7 @@
           "type": [
             "string"
           ],
-          "description": "Configure tracer names to match, evaluated as follows:\n\n * If the tracer name exactly matches.\n * If the tracer name matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nProperty is required and must be non-null.\n"
+          "description": "Configure tracer names to match. Matching is case-sensitive, evaluated as follows:\n\n * If the tracer name exactly matches.\n * If the tracer name matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nProperty is required and must be non-null.\n"
         },
         "config": {
           "$ref": "#/$defs/ExperimentalTracerConfig",
@@ -1457,6 +1464,23 @@
         }
       }
     },
+    "IdGenerator": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "random": {
+          "$ref": "#/$defs/RandomIdGenerator",
+          "description": "Configure the ID generator to randomly generate TraceIds and SpanIds (spec default).\nIf omitted, ignore.\n"
+        }
+      }
+    },
     "IncludeExclude": {
       "type": "object",
       "additionalProperties": false,
@@ -1467,7 +1491,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Configure list of value patterns to include.\nValues are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, all values are included.\n"
+          "description": "Configure list of value patterns to include.\nMatching is case-sensitive. Values are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, all values are included.\n"
         },
         "excluded": {
           "type": "array",
@@ -1475,7 +1499,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Configure list of value patterns to exclude. Applies after .included (i.e. excluded has higher priority than included).\nValues are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, .included attributes are included.\n"
+          "description": "Configure list of value patterns to exclude. Applies after .included (i.e. excluded has higher priority than included).\nMatching is case-sensitive. Values are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, .included attributes are included.\n"
         }
       }
     },
@@ -1595,6 +1619,10 @@
         "simple": {
           "$ref": "#/$defs/SimpleLogRecordProcessor",
           "description": "Configure a simple log record processor.\nIf omitted, ignore.\n"
+        },
+        "event_to_span_event_bridge/development": {
+          "$ref": "#/$defs/ExperimentalEventToSpanEventBridgeLogRecordProcessor",
+          "description": "Configure an event to span event bridge log record processor.\nIf omitted, ignore.\n"
         }
       }
     },
@@ -1975,6 +2003,14 @@
           "minimum": 0,
           "description": "Configure maximum allowed time (in milliseconds) to export data. \nValue must be non-negative. A value of 0 indicates no limit (infinity).\nIf omitted or null, 30000 is used.\n"
         },
+        "max_export_batch_size/development": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Configure maximum export batch size.\nIf omitted or null, no limit is used.\n"
+        },
         "exporter": {
           "$ref": "#/$defs/PushMetricExporter",
           "description": "Configure exporter.\nProperty is required and must be non-null.\n"
@@ -2087,6 +2123,13 @@
           "description": "Configure exporter to be console.\nIf omitted, ignore.\n"
         }
       }
+    },
+    "RandomIdGenerator": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false
     },
     "Resource": {
       "type": "object",
@@ -2416,6 +2459,10 @@
         "sampler": {
           "$ref": "#/$defs/Sampler",
           "description": "Configure the sampler.\nIf omitted, parent based sampler with a root of always_on is used.\n"
+        },
+        "id_generator": {
+          "$ref": "#/$defs/IdGenerator",
+          "description": "Configure the trace and span ID generator.\nIf omitted, RandomIdGenerator is used.\n"
         },
         "tracer_configurator/development": {
           "$ref": "#/$defs/ExperimentalTracerConfigurator",
