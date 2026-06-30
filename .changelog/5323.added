@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: `Span.record_exception` now honors `OTEL_SEMCONV_EXCEPTION_SIGNAL_OPT_IN` (`logs`/`logs/dup`) to record exceptions as logs instead of (or in addition to) span events
