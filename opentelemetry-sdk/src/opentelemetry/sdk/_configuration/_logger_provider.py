@@ -9,11 +9,15 @@ from opentelemetry._logs import set_logger_provider
 from opentelemetry.sdk._configuration._common import (
     _map_compression,
     _parse_headers,
+    _parse_otlp_file_output_stream,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     LoggerProvider as LoggerProviderConfig,
@@ -117,10 +121,30 @@ def _create_otlp_grpc_log_exporter(
     )
 
 
+def _create_otlp_file_development_log_exporter(
+    config: ExperimentalOtlpFileExporterConfig,
+) -> LogRecordExporter:
+    """Create an OTLP file (JSON Lines) log exporter from config."""
+    try:
+        # pylint: disable=import-outside-toplevel,no-name-in-module
+        from opentelemetry.exporter.otlp.json.file._log_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+            FileLogExporter,
+        )
+    except ImportError as exc:
+        raise ConfigurationError(
+            "otlp_file_development log exporter requires 'opentelemetry-exporter-otlp-json-file'. "
+            "Install it with: pip install opentelemetry-exporter-otlp-json-file"
+        ) from exc
+
+    path = _parse_otlp_file_output_stream(config.output_stream)
+    return FileLogExporter(path) if path is not None else FileLogExporter()
+
+
 _LOG_EXPORTER_REGISTRY: dict = {
     "otlp_http": _create_otlp_http_log_exporter,
     "otlp_grpc": _create_otlp_grpc_log_exporter,
     "console": lambda _: ConsoleLogRecordExporter(),
+    "otlp_file_development": _create_otlp_file_development_log_exporter,
 }
 
 
@@ -134,11 +158,6 @@ def _create_log_record_exporter(
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_logs_exporter`` entry point group.
     """
-    if config.otlp_file_development is not None:
-        raise ConfigurationError(
-            "otlp_file_development log exporter is experimental "
-            "and not yet supported."
-        )
     for name, factory in _LOG_EXPORTER_REGISTRY.items():
         value = getattr(config, name, None)
         if value is not None:
@@ -150,7 +169,7 @@ def _create_log_record_exporter(
         )
     raise ConfigurationError(
         "No exporter type specified in log record exporter config. "
-        "Supported types: console, otlp_http, otlp_grpc."
+        "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
     )
 
 
