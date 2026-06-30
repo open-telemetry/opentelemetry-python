@@ -317,20 +317,6 @@ def _init_logging(
             export_processor(exporter_class(**exporter_args))
         )
 
-    # silence warnings from internal users until we drop the deprecated Events API
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=DeprecationWarning)
-        # pylint: disable=import-outside-toplevel
-        from opentelemetry._events import (  # noqa: PLC0415
-            set_event_logger_provider,
-        )
-        from opentelemetry.sdk._events import (  # noqa: PLC0415
-            EventLoggerProvider,
-        )
-
-        event_logger_provider = EventLoggerProvider(logger_provider=provider)
-        set_event_logger_provider(event_logger_provider)
-
     if setup_logging_handler:
         warnings.warn(
             "The `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment variable "
