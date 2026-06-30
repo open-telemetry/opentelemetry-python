@@ -47,11 +47,11 @@ _logger = getLogger(__name__)
 
 _NAME_ERROR_MESSAGE = (
     "Instrument name must be an ASCII string, start with a letter, "
-    "contain only letters, digits, '_', '.', '-', '/' and be at most 255 characters; got {}"
+    "contain only letters, digits, '_', '.', '-', '/' and be at most 255 characters; got {!r}"
 )
 
 _UNIT_ERROR_MESSAGE = (
-    "Expected ASCII string of maximum length 63 characters but got {}"
+    "Instrument unit must be an ASCII string of maximum length 63 characters; got {!r}"
 )
 
 

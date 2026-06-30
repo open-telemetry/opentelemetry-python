@@ -1,1 +1,1 @@
-metrics: clarify instrument name validation error message to reflect spec constraints (start with a letter, allowed chars, max length 255)
+`opentelemetry-sdk`: provide distinct, accurate error messages for instrument name and unit validation
