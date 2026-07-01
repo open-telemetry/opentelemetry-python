@@ -59,6 +59,21 @@ def center_val(mapping: ExponentMapping, index: int) -> float:
     ) / 2
 
 
+def without_trailing_zeros(bucket_counts: list) -> list:
+    # The backing array of a Buckets object can be larger than the range
+    # of indices that actually hold a nonzero count: it is grown to the
+    # next power of two whenever more room is needed, and that capacity
+    # is not trimmed afterwards. This means two histograms that hold the
+    # same logical counts can still report bucket_counts lists of
+    # different lengths, differing only in trailing zeros.
+    bucket_counts = list(bucket_counts)
+
+    while bucket_counts and bucket_counts[-1] == 0:
+        bucket_counts.pop()
+
+    return bucket_counts
+
+
 def swap(
     first: _ExponentialBucketHistogramAggregation,
     second: _ExponentialBucketHistogramAggregation,
@@ -1388,3 +1403,140 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
         self.assertEqual(result.scale, result_1.scale)
+
+    def test_merge_into_empty_buckets(self):
+        # Regression test for
+        # https://github.com/open-telemetry/opentelemetry-python/issues/3219
+        #
+        # A cumulative collect merges the buckets collected so far with the
+        # ones collected since the previous collect. If every value
+        # aggregated so far has the same sign, the buckets for the opposite
+        # sign are still empty, and an empty Buckets object reports
+        # index_start == index_end == 0 as a placeholder. Merging a value of
+        # the opposite sign must not treat that placeholder as a real
+        # boundary.
+        now = time_ns()
+        ctx = Context()
+
+        exponential_histogram_aggregation = (
+            _ExponentialBucketHistogramAggregation(
+                Mock(),
+                _default_reservoir_factory(
+                    _ExponentialBucketHistogramAggregation
+                ),
+                AggregationTemporality.DELTA,
+                Mock(),
+            )
+        )
+
+        exponential_histogram_aggregation.aggregate(
+            Measurement(1, now, Mock(), ctx)
+        )
+        exponential_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
+        exponential_histogram_aggregation.aggregate(
+            Measurement(-95, now, Mock(), ctx)
+        )
+        result = exponential_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
+        self.assertEqual(result.count, 2)
+        self.assertEqual(sum(result.positive.bucket_counts), 1)
+        self.assertEqual(sum(result.negative.bucket_counts), 1)
+
+    def test_merging_two_histograms_equals_aggregating_independently(self):
+        # Regression test for
+        # https://github.com/open-telemetry/opentelemetry-python/issues/3219
+        #
+        # Aggregating a set of values in a single pass must produce the same
+        # exponential histogram as aggregating the same values split across
+        # two collection windows, where the second cumulative collect merges
+        # its buckets with the ones already collected in the first window.
+        now = time_ns()
+        ctx = Context()
+
+        seed = randrange(maxsize)
+        # This test case is executed with random values every time. In
+        # order to run this test case with the same values used in a
+        # previous execution, check the value printed by that previous
+        # execution of this test case and use the same value for the seed
+        # variable in the line below.
+        # seed = 3373389994391084876
+
+        random_generator = Random(seed)
+        print(f"seed for {currentframe().f_code.co_name} is {seed}")
+
+        max_size = 40
+        values = [random_generator.randint(-1000, 1000) for _ in range(500)]
+        split_index = random_generator.randint(1, len(values) - 1)
+
+        merged_histogram = _ExponentialBucketHistogramAggregation(
+            Mock(),
+            _default_reservoir_factory(
+                _ExponentialBucketHistogramAggregation
+            ),
+            AggregationTemporality.DELTA,
+            Mock(),
+            max_size=max_size,
+        )
+
+        for value in values[:split_index]:
+            merged_histogram.aggregate(Measurement(value, now, Mock(), ctx))
+
+        merged_histogram.collect(AggregationTemporality.CUMULATIVE, 0)
+
+        for value in values[split_index:]:
+            merged_histogram.aggregate(Measurement(value, now, Mock(), ctx))
+
+        merged_result = merged_histogram.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
+        independent_histogram = _ExponentialBucketHistogramAggregation(
+            Mock(),
+            _default_reservoir_factory(
+                _ExponentialBucketHistogramAggregation
+            ),
+            AggregationTemporality.DELTA,
+            Mock(),
+            max_size=max_size,
+        )
+
+        for value in values:
+            independent_histogram.aggregate(
+                Measurement(value, now, Mock(), ctx)
+            )
+
+        independent_result = independent_histogram.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
+        self.assertEqual(merged_result.scale, independent_result.scale)
+        self.assertEqual(merged_result.count, independent_result.count)
+        self.assertEqual(merged_result.sum, independent_result.sum)
+        self.assertEqual(
+            merged_result.zero_count, independent_result.zero_count
+        )
+        self.assertEqual(merged_result.min, independent_result.min)
+        self.assertEqual(merged_result.max, independent_result.max)
+        self.assertEqual(
+            merged_result.positive.offset, independent_result.positive.offset
+        )
+        self.assertEqual(
+            without_trailing_zeros(merged_result.positive.bucket_counts),
+            without_trailing_zeros(
+                independent_result.positive.bucket_counts
+            ),
+        )
+        self.assertEqual(
+            merged_result.negative.offset, independent_result.negative.offset
+        )
+        self.assertEqual(
+            without_trailing_zeros(merged_result.negative.bucket_counts),
+            without_trailing_zeros(
+                independent_result.negative.bucket_counts
+            ),
+        )
