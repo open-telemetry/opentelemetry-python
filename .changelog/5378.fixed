@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: correctly merge exponential histogram buckets that start empty
