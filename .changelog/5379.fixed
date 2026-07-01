@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: fix `certificate_file=False` being ignored due to falsy check
