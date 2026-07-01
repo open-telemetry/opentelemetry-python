@@ -934,6 +934,23 @@ class TestCreateViews(unittest.TestCase):
             view._aggregation, ExponentialBucketHistogramAggregation
         )
 
+    def test_stream_aggregation_base2_exponential_record_min_max(self):
+        view = self._get_view(
+            self._make_view_config(
+                stream_kwargs={
+                    "aggregation": AggregationConfig(
+                        base2_exponential_bucket_histogram=Base2Config(
+                            record_min_max=False
+                        )
+                    )
+                }
+            )
+        )
+        self.assertIsInstance(
+            view._aggregation, ExponentialBucketHistogramAggregation
+        )
+        self.assertFalse(view._aggregation._record_min_max)
+
     def test_stream_aggregation_last_value(self):
         view = self._get_view(
             self._make_view_config(
