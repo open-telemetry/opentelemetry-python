@@ -6,7 +6,7 @@ import os
 from collections.abc import Mapping, Sequence
 from typing import overload
 
-from opentelemetry.exporter.http.transport import BaseHTTPTransport
+from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
 from opentelemetry.exporter.http.transport._urllib3 import Urllib3HTTPTransport
 from opentelemetry.exporter.otlp.common import Compression
 from opentelemetry.exporter.otlp.common._http import OTLPHTTPClient

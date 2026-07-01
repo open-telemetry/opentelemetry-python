@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from opentelemetry.exporter.otlp.json.common._internal import (
@@ -72,12 +73,150 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger(__name__)
 
+_METRIC_DATA_FIELDS = ("gauge", "sum", "histogram", "exponential_histogram")
+
 
 def encode_metrics(data: MetricsData) -> JSONExportMetricsServiceRequest:
     return JSONExportMetricsServiceRequest(
         resource_metrics=[
             _encode_resource_metrics(rm) for rm in data.resource_metrics
         ]
+    )
+
+
+# pylint: disable-next=too-many-locals
+def split_metrics_data(
+    metrics_data: JSONExportMetricsServiceRequest,
+    max_export_batch_size: int | None,
+) -> Iterable[JSONExportMetricsServiceRequest]:
+    """Split an ExportMetricsServiceRequest into batches of at most
+    max_export_batch_size data points, preserving resource/scope hierarchy.
+    """
+    if max_export_batch_size is None:
+        yield metrics_data
+        return
+
+    batch_size: int = 0
+    resource_metrics_batch: list[JSONResourceMetrics] = []
+    scope_metrics_batch: list[JSONScopeMetrics] = []
+    metrics_batch: list[JSONMetric] = []
+
+    for (
+        resource_metrics,
+        scope_metrics,
+        metric,
+        field_name,
+        data_points,
+    ) in _iter_metric_data_points(metrics_data):
+        if (
+            not resource_metrics_batch
+            or resource_metrics_batch[-1].resource
+            is not resource_metrics.resource
+        ):
+            scope_metrics_batch = []
+            resource_metrics_batch.append(
+                replace(resource_metrics, scope_metrics=scope_metrics_batch)
+            )
+
+        if (
+            not scope_metrics_batch
+            or scope_metrics_batch[-1].scope is not scope_metrics.scope
+        ):
+            metrics_batch = []
+            scope_metrics_batch.append(
+                replace(scope_metrics, metrics=metrics_batch)
+            )
+
+        data_points_batch: list = []
+        metrics_batch.append(
+            _build_metric_with_data_points(
+                metric, field_name, data_points_batch
+            )
+        )
+
+        for data_point in data_points:
+            if batch_size >= max_export_batch_size:
+                yield JSONExportMetricsServiceRequest(
+                    resource_metrics=resource_metrics_batch
+                )
+                (
+                    resource_metrics_batch,
+                    scope_metrics_batch,
+                    metrics_batch,
+                    data_points_batch,
+                ) = _build_empty_metric_batches(
+                    resource_metrics, scope_metrics, metric, field_name
+                )
+                batch_size = 0
+            data_points_batch.append(data_point)
+            batch_size += 1
+
+    if batch_size > 0:
+        yield JSONExportMetricsServiceRequest(
+            resource_metrics=resource_metrics_batch
+        )
+
+
+def _get_metric_data_field_name(metric: JSONMetric) -> str | None:
+    return next(
+        (f for f in _METRIC_DATA_FIELDS if getattr(metric, f) is not None),
+        None,
+    )
+
+
+def _iter_metric_data_points(
+    metrics_data: JSONExportMetricsServiceRequest,
+) -> Iterable[
+    tuple[JSONResourceMetrics, JSONScopeMetrics, JSONMetric, str, list]
+]:
+    for resource_metrics in metrics_data.resource_metrics:
+        for scope_metrics in resource_metrics.scope_metrics:
+            for metric in scope_metrics.metrics:
+                field_name = _get_metric_data_field_name(metric)
+                if field_name is None:
+                    _logger.warning(
+                        "Tried to split and export an unsupported metric type. Skipping."
+                    )
+                    continue
+                yield (
+                    resource_metrics,
+                    scope_metrics,
+                    metric,
+                    field_name,
+                    getattr(metric, field_name).data_points,
+                )
+
+
+def _build_metric_with_data_points(
+    metric: JSONMetric,
+    field_name: str,
+    data_points: list,
+) -> JSONMetric:
+    new_data = replace(getattr(metric, field_name), data_points=data_points)
+    return replace(metric, **{field_name: new_data})
+
+
+def _build_empty_metric_batches(
+    resource_metrics: JSONResourceMetrics,
+    scope_metrics: JSONScopeMetrics,
+    metric: JSONMetric,
+    field_name: str,
+) -> tuple[
+    list[JSONResourceMetrics], list[JSONScopeMetrics], list[JSONMetric], list
+]:
+    data_points_batch = []
+    metrics_batch = [
+        _build_metric_with_data_points(metric, field_name, data_points_batch)
+    ]
+    scope_metrics_batch = [replace(scope_metrics, metrics=metrics_batch)]
+    resource_metrics_batch = [
+        replace(resource_metrics, scope_metrics=scope_metrics_batch)
+    ]
+    return (
+        resource_metrics_batch,
+        scope_metrics_batch,
+        metrics_batch,
+        data_points_batch,
     )
 
 
