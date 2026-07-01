@@ -70,6 +70,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             def shutdown(self):
                 pass
 
+            def force_flush(self, timeout_millis: int = 10_000) -> bool:
+                return True
+
             def export(self, batch: Sequence[ReadableLogRecord]):
                 logger = logging.getLogger("any logger..")
                 logger.warning("Something happened.")
@@ -929,3 +932,13 @@ class TestConsoleLogExporter(unittest.TestCase):
         exporter.export([EMPTY_LOG])
 
         mock_stdout.write.assert_called_once_with(mock_record_str)
+
+    def test_force_flush(self):
+        exporter = ConsoleLogRecordExporter()
+        self.assertTrue(exporter.force_flush())
+
+
+class TestInMemoryLogRecordExporter(unittest.TestCase):
+    def test_force_flush(self):
+        exporter = InMemoryLogRecordExporter()
+        self.assertTrue(exporter.force_flush())
