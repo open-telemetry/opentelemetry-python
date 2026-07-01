@@ -1,1 +1,1 @@
-Added support for parameter exclude_attribute_keys in View
+`opentelemetry-sdk`: add support for parameter `exclude_attribute_keys` in `View`
