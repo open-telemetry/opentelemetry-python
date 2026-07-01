@@ -73,7 +73,7 @@ class OTLPSpanExporter(SpanExporter):
     def __init__(
         self,
         endpoint: str | None = None,
-        certificate_file: str | None = None,
+        certificate_file: str | bool | None = None,
         client_key_file: str | None = None,
         client_certificate_file: str | None = None,
         headers: dict[str, str] | None = None,
@@ -90,9 +90,13 @@ class OTLPSpanExporter(SpanExporter):
                 environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
             ),
         )
-        self._certificate_file = certificate_file or environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+        self._certificate_file = (
+            certificate_file
+            if certificate_file is not None
+            else environ.get(
+                OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+                environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+            )
         )
         self._client_key_file = client_key_file or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
