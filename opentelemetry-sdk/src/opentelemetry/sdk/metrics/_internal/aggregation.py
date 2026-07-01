@@ -1148,17 +1148,22 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if current_bucket == 0:
                 continue
 
-            # Not considering the case where len(previous_buckets) == 0. This
-            # would not happen because self._previous_point is only assigned to
-            # an ExponentialHistogramDataPoint object if self._count != 0.
-
             current_index = current_buckets.index_base + current_bucket_index
             if current_index > current_buckets.index_end:
                 current_index -= len(current_buckets.counts)
 
             index = current_index >> current_change
 
-            if index < previous_buckets.index_start:
+            # previous_buckets may be empty (no value has ever been merged
+            # into it), in which case its index_start and index_end are
+            # meaningless placeholders and must be initialized from the
+            # first incoming index instead of being treated as real bounds.
+            if len(previous_buckets) == 0:
+                previous_buckets.index_start = index
+                previous_buckets.index_end = index
+                previous_buckets.index_base = index
+
+            elif index < previous_buckets.index_start:
                 span = previous_buckets.index_end - index
 
                 if span >= self._max_size:
@@ -1170,7 +1175,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 previous_buckets.index_start = index
 
-            if index > previous_buckets.index_end:
+            elif index > previous_buckets.index_end:
                 span = index - previous_buckets.index_start
 
                 if span >= self._max_size:
