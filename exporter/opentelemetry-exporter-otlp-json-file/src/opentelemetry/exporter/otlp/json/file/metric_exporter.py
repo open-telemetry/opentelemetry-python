@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from os import PathLike
+import os
 from typing import IO, Any, overload
 
 from opentelemetry.exporter.otlp.json.common._internal import (
@@ -35,7 +35,7 @@ class FileMetricExporter(MetricExporter):
     @overload
     def __init__(
         self,
-        path: str | PathLike[str],
+        path: str | os.PathLike[str],
         *,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
@@ -63,7 +63,7 @@ class FileMetricExporter(MetricExporter):
 
     def __init__(
         self,
-        path: str | PathLike[str] | None = None,
+        path: str | os.PathLike[str] | None = None,
         *,
         stream: IO[str] | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
