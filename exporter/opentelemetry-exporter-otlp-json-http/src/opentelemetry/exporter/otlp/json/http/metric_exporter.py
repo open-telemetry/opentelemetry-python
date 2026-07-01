@@ -70,6 +70,9 @@ class OTLPMetricExporter(MetricExporter):
     def __init__(
         self,
         endpoint: str | None = None,
+        certificate_file: None = None,
+        client_key_file: None = None,
+        client_certificate_file: None = None,
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
@@ -102,7 +105,7 @@ class OTLPMetricExporter(MetricExporter):
             preferred_temporality=_get_temporality(preferred_temporality),
             preferred_aggregation=_get_aggregation(preferred_aggregation),
         )
-        certificate_file = certificate_file or os.environ.get(
+        verify: bool | str = certificate_file or os.environ.get(
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
             os.environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
         )
@@ -118,7 +121,7 @@ class OTLPMetricExporter(MetricExporter):
             _transport
             if _transport
             else Urllib3HTTPTransport(
-                verify=certificate_file,
+                verify=verify,
                 cert=(client_certificate_file, client_key_file)
                 if client_certificate_file and client_key_file
                 else client_certificate_file,

@@ -115,7 +115,7 @@ def split_metrics_data(
         ):
             scope_metrics_batch = []
             resource_metrics_batch.append(
-                replace(resource_metrics, scope_metrics=scope_metrics_batch)
+                replace(resource_metrics, scope_metrics=scope_metrics_batch)  # type: ignore[reportArgumentType]
             )
 
         if (
@@ -124,7 +124,7 @@ def split_metrics_data(
         ):
             metrics_batch = []
             scope_metrics_batch.append(
-                replace(scope_metrics, metrics=metrics_batch)
+                replace(scope_metrics, metrics=metrics_batch)  # type: ignore[reportArgumentType]
             )
 
         data_points_batch: list = []
@@ -193,7 +193,7 @@ def _build_metric_with_data_points(
     data_points: list,
 ) -> JSONMetric:
     new_data = replace(getattr(metric, field_name), data_points=data_points)
-    return replace(metric, **{field_name: new_data})
+    return replace(metric, **{field_name: new_data})  # type: ignore[reportArgumentType]
 
 
 def _build_empty_metric_batches(
@@ -208,9 +208,9 @@ def _build_empty_metric_batches(
     metrics_batch = [
         _build_metric_with_data_points(metric, field_name, data_points_batch)
     ]
-    scope_metrics_batch = [replace(scope_metrics, metrics=metrics_batch)]
+    scope_metrics_batch = [replace(scope_metrics, metrics=metrics_batch)]  # type: ignore[reportArgumentType]
     resource_metrics_batch = [
-        replace(resource_metrics, scope_metrics=scope_metrics_batch)
+        replace(resource_metrics, scope_metrics=scope_metrics_batch)  # type: ignore[reportArgumentType]
     ]
     return (
         resource_metrics_batch,
