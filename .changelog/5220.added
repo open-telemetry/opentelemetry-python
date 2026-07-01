@@ -1,0 +1,1 @@
+`opentelemetry-docker-tests`: Refactor Docker tests to properly validate contents of exported telemetry
