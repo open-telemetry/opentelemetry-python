@@ -2,18 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-import os
 from collections.abc import Mapping, Sequence
 from typing import overload
 
 from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
-from opentelemetry.exporter.http.transport._urllib3 import Urllib3HTTPTransport
 from opentelemetry.exporter.otlp.common import Compression
 from opentelemetry.exporter.otlp.common._http import OTLPHTTPClient
 from opentelemetry.exporter.otlp.json.common._internal._log_encoder import (
     encode_logs,
 )
 from opentelemetry.exporter.otlp.json.http._internal import (
+    _build_transport,
     _resolve_compression,
     _resolve_endpoint,
     _resolve_headers,
@@ -26,9 +25,6 @@ from opentelemetry.sdk._logs.export import (
 )
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
@@ -83,27 +79,13 @@ class OTLPLogExporter(LogRecordExporter):
         *,
         _transport: BaseHTTPTransport | None = None,
     ) -> None:
-        verify: bool | str = certificate_file or os.environ.get(
+        transport = _transport or _build_transport(
+            certificate_file,
+            client_key_file,
+            client_certificate_file,
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
-            os.environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
-        )
-        client_key_file = client_key_file or os.environ.get(
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
-            os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY),
-        )
-        client_certificate_file = client_certificate_file or os.environ.get(
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
-            os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE),
-        )
-        transport = (
-            _transport
-            if _transport
-            else Urllib3HTTPTransport(
-                verify=verify,
-                cert=(client_certificate_file, client_key_file)
-                if client_certificate_file and client_key_file
-                else client_certificate_file,
-            )
         )
         self._client = OTLPHTTPClient(
             transport=transport,

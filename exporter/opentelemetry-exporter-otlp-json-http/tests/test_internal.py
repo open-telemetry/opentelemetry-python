@@ -6,11 +6,13 @@
 import os
 import unittest
 from logging import WARNING
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from opentelemetry.exporter.http.transport._urllib3 import Urllib3HTTPTransport
 from opentelemetry.exporter.otlp.common import Compression
 from opentelemetry.exporter.otlp.json.http._internal import (
     _DEFAULT_TIMEOUT,
+    _build_transport,
     _resolve_compression,
     _resolve_endpoint,
     _resolve_headers,
@@ -18,10 +20,16 @@ from opentelemetry.exporter.otlp.json.http._internal import (
 )
 from opentelemetry.exporter.otlp.json.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
@@ -67,6 +75,14 @@ class TestResolveInternal(unittest.TestCase):
                 "http://base:4318/v1/traces",
             ),
             (
+                "empty_base_falls_back_to_default",
+                {
+                    OTEL_EXPORTER_OTLP_ENDPOINT: "",
+                },
+                "v1/traces",
+                "http://localhost:4318/v1/traces",
+            ),
+            (
                 "default_traces",
                 {},
                 "v1/traces",
@@ -107,6 +123,16 @@ class TestResolveInternal(unittest.TestCase):
                 None,
                 {**_BASE_HEADERS, "api-key": "per-signal"},
             ),
+            # empty per-signal var falls back to (inherits) the general one
+            (
+                "empty_per_signal_falls_back_to_general",
+                {
+                    OTEL_EXPORTER_OTLP_HEADERS: "api-key=general",
+                    OTEL_EXPORTER_OTLP_TRACES_HEADERS: "",
+                },
+                None,
+                {**_BASE_HEADERS, "api-key": "general"},
+            ),
             # explicit arg wins over env and base, by exact key
             (
                 "explicit_arg_overrides",
@@ -137,22 +163,54 @@ class TestResolveInternal(unittest.TestCase):
                     OTEL_EXPORTER_OTLP_TIMEOUT: "7",
                 },
                 5.0,
+                False,
             ),
             (
                 "falls_back_to_general",
                 {OTEL_EXPORTER_OTLP_TIMEOUT: "7"},
                 7.0,
+                False,
             ),
             (
                 "fractional",
                 {OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "2.5"},
                 2.5,
+                False,
             ),
-            ("default", {}, float(_DEFAULT_TIMEOUT)),
+            ("default", {}, float(_DEFAULT_TIMEOUT), False),
+            (
+                "empty_per_signal_falls_back_to_general",
+                {
+                    OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "",
+                    OTEL_EXPORTER_OTLP_TIMEOUT: "7",
+                },
+                7.0,
+                False,
+            ),
+            (
+                "empty_falls_back_to_default",
+                {OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: ""},
+                float(_DEFAULT_TIMEOUT),
+                False,
+            ),
+            (
+                "invalid_value_logs_and_defaults",
+                {OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "not-a-number"},
+                float(_DEFAULT_TIMEOUT),
+                True,
+            ),
         ]
-        for label, env, expected in cases:
+        for label, env, expected, errors in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
-                result = _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
+                if errors:
+                    with self.assertLogs(level=WARNING):
+                        result = _resolve_timeout(
+                            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
+                        )
+                else:
+                    result = _resolve_timeout(
+                        OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
+                    )
                 self.assertEqual(result, expected)
                 self.assertIsInstance(result, float)
 
@@ -214,3 +272,107 @@ class TestResolveInternal(unittest.TestCase):
                 else:
                     result = _resolve_compression(env_var)
                 self.assertEqual(result, expected)
+
+
+class TestBuildTransport(unittest.TestCase):
+    def test_default_transport_factory_is_urllib3(self):
+        with patch.dict(os.environ, {}, clear=True):
+            result = _build_transport(
+                None,
+                None,
+                None,
+                OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            )
+        self.assertIsInstance(result, Urllib3HTTPTransport)
+
+    def test_build_transport(self):
+        cases = [
+            (
+                "explicit_args_win",
+                {
+                    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "env-cert.pem",
+                    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: "env-key.pem",
+                    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE: "env-cert2.pem",
+                },
+                "arg-cert.pem",
+                "arg-key.pem",
+                "arg-cert2.pem",
+                "arg-cert.pem",
+                ("arg-cert2.pem", "arg-key.pem"),
+            ),
+            (
+                "per_signal_env_wins_over_general",
+                {
+                    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "per-signal-cert.pem",
+                    OTEL_EXPORTER_OTLP_CERTIFICATE: "general-cert.pem",
+                    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: "per-signal-key.pem",
+                    OTEL_EXPORTER_OTLP_CLIENT_KEY: "general-key.pem",
+                    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE: "per-signal-cert2.pem",
+                    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: "general-cert2.pem",
+                },
+                None,
+                None,
+                None,
+                "per-signal-cert.pem",
+                ("per-signal-cert2.pem", "per-signal-key.pem"),
+            ),
+            (
+                "falls_back_to_general_env",
+                {
+                    OTEL_EXPORTER_OTLP_CERTIFICATE: "general-cert.pem",
+                    OTEL_EXPORTER_OTLP_CLIENT_KEY: "general-key.pem",
+                    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: "general-cert2.pem",
+                },
+                None,
+                None,
+                None,
+                "general-cert.pem",
+                ("general-cert2.pem", "general-key.pem"),
+            ),
+            (
+                "defaults_verify_true_no_cert",
+                {},
+                None,
+                None,
+                None,
+                True,
+                None,
+            ),
+            (
+                "only_cert_file_not_tupled",
+                {
+                    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE: "cert2.pem",
+                },
+                None,
+                None,
+                None,
+                True,
+                "cert2.pem",
+            ),
+        ]
+        for (
+            label,
+            env,
+            certificate_file,
+            client_key_file,
+            client_certificate_file,
+            expected_verify,
+            expected_cert,
+        ) in cases:
+            with self.subTest(label), patch.dict(os.environ, env, clear=True):
+                mock_factory = MagicMock()
+                result = _build_transport(
+                    certificate_file,
+                    client_key_file,
+                    client_certificate_file,
+                    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+                    OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+                    OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+                    transport_factory=mock_factory,
+                )
+                mock_factory.assert_called_once_with(
+                    verify=expected_verify, cert=expected_cert
+                )
+                self.assertIs(result, mock_factory.return_value)
