@@ -2,9 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access,no-self-use,too-many-lines
+import json
+import os
+import subprocess
+import sys
+import unittest
 import weakref
 from collections.abc import Callable, Iterable, Sequence
 from logging import DEBUG, WARNING
+from pathlib import Path
 from threading import Lock
 from time import sleep
 from typing import Any
@@ -12,7 +18,10 @@ from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.metrics import NoOpMeter
-from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+    OTEL_SDK_DISABLED,
+)
 from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
@@ -119,6 +128,94 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         resource = Resource({"key": "value"})
         self.assertIs(
             MeterProvider(resource=resource)._sdk_config.resource, resource
+        )
+
+    def test_update_resource(self):
+        initial_resource = Resource({"one": "one", "two": "old"})
+        updating_resource = Resource({"two": "new", "three": "three"})
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader], resource=initial_resource
+        )
+        meter = meter_provider.get_meter("name")
+        counter = meter.create_counter("counter")
+
+        meter_provider._update_resource(updating_resource)
+
+        self.assertEqual(
+            meter_provider._sdk_config.resource.attributes,
+            {"one": "one", "two": "new", "three": "three"},
+        )
+
+        counter.add(1)
+        metrics_data = reader.get_metrics_data()
+        self.assertIs(
+            metrics_data.resource_metrics[0].resource,
+            meter_provider._sdk_config.resource,
+        )
+
+        new_meter = meter_provider.get_meter("new")
+        new_counter = new_meter.create_counter("new_counter")
+        new_counter.add(1)
+        metrics_data = reader.get_metrics_data()
+        self.assertIs(
+            metrics_data.resource_metrics[0].resource,
+            meter_provider._sdk_config.resource,
+        )
+
+    @unittest.skipUnless(
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "requires os.fork and os.register_at_fork",
+    )
+    def test_meter_provider_updates_process_sensitive_resource_after_fork(
+        self,
+    ):
+        script_path = (
+            Path(__file__).parent
+            / "scripts"
+            / "meter_provider_resource_after_fork.py"
+        )
+
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            check=False,
+            text=True,
+            env={
+                **os.environ,
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "process",
+            },
+        )
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"stdout: {result.stdout}\nstderr: {result.stderr}",
+        )
+        lines = result.stdout.strip().splitlines()
+        child_payload = json.loads(lines[0])
+        parent_payload = json.loads(lines[1])
+
+        self.assertEqual(
+            parent_payload["parent_resource_pid"], parent_payload["parent_pid"]
+        )
+        self.assertEqual(
+            parent_payload["parent_resource_pid_after_fork"],
+            parent_payload["parent_pid"],
+        )
+
+        self.assertNotEqual(
+            child_payload["child_pid"], parent_payload["parent_pid"]
+        )
+        self.assertEqual(
+            child_payload["provider_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(
+            child_payload["exported_resource_pids"],
+            [child_payload["child_pid"]],
+        )
+        self.assertEqual(
+            child_payload["metric_names"],
+            ["cached_counter", "new_counter"],
         )
 
     def test_get_meter(self):

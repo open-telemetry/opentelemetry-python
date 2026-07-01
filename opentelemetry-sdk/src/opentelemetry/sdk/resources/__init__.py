@@ -293,6 +293,21 @@ class ResourceDetector(abc.ABC):
         """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly"""
         raise NotImplementedError()
 
+    # pylint: disable-next=no-self-use
+    def is_process_dependent(self) -> bool:
+        """Return whether this detector depends on the current process identity.
+
+        Process sensitive detectors may return resource attributes that become
+        stale after a process identity change, such as :func:`os.fork`.
+        Detectors returning ``True`` should be re-run after such changes so the
+        resulting :class:`Resource` describes the current process.
+
+        Returns:
+            ``True`` if this detector should be re-run after process identity
+            changes otherwise ``False``.
+        """
+        return False
+
 
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
@@ -322,6 +337,9 @@ class OTELResourceDetector(ResourceDetector):
 
 class ProcessResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
+    def is_process_dependent(self) -> bool:
+        return True
+
     def detect(self) -> "Resource":
         _runtime_version = ".".join(
             map(
@@ -477,6 +495,9 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
     regenerated automatically when the process PID changes (e.g. after a fork).
     """
 
+    def is_process_dependent(self) -> bool:
+        return True
+
     def detect(self) -> "Resource":
         # pylint: disable-next=global-statement
         global _service_instance_id, _service_instance_id_pid
@@ -559,6 +580,17 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
                 name,
             )
     return detectors
+
+
+def _get_process_sensitive_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
+    return get_aggregated_resources(
+        [
+            detector
+            for detector in _build_resource_detectors()
+            if detector.is_process_dependent()
+        ],
+        Resource.get_empty(),
+    )
 
 
 def get_aggregated_resources(

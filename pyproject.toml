@@ -183,7 +183,7 @@ issue_format = "[#{issue}](https://github.com/open-telemetry/opentelemetry-pytho
 wrap = true # wrap fragments to 79 char line length
 issue_pattern = "^(\\d+)" # only PR numbers as fragment prefix (e.g. 1234.fixed)
 
-# NOTE: remember to update the changelog workflow if these types change 
+# NOTE: remember to update the changelog workflow if these types change
 [[tool.towncrier.type]]
 directory = "added"
 name = "Added"
