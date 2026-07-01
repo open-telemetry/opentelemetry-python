@@ -74,6 +74,111 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             views=[],
         )
 
+    def test_view_instrument_match_exclude_attribute_keys_affects_aggregation(
+        self,
+    ):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+
+        mock_aggregation = MagicMock()
+        mock_aggregation._create_aggregation.return_value = MagicMock()
+
+        instrument_class_aggregation = MagicMock()
+        instrument_class_aggregation.__getitem__.return_value = (
+            mock_aggregation
+        )
+
+        view = View(
+            instrument_name="instrument1",
+            exclude_attribute_keys={"user_id"},
+        )
+        match = _ViewInstrumentMatch(
+            view,
+            instrument=instrument1,
+            instrument_class_aggregation=instrument_class_aggregation,
+        )
+        measurement1 = Measurement(
+            value=1,
+            time_unix_nano=time_ns(),
+            instrument=instrument1,
+            context=Context(),
+            attributes={"method": "GET", "user_id": "u1"},
+        )
+        measurement2 = Measurement(
+            value=2,
+            time_unix_nano=time_ns(),
+            instrument=instrument1,
+            context=Context(),
+            attributes={"method": "GET", "user_id": "u2"},
+        )
+
+        match.consume_measurement(measurement1)
+        match.consume_measurement(measurement2)
+        assert len(match._attributes_aggregation) == 1
+        aggr_key = list(match._attributes_aggregation.keys())[0]
+        assert dict(aggr_key) == {"method": "GET"}
+
+    def test_view_instrument_match_exclude_removes_attributes(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        mock_aggregation = MagicMock()
+        mock_aggregation._create_aggregation.return_value = MagicMock()
+
+        instrument_class_aggregation = MagicMock()
+        instrument_class_aggregation.__getitem__.return_value = (
+            mock_aggregation
+        )
+        view = View(
+            instrument_name="instrument1",
+            exclude_attribute_keys={"user_id"},
+        )
+        match = _ViewInstrumentMatch(
+            view,
+            instrument=instrument1,
+            instrument_class_aggregation=instrument_class_aggregation,
+        )
+        measurement = Measurement(
+            value=1,
+            time_unix_nano=time_ns(),
+            instrument=instrument1,
+            context=Context(),
+            attributes={"method": "GET", "user_id": "u1"},
+        )
+        match.consume_measurement(measurement)
+        aggr_key = list(match._attributes_aggregation.keys())[0]
+        assert "user_id" not in dict(aggr_key)
+
+    def test_view_instrument_match_include_then_exclude(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        mock_aggregation = MagicMock()
+        mock_aggregation._create_aggregation.return_value = MagicMock()
+
+        instrument_class_aggregation = MagicMock()
+        instrument_class_aggregation.__getitem__.return_value = (
+            mock_aggregation
+        )
+        view = View(
+            instrument_name="instrument1",
+            attribute_keys={"method", "user_id"},
+            exclude_attribute_keys={"user_id"},
+        )
+        match = _ViewInstrumentMatch(
+            view,
+            instrument=instrument1,
+            instrument_class_aggregation=instrument_class_aggregation,
+        )
+        measurement = Measurement(
+            value=1,
+            time_unix_nano=time_ns(),
+            instrument=instrument1,
+            context=Context(),
+            attributes={"method": "GET", "user_id": "u1", "x": "y"},
+        )
+        match.consume_measurement(measurement)
+        aggr_key = list(match._attributes_aggregation.keys())[0]
+        assert dict(aggr_key) == {"method": "GET"}
+
     def test_consume_measurement(self):
         instrument1 = Mock(name="instrument1")
         instrument1.instrumentation_scope = self.mock_instrumentation_scope

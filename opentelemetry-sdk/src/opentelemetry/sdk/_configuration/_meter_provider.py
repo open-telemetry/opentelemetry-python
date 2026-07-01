@@ -230,11 +230,8 @@ def _create_view(config: ViewConfig) -> View:
 
     attribute_keys: set[str] | None = None
     if stream.attribute_keys is not None:
-        if stream.attribute_keys.excluded:
-            _logger.warning(
-                "attribute_keys.excluded is not supported by the Python SDK View; "
-                "the exclusion list will be ignored."
-            )
+        if stream.attribute_keys.excluded is not None:
+            exclude_attribute_keys = set(stream.attribute_keys.excluded)
         if stream.attribute_keys.included is not None:
             attribute_keys = set(stream.attribute_keys.included)
 
@@ -253,6 +250,7 @@ def _create_view(config: ViewConfig) -> View:
         description=stream.description,
         attribute_keys=attribute_keys,
         aggregation=aggregation,
+        exclude_attribute_keys=exclude_attribute_keys,
     )
 
 
