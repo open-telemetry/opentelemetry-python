@@ -13,6 +13,7 @@ members = [
     "opentelemetry-codegen-json",
     "opentelemetry-exporter-http-transport",
     "opentelemetry-exporter-otlp",
+    "opentelemetry-exporter-otlp-common",
     "opentelemetry-exporter-otlp-json-common",
     "opentelemetry-exporter-otlp-json-file",
     "opentelemetry-exporter-otlp-proto-common",
@@ -878,6 +879,25 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp-proto-grpc", editable = "exporter/opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http", editable = "exporter/opentelemetry-exporter-otlp-proto-http" },
 ]
+
+[[package]]
+name = "opentelemetry-exporter-otlp-common"
+source = { editable = "exporter/opentelemetry-exporter-otlp-common" }
+dependencies = [
+    { name = "opentelemetry-sdk" },
+]
+
+[package.optional-dependencies]
+http = [
+    { name = "opentelemetry-exporter-http-transport" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "opentelemetry-exporter-http-transport", marker = "extra == 'http'", editable = "exporter/opentelemetry-exporter-http-transport" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+]
+provides-extras = ["http"]
 
 [[package]]
 name = "opentelemetry-exporter-otlp-json-common"
