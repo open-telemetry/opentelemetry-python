@@ -4,9 +4,8 @@
 from __future__ import annotations
 
 import functools
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 # pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._base import (
@@ -15,6 +14,9 @@ from opentelemetry.exporter.http.transport._base import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Any
+
     import requests
     from requests import Response
 
@@ -66,6 +68,7 @@ class RequestsHTTPTransport(BaseHTTPTransport):
         verify: bool | str = True,
         cert: str | tuple[str, str] | None = None,
         session: requests.Session | None = None,
+        **kwargs: Any,
     ) -> None:
         # pylint: disable-next=import-outside-toplevel
         import requests  # noqa: PLC0415

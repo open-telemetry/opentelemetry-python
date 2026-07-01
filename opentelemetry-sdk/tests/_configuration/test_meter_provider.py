@@ -27,6 +27,9 @@ from opentelemetry.sdk._configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
+    ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
     ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -310,6 +313,108 @@ class TestCreateMetricReaders(unittest.TestCase):
                 create_meter_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
+    def test_otlp_file_development_missing_package_raises(self):
+        config = self._make_periodic_config(
+            PushMetricExporterConfig(
+                otlp_file_development=ExperimentalOtlpFileMetricExporterConfig()
+            )
+        )
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.metric_exporter": None,
+            },
+        ):
+            with self.assertRaises(ConfigurationError) as ctx:
+                create_meter_provider(config)
+        self.assertIn(
+            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
+        )
+
+    def test_otlp_file_development_default_stdout(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.metric_exporter": mock_module,
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileMetricExporterConfig()
+                )
+            )
+            create_meter_provider(config)
+
+        args, kwargs = mock_exporter_cls.call_args
+        self.assertEqual(args, ())
+        self.assertEqual(
+            kwargs["preferred_temporality"],
+            {
+                Counter: AggregationTemporality.CUMULATIVE,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                Histogram: AggregationTemporality.CUMULATIVE,
+                ObservableCounter: AggregationTemporality.CUMULATIVE,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            },
+        )
+        self.assertIsInstance(
+            kwargs["preferred_aggregation"][Histogram],
+            ExplicitBucketHistogramAggregation,
+        )
+
+    def test_otlp_file_development_file_uri(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.metric_exporter": mock_module,
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileMetricExporterConfig(
+                        output_stream="file:///tmp/metrics.jsonl"
+                    )
+                )
+            )
+            create_meter_provider(config)
+
+        args, kwargs = mock_exporter_cls.call_args
+        self.assertEqual(args, ("/tmp/metrics.jsonl",))
+        self.assertIn("preferred_temporality", kwargs)
+        self.assertIn("preferred_aggregation", kwargs)
+
+    def test_otlp_file_development_unsupported_output_stream_raises(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.metric_exporter": mock_module,
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileMetricExporterConfig(
+                        output_stream="http://example"
+                    )
+                )
+            )
+            with self.assertRaises(ConfigurationError) as ctx:
+                create_meter_provider(config)
+        self.assertIn("output_stream", str(ctx.exception))
+        mock_exporter_cls.assert_not_called()
+
 
 class TestCreatePullMetricReaders(unittest.TestCase):
     def test_pull_prometheus_creates_reader(self):
@@ -331,7 +436,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                                 prometheus_development=PrometheusMetricExporterConfig(
                                     host="0.0.0.0",
                                     port=9090,
-                                    without_target_info_development=True,
+                                    target_info_enabled_development=False,
                                 )
                             )
                         )
