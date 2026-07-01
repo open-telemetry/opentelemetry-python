@@ -918,12 +918,14 @@ requires-dist = [
 name = "opentelemetry-exporter-otlp-json-file"
 source = { editable = "exporter/opentelemetry-exporter-otlp-json-file" }
 dependencies = [
+    { name = "opentelemetry-exporter-otlp-common" },
     { name = "opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-sdk" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "opentelemetry-exporter-otlp-common", editable = "exporter/opentelemetry-exporter-otlp-common" },
     { name = "opentelemetry-exporter-otlp-json-common", editable = "exporter/opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
 ]
