@@ -16,6 +16,7 @@ from opentelemetry.exporter.otlp.common._aggregation import (
 from opentelemetry.exporter.otlp.common._http import OTLPHTTPClient
 from opentelemetry.exporter.otlp.json.common._internal.metrics_encoder import (
     encode_metrics,
+    split_metrics_data,
 )
 from opentelemetry.exporter.otlp.json.http._internal import (
     _resolve_compression,
@@ -142,6 +143,7 @@ class OTLPMetricExporter(MetricExporter):
             ),
             logger=_logger,
         )
+        self._max_export_batch_size = max_export_batch_size
         self._shutdown = False
 
     def export(
@@ -154,17 +156,18 @@ class OTLPMetricExporter(MetricExporter):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return MetricExportResult.FAILURE
         try:
-            body = encode_metrics(metrics_data).to_json().encode()
+            export_request = encode_metrics(metrics_data)
         # pylint: disable-next=broad-exception-caught
         except Exception as error:
             _logger.error("Failed to encode metrics: %s", error)
             return MetricExportResult.FAILURE
-        export_result = self._client.export(body)
-        return (
-            MetricExportResult.SUCCESS
-            if export_result.success
-            else MetricExportResult.FAILURE
-        )
+        for request in split_metrics_data(
+            export_request, self._max_export_batch_size
+        ):
+            export_result = self._client.export(request.to_json().encode())
+            if not export_result.success:
+                return MetricExportResult.FAILURE
+        return MetricExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:
