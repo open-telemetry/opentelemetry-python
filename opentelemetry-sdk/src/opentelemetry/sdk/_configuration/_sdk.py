@@ -23,9 +23,42 @@ from opentelemetry.sdk._configuration._resource import create_resource
 from opentelemetry.sdk._configuration._tracer_provider import (
     configure_tracer_provider,
 )
-from opentelemetry.sdk._configuration.models import OpenTelemetryConfiguration
+from opentelemetry.sdk._configuration.models import (
+    OpenTelemetryConfiguration,
+    SeverityNumber,
+)
 
 _logger = logging.getLogger(__name__)
+
+# Maps OTel SeverityNumber groups to Python logging levels.
+# The numbered variants (debug2, info3, …) are sub-levels within the same
+# Python tier, so they collapse to the same level constant.
+_SEVERITY_TO_LOGGING_LEVEL: dict[SeverityNumber, int] = {
+    SeverityNumber.trace: logging.DEBUG,
+    SeverityNumber.trace2: logging.DEBUG,
+    SeverityNumber.trace3: logging.DEBUG,
+    SeverityNumber.trace4: logging.DEBUG,
+    SeverityNumber.debug: logging.DEBUG,
+    SeverityNumber.debug2: logging.DEBUG,
+    SeverityNumber.debug3: logging.DEBUG,
+    SeverityNumber.debug4: logging.DEBUG,
+    SeverityNumber.info: logging.INFO,
+    SeverityNumber.info2: logging.INFO,
+    SeverityNumber.info3: logging.INFO,
+    SeverityNumber.info4: logging.INFO,
+    SeverityNumber.warn: logging.WARNING,
+    SeverityNumber.warn2: logging.WARNING,
+    SeverityNumber.warn3: logging.WARNING,
+    SeverityNumber.warn4: logging.WARNING,
+    SeverityNumber.error: logging.ERROR,
+    SeverityNumber.error2: logging.ERROR,
+    SeverityNumber.error3: logging.ERROR,
+    SeverityNumber.error4: logging.ERROR,
+    SeverityNumber.fatal: logging.CRITICAL,
+    SeverityNumber.fatal2: logging.CRITICAL,
+    SeverityNumber.fatal3: logging.CRITICAL,
+    SeverityNumber.fatal4: logging.CRITICAL,
+}
 
 
 def configure_sdk(config: OpenTelemetryConfiguration) -> None:
@@ -56,6 +89,10 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
             "Declarative configuration has disabled=true; skipping SDK setup."
         )
         return
+
+    if config.log_level is not None:
+        level = _SEVERITY_TO_LOGGING_LEVEL.get(config.log_level, logging.INFO)
+        logging.getLogger("opentelemetry").setLevel(level)
 
     resource = create_resource(config.resource)
     configure_tracer_provider(config.tracer_provider, resource)
