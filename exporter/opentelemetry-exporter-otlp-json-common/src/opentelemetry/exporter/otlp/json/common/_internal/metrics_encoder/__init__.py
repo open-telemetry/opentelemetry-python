@@ -73,7 +73,13 @@ if TYPE_CHECKING:
 
 _logger = logging.getLogger(__name__)
 
-_METRIC_DATA_FIELDS = ("gauge", "sum", "histogram", "exponential_histogram")
+_METRIC_DATA_FIELDS = (
+    "gauge",
+    "sum",
+    "histogram",
+    "exponential_histogram",
+    "summary",
+)
 
 
 def encode_metrics(data: MetricsData) -> JSONExportMetricsServiceRequest:
@@ -135,6 +141,9 @@ def split_metrics_data(
         )
 
         for data_point in data_points:
+            data_points_batch.append(data_point)
+            batch_size += 1
+
             if batch_size >= max_export_batch_size:
                 yield JSONExportMetricsServiceRequest(
                     resource_metrics=resource_metrics_batch
@@ -148,8 +157,15 @@ def split_metrics_data(
                     resource_metrics, scope_metrics, metric, field_name
                 )
                 batch_size = 0
-            data_points_batch.append(data_point)
-            batch_size += 1
+
+        # A metric whose last point exactly filled the previous batch
+        # leaves a dangling empty batch here.
+        _prune_if_empty(
+            resource_metrics_batch,
+            scope_metrics_batch,
+            metrics_batch,
+            data_points_batch,
+        )
 
     if batch_size > 0:
         yield JSONExportMetricsServiceRequest(
@@ -218,6 +234,23 @@ def _build_empty_metric_batches(
         metrics_batch,
         data_points_batch,
     )
+
+
+def _prune_if_empty(
+    resource_metrics_batch: list[JSONResourceMetrics],
+    scope_metrics_batch: list[JSONScopeMetrics],
+    metrics_batch: list[JSONMetric],
+    data_points_batch: list,
+) -> None:
+    if data_points_batch:
+        return
+    metrics_batch.pop()
+    if metrics_batch:
+        return
+    scope_metrics_batch.pop()
+    if scope_metrics_batch:
+        return
+    resource_metrics_batch.pop()
 
 
 def _encode_resource_metrics(

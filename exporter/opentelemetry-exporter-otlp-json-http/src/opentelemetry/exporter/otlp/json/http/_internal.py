@@ -32,7 +32,10 @@ _DEFAULT_TIMEOUT = 10
 _logger = logging.getLogger(__name__)
 
 
-def _resolve_endpoint(endpoint_env_var: str, default_path: Literal["v1/traces", "v1/metrics", "v1/logs"]) -> str:
+def _resolve_endpoint(
+    endpoint_env_var: str,
+    default_path: Literal["v1/traces", "v1/metrics", "v1/logs"],
+) -> str:
     if endpoint := os.environ.get(endpoint_env_var):
         return endpoint
 
