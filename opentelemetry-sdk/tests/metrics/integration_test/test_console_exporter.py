@@ -106,7 +106,13 @@ class TestConsoleExporter(TestCase):
 
         output.seek(0)
         joined_output = "".join(output.readlines())
-        result_0, _ = JSONDecoder().raw_decode(joined_output.lstrip())
+        decoder = JSONDecoder()
+        stripped_output = joined_output.lstrip()
+        result_0, decoded_length = decoder.raw_decode(stripped_output)
+        stripped_output = stripped_output[decoded_length:].strip()
+        while stripped_output:
+            _, decoded_length = decoder.raw_decode(stripped_output)
+            stripped_output = stripped_output[decoded_length:].strip()
 
         self.assertGreater(len(result_0), 0)
 
