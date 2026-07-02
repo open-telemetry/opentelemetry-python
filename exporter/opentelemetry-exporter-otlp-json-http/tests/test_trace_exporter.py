@@ -27,9 +27,15 @@ from opentelemetry.exporter.otlp.json.http.trace_exporter import (
     OTLPSpanExporter,
 )
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_ENDPOINT,
+    OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -41,12 +47,11 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 from opentelemetry.trace import Link, SpanContext, StatusCode, TraceFlags
-from . import _mock_clock
 
+from . import _mock_clock
 
 _TEST_ENDPOINT = "http://localhost:4318/v1/traces"
 _LOGGER_NAME = "opentelemetry.exporter.otlp.json.http.trace_exporter"
-
 
 
 class TestOTLPSpanExporter(unittest.TestCase):
@@ -189,38 +194,72 @@ class TestOTLPSpanExporter(unittest.TestCase):
         headers = Mocket.last_request().headers
         self.assertEqual(headers["content-type"], "application/json")
         self.assertTrue(
-            headers["user-agent"].startswith(
-                "OTel-OTLP-JSON-Exporter-Python/"
-            )
+            headers["user-agent"].startswith("OTel-OTLP-JSON-Exporter-Python/")
         )
 
-    @mocketize
     def test_custom_endpoint(self):
         url = "http://custom.example:9999/v1/traces"
-        Entry.single_register(Entry.POST, url, status=200)
-        exporter = OTLPSpanExporter(endpoint=url)
+        cases = (
+            ("constructor", {}, {"endpoint": url}),
+            (
+                "generic_env",
+                {OTEL_EXPORTER_OTLP_ENDPOINT: "http://custom.example:9999"},
+                {},
+            ),
+            (
+                "per_signal_env",
+                {OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: url},
+                {},
+            ),
+        )
+        for label, env, kwargs in cases:
+            with (
+                self.subTest(label),
+                patch.dict(os.environ, env, clear=True),
+                Mocketizer(),
+            ):
+                Entry.single_register(Entry.POST, url, status=200)
+                exporter = OTLPSpanExporter(**kwargs)
+                self._in_memory.clear()
 
-        result = exporter.export(self._make_span())
+                result = exporter.export(self._make_span())
 
-        self.assertEqual(result, SpanExportResult.SUCCESS)
+                self.assertEqual(result, SpanExportResult.SUCCESS)
 
-    @mocketize
     def test_custom_headers(self):
-        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
-        exporter = OTLPSpanExporter(
-            endpoint=_TEST_ENDPOINT, headers={"x-api-key": "secret"}
+        cases = (
+            ("constructor", {}, {"headers": {"x-api-key": "secret"}}),
+            (
+                "generic_env",
+                {OTEL_EXPORTER_OTLP_HEADERS: "x-api-key=secret"},
+                {},
+            ),
+            (
+                "per_signal_env",
+                {OTEL_EXPORTER_OTLP_TRACES_HEADERS: "x-api-key=secret"},
+                {},
+            ),
         )
+        for label, env, kwargs in cases:
+            with (
+                self.subTest(label),
+                patch.dict(os.environ, env, clear=True),
+                Mocketizer(),
+            ):
+                Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+                exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT, **kwargs)
+                self._in_memory.clear()
 
-        exporter.export(self._make_span())
+                exporter.export(self._make_span())
 
-        headers = Mocket.last_request().headers
-        self.assertEqual(headers["x-api-key"], "secret")
-        self.assertEqual(headers["content-type"], "application/json")
-        self.assertTrue(
-            headers["user-agent"].startswith(
-                "OTel-OTLP-JSON-Exporter-Python/"
-            )
-        )
+                headers = Mocket.last_request().headers
+                self.assertEqual(headers["x-api-key"], "secret")
+                self.assertEqual(headers["content-type"], "application/json")
+                self.assertTrue(
+                    headers["user-agent"].startswith(
+                        "OTel-OTLP-JSON-Exporter-Python/"
+                    )
+                )
 
     @mocketize
     def test_custom_transport(self):
@@ -242,22 +281,37 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(result, SpanExportResult.SUCCESS)
         self.assertEqual(len(Mocket.request_list()), 1)
 
-    @mocketize
     def test_custom_timeout(self):
-        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
-        exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT, timeout=7.5)
-
-        with patch.object(
-                exporter._client._transport,
-                "request",
-                wraps=exporter._client._transport.request,
-        ) as mock_request:
-            result = exporter.export(self._make_span())
-
-        self.assertEqual(result, SpanExportResult.SUCCESS)
-        self.assertAlmostEqual(
-            mock_request.call_args.kwargs["timeout"], 7.5, delta=0.5
+        cases = (
+            ("constructor", {}, {"timeout": 7.5}),
+            ("generic_env", {OTEL_EXPORTER_OTLP_TIMEOUT: "7.5"}, {}),
+            (
+                "per_signal_env",
+                {OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "7.5"},
+                {},
+            ),
         )
+        for label, env, kwargs in cases:
+            with (
+                self.subTest(label),
+                patch.dict(os.environ, env, clear=True),
+                Mocketizer(),
+            ):
+                Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+                exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT, **kwargs)
+                self._in_memory.clear()
+
+                with patch.object(
+                    exporter._client._transport,
+                    "request",
+                    wraps=exporter._client._transport.request,
+                ) as mock_request:
+                    result = exporter.export(self._make_span())
+
+                self.assertEqual(result, SpanExportResult.SUCCESS)
+                self.assertAlmostEqual(
+                    mock_request.call_args.kwargs["timeout"], 7.5, delta=0.5
+                )
 
     @mocketize
     def test_certificate_args(self):
@@ -295,9 +349,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         )
         for compression, expected_encoding, decompress in cases:
             with self.subTest(compression=compression), Mocketizer():
-                Entry.single_register(
-                    Entry.POST, _TEST_ENDPOINT, status=200
-                )
+                Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
                 exporter = OTLPSpanExporter(
                     endpoint=_TEST_ENDPOINT, compression=compression
                 )
@@ -349,6 +401,20 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 (wait_arg,) = shutdown_event.wait.call_args.args
                 self.assertGreaterEqual(wait_arg, 0.8)
                 self.assertLessEqual(wait_arg, 1.2)
+
+    def test_export_non_retryable_status_codes(self):
+        for status_code in (400, 401, 403, 404, 408, 500, 501):
+            with self.subTest(status_code=status_code), Mocketizer():
+                Entry.single_register(
+                    Entry.POST, _TEST_ENDPOINT, status=status_code
+                )
+                exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
+                self._in_memory.clear()
+
+                result = exporter.export(self._make_span())
+
+                self.assertEqual(result, SpanExportResult.FAILURE)
+                self.assertEqual(len(Mocket.request_list()), 1)
 
     @mocketize
     def test_export_max_retries(self):
@@ -413,20 +479,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(result, SpanExportResult.SUCCESS)
         self.assertEqual(len(Mocket.request_list()), 2)
         shutdown_event.wait.assert_called_once_with(30.0)
-
-    def test_export_non_retryable_status_codes(self):
-        for status_code in (400, 401, 403, 404, 408, 500, 501):
-            with self.subTest(status_code=status_code), Mocketizer():
-                Entry.single_register(
-                    Entry.POST, _TEST_ENDPOINT, status=status_code
-                )
-                exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
-                self._in_memory.clear()
-
-                result = exporter.export(self._make_span())
-
-                self.assertEqual(result, SpanExportResult.FAILURE)
-                self.assertEqual(len(Mocket.request_list()), 1)
 
     @mocketize
     def test_export_connection_error(self):
