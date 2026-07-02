@@ -1,0 +1,1 @@
+Removed `scripts/eachdist.py` in favor of tox and small purpose-built scripts for release version bumping (`scripts/release.py`) and distribution discovery (`scripts/repo_targets.py`). Renamed `eachdist.ini` to `repo.ini`.
