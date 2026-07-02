@@ -107,26 +107,16 @@ class TestConsoleExporter(TestCase):
         output.seek(0)
         joined_output = "".join(output.readlines())
         decoder = JSONDecoder()
-        output_to_decode = joined_output
-        output_to_decode_start = 0
+        remaining_output = joined_output.strip()
         results = []
-        while output_to_decode_start < len(output_to_decode):
-            while (
-                output_to_decode_start < len(output_to_decode)
-                and output_to_decode[output_to_decode_start].isspace()
-            ):
-                output_to_decode_start += 1
-
-            if output_to_decode_start >= len(output_to_decode):
-                break
-
-            result, decoded_length = decoder.raw_decode(
-                output_to_decode[output_to_decode_start:]
-            )
+        while remaining_output:
+            result, decoded_length = decoder.raw_decode(remaining_output)
             results.append(result)
-            output_to_decode_start += decoded_length
+            remaining_output = remaining_output[decoded_length:].strip()
 
         self.assertTrue(results)
+        for result in results:
+            self.assertIn("resource_metrics", result)
         result_0 = results[0]
 
         self.assertGreater(len(result_0), 0)
