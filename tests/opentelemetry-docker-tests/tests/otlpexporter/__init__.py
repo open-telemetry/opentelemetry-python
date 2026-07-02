@@ -25,7 +25,7 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
-from opentelemetry.test.otlp_test_server import OtlpProtoTestServer
+from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 from opentelemetry.trace import Link, SpanContext, StatusCode, TraceFlags
 
 

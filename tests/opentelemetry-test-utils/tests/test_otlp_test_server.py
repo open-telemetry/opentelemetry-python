@@ -16,7 +16,7 @@ from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.test.otlp_test_server import (
+from opentelemetry.test._otlp_test_server import (
     OtlpProtoTestServer,
     RecordedLogRecord,
     RecordedMetric,
