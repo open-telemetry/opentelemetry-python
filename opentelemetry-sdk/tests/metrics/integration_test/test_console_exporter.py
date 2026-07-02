@@ -107,15 +107,14 @@ class TestConsoleExporter(TestCase):
         output.seek(0)
         joined_output = "".join(output.readlines())
         decoder = JSONDecoder()
-        stripped_output = joined_output.lstrip()
+        output_to_decode = joined_output.lstrip()
         results = []
-        while stripped_output:
-            result, decoded_length = decoder.raw_decode(stripped_output)
+        while output_to_decode:
+            result, decoded_length = decoder.raw_decode(output_to_decode)
             results.append(result)
-            stripped_output = stripped_output[decoded_length:].strip()
+            output_to_decode = output_to_decode[decoded_length:].strip()
         result_0 = results[0]
 
-        self.assertGreater(len(results), 0)
         self.assertGreater(len(result_0), 0)
 
         metrics = result_0["resource_metrics"][0]["scope_metrics"][0]
