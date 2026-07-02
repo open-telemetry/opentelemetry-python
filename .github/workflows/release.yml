@@ -24,8 +24,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          stable_version=$(./scripts/eachdist.py version --mode stable)
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          stable_version=$(./scripts/release.py version --mode stable)
+          unstable_version=$(./scripts/release.py version --mode prerelease)
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
             stable_major="${BASH_REMATCH[1]}"
