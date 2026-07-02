@@ -12,7 +12,10 @@ from opentelemetry.sdk._configuration._common import (
     _parse_otlp_file_output_stream,
     load_entry_point,
 )
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration._exceptions import (
+    ConfigurationError,
+    MissingDependencyError,
+)
 from opentelemetry.sdk._configuration.models import (
     Aggregation as AggregationConfig,
 )
@@ -283,9 +286,9 @@ def _create_otlp_http_metric_exporter(
             OTLPMetricExporter,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "otlp_http metric exporter requires 'opentelemetry-exporter-otlp-proto-http'. "
-            "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-otlp-proto-http",
+            feature="otlp_http metric exporter",
         ) from exc
 
     compression = _map_compression(
@@ -320,9 +323,9 @@ def _create_otlp_grpc_metric_exporter(
             OTLPMetricExporter,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "otlp_grpc metric exporter requires 'opentelemetry-exporter-otlp-proto-grpc'. "
-            "Install it with: pip install opentelemetry-exporter-otlp-proto-grpc"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-otlp-proto-grpc",
+            feature="otlp_grpc metric exporter",
         ) from exc
 
     compression = _map_compression(config.compression, grpc.Compression)
@@ -451,10 +454,9 @@ def _create_prometheus_metric_reader(
             start_http_server,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "prometheus pull metric exporter requires "
-            "'opentelemetry-exporter-prometheus'. "
-            "Install it with: pip install opentelemetry-exporter-prometheus"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-prometheus",
+            feature="prometheus pull metric exporter",
         ) from exc
 
     disable_target_info = (
