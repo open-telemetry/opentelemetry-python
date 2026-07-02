@@ -10,6 +10,7 @@ dependencies = [
   "opentelemetry-proto-json",
   "opentelemetry-test-utils",
   "opentelemetry-exporter-otlp-json-file",
+  "opentelemetry-exporter-otlp-json-http",
   "opentelemetry-exporter-http-transport",
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
@@ -34,12 +35,14 @@ opentelemetry-proto = { workspace = true }
 opentelemetry-proto-json = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
 opentelemetry-test-utils = { workspace = true }
-opentelemetry-exporter-otlp-json-file = { workspace = true }
 opentelemetry-exporter-http-transport = { workspace = true }
+opentelemetry-exporter-otlp-json-file = { workspace = true }
+opentelemetry-exporter-otlp-json-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
 opentelemetry-exporter-otlp-proto-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-common = { workspace = true }
 opentelemetry-exporter-otlp-json-common = { workspace = true }
+opentelemetry-exporter-otlp-common = { workspace = true }
 opentelemetry-exporter-zipkin-json = { workspace = true }
 opentelemetry-exporter-prometheus = {workspace = true }
 opentelemetry-propagator-jaeger = { workspace = true }
@@ -124,6 +127,7 @@ include = [
   "opentelemetry-sdk",
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-json-file",
+  "exporter/opentelemetry-exporter-otlp-json-http",
   "exporter/opentelemetry-exporter-http-transport",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
@@ -148,6 +152,7 @@ exclude = [
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/tests",
+  "exporter/opentelemetry-exporter-otlp-json-http/tests",
   "exporter/opentelemetry-exporter-otlp-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
 ]

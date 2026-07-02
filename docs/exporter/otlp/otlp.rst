@@ -72,3 +72,25 @@ opentelemetry.exporter.otlp.json.file
     :members:
     :undoc-members:
     :show-inheritance:
+
+opentelemetry.exporter.otlp.json.http
+---------------------------------------
+
+.. automodule:: opentelemetry.exporter.otlp.json.http
+    :no-members:
+    :no-undoc-members:
+
+.. automodule:: opentelemetry.exporter.otlp.json.http.trace_exporter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.otlp.json.http.metric_exporter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.otlp.json.http._log_exporter
+    :members:
+    :undoc-members:
+    :show-inheritance:

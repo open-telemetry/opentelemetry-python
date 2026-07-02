@@ -40,7 +40,7 @@ class BaseHTTPResult(ABC):
         keys. Headers with multiple values are represented as a single string
         of comma separated values.
 
-        Implementations may raise an exception the returned headers are malformed.
+        Implementations may raise an exception if the returned headers are malformed.
         """
 
     def text(self) -> str:
