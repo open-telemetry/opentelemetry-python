@@ -9,7 +9,7 @@ from logging import WARNING
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.exporter.http.transport._urllib3 import Urllib3HTTPTransport
-from opentelemetry.exporter.otlp.common import Compression
+from opentelemetry.exporter.otlp.common.http import Compression
 from opentelemetry.exporter.otlp.json.http._internal import (
     _DEFAULT_TIMEOUT,
     _build_transport,

@@ -6,12 +6,14 @@ from collections.abc import Mapping
 from typing import overload
 
 from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
-from opentelemetry.exporter.otlp.common import Compression
 from opentelemetry.exporter.otlp.common._aggregation import (
     _get_aggregation,
     _get_temporality,
 )
-from opentelemetry.exporter.otlp.common._http import OTLPHTTPClient
+from opentelemetry.exporter.otlp.common.http import (
+    Compression,
+    _OTLPHTTPClient,
+)
 from opentelemetry.exporter.otlp.json.common._internal.metrics_encoder import (
     encode_metrics,
     split_metrics_data,
@@ -109,7 +111,7 @@ class OTLPMetricExporter(MetricExporter):
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
         )
-        self._client = OTLPHTTPClient(
+        self._client = _OTLPHTTPClient(
             transport=transport,
             endpoint=endpoint
             or _resolve_endpoint(

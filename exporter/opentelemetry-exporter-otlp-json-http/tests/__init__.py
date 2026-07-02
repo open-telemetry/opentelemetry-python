@@ -26,7 +26,7 @@ def _mock_clock(
         shutdown_event.wait.side_effect = _wait
 
     with patch(
-        "opentelemetry.exporter.otlp.common._http.time.time",
+        "opentelemetry.exporter.otlp.common.http.time.time",
         side_effect=get_time,
     ):
         yield advance

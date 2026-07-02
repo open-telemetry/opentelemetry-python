@@ -21,7 +21,7 @@ from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
-from opentelemetry.exporter.otlp.common import Compression
+from opentelemetry.exporter.otlp.common.http import Compression
 from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.json.http._internal import _build_transport
 from opentelemetry.exporter.otlp.json.http._log_exporter import (
@@ -481,7 +481,7 @@ class TestOTLPLogExporter(unittest.TestCase):
         exporter._client._shutdown_event = shutdown_event
 
         with patch(
-            "opentelemetry.exporter.otlp.common._http.time.time",
+            "opentelemetry.exporter.otlp.common.http.time.time",
             return_value=base,
         ):
             result = exporter.export(self._make_log())

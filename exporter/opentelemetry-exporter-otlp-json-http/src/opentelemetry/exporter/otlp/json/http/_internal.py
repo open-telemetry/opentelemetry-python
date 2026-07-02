@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal
 
 from opentelemetry.exporter.http.transport._urllib3 import Urllib3HTTPTransport
-from opentelemetry.exporter.otlp.common import Compression
+from opentelemetry.exporter.otlp.common.http import Compression
 from opentelemetry.exporter.otlp.json.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,

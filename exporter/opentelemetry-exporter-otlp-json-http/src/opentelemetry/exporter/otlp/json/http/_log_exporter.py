@@ -6,8 +6,10 @@ from collections.abc import Mapping, Sequence
 from typing import overload
 
 from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
-from opentelemetry.exporter.otlp.common import Compression
-from opentelemetry.exporter.otlp.common._http import OTLPHTTPClient
+from opentelemetry.exporter.otlp.common.http import (
+    Compression,
+    _OTLPHTTPClient,
+)
 from opentelemetry.exporter.otlp.json.common._internal._log_encoder import (
     encode_logs,
 )
@@ -87,7 +89,7 @@ class OTLPLogExporter(LogRecordExporter):
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
         )
-        self._client = OTLPHTTPClient(
+        self._client = _OTLPHTTPClient(
             transport=transport,
             endpoint=endpoint
             or _resolve_endpoint(

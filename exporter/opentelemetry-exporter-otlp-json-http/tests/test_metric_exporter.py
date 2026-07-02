@@ -21,7 +21,7 @@ from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
-from opentelemetry.exporter.otlp.common import Compression
+from opentelemetry.exporter.otlp.common.http import Compression
 from opentelemetry.exporter.otlp.json.common._internal.metrics_encoder import (
     split_metrics_data,
 )
@@ -560,7 +560,7 @@ class TestOTLPMetricExporter(unittest.TestCase):
         exporter._client._shutdown_event = shutdown_event
 
         with patch(
-            "opentelemetry.exporter.otlp.common._http.time.time",
+            "opentelemetry.exporter.otlp.common.http.time.time",
             return_value=base,
         ):
             result = exporter.export(_make_metrics_data())

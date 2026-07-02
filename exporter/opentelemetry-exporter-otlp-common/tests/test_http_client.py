@@ -21,10 +21,10 @@ from opentelemetry.exporter.http.transport._base import (
 )
 
 # pylint: disable-next=import-error
-from opentelemetry.exporter.otlp.common._http import (
+from opentelemetry.exporter.otlp.common.http import (
     Compression,
-    OTLPHTTPClient,
     _extract_retry_after,
+    _OTLPHTTPClient,
 )
 
 
@@ -115,7 +115,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
         compression=Compression.NONE,
         jitter=0.0,
     ):
-        return OTLPHTTPClient(
+        return _OTLPHTTPClient(
             transport=transport,
             endpoint="http://example.test/v1/traces",
             timeout=timeout,
