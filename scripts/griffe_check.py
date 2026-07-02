@@ -5,12 +5,12 @@ import argparse
 import sys
 
 import griffe
-from eachdist import find_projectroot, find_targets
+from repo_targets import find_projectroot, find_targets
 
 
 def get_modules() -> list[str]:
     rootpath = find_projectroot()
-    targets = find_targets("DEFAULT", rootpath)
+    targets = find_targets(rootpath)
 
     dirs_to_exclude = [
         "docs",

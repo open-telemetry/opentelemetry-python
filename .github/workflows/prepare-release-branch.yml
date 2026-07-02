@@ -28,7 +28,7 @@ jobs:
           fi
 
           if [[ ! -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(./scripts/release.py version --mode stable)
             stable_version=${stable_version//.dev/}
             if [[ $PRERELEASE_VERSION != ${stable_version}* ]]; then
               echo "$PRERELEASE_VERSION is not a prerelease for the version on main ($stable_version)"
@@ -53,13 +53,13 @@ jobs:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
           if [[ -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(./scripts/release.py version --mode stable)
             stable_version=${stable_version//.dev/}
           else
             stable_version=$PRERELEASE_VERSION
           fi
 
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=$(./scripts/release.py version --mode prerelease)
           unstable_version=${unstable_version//.dev/}
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
@@ -136,13 +136,13 @@ jobs:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
           if [[ -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(./scripts/release.py version --mode stable)
             stable_version=${stable_version//.dev/}
           else
             stable_version=$PRERELEASE_VERSION
           fi
 
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=$(./scripts/release.py version --mode prerelease)
           unstable_version=${unstable_version//.dev/}
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
