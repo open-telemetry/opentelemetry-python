@@ -570,7 +570,7 @@ class TestAlwaysRecordSampler(unittest.TestCase):
         trace_state: trace.TraceState = trace.TraceState()
         trace_state.add("key", root_decision.name)
         root_result: sampling.SamplingResult = sampling.SamplingResult(
-            attributes={"key", root_decision.name},
+            attributes={"key": root_decision.name},
             decision=root_decision,
             trace_state=trace_state,
         )
