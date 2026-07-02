@@ -87,9 +87,12 @@ def _resolve_timeout(
 
 def _resolve_compression(compression_env_var: str) -> Compression:
     val = (
-        os.environ.get(
-            compression_env_var,
-            os.environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
+        (
+            os.environ.get(
+                compression_env_var,
+            )
+            or os.environ.get(OTEL_EXPORTER_OTLP_COMPRESSION)
+            or "none"
         )
         .lower()
         .strip()
@@ -103,7 +106,7 @@ def _resolve_compression(compression_env_var: str) -> Compression:
 
 
 def _build_transport(
-    certificate_file: str | None,
+    certificate_file: str | bool | None,
     client_key_file: str | None,
     client_certificate_file: str | None,
     certificate_env_var: str,
@@ -111,17 +114,26 @@ def _build_transport(
     client_certificate_env_var: str,
     transport_factory: BaseHTTPTransportFactory = Urllib3HTTPTransport,
 ) -> BaseHTTPTransport:
-    verify: bool | str = certificate_file or os.environ.get(
-        certificate_env_var,
-        os.environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+    verify: bool | str = (
+        certificate_file
+        or os.environ.get(
+            certificate_env_var,
+        )
+        or os.environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True)
     )
-    client_key_file = client_key_file or os.environ.get(
-        client_key_env_var,
-        os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY),
+    client_key_file = (
+        client_key_file
+        or os.environ.get(
+            client_key_env_var,
+        )
+        or os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY)
     )
-    client_certificate_file = client_certificate_file or os.environ.get(
-        client_certificate_env_var,
-        os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE),
+    client_certificate_file = (
+        client_certificate_file
+        or os.environ.get(
+            client_certificate_env_var,
+        )
+        or os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE)
     )
     return transport_factory(
         verify=verify,
