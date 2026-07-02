@@ -51,8 +51,8 @@ def _resolve_headers(
     headers_env_var: str,
 ) -> dict[str, str]:
     headers_ = {
-        "Content-Type": "application/json",
-        "User-Agent": "OTel-OTLP-JSON-Exporter-Python/" + __version__,
+        "content-type": "application/json",
+        "user-agent": "OTel-OTLP-JSON-Exporter-Python/" + __version__,
     }
     env_headers = parse_env_headers(
         os.environ.get(headers_env_var)
@@ -61,7 +61,7 @@ def _resolve_headers(
     )
     headers_.update(env_headers)
     if headers:
-        headers_.update(headers)
+        headers_.update({key.lower(): value for key, value in headers.items()})
     return headers_
 
 
@@ -119,7 +119,8 @@ def _build_transport(
         or os.environ.get(
             certificate_env_var,
         )
-        or os.environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True)
+        or os.environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE)
+        or True
     )
     client_key_file = (
         client_key_file

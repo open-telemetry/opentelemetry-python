@@ -37,7 +37,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 
 _USER_AGENT = "OTel-OTLP-JSON-Exporter-Python/" + __version__
-_BASE_HEADERS = {"Content-Type": "application/json", "User-Agent": _USER_AGENT}
+_BASE_HEADERS = {"content-type": "application/json", "user-agent": _USER_AGENT}
 
 
 class TestResolveInternal(unittest.TestCase):
@@ -139,9 +139,28 @@ class TestResolveInternal(unittest.TestCase):
                 {OTEL_EXPORTER_OTLP_HEADERS: "api-key=from-env"},
                 {"api-key": "explicit", "Content-Type": "text/plain"},
                 {
-                    "Content-Type": "text/plain",
-                    "User-Agent": _USER_AGENT,
+                    "content-type": "text/plain",
+                    "user-agent": _USER_AGENT,
                     "api-key": "explicit",
+                },
+            ),
+            # env override of a default header must replace it
+            (
+                "env_overrides_default_header_case_insensitively",
+                {OTEL_EXPORTER_OTLP_HEADERS: "user-agent=custom-agent"},
+                None,
+                {
+                    "content-type": "application/json",
+                    "user-agent": "custom-agent",
+                },
+            ),
+            (
+                "explicit_arg_overrides_default_header_case_insensitively",
+                {},
+                {"User-Agent": "explicit-agent"},
+                {
+                    "content-type": "application/json",
+                    "user-agent": "explicit-agent",
                 },
             ),
         ]
@@ -250,6 +269,16 @@ class TestResolveInternal(unittest.TestCase):
                 False,
             ),
             (
+                "empty_per_signal_falls_back_to_general",
+                {
+                    OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "",
+                    OTEL_EXPORTER_OTLP_COMPRESSION: "gzip",
+                },
+                OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
+                Compression.GZIP,
+                False,
+            ),
+            (
                 "default",
                 {},
                 OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
@@ -330,6 +359,30 @@ class TestBuildTransport(unittest.TestCase):
                 None,
                 "general-cert.pem",
                 ("general-cert2.pem", "general-key.pem"),
+            ),
+            (
+                "empty_per_signal_certificate_falls_back_to_general",
+                {
+                    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "",
+                    OTEL_EXPORTER_OTLP_CERTIFICATE: "general-cert.pem",
+                },
+                None,
+                None,
+                None,
+                "general-cert.pem",
+                None,
+            ),
+            (
+                "empty_certificate_at_every_level_falls_back_to_default_true",
+                {
+                    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "",
+                    OTEL_EXPORTER_OTLP_CERTIFICATE: "",
+                },
+                None,
+                None,
+                None,
+                True,
+                None,
             ),
             (
                 "defaults_verify_true_no_cert",
