@@ -7,10 +7,14 @@ import math
 from collections.abc import Iterator
 
 import pytest
+from grpc import Compression as GRPCCompression
 
 from opentelemetry._logs import Logger, SeverityNumber
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter as GRPCLogExporter,
+)
+from opentelemetry.exporter.otlp.proto.http import (
+    Compression as HTTPCompression,
 )
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter as HTTPLogExporter,
@@ -23,7 +27,7 @@ from opentelemetry.sdk._logs.export import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
-from . import ExporterConfig, _attrs_to_dict
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict
 
 LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
     ExporterConfig(
@@ -32,9 +36,43 @@ LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
         kwargs={"endpoint": "http://localhost:4318/v1/logs"},
     ),
     ExporterConfig(
+        id="http-deflate",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": HTTPCompression.Deflate,
+        },
+    ),
+    ExporterConfig(
+        id="http-gzip",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": HTTPCompression.Gzip,
+        },
+    ),
+    ExporterConfig(
+        id="http-headers",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "headers": CUSTOM_HEADERS,
+        },
+    ),
+    ExporterConfig(
         id="grpc",
         exporter_class=GRPCLogExporter,
         kwargs={"insecure": True},
+    ),
+    ExporterConfig(
+        id="grpc-gzip",
+        exporter_class=GRPCLogExporter,
+        kwargs={"insecure": True, "compression": GRPCCompression.Gzip},
+    ),
+    ExporterConfig(
+        id="grpc-headers",
+        exporter_class=GRPCLogExporter,
+        kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
     ),
 ]
 

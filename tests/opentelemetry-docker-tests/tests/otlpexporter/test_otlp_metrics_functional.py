@@ -7,9 +7,13 @@ import math
 from collections.abc import Iterator
 
 import pytest
+from grpc import Compression as GRPCCompression
 
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter as GRPCMetricExporter,
+)
+from opentelemetry.exporter.otlp.proto.http import (
+    Compression as HTTPCompression,
 )
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     OTLPMetricExporter as HTTPMetricExporter,
@@ -27,7 +31,7 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
-from . import ExporterConfig, _attrs_to_dict
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict
 
 METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
     ExporterConfig(
@@ -36,9 +40,43 @@ METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
         kwargs={"endpoint": "http://localhost:4318/v1/metrics"},
     ),
     ExporterConfig(
+        id="http-deflate",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": HTTPCompression.Deflate,
+        },
+    ),
+    ExporterConfig(
+        id="http-gzip",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": HTTPCompression.Gzip,
+        },
+    ),
+    ExporterConfig(
+        id="http-headers",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "headers": CUSTOM_HEADERS,
+        },
+    ),
+    ExporterConfig(
         id="grpc",
         exporter_class=GRPCMetricExporter,
         kwargs={"insecure": True},
+    ),
+    ExporterConfig(
+        id="grpc-gzip",
+        exporter_class=GRPCMetricExporter,
+        kwargs={"insecure": True, "compression": GRPCCompression.Gzip},
+    ),
+    ExporterConfig(
+        id="grpc-headers",
+        exporter_class=GRPCMetricExporter,
+        kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
     ),
 ]
 

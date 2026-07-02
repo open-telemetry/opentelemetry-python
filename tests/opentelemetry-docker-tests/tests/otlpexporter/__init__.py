@@ -8,6 +8,11 @@ from typing import Any, Generic, TypeVar
 
 ExporterT = TypeVar("ExporterT")
 
+CUSTOM_HEADERS: dict[str, str] = {
+    "x-custom-header": "custom-value",
+    "x-another-header": "another-value",
+}
+
 
 @dataclass
 class ExporterConfig(Generic[ExporterT]):

@@ -7,9 +7,13 @@ import math
 from collections.abc import Iterator
 
 import pytest
+from grpc import Compression as GRPCCompression
 
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter as GRPCSpanExporter,
+)
+from opentelemetry.exporter.otlp.proto.http import (
+    Compression as HTTPCompression,
 )
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter as HTTPSpanExporter,
@@ -19,7 +23,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 from opentelemetry.trace import Link, SpanContext, StatusCode, TraceFlags
 
-from . import ExporterConfig, _attrs_to_dict
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict
 
 TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
     ExporterConfig(
@@ -28,9 +32,43 @@ TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
         kwargs={"endpoint": "http://localhost:4318/v1/traces"},
     ),
     ExporterConfig(
+        id="http-deflate",
+        exporter_class=HTTPSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "compression": HTTPCompression.Deflate,
+        },
+    ),
+    ExporterConfig(
+        id="http-gzip",
+        exporter_class=HTTPSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "compression": HTTPCompression.Gzip,
+        },
+    ),
+    ExporterConfig(
+        id="http-headers",
+        exporter_class=HTTPSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "headers": CUSTOM_HEADERS,
+        },
+    ),
+    ExporterConfig(
         id="grpc",
         exporter_class=GRPCSpanExporter,
         kwargs={"insecure": True},
+    ),
+    ExporterConfig(
+        id="grpc-gzip",
+        exporter_class=GRPCSpanExporter,
+        kwargs={"insecure": True, "compression": GRPCCompression.Gzip},
+    ),
+    ExporterConfig(
+        id="grpc-headers",
+        exporter_class=GRPCSpanExporter,
+        kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
     ),
 ]
 
