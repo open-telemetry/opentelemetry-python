@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from io import StringIO
-from json import loads
+from json import JSONDecoder, loads
 from os import linesep
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -106,7 +106,7 @@ class TestConsoleExporter(TestCase):
 
         output.seek(0)
         joined_output = "".join(output.readlines())
-        result_0 = loads(joined_output.strip(linesep))
+        result_0, _ = JSONDecoder().raw_decode(joined_output.lstrip())
 
         self.assertGreater(len(result_0), 0)
 
