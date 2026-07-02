@@ -289,7 +289,7 @@ class MetricsExporterTestsBase(ABC, unittest.TestCase):
         dp = recorded.metric.exponential_histogram.data_points[0]
         self.assertEqual(dp.count, 3)
         self.assertAlmostEqual(dp.sum, 7.0)
-        self.assertIsNotNone(dp.scale)
+        self.assertGreater(len(dp.positive.bucket_counts), 0)
 
         meter_provider.shutdown()
 
