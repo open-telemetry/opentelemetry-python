@@ -1,8 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import collections.abc
 import threading
-import typing
 
 from typing_extensions import deprecated
 
@@ -18,7 +18,7 @@ class InMemoryLogRecordExporter(LogRecordExporter):
 
     This class can be used for testing purposes. It stores the exported logs
     in a list in memory that can be retrieved using the
-    :func:`.get_finished_logs` method.
+    :meth:`.get_finished_logs` method.
     """
 
     def __init__(self):
@@ -35,7 +35,7 @@ class InMemoryLogRecordExporter(LogRecordExporter):
             return tuple(self._logs)
 
     def export(
-        self, batch: typing.Sequence[ReadableLogRecord]
+        self, batch: collections.abc.Sequence[ReadableLogRecord]
     ) -> LogRecordExportResult:
         if self._stopped:
             return LogRecordExportResult.FAILURE

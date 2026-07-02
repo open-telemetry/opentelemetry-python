@@ -9,6 +9,8 @@ dependencies = [
   "opentelemetry-proto",
   "opentelemetry-proto-json",
   "opentelemetry-test-utils",
+  "opentelemetry-exporter-otlp-json-file",
+  "opentelemetry-exporter-http-transport",
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
   "opentelemetry-exporter-otlp-proto-common",
@@ -32,6 +34,8 @@ opentelemetry-proto = { workspace = true }
 opentelemetry-proto-json = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
 opentelemetry-test-utils = { workspace = true }
+opentelemetry-exporter-otlp-json-file = { workspace = true }
+opentelemetry-exporter-http-transport = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
 opentelemetry-exporter-otlp-proto-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-common = { workspace = true }
@@ -119,9 +123,12 @@ include = [
   "opentelemetry-api",
   "opentelemetry-sdk",
   "opentelemetry-proto-json",
+  "exporter/opentelemetry-exporter-otlp-json-file",
+  "exporter/opentelemetry-exporter-http-transport",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
   "exporter/opentelemetry-exporter-otlp-json-common",
+  "exporter/opentelemetry-exporter-otlp-common",
   "codegen/opentelemetry-codegen-json"
 ]
 
@@ -137,9 +144,11 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/metric_reader_storage.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py",
   "opentelemetry-sdk/benchmarks",
+  "exporter/opentelemetry-exporter-http-transport/tests",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/tests",
+  "exporter/opentelemetry-exporter-otlp-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
 ]
 
@@ -174,6 +183,7 @@ issue_format = "[#{issue}](https://github.com/open-telemetry/opentelemetry-pytho
 wrap = true # wrap fragments to 79 char line length
 issue_pattern = "^(\\d+)" # only PR numbers as fragment prefix (e.g. 1234.fixed)
 
+# NOTE: remember to update the changelog workflow if these types change 
 [[tool.towncrier.type]]
 directory = "added"
 name = "Added"

@@ -40,7 +40,6 @@ class _SeverityNumber:
 class _SeverityNumberEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_SeverityNumber.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     SEVERITY_NUMBER_UNSPECIFIED: _SeverityNumber.ValueType  # 0
-    """UNSPECIFIED is the default SeverityNumber, it MUST NOT be used."""
     SEVERITY_NUMBER_TRACE: _SeverityNumber.ValueType  # 1
     SEVERITY_NUMBER_TRACE2: _SeverityNumber.ValueType  # 2
     SEVERITY_NUMBER_TRACE3: _SeverityNumber.ValueType  # 3
@@ -70,7 +69,6 @@ class SeverityNumber(_SeverityNumber, metaclass=_SeverityNumberEnumTypeWrapper):
     """Possible values for LogRecord.SeverityNumber."""
 
 SEVERITY_NUMBER_UNSPECIFIED: SeverityNumber.ValueType  # 0
-"""UNSPECIFIED is the default SeverityNumber, it MUST NOT be used."""
 SEVERITY_NUMBER_TRACE: SeverityNumber.ValueType  # 1
 SEVERITY_NUMBER_TRACE2: SeverityNumber.ValueType  # 2
 SEVERITY_NUMBER_TRACE3: SeverityNumber.ValueType  # 3

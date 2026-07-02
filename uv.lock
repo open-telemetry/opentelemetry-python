@@ -11,8 +11,11 @@ resolution-markers = [
 members = [
     "opentelemetry-api",
     "opentelemetry-codegen-json",
+    "opentelemetry-exporter-http-transport",
     "opentelemetry-exporter-otlp",
+    "opentelemetry-exporter-otlp-common",
     "opentelemetry-exporter-otlp-json-common",
+    "opentelemetry-exporter-otlp-json-file",
     "opentelemetry-exporter-otlp-proto-common",
     "opentelemetry-exporter-otlp-proto-grpc",
     "opentelemetry-exporter-otlp-proto-http",
@@ -629,18 +632,6 @@ wheels = [
 ]
 
 [[package]]
-name = "importlib-metadata"
-version = "8.7.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "zipp" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107, upload-time = "2025-12-21T10:00:19.278Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/5e/f8e9a1d23b9c20a551a8a02ea3637b4642e22c2626e3a13a9a29cdea99eb/importlib_metadata-8.7.1-py3-none-any.whl", hash = "sha256:5a1f80bf1daa489495071efbb095d75a634cf28a8bc299581244063b53176151", size = 27865, upload-time = "2025-12-21T10:00:18.329Z" },
-]
-
-[[package]]
 name = "inflect"
 version = "7.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -817,15 +808,11 @@ wheels = [
 name = "opentelemetry-api"
 source = { editable = "opentelemetry-api" }
 dependencies = [
-    { name = "importlib-metadata" },
     { name = "typing-extensions" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "importlib-metadata", specifier = ">=6.0,<8.8.0" },
-    { name = "typing-extensions", specifier = ">=4.5.0" },
-]
+requires-dist = [{ name = "typing-extensions", specifier = ">=4.5.0" }]
 
 [[package]]
 name = "opentelemetry-codegen-json"
@@ -857,6 +844,29 @@ wheels = [
 ]
 
 [[package]]
+name = "opentelemetry-exporter-http-transport"
+source = { editable = "exporter/opentelemetry-exporter-http-transport" }
+dependencies = [
+    { name = "opentelemetry-api" },
+]
+
+[package.optional-dependencies]
+requests = [
+    { name = "requests" },
+]
+urllib3 = [
+    { name = "urllib3" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "opentelemetry-api", editable = "opentelemetry-api" },
+    { name = "requests", marker = "extra == 'requests'", specifier = "~=2.25" },
+    { name = "urllib3", marker = "extra == 'urllib3'", specifier = ">=1.26" },
+]
+provides-extras = ["requests", "urllib3"]
+
+[[package]]
 name = "opentelemetry-exporter-otlp"
 source = { editable = "exporter/opentelemetry-exporter-otlp" }
 dependencies = [
@@ -871,6 +881,25 @@ requires-dist = [
 ]
 
 [[package]]
+name = "opentelemetry-exporter-otlp-common"
+source = { editable = "exporter/opentelemetry-exporter-otlp-common" }
+dependencies = [
+    { name = "opentelemetry-sdk" },
+]
+
+[package.optional-dependencies]
+http = [
+    { name = "opentelemetry-exporter-http-transport" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "opentelemetry-exporter-http-transport", marker = "extra == 'http'", editable = "exporter/opentelemetry-exporter-http-transport" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+]
+provides-extras = ["http"]
+
+[[package]]
 name = "opentelemetry-exporter-otlp-json-common"
 source = { editable = "exporter/opentelemetry-exporter-otlp-json-common" }
 dependencies = [
@@ -881,6 +910,20 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "opentelemetry-proto-json", editable = "opentelemetry-proto-json" },
+    { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
+]
+
+[[package]]
+name = "opentelemetry-exporter-otlp-json-file"
+source = { editable = "exporter/opentelemetry-exporter-otlp-json-file" }
+dependencies = [
+    { name = "opentelemetry-exporter-otlp-json-common" },
+    { name = "opentelemetry-sdk" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "opentelemetry-exporter-otlp-json-common", editable = "exporter/opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
 ]
 
@@ -1022,7 +1065,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "protobuf", specifier = ">=5.0,<7.0" }]
+requires-dist = [{ name = "protobuf", specifier = ">=5.0,<8.0" }]
 
 [[package]]
 name = "opentelemetry-proto-json"
@@ -1035,7 +1078,9 @@ source = { virtual = "." }
 dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-codegen-json" },
+    { name = "opentelemetry-exporter-http-transport" },
     { name = "opentelemetry-exporter-otlp-json-common" },
+    { name = "opentelemetry-exporter-otlp-json-file" },
     { name = "opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
@@ -1063,7 +1108,9 @@ dev = [
 requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-codegen-json", editable = "codegen/opentelemetry-codegen-json" },
+    { name = "opentelemetry-exporter-http-transport", editable = "exporter/opentelemetry-exporter-http-transport" },
     { name = "opentelemetry-exporter-otlp-json-common", editable = "exporter/opentelemetry-exporter-otlp-json-common" },
+    { name = "opentelemetry-exporter-otlp-json-file", editable = "exporter/opentelemetry-exporter-otlp-json-file" },
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", editable = "exporter/opentelemetry-exporter-otlp-proto-grpc" },
     { name = "opentelemetry-exporter-otlp-proto-http", editable = "exporter/opentelemetry-exporter-otlp-proto-http" },
@@ -1906,13 +1953,4 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/97/c5/aff062c66b42e2183201a7ace10c6b2e959a9a16525c8e8ca8e59410d27a/virtualenv-21.2.1.tar.gz", hash = "sha256:b66ffe81301766c0d5e2208fc3576652c59d44e7b731fc5f5ed701c9b537fa78", size = 5844770, upload-time = "2026-04-09T18:47:11.482Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/20/0e/f083a76cb590e60dff3868779558eefefb8dfb7c9ed020babc7aa014ccbf/virtualenv-21.2.1-py3-none-any.whl", hash = "sha256:bd16b49c53562b28cf1a3ad2f36edb805ad71301dee70ddc449e5c88a9f919a2", size = 5828326, upload-time = "2026-04-09T18:47:09.331Z" },
-]
-
-[[package]]
-name = "zipp"
-version = "3.23.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e3/02/0f2892c661036d50ede074e376733dca2ae7c6eb617489437771209d4180/zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166", size = 25547, upload-time = "2025-06-08T17:06:39.4Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/54/647ade08bf0db230bfea292f893923872fd20be6ac6f53b2b936ba839d75/zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e", size = 10276, upload-time = "2025-06-08T17:06:38.034Z" },
 ]

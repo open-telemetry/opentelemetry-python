@@ -9,6 +9,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+from opentelemetry import trace as trace_api
 from opentelemetry.sdk._configuration._tracer_provider import (
     configure_tracer_provider,
     create_tracer_provider,
@@ -16,6 +17,30 @@ from opentelemetry.sdk._configuration._tracer_provider import (
 from opentelemetry.sdk._configuration.file._loader import ConfigurationError
 from opentelemetry.sdk._configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableProbabilitySampler as ComposableProbabilityConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableRuleBasedSamplerRule as RuleBasedSamplerRuleConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableRuleBasedSamplerRuleAttributePatterns as RuleAttributePatternsConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableRuleBasedSamplerRuleAttributeValues as RuleAttributeValuesConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableSampler as ComposableSamplerConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalSpanParent as SpanParentConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -34,6 +59,9 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     SpanExporter as SpanExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    SpanKind as SpanKindConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     SpanLimits as SpanLimitsConfig,
@@ -57,10 +85,16 @@ from opentelemetry.sdk.trace.export import (
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
+    Decision,
     ParentBased,
     Sampler,
     TraceIdRatioBased,
 )
+from opentelemetry.trace import SpanContext, TraceFlags
+from opentelemetry.trace import SpanKind as TraceSpanKind
+
+TRACE_ID = int("00112233445566778800000000000000", 16)
+SPAN_ID = int("0123456789abcdef", 16)
 
 
 class TestCreateTracerProviderBasic(unittest.TestCase):
@@ -207,11 +241,11 @@ class TestCreateSampler(unittest.TestCase):
         self.assertIs(sampler._local_parent_sampled, ALWAYS_ON)
         self.assertIs(sampler._local_parent_not_sampled, ALWAYS_OFF)
 
-    def test_unknown_sampler_raises_configuration_error(self):
+    def test_no_sampler_raises_configuration_error(self):
         with self.assertRaises(ConfigurationError):
             self._make_provider(SamplerConfig())
 
-    def test_plugin_sampler_loaded_via_entry_point(self):
+    def test_user_defined_sampler_loaded_via_entry_point(self):
         mock_sampler = MagicMock(spec=Sampler)
         mock_class = MagicMock(return_value=mock_sampler)
         with patch(
@@ -222,7 +256,7 @@ class TestCreateSampler(unittest.TestCase):
             provider = self._make_provider(SamplerConfig(my_custom_sampler={}))
         self.assertIs(provider.sampler, mock_sampler)
 
-    def test_unknown_plugin_raises_configuration_error(self):
+    def test_user_defined_sampler_not_found_raises_configuration_error(self):
         with patch(
             "opentelemetry.sdk._configuration._common.entry_points",
             return_value=[],
@@ -230,6 +264,267 @@ class TestCreateSampler(unittest.TestCase):
             with self.assertRaises(ConfigurationError):
                 # pylint: disable=unexpected-keyword-arg
                 self._make_provider(SamplerConfig(no_such_sampler={}))
+
+
+class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
+    @staticmethod
+    def _make_provider(rule_based_config):
+        return create_tracer_provider(
+            TracerProviderConfig(
+                processors=[],
+                sampler=SamplerConfig(
+                    composite_development=ComposableSamplerConfig(
+                        rule_based=rule_based_config
+                    )
+                ),
+            )
+        )
+
+    @staticmethod
+    def _rule(sampler, **kwargs):
+        return RuleBasedSamplerRuleConfig(sampler=sampler, **kwargs)
+
+    @staticmethod
+    def _always_on():
+        return ComposableSamplerConfig(always_on={})
+
+    @staticmethod
+    def _always_off():
+        return ComposableSamplerConfig(always_off={})
+
+    @staticmethod
+    def _attribute_values(key, values):
+        return RuleAttributeValuesConfig(key=key, values=values)
+
+    @staticmethod
+    def _attribute_patterns(key, included=None, excluded=None):
+        return RuleAttributePatternsConfig(
+            key=key,
+            included=included,
+            excluded=excluded,
+        )
+
+    def _decision(
+        self,
+        rule_based_config,
+        *,
+        name="span",
+        kind=None,
+        attributes=None,
+        parent_context=None,
+    ):
+        provider = self._make_provider(rule_based_config)
+        return provider.sampler.should_sample(
+            parent_context,
+            TRACE_ID,
+            name,
+            kind,
+            attributes,
+            None,
+        ).decision
+
+    def test_composite_rule_based_no_rules_drops(self):
+        decision = self._decision(RuleBasedSamplerConfig())
+
+        self.assertEqual(decision, Decision.DROP)
+
+    def test_composite_rule_based_no_condition_rule_matches(self):
+        decision = self._decision(
+            RuleBasedSamplerConfig(rules=[self._rule(self._always_on())])
+        )
+
+        self.assertEqual(decision, Decision.RECORD_AND_SAMPLE)
+
+    def test_composite_rule_based_first_match_wins(self):
+        rule_based = RuleBasedSamplerConfig(
+            rules=[
+                self._rule(
+                    self._always_off(),
+                    attribute_values=self._attribute_values(
+                        "http.route", ["/health"]
+                    ),
+                ),
+                self._rule(
+                    self._always_on(),
+                    attribute_values=self._attribute_values(
+                        "http.route", ["/health"]
+                    ),
+                ),
+            ]
+        )
+
+        decision = self._decision(
+            rule_based, attributes={"http.route": "/health"}
+        )
+
+        self.assertEqual(decision, Decision.DROP)
+
+    def test_composite_rule_based_attribute_values_stringifies_values(self):
+        decision = self._decision(
+            RuleBasedSamplerConfig(
+                rules=[
+                    self._rule(
+                        self._always_on(),
+                        attribute_values=self._attribute_values(
+                            "http.response.status_code", ["404"]
+                        ),
+                    )
+                ]
+            ),
+            attributes={"http.response.status_code": 404},
+        )
+
+        self.assertEqual(decision, Decision.RECORD_AND_SAMPLE)
+
+    def test_composite_rule_based_attribute_values_match_array_item(self):
+        decision = self._decision(
+            RuleBasedSamplerConfig(
+                rules=[
+                    self._rule(
+                        self._always_on(),
+                        attribute_values=self._attribute_values(
+                            "http.request.method", ["POST"]
+                        ),
+                    )
+                ]
+            ),
+            attributes={"http.request.method": ("GET", "POST")},
+        )
+
+        self.assertEqual(decision, Decision.RECORD_AND_SAMPLE)
+
+    def test_composite_rule_based_attribute_patterns_include_exclude(self):
+        rule_based = RuleBasedSamplerConfig(
+            rules=[
+                self._rule(
+                    self._always_on(),
+                    attribute_patterns=self._attribute_patterns(
+                        "http.route",
+                        ["/api/*"],
+                        ["/api/private/*"],
+                    ),
+                )
+            ]
+        )
+
+        included = self._decision(
+            rule_based, attributes={"http.route": "/api/users"}
+        )
+        excluded = self._decision(
+            rule_based, attributes={"http.route": "/api/private/user"}
+        )
+        case_mismatch = self._decision(
+            rule_based, attributes={"http.route": "/API/users"}
+        )
+
+        self.assertEqual(included, Decision.RECORD_AND_SAMPLE)
+        self.assertEqual(excluded, Decision.DROP)
+        self.assertEqual(case_mismatch, Decision.DROP)
+
+    def test_composite_rule_based_span_kind(self):
+        rule_based = RuleBasedSamplerConfig(
+            rules=[
+                self._rule(
+                    self._always_on(),
+                    span_kinds=[SpanKindConfig.server],
+                )
+            ]
+        )
+
+        server = self._decision(rule_based, kind=TraceSpanKind.SERVER)
+        client = self._decision(rule_based, kind=TraceSpanKind.CLIENT)
+
+        self.assertEqual(server, Decision.RECORD_AND_SAMPLE)
+        self.assertEqual(client, Decision.DROP)
+
+    def test_composite_rule_based_parent(self):
+        local_parent_context = trace_api.set_span_in_context(
+            trace_api.NonRecordingSpan(
+                SpanContext(
+                    TRACE_ID,
+                    SPAN_ID,
+                    is_remote=False,
+                    trace_flags=TraceFlags.get_default(),
+                )
+            )
+        )
+        remote_parent_context = trace_api.set_span_in_context(
+            trace_api.NonRecordingSpan(
+                SpanContext(
+                    TRACE_ID,
+                    SPAN_ID,
+                    is_remote=True,
+                    trace_flags=TraceFlags.get_default(),
+                )
+            )
+        )
+        rule_based = RuleBasedSamplerConfig(
+            rules=[
+                self._rule(
+                    self._always_on(),
+                    parent=[SpanParentConfig.local],
+                )
+            ]
+        )
+
+        local = self._decision(rule_based, parent_context=local_parent_context)
+        remote = self._decision(
+            rule_based, parent_context=remote_parent_context
+        )
+        no_parent = self._decision(rule_based)
+
+        self.assertEqual(local, Decision.RECORD_AND_SAMPLE)
+        self.assertEqual(remote, Decision.DROP)
+        self.assertEqual(no_parent, Decision.DROP)
+
+    def test_composite_rule_based_multiple_conditions_are_anded(self):
+        rule_based = RuleBasedSamplerConfig(
+            rules=[
+                self._rule(
+                    self._always_on(),
+                    attribute_values=self._attribute_values(
+                        "http.route", ["/users"]
+                    ),
+                    span_kinds=[SpanKindConfig.server],
+                )
+            ]
+        )
+
+        matching = self._decision(
+            rule_based,
+            kind=TraceSpanKind.SERVER,
+            attributes={"http.route": "/users"},
+        )
+        wrong_kind = self._decision(
+            rule_based,
+            kind=TraceSpanKind.CLIENT,
+            attributes={"http.route": "/users"},
+        )
+
+        self.assertEqual(matching, Decision.RECORD_AND_SAMPLE)
+        self.assertEqual(wrong_kind, Decision.DROP)
+
+    def test_composite_rule_based_nested_probability_sampler(self):
+        provider = self._make_provider(
+            RuleBasedSamplerConfig(
+                rules=[
+                    self._rule(
+                        ComposableSamplerConfig(
+                            probability=ComposableProbabilityConfig(ratio=0.0)
+                        )
+                    )
+                ]
+            )
+        )
+
+        expected = (
+            "ComposableRuleBased{[(AlwaysMatch:"
+            "ComposableTraceIDRatioBased{threshold=max, ratio=0.0})]}"
+        )
+        self.assertEqual(
+            provider.sampler.get_description(),
+            expected,
+        )
 
 
 class TestCreateSpanExporterAndProcessor(unittest.TestCase):
@@ -317,6 +612,32 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             compression=None,
         )
 
+    def test_otlp_http_created_with_deflate_compression(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_compression_cls.Deflate = "deflate_val"
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+        mock_http_module = MagicMock()
+        mock_http_module.Compression = mock_compression_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(compression="deflate")
+                )
+            )
+            create_tracer_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertEqual(kwargs["compression"], "deflate_val")
+
     def test_otlp_http_headers_list(self):
         mock_exporter_cls = MagicMock()
         mock_http_module = MagicMock()
@@ -344,6 +665,89 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             kwargs["headers"], {"x-api-key": "secret", "env": "prod"}
         )
 
+    def test_otlp_file_development_missing_package_raises(self):
+        config = self._make_batch_config(
+            SpanExporterConfig(
+                otlp_file_development=ExperimentalOtlpFileExporterConfig()
+            )
+        )
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.trace_exporter": None,
+            },
+        ):
+            with self.assertRaises(ConfigurationError) as ctx:
+                create_tracer_provider(config)
+        self.assertIn(
+            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
+        )
+
+    def test_otlp_file_development_default_stdout(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.trace_exporter": mock_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileExporterConfig()
+                )
+            )
+            create_tracer_provider(config)
+
+        mock_exporter_cls.assert_called_once_with()
+
+    def test_otlp_file_development_file_uri(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.trace_exporter": mock_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileExporterConfig(
+                        output_stream="file:///tmp/traces.jsonl"
+                    )
+                )
+            )
+            create_tracer_provider(config)
+
+        mock_exporter_cls.assert_called_once_with("/tmp/traces.jsonl")
+
+    def test_otlp_file_development_unsupported_output_stream_raises(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.FileSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.json.file.trace_exporter": mock_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_file_development=ExperimentalOtlpFileExporterConfig(
+                        output_stream="http://example"
+                    )
+                )
+            )
+            with self.assertRaises(ConfigurationError) as ctx:
+                create_tracer_provider(config)
+        self.assertIn("output_stream", str(ctx.exception))
+        mock_exporter_cls.assert_not_called()
+
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_batch_config(
             SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig())
@@ -368,6 +772,34 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         config = self._make_batch_config(SpanExporterConfig())
         with self.assertRaises(ConfigurationError):
             create_tracer_provider(config)
+
+    def test_plugin_span_exporter_loaded_via_entry_point(self):
+        mock_exporter = MagicMock()
+        mock_class = MagicMock(return_value=mock_exporter)
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            config = self._make_batch_config(
+                # pylint: disable=unexpected-keyword-arg
+                SpanExporterConfig(my_custom_exporter={})
+            )
+            provider = create_tracer_provider(config)
+        self.assertEqual(
+            len(provider._active_span_processor._span_processors), 1
+        )
+
+    def test_unknown_span_exporter_raises_configuration_error(self):
+        with patch(
+            "opentelemetry.sdk._configuration._common.entry_points",
+            return_value=[],
+        ):
+            config = self._make_batch_config(
+                # pylint: disable=unexpected-keyword-arg
+                SpanExporterConfig(no_such_exporter={})
+            )
+            with self.assertRaises(ConfigurationError):
+                create_tracer_provider(config)
 
 
 class TestCreateSpanLimits(unittest.TestCase):
