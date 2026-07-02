@@ -49,7 +49,7 @@ def _mock_clock(
         shutdown_event.wait.side_effect = _wait
 
     with patch(
-        "opentelemetry.exporter.otlp.common._http.time.time",
+        "opentelemetry.exporter.otlp.common.http.time.time",
         side_effect=get_time,
     ):
         yield advance
@@ -147,7 +147,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 self.assertIsNone(result.error)
 
     @patch(
-        "opentelemetry.exporter.otlp.common._http.time.time",
+        "opentelemetry.exporter.otlp.common.http.time.time",
         side_effect=(100.0, 100.0, 100.0),
     )
     def test_export_request_arguments(self, mock_time):
@@ -479,7 +479,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
         client._shutdown_event = shutdown_event
 
         with patch(
-            "opentelemetry.exporter.otlp.common._http.time.time",
+            "opentelemetry.exporter.otlp.common.http.time.time",
             return_value=base,
         ):
             result = client.export(b"payload")
@@ -509,7 +509,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
         client._shutdown_event = shutdown_event
 
         with patch(
-            "opentelemetry.exporter.otlp.common._http.time.time",
+            "opentelemetry.exporter.otlp.common.http.time.time",
             return_value=base,
         ):
             result = client.export(b"payload")
