@@ -14,8 +14,19 @@ class ConfigurationError(Exception):
     """
 
 
-class MissingDependencyError(ConfigurationError):
-    """Raised when an optional dependency is not installed."""
+class MissingDependencyError(ConfigurationError, ImportError):
+    """Raised when an optional dependency is not installed.
+
+    Inherits from both :class:`ConfigurationError` and :class:`ImportError` to
+    maintain backwards compatibility with callers that catch ``ImportError``.
+
+    Args:
+        package: The name of the missing package.
+        feature: Optional description of the feature that requires the package.
+        install_name: Optional package name used in the pip install command
+            (defaults to ``package``).
+        extras: Optional extras string for the pip install command.
+    """
 
     def __init__(
         self,
@@ -30,7 +41,7 @@ class MissingDependencyError(ConfigurationError):
         self.extras = extras
 
         if extras:
-            install_cmd = f"pip install '{self.install_name}[{extras}]'"
+            install_cmd = f'pip install "{self.install_name}[{extras}]"'
         else:
             install_cmd = f"pip install {self.install_name}"
 

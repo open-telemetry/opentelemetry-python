@@ -38,7 +38,7 @@ class TestMissingDependencyError(unittest.TestCase):
         self.assertEqual(exc.install_name, "opentelemetry-sdk")
         self.assertEqual(exc.extras, "file-configuration")
         self.assertIn(
-            "pip install 'opentelemetry-sdk[file-configuration]'", str(exc)
+            'pip install "opentelemetry-sdk[file-configuration]"', str(exc)
         )
 
     def test_with_feature_and_extras(self):
@@ -50,7 +50,7 @@ class TestMissingDependencyError(unittest.TestCase):
         )
         self.assertIn("File configuration requires 'jsonschema'", str(exc))
         self.assertIn(
-            "pip install 'opentelemetry-sdk[file-configuration]'", str(exc)
+            'pip install "opentelemetry-sdk[file-configuration]"', str(exc)
         )
 
     def test_can_be_caught_as_configuration_error(self):
@@ -60,3 +60,28 @@ class TestMissingDependencyError(unittest.TestCase):
     def test_can_be_caught_as_exception(self):
         with self.assertRaises(Exception):
             raise MissingDependencyError(package="test")
+
+    def test_can_be_caught_as_import_error(self):
+        with self.assertRaises(ImportError):
+            raise MissingDependencyError(package="test")
+
+    def test_is_import_error_subclass(self):
+        self.assertTrue(issubclass(MissingDependencyError, ImportError))
+
+    def test_issubclass_import_error(self):
+        self.assertIsInstance(
+            MissingDependencyError(package="test"), ImportError
+        )
+
+    def test_import_error_backwards_compatible(self):
+        try:
+            import foo_bar_nonexistent  # type: ignore
+        except ImportError:
+            pass
+        else:
+            try:
+                raise MissingDependencyError(package="test")
+            except ImportError:
+                pass
+            else:
+                self.fail("MissingDependencyError should be catchable as ImportError")
