@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: `ProcessResourceDetector` no longer collects `process.command_line` and `process.command_args` by default, since these can contain secrets passed via CLI flags. Opt in via `ProcessResourceDetector(collect_command_args=True)`

@@ -322,6 +322,25 @@ class OTELResourceDetector(ResourceDetector):
 
 class ProcessResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
+    def __init__(
+        self,
+        raise_on_error: bool = False,
+        collect_command_args: bool = False,
+    ) -> None:
+        """
+        Args:
+            raise_on_error: See :class:`ResourceDetector`.
+            collect_command_args: Whether to collect the
+                ``process.command_line`` and ``process.command_args``
+                attributes. These attributes are **disabled by default**
+                because command-line arguments can contain secrets or other
+                sensitive data (e.g. ``--api-key=...``). Per the OpenTelemetry
+                semantic conventions, these attributes are opt-in:
+                https://opentelemetry.io/docs/specs/semconv/resource/process/
+        """
+        super().__init__(raise_on_error=raise_on_error)
+        self.collect_command_args = collect_command_args
+
     def detect(self) -> "Resource":
         _runtime_version = ".".join(
             map(
@@ -345,8 +364,6 @@ class ProcessResourceDetector(ResourceDetector):
         # conventions reference for these attributes.
         _process_argv = list(sys.orig_argv)
         _process_command = _process_argv[0] if _process_argv else ""
-        _process_command_line = " ".join(_process_argv)
-        _process_command_args = _process_argv
         resource_info = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
@@ -355,9 +372,13 @@ class ProcessResourceDetector(ResourceDetector):
             PROCESS_EXECUTABLE_NAME: _process_executable_name,
             PROCESS_EXECUTABLE_PATH: _process_executable_path,
             PROCESS_COMMAND: _process_command,
-            PROCESS_COMMAND_LINE: _process_command_line,
-            PROCESS_COMMAND_ARGS: _process_command_args,
         }
+        # process.command_line and process.command_args can contain secrets
+        # passed via CLI flags, so per the semantic conventions they are
+        # opt-in only and excluded from the default resource attributes.
+        if self.collect_command_args:
+            resource_info[PROCESS_COMMAND_LINE] = " ".join(_process_argv)
+            resource_info[PROCESS_COMMAND_ARGS] = _process_argv
         if hasattr(os, "getppid"):
             # pypy3 does not have getppid()
             resource_info[PROCESS_PARENT_PID] = os.getppid()

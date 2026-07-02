@@ -657,6 +657,49 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND], sys.orig_argv[0]
         )
+
+        # process.command_line and process.command_args are opt-in only
+        # (see test_process_detector_command_args_excluded_by_default and
+        # test_process_detector_command_args_opt_in below), since they can
+        # contain secrets passed via CLI flags.
+        self.assertNotIn(
+            PROCESS_COMMAND_LINE,
+            aggregated_resource.attributes.keys(),
+        )
+        self.assertNotIn(
+            PROCESS_COMMAND_ARGS,
+            aggregated_resource.attributes.keys(),
+        )
+
+    def test_process_detector_command_args_excluded_by_default(self):
+        """process.command_line / process.command_args must NOT be
+        collected unless explicitly opted in, since they can leak secrets
+        passed via CLI flags (e.g. --api-key=...).
+        See https://github.com/open-telemetry/opentelemetry-python/issues/5358
+        and https://opentelemetry.io/docs/specs/semconv/resource/process/.
+        """
+        aggregated_resource = get_aggregated_resources(
+            [ProcessResourceDetector()], Resource({"foo": "bar"})
+        )
+
+        self.assertNotIn(
+            PROCESS_COMMAND_LINE,
+            aggregated_resource.attributes.keys(),
+        )
+        self.assertNotIn(
+            PROCESS_COMMAND_ARGS,
+            aggregated_resource.attributes.keys(),
+        )
+
+    def test_process_detector_command_args_opt_in(self):
+        """When explicitly opted in via collect_command_args=True,
+        process.command_line and process.command_args must be collected.
+        """
+        aggregated_resource = get_aggregated_resources(
+            [ProcessResourceDetector(collect_command_args=True)],
+            Resource({"foo": "bar"}),
+        )
+
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_LINE],
             " ".join(sys.orig_argv),
@@ -674,7 +717,8 @@ class TestOTELResourceDetector(unittest.TestCase):
         See https://github.com/open-telemetry/opentelemetry-python/issues/4518.
         """
         aggregated_resource = get_aggregated_resources(
-            [ProcessResourceDetector()], Resource({"foo": "bar"})
+            [ProcessResourceDetector(collect_command_args=True)],
+            Resource({"foo": "bar"}),
         )
 
         self.assertEqual(
