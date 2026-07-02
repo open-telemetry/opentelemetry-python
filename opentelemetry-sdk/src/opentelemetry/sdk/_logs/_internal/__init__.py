@@ -59,7 +59,7 @@ from opentelemetry.sdk.environment_variables._internal import (
 )
 from opentelemetry.sdk.resources import (
     Resource,
-    _get_process_sensitive_resource,
+    _get_process_dependent_resource,
 )
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
@@ -828,7 +828,7 @@ class LoggerProvider(APILoggerProvider):
     def _handle_fork(self) -> None:
         self._logger_cache_lock = Lock()
         self._active_loggers_lock = Lock()
-        self._update_resource(_get_process_sensitive_resource())
+        self._update_resource(_get_process_dependent_resource())
 
     @property
     def resource(self):

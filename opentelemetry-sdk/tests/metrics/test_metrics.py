@@ -167,7 +167,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         hasattr(os, "fork") and hasattr(os, "register_at_fork"),
         "requires os.fork and os.register_at_fork",
     )
-    def test_meter_provider_updates_process_sensitive_resource_after_fork(
+    def test_meter_provider_updates_process_dependent_resource_after_fork(
         self,
     ):
         script_path = (

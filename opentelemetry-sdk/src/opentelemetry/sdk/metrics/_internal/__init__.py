@@ -54,7 +54,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 )
 from opentelemetry.sdk.resources import (
     Resource,
-    _get_process_sensitive_resource,
+    _get_process_dependent_resource,
 )
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
@@ -543,7 +543,7 @@ class MeterProvider(APIMeterProvider):
         self._lock = Lock()
         self._meter_lock = Lock()
         type(self)._all_metric_readers_lock = Lock()
-        self._update_resource(_get_process_sensitive_resource())
+        self._update_resource(_get_process_dependent_resource())
 
     def _set_meter_configurator(
         self, *, meter_configurator: _MeterConfiguratorT

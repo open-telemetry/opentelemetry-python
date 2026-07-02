@@ -297,7 +297,7 @@ class ResourceDetector(abc.ABC):
     def is_process_dependent(self) -> bool:
         """Return whether this detector depends on the current process identity.
 
-        Process sensitive detectors may return resource attributes that become
+        Process dependent detectors may return resource attributes that become
         stale after a process identity change, such as :func:`os.fork`.
         Detectors returning ``True`` should be re-run after such changes so the
         resulting :class:`Resource` describes the current process.
@@ -582,7 +582,7 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     return detectors
 
 
-def _get_process_sensitive_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
+def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
     return get_aggregated_resources(
         [
             detector

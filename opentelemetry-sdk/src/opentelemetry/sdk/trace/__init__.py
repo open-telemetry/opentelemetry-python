@@ -52,7 +52,7 @@ from opentelemetry.sdk.environment_variables._internal import (
 )
 from opentelemetry.sdk.resources import (
     Resource,
-    _get_process_sensitive_resource,
+    _get_process_dependent_resource,
 )
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace._tracer_metrics import create_tracer_metrics
@@ -1362,7 +1362,7 @@ class TracerProvider(trace_api.TracerProvider):
 
     def _handle_fork(self) -> None:
         self._tracers_lock = threading.Lock()
-        self._update_resource(_get_process_sensitive_resource())
+        self._update_resource(_get_process_dependent_resource())
 
     def _set_tracer_configurator(
         self, *, tracer_configurator: _TracerConfiguratorT

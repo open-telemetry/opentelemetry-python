@@ -50,7 +50,7 @@ from opentelemetry.sdk.resources import (
     Resource,
     ResourceDetector,
     ServiceInstanceIdResourceDetector,
-    _get_process_sensitive_resource,
+    _get_process_dependent_resource,
     _HostResourceDetector,
     get_aggregated_resources,
 )
@@ -69,19 +69,19 @@ class DefaultResourceDetector(ResourceDetector):
         return Resource.get_empty()
 
 
-class ProcessSensitivityResourceDetector(ResourceDetector):
+class ProcessDependentResourceDetector(ResourceDetector):
     def __init__(
-        self, resource: Resource, process_sensitive: bool = False
+        self, resource: Resource, process_dependent: bool = False
     ) -> None:
         super().__init__()
         self.resource = resource
-        self.process_sensitive = process_sensitive
+        self.process_dependent = process_dependent
 
     def detect(self) -> Resource:
         return self.resource
 
     def is_process_dependent(self) -> bool:
-        return self.process_sensitive
+        return self.process_dependent
 
 
 # pylint: disable-next=too-many-public-methods
@@ -481,46 +481,42 @@ class TestResources(unittest.TestCase):
             Exception, get_aggregated_resources, [resource_detector]
         )
 
-    def test_resource_detector_is_not_process_sensitive_by_default(self):
+    def test_resource_detector_is_not_process_dependent_by_default(self):
         self.assertFalse(DefaultResourceDetector().is_process_dependent())
 
-    def test_process_resource_detector_is_process_sensitive(self):
+    def test_process_resource_detector_is_process_dependent(self):
         self.assertTrue(ProcessResourceDetector().is_process_dependent())
 
     @patch("opentelemetry.sdk.resources._build_resource_detectors")
-    def test_get_process_sensitive_resource(
+    def test_get_process_dependent_resource(
         self, build_resource_detectors_mock
     ):
         build_resource_detectors_mock.return_value = [
-            ProcessSensitivityResourceDetector(
-                Resource({"ignored": "ignored"})
+            ProcessDependentResourceDetector(Resource({"ignored": "ignored"})),
+            ProcessDependentResourceDetector(
+                Resource({"one": "one", "two": "old"}), process_dependent=True
             ),
-            ProcessSensitivityResourceDetector(
-                Resource({"one": "one", "two": "old"}), process_sensitive=True
-            ),
-            ProcessSensitivityResourceDetector(
+            ProcessDependentResourceDetector(
                 Resource({"two": "new", "three": "three"}),
-                process_sensitive=True,
+                process_dependent=True,
             ),
         ]
 
         self.assertEqual(
-            _get_process_sensitive_resource(),
+            _get_process_dependent_resource(),
             Resource({"one": "one", "two": "new", "three": "three"}),
         )
 
     @patch("opentelemetry.sdk.resources._build_resource_detectors")
-    def test_get_process_sensitive_resource_empty(
+    def test_get_process_dependent_resource_empty(
         self, build_resource_detectors_mock
     ):
         build_resource_detectors_mock.return_value = [
-            ProcessSensitivityResourceDetector(
-                Resource({"ignored": "ignored"})
-            ),
+            ProcessDependentResourceDetector(Resource({"ignored": "ignored"})),
         ]
 
         self.assertEqual(
-            _get_process_sensitive_resource(), Resource.get_empty()
+            _get_process_dependent_resource(), Resource.get_empty()
         )
 
     @patch("opentelemetry.sdk.resources.logger")
@@ -1034,7 +1030,7 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
         _resources_module._service_instance_id = self._orig_instance_id
         _resources_module._service_instance_id_pid = self._orig_instance_pid
 
-    def test_is_process_sensitive(self):
+    def test_is_process_dependent(self):
         self.assertTrue(
             ServiceInstanceIdResourceDetector().is_process_dependent()
         )
