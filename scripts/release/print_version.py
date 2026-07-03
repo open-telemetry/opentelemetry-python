@@ -17,9 +17,13 @@ from tomlkit import load
 
 parser = ArgumentParser(description="Get the version for a release")
 group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument("--stable", action="store_true")
-group.add_argument("--unstable", action="store_true")
+group.add_argument(
+    "--stable", dest="section", action="store_const", const="stable"
+)
+group.add_argument(
+    "--unstable", dest="section", action="store_const", const="prerelease"
+)
 args = parser.parse_args()
 
 with open(find_projectroot() / "repo.toml", encoding="utf-8") as file:
-    print(load(file)["stable" if args.stable else "prerelease"]["version"])
+    print(load(file)[args.section]["version"])
