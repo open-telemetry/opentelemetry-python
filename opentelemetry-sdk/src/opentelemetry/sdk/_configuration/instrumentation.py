@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
-import inspect
 from dataclasses import fields, is_dataclass
+from inspect import isclass
 from logging import getLogger
 
 from opentelemetry.sdk._configuration._common import load_entry_point
@@ -50,9 +50,7 @@ def configure_instrumentation(
         try:
             cls = load_entry_point("opentelemetry_instrumentor", name)
             configuration_cls = getattr(cls, "configuration", None)
-            if inspect.isclass(configuration_cls) and is_dataclass(
-                configuration_cls
-            ):
+            if isclass(configuration_cls) and is_dataclass(configuration_cls):
                 configuration_obj = _dict_to_dataclass(
                     options, configuration_cls
                 )
