@@ -23,7 +23,6 @@ group.add_argument(
 group.add_argument(
     "--unstable", dest="section", action="store_const", const="prerelease"
 )
-args = parser.parse_args()
 
 with open(find_projectroot() / "repo.toml", encoding="utf-8") as file:
-    print(load(file)[args.section]["version"])
+    print(load(file)[parser.parse_args().section]["version"])

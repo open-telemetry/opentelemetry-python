@@ -18,11 +18,12 @@ from tomlkit import dump, load
 logger = getLogger(__name__)
 
 # PEP 508 allowed specifier operators
-OPERATORS = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
-OPERATORS_PATTERN = "|".join(escape(op) for op in OPERATORS)
+OPERATORS_PATTERN = "|".join(
+    escape(op) for op in ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
+)
 
 
-def update_version_files(
+def edit_version_files(
     package_dirs: list[Path], version: str, packages: list[str]
 ) -> None:
     """Rewrites __version__ to version in each package directory's version
@@ -53,7 +54,7 @@ def update_version_files(
             file.write(sub("__version__ .*", replace, text))
 
 
-def update_files(
+def edit_files(
     package_dirs: list[Path], filename: str, search: str, replace: str
 ) -> None:
     """Finds filename under each package directory and replaces every
@@ -80,9 +81,7 @@ def update_files(
             _file.write(sub(search, replace, text))
 
 
-def update_repo_toml_version(
-    rootpath: Path, section: str, version: str
-) -> None:
+def edit_repo_toml_version(rootpath: Path, section: str, version: str) -> None:
     """Sets repo.toml's [section].version to version."""
     repo_toml_path = rootpath / "repo.toml"
     with open(repo_toml_path, encoding="utf-8") as file:

@@ -40,14 +40,14 @@ from sys import path
 
 path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from edit import (
+    OPERATORS_PATTERN,
+    edit_files,
+    edit_repo_toml_version,
+    edit_version_files,
+)
 from repo_targets import find_package_dirs_unordered, find_projectroot
 from tomlkit import load
-from version_files import (
-    OPERATORS_PATTERN,
-    update_files,
-    update_repo_toml_version,
-    update_version_files,
-)
 
 basicConfig(level=INFO, format="%(message)s")
 logger = getLogger(__name__)
@@ -64,8 +64,8 @@ logger.info("preparing release")
 rootpath = find_projectroot()
 package_dirs = list(find_package_dirs_unordered(rootpath))
 
-update_repo_toml_version(rootpath, "stable", args.stable_version)
-update_repo_toml_version(rootpath, "prerelease", args.unstable_version)
+edit_repo_toml_version(rootpath, "stable", args.stable_version)
+edit_repo_toml_version(rootpath, "prerelease", args.unstable_version)
 
 with open(rootpath / "repo.toml", encoding="utf-8") as file:
     cfg = load(file)
@@ -79,11 +79,11 @@ for group, version in (
 
     logger.info("updating dependencies")
     for pkg in packages:
-        update_files(
+        edit_files(
             package_dirs,
             "pyproject.toml",
             rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)",
             r"\1\2 " + version,
         )
 
-    update_version_files(package_dirs, version, packages)
+    edit_version_files(package_dirs, version, packages)
