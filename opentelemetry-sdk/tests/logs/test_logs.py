@@ -571,7 +571,7 @@ class TestLogger(unittest.TestCase):
         logger = provider.get_logger("test")
         self.assertFalse(logger.enabled())
 
-    def test_enabled_passes_args_to_processor(self):
+    def test_enabled_passes_args_to_processor(self):  # pylint: disable=no-self-use
         provider = LoggerProvider()
         processor_mock = Mock()
         processor_mock.enabled.return_value = True

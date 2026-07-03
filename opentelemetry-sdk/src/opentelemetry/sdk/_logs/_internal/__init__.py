@@ -379,7 +379,7 @@ class LogRecordProcessor(abc.ABC):
         on error handling expectations.
         """
 
-    def enabled(
+    def enabled(  # pylint: disable=no-self-use
         self,
         *,
         context: Context | None = None,
