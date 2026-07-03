@@ -13,6 +13,7 @@ repos:
     rev: 0.6.0
     hooks:
       - id: uv-lock
+        args: ["--index-url", "https://pypi.org/simple"]
   - repo: https://github.com/rstcheck/rstcheck
     rev: 77490ffa33bfc0928975ae3cf904219903db755d # frozen: v6.2.5
     hooks:
