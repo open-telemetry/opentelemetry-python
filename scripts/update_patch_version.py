@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from argparse import ArgumentParser
-from configparser import ConfigParser
 from sys import exit
 
 from repo_targets import find_projectroot, find_targets_unordered
+from toml import load
 from version_files import (
     update_patch_dependencies,
-    update_repo_ini_version,
+    update_repo_toml_version,
     update_version_files,
 )
 
@@ -33,22 +33,19 @@ def main():
     rootpath = find_projectroot()
     targets = list(find_targets_unordered(rootpath))
 
-    update_repo_ini_version(rootpath, "stable", args.stable_version)
-    update_repo_ini_version(rootpath, "prerelease", args.unstable_version)
+    update_repo_toml_version(rootpath, "stable", args.stable_version)
+    update_repo_toml_version(rootpath, "prerelease", args.unstable_version)
 
-    cfg = ConfigParser()
-    cfg.read(str(rootpath / "repo.ini"))
+    cfg = load(rootpath / "repo.toml")
 
-    mcfg = cfg["stable"]
-    packages = mcfg["packages"].split()
+    packages = cfg["stable"]["packages"]
     print(f"update stable packages to {args.stable_version}")
     update_patch_dependencies(
         targets, args.stable_version, args.stable_version_prev, packages
     )
     update_version_files(targets, args.stable_version, packages)
 
-    mcfg = cfg["prerelease"]
-    packages = mcfg["packages"].split()
+    packages = cfg["prerelease"]["packages"]
     print(f"update prerelease packages to {args.unstable_version}")
     update_patch_dependencies(
         targets, args.unstable_version, args.unstable_version_prev, packages

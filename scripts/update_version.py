@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from argparse import ArgumentParser
-from configparser import ConfigParser
 from sys import exit
 
 from repo_targets import find_projectroot, find_targets_unordered
+from toml import load
 from version_files import (
     update_dependencies,
-    update_repo_ini_version,
+    update_repo_toml_version,
     update_version_files,
 )
 
@@ -31,17 +31,16 @@ def main():
     rootpath = find_projectroot()
     targets = list(find_targets_unordered(rootpath))
 
-    update_repo_ini_version(rootpath, "stable", args.stable_version)
-    update_repo_ini_version(rootpath, "prerelease", args.unstable_version)
+    update_repo_toml_version(rootpath, "stable", args.stable_version)
+    update_repo_toml_version(rootpath, "prerelease", args.unstable_version)
 
-    cfg = ConfigParser()
-    cfg.read(str(rootpath / "repo.ini"))
+    cfg = load(rootpath / "repo.toml")
 
     for group, version in (
         ("stable", args.stable_version),
         ("prerelease", args.unstable_version),
     ):
-        packages = cfg[group]["packages"].split()
+        packages = cfg[group]["packages"]
         print(f"update {group} packages to {version}")
         update_dependencies(targets, version, packages)
         update_version_files(targets, version, packages)

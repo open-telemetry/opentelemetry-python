@@ -2,9 +2,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from configparser import ConfigParser
 from itertools import chain
 from pathlib import Path
+
+from toml import load
 
 
 def unique(elems):
@@ -13,15 +14,6 @@ def unique(elems):
         if elem not in seen:
             yield elem
             seen.add(elem)
-
-
-def getlistcfg(strval):
-    return [
-        val.strip()
-        for line in strval.split("\n")
-        for val in line.split(",")
-        if val.strip()
-    ]
 
 
 def find_projectroot(search_start=Path(".")):
@@ -48,9 +40,8 @@ def find_targets_unordered(rootpath):
 
 
 def find_targets(rootpath):
-    cfg = ConfigParser()
-    cfg.read(str(rootpath / "repo.ini"))
-    sortfirst = getlistcfg(cfg["DEFAULT"].get("sortfirst", ""))
+    cfg = load(rootpath / "repo.toml")
+    sortfirst = cfg["DEFAULT"].get("sortfirst", [])
 
     targets = list(find_targets_unordered(rootpath))
 

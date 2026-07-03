@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from argparse import ArgumentParser
-from configparser import ConfigParser
 from sys import exit
 
 from repo_targets import find_projectroot
+from toml import load
 
 
 def parse_args():
@@ -17,8 +17,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cfg = ConfigParser()
-    cfg.read(str(find_projectroot() / "repo.ini"))
+    cfg = load(find_projectroot() / "repo.toml")
     print(cfg[args.mode]["version"])
 
 
