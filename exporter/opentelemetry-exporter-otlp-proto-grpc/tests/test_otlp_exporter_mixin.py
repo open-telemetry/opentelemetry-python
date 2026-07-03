@@ -23,6 +23,9 @@ from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
 )
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
+    OtelComponentTypeValues,
+)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -53,9 +56,6 @@ from opentelemetry.sdk.trace import ReadableSpan, _Span
 from opentelemetry.sdk.trace.export import (
     SpanExporter,
     SpanExportResult,
-)
-from opentelemetry.semconv._incubating.attributes.otel_attributes import (
-    OtelComponentTypeValues,
 )
 from opentelemetry.test.mock_test_classes import IterEntryPoint
 

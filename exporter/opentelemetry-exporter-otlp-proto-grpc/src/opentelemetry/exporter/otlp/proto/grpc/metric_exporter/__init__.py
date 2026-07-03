@@ -10,6 +10,9 @@ from logging import getLogger
 from os import environ
 
 from grpc import ChannelCredentials, Compression, StatusCode
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
+    OtelComponentTypeValues,
+)
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
 )
@@ -62,9 +65,6 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
 )
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     Histogram as HistogramType,
-)
-from opentelemetry.semconv._incubating.attributes.otel_attributes import (
-    OtelComponentTypeValues,
 )
 
 _logger = getLogger(__name__)

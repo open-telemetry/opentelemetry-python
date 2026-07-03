@@ -44,7 +44,8 @@ from grpc import (
     secure_channel,
     ssl_channel_credentials,
 )
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
+    OtelComponentTypeValues,
     create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -98,9 +99,6 @@ from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExportResult
-from opentelemetry.semconv._incubating.attributes.otel_attributes import (
-    OtelComponentTypeValues,
-)
 from opentelemetry.semconv._incubating.attributes.rpc_attributes import (
     RPC_RESPONSE_STATUS_CODE,
 )
