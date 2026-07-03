@@ -2,6 +2,36 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Bumps repo.toml's stable/prerelease versions, along with every
+dependency pin and __version__ file currently pinned to a ".dev"
+version, to the given new version. Used both to finalize a release
+branch's version and, separately, to advance main to the next dev
+version right after a release branch is cut.
+
+Example, given --stable_version=1.45.0:
+
+repo.toml, before:
+    [stable]
+    version = "1.44.0.dev"
+after:
+    [stable]
+    version = "1.45.0"
+
+opentelemetry-sdk/pyproject.toml, before:
+    dependencies = [
+      "opentelemetry-api == 1.44.0.dev",
+    ]
+after:
+    dependencies = [
+      "opentelemetry-api == 1.45.0",
+    ]
+
+opentelemetry-sdk/src/opentelemetry/sdk/version/__init__.py, before:
+    __version__ = "1.44.0.dev"
+after:
+    __version__ = "1.45.0"
+"""
+
 from argparse import ArgumentParser
 from logging import INFO, basicConfig, getLogger
 from os.path import basename

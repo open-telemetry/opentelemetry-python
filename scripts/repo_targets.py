@@ -2,6 +2,13 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Shared helpers for locating this repo's root and its individual
+package directories (each one a directory containing setup.py or
+pyproject.toml), ordered per repo.toml's [DEFAULT].sortfirst list.
+
+Used by the release scripts in scripts/release/ and by
+scripts/griffe_check.py's public-API breaking-change check."""
+
 from collections.abc import Iterable, Iterator
 from itertools import chain
 from pathlib import Path

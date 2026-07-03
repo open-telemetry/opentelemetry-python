@@ -2,6 +2,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Prints repo.toml's current stable or prerelease version to stdout,
+for the release workflows to capture (e.g.
+`$(./scripts/release/print_version.py --stable)`)."""
+
 from argparse import ArgumentParser
 from pathlib import Path
 from sys import path

@@ -2,6 +2,11 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Shared file-editing helpers used by update_version.py and
+update_patch_version.py: rewriting repo.toml's version fields, bumping
+each package's pinned dependencies, and rewriting each package's
+__version__."""
+
 from logging import getLogger
 from os import walk
 from os.path import join
