@@ -2,8 +2,12 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import sys
 from argparse import ArgumentParser
+from pathlib import Path
 from sys import exit
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from repo_targets import find_projectroot
 from tomlkit import load

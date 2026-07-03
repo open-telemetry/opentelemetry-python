@@ -25,8 +25,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          stable_version=$(./scripts/version.py --mode stable)
-          unstable_version=$(./scripts/version.py --mode prerelease)
+          stable_version=$(./scripts/release/version.py --mode stable)
+          unstable_version=$(./scripts/release/version.py --mode prerelease)
 
           if [[ $stable_version =~ ^([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
             stable_major_minor="${BASH_REMATCH[1]}"
@@ -55,7 +55,7 @@ jobs:
           echo "UNSTABLE_VERSION_PREV=$unstable_version_prev" >> $GITHUB_ENV
 
       - name: Update version
-        run: ./scripts/update_patch_version.py --stable_version=$STABLE_VERSION --unstable_version=$UNSTABLE_VERSION --stable_version_prev=$STABLE_VERSION_PREV --unstable_version_prev=$UNSTABLE_VERSION_PREV
+        run: ./scripts/release/update_patch_version.py --stable_version=$STABLE_VERSION --unstable_version=$UNSTABLE_VERSION --stable_version_prev=$STABLE_VERSION_PREV --unstable_version_prev=$UNSTABLE_VERSION_PREV
 
       - name: Generate changelog
         run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
