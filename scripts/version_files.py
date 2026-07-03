@@ -72,6 +72,18 @@ def update_files(targets, filename, search, replace):
             _file.write(sub(search, replace, text))
 
 
+def update_repo_ini_version(rootpath, section, version):
+    repo_ini_path = rootpath / "repo.ini"
+    text = repo_ini_path.read_text(encoding="utf-8")
+    text = sub(
+        rf"(\[{section}\]\nversion=).*",
+        lambda match: match.group(1) + version,
+        text,
+        count=1,
+    )
+    repo_ini_path.write_text(text, encoding="utf-8")
+
+
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
     for pkg in packages:

@@ -7,14 +7,19 @@ from configparser import ConfigParser
 from sys import exit
 
 from repo_targets import find_projectroot, find_targets_unordered
-from version_files import update_dependencies, update_version_files
+from version_files import (
+    update_dependencies,
+    update_repo_ini_version,
+    update_version_files,
+)
 
 
 def parse_args():
     parser = ArgumentParser(
         description="Updates version numbers, used by maintainers and CI"
     )
-    parser.add_argument("--versions", required=True)
+    parser.add_argument("--stable_version", required=True)
+    parser.add_argument("--unstable_version", required=True)
     return parser.parse_args()
 
 
@@ -25,13 +30,18 @@ def main():
 
     rootpath = find_projectroot()
     targets = list(find_targets_unordered(rootpath))
+
+    update_repo_ini_version(rootpath, "stable", args.stable_version)
+    update_repo_ini_version(rootpath, "prerelease", args.unstable_version)
+
     cfg = ConfigParser()
     cfg.read(str(rootpath / "repo.ini"))
 
-    for group in args.versions.split(","):
-        mcfg = cfg[group]
-        version = mcfg["version"]
-        packages = mcfg["packages"].split()
+    for group, version in (
+        ("stable", args.stable_version),
+        ("prerelease", args.unstable_version),
+    ):
+        packages = cfg[group]["packages"].split()
         print(f"update {group} packages to {version}")
         update_dependencies(targets, version, packages)
         update_version_files(targets, version, packages)

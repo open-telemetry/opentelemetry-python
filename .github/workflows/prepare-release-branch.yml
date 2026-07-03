@@ -81,7 +81,7 @@ jobs:
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
 
       - name: Update version
-        run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
+        run: ./scripts/update_version.py --stable_version=$STABLE_VERSION --unstable_version=$UNSTABLE_VERSION
 
       - name: Generate changelog
         run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
@@ -175,7 +175,7 @@ jobs:
           echo "UNSTABLE_NEXT_VERSION=${unstable_next_version}.dev" >> $GITHUB_ENV
 
       - name: Update version
-        run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $UNSTABLE_NEXT_VERSION
+        run: ./scripts/update_version.py --stable_version=$STABLE_NEXT_VERSION --unstable_version=$UNSTABLE_NEXT_VERSION
 
       - name: Generate changelog
         run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
