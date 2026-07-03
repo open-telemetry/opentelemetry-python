@@ -25,8 +25,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          stable_version=$(./scripts/release/version.py --mode stable)
-          unstable_version=$(./scripts/release/version.py --mode prerelease)
+          stable_version=$(./scripts/release/version.py --stable)
+          unstable_version=$(./scripts/release/version.py --unstable)
 
           if [[ $stable_version =~ ^([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
             stable_major_minor="${BASH_REMATCH[1]}"

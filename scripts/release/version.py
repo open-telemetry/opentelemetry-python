@@ -12,9 +12,13 @@ from repo_targets import find_projectroot
 from tomlkit import load
 
 parser = ArgumentParser(description="Get the version for a release")
-parser.add_argument("--mode", "-m", default="DEFAULT")
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument("--stable", action="store_true")
+group.add_argument("--unstable", action="store_true")
 args = parser.parse_args()
+
+section = "stable" if args.stable else "prerelease"
 
 with open(find_projectroot() / "repo.toml", encoding="utf-8") as file:
     cfg = load(file)
-print(cfg[args.mode]["version"])
+print(cfg[section]["version"])
