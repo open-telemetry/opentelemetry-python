@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import collections.abc
 import logging
 import sys
 import typing
@@ -63,7 +64,9 @@ class SpanExporter:
     `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
-    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:  # pyright: ignore[reportReturnType]
+    def export(
+        self, spans: collections.abc.Sequence[ReadableSpan]
+    ) -> SpanExportResult:  # pyright: ignore[reportReturnType]
         """Exports a batch of telemetry data.
 
         Args:
@@ -328,15 +331,17 @@ class ConsoleSpanExporter(SpanExporter):
         self,
         service_name: str | None = None,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[ReadableSpan], str] = lambda span: (
-            span.to_json() + linesep
-        ),
+        formatter: collections.abc.Callable[
+            [ReadableSpan], str
+        ] = lambda span: (span.to_json() + linesep),
     ):
         self.out = out
         self.formatter = formatter
         self.service_name = service_name
 
-    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
+    def export(
+        self, spans: collections.abc.Sequence[ReadableSpan]
+    ) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
         self.out.flush()

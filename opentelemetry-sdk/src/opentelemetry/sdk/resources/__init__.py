@@ -56,9 +56,8 @@ import platform
 import socket
 import sys
 import threading
-import typing
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
@@ -87,7 +86,7 @@ except ImportError:
     pass
 
 LabelValue = AttributeValue
-Attributes = typing.Mapping[str, LabelValue]
+Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -228,7 +227,7 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = dict(self.attributes).copy()
+        merged_attributes = dict(self.attributes)
         merged_attributes.update(other.attributes)
 
         if self.schema_url == "":
