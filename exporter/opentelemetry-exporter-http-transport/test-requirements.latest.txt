@@ -2,6 +2,10 @@
 #    uv pip compile --python 3.10 --universal --resolution highest exporter/opentelemetry-exporter-http-transport/test-requirements.in -o exporter/opentelemetry-exporter-http-transport/test-requirements.latest.txt
 -e exporter/opentelemetry-exporter-http-transport
     # via -r exporter/opentelemetry-exporter-http-transport/test-requirements.in
+-e opentelemetry-api
+    # via
+    #   -r exporter/opentelemetry-exporter-http-transport/test-requirements.in
+    #   opentelemetry-exporter-http-transport
 certifi==2026.4.22
     # via requests
 charset-normalizer==3.4.7
@@ -44,6 +48,7 @@ typing-extensions==4.15.0
     # via
     #   exceptiongroup
     #   mocket
+    #   opentelemetry-api
 urllib3==2.7.0
     # via
     #   mocket
