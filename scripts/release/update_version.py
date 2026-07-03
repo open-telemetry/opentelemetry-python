@@ -5,7 +5,7 @@
 from argparse import ArgumentParser
 from os.path import basename
 from pathlib import Path
-from sys import exit, path
+from sys import path
 
 path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -18,45 +18,35 @@ from version_files import (
     update_version_files,
 )
 
+parser = ArgumentParser(
+    description="Updates version numbers, used by maintainers and CI"
+)
+parser.add_argument("--stable_version", required=True)
+parser.add_argument("--unstable_version", required=True)
+args = parser.parse_args()
 
-def parse_args():
-    parser = ArgumentParser(
-        description="Updates version numbers, used by maintainers and CI"
-    )
-    parser.add_argument("--stable_version", required=True)
-    parser.add_argument("--unstable_version", required=True)
-    return parser.parse_args()
+print("preparing release")
 
+rootpath = find_projectroot()
+targets = list(find_targets_unordered(rootpath))
 
-def main():
-    args = parse_args()
+update_repo_toml_version(rootpath, "stable", args.stable_version)
+update_repo_toml_version(rootpath, "prerelease", args.unstable_version)
 
-    print("preparing release")
+with open(rootpath / "repo.toml", encoding="utf-8") as file:
+    cfg = load(file)
 
-    rootpath = find_projectroot()
-    targets = list(find_targets_unordered(rootpath))
+for group, version in (
+    ("stable", args.stable_version),
+    ("prerelease", args.unstable_version),
+):
+    packages = cfg[group]["packages"]
+    print(f"update {group} packages to {version}")
 
-    update_repo_toml_version(rootpath, "stable", args.stable_version)
-    update_repo_toml_version(rootpath, "prerelease", args.unstable_version)
+    print("updating dependencies")
+    for pkg in packages:
+        search = rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)"
+        replace = r"\1\2 " + version
+        update_files(targets, "pyproject.toml", search, replace)
 
-    with open(rootpath / "repo.toml", encoding="utf-8") as file:
-        cfg = load(file)
-
-    for group, version in (
-        ("stable", args.stable_version),
-        ("prerelease", args.unstable_version),
-    ):
-        packages = cfg[group]["packages"]
-        print(f"update {group} packages to {version}")
-
-        print("updating dependencies")
-        for pkg in packages:
-            search = rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)"
-            replace = r"\1\2 " + version
-            update_files(targets, "pyproject.toml", search, replace)
-
-        update_version_files(targets, version, packages)
-
-
-if __name__ == "__main__":
-    exit(main())
+    update_version_files(targets, version, packages)
