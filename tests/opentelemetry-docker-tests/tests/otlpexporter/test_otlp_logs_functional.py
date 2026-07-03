@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 from grpc import Compression as GRPCCompression
+from inline_snapshot import snapshot
 
 from opentelemetry._logs import Logger, SeverityNumber
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
@@ -153,10 +154,11 @@ class TestLogsExporter:
 
         recorded = server.get_log_record(timeout=5.0)
         attrs = _attrs_to_dict(recorded.log_record.attributes)
-        assert attrs["str_key"] == "hello"
-        assert attrs["int_key"] == 42
-        assert math.isclose(attrs["float_key"], 3.14, abs_tol=1e-5)
-        assert attrs["bool_key"] is True
+        float_key = attrs.pop("float_key")
+        assert attrs == snapshot(
+            {"str_key": "hello", "int_key": 42, "bool_key": True}
+        )
+        assert math.isclose(float_key, 3.14, abs_tol=1e-5)
 
     def test_scope_attributes(
         self, logger_provider: LoggerProvider, server: OtlpProtoTestServer
@@ -169,12 +171,11 @@ class TestLogsExporter:
         logger.emit(body="scope test", severity_number=SeverityNumber.INFO)
 
         recorded = server.get_log_record(timeout=5.0)
-        assert recorded.scope.name == "test.scope"
-        assert recorded.scope.version == "1.0.0"
-        assert (
-            _attrs_to_dict(recorded.scope.attributes)["scope.key"]
-            == "scope.val"
-        )
+        assert recorded.scope.name == snapshot("test.scope")
+        assert recorded.scope.version == snapshot("1.0.0")
+        assert _attrs_to_dict(recorded.scope.attributes)[
+            "scope.key"
+        ] == snapshot("scope.val")
 
     def test_resource_attributes(
         self, logger: Logger, server: OtlpProtoTestServer
@@ -183,4 +184,4 @@ class TestLogsExporter:
 
         recorded = server.get_log_record(timeout=5.0)
         resource_attrs = _attrs_to_dict(recorded.resource.attributes)
-        assert resource_attrs["service.name"] == "test-service"
+        assert resource_attrs["service.name"] == snapshot("test-service")

@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 from grpc import Compression as GRPCCompression
+from inline_snapshot import snapshot
 
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter as GRPCSpanExporter,
@@ -122,10 +123,11 @@ class TestTracesExporter:
 
         recorded = server.get_span(timeout=5.0)
         attrs = _attrs_to_dict(recorded.span.attributes)
-        assert attrs["str_key"] == "hello"
-        assert attrs["int_key"] == 42
-        assert math.isclose(attrs["float_key"], 3.14, abs_tol=1e-5)
-        assert attrs["bool_key"] is True
+        float_key = attrs.pop("float_key")
+        assert attrs == snapshot(
+            {"str_key": "hello", "int_key": 42, "bool_key": True}
+        )
+        assert math.isclose(float_key, 3.14, abs_tol=1e-5)
 
     def test_nested_spans_parent_child(
         self, tracer: Tracer, server: OtlpProtoTestServer
@@ -139,9 +141,7 @@ class TestTracesExporter:
             r.span.name: r.span
             for r in server.get_spans(count=3, timeout=10.0)
         }
-        assert "foo" in spans
-        assert "bar" in spans
-        assert "baz" in spans
+        assert sorted(spans.keys()) == snapshot(["bar", "baz", "foo"])
         assert spans["baz"].parent_span_id == spans["bar"].span_id
         assert spans["bar"].parent_span_id == spans["foo"].span_id
         assert spans["foo"].parent_span_id == b""
@@ -156,7 +156,9 @@ class TestTracesExporter:
         assert len(recorded.span.events) == 1
         event = recorded.span.events[0]
         assert event.name == "my-event"
-        assert _attrs_to_dict(event.attributes) == {"event_key": "event_val"}
+        assert _attrs_to_dict(event.attributes) == snapshot(
+            {"event_key": "event_val"}
+        )
 
     def test_span_with_link(self, tracer: Tracer, server: OtlpProtoTestServer):
         link_trace_id = 0x000000000000000000000000DEADBEEF
@@ -183,7 +185,7 @@ class TestTracesExporter:
             span.set_status(StatusCode.OK)
 
         recorded = server.get_span(timeout=5.0)
-        assert recorded.span.status.code == 1
+        assert recorded.span.status.code == snapshot(1)
 
     def test_span_status_error(
         self, tracer: Tracer, server: OtlpProtoTestServer
@@ -192,5 +194,5 @@ class TestTracesExporter:
             span.set_status(StatusCode.ERROR, "something went wrong")
 
         recorded = server.get_span(timeout=5.0)
-        assert recorded.span.status.code == 2
-        assert recorded.span.status.message == "something went wrong"
+        assert recorded.span.status.code == snapshot(2)
+        assert recorded.span.status.message == snapshot("something went wrong")

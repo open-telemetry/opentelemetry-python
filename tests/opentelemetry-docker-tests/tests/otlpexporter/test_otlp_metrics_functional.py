@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 from grpc import Compression as GRPCCompression
+from inline_snapshot import snapshot
 
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter as GRPCMetricExporter,
@@ -132,16 +133,15 @@ class TestMetricsExporter:
         reader.force_flush(timeout_millis=5000)
 
         recorded = server.wait_for_metric(name="test.counter", timeout=5.0)
-        assert recorded.metric.name == "test.counter"
-        assert recorded.metric.unit == "requests"
+        assert recorded.metric.name == snapshot("test.counter")
+        assert recorded.metric.unit == snapshot("requests")
         assert recorded.metric.HasField("sum")
         assert recorded.metric.sum.is_monotonic
         dps = {
-            tuple(sorted(_attrs_to_dict(dp.attributes).items())): dp
+            _attrs_to_dict(dp.attributes)["status"]: dp.as_int
             for dp in recorded.metric.sum.data_points
         }
-        assert dps[(("status", "ok"),)].as_int == 10
-        assert dps[(("status", "error"),)].as_int == 5
+        assert dps == snapshot({"ok": 10, "error": 5})
 
     def test_sum_up_down_counter(
         self,
@@ -173,7 +173,7 @@ class TestMetricsExporter:
 
         recorded = server.wait_for_metric(name="test.gauge", timeout=5.0)
         assert recorded.metric.HasField("gauge")
-        assert recorded.metric.gauge.data_points[0].as_int == 42
+        assert recorded.metric.gauge.data_points[0].as_int == snapshot(42)
 
     def test_explicit_bucket_histogram(
         self,
@@ -244,8 +244,7 @@ class TestMetricsExporter:
             name="test.attrs.counter", timeout=5.0
         )
         attrs = _attrs_to_dict(recorded.metric.sum.data_points[0].attributes)
-        assert attrs["str_key"] == "hello"
-        assert attrs["int_key"] == 42
+        assert attrs == snapshot({"str_key": "hello", "int_key": 42})
 
     def test_scope_attributes(
         self,
@@ -263,12 +262,11 @@ class TestMetricsExporter:
         reader.force_flush(timeout_millis=5000)
 
         recorded = server.wait_for_metric(name="scope.counter", timeout=5.0)
-        assert recorded.scope.name == "test.scope"
-        assert recorded.scope.version == "1.0.0"
-        assert (
-            _attrs_to_dict(recorded.scope.attributes)["scope.key"]
-            == "scope.val"
-        )
+        assert recorded.scope.name == snapshot("test.scope")
+        assert recorded.scope.version == snapshot("1.0.0")
+        assert _attrs_to_dict(recorded.scope.attributes)[
+            "scope.key"
+        ] == snapshot("scope.val")
 
     def test_resource_attributes(
         self,
@@ -282,4 +280,4 @@ class TestMetricsExporter:
 
         recorded = server.wait_for_metric(name="resource.counter", timeout=5.0)
         resource_attrs = _attrs_to_dict(recorded.resource.attributes)
-        assert resource_attrs["service.name"] == "test-service"
+        assert resource_attrs["service.name"] == snapshot("test-service")
