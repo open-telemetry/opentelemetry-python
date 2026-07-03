@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-from dataclasses import fields
+import inspect
+from dataclasses import fields, is_dataclass
 from logging import getLogger
 
 from opentelemetry.sdk._configuration._common import load_entry_point
@@ -21,10 +22,14 @@ def configure_instrumentation(
 
     For each entry in ``configuration.python`` the matching
     ``opentelemetry_instrumentor`` entry point is loaded.  If the instrumentor
-    class exposes a ``configuration`` attribute, the raw options are
-    validated through ``_dict_to_dataclass`` before being forwarded to
-    ``instrument()``.  An ``enabled: false`` value suppresses instrumentation
-    without raising.
+    class exposes a ``configuration`` attribute that is a dataclass type, the
+    raw options are validated through ``_dict_to_dataclass`` before being
+    forwarded to ``instrument()``.  An ``enabled: false`` value suppresses
+    instrumentation without raising.
+
+    If an instrumentor is already active (e.g. ``opentelemetry-instrument``
+    ran before the SDK was configured from the file) its ``instrument()`` call
+    is skipped to avoid a double-instrumentation warning.
 
     Absent or unknown entry points are logged as warnings; runtime errors from
     an instrumentor are logged as exceptions.  Neither stops the remaining
@@ -45,7 +50,9 @@ def configure_instrumentation(
         try:
             cls = load_entry_point("opentelemetry_instrumentor", name)
             configuration_cls = getattr(cls, "configuration", None)
-            if configuration_cls is not None:
+            if inspect.isclass(configuration_cls) and is_dataclass(
+                configuration_cls
+            ):
                 configuration_obj = _dict_to_dataclass(
                     options, configuration_cls
                 )
@@ -55,8 +62,12 @@ def configure_instrumentation(
                     if (value := getattr(configuration_obj, f.name))
                     is not None
                 }
-            cls().instrument(**options)
-            _logger.debug("Instrumented '%s' via declarative config", name)
+            instance = cls()
+            if getattr(instance, "is_instrumented_by_opentelemetry", False):
+                _logger.debug("Skipping '%s': already instrumented", name)
+            else:
+                instance.instrument(**options)
+                _logger.debug("Instrumented '%s' via declarative config", name)
         except ConfigurationError as exc:
             _logger.warning(
                 "Skipping instrumentation '%s' in declarative config: %s",

@@ -19,6 +19,7 @@ def _make_instrumentor_class(instance, configuration=None):
     """Return a class mock whose constructor returns ``instance``."""
     cls = MagicMock(return_value=instance)
     cls.configuration = configuration
+    instance.is_instrumented_by_opentelemetry = False
     return cls
 
 
@@ -149,6 +150,31 @@ class TestConfigureInstrumentation(TestCase):
             )
 
         ok_inst.instrument.assert_called_once_with()
+
+    @patch(_LOAD_EP)
+    def test_skips_already_instrumented(self, mock_load):
+        instrumentor = MagicMock()
+        mock_load.return_value = _make_instrumentor_class(instrumentor)
+        instrumentor.is_instrumented_by_opentelemetry = True
+
+        configure_instrumentation(
+            ExperimentalInstrumentation(python={"requests": {}})
+        )
+
+        instrumentor.instrument.assert_not_called()
+
+    @patch(_LOAD_EP)
+    def test_non_dataclass_configuration_attribute_ignored(self, mock_load):
+        instrumentor = MagicMock()
+        mock_load.return_value = _make_instrumentor_class(
+            instrumentor, configuration="not-a-dataclass"
+        )
+
+        configure_instrumentation(
+            ExperimentalInstrumentation(python={"requests": {"foo": "bar"}})
+        )
+
+        instrumentor.instrument.assert_called_once_with(foo="bar")
 
     @patch(_LOAD_EP)
     def test_configuration_coerces_opts(self, mock_load):
