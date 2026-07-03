@@ -2,21 +2,21 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-import re
-from os.path import basename
+from os import walk
+from os.path import basename, join
+from re import escape, sub
 
 from toml import load
 
 # PEP 508 allowed specifier operators
 OPERATORS = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
-OPERATORS_PATTERN = "|".join(re.escape(op) for op in OPERATORS)
+OPERATORS_PATTERN = "|".join(escape(op) for op in OPERATORS)
 
 
 def find(name, path):
-    for root, _, files in os.walk(path):
+    for root, _, files in walk(path):
         if name in files:
-            return os.path.join(root, name)
+            return join(root, name)
     return None
 
 
@@ -51,7 +51,7 @@ def update_version_files(targets, version, packages):
             continue
 
         with open(version_file_path, "w", encoding="utf-8") as file:
-            file.write(re.sub(search, replace, text))
+            file.write(sub(search, replace, text))
 
 
 def update_files(targets, filename, search, replace):
@@ -69,7 +69,7 @@ def update_files(targets, filename, search, replace):
             continue
 
         with open(curr_file, "w", encoding="utf-8") as _file:
-            _file.write(re.sub(search, replace, text))
+            _file.write(sub(search, replace, text))
 
 
 def update_dependencies(targets, version, packages):

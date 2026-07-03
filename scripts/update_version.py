@@ -2,16 +2,16 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import argparse
-import sys
+from argparse import ArgumentParser
 from configparser import ConfigParser
+from sys import exit
 
 from repo_targets import find_projectroot, find_targets_unordered
 from version_files import update_dependencies, update_version_files
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description="Updates version numbers, used by maintainers and CI"
     )
     parser.add_argument("--versions", required=True)
@@ -38,4 +38,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    exit(main())
