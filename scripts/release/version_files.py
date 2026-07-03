@@ -19,7 +19,6 @@ def update_version_files(
 ) -> None:
     print("updating version/__init__.py files")
 
-    search = "__version__ .*"
     replace = f'__version__ = "{version}"'
 
     for target in targets:
@@ -27,10 +26,9 @@ def update_version_files(
             continue
 
         with open(target.joinpath("pyproject.toml"), encoding="utf-8") as file:
-            pyproject = load(file)
-        version_file_path = target.joinpath(
-            pyproject["tool"]["hatch"]["version"]["path"]
-        )
+            version_file_path = target.joinpath(
+                load(file)["tool"]["hatch"]["version"]["path"]
+            )
 
         with open(version_file_path) as file:
             text = file.read()
@@ -40,7 +38,7 @@ def update_version_files(
             continue
 
         with open(version_file_path, "w", encoding="utf-8") as file:
-            file.write(sub(search, replace, text))
+            file.write(sub("__version__ .*", replace, text))
 
 
 def update_files(

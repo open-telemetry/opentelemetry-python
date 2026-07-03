@@ -45,8 +45,7 @@ def find_targets_unordered(rootpath: Path) -> Iterator[Path]:
 
 def find_targets(rootpath: Path) -> list[Path]:
     with open(rootpath / "repo.toml", encoding="utf-8") as file:
-        cfg = load(file)
-    sortfirst = cfg["DEFAULT"].get("sortfirst", [])
+        sortfirst = load(file)["DEFAULT"].get("sortfirst", [])
 
     targets = list(find_targets_unordered(rootpath))
 

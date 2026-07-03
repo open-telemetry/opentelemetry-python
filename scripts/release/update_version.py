@@ -45,8 +45,11 @@ for group, version in (
 
     print("updating dependencies")
     for pkg in packages:
-        search = rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)"
-        replace = r"\1\2 " + version
-        update_files(targets, "pyproject.toml", search, replace)
+        update_files(
+            targets,
+            "pyproject.toml",
+            rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)",
+            r"\1\2 " + version,
+        )
 
     update_version_files(targets, version, packages)

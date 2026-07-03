@@ -17,8 +17,5 @@ group.add_argument("--stable", action="store_true")
 group.add_argument("--unstable", action="store_true")
 args = parser.parse_args()
 
-section = "stable" if args.stable else "prerelease"
-
 with open(find_projectroot() / "repo.toml", encoding="utf-8") as file:
-    cfg = load(file)
-print(cfg[section]["version"])
+    print(load(file)["stable" if args.stable else "prerelease"]["version"])
