@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from sys import exit
 
 from repo_targets import find_projectroot, find_targets_unordered
-from tomllib import load
+from tomlkit import load
 from version_files import (
     update_dependencies,
     update_repo_toml_version,
@@ -34,7 +34,7 @@ def main():
     update_repo_toml_version(rootpath, "stable", args.stable_version)
     update_repo_toml_version(rootpath, "prerelease", args.unstable_version)
 
-    with open(rootpath / "repo.toml", "rb") as file:
+    with open(rootpath / "repo.toml", encoding="utf-8") as file:
         cfg = load(file)
 
     for group, version in (

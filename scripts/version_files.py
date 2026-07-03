@@ -6,7 +6,7 @@ from os import walk
 from os.path import basename, join
 from re import escape, sub
 
-from tomllib import load
+from tomlkit import dump, load
 
 # PEP 508 allowed specifier operators
 OPERATORS = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
@@ -37,7 +37,7 @@ def update_version_files(targets, version, packages):
     replace = f'__version__ = "{version}"'
 
     for target in filter_packages(targets, packages):
-        with open(target.joinpath("pyproject.toml"), "rb") as file:
+        with open(target.joinpath("pyproject.toml"), encoding="utf-8") as file:
             pyproject = load(file)
         version_file_path = target.joinpath(
             pyproject["tool"]["hatch"]["version"]["path"]
@@ -75,12 +75,10 @@ def update_files(targets, filename, search, replace):
 def update_repo_toml_version(rootpath, section, version):
     repo_toml_path = rootpath / "repo.toml"
     with open(repo_toml_path, encoding="utf-8") as file:
-        text = file.read()
-
-    search = rf'(\[{escape(section)}\]\nversion = ").*(")'
-    replace = r"\g<1>" + version + r"\g<2>"
+        data = load(file)
+    data[section]["version"] = version
     with open(repo_toml_path, "w", encoding="utf-8") as file:
-        file.write(sub(search, replace, text, count=1))
+        dump(data, file)
 
 
 def update_dependencies(targets, version, packages):

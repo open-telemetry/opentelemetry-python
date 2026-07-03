@@ -5,7 +5,7 @@
 from itertools import chain
 from pathlib import Path
 
-from tomllib import load
+from tomlkit import load
 
 
 def unique(elems):
@@ -40,7 +40,7 @@ def find_targets_unordered(rootpath):
 
 
 def find_targets(rootpath):
-    with open(rootpath / "repo.toml", "rb") as file:
+    with open(rootpath / "repo.toml", encoding="utf-8") as file:
         cfg = load(file)
     sortfirst = cfg["DEFAULT"].get("sortfirst", [])
 
