@@ -264,9 +264,9 @@ class TestMetricsExporter:
         recorded = server.wait_for_metric(name="scope.counter", timeout=5.0)
         assert recorded.scope.name == snapshot("test.scope")
         assert recorded.scope.version == snapshot("1.0.0")
-        assert _attrs_to_dict(recorded.scope.attributes)[
-            "scope.key"
-        ] == snapshot("scope.val")
+        assert _attrs_to_dict(recorded.scope.attributes) == snapshot(
+            {"scope.key": "scope.val"}
+        )
 
     def test_resource_attributes(
         self,

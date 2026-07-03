@@ -123,11 +123,10 @@ class TestTracesExporter:
 
         recorded = server.get_span(timeout=5.0)
         attrs = _attrs_to_dict(recorded.span.attributes)
-        float_key = attrs.pop("float_key")
+        assert math.isclose(attrs.pop("float_key"), 3.14, abs_tol=1e-5)
         assert attrs == snapshot(
             {"str_key": "hello", "int_key": 42, "bool_key": True}
         )
-        assert math.isclose(float_key, 3.14, abs_tol=1e-5)
 
     def test_nested_spans_parent_child(
         self, tracer: Tracer, server: OtlpProtoTestServer
@@ -141,7 +140,7 @@ class TestTracesExporter:
             r.span.name: r.span
             for r in server.get_spans(count=3, timeout=10.0)
         }
-        assert sorted(spans.keys()) == snapshot(["bar", "baz", "foo"])
+        assert set(spans.keys()) == snapshot({"bar", "baz", "foo"})
         assert spans["baz"].parent_span_id == spans["bar"].span_id
         assert spans["bar"].parent_span_id == spans["foo"].span_id
         assert spans["foo"].parent_span_id == b""

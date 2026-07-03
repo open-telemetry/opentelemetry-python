@@ -114,7 +114,7 @@ class TestLogsExporter:
         logger.emit(body="hello world", severity_number=SeverityNumber.INFO)
 
         recorded = server.get_log_record(timeout=5.0)
-        assert recorded.log_record.body.string_value == "hello world"
+        assert recorded.log_record.body.string_value == snapshot("hello world")
 
     def test_log_severity_number(
         self, logger: Logger, server: OtlpProtoTestServer
@@ -138,7 +138,7 @@ class TestLogsExporter:
         )
 
         recorded = server.get_log_record(timeout=5.0)
-        assert recorded.log_record.severity_text == "WARN"
+        assert recorded.log_record.severity_text == snapshot("WARN")
 
     def test_log_attributes(self, logger: Logger, server: OtlpProtoTestServer):
         logger.emit(
@@ -154,11 +154,10 @@ class TestLogsExporter:
 
         recorded = server.get_log_record(timeout=5.0)
         attrs = _attrs_to_dict(recorded.log_record.attributes)
-        float_key = attrs.pop("float_key")
+        assert math.isclose(attrs.pop("float_key"), 3.14, abs_tol=1e-5)
         assert attrs == snapshot(
             {"str_key": "hello", "int_key": 42, "bool_key": True}
         )
-        assert math.isclose(float_key, 3.14, abs_tol=1e-5)
 
     def test_scope_attributes(
         self, logger_provider: LoggerProvider, server: OtlpProtoTestServer
@@ -173,9 +172,9 @@ class TestLogsExporter:
         recorded = server.get_log_record(timeout=5.0)
         assert recorded.scope.name == snapshot("test.scope")
         assert recorded.scope.version == snapshot("1.0.0")
-        assert _attrs_to_dict(recorded.scope.attributes)[
-            "scope.key"
-        ] == snapshot("scope.val")
+        assert _attrs_to_dict(recorded.scope.attributes) == snapshot(
+            {"scope.key": "scope.val"}
+        )
 
     def test_resource_attributes(
         self, logger: Logger, server: OtlpProtoTestServer
