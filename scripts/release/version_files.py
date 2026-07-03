@@ -13,30 +13,16 @@ OPERATORS = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
 OPERATORS_PATTERN = "|".join(escape(op) for op in OPERATORS)
 
 
-def find(name, path):
-    for root, _, files in walk(path):
-        if name in files:
-            return join(root, name)
-    return None
-
-
-def filter_packages(targets, packages):
-    filtered_packages = []
-    for target in targets:
-        for pkg in packages:
-            if pkg in str(target):
-                filtered_packages.append(target)
-                break
-    return filtered_packages
-
-
 def update_version_files(targets, version, packages):
     print("updating version/__init__.py files")
 
     search = "__version__ .*"
     replace = f'__version__ = "{version}"'
 
-    for target in filter_packages(targets, packages):
+    for target in targets:
+        if not any(pkg in str(target) for pkg in packages):
+            continue
+
         with open(target.joinpath("pyproject.toml"), encoding="utf-8") as file:
             pyproject = load(file)
         version_file_path = target.joinpath(
@@ -56,7 +42,12 @@ def update_version_files(targets, version, packages):
 
 def update_files(targets, filename, search, replace):
     for target in targets:
-        curr_file = find(filename, target)
+        curr_file = None
+        for root, _, files in walk(target):
+            if filename in files:
+                curr_file = join(root, filename)
+                break
+
         if curr_file is None:
             print(f"file missing: {target}/{filename}")
             continue
