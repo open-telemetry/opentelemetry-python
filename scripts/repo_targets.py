@@ -10,6 +10,7 @@ from tomlkit import load
 
 
 def unique(elems: Iterable[Path]) -> Iterator[Path]:
+    """Yields each element once, in first-seen order."""
     seen = set()
     for elem in elems:
         if elem not in seen:
@@ -18,6 +19,8 @@ def unique(elems: Iterable[Path]) -> Iterator[Path]:
 
 
 def find_projectroot(search_start: Path = Path(".")) -> Path:
+    """Walks upward from search_start to the nearest directory containing
+    .git or tox.ini."""
     root = search_start.resolve()
     for root in chain((root,), root.parents):
         if any((root / marker).exists() for marker in (".git", "tox.ini")):
@@ -29,6 +32,8 @@ def find_projectroot(search_start: Path = Path(".")) -> Path:
 
 
 def find_targets_unordered(rootpath: Path) -> Iterator[Path]:
+    """Recursively yields every package directory (one containing setup.py
+    or pyproject.toml) under rootpath, in arbitrary order."""
     for subdir in rootpath.iterdir():
         if not subdir.is_dir():
             continue
@@ -44,12 +49,16 @@ def find_targets_unordered(rootpath: Path) -> Iterator[Path]:
 
 
 def find_targets(rootpath: Path) -> list[Path]:
+    """Returns every package directory under rootpath, ordered per
+    repo.toml's [DEFAULT].sortfirst list."""
     with open(rootpath / "repo.toml", encoding="utf-8") as file:
         sortfirst = load(file)["DEFAULT"].get("sortfirst", [])
 
     targets = list(find_targets_unordered(rootpath))
 
     def keyfunc(path: Path) -> float:
+        """A target's index in sortfirst, or infinity if it isn't
+        listed."""
         path = path.relative_to(rootpath)
         for idx, pattern in enumerate(sortfirst):
             if path.match(pattern):

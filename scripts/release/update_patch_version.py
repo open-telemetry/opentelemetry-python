@@ -25,6 +25,8 @@ def update_patch_dependencies(
     prev_version: str,
     packages: list[str],
 ) -> None:
+    """Updates each target's pinned dependency on packages from
+    prev_version to version."""
     print("updating patch dependencies")
     for pkg in packages:
         search = rf"({basename(pkg)}[^,]*?)(\s?({OPERATORS_PATTERN})\s?)(.*{prev_version})"

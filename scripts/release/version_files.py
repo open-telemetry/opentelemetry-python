@@ -17,6 +17,8 @@ OPERATORS_PATTERN = "|".join(escape(op) for op in OPERATORS)
 def update_version_files(
     targets: list[Path], version: str, packages: list[str]
 ) -> None:
+    """Rewrites __version__ to version in each target's version file, for
+    targets matching one of packages."""
     print("updating version/__init__.py files")
 
     replace = f'__version__ = "{version}"'
@@ -44,6 +46,8 @@ def update_version_files(
 def update_files(
     targets: list[Path], filename: str, search: str, replace: str
 ) -> None:
+    """Finds filename under each target and replaces every regex match of
+    search with replace."""
     for target in targets:
         curr_file = None
         for root, _, files in walk(target):
@@ -69,6 +73,7 @@ def update_files(
 def update_repo_toml_version(
     rootpath: Path, section: str, version: str
 ) -> None:
+    """Sets repo.toml's [section].version to version."""
     repo_toml_path = rootpath / "repo.toml"
     with open(repo_toml_path, encoding="utf-8") as file:
         data = load(file)
