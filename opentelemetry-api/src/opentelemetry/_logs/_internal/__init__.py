@@ -175,7 +175,7 @@ class Logger(ABC):
     ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
-    def enabled(
+    def enabled(  # pylint: disable=no-self-use
         self,
         *,
         context: Context | None = None,
