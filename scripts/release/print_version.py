@@ -12,7 +12,7 @@ from sys import path
 
 path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from repo_targets import find_projectroot
+from find import find_projectroot
 from tomlkit import load
 
 parser = ArgumentParser(description="Get the version for a release")

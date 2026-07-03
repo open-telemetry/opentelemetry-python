@@ -46,7 +46,7 @@ from edit import (
     edit_repo_toml_version,
     edit_version_files,
 )
-from repo_targets import find_package_dirs_unordered, find_projectroot
+from find import find_package_dirs_unordered, find_projectroot
 from tomlkit import load
 
 basicConfig(level=INFO, format="%(message)s")
@@ -61,13 +61,13 @@ args = parser.parse_args()
 
 logger.info("preparing release")
 
-rootpath = find_projectroot()
-package_dirs = list(find_package_dirs_unordered(rootpath))
+root_path = find_projectroot()
+package_directory_paths = list(find_package_dirs_unordered(root_path))
 
-edit_repo_toml_version(rootpath, "stable", args.stable_version)
-edit_repo_toml_version(rootpath, "prerelease", args.unstable_version)
+edit_repo_toml_version(root_path, "stable", args.stable_version)
+edit_repo_toml_version(root_path, "prerelease", args.unstable_version)
 
-with open(rootpath / "repo.toml", encoding="utf-8") as file:
+with open(root_path / "repo.toml", encoding="utf-8") as file:
     cfg = load(file)
 
 for group, version in (
@@ -80,10 +80,10 @@ for group, version in (
     logger.info("updating dependencies")
     for pkg in packages:
         edit_files(
-            package_dirs,
+            package_directory_paths,
             "pyproject.toml",
             rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)",
             r"\1\2 " + version,
         )
 
-    edit_version_files(package_dirs, version, packages)
+    edit_version_files(package_directory_paths, version, packages)

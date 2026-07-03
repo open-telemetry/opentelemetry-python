@@ -47,7 +47,7 @@ from edit import (
     edit_repo_toml_version,
     edit_version_files,
 )
-from repo_targets import find_package_dirs_unordered, find_projectroot
+from find import find_package_dirs_unordered, find_projectroot
 from tomlkit import load
 
 basicConfig(level=INFO, format="%(message)s")
@@ -55,19 +55,19 @@ logger = getLogger(__name__)
 
 
 def update_patch_dependencies(
-    package_dirs: list[Path],
+    package_directory_paths: list[Path],
     version: str,
     prev_version: str,
     packages: list[str],
 ) -> None:
-    """For each of package_dirs, updates its pinned dependency on packages
-    from prev_version to version."""
+    """For each of package_directory_paths, updates its pinned dependency
+    on packages from prev_version to version."""
     logger.info("updating patch dependencies")
     for pkg in packages:
         search = rf"({basename(pkg)}[^,]*?)(\s?({OPERATORS_PATTERN})\s?)(.*{prev_version})"
         replace = r"\g<1>\g<2>" + version
         logger.debug("search=%r replace=%r pkg=%r", search, replace, pkg)
-        edit_files(package_dirs, "pyproject.toml", search, replace)
+        edit_files(package_directory_paths, "pyproject.toml", search, replace)
 
 
 parser = ArgumentParser(
@@ -81,28 +81,31 @@ args = parser.parse_args()
 
 logger.info("preparing patch release")
 
-rootpath = find_projectroot()
-package_dirs = list(find_package_dirs_unordered(rootpath))
+root_path = find_projectroot()
+package_directory_paths = list(find_package_dirs_unordered(root_path))
 
-edit_repo_toml_version(rootpath, "stable", args.stable_version)
-edit_repo_toml_version(rootpath, "prerelease", args.unstable_version)
+edit_repo_toml_version(root_path, "stable", args.stable_version)
+edit_repo_toml_version(root_path, "prerelease", args.unstable_version)
 
-with open(rootpath / "repo.toml", encoding="utf-8") as file:
+with open(root_path / "repo.toml", encoding="utf-8") as file:
     cfg = load(file)
 
 packages = cfg["stable"]["packages"]
 logger.info("update stable packages to %s", args.stable_version)
 update_patch_dependencies(
-    package_dirs, args.stable_version, args.stable_version_prev, packages
+    package_directory_paths,
+    args.stable_version,
+    args.stable_version_prev,
+    packages,
 )
-edit_version_files(package_dirs, args.stable_version, packages)
+edit_version_files(package_directory_paths, args.stable_version, packages)
 
 packages = cfg["prerelease"]["packages"]
 logger.info("update prerelease packages to %s", args.unstable_version)
 update_patch_dependencies(
-    package_dirs,
+    package_directory_paths,
     args.unstable_version,
     args.unstable_version_prev,
     packages,
 )
-edit_version_files(package_dirs, args.unstable_version, packages)
+edit_version_files(package_directory_paths, args.unstable_version, packages)

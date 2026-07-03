@@ -9,20 +9,11 @@ pyproject.toml), ordered per repo.toml's [DEFAULT].sortfirst list.
 Used by the release scripts in scripts/release/ and by
 scripts/griffe_check.py's public-API breaking-change check."""
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from itertools import chain
 from pathlib import Path
 
 from tomlkit import load
-
-
-def unique(elems: Iterable[Path]) -> Iterator[Path]:
-    """Yields each element once, in first-seen order."""
-    seen = set()
-    for elem in elems:
-        if elem not in seen:
-            yield elem
-            seen.add(elem)
 
 
 def find_projectroot(search_start: Path = Path(".")) -> Path:
@@ -38,10 +29,10 @@ def find_projectroot(search_start: Path = Path(".")) -> Path:
     )
 
 
-def find_package_dirs_unordered(rootpath: Path) -> Iterator[Path]:
+def find_package_dirs_unordered(root_path: Path) -> Iterator[Path]:
     """Recursively yields every package directory (one containing setup.py
-    or pyproject.toml) under rootpath, in arbitrary order."""
-    for subdir in rootpath.iterdir():
+    or pyproject.toml) under root_path, in arbitrary order."""
+    for subdir in root_path.iterdir():
         if not subdir.is_dir():
             continue
         if subdir.name.startswith(".") or subdir.name.startswith("venv"):
@@ -55,23 +46,23 @@ def find_package_dirs_unordered(rootpath: Path) -> Iterator[Path]:
             yield from find_package_dirs_unordered(subdir)
 
 
-def find_package_dirs(rootpath: Path) -> list[Path]:
-    """Returns every package directory under rootpath, ordered per
+def find_package_dirs_ordered(root_path: Path) -> list[Path]:
+    """Returns every package directory under root_path, ordered per
     repo.toml's [DEFAULT].sortfirst list."""
-    with open(rootpath / "repo.toml", encoding="utf-8") as file:
+    with open(root_path / "repo.toml", encoding="utf-8") as file:
         sortfirst = load(file)["DEFAULT"].get("sortfirst", [])
 
-    package_dirs = list(find_package_dirs_unordered(rootpath))
+    package_directory_paths = list(find_package_dirs_unordered(root_path))
 
     def keyfunc(path: Path) -> float:
         """A package directory's index in sortfirst, or infinity if it
         isn't listed."""
-        path = path.relative_to(rootpath)
+        path = path.relative_to(root_path)
         for idx, pattern in enumerate(sortfirst):
             if path.match(pattern):
                 return idx
         return float("inf")
 
-    package_dirs.sort(key=keyfunc)
+    package_directory_paths.sort(key=keyfunc)
 
-    return list(unique(package_dirs))
+    return list(dict.fromkeys(package_directory_paths))

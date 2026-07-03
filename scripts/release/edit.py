@@ -24,7 +24,7 @@ OPERATORS_PATTERN = "|".join(
 
 
 def edit_version_files(
-    package_dirs: list[Path], version: str, packages: list[str]
+    package_directory_paths: list[Path], version: str, packages: list[str]
 ) -> None:
     """Rewrites __version__ to version in each package directory's version
     file, for package directories matching one of packages."""
@@ -32,14 +32,15 @@ def edit_version_files(
 
     replace = f'__version__ = "{version}"'
 
-    for package_dir in package_dirs:
-        if not any(pkg in str(package_dir) for pkg in packages):
+    for package_directory_path in package_directory_paths:
+        if not any(pkg in str(package_directory_path) for pkg in packages):
             continue
 
         with open(
-            package_dir.joinpath("pyproject.toml"), encoding="utf-8"
+            package_directory_path.joinpath("pyproject.toml"),
+            encoding="utf-8",
         ) as file:
-            version_file_path = package_dir.joinpath(
+            version_file_path = package_directory_path.joinpath(
                 load(file)["tool"]["hatch"]["version"]["path"]
             )
 
@@ -55,19 +56,24 @@ def edit_version_files(
 
 
 def edit_files(
-    package_dirs: list[Path], filename: str, search: str, replace: str
+    package_directory_paths: list[Path],
+    filename: str,
+    search: str,
+    replace: str,
 ) -> None:
     """Finds filename under each package directory and replaces every
     regex match of search with replace."""
-    for package_dir in package_dirs:
+    for package_directory_path in package_directory_paths:
         curr_file = None
-        for root, _, files in walk(package_dir):
+        for root, _, files in walk(package_directory_path):
             if filename in files:
                 curr_file = join(root, filename)
                 break
 
         if curr_file is None:
-            logger.warning("file missing: %s/%s", package_dir, filename)
+            logger.warning(
+                "file missing: %s/%s", package_directory_path, filename
+            )
             continue
 
         with open(curr_file, encoding="utf-8") as _file:
@@ -81,9 +87,11 @@ def edit_files(
             _file.write(sub(search, replace, text))
 
 
-def edit_repo_toml_version(rootpath: Path, section: str, version: str) -> None:
+def edit_repo_toml_version(
+    root_path: Path, section: str, version: str
+) -> None:
     """Sets repo.toml's [section].version to version."""
-    repo_toml_path = rootpath / "repo.toml"
+    repo_toml_path = root_path / "repo.toml"
     with open(repo_toml_path, encoding="utf-8") as file:
         data = load(file)
     data[section]["version"] = version
