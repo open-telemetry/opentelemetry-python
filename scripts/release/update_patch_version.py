@@ -19,7 +19,12 @@ from version_files import (
 )
 
 
-def update_patch_dependencies(targets, version, prev_version, packages):
+def update_patch_dependencies(
+    targets: list[Path],
+    version: str,
+    prev_version: str,
+    packages: list[str],
+) -> None:
     print("updating patch dependencies")
     for pkg in packages:
         search = rf"({basename(pkg)}[^,]*?)(\s?({OPERATORS_PATTERN})\s?)(.*{prev_version})"

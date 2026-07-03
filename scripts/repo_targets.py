@@ -2,13 +2,14 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Iterable, Iterator
 from itertools import chain
 from pathlib import Path
 
 from tomlkit import load
 
 
-def unique(elems):
+def unique(elems: Iterable[Path]) -> Iterator[Path]:
     seen = set()
     for elem in elems:
         if elem not in seen:
@@ -16,15 +17,18 @@ def unique(elems):
             seen.add(elem)
 
 
-def find_projectroot(search_start=Path(".")):
+def find_projectroot(search_start: Path = Path(".")) -> Path:
     root = search_start.resolve()
     for root in chain((root,), root.parents):
         if any((root / marker).exists() for marker in (".git", "tox.ini")):
             return root
-    return None
+    raise FileNotFoundError(
+        "could not find project root (no .git or tox.ini) above "
+        f"{search_start.resolve()}"
+    )
 
 
-def find_targets_unordered(rootpath):
+def find_targets_unordered(rootpath: Path) -> Iterator[Path]:
     for subdir in rootpath.iterdir():
         if not subdir.is_dir():
             continue
@@ -39,14 +43,14 @@ def find_targets_unordered(rootpath):
             yield from find_targets_unordered(subdir)
 
 
-def find_targets(rootpath):
+def find_targets(rootpath: Path) -> list[Path]:
     with open(rootpath / "repo.toml", encoding="utf-8") as file:
         cfg = load(file)
     sortfirst = cfg["DEFAULT"].get("sortfirst", [])
 
     targets = list(find_targets_unordered(rootpath))
 
-    def keyfunc(path):
+    def keyfunc(path: Path) -> float:
         path = path.relative_to(rootpath)
         for idx, pattern in enumerate(sortfirst):
             if path.match(pattern):

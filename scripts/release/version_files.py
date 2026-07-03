@@ -4,6 +4,7 @@
 
 from os import walk
 from os.path import join
+from pathlib import Path
 from re import escape, sub
 
 from tomlkit import dump, load
@@ -13,7 +14,9 @@ OPERATORS = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
 OPERATORS_PATTERN = "|".join(escape(op) for op in OPERATORS)
 
 
-def update_version_files(targets, version, packages):
+def update_version_files(
+    targets: list[Path], version: str, packages: list[str]
+) -> None:
     print("updating version/__init__.py files")
 
     search = "__version__ .*"
@@ -40,7 +43,9 @@ def update_version_files(targets, version, packages):
             file.write(sub(search, replace, text))
 
 
-def update_files(targets, filename, search, replace):
+def update_files(
+    targets: list[Path], filename: str, search: str, replace: str
+) -> None:
     for target in targets:
         curr_file = None
         for root, _, files in walk(target):
@@ -63,7 +68,9 @@ def update_files(targets, filename, search, replace):
             _file.write(sub(search, replace, text))
 
 
-def update_repo_toml_version(rootpath, section, version):
+def update_repo_toml_version(
+    rootpath: Path, section: str, version: str
+) -> None:
     repo_toml_path = rootpath / "repo.toml"
     with open(repo_toml_path, encoding="utf-8") as file:
         data = load(file)
