@@ -1,3 +1,30 @@
+# =============================================================================
+# Prepare patch release workflow
+# =============================================================================
+#
+# Purpose: prepares a patch release (e.g. 1.44.0 -> 1.44.1) on an existing
+# long-term release branch. Opens a PR against that same branch which bumps
+# the patch version and regenerates the changelog -- mirroring what
+# prepare-release-branch.yml does for a brand new release branch -- and, in
+# addition, backports the new changelog entry to main via a second PR, since
+# main's own version isn't touched by a patch release but its CHANGELOG.md
+# should still document that the patch happened.
+#
+# Run this manually (workflow_dispatch) on the long-term release branch you
+# want to patch (one previously created by prepare-release-branch.yml's
+# "normal release" path -- see that file's header comment; one-off
+# prerelease branches, e.g. release/v1.45.0rc2-0.66b0, are never patched
+# this way). Once the PR this workflow opens is merged, run release.yml on
+# that branch again to actually publish the patch. See release.yml's header
+# comment for how this fits into the full 3-workflow release pipeline.
+#
+# Unlike prepare-release-branch.yml/update_version.py, this workflow (via
+# scripts/release/update_patch_version.py) can't rely on version pins ending
+# in ".dev" to know what to bump -- a release branch's versions are already
+# finalized, non-dev values -- so it explicitly computes both the previous
+# and the next patch version and passes both to the script, which replaces
+# only pins matching the exact previous version.
+# =============================================================================
 name: Prepare patch release
 on:
   workflow_dispatch:
@@ -14,20 +41,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # tomlkit: read/write repo.toml (via scripts/release/print_version.py
+      # and update_patch_version.py). towncrier: generate the changelog
+      # section for this patch below.
       - name: Install dependencies
         run: pip install tomlkit towncrier
 
+      # Guard rail: this workflow only makes sense on a long-term release
+      # branch, i.e. one named "release/vX.Y.x-0.ZbX" (the "x" is a literal
+      # placeholder character in the branch name, standing in for "whatever
+      # patch number", not a wildcard) -- the kind created by
+      # prepare-release-branch.yml's non-prerelease path. It refuses to run
+      # on main, a one-off prerelease branch, or anything else.
       - run: |
           if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x-0\.[0-9]+bx$ ]]; then
             echo this workflow should only be run against long-term release branches
             exit 1
           fi
 
+      # Reads this branch's current (already-published) version and
+      # computes both the version being patched (*_PREV) and the new patch
+      # version (bumping the patch number by 1 on both tracks).
       - name: Set environment variables
         run: |
           stable_version=$(./scripts/release/print_version.py --stable)
           unstable_version=$(./scripts/release/print_version.py --unstable)
 
+          # Split e.g. "1.44.0" into stable_major_minor="1.44"
+          # stable_patch=0.
           if [[ $stable_version =~ ^([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
             stable_major_minor="${BASH_REMATCH[1]}"
             stable_patch="${BASH_REMATCH[2]}"
@@ -36,6 +77,7 @@ jobs:
             exit 1
           fi
 
+          # Split e.g. "0.65b0" into unstable_minor=65 unstable_patch=0.
           if [[ $unstable_version =~ ^0\.([0-9]+)b([0-9]+)$ ]]; then
             unstable_minor="${BASH_REMATCH[1]}"
             unstable_patch="${BASH_REMATCH[2]}"
@@ -44,6 +86,9 @@ jobs:
             exit 1
           fi
 
+          # *_prev is just the current (pre-patch) version, restated from
+          # its parsed pieces; the *_version (without _prev) is that same
+          # version with its patch number incremented by one.
           stable_version_prev="$stable_major_minor.$((stable_patch))"
           unstable_version_prev="0.${unstable_minor}b$((unstable_patch))"
           stable_version="$stable_major_minor.$((stable_patch + 1))"
@@ -54,21 +99,39 @@ jobs:
           echo "STABLE_VERSION_PREV=$stable_version_prev" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION_PREV=$unstable_version_prev" >> $GITHUB_ENV
 
+      # Rewrites repo.toml, every package's pyproject.toml pins currently
+      # matching the exact previous version, and every package's
+      # __version__, to the new patch version. See
+      # scripts/release/update_patch_version.py's own module docstring for
+      # a worked before/after example.
       - name: Update version
         run: ./scripts/release/update_patch_version.py --stable_version=$STABLE_VERSION --unstable_version=$UNSTABLE_VERSION --stable_version_prev=$STABLE_VERSION_PREV --unstable_version_prev=$UNSTABLE_VERSION_PREV
 
+      # Consumes the .changelog/*.<type> fragments accumulated since the
+      # last release into a new "## Version X/Y" section in CHANGELOG.md,
+      # same as prepare-release-branch.yml does for a normal release.
       - name: Generate changelog
         run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
+      # Configures git's committer identity as the "otelbot" account so the
+      # commits made below pass this repo's CLA check.
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
 
+      # Mints a short-lived GitHub App installation token for otelbot,
+      # reused by both PR-creating steps below (this workflow only needs
+      # one token for its single job, unlike prepare-release-branch.yml
+      # which mints one per job).
       - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
+      # Commits the version bump + changelog changes, pushes them to a new
+      # otelbot-owned branch, and opens a PR from that branch back into
+      # *this same release branch* (not into main -- see the backport steps
+      # below for how main's changelog gets updated separately).
       - name: Create pull request
         id: create_pr
         env:
@@ -86,6 +149,8 @@ jobs:
                        --base $GITHUB_REF_NAME)
 
           echo "pr_url=$pr_url" >> $GITHUB_OUTPUT
+      # Tags the PR so it's easy to find/filter in the repo's PR list. Only
+      # runs if a PR URL was actually produced above.
       - name: Add prepare-release label to PR
         if: steps.create_pr.outputs.pr_url != ''
         env:
@@ -93,6 +158,9 @@ jobs:
         run: |
           gh pr edit ${{ steps.create_pr.outputs.pr_url }}  --add-label "prepare-release"
 
+      # Switches the workspace to main, so the remaining steps operate on
+      # main's git history instead of the release branch's (needed to build
+      # a PR whose base is main, below).
       - uses: actions/checkout@v4
         with:
           ref: main
@@ -100,6 +168,13 @@ jobs:
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
 
+      # Since a patch release doesn't touch main's own version, main's
+      # CHANGELOG.md needs its own separate PR to pick up the new "##
+      # Version X/Y" section -- this step builds that PR. It fetches the
+      # otelbot branch pushed above (which already has the correct,
+      # towncrier-generated CHANGELOG.md from the release branch), copies
+      # just that one file into a fresh commit on top of main, and opens a
+      # PR from that commit into main.
       - name: Backport patch release changelog to main
         id: backport_pr
         env:
@@ -123,6 +198,9 @@ jobs:
                                 --base main)
           echo "pr_url=$pr_url" >> $GITHUB_OUTPUT
 
+      # "Skip Changelog": this PR's only change *is* CHANGELOG.md itself
+      # (copied verbatim from the release branch above), so it doesn't need
+      # -- and shouldn't be asked for -- a changelog fragment of its own.
       - name: Add Skip Changelog label to backport PR
         if: steps.backport_pr.outputs.pr_url != ''
         env:
