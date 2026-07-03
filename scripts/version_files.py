@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+import os
+import re
+from os.path import basename
+
+from toml import load
+
+# PEP 508 allowed specifier operators
+OPERATORS = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
+OPERATORS_PATTERN = "|".join(re.escape(op) for op in OPERATORS)
+
+
+def find(name, path):
+    for root, _, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+    return None
+
+
+def filter_packages(targets, packages):
+    filtered_packages = []
+    for target in targets:
+        for pkg in packages:
+            if pkg in str(target):
+                filtered_packages.append(target)
+                break
+    return filtered_packages
+
+
+def update_version_files(targets, version, packages):
+    print("updating version/__init__.py files")
+
+    search = "__version__ .*"
+    replace = f'__version__ = "{version}"'
+
+    for target in filter_packages(targets, packages):
+        version_file_path = target.joinpath(
+            load(target.joinpath("pyproject.toml"))["tool"]["hatch"][
+                "version"
+            ]["path"]
+        )
+
+        with open(version_file_path) as file:
+            text = file.read()
+
+        if replace in text:
+            print(f"{version_file_path} already contains {replace}")
+            continue
+
+        with open(version_file_path, "w", encoding="utf-8") as file:
+            file.write(re.sub(search, replace, text))
+
+
+def update_files(targets, filename, search, replace):
+    for target in targets:
+        curr_file = find(filename, target)
+        if curr_file is None:
+            print(f"file missing: {target}/{filename}")
+            continue
+
+        with open(curr_file, encoding="utf-8") as _file:
+            text = _file.read()
+
+        if replace in text:
+            print(f"{curr_file} already contains {replace}")
+            continue
+
+        with open(curr_file, "w", encoding="utf-8") as _file:
+            _file.write(re.sub(search, replace, text))
+
+
+def update_dependencies(targets, version, packages):
+    print("updating dependencies")
+    for pkg in packages:
+        search = rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)"
+        replace = r"\1\2 " + version
+        update_files(targets, "pyproject.toml", search, replace)
+
+
+def update_patch_dependencies(targets, version, prev_version, packages):
+    print("updating patch dependencies")
+    for pkg in packages:
+        search = rf"({basename(pkg)}[^,]*?)(\s?({OPERATORS_PATTERN})\s?)(.*{prev_version})"
+        replace = r"\g<1>\g<2>" + version
+        print(f"{search=}\t{replace=}\t{pkg=}")
+        update_files(targets, "pyproject.toml", search, replace)
