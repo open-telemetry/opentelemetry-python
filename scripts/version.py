@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from sys import exit
 
 from repo_targets import find_projectroot
-from toml import load
+from tomllib import load
 
 
 def parse_args():
@@ -17,7 +17,8 @@ def parse_args():
 
 def main():
     args = parse_args()
-    cfg = load(find_projectroot() / "repo.toml")
+    with open(find_projectroot() / "repo.toml", "rb") as file:
+        cfg = load(file)
     print(cfg[args.mode]["version"])
 
 

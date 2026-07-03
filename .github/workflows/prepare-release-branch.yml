@@ -15,9 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install toml
-        run: pip install toml
-
       - name: Verify prerequisites
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
@@ -46,7 +43,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: pip install toml towncrier
+        run: pip install towncrier
 
       - name: Create release branch
         env:
@@ -129,7 +126,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: pip install toml towncrier
+        run: pip install towncrier
 
       - name: Set environment variables
         env:

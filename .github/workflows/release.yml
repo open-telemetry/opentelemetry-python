@@ -19,9 +19,6 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Install toml
-        run: pip install toml
-
       - name: Set environment variables
         run: |
           stable_version=$(./scripts/version.py --mode stable)
