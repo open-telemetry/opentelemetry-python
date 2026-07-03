@@ -12,6 +12,12 @@ from typing import TYPE_CHECKING, Final
 if TYPE_CHECKING:
     from opentelemetry.metrics import Counter, Histogram, Meter, UpDownCounter
 
+# TODO: Remove these attributes once "opentelemetry-semantic-conventions"
+# becomes stable (i.e. reaches 1.x.y)
+_ERROR_TYPE: Final[str] = "error.type"
+_SERVER_ADDRESS: Final[str] = "server.address"
+_SERVER_PORT: Final[str] = "server.port"
+
 
 class OtelComponentTypeValues(Enum):
     OTLP_GRPC_SPAN_EXPORTER = "otlp_grpc_span_exporter"
@@ -31,12 +37,6 @@ class OtelComponentTypeValues(Enum):
 
 _OTEL_COMPONENT_NAME: Final[str] = "otel.component.name"
 _OTEL_COMPONENT_TYPE: Final[str] = "otel.component.type"
-
-# TODO: Remove these attributes once "opentelemetry-semantic-conventions"
-# becomes stable (i.e. reaches 1.x.y)
-_ERROR_TYPE: Final[str] = "error.type"
-_SERVER_ADDRESS: Final[str] = "server.address"
-_SERVER_PORT: Final[str] = "server.port"
 
 _OTEL_SDK_EXPORTER_SPAN_EXPORTED: Final[str] = (
     "otel.sdk.exporter.span.exported"
