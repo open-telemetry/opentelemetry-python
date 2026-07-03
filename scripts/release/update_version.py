@@ -3,13 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from argparse import ArgumentParser
+from logging import INFO, basicConfig, getLogger
 from os.path import basename
 from pathlib import Path
 from sys import path
 
 path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from repo_targets import find_projectroot, find_targets_unordered
+from repo_targets import find_package_dirs_unordered, find_projectroot
 from tomlkit import load
 from version_files import (
     OPERATORS_PATTERN,
@@ -18,6 +19,9 @@ from version_files import (
     update_version_files,
 )
 
+basicConfig(level=INFO, format="%(message)s")
+logger = getLogger(__name__)
+
 parser = ArgumentParser(
     description="Updates version numbers, used by maintainers and CI"
 )
@@ -25,10 +29,10 @@ parser.add_argument("--stable_version", required=True)
 parser.add_argument("--unstable_version", required=True)
 args = parser.parse_args()
 
-print("preparing release")
+logger.info("preparing release")
 
 rootpath = find_projectroot()
-targets = list(find_targets_unordered(rootpath))
+package_dirs = list(find_package_dirs_unordered(rootpath))
 
 update_repo_toml_version(rootpath, "stable", args.stable_version)
 update_repo_toml_version(rootpath, "prerelease", args.unstable_version)
@@ -41,15 +45,15 @@ for group, version in (
     ("prerelease", args.unstable_version),
 ):
     packages = cfg[group]["packages"]
-    print(f"update {group} packages to {version}")
+    logger.info("update %s packages to %s", group, version)
 
-    print("updating dependencies")
+    logger.info("updating dependencies")
     for pkg in packages:
         update_files(
-            targets,
+            package_dirs,
             "pyproject.toml",
             rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)",
             r"\1\2 " + version,
         )
 
-    update_version_files(targets, version, packages)
+    update_version_files(package_dirs, version, packages)

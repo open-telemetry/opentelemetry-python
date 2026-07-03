@@ -31,7 +31,7 @@ def find_projectroot(search_start: Path = Path(".")) -> Path:
     )
 
 
-def find_targets_unordered(rootpath: Path) -> Iterator[Path]:
+def find_package_dirs_unordered(rootpath: Path) -> Iterator[Path]:
     """Recursively yields every package directory (one containing setup.py
     or pyproject.toml) under rootpath, in arbitrary order."""
     for subdir in rootpath.iterdir():
@@ -45,26 +45,26 @@ def find_targets_unordered(rootpath: Path) -> Iterator[Path]:
         ):
             yield subdir
         else:
-            yield from find_targets_unordered(subdir)
+            yield from find_package_dirs_unordered(subdir)
 
 
-def find_targets(rootpath: Path) -> list[Path]:
+def find_package_dirs(rootpath: Path) -> list[Path]:
     """Returns every package directory under rootpath, ordered per
     repo.toml's [DEFAULT].sortfirst list."""
     with open(rootpath / "repo.toml", encoding="utf-8") as file:
         sortfirst = load(file)["DEFAULT"].get("sortfirst", [])
 
-    targets = list(find_targets_unordered(rootpath))
+    package_dirs = list(find_package_dirs_unordered(rootpath))
 
     def keyfunc(path: Path) -> float:
-        """A target's index in sortfirst, or infinity if it isn't
-        listed."""
+        """A package directory's index in sortfirst, or infinity if it
+        isn't listed."""
         path = path.relative_to(rootpath)
         for idx, pattern in enumerate(sortfirst):
             if path.match(pattern):
                 return idx
         return float("inf")
 
-    targets.sort(key=keyfunc)
+    package_dirs.sort(key=keyfunc)
 
-    return list(unique(targets))
+    return list(unique(package_dirs))

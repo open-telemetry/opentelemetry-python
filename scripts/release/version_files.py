@@ -2,6 +2,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from logging import getLogger
 from os import walk
 from os.path import join
 from pathlib import Path
@@ -9,26 +10,30 @@ from re import escape, sub
 
 from tomlkit import dump, load
 
+logger = getLogger(__name__)
+
 # PEP 508 allowed specifier operators
 OPERATORS = ["==", "!=", "<=", ">=", "<", ">", "===", "~=", "="]
 OPERATORS_PATTERN = "|".join(escape(op) for op in OPERATORS)
 
 
 def update_version_files(
-    targets: list[Path], version: str, packages: list[str]
+    package_dirs: list[Path], version: str, packages: list[str]
 ) -> None:
-    """Rewrites __version__ to version in each target's version file, for
-    targets matching one of packages."""
-    print("updating version/__init__.py files")
+    """Rewrites __version__ to version in each package directory's version
+    file, for package directories matching one of packages."""
+    logger.info("updating version/__init__.py files")
 
     replace = f'__version__ = "{version}"'
 
-    for target in targets:
-        if not any(pkg in str(target) for pkg in packages):
+    for package_dir in package_dirs:
+        if not any(pkg in str(package_dir) for pkg in packages):
             continue
 
-        with open(target.joinpath("pyproject.toml"), encoding="utf-8") as file:
-            version_file_path = target.joinpath(
+        with open(
+            package_dir.joinpath("pyproject.toml"), encoding="utf-8"
+        ) as file:
+            version_file_path = package_dir.joinpath(
                 load(file)["tool"]["hatch"]["version"]["path"]
             )
 
@@ -36,7 +41,7 @@ def update_version_files(
             text = file.read()
 
         if replace in text:
-            print(f"{version_file_path} already contains {replace}")
+            logger.info("%s already contains %s", version_file_path, replace)
             continue
 
         with open(version_file_path, "w", encoding="utf-8") as file:
@@ -44,26 +49,26 @@ def update_version_files(
 
 
 def update_files(
-    targets: list[Path], filename: str, search: str, replace: str
+    package_dirs: list[Path], filename: str, search: str, replace: str
 ) -> None:
-    """Finds filename under each target and replaces every regex match of
-    search with replace."""
-    for target in targets:
+    """Finds filename under each package directory and replaces every
+    regex match of search with replace."""
+    for package_dir in package_dirs:
         curr_file = None
-        for root, _, files in walk(target):
+        for root, _, files in walk(package_dir):
             if filename in files:
                 curr_file = join(root, filename)
                 break
 
         if curr_file is None:
-            print(f"file missing: {target}/{filename}")
+            logger.warning("file missing: %s/%s", package_dir, filename)
             continue
 
         with open(curr_file, encoding="utf-8") as _file:
             text = _file.read()
 
         if replace in text:
-            print(f"{curr_file} already contains {replace}")
+            logger.info("%s already contains %s", curr_file, replace)
             continue
 
         with open(curr_file, "w", encoding="utf-8") as _file:

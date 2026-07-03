@@ -5,12 +5,12 @@ import argparse
 import sys
 
 import griffe
-from repo_targets import find_projectroot, find_targets
+from repo_targets import find_package_dirs, find_projectroot
 
 
 def get_modules() -> list[str]:
     rootpath = find_projectroot()
-    targets = find_targets(rootpath)
+    package_dirs = find_package_dirs(rootpath)
 
     dirs_to_exclude = [
         "docs",
@@ -21,8 +21,8 @@ def get_modules() -> list[str]:
     ]
 
     packages = []
-    for target in targets:
-        rel_path = target.relative_to(rootpath)
+    for package_dir in package_dirs:
+        rel_path = package_dir.relative_to(rootpath)
         if not any(excluded in str(rel_path) for excluded in dirs_to_exclude):
             packages.append(str(rel_path / "src"))
     return packages
