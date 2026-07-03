@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from os import walk
-from os.path import basename, join
+from os.path import join
 from re import escape, sub
 
 from tomlkit import dump, load
@@ -79,20 +79,3 @@ def update_repo_toml_version(rootpath, section, version):
     data[section]["version"] = version
     with open(repo_toml_path, "w", encoding="utf-8") as file:
         dump(data, file)
-
-
-def update_dependencies(targets, version, packages):
-    print("updating dependencies")
-    for pkg in packages:
-        search = rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)"
-        replace = r"\1\2 " + version
-        update_files(targets, "pyproject.toml", search, replace)
-
-
-def update_patch_dependencies(targets, version, prev_version, packages):
-    print("updating patch dependencies")
-    for pkg in packages:
-        search = rf"({basename(pkg)}[^,]*?)(\s?({OPERATORS_PATTERN})\s?)(.*{prev_version})"
-        replace = r"\g<1>\g<2>" + version
-        print(f"{search=}\t{replace=}\t{pkg=}")
-        update_files(targets, "pyproject.toml", search, replace)

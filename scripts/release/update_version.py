@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from argparse import ArgumentParser
+from os.path import basename
 from pathlib import Path
 from sys import exit, path
 
@@ -11,7 +12,8 @@ path.insert(0, str(Path(__file__).resolve().parent.parent))
 from repo_targets import find_projectroot, find_targets_unordered
 from tomlkit import load
 from version_files import (
-    update_dependencies,
+    OPERATORS_PATTERN,
+    update_files,
     update_repo_toml_version,
     update_version_files,
 )
@@ -46,7 +48,13 @@ def main():
     ):
         packages = cfg[group]["packages"]
         print(f"update {group} packages to {version}")
-        update_dependencies(targets, version, packages)
+
+        print("updating dependencies")
+        for pkg in packages:
+            search = rf"({basename(pkg)}[^,]*)({OPERATORS_PATTERN})(.*\.dev)"
+            replace = r"\1\2 " + version
+            update_files(targets, "pyproject.toml", search, replace)
+
         update_version_files(targets, version, packages)
 
 

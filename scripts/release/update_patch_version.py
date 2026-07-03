@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from argparse import ArgumentParser
+from os.path import basename
 from pathlib import Path
 from sys import exit, path
 
@@ -11,7 +12,8 @@ path.insert(0, str(Path(__file__).resolve().parent.parent))
 from repo_targets import find_projectroot, find_targets_unordered
 from tomlkit import load
 from version_files import (
-    update_patch_dependencies,
+    OPERATORS_PATTERN,
+    update_files,
     update_repo_toml_version,
     update_version_files,
 )
@@ -26,6 +28,15 @@ def parse_args():
     parser.add_argument("--stable_version_prev", required=True)
     parser.add_argument("--unstable_version_prev", required=True)
     return parser.parse_args()
+
+
+def update_patch_dependencies(targets, version, prev_version, packages):
+    print("updating patch dependencies")
+    for pkg in packages:
+        search = rf"({basename(pkg)}[^,]*?)(\s?({OPERATORS_PATTERN})\s?)(.*{prev_version})"
+        replace = r"\g<1>\g<2>" + version
+        print(f"{search=}\t{replace=}\t{pkg=}")
+        update_files(targets, "pyproject.toml", search, replace)
 
 
 def main():
