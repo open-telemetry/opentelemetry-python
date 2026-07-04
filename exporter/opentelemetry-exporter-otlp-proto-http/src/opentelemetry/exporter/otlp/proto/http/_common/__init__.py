@@ -12,14 +12,6 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.util._importlib_metadata import entry_points
 
 
-def _is_retryable(resp: requests.Response) -> bool:
-    if resp.status_code == 408:
-        return True
-    if resp.status_code >= 500 and resp.status_code <= 599:
-        return True
-    return False
-
-
 def _load_session_from_envvar(
     cred_envvar: Literal[
         "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER",
