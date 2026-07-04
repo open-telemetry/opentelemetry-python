@@ -126,11 +126,13 @@ class TestConfigureSdk(unittest.TestCase):
 
 class TestConfigureSdkLogLevel(unittest.TestCase):
     def setUp(self):
-        # Reset the opentelemetry logger level before each test.
-        logging.getLogger("opentelemetry").setLevel(logging.NOTSET)
+        # Preserve whatever level was set before this test so we can
+        # restore it in tearDown, keeping tests isolated from each other
+        # and from the ambient logging configuration.
+        self._original_level = logging.getLogger("opentelemetry").level
 
     def tearDown(self):
-        logging.getLogger("opentelemetry").setLevel(logging.NOTSET)
+        logging.getLogger("opentelemetry").setLevel(self._original_level)
 
     @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
     @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
@@ -163,16 +165,28 @@ class TestConfigureSdkLogLevel(unittest.TestCase):
     def test_severity_number_variants_map_correctly(self, *_mocks):
         cases = [
             (SeverityNumber.trace, logging.DEBUG),
+            (SeverityNumber.trace2, logging.DEBUG),
+            (SeverityNumber.trace3, logging.DEBUG),
             (SeverityNumber.trace4, logging.DEBUG),
             (SeverityNumber.debug, logging.DEBUG),
+            (SeverityNumber.debug2, logging.DEBUG),
+            (SeverityNumber.debug3, logging.DEBUG),
             (SeverityNumber.debug4, logging.DEBUG),
             (SeverityNumber.info, logging.INFO),
+            (SeverityNumber.info2, logging.INFO),
+            (SeverityNumber.info3, logging.INFO),
             (SeverityNumber.info4, logging.INFO),
             (SeverityNumber.warn, logging.WARNING),
+            (SeverityNumber.warn2, logging.WARNING),
+            (SeverityNumber.warn3, logging.WARNING),
             (SeverityNumber.warn4, logging.WARNING),
             (SeverityNumber.error, logging.ERROR),
+            (SeverityNumber.error2, logging.ERROR),
+            (SeverityNumber.error3, logging.ERROR),
             (SeverityNumber.error4, logging.ERROR),
             (SeverityNumber.fatal, logging.CRITICAL),
+            (SeverityNumber.fatal2, logging.CRITICAL),
+            (SeverityNumber.fatal3, logging.CRITICAL),
             (SeverityNumber.fatal4, logging.CRITICAL),
         ]
         for severity, expected_level in cases:
@@ -182,6 +196,12 @@ class TestConfigureSdkLogLevel(unittest.TestCase):
                     logging.getLogger("opentelemetry").level,
                     expected_level,
                 )
+
+    def test_log_level_applies_even_when_disabled(self):
+        configure_sdk(_config(disabled=True, log_level=SeverityNumber.error))
+        self.assertEqual(
+            logging.getLogger("opentelemetry").level, logging.ERROR
+        )
 
 
 class TestConfigureSdkIntegration(unittest.TestCase):

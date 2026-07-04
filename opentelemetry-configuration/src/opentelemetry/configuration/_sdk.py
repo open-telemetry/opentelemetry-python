@@ -75,6 +75,9 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     behavior.
 
     Honors the top-level ``disabled`` flag: when true, no globals are set.
+    The ``log_level`` field, when present, is applied to the internal
+    ``opentelemetry`` logger regardless of ``disabled`` — it configures
+    SDK self-diagnostics, not telemetry emission.
 
     Args:
         config: Parsed ``OpenTelemetryConfiguration`` (typically from
@@ -87,15 +90,15 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
         >>> config = load_config_file("otel-config.yaml")
         >>> configure_sdk(config)
     """
+    if config.log_level is not None:
+        level = _SEVERITY_TO_LOGGING_LEVEL.get(config.log_level, logging.INFO)
+        logging.getLogger("opentelemetry").setLevel(level)
+
     if config.disabled:
         _logger.warning(
             "Declarative configuration has disabled=true; skipping SDK setup."
         )
         return
-
-    if config.log_level is not None:
-        level = _SEVERITY_TO_LOGGING_LEVEL.get(config.log_level, logging.INFO)
-        logging.getLogger("opentelemetry").setLevel(level)
 
     resource = create_resource(config.resource)
     configure_tracer_provider(config.tracer_provider, resource)
