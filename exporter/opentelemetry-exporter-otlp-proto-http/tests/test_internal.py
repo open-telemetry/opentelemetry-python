@@ -53,7 +53,9 @@ _BASE_HEADERS = {
     "content-type": "application/x-protobuf",
     "user-agent": _USER_AGENT,
 }
-_CREDENTIAL_ENV_VAR = "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER"
+_CREDENTIAL_ENV_VAR = (
+    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER"
+)
 
 
 class TestResolveInternal(unittest.TestCase):
@@ -241,7 +243,9 @@ class TestResolveInternal(unittest.TestCase):
                             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
                         )
                 else:
-                    result = _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
+                    result = _resolve_timeout(
+                        OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
+                    )
                 self.assertEqual(result, expected)
                 self.assertIsInstance(result, float)
 

@@ -119,7 +119,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
         self.assertIs(exporter._compression, CommonCompression.NONE)
         self.assertIsNone(exporter._session)
-        self.assertIsInstance(exporter._client._transport, Urllib3HTTPTransport)
+        self.assertIsInstance(
+            exporter._client._transport, Urllib3HTTPTransport
+        )
 
     def test_explicit_session_uses_requests_transport(self):
         session = requests.Session()
@@ -137,7 +139,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
     ):
         credential = requests.Session()
         mock_entry_point.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", lambda: credential)]
+            return_value=[
+                IterEntryPoint("custom_credential", lambda: credential)
+            ]
         )
         with patch.dict(
             os.environ,

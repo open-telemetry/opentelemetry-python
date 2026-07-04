@@ -126,7 +126,9 @@ class TestOTLPSpanExporter(unittest.TestCase):
         )
         self.assertIs(exporter._compression, CommonCompression.NONE)
         self.assertIsNone(exporter._session)
-        self.assertIsInstance(exporter._client._transport, Urllib3HTTPTransport)
+        self.assertIsInstance(
+            exporter._client._transport, Urllib3HTTPTransport
+        )
 
     def test_explicit_session_uses_requests_transport(self):
         session = requests.Session()
@@ -144,7 +146,9 @@ class TestOTLPSpanExporter(unittest.TestCase):
     ):
         credential = requests.Session()
         mock_entry_point.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", lambda: credential)]
+            return_value=[
+                IterEntryPoint("custom_credential", lambda: credential)
+            ]
         )
         with patch.dict(
             os.environ,
@@ -394,7 +398,9 @@ class TestOTLPSpanExporter(unittest.TestCase):
                     )
                 sent_data = mock_request.call_args.kwargs["data"]
                 decompressed = decompress(sent_data)
-                self.assertEqual(_decode_body(decompressed), encode_spans(spans))
+                self.assertEqual(
+                    _decode_body(decompressed), encode_spans(spans)
+                )
 
     # -- retry / backoff ------------------------------------------------------
 
@@ -618,9 +624,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(
             metrics[0].name, "otel.sdk.exporter.operation.duration"
         )
-        self.assertIn(
-            "error.type", metrics[0].data.data_points[0].attributes
-        )
+        self.assertIn("error.type", metrics[0].data.data_points[0].attributes)
         self.assertNotIn(
             "http.response.status_code",
             metrics[0].data.data_points[0].attributes,

@@ -161,7 +161,9 @@ class OTLPSpanExporter(SpanExporter):
 
         with self._metrics.export_operation(len(spans)) as result:
             try:
-                serialized_data = encode_spans(spans).SerializePartialToString()
+                serialized_data = encode_spans(
+                    spans
+                ).SerializePartialToString()
             # pylint: disable-next=broad-exception-caught
             except Exception as error:
                 _logger.error("Failed to encode span batch: %s", error)

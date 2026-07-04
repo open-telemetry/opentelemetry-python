@@ -178,7 +178,9 @@ class TestOTLPMetricExporter(TestCase):
         )
         self.assertIs(exporter._compression, CommonCompression.NONE)
         self.assertIsNone(exporter._session)
-        self.assertIsInstance(exporter._client._transport, Urllib3HTTPTransport)
+        self.assertIsInstance(
+            exporter._client._transport, Urllib3HTTPTransport
+        )
 
     def test_explicit_session_uses_requests_transport(self):
         session = requests.Session()
@@ -196,7 +198,9 @@ class TestOTLPMetricExporter(TestCase):
     ):
         credential = requests.Session()
         mock_entry_point.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", lambda: credential)]
+            return_value=[
+                IterEntryPoint("custom_credential", lambda: credential)
+            ]
         )
         with patch.dict(
             environ,
@@ -392,7 +396,9 @@ class TestOTLPMetricExporter(TestCase):
         first_request = _decode_body(
             mock_request.call_args_list[0].kwargs["data"]
         )
-        first_metrics = first_request.resource_metrics[0].scope_metrics[0].metrics
+        first_metrics = (
+            first_request.resource_metrics[0].scope_metrics[0].metrics
+        )
         self.assertEqual(
             {m.name for m in first_metrics}, {"sum_int_0", "sum_int_1"}
         )
@@ -400,7 +406,9 @@ class TestOTLPMetricExporter(TestCase):
         second_request = _decode_body(
             mock_request.call_args_list[1].kwargs["data"]
         )
-        second_metrics = second_request.resource_metrics[0].scope_metrics[0].metrics
+        second_metrics = (
+            second_request.resource_metrics[0].scope_metrics[0].metrics
+        )
         self.assertEqual(len(second_metrics), 1)
         self.assertEqual(second_metrics[0].name, "sum_int_2")
 

@@ -114,10 +114,14 @@ def _resolve_timeout(
 
 def _resolve_compression(compression_env_var: str) -> CommonCompression:
     value = (
-        os.environ.get(compression_env_var)
-        or os.environ.get(OTEL_EXPORTER_OTLP_COMPRESSION)
-        or "none"
-    ).lower().strip()
+        (
+            os.environ.get(compression_env_var)
+            or os.environ.get(OTEL_EXPORTER_OTLP_COMPRESSION)
+            or "none"
+        )
+        .lower()
+        .strip()
+    )
 
     try:
         return CommonCompression.from_str(value)
