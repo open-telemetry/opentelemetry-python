@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`: remove dependence on incubating `rpc.response.status_code` semconv attribute
