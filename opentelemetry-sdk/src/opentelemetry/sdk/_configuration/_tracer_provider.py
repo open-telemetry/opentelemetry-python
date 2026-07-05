@@ -363,7 +363,9 @@ def _create_id_generator(config: IdGeneratorConfig) -> IdGenerator:
         return RandomIdGenerator()
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_id_generator", name)(**(plugin_config or {}))
+        return load_entry_point("opentelemetry_id_generator", name)(
+            **(plugin_config or {})
+        )
     raise ConfigurationError(
         "No id_generator type specified in config. "
         "Supported built-in types: random."
