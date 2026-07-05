@@ -16,9 +16,7 @@ from opentelemetry.exporter.http.transport._requests import (
 from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
-from opentelemetry.exporter.otlp.common._http import (
-    Compression as CommonCompression,
-)
+from opentelemetry.exporter.otlp.common import _http
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._internal import (
     _DEFAULT_TIMEOUT,
@@ -254,31 +252,31 @@ class TestResolveInternal(unittest.TestCase):
             (
                 "gzip",
                 {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
-                CommonCompression.GZIP,
+                _http.Compression.GZIP,
                 False,
             ),
             (
                 "deflate",
                 {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "deflate"},
-                CommonCompression.DEFLATE,
+                _http.Compression.DEFLATE,
                 False,
             ),
             (
                 "none",
                 {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "none"},
-                CommonCompression.NONE,
+                _http.Compression.NONE,
                 False,
             ),
             (
                 "case_and_whitespace",
                 {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "  GzIp  "},
-                CommonCompression.GZIP,
+                _http.Compression.GZIP,
                 False,
             ),
             (
                 "falls_back_to_general",
                 {OTEL_EXPORTER_OTLP_COMPRESSION: "deflate"},
-                CommonCompression.DEFLATE,
+                _http.Compression.DEFLATE,
                 False,
             ),
             (
@@ -287,7 +285,7 @@ class TestResolveInternal(unittest.TestCase):
                     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
                     OTEL_EXPORTER_OTLP_COMPRESSION: "deflate",
                 },
-                CommonCompression.GZIP,
+                _http.Compression.GZIP,
                 False,
             ),
             (
@@ -296,14 +294,14 @@ class TestResolveInternal(unittest.TestCase):
                     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "",
                     OTEL_EXPORTER_OTLP_COMPRESSION: "gzip",
                 },
-                CommonCompression.GZIP,
+                _http.Compression.GZIP,
                 False,
             ),
-            ("default", {}, CommonCompression.NONE, False),
+            ("default", {}, _http.Compression.NONE, False),
             (
                 "invalid_warns",
                 {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "bogus"},
-                CommonCompression.NONE,
+                _http.Compression.NONE,
                 True,
             ),
         ]
@@ -326,14 +324,14 @@ class TestResolveInternal(unittest.TestCase):
             (
                 "legacy_no_compression",
                 Compression.NoCompression,
-                CommonCompression.NONE,
+                _http.Compression.NONE,
             ),
-            ("legacy_deflate", Compression.Deflate, CommonCompression.DEFLATE),
-            ("legacy_gzip", Compression.Gzip, CommonCompression.GZIP),
+            ("legacy_deflate", Compression.Deflate, _http.Compression.DEFLATE),
+            ("legacy_gzip", Compression.Gzip, _http.Compression.GZIP),
             (
                 "common_passthrough",
-                CommonCompression.GZIP,
-                CommonCompression.GZIP,
+                _http.Compression.GZIP,
+                _http.Compression.GZIP,
             ),
         ]
         for label, given, expected in cases:

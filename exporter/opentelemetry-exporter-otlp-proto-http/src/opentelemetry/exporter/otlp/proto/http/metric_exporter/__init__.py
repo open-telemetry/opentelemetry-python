@@ -13,17 +13,13 @@ from typing import (  # noqa: F401
 )
 from urllib.parse import urlparse
 
-import requests
 from typing_extensions import deprecated
 
+from opentelemetry.exporter.otlp.common import _http
 from opentelemetry.exporter.otlp.common._aggregation import (
     _get_aggregation,
     _get_temporality,
 )
-from opentelemetry.exporter.otlp.common._http import (
-    Compression as CommonCompression,
-)
-from opentelemetry.exporter.otlp.common._http import OTLPHTTPClient
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
     create_exporter_metrics,
 )
@@ -91,6 +87,8 @@ from opentelemetry.semconv.attributes.http_attributes import (
 )
 
 if TYPE_CHECKING:
+    import requests
+
     from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
 
 _logger = logging.getLogger(__name__)
@@ -112,7 +110,7 @@ class OTLPMetricExporter(MetricExporter):
         client_certificate_file: str | None = None,
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
-        compression: Compression | CommonCompression | None = None,
+        compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
@@ -131,7 +129,7 @@ class OTLPMetricExporter(MetricExporter):
         client_certificate_file: None = None,
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
-        compression: Compression | CommonCompression | None = None,
+        compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
@@ -150,7 +148,7 @@ class OTLPMetricExporter(MetricExporter):
         client_certificate_file: str | None = None,
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
-        compression: Compression | CommonCompression | None = None,
+        compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         preferred_temporality: dict[type, AggregationTemporality]
         | None = None,
@@ -205,7 +203,7 @@ class OTLPMetricExporter(MetricExporter):
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
             session=self._session,
         )
-        self._client = OTLPHTTPClient(
+        self._client = _http.OTLPHTTPClient(
             transport=transport,
             endpoint=self._endpoint,
             kind="metrics",

@@ -9,12 +9,7 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, overload
 from urllib.parse import urlparse
 
-import requests
-
-from opentelemetry.exporter.otlp.common._http import (
-    Compression as CommonCompression,
-)
-from opentelemetry.exporter.otlp.common._http import OTLPHTTPClient
+from opentelemetry.exporter.otlp.common import _http
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
     create_exporter_metrics,
 )
@@ -53,6 +48,8 @@ from opentelemetry.semconv.attributes.http_attributes import (
 )
 
 if TYPE_CHECKING:
+    import requests
+
     from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
 
 _logger = logging.getLogger(__name__)
@@ -74,7 +71,7 @@ class OTLPSpanExporter(SpanExporter):
         client_certificate_file: str | None = None,
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
-        compression: Compression | CommonCompression | None = None,
+        compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         *,
         meter_provider: MeterProvider | None = None,
@@ -89,7 +86,7 @@ class OTLPSpanExporter(SpanExporter):
         client_certificate_file: None = None,
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
-        compression: Compression | CommonCompression | None = None,
+        compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         *,
         meter_provider: MeterProvider | None = None,
@@ -104,7 +101,7 @@ class OTLPSpanExporter(SpanExporter):
         client_certificate_file: str | None = None,
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
-        compression: Compression | CommonCompression | None = None,
+        compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         *,
         meter_provider: MeterProvider | None = None,
@@ -128,7 +125,7 @@ class OTLPSpanExporter(SpanExporter):
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
             session=self._session,
         )
-        self._client = OTLPHTTPClient(
+        self._client = _http.OTLPHTTPClient(
             transport=transport,
             endpoint=self._endpoint,
             kind="spans",

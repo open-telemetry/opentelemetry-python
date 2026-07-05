@@ -1,15 +1,18 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from os import environ
-from typing import Literal
+from __future__ import annotations
 
-import requests
+from os import environ
+from typing import TYPE_CHECKING, Literal
 
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
 )
 from opentelemetry.util._importlib_metadata import entry_points
+
+if TYPE_CHECKING:
+    import requests
 
 
 def _load_session_from_envvar(
@@ -23,6 +26,9 @@ def _load_session_from_envvar(
         _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
     ) or environ.get(cred_envvar)
     if _credential_env:
+        # pylint: disable-next=import-outside-toplevel
+        import requests  # noqa: PLC0415
+
         try:
             maybe_session = next(
                 iter(

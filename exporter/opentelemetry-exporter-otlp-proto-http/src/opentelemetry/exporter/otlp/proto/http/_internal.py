@@ -8,17 +8,13 @@ import os
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal
 
-import requests
-
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
 )
 from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
-from opentelemetry.exporter.otlp.common._http import (
-    Compression as CommonCompression,
-)
+from opentelemetry.exporter.otlp.common import _http
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
@@ -38,6 +34,8 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.util.re import parse_env_headers
 
 if TYPE_CHECKING:
+    import requests
+
     from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
 
 _logger = logging.getLogger(__name__)
@@ -45,21 +43,21 @@ _logger = logging.getLogger(__name__)
 _DEFAULT_ENDPOINT = "http://localhost:4318"
 _DEFAULT_TIMEOUT = 10
 
-_FROM_LEGACY_COMPRESSION: dict[Compression, CommonCompression] = {
-    Compression.NoCompression: CommonCompression.NONE,
-    Compression.Deflate: CommonCompression.DEFLATE,
-    Compression.Gzip: CommonCompression.GZIP,
-}
-
 
 def _normalize_compression(
-    compression: Compression | CommonCompression | None,
-) -> CommonCompression | None:
+    compression: Compression | _http.Compression | None,
+) -> _http.Compression | None:
     if compression is None:
         return None
-    if isinstance(compression, Compression):
-        return _FROM_LEGACY_COMPRESSION[compression]
-    return compression
+    match compression:
+        case Compression.NoCompression:
+            return _http.Compression.NONE
+        case Compression.Deflate:
+            return _http.Compression.DEFLATE
+        case Compression.Gzip:
+            return _http.Compression.GZIP
+        case _:
+            return compression
 
 
 def _resolve_endpoint(
@@ -112,7 +110,7 @@ def _resolve_timeout(
         return float(_DEFAULT_TIMEOUT)
 
 
-def _resolve_compression(compression_env_var: str) -> CommonCompression:
+def _resolve_compression(compression_env_var: str) -> _http.Compression:
     value = (
         (
             os.environ.get(compression_env_var)
@@ -124,10 +122,10 @@ def _resolve_compression(compression_env_var: str) -> CommonCompression:
     )
 
     try:
-        return CommonCompression.from_str(value)
+        return _http.Compression.from_str(value)
     except ValueError:
         _logger.warning("Unsupported compression type: %s", value)
-        return CommonCompression.NONE
+        return _http.Compression.NONE
 
 
 _CredentialEnvVar = Literal[

@@ -23,9 +23,7 @@ from opentelemetry.exporter.http.transport._requests import (
 from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
-from opentelemetry.exporter.otlp.common._http import (
-    Compression as CommonCompression,
-)
+from opentelemetry.exporter.otlp.common import _http
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._internal import _build_transport
@@ -117,7 +115,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(
             exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
         )
-        self.assertIs(exporter._compression, CommonCompression.NONE)
+        self.assertIs(exporter._compression, _http.Compression.NONE)
         self.assertIsNone(exporter._session)
         self.assertIsInstance(
             exporter._client._transport, Urllib3HTTPTransport
@@ -191,10 +189,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             OTLPLogExporter()
 
     def test_compression_dual_enum_acceptance(self):
-        for compression in (Compression.Gzip, CommonCompression.GZIP):
+        for compression in (Compression.Gzip, _http.Compression.GZIP):
             with self.subTest(compression=compression):
                 exporter = OTLPLogExporter(compression=compression)
-                self.assertIs(exporter._compression, CommonCompression.GZIP)
+                self.assertIs(exporter._compression, _http.Compression.GZIP)
 
     # -- export / wire format ------------------------------------------------
 
