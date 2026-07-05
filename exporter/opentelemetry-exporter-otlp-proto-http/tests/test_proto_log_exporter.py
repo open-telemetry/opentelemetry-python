@@ -26,7 +26,7 @@ from opentelemetry.exporter.http.transport._urllib3 import (
 from opentelemetry.exporter.otlp.common import _http
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http._internal import _build_transport
+from opentelemetry.exporter.otlp.proto.http._common import _build_transport
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_ENDPOINT,
     DEFAULT_LOGS_EXPORT_PATH,
@@ -107,94 +107,87 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
 
-    # -- construction / transport selection --------------------------------
-
-    def test_constructor_default_uses_urllib3_transport(self):
+    def test_default_transport_is_urllib3(self):
         exporter = OTLPLogExporter()
 
         self.assertEqual(
             exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
         )
         self.assertIs(exporter._compression, _http.Compression.NONE)
-        self.assertIsNone(exporter._session)
         self.assertIsInstance(
             exporter._client._transport, Urllib3HTTPTransport
         )
 
-    def test_explicit_session_uses_requests_transport(self):
+    def test_session_uses_requests_transport(self):
         session = requests.Session()
         exporter = OTLPLogExporter(session=session)
 
-        self.assertIs(exporter._session, session)
         self.assertIsInstance(
             exporter._client._transport, RequestsHTTPTransport
         )
         self.assertIs(exporter._client._transport._session, session)
 
+    @patch.dict(
+        os.environ,
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "custom_credential",
+        },
+    )
     @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
-    def test_credential_provider_uses_requests_transport(
-        self, mock_entry_point
-    ):
+    def test_credential_provider_uses_requests(self, mock_entry_point):
         credential = requests.Session()
         mock_entry_point.configure_mock(
             return_value=[
                 IterEntryPoint("custom_credential", lambda: credential)
             ]
         )
-        with patch.dict(
-            os.environ,
-            {
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "custom_credential",
-            },
-        ):
-            exporter = OTLPLogExporter()
+        exporter = OTLPLogExporter()
 
-        self.assertIs(exporter._session, credential)
         self.assertIsInstance(
             exporter._client._transport, RequestsHTTPTransport
         )
+        self.assertIs(exporter._client._transport._session, credential)
 
+    @patch.dict(
+        os.environ,
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "bad_credential",
+        },
+    )
     @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
-    def test_exception_raised_when_entrypoint_returns_wrong_type(
-        self, mock_entry_point
-    ):
+    def test_entrypoint_wrong_type_raises(self, mock_entry_point):
         mock_entry_point.configure_mock(
             return_value=[IterEntryPoint("bad_credential", lambda: 1)]
         )
-        with (
-            patch.dict(
-                os.environ,
-                {
-                    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "bad_credential",
-                },
-            ),
-            self.assertRaises(RuntimeError),
-        ):
+        with self.assertRaises(RuntimeError):
             OTLPLogExporter()
 
+    @patch.dict(
+        os.environ,
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "missing",
+        },
+    )
     @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
-    def test_exception_raised_when_entrypoint_does_not_exist(
-        self, mock_entry_point
-    ):
+    def test_entrypoint_missing_raises(self, mock_entry_point):
         mock_entry_point.configure_mock(return_value=[])
-        with (
-            patch.dict(
-                os.environ,
-                {
-                    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "missing",
-                },
-            ),
-            self.assertRaises(RuntimeError),
-        ):
+        with self.assertRaises(RuntimeError):
             OTLPLogExporter()
 
     def test_compression_dual_enum_acceptance(self):
-        for compression in (Compression.Gzip, _http.Compression.GZIP):
+        cases = (
+            (Compression.NoCompression, _http.Compression.NONE),
+            (Compression.Deflate, _http.Compression.DEFLATE),
+            (Compression.Gzip, _http.Compression.GZIP),
+            (_http.Compression.NONE, _http.Compression.NONE),
+            (_http.Compression.DEFLATE, _http.Compression.DEFLATE),
+            (_http.Compression.GZIP, _http.Compression.GZIP),
+        )
+        for compression, expected in cases:
             with self.subTest(compression=compression):
                 exporter = OTLPLogExporter(compression=compression)
-                self.assertIs(exporter._compression, _http.Compression.GZIP)
-
-    # -- export / wire format ------------------------------------------------
+                self.assertIs(exporter._compression, expected)
+                self.assertIs(exporter._client._compression, expected)
 
     @mocketize
     def test_export_single_log(self):
@@ -284,16 +277,16 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 self.assertEqual(headers["x-api-key"], "secret")
 
     @mocketize
-    def test_custom_transport(self):
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter._build_transport"
+    )
+    def test_custom_transport(self, mock_build_transport):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
         custom_transport = Urllib3HTTPTransport()
 
-        with patch(
-            "opentelemetry.exporter.otlp.proto.http._log_exporter._build_transport"
-        ) as mock_build_transport:
-            exporter = OTLPLogExporter(
-                endpoint=_TEST_ENDPOINT, _transport=custom_transport
-            )
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT, _transport=custom_transport
+        )
 
         mock_build_transport.assert_not_called()
         self.assertIs(exporter._client._transport, custom_transport)
@@ -302,19 +295,19 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(result, LogRecordExportResult.SUCCESS)
 
     @mocketize
-    def test_certificate_args(self):
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter._build_transport",
+        wraps=_build_transport,
+    )
+    def test_certificate_args(self, mock_build_transport):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
 
-        with patch(
-            "opentelemetry.exporter.otlp.proto.http._log_exporter._build_transport",
-            wraps=_build_transport,
-        ) as mock_build_transport:
-            exporter = OTLPLogExporter(
-                endpoint=_TEST_ENDPOINT,
-                certificate_file="ca.pem",
-                client_key_file="client-key.pem",
-                client_certificate_file="client-cert.pem",
-            )
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT,
+            certificate_file="ca.pem",
+            client_key_file="client-key.pem",
+            client_certificate_file="client-cert.pem",
+        )
 
         mock_build_transport.assert_called_once_with(
             "ca.pem",
@@ -334,6 +327,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             (Compression.NoCompression, None, lambda data: data),
             (Compression.Gzip, "gzip", gzip.decompress),
             (Compression.Deflate, "deflate", zlib.decompress),
+            (_http.Compression.NONE, None, lambda data: data),
+            (_http.Compression.GZIP, "gzip", gzip.decompress),
+            (_http.Compression.DEFLATE, "deflate", zlib.decompress),
         )
         for compression, expected_encoding, decompress in cases:
             with self.subTest(compression=compression), Mocketizer():
@@ -360,8 +356,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 sent_data = mock_request.call_args.kwargs["data"]
                 decompressed = decompress(sent_data)
                 self.assertEqual(_decode_body(decompressed), encode_logs(logs))
-
-    # -- retry / backoff ------------------------------------------------------
 
     def test_export_retryable_status_codes(self):
         for status_code in (429, 502, 503, 504):
@@ -432,8 +426,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         self.assertLess(after - before, 0.5)
 
-    # -- self-observability metrics -------------------------------------------
-
     @mocketize
     def test_exporter_metrics_disabled_by_default(self):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
@@ -494,8 +486,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             503,
         )
 
-    # -- misc -----------------------------------------------------------------
-
     @mocketize
     def test_export_after_shutdown(self):
         exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
@@ -532,21 +522,15 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertTrue(exporter.force_flush())
 
     @mocketize
-    def test_export_encoding_failure(self):
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter.encode_logs",
+        side_effect=ValueError("boom"),
+    )
+    def test_export_encoding_failure(self, mock_encode_logs):
         exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
 
-        with (
-            patch(
-                "opentelemetry.exporter.otlp.proto.http._log_exporter.encode_logs",
-                side_effect=ValueError("boom"),
-            ),
-            self.assertLogs(_LOGGER_NAME, level="ERROR"),
-        ):
+        with self.assertLogs(_LOGGER_NAME, level="ERROR"):
             result = exporter.export([_make_log_record()])
 
         self.assertEqual(result, LogRecordExportResult.FAILURE)
         self.assertIsNone(Mocket.last_request())
-
-
-if __name__ == "__main__":
-    unittest.main()

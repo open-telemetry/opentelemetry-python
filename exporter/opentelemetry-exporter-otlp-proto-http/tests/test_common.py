@@ -18,14 +18,13 @@ from opentelemetry.exporter.http.transport._urllib3 import (
 )
 from opentelemetry.exporter.otlp.common import _http
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http._internal import (
+from opentelemetry.exporter.otlp.proto.http._common import (
     _DEFAULT_TIMEOUT,
     _build_transport,
     _normalize_compression,
     _resolve_compression,
     _resolve_endpoint,
     _resolve_headers,
-    _resolve_session,
     _resolve_timeout,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
@@ -51,12 +50,9 @@ _BASE_HEADERS = {
     "content-type": "application/x-protobuf",
     "user-agent": _USER_AGENT,
 }
-_CREDENTIAL_ENV_VAR = (
-    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER"
-)
 
 
-class TestResolveInternal(unittest.TestCase):
+class TestResolveCommon(unittest.TestCase):
     def test_resolve_endpoint(self):
         cases = [
             # per-signal wins over base and is returned verbatim (no path added)
@@ -329,7 +325,17 @@ class TestResolveInternal(unittest.TestCase):
             ("legacy_deflate", Compression.Deflate, _http.Compression.DEFLATE),
             ("legacy_gzip", Compression.Gzip, _http.Compression.GZIP),
             (
-                "common_passthrough",
+                "common_passthrough_none",
+                _http.Compression.NONE,
+                _http.Compression.NONE,
+            ),
+            (
+                "common_passthrough_deflate",
+                _http.Compression.DEFLATE,
+                _http.Compression.DEFLATE,
+            ),
+            (
+                "common_passthrough_gzip",
                 _http.Compression.GZIP,
                 _http.Compression.GZIP,
             ),
@@ -338,41 +344,33 @@ class TestResolveInternal(unittest.TestCase):
             with self.subTest(label):
                 self.assertEqual(_normalize_compression(given), expected)
 
-    def test_resolve_session(self):
-        explicit = requests.Session()
-        with patch.dict(os.environ, {}, clear=True):
-            self.assertIs(
-                _resolve_session(explicit, _CREDENTIAL_ENV_VAR), explicit
-            )
-            self.assertIsNone(_resolve_session(None, _CREDENTIAL_ENV_VAR))
-
 
 class TestBuildTransport(unittest.TestCase):
+    @patch.dict(os.environ, {}, clear=True)
     def test_default_transport_is_urllib3(self):
-        with patch.dict(os.environ, {}, clear=True):
-            result = _build_transport(
-                None,
-                None,
-                None,
-                OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
-                OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
-                OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
-                session=None,
-            )
+        result = _build_transport(
+            None,
+            None,
+            None,
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            session=None,
+        )
         self.assertIsInstance(result, Urllib3HTTPTransport)
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_session_forces_requests_transport(self):
         session = requests.Session()
-        with patch.dict(os.environ, {}, clear=True):
-            result = _build_transport(
-                None,
-                None,
-                None,
-                OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
-                OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
-                OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
-                session=session,
-            )
+        result = _build_transport(
+            None,
+            None,
+            None,
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            session=session,
+        )
         self.assertIsInstance(result, RequestsHTTPTransport)
         # pylint: disable-next=protected-access
         self.assertIs(result._session, session)
@@ -453,6 +451,18 @@ class TestBuildTransport(unittest.TestCase):
                 True,
                 "cert2.pem",
             ),
+            (
+                "explicit_false_disables_verification_over_env",
+                {
+                    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "env-cert.pem",
+                    OTEL_EXPORTER_OTLP_CERTIFICATE: "general-cert.pem",
+                },
+                False,
+                None,
+                None,
+                False,
+                None,
+            ),
         ]
         for (
             label,
@@ -465,7 +475,7 @@ class TestBuildTransport(unittest.TestCase):
         ) in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
                 with patch(
-                    "opentelemetry.exporter.otlp.proto.http._internal.Urllib3HTTPTransport"
+                    "opentelemetry.exporter.otlp.proto.http._common.Urllib3HTTPTransport"
                 ) as mock_transport:
                     result = _build_transport(
                         certificate_file,
@@ -490,7 +500,7 @@ class TestBuildTransport(unittest.TestCase):
                 clear=True,
             ),
             patch(
-                "opentelemetry.exporter.otlp.proto.http._internal.RequestsHTTPTransport"
+                "opentelemetry.exporter.otlp.proto.http._common.RequestsHTTPTransport"
             ) as mock_transport,
         ):
             result = _build_transport(

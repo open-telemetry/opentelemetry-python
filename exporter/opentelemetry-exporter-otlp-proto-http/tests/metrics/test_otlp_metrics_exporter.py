@@ -166,103 +166,98 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
-    # -- construction / transport selection --------------------------------
-
-    def test_constructor_default_uses_urllib3_transport(self):
+    def test_default_transport_is_urllib3(self):
         exporter = OTLPMetricExporter()
 
         self.assertEqual(
             exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_METRICS_EXPORT_PATH
         )
         self.assertIs(exporter._compression, _http.Compression.NONE)
-        self.assertIsNone(exporter._session)
         self.assertIsInstance(
             exporter._client._transport, Urllib3HTTPTransport
         )
 
-    def test_explicit_session_uses_requests_transport(self):
+    def test_session_uses_requests_transport(self):
         session = requests.Session()
         exporter = OTLPMetricExporter(session=session)
 
-        self.assertIs(exporter._session, session)
         self.assertIsInstance(
             exporter._client._transport, RequestsHTTPTransport
         )
         self.assertIs(exporter._client._transport._session, session)
 
+    @patch.dict(
+        environ,
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER: "custom_credential",
+        },
+    )
     @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
-    def test_credential_provider_uses_requests_transport(
-        self, mock_entry_point
-    ):
+    def test_credential_provider_uses_requests(self, mock_entry_point):
         credential = requests.Session()
         mock_entry_point.configure_mock(
             return_value=[
                 IterEntryPoint("custom_credential", lambda: credential)
             ]
         )
-        with patch.dict(
-            environ,
-            {
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER: "custom_credential",
-            },
-        ):
-            exporter = OTLPMetricExporter()
+        exporter = OTLPMetricExporter()
 
-        self.assertIs(exporter._session, credential)
         self.assertIsInstance(
             exporter._client._transport, RequestsHTTPTransport
         )
+        self.assertIs(exporter._client._transport._session, credential)
 
+    @patch.dict(
+        environ,
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER: "bad_credential",
+        },
+    )
     @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
-    def test_exception_raised_when_entrypoint_returns_wrong_type(
-        self, mock_entry_point
-    ):
+    def test_entrypoint_wrong_type_raises(self, mock_entry_point):
         mock_entry_point.configure_mock(
             return_value=[IterEntryPoint("bad_credential", lambda: 1)]
         )
-        with (
-            patch.dict(
-                environ,
-                {
-                    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER: "bad_credential",
-                },
-            ),
-            self.assertRaises(RuntimeError),
-        ):
+        with self.assertRaises(RuntimeError):
             OTLPMetricExporter()
 
     def test_compression_dual_enum_acceptance(self):
-        for compression in (Compression.Gzip, _http.Compression.GZIP):
+        cases = (
+            (Compression.NoCompression, _http.Compression.NONE),
+            (Compression.Deflate, _http.Compression.DEFLATE),
+            (Compression.Gzip, _http.Compression.GZIP),
+            (_http.Compression.NONE, _http.Compression.NONE),
+            (_http.Compression.DEFLATE, _http.Compression.DEFLATE),
+            (_http.Compression.GZIP, _http.Compression.GZIP),
+        )
+        for compression, expected in cases:
             with self.subTest(compression=compression):
                 exporter = OTLPMetricExporter(compression=compression)
-                self.assertIs(exporter._compression, _http.Compression.GZIP)
+                self.assertIs(exporter._compression, expected)
+                self.assertIs(exporter._client._compression, expected)
 
+    @patch.dict(environ, {OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "os.env.base"})
     def test_exporter_env_endpoint_without_slash(self):
-        with patch.dict(
-            environ, {OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "os.env.base"}
-        ):
-            exporter = OTLPMetricExporter()
+        exporter = OTLPMetricExporter()
         self.assertEqual(exporter._endpoint, "os.env.base")
 
     @mocketize
-    def test_custom_transport(self):
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter._build_transport"
+    )
+    def test_custom_transport(self, mock_build_transport):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
         custom_transport = Urllib3HTTPTransport()
 
-        with patch(
-            "opentelemetry.exporter.otlp.proto.http.metric_exporter._build_transport"
-        ) as mock_build_transport:
-            exporter = OTLPMetricExporter(
-                endpoint=_TEST_ENDPOINT, _transport=custom_transport
-            )
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT, _transport=custom_transport
+        )
 
         mock_build_transport.assert_not_called()
         self.assertIs(exporter._client._transport, custom_transport)
 
         result = exporter.export(self.metrics["sum_int"])
         self.assertEqual(result, MetricExportResult.SUCCESS)
-
-    # -- export / wire format ------------------------------------------------
 
     @mocketize
     def test_serialization(self):
@@ -339,8 +334,6 @@ class TestOTLPMetricExporter(TestCase):
             ],
             401,
         )
-
-    # -- batch splitting integration ------------------------------------------
 
     @mocketize
     def test_export_max_export_batch_size_single_batch_integration(self):
@@ -449,8 +442,6 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(result, MetricExportResult.SUCCESS)
         # First batch + retry of second batch
         self.assertEqual(len(Mocket.request_list()), 3)
-
-    # -- aggregation / temporality (unchanged pure logic) ---------------------
 
     def test_aggregation_temporality(self):
         otlp_metric_exporter = OTLPMetricExporter()
@@ -613,8 +604,6 @@ class TestOTLPMetricExporter(TestCase):
             exporter._preferred_aggregation[Histogram], histogram_aggregation
         )
 
-    # -- misc -----------------------------------------------------------------
-
     @mocketize
     def test_2xx_status_code(self):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
@@ -692,8 +681,6 @@ class TestOTLPMetricExporter(TestCase):
         after = time.time()
 
         self.assertLess(after - before, 0.5)
-
-    # -- split_metrics_data / get_split_resource_metrics_pb2 (unchanged) ------
 
     def test_split_metrics_data_many_data_points(self):
         metrics_data = ExportMetricsServiceRequest(

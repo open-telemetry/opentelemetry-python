@@ -15,13 +15,13 @@ from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
 )
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http._internal import (
+from opentelemetry.exporter.otlp.proto.http._common import (
     _build_transport,
+    _load_session_from_envvar,
     _normalize_compression,
     _resolve_compression,
     _resolve_endpoint,
     _resolve_headers,
-    _resolve_session,
     _resolve_timeout,
 )
 from opentelemetry.metrics import MeterProvider
@@ -70,7 +70,7 @@ class OTLPLogExporter(LogRecordExporter):
     def __init__(
         self,
         endpoint: str | None = None,
-        certificate_file: str | None = None,
+        certificate_file: str | bool | None = None,
         client_key_file: str | None = None,
         client_certificate_file: str | None = None,
         headers: Mapping[str, str] | None = None,
@@ -100,7 +100,7 @@ class OTLPLogExporter(LogRecordExporter):
     def __init__(
         self,
         endpoint: str | None = None,
-        certificate_file: str | None = None,
+        certificate_file: str | bool | None = None,
         client_key_file: str | None = None,
         client_certificate_file: str | None = None,
         headers: Mapping[str, str] | None = None,
@@ -117,9 +117,6 @@ class OTLPLogExporter(LogRecordExporter):
         self._compression = _normalize_compression(
             compression
         ) or _resolve_compression(OTEL_EXPORTER_OTLP_LOGS_COMPRESSION)
-        self._session = _resolve_session(
-            session, _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
-        )
         transport = _transport or _build_transport(
             certificate_file,
             client_key_file,
@@ -127,7 +124,10 @@ class OTLPLogExporter(LogRecordExporter):
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
-            session=self._session,
+            session=session
+            or _load_session_from_envvar(
+                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
+            ),
         )
         self._client = _http.OTLPHTTPClient(
             transport=transport,
