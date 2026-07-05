@@ -230,7 +230,7 @@ class OTLPMetricExporter(MetricExporter):
             == "true",
         )
 
-    def _export_one(
+    def _export_batch(
         self,
         export_request: ExportMetricsServiceRequest,
         num_items: int,
@@ -274,15 +274,12 @@ class OTLPMetricExporter(MetricExporter):
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:
-            return self._export_one(export_request, num_items)
+            return self._export_batch(export_request, num_items)
 
-        # Else, export in batches of configured size
-        batched_export_requests = _split_metrics_data(
+        for batch in _split_metrics_data(
             export_request, self._max_export_batch_size
-        )
-
-        for split_metrics_data in batched_export_requests:
-            export_result = self._export_one(split_metrics_data, num_items)
+        ):
+            export_result = self._export_batch(batch, num_items)
             if export_result != MetricExportResult.SUCCESS:
                 return MetricExportResult.FAILURE
 
