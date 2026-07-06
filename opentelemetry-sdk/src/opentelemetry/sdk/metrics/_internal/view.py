@@ -154,12 +154,18 @@ class View:
         self._meter_schema_url = meter_schema_url
 
         self._description = description
-        self._attribute_keys = attribute_keys
+        self._attribute_keys = (
+            frozenset(attribute_keys) if attribute_keys is not None else None
+        )
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = (
             exemplar_reservoir_factory or _default_reservoir_factory
         )
-        self._exclude_attribute_keys = exclude_attribute_keys
+        self._exclude_attribute_keys = (
+            frozenset(exclude_attribute_keys)
+            if exclude_attribute_keys is not None
+            else None
+        )
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

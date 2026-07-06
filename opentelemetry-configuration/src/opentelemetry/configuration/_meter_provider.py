@@ -239,6 +239,7 @@ def _create_view(config: ViewConfig) -> View:
             )
 
     attribute_keys: set[str] | None = None
+    exclude_attribute_keys: set[str] | None = None
     if stream.attribute_keys is not None:
         if stream.attribute_keys.excluded is not None:
             exclude_attribute_keys = set(stream.attribute_keys.excluded)
