@@ -1,0 +1,23 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  otlphttp:
+    endpoint: http://host.docker.internal:4319
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlphttp]
+    metrics:
+      receivers: [otlp]
+      exporters: [otlphttp]
+    logs:
+      receivers: [otlp]
+      exporters: [otlphttp]
