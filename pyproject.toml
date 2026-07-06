@@ -132,6 +132,7 @@ include = [
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
   "exporter/opentelemetry-exporter-otlp-json-common",
+  "exporter/opentelemetry-exporter-otlp-common",
   "codegen/opentelemetry-codegen-json"
 ]
 
@@ -152,6 +153,7 @@ exclude = [
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/tests",
+  "exporter/opentelemetry-exporter-otlp-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
 ]
 
@@ -211,6 +213,9 @@ showcontent = true
 directory = "fixed"
 name = "Fixed"
 showcontent = true
+
+[tool.inline-snapshot]
+format-command="ruff format --stdin-filename {filename}"
 
 [dependency-groups]
 dev = [
