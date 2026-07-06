@@ -25,6 +25,10 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_TIMEOUT,
+    _build_transport,
+)
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_ENDPOINT,
     DEFAULT_METRICS_EXPORT_PATH,
@@ -32,6 +36,7 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     _get_split_resource_metrics_pb2,
     _split_metrics_data,
 )
+from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -45,9 +50,19 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
+    OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_EXPORTER_OTLP_ENDPOINT,
+    OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
+    OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+    OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import (
@@ -80,6 +95,11 @@ from opentelemetry.test.mock_test_classes import IterEntryPoint
 from tests import _mock_clock
 
 _TEST_ENDPOINT = "http://localhost:4318/v1/metrics"
+_USER_AGENT = "OTel-OTLP-Exporter-Python/" + __version__
+_BASE_HEADERS = {
+    "content-type": "application/x-protobuf",
+    "user-agent": _USER_AGENT,
+}
 
 
 def _decode_body(body: bytes) -> ExportMetricsServiceRequest:
@@ -240,6 +260,123 @@ class TestOTLPMetricExporter(TestCase):
     def test_exporter_env_endpoint_without_slash(self):
         exporter = OTLPMetricExporter()
         self.assertEqual(exporter._endpoint, "os.env.base")
+
+    def test_configuration_precedence(self):
+        common_env = {
+            OTEL_EXPORTER_OTLP_ENDPOINT: "http://common.example:4318",
+            OTEL_EXPORTER_OTLP_HEADERS: "common-key=common-value",
+            OTEL_EXPORTER_OTLP_COMPRESSION: "gzip",
+            OTEL_EXPORTER_OTLP_TIMEOUT: "5",
+        }
+        signal_env = {
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://signal.example:4318/v1/metrics",
+            OTEL_EXPORTER_OTLP_METRICS_HEADERS: "signal-key=signal-value",
+            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "deflate",
+            OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "7",
+        }
+        explicit_kwargs = {
+            "endpoint": "http://explicit.example:4318/v1/metrics",
+            "headers": {"explicit-key": "explicit-value"},
+            "compression": _http.Compression.NONE,
+            "timeout": 9,
+        }
+        cases = (
+            (
+                "defaults",
+                {},
+                {},
+                {
+                    "endpoint": DEFAULT_ENDPOINT + DEFAULT_METRICS_EXPORT_PATH,
+                    "compression": _http.Compression.NONE,
+                    "headers": _BASE_HEADERS,
+                    "timeout": float(_DEFAULT_TIMEOUT),
+                },
+            ),
+            (
+                "common_env",
+                common_env,
+                {},
+                {
+                    "endpoint": "http://common.example:4318/v1/metrics",
+                    "compression": _http.Compression.GZIP,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "common-key": "common-value",
+                        "Content-Encoding": "gzip",
+                    },
+                    "timeout": 5.0,
+                },
+            ),
+            (
+                "signal_env_overrides_common",
+                {**common_env, **signal_env},
+                {},
+                {
+                    "endpoint": "http://signal.example:4318/v1/metrics",
+                    "compression": _http.Compression.DEFLATE,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "signal-key": "signal-value",
+                        "Content-Encoding": "deflate",
+                    },
+                    "timeout": 7.0,
+                },
+            ),
+            (
+                "constructor_overrides_all",
+                {**common_env, **signal_env},
+                explicit_kwargs,
+                {
+                    "endpoint": "http://explicit.example:4318/v1/metrics",
+                    "compression": _http.Compression.NONE,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "signal-key": "signal-value",
+                        "explicit-key": "explicit-value",
+                    },
+                    "timeout": 9.0,
+                },
+            ),
+        )
+        for label, env, kwargs, expected in cases:
+            with self.subTest(label), patch.dict(environ, env, clear=True):
+                exporter = OTLPMetricExporter(**kwargs)
+                self.assertEqual(exporter._endpoint, expected["endpoint"])
+                self.assertIs(exporter._compression, expected["compression"])
+                self.assertEqual(
+                    exporter._client._headers, expected["headers"]
+                )
+                self.assertEqual(
+                    exporter._client._timeout, expected["timeout"]
+                )
+
+    @mocketize
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter._build_transport",
+        wraps=_build_transport,
+    )
+    def test_certificate_args(self, mock_build_transport):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT,
+            certificate_file="ca.pem",
+            client_key_file="client-key.pem",
+            client_certificate_file="client-cert.pem",
+        )
+
+        mock_build_transport.assert_called_once_with(
+            "ca.pem",
+            "client-key.pem",
+            "client-cert.pem",
+            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
+            OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
+            session=None,
+        )
+
+        result = exporter.export(self.metrics["sum_int"])
+        self.assertEqual(result, MetricExportResult.SUCCESS)
 
     @mocketize
     @patch(
@@ -444,104 +581,70 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(len(Mocket.request_list()), 3)
 
     def test_aggregation_temporality(self):
-        otlp_metric_exporter = OTLPMetricExporter()
+        cumulative_all = {
+            Counter: AggregationTemporality.CUMULATIVE,
+            UpDownCounter: AggregationTemporality.CUMULATIVE,
+            Histogram: AggregationTemporality.CUMULATIVE,
+            ObservableCounter: AggregationTemporality.CUMULATIVE,
+            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
+        cases = (
+            ("unset", None, False, cumulative_all),
+            ("cumulative", "CUMULATIVE", False, cumulative_all),
+            ("invalid_falls_back_to_cumulative", "ABC", True, cumulative_all),
+            (
+                "delta",
+                "DELTA",
+                False,
+                {
+                    Counter: AggregationTemporality.DELTA,
+                    UpDownCounter: AggregationTemporality.CUMULATIVE,
+                    Histogram: AggregationTemporality.DELTA,
+                    ObservableCounter: AggregationTemporality.DELTA,
+                    ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                    ObservableGauge: AggregationTemporality.CUMULATIVE,
+                },
+            ),
+            (
+                "low_memory",
+                "LOWMEMORY",
+                False,
+                {
+                    Counter: AggregationTemporality.DELTA,
+                    UpDownCounter: AggregationTemporality.CUMULATIVE,
+                    Histogram: AggregationTemporality.DELTA,
+                    ObservableCounter: AggregationTemporality.CUMULATIVE,
+                    ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                    ObservableGauge: AggregationTemporality.CUMULATIVE,
+                },
+            ),
+        )
+        for label, env_value, expect_warning, expected in cases:
+            env = (
+                {}
+                if env_value is None
+                else {
+                    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: env_value
+                }
+            )
+            with self.subTest(label), patch.dict(environ, env):
+                if expect_warning:
+                    with self.assertLogs(level=WARNING):
+                        otlp_metric_exporter = OTLPMetricExporter()
+                else:
+                    otlp_metric_exporter = OTLPMetricExporter()
 
-        for (
-            temporality
-        ) in otlp_metric_exporter._preferred_temporality.values():
-            self.assertEqual(temporality, AggregationTemporality.CUMULATIVE)
-
-        with patch.dict(
-            environ,
-            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
-        ):
-            otlp_metric_exporter = OTLPMetricExporter()
-
-            for (
-                temporality
-            ) in otlp_metric_exporter._preferred_temporality.values():
-                self.assertEqual(
-                    temporality, AggregationTemporality.CUMULATIVE
-                )
-
-        with patch.dict(
-            environ, {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "ABC"}
-        ):
-            with self.assertLogs(level=WARNING):
-                otlp_metric_exporter = OTLPMetricExporter()
-
-            for (
-                temporality
-            ) in otlp_metric_exporter._preferred_temporality.values():
-                self.assertEqual(
-                    temporality, AggregationTemporality.CUMULATIVE
-                )
-
-        with patch.dict(
-            environ,
-            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
-        ):
-            otlp_metric_exporter = OTLPMetricExporter()
-
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[Counter],
-                AggregationTemporality.DELTA,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[UpDownCounter],
-                AggregationTemporality.CUMULATIVE,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[Histogram],
-                AggregationTemporality.DELTA,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[ObservableCounter],
-                AggregationTemporality.DELTA,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[
-                    ObservableUpDownCounter
-                ],
-                AggregationTemporality.CUMULATIVE,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[ObservableGauge],
-                AggregationTemporality.CUMULATIVE,
-            )
-
-        with patch.dict(
-            environ,
-            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "LOWMEMORY"},
-        ):
-            otlp_metric_exporter = OTLPMetricExporter()
-
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[Counter],
-                AggregationTemporality.DELTA,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[UpDownCounter],
-                AggregationTemporality.CUMULATIVE,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[Histogram],
-                AggregationTemporality.DELTA,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[ObservableCounter],
-                AggregationTemporality.CUMULATIVE,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[
-                    ObservableUpDownCounter
-                ],
-                AggregationTemporality.CUMULATIVE,
-            )
-            self.assertEqual(
-                otlp_metric_exporter._preferred_temporality[ObservableGauge],
-                AggregationTemporality.CUMULATIVE,
-            )
+                for (
+                    instrument_type,
+                    expected_temporality,
+                ) in expected.items():
+                    self.assertEqual(
+                        otlp_metric_exporter._preferred_temporality[
+                            instrument_type
+                        ],
+                        expected_temporality,
+                    )
 
     def test_exponential_explicit_bucket_histogram(self):
         self.assertIsInstance(

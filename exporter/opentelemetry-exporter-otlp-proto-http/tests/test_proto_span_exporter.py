@@ -29,24 +29,32 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http._common import _build_transport
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_TIMEOUT,
+    _build_transport,
+)
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_ENDPOINT,
     DEFAULT_TRACES_EXPORT_PATH,
     OTLPSpanExporter,
 )
+from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
+    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+    OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
@@ -66,6 +74,11 @@ from . import _mock_clock
 
 _TEST_ENDPOINT = "http://localhost:4318/v1/traces"
 _LOGGER_NAME = "opentelemetry.exporter.otlp.proto.http.trace_exporter"
+_USER_AGENT = "OTel-OTLP-Exporter-Python/" + __version__
+_BASE_HEADERS = {
+    "content-type": "application/x-protobuf",
+    "user-agent": _USER_AGENT,
+}
 
 
 def _decode_body(body: bytes) -> ExportTraceServiceRequest:
@@ -310,6 +323,95 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
                 headers = Mocket.last_request().headers
                 self.assertEqual(headers["x-api-key"], "secret")
+
+    def test_configuration_precedence(self):
+        common_env = {
+            OTEL_EXPORTER_OTLP_ENDPOINT: "http://common.example:4318",
+            OTEL_EXPORTER_OTLP_HEADERS: "common-key=common-value",
+            OTEL_EXPORTER_OTLP_COMPRESSION: "gzip",
+            OTEL_EXPORTER_OTLP_TIMEOUT: "5",
+        }
+        signal_env = {
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://signal.example:4318/v1/traces",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "signal-key=signal-value",
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "deflate",
+            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "7",
+        }
+        explicit_kwargs = {
+            "endpoint": "http://explicit.example:4318/v1/traces",
+            "headers": {"explicit-key": "explicit-value"},
+            "compression": _http.Compression.NONE,
+            "timeout": 9,
+        }
+        cases = (
+            (
+                "defaults",
+                {},
+                {},
+                {
+                    "endpoint": DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH,
+                    "compression": _http.Compression.NONE,
+                    "headers": _BASE_HEADERS,
+                    "timeout": float(_DEFAULT_TIMEOUT),
+                },
+            ),
+            (
+                "common_env",
+                common_env,
+                {},
+                {
+                    "endpoint": "http://common.example:4318/v1/traces",
+                    "compression": _http.Compression.GZIP,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "common-key": "common-value",
+                        "Content-Encoding": "gzip",
+                    },
+                    "timeout": 5.0,
+                },
+            ),
+            (
+                "signal_env_overrides_common",
+                {**common_env, **signal_env},
+                {},
+                {
+                    "endpoint": "http://signal.example:4318/v1/traces",
+                    "compression": _http.Compression.DEFLATE,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "signal-key": "signal-value",
+                        "Content-Encoding": "deflate",
+                    },
+                    "timeout": 7.0,
+                },
+            ),
+            (
+                "constructor_overrides_all",
+                {**common_env, **signal_env},
+                explicit_kwargs,
+                {
+                    "endpoint": "http://explicit.example:4318/v1/traces",
+                    "compression": _http.Compression.NONE,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "signal-key": "signal-value",
+                        "explicit-key": "explicit-value",
+                    },
+                    "timeout": 9.0,
+                },
+            ),
+        )
+        for label, env, kwargs, expected in cases:
+            with self.subTest(label), patch.dict(os.environ, env, clear=True):
+                exporter = OTLPSpanExporter(**kwargs)
+                self.assertEqual(exporter._endpoint, expected["endpoint"])
+                self.assertIs(exporter._compression, expected["compression"])
+                self.assertEqual(
+                    exporter._client._headers, expected["headers"]
+                )
+                self.assertEqual(
+                    exporter._client._timeout, expected["timeout"]
+                )
 
     @mocketize
     @patch(
@@ -637,6 +739,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         with self.assertLogs(_LOGGER_NAME, level="WARNING"):
             exporter.shutdown()
 
+    # pylint: disable-next=no-self-use
     def test_shutdown_closes_transport(self):
         exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
 
