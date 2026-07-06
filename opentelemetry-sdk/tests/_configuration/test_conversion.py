@@ -125,9 +125,7 @@ class TestDictToDataclass(unittest.TestCase):
 
     def test_slash_key_normalized_in_additional_properties(self):
         result = _dict_to_dataclass(
-            {"known": "yes", "detection/development": "value"}, _WithExtras
+            {"known": "yes", "foo/bar": "value"}, _WithExtras
         )
         self.assertEqual(result.known, "yes")
-        self.assertEqual(
-            result.additional_properties, {"detection_development": "value"}
-        )
+        self.assertEqual(result.additional_properties, {"foo_bar": "value"})
