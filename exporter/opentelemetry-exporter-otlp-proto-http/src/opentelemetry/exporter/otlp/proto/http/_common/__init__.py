@@ -200,6 +200,8 @@ def _build_transport(
         else client_certificate_file
     )
 
-    if session is not None:
-        return RequestsHTTPTransport(verify=verify, cert=cert, session=session)
-    return Urllib3HTTPTransport(verify=verify, cert=cert)
+    return (
+        RequestsHTTPTransport(verify=verify, cert=cert, session=session)
+        if session
+        else Urllib3HTTPTransport(verify=verify, cert=cert)
+    )

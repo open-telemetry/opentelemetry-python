@@ -647,50 +647,54 @@ class TestOTLPMetricExporter(TestCase):
                     )
 
     def test_exponential_explicit_bucket_histogram(self):
-        self.assertIsInstance(
-            OTLPMetricExporter()._preferred_aggregation[Histogram],
-            ExplicitBucketHistogramAggregation,
-        )
-
-        with patch.dict(
-            environ,
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "base2_exponential_bucket_histogram"
-            },
-        ):
-            self.assertIsInstance(
-                OTLPMetricExporter()._preferred_aggregation[Histogram],
+        cases = (
+            ("unset", None, ExplicitBucketHistogramAggregation, None),
+            (
+                "base2_exponential_bucket_histogram",
+                "base2_exponential_bucket_histogram",
                 ExponentialBucketHistogramAggregation,
-            )
-
-        with patch.dict(
-            environ,
-            {OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "abc"},
-        ):
-            with self.assertLogs(level=WARNING) as log:
-                self.assertIsInstance(
-                    OTLPMetricExporter()._preferred_aggregation[Histogram],
-                    ExplicitBucketHistogramAggregation,
-                )
-            self.assertIn(
+                None,
+            ),
+            (
+                "invalid_falls_back_to_explicit_bucket",
+                "abc",
+                ExplicitBucketHistogramAggregation,
                 (
                     "Invalid value for OTEL_EXPORTER_OTLP_METRICS_DEFAULT_"
                     "HISTOGRAM_AGGREGATION: ABC, using explicit bucket "
                     "histogram aggregation"
                 ),
-                log.output[0],
-            )
-
-        with patch.dict(
-            environ,
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "explicit_bucket_histogram"
-            },
-        ):
-            self.assertIsInstance(
-                OTLPMetricExporter()._preferred_aggregation[Histogram],
+            ),
+            (
+                "explicit_bucket_histogram",
+                "explicit_bucket_histogram",
                 ExplicitBucketHistogramAggregation,
+                None,
+            ),
+        )
+        for label, env_value, expected_type, expected_warning in cases:
+            env = (
+                {}
+                if env_value is None
+                else {
+                    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: env_value
+                }
             )
+            with self.subTest(label), patch.dict(environ, env):
+                if expected_warning:
+                    with self.assertLogs(level=WARNING) as log:
+                        self.assertIsInstance(
+                            OTLPMetricExporter()._preferred_aggregation[
+                                Histogram
+                            ],
+                            expected_type,
+                        )
+                    self.assertIn(expected_warning, log.output[0])
+                else:
+                    self.assertIsInstance(
+                        OTLPMetricExporter()._preferred_aggregation[Histogram],
+                        expected_type,
+                    )
 
     def test_preferred_aggregation_override(self):
         histogram_aggregation = ExplicitBucketHistogramAggregation(
