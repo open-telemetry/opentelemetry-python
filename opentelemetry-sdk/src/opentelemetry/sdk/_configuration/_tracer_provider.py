@@ -457,8 +457,7 @@ def create_tracer_provider(
     )
     id_generator = (
         _create_id_generator(config.id_generator)
-        if config is not None
-        and config.id_generator is not None
+        if config is not None and config.id_generator is not None
         else None
     )
     span_limits = (
