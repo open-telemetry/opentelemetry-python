@@ -707,6 +707,139 @@ class TestSpanCreation(unittest.TestCase):  # pylint: disable=too-many-public-me
         self.assertEqual(child.parent, root.get_span_context())
         self.assertEqual(child.links, ())
 
+    def test_trace_continuation_rule_based_uses_first_matching_rule(self):
+        remote_parent, context = _remote_parent_context()
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.RESTART_WITH_LINK,
+                    attributes={"http.route": "/webhooks/*"},
+                ),
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.CONTINUE,
+                    attributes={"http.route": "/webhooks/partner"},
+                ),
+            )
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+
+        root = tracer.start_span(
+            "root", context, attributes={"http.route": "/webhooks/partner"}
+        )
+
+        self.assertIsNone(root.parent)
+        self.assertNotEqual(
+            root.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(len(root.links), 1)
+        self.assertEqual(root.links[0].context, remote_parent)
+
+    def test_trace_continuation_rule_based_uses_default_strategy(self):
+        remote_parent, context = _remote_parent_context()
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.CONTINUE,
+                    attributes={"http.route": "/internal/*"},
+                ),
+            ),
+            default_strategy=trace_continuation.Decision.RESTART_WITHOUT_LINK,
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+
+        root = tracer.start_span(
+            "root", context, attributes={"http.route": "/webhooks/partner"}
+        )
+
+        self.assertIsNone(root.parent)
+        self.assertNotEqual(
+            root.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(root.links, ())
+
+    def test_trace_continuation_rule_based_matches_all_conditions(self):
+        remote_parent, context = _remote_parent_context()
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.CONTINUE,
+                    attributes={"http.route": "/internal/*"},
+                    direction=trace_continuation.ContinuationDirection.INGRESS,
+                    span_kind=trace_api.SpanKind.SERVER,
+                ),
+            ),
+            default_strategy=trace_continuation.Decision.RESTART_WITHOUT_LINK,
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+
+        child = tracer.start_span(
+            "child",
+            context,
+            kind=trace_api.SpanKind.SERVER,
+            attributes={"http.route": "/internal/users"},
+        )
+
+        self.assertEqual(child.parent, remote_parent)
+        self.assertEqual(
+            child.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(child.links, ())
+
+    def test_trace_continuation_rule_based_is_direction_aware(self):
+        remote_parent, context = _remote_parent_context()
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.RESTART_WITHOUT_LINK,
+                    direction=trace_continuation.ContinuationDirection.EGRESS,
+                ),
+            )
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+
+        child = tracer.start_span("child", context)
+
+        self.assertEqual(child.parent, remote_parent)
+        self.assertEqual(
+            child.get_span_context().trace_id, remote_parent.trace_id
+        )
+
+    def test_trace_continuation_rule_based_adds_link_attributes(self):
+        remote_parent, context = _remote_parent_context()
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.RESTART_WITH_LINK,
+                    attributes={"http.route": "/webhooks/*"},
+                    link_attributes={
+                        "otel.trace_continuation.reason": "external_webhook"
+                    },
+                ),
+            )
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+
+        root = tracer.start_span(
+            "root", context, attributes={"http.route": "/webhooks/partner"}
+        )
+
+        self.assertEqual(len(root.links), 1)
+        self.assertEqual(root.links[0].context, remote_parent)
+        self.assertEqual(
+            root.links[0].attributes,
+            {"otel.trace_continuation.reason": "external_webhook"},
+        )
+
     def test_start_as_current_span_implicit(self):
         tracer = new_tracer()
 
