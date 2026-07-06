@@ -38,6 +38,7 @@ from opentelemetry.sdk.trace import (
     TracerProvider,
     _RuleBasedTracerConfigurator,
     _TracerConfig,
+    trace_continuation,
 )
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
@@ -62,6 +63,48 @@ from opentelemetry.trace import (
     get_tracer,
     set_tracer_provider,
 )
+from opentelemetry.util.types import Attributes
+
+
+def _remote_parent_context():
+    remote_parent = trace_api.SpanContext(
+        trace_id=0x000000000000000000000000DEADBEEF,
+        span_id=0x00000000DEADBEF0,
+        is_remote=True,
+        trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
+    )
+    context = trace_api.set_span_in_context(
+        trace_api.NonRecordingSpan(remote_parent)
+    )
+    return remote_parent, context
+
+
+class _RemoteOnlyRestartWithLinkDecider(
+    trace_continuation.TraceContinuationDecider
+):
+    def should_continue(
+        self,
+        *,
+        parent_context: Context | None,
+        parent_span_context: trace_api.SpanContext | None,
+        direction: trace_continuation.ContinuationDirection | None = None,
+        kind: trace_api.SpanKind | None = None,
+        attributes: Attributes = None,
+        links: tuple[trace_api.Link, ...] | None = None,
+    ) -> trace_continuation.ContinuationResult:
+        result_links = links or ()
+        if parent_span_context is not None and parent_span_context.is_remote:
+            return trace_continuation.ContinuationResult(
+                decision=trace_continuation.Decision.RESTART_WITH_LINK,
+                links=result_links + (trace_api.Link(parent_span_context),),
+            )
+        return trace_continuation.ContinuationResult(
+            decision=trace_continuation.Decision.CONTINUE,
+            links=result_links,
+        )
+
+    def get_description(self) -> str:
+        return "RemoteOnlyRestartWithLinkDecider"
 
 
 class TestTracer(unittest.TestCase):
@@ -323,7 +366,7 @@ class TestTracerSampling(unittest.TestCase):
         self.assertEqual(tracer_provider.sampler._root, ALWAYS_ON)
 
 
-class TestSpanCreation(unittest.TestCase):
+class TestSpanCreation(unittest.TestCase):  # pylint: disable=too-many-public-methods
     def test_start_span_invalid_spancontext(self):
         """If an invalid span context is passed as the parent, the created
         span should use a new span id.
@@ -545,6 +588,124 @@ class TestSpanCreation(unittest.TestCase):
                     parent_trace_flags.random_trace_id,
                     child_trace_flags.random_trace_id,
                 )
+
+    def test_trace_continuation_continue_uses_remote_parent(self):
+        remote_parent, context = _remote_parent_context()
+        tracer = TracerProvider(
+            _continuation_decider=trace_continuation.ALWAYS_CONTINUE
+        ).get_tracer(__name__)
+
+        child = tracer.start_span("child", context)
+
+        self.assertEqual(child.parent, remote_parent)
+        self.assertEqual(
+            child.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(child.links, ())
+
+    def test_trace_continuation_restart_without_link_creates_root(self):
+        remote_parent, context = _remote_parent_context()
+        tracer = TracerProvider(
+            _continuation_decider=trace_continuation.ALWAYS_RESTART_WITHOUT_LINK
+        ).get_tracer(__name__)
+
+        root = tracer.start_span("root", context)
+
+        self.assertIsNone(root.parent)
+        self.assertNotEqual(
+            root.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(root.links, ())
+
+    def test_trace_continuation_restart_with_link_creates_root_with_link(self):
+        remote_parent, context = _remote_parent_context()
+        tracer = TracerProvider(
+            _continuation_decider=trace_continuation.ALWAYS_RESTART_WITH_LINK
+        ).get_tracer(__name__)
+
+        root = tracer.start_span("root", context)
+
+        self.assertIsNone(root.parent)
+        self.assertNotEqual(
+            root.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(len(root.links), 1)
+        self.assertEqual(root.links[0].context, remote_parent)
+
+    def test_trace_continuation_restart_with_link_preserves_explicit_links(
+        self,
+    ):
+        remote_parent, context = _remote_parent_context()
+        explicit_link_context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000FEEDBEEF,
+            span_id=0x00000000FEEDBEF0,
+            is_remote=False,
+        )
+        explicit_link = trace_api.Link(explicit_link_context)
+        tracer = TracerProvider(
+            _continuation_decider=trace_continuation.ALWAYS_RESTART_WITH_LINK
+        ).get_tracer(__name__)
+
+        root = tracer.start_span("root", context, links=(explicit_link,))
+
+        self.assertEqual(len(root.links), 2)
+        self.assertEqual(root.links[0].context, explicit_link_context)
+        self.assertEqual(root.links[1].context, remote_parent)
+
+    def test_trace_continuation_restart_sampler_sees_root_context(self):
+        _, context = _remote_parent_context()
+        sampler = ParentBased(
+            root=ALWAYS_OFF,
+            remote_parent_sampled=ALWAYS_ON,
+            remote_parent_not_sampled=ALWAYS_OFF,
+            local_parent_sampled=ALWAYS_OFF,
+            local_parent_not_sampled=ALWAYS_OFF,
+        )
+        tracer = TracerProvider(
+            sampler=sampler,
+            _continuation_decider=trace_continuation.ALWAYS_RESTART_WITHOUT_LINK,
+        ).get_tracer(__name__)
+
+        span = tracer.start_span("root", context)
+
+        self.assertIsInstance(span, trace_api.NonRecordingSpan)
+
+    def test_trace_continuation_restart_updates_processor_parent_context(self):
+        _, context = _remote_parent_context()
+        span_processor = mock.Mock(spec=trace.SpanProcessor)
+        tracer_provider = TracerProvider(
+            _continuation_decider=trace_continuation.ALWAYS_RESTART_WITHOUT_LINK
+        )
+        tracer_provider.add_span_processor(span_processor)
+        tracer = tracer_provider.get_tracer(__name__)
+
+        root = tracer.start_span("root", context)
+
+        span_processor.on_start.assert_called_once()
+        parent_context = span_processor.on_start.call_args.kwargs[
+            "parent_context"
+        ]
+        self.assertEqual(
+            trace_api.get_current_span(parent_context),
+            trace_api.INVALID_SPAN,
+        )
+        root.end()
+
+    def test_trace_continuation_restart_link_not_inherited_by_child(self):
+        remote_parent, context = _remote_parent_context()
+        tracer = TracerProvider(
+            _continuation_decider=_RemoteOnlyRestartWithLinkDecider()
+        ).get_tracer(__name__)
+
+        with tracer.start_as_current_span("root", context) as root:
+            child = tracer.start_span("child")
+            child.end()
+
+        self.assertIsNone(root.parent)
+        self.assertEqual(len(root.links), 1)
+        self.assertEqual(root.links[0].context, remote_parent)
+        self.assertEqual(child.parent, root.get_span_context())
+        self.assertEqual(child.links, ())
 
     def test_start_as_current_span_implicit(self):
         tracer = new_tracer()

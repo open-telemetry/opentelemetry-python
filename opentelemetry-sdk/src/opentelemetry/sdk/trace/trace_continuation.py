@@ -96,7 +96,7 @@ class StaticTraceContinuationDecider(TraceContinuationDecider):
     def get_description(self) -> str:
         if self._decision is Decision.RESTART_WITH_LINK:
             return "AlwaysRestartWithLinkContinuationDecider"
-        elif self._decision is Decision.RESTART_WITHOUT_LINK:
+        if self._decision is Decision.RESTART_WITHOUT_LINK:
             return "AlwaysRestartWithoutLinkContinuationDecider"
         return "AlwaysContinueContinuationDecider"
 
