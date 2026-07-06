@@ -77,7 +77,7 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
 def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
     """Recursively convert a mapping to a dataclass instance.
 
-    For each key in ``data``:
+    For each (normalized) key in ``data``:
     - If it matches a known dataclass field, the value is converted according
       to that field's type annotation (recursing for nested dataclasses).
     - Unknown keys are passed through as kwargs; classes decorated with
@@ -103,11 +103,15 @@ def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
     kwargs: dict[str, Any] = {}
 
     for key, value in data.items():
-        if key in known_fields:
-            type_hint = hints.get(key)
-            kwargs[key] = _convert_value(value, type_hint)
+        # OpenTelemetry Configuration schema uses "/" to separate the feature from its
+        # stability level (e.g. "detection/development"). Normalize to "_" so
+        # the key matches valid Python dataclass field names.
+        normalized_key = key.replace("/", "_")
+        if normalized_key in known_fields:
+            type_hint = hints.get(normalized_key)
+            kwargs[normalized_key] = _convert_value(value, type_hint)
         else:
             # Unknown key — @_additional_properties decorator will capture it.
-            kwargs[key] = value
+            kwargs[normalized_key] = value
 
     return cls(**kwargs)

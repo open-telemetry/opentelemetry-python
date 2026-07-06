@@ -42,6 +42,12 @@ class _WithEnum:
     filter: ExemplarFilter | None = None
 
 
+@dataclass
+class _WithSlashField:
+    detection_development: str | None = None
+    name: str | None = None
+
+
 class TestDictToDataclass(unittest.TestCase):
     def test_raises_on_non_dataclass(self):
         # _dict_to_dataclass is internal and assumes cls is a dataclass.
@@ -108,3 +114,20 @@ class TestDictToDataclass(unittest.TestCase):
             {"filter": ExemplarFilter.trace_based}, _WithEnum
         )
         self.assertIs(result.filter, ExemplarFilter.trace_based)
+
+    def test_slash_key_mapped_to_underscore_field(self):
+        result = _dict_to_dataclass(
+            {"name": "hello", "detection/development": "some_value"},
+            _WithSlashField,
+        )
+        self.assertEqual(result.name, "hello")
+        self.assertEqual(result.detection_development, "some_value")
+
+    def test_slash_key_normalized_in_additional_properties(self):
+        result = _dict_to_dataclass(
+            {"known": "yes", "detection/development": "value"}, _WithExtras
+        )
+        self.assertEqual(result.known, "yes")
+        self.assertEqual(
+            result.additional_properties, {"detection_development": "value"}
+        )
