@@ -35,6 +35,8 @@ def _type_name(t):
 _logger = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-return-statements
+# pylint: disable=too-many-branches
 def _clean_attribute(
     key: str, value: types.AttributeValue, max_len: int | None
 ) -> types.AttributeValue | tuple[str | int | float, ...] | None:
@@ -58,16 +60,32 @@ def _clean_attribute(
         return None
 
     if isinstance(value, _VALID_ATTR_VALUE_TYPES):
-        return _clean_attribute_value(value, max_len)
+        if isinstance(value, bytes):
+            try:
+                value = value.decode()
+            except UnicodeDecodeError:
+                _logger.warning("Byte attribute could not be decoded.")
+                return None
+        if max_len is not None and isinstance(value, str):
+            value = value[:max_len]
+        return value
 
     if isinstance(value, Sequence):
         sequence_first_valid_type = None
         cleaned_seq = []
 
         for element in value:
-            element = _clean_attribute_value(element, max_len)  # type: ignore
-            if element is None:
-                cleaned_seq.append(element)
+            if isinstance(element, bytes):
+                try:
+                    element = element.decode()
+                except UnicodeDecodeError:
+                    _logger.warning("Byte attribute could not be decoded.")
+                    cleaned_seq.append(None)
+                    continue
+            if max_len is not None and isinstance(element, str):
+                element = element[:max_len]
+            elif element is None:
+                cleaned_seq.append(None)
                 continue
 
             element_type = type(element)
@@ -214,24 +232,6 @@ def _clean_extended_attribute(
         return None
 
 
-def _clean_attribute_value(
-    value: types.AttributeValue, limit: int | None
-) -> types.AttributeValue | None:
-    if value is None:
-        return None
-
-    if isinstance(value, bytes):
-        try:
-            value = value.decode()
-        except UnicodeDecodeError:
-            _logger.warning("Byte attribute could not be decoded.")
-            return None
-
-    if limit is not None and isinstance(value, str):
-        value = value[:limit]
-    return value
-
-
 class BoundedAttributes(MutableMapping):  # type: ignore
     """An ordered dict with a fixed max capacity.
 
@@ -277,29 +277,49 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
             raise TypeError
-        with self._lock:
-            if self.maxlen is not None and self.maxlen == 0:
+        if self.maxlen is not None and self.maxlen == 0:
+            with self._lock:
                 self.dropped += 1
+            return
+        if self._extended_attributes:
+            value = _clean_extended_attribute(key, value, self.max_value_len)
+        else:
+            value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
+            if value is None:
                 return
+        with self._lock:
+            self._setitem_locked(key, value)
 
+    def _set_items(self, attributes: "types._ExtendedAttributes") -> None:
+        if getattr(self, "_immutable", False):  # type: ignore
+            raise TypeError
+        if self.maxlen is not None and self.maxlen == 0:
+            with self._lock:
+                self.dropped += len(attributes)
+            return
+        cleaned = []
+        for key, value in attributes.items():
             if self._extended_attributes:
-                value = _clean_extended_attribute(
-                    key, value, self.max_value_len
-                )
+                cv = _clean_extended_attribute(key, value, self.max_value_len)
             else:
-                value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
-                if value is None:
-                    return
+                cv = _clean_attribute(key, value, self.max_value_len)  # type: ignore
+                if cv is None:
+                    continue
+            cleaned.append((key, cv))
+        with self._lock:
+            for key, cv in cleaned:
+                self._setitem_locked(key, cv)
 
-            if key in self._dict:
-                del self._dict[key]
-            elif self.maxlen is not None and len(self._dict) == self.maxlen:
-                if not isinstance(self._dict, OrderedDict):
-                    self._dict = OrderedDict(self._dict)
-                self._dict.popitem(last=False)  # type: ignore
-                self.dropped += 1
+    def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
+        if key in self._dict:
+            del self._dict[key]
+        elif self.maxlen is not None and len(self._dict) == self.maxlen:
+            if not isinstance(self._dict, OrderedDict):
+                self._dict = OrderedDict(self._dict)
+            self._dict.popitem(last=False)  # type: ignore
+            self.dropped += 1
 
-            self._dict[key] = value  # type: ignore
+        self._dict[key] = value  # type: ignore
 
     def __delitem__(self, key: str) -> None:
         if getattr(self, "_immutable", False):  # type: ignore
@@ -307,9 +327,11 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         with self._lock:
             del self._dict[key]
 
-    def __iter__(self):  # type: ignore
+    def __iter__(self):
+        if self._immutable:
+            return iter(self._dict)
         with self._lock:
-            return iter(self._dict.copy())  # type: ignore
+            return iter(list(self._dict))
 
     def __len__(self) -> int:
         return len(self._dict)

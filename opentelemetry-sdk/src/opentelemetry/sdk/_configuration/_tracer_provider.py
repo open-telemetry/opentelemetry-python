@@ -9,9 +9,22 @@ from opentelemetry import trace
 from opentelemetry.sdk._configuration._common import (
     _map_compression,
     _parse_headers,
+    _parse_otlp_file_output_stream,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableRuleBasedSamplerRule as RuleBasedSamplerRuleConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalComposableSampler as ComposableSamplerConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
+)
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
@@ -46,6 +59,25 @@ from opentelemetry.sdk.trace import (
     SpanLimits,
     TracerProvider,
 )
+from opentelemetry.sdk.trace._sampling_experimental import (
+    ComposableSampler,
+    composable_always_off,
+    composable_always_on,
+    composable_parent_threshold,
+    composable_rule_based,
+    composable_traceid_ratio_based,
+    composite_sampler,
+)
+from opentelemetry.sdk.trace._sampling_experimental._rule_based import (
+    AllPredicate,
+    AlwaysMatchPredicate,
+    AttributePatternsPredicate,
+    AttributeValuesPredicate,
+    ParentPredicate,
+    PredicateT,
+    RulesT,
+    SpanKindPredicate,
+)
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
@@ -59,6 +91,7 @@ from opentelemetry.sdk.trace.sampling import (
     Sampler,
     TraceIdRatioBased,
 )
+from opentelemetry.trace import SpanKind as TraceSpanKind
 
 _logger = logging.getLogger(__name__)
 
@@ -127,10 +160,30 @@ def _create_otlp_grpc_span_exporter(
     )
 
 
+def _create_otlp_file_development_span_exporter(
+    config: ExperimentalOtlpFileExporterConfig,
+) -> SpanExporter:
+    """Create an OTLP file (JSON Lines) span exporter from config."""
+    try:
+        # pylint: disable=import-outside-toplevel,no-name-in-module
+        from opentelemetry.exporter.otlp.json.file.trace_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+            FileSpanExporter,
+        )
+    except ImportError as exc:
+        raise ConfigurationError(
+            "otlp_file_development span exporter requires 'opentelemetry-exporter-otlp-json-file'. "
+            "Install it with: pip install opentelemetry-exporter-otlp-json-file"
+        ) from exc
+
+    path = _parse_otlp_file_output_stream(config.output_stream)
+    return FileSpanExporter(path) if path is not None else FileSpanExporter()
+
+
 _SPAN_EXPORTER_REGISTRY: dict = {
     "otlp_http": _create_otlp_http_span_exporter,
     "otlp_grpc": _create_otlp_grpc_span_exporter,
     "console": lambda _: ConsoleSpanExporter(),
+    "otlp_file_development": _create_otlp_file_development_span_exporter,
 }
 
 
@@ -142,11 +195,6 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_traces_exporter`` entry point group.
     """
-    if config.otlp_file_development is not None:
-        raise ConfigurationError(
-            "otlp_file_development span exporter is experimental "
-            "and not yet supported."
-        )
     for name, factory in _SPAN_EXPORTER_REGISTRY.items():
         value = getattr(config, name, None)
         if value is not None:
@@ -158,7 +206,7 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
         )
     raise ConfigurationError(
         "No exporter type specified in span exporter config. "
-        "Supported types: otlp_http, otlp_grpc, console."
+        "Supported types: otlp_http, otlp_grpc, console, otlp_file_development."
     )
 
 
@@ -185,11 +233,93 @@ def _create_span_processor(
     )
 
 
+def _create_experimental_composable_sampler(
+    config: ComposableSamplerConfig,
+) -> ComposableSampler:
+    """Create an experimental composable sampler from config"""
+    if config.always_on is not None:
+        return composable_always_on()
+    if config.always_off is not None:
+        return composable_always_off()
+    if config.parent_threshold is not None:
+        return composable_parent_threshold(
+            _create_experimental_composable_sampler(
+                config.parent_threshold.root
+            )
+        )
+    if config.probability is not None:
+        ratio = config.probability.ratio
+        return composable_traceid_ratio_based(
+            ratio if ratio is not None else 1.0
+        )
+    if config.rule_based is not None:
+        return composable_rule_based(
+            _create_rule_based_sampler_rules(config.rule_based)
+        )
+    raise ConfigurationError(
+        f"Unknown or unsupported experimental composable sampler type in config: {config!r}. "
+        "Supported types: always_on, always_off, parent_threshold, probability, rule_based."
+    )
+
+
+def _create_rule_based_sampler_rules(
+    config: RuleBasedSamplerConfig,
+) -> RulesT:
+    if config.rules is None:
+        return []
+    return [
+        (
+            _create_rule_based_sampler_rule_predicate(rule),
+            _create_experimental_composable_sampler(rule.sampler),
+        )
+        for rule in config.rules
+    ]
+
+
+def _create_rule_based_sampler_rule_predicate(
+    config: RuleBasedSamplerRuleConfig,
+) -> PredicateT:
+    predicates: list[PredicateT] = []
+    if config.attribute_values is not None:
+        predicates.append(
+            AttributeValuesPredicate(
+                config.attribute_values.key,
+                config.attribute_values.values,
+            )
+        )
+    if config.attribute_patterns is not None:
+        predicates.append(
+            AttributePatternsPredicate(
+                config.attribute_patterns.key,
+                config.attribute_patterns.included,
+                config.attribute_patterns.excluded,
+            )
+        )
+    if config.span_kinds is not None:
+        predicates.append(
+            SpanKindPredicate(
+                [
+                    TraceSpanKind[span_kind.value.upper()]
+                    for span_kind in config.span_kinds
+                ]
+            )
+        )
+    if config.parent is not None:
+        predicates.append(
+            ParentPredicate([parent.value for parent in config.parent])
+        )
+    if not predicates:
+        return AlwaysMatchPredicate()
+    if len(predicates) == 1:
+        return predicates[0]
+    return AllPredicate(predicates)
+
+
 def _create_sampler(config: SamplerConfig) -> Sampler:
     """Create a sampler from config.
 
-    Known sampler types are checked via typed fields on the Sampler
-    dataclass. Unknown sampler names captured in additional_properties
+    Built-in sampler types are checked via typed fields on the Sampler
+    dataclass. User-defined sampler names captured in additional_properties
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_sampler`` entry point group.
     """
@@ -200,14 +330,21 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     if config.trace_id_ratio_based is not None:
         ratio = config.trace_id_ratio_based.ratio
         return TraceIdRatioBased(ratio if ratio is not None else 1.0)
+    if config.composite_development is not None:
+        return composite_sampler(
+            _create_experimental_composable_sampler(
+                config.composite_development
+            )
+        )
     if config.parent_based is not None:
         return _create_parent_based_sampler(config.parent_based)
     if config.additional_properties:
         name = next(iter(config.additional_properties))
         return load_entry_point("opentelemetry_sampler", name)()
     raise ConfigurationError(
-        f"Unknown or unsupported sampler type in config: {config!r}. "
-        "Supported types: always_on, always_off, trace_id_ratio_based, parent_based."
+        f"Unsupported sampler type in config: {config!r}. "
+        "Supported types: always_on, always_off, composite_development, "
+        "trace_id_ratio_based, parent_based."
     )
 
 

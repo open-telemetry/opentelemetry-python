@@ -1,10 +1,12 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
-from typing import Optional, cast
+from typing import cast
 
 from typing_extensions import deprecated
 
@@ -32,7 +34,7 @@ class Event(LogRecord):
         timestamp: int | None = None,
         trace_id: int | None = None,
         span_id: int | None = None,
-        trace_flags: Optional["TraceFlags"] = None,
+        trace_flags: TraceFlags | None = None,
         body: AnyValue | None = None,
         severity_number: SeverityNumber | None = None,
         attributes: _ExtendedAttributes | None = None,
@@ -72,7 +74,7 @@ class EventLogger(ABC):
         self._attributes = attributes
 
     @abstractmethod
-    def emit(self, event: "Event") -> None:
+    def emit(self, event: Event) -> None:
         """Emits a :class:`Event` representing an event."""
 
 
@@ -244,7 +246,7 @@ def get_event_logger(
     schema_url: str | None = None,
     attributes: _ExtendedAttributes | None = None,
     event_logger_provider: EventLoggerProvider | None = None,
-) -> "EventLogger":
+) -> EventLogger:
     if event_logger_provider is None:
         event_logger_provider = get_event_logger_provider()
     return event_logger_provider.get_event_logger(

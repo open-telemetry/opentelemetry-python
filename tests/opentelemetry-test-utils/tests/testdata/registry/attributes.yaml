@@ -5,6 +5,11 @@ groups:
     type: attribute_group
     brief: Minimal registry for WeaverLiveCheck self-tests.
     attributes:
+      - id: service.instance.id
+        type: string
+        brief: The unique identifier of the service instance.
+        stability: stable
+        examples: ["my-k8s-pod-deployment-1"]
       - id: service.name
         type: string
         brief: The name of the service.

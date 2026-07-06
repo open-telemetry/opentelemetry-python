@@ -9,6 +9,7 @@ from opentelemetry import metrics
 from opentelemetry.sdk._configuration._common import (
     _map_compression,
     _parse_headers,
+    _parse_otlp_file_output_stream,
     load_entry_point,
 )
 from opentelemetry.sdk._configuration._exceptions import ConfigurationError
@@ -20,6 +21,12 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     ExporterDefaultHistogramAggregation,
@@ -40,6 +47,12 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     PeriodicMetricReader as PeriodicMetricReaderConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    PullMetricExporter as PullMetricExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    PullMetricReader as PullMetricReaderConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     PushMetricExporter as PushMetricExporterConfig,
@@ -330,10 +343,45 @@ def _create_otlp_grpc_metric_exporter(
     )
 
 
+def _create_otlp_file_development_metric_exporter(
+    config: ExperimentalOtlpFileMetricExporterConfig,
+) -> MetricExporter:
+    """Create an OTLP file (JSON Lines) metric exporter from config."""
+    try:
+        # pylint: disable=import-outside-toplevel,no-name-in-module
+        from opentelemetry.exporter.otlp.json.file.metric_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+            FileMetricExporter,
+        )
+    except ImportError as exc:
+        raise ConfigurationError(
+            "otlp_file_development metric exporter requires 'opentelemetry-exporter-otlp-json-file'. "
+            "Install it with: pip install opentelemetry-exporter-otlp-json-file"
+        ) from exc
+
+    path = _parse_otlp_file_output_stream(config.output_stream)
+    preferred_temporality = _map_temporality(config.temporality_preference)
+    preferred_aggregation = _map_histogram_aggregation(
+        config.default_histogram_aggregation
+    )
+    return (
+        FileMetricExporter(
+            path,
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
+        if path is not None
+        else FileMetricExporter(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
+    )
+
+
 _METRIC_EXPORTER_REGISTRY: dict = {
     "otlp_http": _create_otlp_http_metric_exporter,
     "otlp_grpc": _create_otlp_grpc_metric_exporter,
     "console": _create_console_metric_exporter,
+    "otlp_file_development": _create_otlp_file_development_metric_exporter,
 }
 
 
@@ -347,11 +395,6 @@ def _create_push_metric_exporter(
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_metrics_exporter`` entry point group.
     """
-    if config.otlp_file_development is not None:
-        raise ConfigurationError(
-            "otlp_file_development metric exporter is experimental "
-            "and not yet supported."
-        )
     for name, factory in _METRIC_EXPORTER_REGISTRY.items():
         value = getattr(config, name, None)
         if value is not None:
@@ -363,7 +406,7 @@ def _create_push_metric_exporter(
         )
     raise ConfigurationError(
         "No exporter type specified in push metric exporter config. "
-        "Supported types: console, otlp_http, otlp_grpc."
+        "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
     )
 
 
@@ -392,18 +435,110 @@ def _create_periodic_metric_reader(
     )
 
 
+def _create_prometheus_metric_reader(
+    config: PrometheusMetricExporterConfig,
+) -> MetricReader:
+    """Create a PrometheusMetricReader from config.
+
+    Dynamically imports the prometheus exporter package to avoid a hard
+    dependency. Maps config fields to constructor parameters and starts
+    the HTTP server.
+    """
+    try:
+        # pylint: disable=import-outside-toplevel,no-name-in-module
+        from opentelemetry.exporter.prometheus import (  # type: ignore[import-untyped]  # noqa: PLC0415
+            PrometheusMetricReader,
+            start_http_server,
+        )
+    except ImportError as exc:
+        raise ConfigurationError(
+            "prometheus pull metric exporter requires "
+            "'opentelemetry-exporter-prometheus'. "
+            "Install it with: pip install opentelemetry-exporter-prometheus"
+        ) from exc
+
+    disable_target_info = (
+        config.target_info_enabled_development is not None
+        and not config.target_info_enabled_development
+    )
+
+    if config.scope_info_enabled is not None:
+        _logger.warning(
+            "scope_info_enabled is not yet supported for "
+            "Prometheus metric exporter and will be ignored."
+        )
+    if config.resource_constant_labels is not None:
+        _logger.warning(
+            "resource_constant_labels is not yet supported for "
+            "Prometheus metric exporter and will be ignored."
+        )
+
+    reader = PrometheusMetricReader(
+        disable_target_info=disable_target_info,
+    )
+
+    port = config.port if config.port is not None else 9464
+    host = config.host if config.host is not None else "localhost"
+    start_http_server(port=port, addr=host)
+
+    return reader
+
+
+def _create_pull_metric_exporter(
+    config: PullMetricExporterConfig,
+) -> MetricReader:
+    """Create a pull metric exporter (which is itself a MetricReader) from config.
+
+    Pull metric exporters like Prometheus are combined reader+exporter objects:
+    the "exporter" IS the reader. The config schema models them as separate
+    exporter configs, but the factory returns a MetricReader.
+
+    Plugin pull exporters are loaded via the ``opentelemetry_pull_metric_exporter``
+    entry point group.
+    """
+    if config.prometheus_development is not None:
+        return _create_prometheus_metric_reader(config.prometheus_development)
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_pull_metric_exporter", name)(
+            **(plugin_config or {})
+        )
+    raise ConfigurationError(
+        "No exporter type specified in pull metric exporter config. "
+        "Supported types: prometheus_development."
+    )
+
+
+def _create_pull_metric_reader(
+    config: PullMetricReaderConfig,
+) -> MetricReader:
+    """Create a pull MetricReader from config.
+
+    The pull reader's exporter is itself a MetricReader (combined reader+exporter).
+    producers and cardinality_limits are not yet supported.
+    """
+    if config.producers:
+        _logger.warning(
+            "MetricProducer configuration is not yet supported for "
+            "pull metric readers and will be ignored."
+        )
+    if config.cardinality_limits is not None:
+        _logger.warning(
+            "cardinality_limits is not yet supported for "
+            "pull metric readers and will be ignored."
+        )
+    return _create_pull_metric_exporter(config.exporter)
+
+
 def _create_metric_reader(config: MetricReaderConfig) -> MetricReader:
     """Create a MetricReader from config."""
     if config.periodic is not None:
         return _create_periodic_metric_reader(config.periodic)
     if config.pull is not None:
-        raise ConfigurationError(
-            "Pull metric readers (e.g. Prometheus) are experimental and not yet supported "
-            "by declarative config. Use the SDK API directly to configure pull readers."
-        )
+        return _create_pull_metric_reader(config.pull)
     raise ConfigurationError(
         "No reader type specified in metric reader config. "
-        "Supported types: periodic."
+        "Supported types: periodic, pull."
     )
 
 
