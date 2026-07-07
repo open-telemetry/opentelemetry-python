@@ -114,9 +114,7 @@ class _ViewInstrumentMatch:
     ) -> None:
         attributes = {}
         if measurement.attributes:
-            # Deepcopy to prevent the user from modifying the attributes after the
-            # measurement has been consumed.
-            attributes = copy.deepcopy(measurement.attributes)
+            attributes = dict(measurement.attributes)
         if self._view._attribute_keys is not None:
             attributes = {
                 k: v
