@@ -51,6 +51,20 @@ class TestCounter(TestCase):
             counter.add(-1.0)
         mc.consume_measurement.assert_not_called()
 
+    def test_add_nan(self):
+        mc = Mock()
+        counter = _Counter("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            counter.add(float("nan"))
+        mc.consume_measurement.assert_not_called()
+
+    def test_add_inf(self):
+        mc = Mock()
+        counter = _Counter("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            counter.add(float("inf"))
+        mc.consume_measurement.assert_not_called()
+
     def test_disallow_direct_counter_creation(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
@@ -69,6 +83,20 @@ class TestUpDownCounter(TestCase):
         counter = _UpDownCounter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_called_once()
+
+    def test_add_nan(self):
+        mc = Mock()
+        counter = _UpDownCounter("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            counter.add(float("nan"))
+        mc.consume_measurement.assert_not_called()
+
+    def test_add_inf(self):
+        mc = Mock()
+        counter = _UpDownCounter("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            counter.add(float("inf"))
+        mc.consume_measurement.assert_not_called()
 
     def test_disallow_direct_up_down_counter_creation(self):
         with self.assertRaises(TypeError):
@@ -300,6 +328,36 @@ class TestObservableGauge(TestCase):
             ],
         )
 
+    def test_nan_callback_value_is_dropped(self):
+        def nan_callback(options: CallbackOptions):
+            return [
+                Observation(float("nan"), attributes=TEST_ATTRIBUTES),
+                Observation(1, attributes=TEST_ATTRIBUTES),
+            ]
+
+        observable_gauge = _ObservableGauge(
+            "name", Mock(), Mock(), [nan_callback]
+        )
+        with self.assertLogs(level=WARNING):
+            measurements = list(observable_gauge.callback(CallbackOptions()))
+        self.assertEqual(len(measurements), 1)
+        self.assertEqual(measurements[0].value, 1)
+
+    def test_inf_callback_value_is_dropped(self):
+        def inf_callback(options: CallbackOptions):
+            return [
+                Observation(float("inf"), attributes=TEST_ATTRIBUTES),
+                Observation(1, attributes=TEST_ATTRIBUTES),
+            ]
+
+        observable_gauge = _ObservableGauge(
+            "name", Mock(), Mock(), [inf_callback]
+        )
+        with self.assertLogs(level=WARNING):
+            measurements = list(observable_gauge.callback(CallbackOptions()))
+        self.assertEqual(len(measurements), 1)
+        self.assertEqual(measurements[0].value, 1)
+
     def test_disallow_direct_observable_gauge_creation(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
@@ -391,6 +449,20 @@ class TestGauge(TestCase):
         gauge = _Gauge("name", Mock(), mc)
         gauge.set(1.0)
         mc.consume_measurement.assert_called_once()
+
+    def test_set_nan(self):
+        mc = Mock()
+        gauge = _Gauge("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            gauge.set(float("nan"))
+        mc.consume_measurement.assert_not_called()
+
+    def test_set_inf(self):
+        mc = Mock()
+        gauge = _Gauge("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            gauge.set(float("inf"))
+        mc.consume_measurement.assert_not_called()
 
     def test_disallow_direct_counter_creation(self):
         with self.assertRaises(TypeError):
@@ -485,6 +557,20 @@ class TestHistogram(TestCase):
         hist = _Histogram("name", Mock(), mc)
         with self.assertLogs(level=WARNING):
             hist.record(-1.0)
+        mc.consume_measurement.assert_not_called()
+
+    def test_record_nan(self):
+        mc = Mock()
+        hist = _Histogram("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            hist.record(float("nan"))
+        mc.consume_measurement.assert_not_called()
+
+    def test_record_inf(self):
+        mc = Mock()
+        hist = _Histogram("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            hist.record(float("inf"))
         mc.consume_measurement.assert_not_called()
 
     def test_disallow_direct_histogram_creation(self):
