@@ -202,7 +202,7 @@ class TestBoundedAttributes(unittest.TestCase):
         With _clean_attribute called before the lock is acquired, no deadlock
         occurs.
         """
-        bdict = BoundedAttributes(immutable=False)
+        bdict = BoundedAttributes(immutable=False, max_value_len=20)
 
         class ReentrantHandler(logging.Handler):
             def emit(self, _record):
@@ -217,9 +217,8 @@ class TestBoundedAttributes(unittest.TestCase):
             completed = threading.Event()
 
             def run():
-                # None is an invalid attribute value and triggers _logger.warning
-                # in _clean_attribute, which fires the ReentrantHandler above.
-                bdict["trigger.key"] = None
+                # A string value > 20 triggers a warning log in _clean_attribute, which fires the ReentrantHandler above.
+                bdict["trigger.key"] = "a" * 21
                 completed.set()
 
             thread = threading.Thread(target=run, daemon=True)

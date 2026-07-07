@@ -136,13 +136,6 @@ class BoundedAttributes(MutableMapping):
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
-        self._extended_attributes = extended_attributes
-        # OrderedDict is not used until the maxlen is reached for efficiency.
-
-        self._dict: (
-            MutableMapping[str, types.AnyValue]
-            | OrderedDict[str, types.AnyValue]
-        ) = {}
         self._lock = threading.Lock()
         self._immutable = False
         if attributes:
@@ -172,10 +165,9 @@ class BoundedAttributes(MutableMapping):
             )
             self.dropped += 1
             return
+        cleaned = _clean_attribute_value(value, self.max_value_len)
         with self._lock:
-            self._setitem_locked(
-                key, _clean_attribute_value(value, self.max_value_len)
-            )
+            self._setitem_locked(key, cleaned)
 
     def _set_items(self, attributes: Mapping[str, types.AnyValue]) -> None:
         if self._immutable:
@@ -186,11 +178,13 @@ class BoundedAttributes(MutableMapping):
             with self._lock:
                 self.dropped += len(attributes)
             return
+        cleaned_items = [
+            (key, _clean_attribute_value(val, self.max_value_len))
+            for key, val in attributes.items()
+        ]
         with self._lock:
-            for key, value in attributes.items():
-                self._setitem_locked(
-                    key, _clean_attribute_value(value, self.max_value_len)
-                )
+            for key, value in cleaned_items:
+                self._setitem_locked(key, value)
 
     def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
         if key in self._dict:
