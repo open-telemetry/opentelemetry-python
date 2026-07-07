@@ -138,10 +138,10 @@ ALWAYS_RESTART_WITHOUT_LINK = StaticTraceContinuationDecider(
 class TraceContinuationRule:
     """A rule that selects a trace continuation decision when all conditions match."""
 
+    direction: ContinuationDirection
     strategy: Decision | None = None
     egress_action: EgressAction | None = None
     attributes: Mapping[str, AnyValue] | None = None
-    direction: ContinuationDirection | None = None
     span_kind: SpanKind | None = None
     link_attributes: Attributes = None
 
@@ -152,7 +152,7 @@ class TraceContinuationRule:
         span_kind: SpanKind | None = None,
         attributes: Attributes = None,
     ) -> bool:
-        if self.direction is not None and direction != self.direction:
+        if direction != self.direction:
             return False
         if self.span_kind is not None and span_kind != self.span_kind:
             return False
