@@ -144,6 +144,7 @@ class BoundedAttributes(MutableMapping):
             | OrderedDict[str, types.AnyValue]
         ) = {}
         self._lock = threading.Lock()
+        self._immutable = False
         if attributes:
             for key, value in attributes.items():
                 self[key] = value
