@@ -1,3 +1,38 @@
+# =============================================================================
+# Prepare release branch workflow
+# =============================================================================
+#
+# Purpose: kicks off a release by cutting a new release branch from main and
+# preparing two pull requests: one that bumps the new branch's version to
+# the version being released (for a human to merge before running
+# release.yml), and a separate one that bumps main forward to the *next*
+# dev version, so ongoing development on main isn't left pointing at a
+# version that's about to ship.
+#
+# This is the FIRST of this repo's 3 release workflows, and it must be
+# triggered manually (workflow_dispatch) on main. See release.yml's header
+# comment for how it fits into the full release pipeline (this workflow ->
+# release.yml -> optionally prepare-patch-release.yml -> release.yml again).
+#
+# Two release shapes are supported, both driven by the optional
+# prerelease_version input:
+#   - Normal release (no input given): cuts a long-term release branch named
+#     after the *next* stable/unstable version rounded down to a ".0"/"b0"
+#     patch number (e.g. main at 1.45.0.dev/0.66b0.dev -> branch
+#     release/v1.45.x-0.66bx), and prepares that branch to release exactly
+#     that ".0"/"b0" version. Patch releases later reuse this same branch
+#     (see prepare-patch-release.yml).
+#   - One-off prerelease (prerelease_version given, e.g. "1.45.0rc2"): cuts a
+#     branch for a release-candidate-style version instead (e.g.
+#     release/v1.45.0rc2-0.66b0), which does NOT get reused for patches.
+#
+# This workflow has 3 jobs: "prereqs" (validation only, no writes), and two
+# independent jobs that both depend on it and run in parallel -- one opens
+# the PR against the new release branch, the other opens the PR against
+# main. Splitting them like this means a failure preparing one PR doesn't
+# necessarily stop the other, and each PR's diff stays focused on exactly
+# one branch's version bump.
+# =============================================================================
 name: Prepare release branch
 on:
   workflow_dispatch:
@@ -10,25 +45,36 @@ permissions:
   contents: read
 
 jobs:
+  # Validates the workflow was triggered correctly before either of the two
+  # PR-creating jobs below does any real work. Does not modify anything.
   prereqs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install toml
-        run: pip install toml
+      # scripts/release/print_version.py needs tomlkit to parse repo.toml.
+      - name: Install tomlkit
+        run: pip install tomlkit
 
       - name: Verify prerequisites
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
+          # Guard rail: this workflow cuts a new branch off of the current
+          # commit and rewrites version files on it, so it must only ever
+          # run from main, never from a release branch or a fork/PR branch.
           if [[ $GITHUB_REF_NAME != main ]]; then
             echo this workflow should only be run against main
             exit 1
           fi
 
+          # If a specific prerelease_version was requested (e.g. "1.9.0rc2"),
+          # sanity-check it's actually a prerelease *of* the version
+          # currently on main (e.g. main is at "1.9.0.dev" -> stripped to
+          # "1.9.0" -> "1.9.0rc2" must start with "1.9.0"). This catches an
+          # operator accidentally typing the wrong version number.
           if [[ ! -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(./scripts/release/print_version.py --stable)
             stable_version=${stable_version//.dev/}
             if [[ $PRERELEASE_VERSION != ${stable_version}* ]]; then
               echo "$PRERELEASE_VERSION is not a prerelease for the version on main ($stable_version)"
@@ -36,6 +82,10 @@ jobs:
             fi
           fi
 
+  # Cuts the new release branch and opens a PR *against that branch* (not
+  # against main) which bumps its version to the version being released and
+  # regenerates the changelog. A human must review and merge this PR before
+  # release.yml can be run on the new branch.
   create-pull-request-against-release-branch:
     permissions:
       contents: write  # required for pushing changes
@@ -45,23 +95,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # tomlkit: read/write repo.toml. towncrier: generate the changelog
+      # section for the new release below.
       - name: Install dependencies
-        run: pip install toml towncrier
+        run: pip install tomlkit towncrier
 
       - name: Create release branch
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
+          # Absent an explicit prerelease_version, the version to release is
+          # main's current stable version with ".dev" stripped (e.g.
+          # "1.45.0.dev" -> "1.45.0"). With one given, that's the version to
+          # release outright (already validated against main's version in
+          # the prereqs job above).
           if [[ -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(./scripts/release/print_version.py --stable)
             stable_version=${stable_version//.dev/}
           else
             stable_version=$PRERELEASE_VERSION
           fi
 
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          # Same idea for the unstable/prerelease-track version.
+          unstable_version=$(./scripts/release/print_version.py --unstable)
           unstable_version=${unstable_version//.dev/}
 
+          # Names the release branch. A ".0"/"b0" version (a normal,
+          # non-prerelease release) gets a long-term branch name using "x"
+          # as a wildcard for the not-yet-known patch number (e.g.
+          # "1.45.0" + "0.66b0" -> "release/v1.45.x-0.66bx"), since this
+          # same branch will be reused for future patch releases. Any other
+          # version (e.g. "1.45.0rc2") is a one-off prerelease, so the
+          # branch is just named after that exact version instead.
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
             stable_version_branch_part=$(echo $stable_version | sed -E 's/([0-9]+)\.([0-9]+)\.0/\1.\2.x/')
             unstable_version_branch_part=$(echo $unstable_version | sed -E 's/0\.([0-9]+)b0/0.\1bx/')
@@ -74,27 +139,51 @@ jobs:
             exit 1
           fi
 
+          # Pushes a new branch pointing at the current commit (main's
+          # HEAD) under the computed name. No version bump has happened
+          # yet -- that's done by the "Update version" step below, as a
+          # separate commit on top of this branch.
           git push origin HEAD:$release_branch_name
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
 
+      # Rewrites repo.toml, every package's pyproject.toml dependency pins,
+      # and every package's __version__ from the current ".dev" version to
+      # the finalized release version computed above. See
+      # scripts/release/update_version.py's own module docstring for a
+      # worked before/after example of exactly what it changes.
       - name: Update version
-        run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
+        run: ./scripts/release/update_version.py --stable_version=$STABLE_VERSION --unstable_version=$UNSTABLE_VERSION
 
+      # Consumes the .changelog/*.<type> fragment files accumulated since
+      # the last release and rewrites them into a single new
+      # "## Version X/Y" section at the top of CHANGELOG.md.
       - name: Generate changelog
         run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
+      # Configures git's committer identity as the "otelbot" account (see
+      # .github/scripts/use-cla-approved-github-bot.sh) so the commit made
+      # below passes this repo's CLA check.
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
 
+      # Mints a short-lived GitHub App installation token for otelbot, used
+      # instead of the workflow's own GITHUB_TOKEN below specifically so
+      # that opening the PR can itself trigger other workflows (see the env
+      # comment on the next step).
       - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
+      # Commits the version bump + changelog changes made above, pushes
+      # them to a new otelbot-owned branch, and opens a PR from that branch
+      # *into the release branch created earlier* -- not into main. Records
+      # the created PR's URL in $GITHUB_OUTPUT (empty if PR creation is
+      # ever skipped/fails silently) for the labeling step below.
       - name: Create pull request against the release branch
         id: create_release_branch_pr
         env:
@@ -112,6 +201,8 @@ jobs:
                        --base $RELEASE_BRANCH_NAME)
           echo "pr_url=$pr_url" >> $GITHUB_OUTPUT
 
+      # Tags the PR so it's easy to find/filter in the repo's PR list. Only
+      # runs if a PR URL was actually produced above.
       - name: Add prepare-release label to PR
         if: steps.create_release_branch_pr.outputs.pr_url != ''
         env:
@@ -119,6 +210,11 @@ jobs:
         run: |
           gh pr edit ${{ steps.create_release_branch_pr.outputs.pr_url }}  --add-label "prepare-release"
 
+  # Runs in parallel with the job above (both only depend on prereqs, not on
+  # each other). Bumps main itself forward to the *next* dev version -- so
+  # that, once the release branch above ships, ongoing work on main is
+  # already pointed at the version after it -- and opens a separate PR
+  # against main for that change.
   create-pull-request-against-main:
     permissions:
       contents: write  # required for pushing changes
@@ -128,23 +224,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # tomlkit: read/write repo.toml. towncrier: generate the changelog
+      # section for the release that's about to happen off of this run's
+      # current version (see the "Generate changelog" step below).
       - name: Install dependencies
-        run: pip install toml towncrier
+        run: pip install tomlkit towncrier
 
       - name: Set environment variables
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
+          # Same version-resolution logic as the sibling job above: the
+          # version about to be released is either main's current version
+          # (".dev" stripped) or the explicit prerelease_version given.
           if [[ -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(./scripts/release/print_version.py --stable)
             stable_version=${stable_version//.dev/}
           else
             stable_version=$PRERELEASE_VERSION
           fi
 
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=$(./scripts/release/print_version.py --unstable)
           unstable_version=${unstable_version//.dev/}
 
+          # Computes the version main should advance to *after* this
+          # release: for a normal ".0" release, bump the minor version
+          # (e.g. 1.45.0 -> 1.46.0). For a prerelease/release-candidate
+          # version, stay on the same "X.Y.0" and just strip the
+          # prerelease suffix (e.g. 1.45.0rc2 -> 1.45.0), since the real
+          # 1.45.0 hasn't shipped yet.
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
             stable_major="${BASH_REMATCH[1]}"
             stable_minor="${BASH_REMATCH[2]}"
@@ -159,6 +267,8 @@ jobs:
             exit 1
           fi
 
+          # Same idea for the unstable/prerelease-track version: always
+          # bump its minor ("b" prefix) number forward by one.
           if [[ $unstable_version =~ ^0\.([0-9]+)b[0-9]+$ ]]; then
             unstable_minor="${BASH_REMATCH[1]}"
           else
@@ -168,15 +278,27 @@ jobs:
 
           unstable_next_version="0.$((unstable_minor + 1))b0"
 
+          # STABLE_VERSION/UNSTABLE_VERSION here are the version *being
+          # released* (used below to generate that release's changelog
+          # section), while STABLE_NEXT_VERSION/UNSTABLE_NEXT_VERSION (with
+          # ".dev" appended back on) are what main's own version gets
+          # bumped to.
           echo "STABLE_VERSION=${stable_version}" >> $GITHUB_ENV
           echo "STABLE_NEXT_VERSION=${stable_next_version}.dev" >> $GITHUB_ENV
 
           echo "UNSTABLE_VERSION=${unstable_version}" >> $GITHUB_ENV
           echo "UNSTABLE_NEXT_VERSION=${unstable_next_version}.dev" >> $GITHUB_ENV
 
+      # Rewrites main's repo.toml/pyproject.toml pins/version files to the
+      # *next* dev version (not the version being released -- that happens
+      # on the release branch, in the sibling job above).
       - name: Update version
-        run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $UNSTABLE_NEXT_VERSION
+        run: ./scripts/release/update_version.py --stable_version=$STABLE_NEXT_VERSION --unstable_version=$UNSTABLE_NEXT_VERSION
 
+      # Generates the changelog section for the version being released
+      # (STABLE_VERSION/UNSTABLE_VERSION, not the _NEXT_ version), so that
+      # main's CHANGELOG.md documents the release the same way the release
+      # branch's own copy will.
       - name: Generate changelog
         run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
@@ -189,6 +311,9 @@ jobs:
           app-id: ${{ vars.OTELBOT_APP_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
+      # Same pattern as the sibling job: commit, push to an otelbot branch,
+      # open a PR -- but this one targets main instead of the release
+      # branch.
       - name: Create pull request against main
         id: create_main_pr
         env:
@@ -207,6 +332,10 @@ jobs:
                        --base main)
           echo "pr_url=$pr_url" >> $GITHUB_OUTPUT
 
+      # Same labeling as the sibling job, plus "Skip Changelog": this PR's
+      # own diff already touches CHANGELOG.md directly (via towncrier
+      # above), so it doesn't need an *additional* changelog fragment of
+      # its own the way a normal PR would.
       - name: Add prepare-release label to PR
         if: steps.create_main_pr.outputs.pr_url != ''
         env:

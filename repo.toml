@@ -1,0 +1,45 @@
+# These will be sorted first in that order.
+# All packages that are depended upon by others should be listed here.
+[DEFAULT]
+sortfirst = [
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "opentelemetry-proto",
+    "opentelemetry-distro",
+    "tests/opentelemetry-test-utils",
+    "exporter/*",
+]
+
+[stable]
+version = "1.44.0.dev"
+packages = [
+    "opentelemetry-sdk",
+    "opentelemetry-proto",
+    "opentelemetry-propagator-jaeger",
+    "opentelemetry-propagator-b3",
+    "opentelemetry-exporter-zipkin-proto-http",
+    "opentelemetry-exporter-zipkin-json",
+    "opentelemetry-exporter-zipkin",
+    "opentelemetry-exporter-otlp-proto-grpc",
+    "opentelemetry-exporter-otlp-proto-http",
+    "opentelemetry-exporter-otlp",
+    "opentelemetry-api",
+]
+
+[prerelease]
+version = "0.65b0.dev"
+packages = [
+    "opentelemetry-opentracing-shim",
+    "opentelemetry-opencensus-shim",
+    "opentelemetry-exporter-http-transport",
+    "opentelemetry-exporter-opencensus",
+    "opentelemetry-exporter-prometheus",
+    "opentelemetry-exporter-otlp-json-common",
+    "opentelemetry-exporter-otlp-json-file",
+    "opentelemetry-exporter-otlp-common",
+    "opentelemetry-distro",
+    "opentelemetry-proto-json",
+    "opentelemetry-semantic-conventions",
+    "opentelemetry-test-utils",
+    "tests",
+]

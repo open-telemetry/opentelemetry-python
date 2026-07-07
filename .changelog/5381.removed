@@ -1,0 +1,1 @@
+Removed `scripts/eachdist.py` and the `.github/scripts/update-version*.sh` wrappers in favor of tox and small purpose-built scripts: `scripts/version.py`, `scripts/update_version.py`, and `scripts/update_patch_version.py` for release version bumping, and `scripts/repo_targets.py` for distribution discovery. Renamed `eachdist.ini` to `repo.toml`.

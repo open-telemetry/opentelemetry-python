@@ -102,6 +102,9 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "docs/**/*.*" = ["PLE"]
 "opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
+"scripts/release/print_version.py" = ["E402"]
+"scripts/release/update_version.py" = ["E402"]
+"scripts/release/update_patch_version.py" = ["E402"]
 "shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
 
 [tool.ruff.lint.isort]
