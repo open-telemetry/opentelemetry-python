@@ -72,16 +72,3 @@ class TestMissingDependencyError(unittest.TestCase):
         self.assertIsInstance(
             MissingDependencyError(package="test"), ImportError
         )
-
-    def test_import_error_backwards_compatible(self):
-        try:
-            import foo_bar_nonexistent  # type: ignore
-        except ImportError:
-            pass
-        else:
-            try:
-                raise MissingDependencyError(package="test")
-            except ImportError:
-                pass
-            else:
-                self.fail("MissingDependencyError should be catchable as ImportError")
