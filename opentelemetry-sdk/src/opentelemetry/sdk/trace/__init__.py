@@ -1175,7 +1175,7 @@ class Tracer(trace_api.Tracer):
             set_status_on_exception=set_status_on_exception,
         )
         token = None
-        if kind is trace_api.SpanKind.CLIENT:
+        if kind in (trace_api.SpanKind.CLIENT, trace_api.SpanKind.PRODUCER):
             egress_action = self._continuation_decider.should_inject(
                 context=context,
                 kind=kind,
