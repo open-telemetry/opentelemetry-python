@@ -63,7 +63,6 @@ from opentelemetry.trace import (
     get_tracer,
     set_tracer_provider,
 )
-from opentelemetry.util.types import Attributes
 
 
 def _remote_parent_context():
@@ -77,34 +76,6 @@ def _remote_parent_context():
         trace_api.NonRecordingSpan(remote_parent)
     )
     return remote_parent, context
-
-
-class _RemoteOnlyRestartWithLinkDecider(
-    trace_continuation.TraceContinuationDecider
-):
-    def should_continue(
-        self,
-        *,
-        parent_context: Context | None,
-        parent_span_context: trace_api.SpanContext | None,
-        direction: trace_continuation.ContinuationDirection | None = None,
-        kind: trace_api.SpanKind | None = None,
-        attributes: Attributes = None,
-        links: tuple[trace_api.Link, ...] | None = None,
-    ) -> trace_continuation.ContinuationResult:
-        result_links = links or ()
-        if parent_span_context is not None and parent_span_context.is_remote:
-            return trace_continuation.ContinuationResult(
-                decision=trace_continuation.Decision.RESTART_WITH_LINK,
-                links=result_links + (trace_api.Link(parent_span_context),),
-            )
-        return trace_continuation.ContinuationResult(
-            decision=trace_continuation.Decision.CONTINUE,
-            links=result_links,
-        )
-
-    def get_description(self) -> str:
-        return "RemoteOnlyRestartWithLinkDecider"
 
 
 class TestTracer(unittest.TestCase):
@@ -694,7 +665,7 @@ class TestSpanCreation(unittest.TestCase):  # pylint: disable=too-many-public-me
     def test_trace_continuation_restart_link_not_inherited_by_child(self):
         remote_parent, context = _remote_parent_context()
         tracer = TracerProvider(
-            _continuation_decider=_RemoteOnlyRestartWithLinkDecider()
+            _continuation_decider=trace_continuation.ALWAYS_RESTART_WITH_LINK,
         ).get_tracer(__name__)
 
         with tracer.start_as_current_span("root", context) as root:

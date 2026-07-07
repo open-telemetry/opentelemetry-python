@@ -1208,15 +1208,26 @@ class Tracer(trace_api.Tracer):
             return trace_api.NonRecordingSpan(context=parent_span_context)
 
         # the continuation result decides if we should restart the trace
-        # or not
-        continuation_result = self._continuation_decider.should_continue(
-            parent_context=context,
-            parent_span_context=parent_span_context,
-            direction=trace_continuation.ContinuationDirection.INGRESS,
-            kind=kind,
-            attributes=attributes,
-            links=links,
-        )
+        # or not, consider only remote parent spans
+
+        if (
+            parent_span_context is not None
+            and parent_span_context.is_valid
+            and parent_span_context.is_remote
+        ):
+            continuation_result = self._continuation_decider.should_continue(
+                parent_context=context,
+                parent_span_context=parent_span_context,
+                direction=trace_continuation.ContinuationDirection.INGRESS,
+                kind=kind,
+                attributes=attributes,
+                links=links,
+            )
+        else:
+            continuation_result = trace_continuation.ContinuationResult(
+                decision=trace_continuation.Decision.CONTINUE,
+                links=links,
+            )
 
         # is_valid determines root span
         if (
