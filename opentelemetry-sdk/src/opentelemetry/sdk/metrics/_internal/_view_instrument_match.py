@@ -1,7 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import copy
 import json
 from collections.abc import Mapping, Sequence
 from logging import getLogger
@@ -114,6 +113,9 @@ class _ViewInstrumentMatch:
     ) -> None:
         attributes = {}
         if measurement.attributes:
+            # Make a shallow copy since the user can mutate the dict after the fact.
+            # The user can still modify mutable attribute values (lists/dicts)
+            # leading to unexpected behavior, but deep copying is expensive.
             attributes = dict(measurement.attributes)
         if self._view._attribute_keys is not None:
             attributes = {

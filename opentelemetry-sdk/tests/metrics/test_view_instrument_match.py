@@ -255,6 +255,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
     def test_consume_measurement_attributes_are_copied(self):
         """Mutating the attributes dict after recording must not affect stored data points."""
+        # Note mutating mutable objects in the attributes dict will still cause issues,
+        # as they are not deep copied.
         instrument1 = _Counter(
             "instrument1",
             Mock(),
@@ -275,7 +277,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             ),
         )
 
-        attributes = {"key": "original", "mutable_value": [1, 2, 3]}
+        attributes = {"key": "original"}
         view_instrument_match.consume_measurement(
             Measurement(
                 value=1,
@@ -288,7 +290,6 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         # Mutate the original dict after recording
         attributes["key"] = "mutated"
-        attributes["mutable_value"].append(4)
         number_data_points = view_instrument_match.collect(
             AggregationTemporality.CUMULATIVE, 0
         )
@@ -296,7 +297,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(len(number_data_points), 1)
         self.assertEqual(
             number_data_points[0].attributes,
-            {"key": "original", "mutable_value": [1, 2, 3]},
+            {"key": "original"},
         )
 
     @patch(
