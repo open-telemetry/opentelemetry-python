@@ -1230,7 +1230,9 @@ class Tracer(trace_api.Tracer):
             # if we need to restart remove the previous span from the context
             # so that the samplers do not see it
             if continuation_result.should_restart:
-                context = trace_api.set_span_in_context(trace_api.INVALID_SPAN)
+                context = trace_api.set_span_in_context(
+                    trace_api.INVALID_SPAN, context
+                )
         else:
             trace_id = parent_span_context.trace_id
 
