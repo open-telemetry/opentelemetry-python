@@ -136,8 +136,14 @@ class BoundedAttributes(MutableMapping):
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
-        self._lock = threading.RLock()
-        self._immutable = False
+        self._extended_attributes = extended_attributes
+        # OrderedDict is not used until the maxlen is reached for efficiency.
+
+        self._dict: (
+            MutableMapping[str, types.AnyValue]
+            | OrderedDict[str, types.AnyValue]
+        ) = {}
+        self._lock = threading.Lock()
         if attributes:
             for key, value in attributes.items():
                 self[key] = value

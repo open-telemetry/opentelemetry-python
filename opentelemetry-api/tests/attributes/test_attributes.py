@@ -4,6 +4,8 @@
 # type: ignore
 
 import copy
+import logging
+import threading
 import unittest
 import unittest.mock
 
@@ -190,19 +192,47 @@ class TestBoundedAttributes(unittest.TestCase):
         with self.assertRaises(TypeError):
             bdict["should-not-work"] = "dict immutable"
 
-    def test_locking(self):
-        """Supporting test case for a commit titled: Fix class BoundedAttributes to have RLock rather than Lock. See #3858.
-        The change was introduced because __iter__ of the class BoundedAttributes holds lock, and we observed some deadlock symptoms
-        in the codebase. This test case is to verify that the fix works as expected.
+    def test_no_deadlock_on_reentrant_logging(self):
+        """Regression test for #3858.
+
+        The deadlock scenario: a logging handler intercepts the warning
+        emitted by _clean_attribute for an invalid value and calls __setitem__
+        on the same BoundedAttributes instance from the same thread.
+        With _clean_attribute called inside the lock this caused a deadlock.
+        With _clean_attribute called before the lock is acquired, no deadlock
+        occurs.
         """
         bdict = BoundedAttributes(immutable=False)
 
-        with bdict._lock:  # pylint: disable=protected-access
-            for num in range(100):
-                bdict[str(num)] = num
+        class ReentrantHandler(logging.Handler):
+            def emit(self, _record):
+                # Simulates Sentry intercepting the OTel warning and writing
+                # back into the same BoundedAttributes on the same thread.
+                bdict["reentrant.key"] = "set_by_handler"
 
-        for num in range(100):
-            self.assertEqual(bdict[str(num)], num)
+        otel_logger = logging.getLogger("opentelemetry.attributes")
+        handler = ReentrantHandler()
+        otel_logger.addHandler(handler)
+        try:
+            completed = threading.Event()
+
+            def run():
+                # None is an invalid attribute value and triggers _logger.warning
+                # in _clean_attribute, which fires the ReentrantHandler above.
+                bdict["trigger.key"] = None
+                completed.set()
+
+            thread = threading.Thread(target=run, daemon=True)
+            thread.start()
+            thread.join(timeout=2.0)
+
+            self.assertTrue(
+                completed.is_set(),
+                "Deadlock detected: __setitem__ did not complete within 2s",
+            )
+            self.assertEqual(bdict.get("reentrant.key"), "set_by_handler")
+        finally:
+            otel_logger.removeHandler(handler)
 
     def test_wsgi_request_conversion_to_string(self):
         """Test that WSGI request objects are converted to strings when _clean_attribute_value is called."""
