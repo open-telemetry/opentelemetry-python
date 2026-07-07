@@ -63,6 +63,7 @@ from opentelemetry.trace import (
     get_tracer,
     set_tracer_provider,
 )
+from opentelemetry.trace.propagation import tracecontext
 
 
 def _remote_parent_context():
@@ -603,6 +604,25 @@ class TestSpanCreation(unittest.TestCase):  # pylint: disable=too-many-public-me
         self.assertEqual(len(root.links), 1)
         self.assertEqual(root.links[0].context, remote_parent)
 
+    def test_trace_continuation_client_span_with_remote_parent_can_restart(
+        self,
+    ):
+        remote_parent, context = _remote_parent_context()
+        tracer = TracerProvider(
+            _continuation_decider=trace_continuation.ALWAYS_RESTART_WITH_LINK
+        ).get_tracer(__name__)
+
+        root = tracer.start_span(
+            "client", context, kind=trace_api.SpanKind.CLIENT
+        )
+
+        self.assertIsNone(root.parent)
+        self.assertNotEqual(
+            root.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(len(root.links), 1)
+        self.assertEqual(root.links[0].context, remote_parent)
+
     def test_trace_continuation_restart_with_link_preserves_explicit_links(
         self,
     ):
@@ -809,6 +829,125 @@ class TestSpanCreation(unittest.TestCase):  # pylint: disable=too-many-public-me
         self.assertEqual(
             root.links[0].attributes,
             {"otel.trace_continuation.reason": "external_webhook"},
+        )
+
+    def test_trace_continuation_egress_continue_preserves_injection(self):
+        tracer = TracerProvider().get_tracer(__name__)
+        propagator = tracecontext.TraceContextTextMapPropagator()
+
+        with tracer.start_as_current_span(
+            "client",
+            kind=trace_api.SpanKind.CLIENT,
+            attributes={"server.address": "internal.example.com"},
+        ) as span:
+            carrier = {}
+            propagator.inject(carrier)
+
+        self.assertIn("traceparent", carrier)
+        self.assertIn(
+            format(span.get_span_context().trace_id, "032x"),
+            carrier["traceparent"],
+        )
+
+    def test_trace_continuation_egress_restart_suppresses_trace_context(self):
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    egress_action=(
+                        trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT
+                    ),
+                    attributes={"server.address": "api.third-party.example"},
+                    direction=trace_continuation.ContinuationDirection.EGRESS,
+                ),
+            )
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+        propagator = tracecontext.TraceContextTextMapPropagator()
+
+        with tracer.start_as_current_span(
+            "client",
+            kind=trace_api.SpanKind.CLIENT,
+            attributes={"server.address": "api.third-party.example"},
+        ):
+            carrier = {}
+            propagator.inject(carrier)
+
+        self.assertNotIn("traceparent", carrier)
+        self.assertNotIn("tracestate", carrier)
+
+    def test_trace_continuation_egress_returns_propagation_action(self):
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.RESTART_WITH_LINK,
+                    attributes={"server.address": "api.third-party.example"},
+                    direction=trace_continuation.ContinuationDirection.EGRESS,
+                ),
+            )
+        )
+
+        action = decider.should_inject(
+            kind=trace_api.SpanKind.CLIENT,
+            attributes={"server.address": "api.third-party.example"},
+        )
+
+        self.assertIs(
+            action,
+            trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT,
+        )
+
+    def test_trace_continuation_egress_strategy_maps_to_propagation_action(
+        self,
+    ):
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.CONTINUE,
+                    attributes={"server.address": "internal.example.com"},
+                    direction=trace_continuation.ContinuationDirection.EGRESS,
+                ),
+            )
+        )
+
+        action = decider.should_inject(
+            kind=trace_api.SpanKind.CLIENT,
+            attributes={"server.address": "internal.example.com"},
+        )
+
+        self.assertIs(
+            action,
+            trace_continuation.EgressAction.INJECT_TRACE_CONTEXT,
+        )
+
+    def test_trace_continuation_egress_rule_is_direction_aware(self):
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    strategy=trace_continuation.Decision.RESTART_WITHOUT_LINK,
+                    attributes={"server.address": "api.third-party.example"},
+                    direction=trace_continuation.ContinuationDirection.INGRESS,
+                ),
+            )
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+        propagator = tracecontext.TraceContextTextMapPropagator()
+
+        with tracer.start_as_current_span(
+            "client",
+            kind=trace_api.SpanKind.CLIENT,
+            attributes={"server.address": "api.third-party.example"},
+        ) as span:
+            carrier = {}
+            propagator.inject(carrier)
+
+        self.assertIn("traceparent", carrier)
+        self.assertIn(
+            format(span.get_span_context().trace_id, "032x"),
+            carrier["traceparent"],
         )
 
     def test_start_as_current_span_implicit(self):

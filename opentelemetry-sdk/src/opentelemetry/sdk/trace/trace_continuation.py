@@ -29,6 +29,11 @@ class Decision(enum.Enum):
     RESTART_WITHOUT_LINK = 2
 
 
+class EgressAction(enum.Enum):
+    INJECT_TRACE_CONTEXT = 0
+    SUPPRESS_TRACE_CONTEXT = 1
+
+
 class ContinuationResult:
     def __repr__(self) -> str:
         return f"{type(self).__name__}({str(self.decision)}, links={str(self.links)})"
@@ -57,7 +62,6 @@ class TraceContinuationDecider(abc.ABC):
         *,
         parent_context: Context | None,
         parent_span_context: SpanContext | None,
-        direction: ContinuationDirection | None = None,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
         links: tuple[Link, ...] | None = None,
@@ -66,6 +70,16 @@ class TraceContinuationDecider(abc.ABC):
 
     @abc.abstractmethod
     def get_description(self) -> str:
+        pass
+
+    @abc.abstractmethod
+    def should_inject(
+        self,
+        *,
+        context: Context | None = None,
+        kind: SpanKind | None = None,
+        attributes: Attributes = None,
+    ) -> EgressAction:
         pass
 
 
@@ -80,7 +94,6 @@ class StaticTraceContinuationDecider(TraceContinuationDecider):
         *,
         parent_context: Context | None,
         parent_span_context: SpanContext | None,
-        direction: ContinuationDirection | None = None,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
         links: tuple[Link, ...] | None = None,
@@ -102,6 +115,15 @@ class StaticTraceContinuationDecider(TraceContinuationDecider):
             return "AlwaysRestartWithoutLinkContinuationDecider"
         return "AlwaysContinueContinuationDecider"
 
+    def should_inject(
+        self,
+        *,
+        context: Context | None = None,
+        kind: SpanKind | None = None,
+        attributes: Attributes = None,
+    ) -> EgressAction:
+        return _egress_action_from_decision(self._decision)
+
 
 ALWAYS_CONTINUE = StaticTraceContinuationDecider(Decision.CONTINUE)
 ALWAYS_RESTART_WITH_LINK = StaticTraceContinuationDecider(
@@ -116,7 +138,8 @@ ALWAYS_RESTART_WITHOUT_LINK = StaticTraceContinuationDecider(
 class TraceContinuationRule:
     """A rule that selects a trace continuation decision when all conditions match."""
 
-    strategy: Decision
+    strategy: Decision | None = None
+    egress_action: EgressAction | None = None
     attributes: Mapping[str, AnyValue] | None = None
     direction: ContinuationDirection | None = None
     span_kind: SpanKind | None = None
@@ -144,16 +167,17 @@ class RuleBasedTraceContinuationDecider(TraceContinuationDecider):
         *,
         rules: Sequence[TraceContinuationRule],
         default_strategy: Decision = Decision.CONTINUE,
+        default_egress_action: EgressAction = EgressAction.INJECT_TRACE_CONTEXT,
     ) -> None:
         self._rules = tuple(rules)
         self._default_strategy = default_strategy
+        self._default_egress_action = default_egress_action
 
     def should_continue(
         self,
         *,
         parent_context: Context | None,
         parent_span_context: SpanContext | None,
-        direction: ContinuationDirection | None = None,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
         links: tuple[Link, ...] | None = None,
@@ -161,14 +185,15 @@ class RuleBasedTraceContinuationDecider(TraceContinuationDecider):
         result_links = links or ()
         for rule in self._rules:
             if rule.matches(
-                direction=direction,
+                direction=ContinuationDirection.INGRESS,
                 span_kind=kind,
                 attributes=attributes,
             ):
+                strategy = _ingress_strategy_from_rule(rule)
                 return ContinuationResult(
-                    decision=rule.strategy,
+                    decision=strategy,
                     links=_maybe_add_restart_link(
-                        decision=rule.strategy,
+                        decision=strategy,
                         parent_span_context=parent_span_context,
                         links=result_links,
                         link_attributes=rule.link_attributes,
@@ -187,6 +212,23 @@ class RuleBasedTraceContinuationDecider(TraceContinuationDecider):
     def get_description(self) -> str:
         return "RuleBasedTraceContinuationDecider"
 
+    def should_inject(
+        self,
+        *,
+        context: Context | None = None,
+        kind: SpanKind | None = None,
+        attributes: Attributes = None,
+    ) -> EgressAction:
+        for rule in self._rules:
+            if rule.matches(
+                direction=ContinuationDirection.EGRESS,
+                span_kind=kind,
+                attributes=attributes,
+            ):
+                return _egress_action_from_rule(rule)
+
+        return self._default_egress_action
+
 
 def _maybe_add_restart_link(
     *,
@@ -198,6 +240,30 @@ def _maybe_add_restart_link(
     if decision is Decision.RESTART_WITH_LINK and parent_span_context:
         return links + (Link(parent_span_context, link_attributes),)
     return links
+
+
+def _egress_action_from_decision(decision: Decision) -> EgressAction:
+    if decision is Decision.CONTINUE:
+        return EgressAction.INJECT_TRACE_CONTEXT
+    return EgressAction.SUPPRESS_TRACE_CONTEXT
+
+
+def _ingress_strategy_from_rule(rule: TraceContinuationRule) -> Decision:
+    if rule.strategy is None:
+        raise ValueError(
+            "Ingress trace continuation rules must define strategy"
+        )
+    return rule.strategy
+
+
+def _egress_action_from_rule(rule: TraceContinuationRule) -> EgressAction:
+    if rule.egress_action is not None:
+        return rule.egress_action
+    if rule.strategy is not None:
+        return _egress_action_from_decision(rule.strategy)
+    raise ValueError(
+        "Egress trace continuation rules must define egress_action or strategy"
+    )
 
 
 def _attributes_match(

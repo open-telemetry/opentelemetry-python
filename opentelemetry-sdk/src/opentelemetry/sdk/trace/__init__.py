@@ -67,6 +67,7 @@ from opentelemetry.semconv.attributes.exception_attributes import (
     EXCEPTION_TYPE,
 )
 from opentelemetry.trace import NoOpTracer, SpanContext
+from opentelemetry.trace.propagation import tracecontext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
@@ -1173,13 +1174,32 @@ class Tracer(trace_api.Tracer):
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
         )
-        with trace_api.use_span(
-            span,
-            end_on_exit=end_on_exit,
-            record_exception=record_exception,
-            set_status_on_exception=set_status_on_exception,
-        ) as span:
-            yield span
+        token = None
+        if kind is trace_api.SpanKind.CLIENT:
+            egress_action = self._continuation_decider.should_inject(
+                context=context,
+                kind=kind,
+                attributes=attributes,
+            )
+            if (
+                egress_action
+                is trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT
+            ):
+                egress_context = tracecontext.suppress_trace_context_injection(
+                    context
+                )
+                token = context_api.attach(egress_context)
+        try:
+            with trace_api.use_span(
+                span,
+                end_on_exit=end_on_exit,
+                record_exception=record_exception,
+                set_status_on_exception=set_status_on_exception,
+            ) as span:
+                yield span
+        finally:
+            if token is not None:
+                context_api.detach(token)
 
     def start_span(  # pylint: disable=too-many-locals
         self,
@@ -1209,7 +1229,6 @@ class Tracer(trace_api.Tracer):
 
         # the continuation result decides if we should restart the trace
         # or not, consider only remote parent spans
-
         if (
             parent_span_context is not None
             and parent_span_context.is_valid
@@ -1218,7 +1237,6 @@ class Tracer(trace_api.Tracer):
             continuation_result = self._continuation_decider.should_continue(
                 parent_context=context,
                 parent_span_context=parent_span_context,
-                direction=trace_continuation.ContinuationDirection.INGRESS,
                 kind=kind,
                 attributes=attributes,
                 links=links,
