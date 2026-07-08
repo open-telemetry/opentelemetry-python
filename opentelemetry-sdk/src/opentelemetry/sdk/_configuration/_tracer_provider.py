@@ -12,7 +12,10 @@ from opentelemetry.sdk._configuration._common import (
     _parse_otlp_file_output_stream,
     load_entry_point,
 )
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration._exceptions import (
+    ConfigurationError,
+    MissingDependencyError,
+)
 from opentelemetry.sdk._configuration.models import (
     ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
 )
@@ -24,6 +27,9 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    IdGenerator as IdGeneratorConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -84,6 +90,7 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanExporter,
 )
+from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
@@ -112,9 +119,9 @@ def _create_otlp_http_span_exporter(
             OTLPSpanExporter,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "otlp_http span exporter requires 'opentelemetry-exporter-otlp-proto-http'. "
-            "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-otlp-proto-http",
+            feature="otlp_http span exporter",
         ) from exc
 
     compression = _map_compression(
@@ -143,9 +150,9 @@ def _create_otlp_grpc_span_exporter(
             OTLPSpanExporter,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "otlp_grpc span exporter requires 'opentelemetry-exporter-otlp-proto-grpc'. "
-            "Install it with: pip install opentelemetry-exporter-otlp-proto-grpc"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-otlp-proto-grpc",
+            feature="otlp_grpc span exporter",
         ) from exc
 
     compression = _map_compression(config.compression, grpc.Compression)
@@ -348,6 +355,26 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     )
 
 
+def _create_id_generator(config: IdGeneratorConfig) -> IdGenerator:
+    """Create an IdGenerator from config.
+
+    Built-in ``random`` resolves to ``RandomIdGenerator``; unknown names
+    load from the ``opentelemetry_id_generator`` entry point group (the
+    same group ``OTEL_PYTHON_ID_GENERATOR`` uses today).
+    """
+    if config.random is not None:
+        return RandomIdGenerator()
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_id_generator", name)(
+            **(plugin_config or {})
+        )
+    raise ConfigurationError(
+        "No id_generator type specified in config. "
+        "Supported built-in types: random."
+    )
+
+
 def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
     """Create a ParentBased sampler from config, applying SDK defaults for absent delegates."""
     root = (
@@ -431,6 +458,11 @@ def create_tracer_provider(
         if config is not None and config.sampler is not None
         else _DEFAULT_SAMPLER
     )
+    id_generator = (
+        _create_id_generator(config.id_generator)
+        if config is not None and config.id_generator is not None
+        else None
+    )
     span_limits = (
         _create_span_limits(config.limits)
         if config is not None and config.limits is not None
@@ -447,6 +479,7 @@ def create_tracer_provider(
         resource=resource,
         sampler=sampler,
         span_limits=span_limits,
+        id_generator=id_generator,
     )
 
     if config is not None:
