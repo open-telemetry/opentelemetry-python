@@ -144,6 +144,13 @@ Behavior notes
   not consulted. Environment variables can still be read indirectly by
   components the file enables (for example resource detectors) and via
   ``${env:VAR}`` substitution.
+* Python-implementation extensions (``OTEL_PYTHON_*`` variables such as
+  ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
+  ``OTEL_PYTHON_TRACER_CONFIGURATOR``) are **not** applied when
+  ``OTEL_CONFIG_FILE`` is set: the env-var initialisation path is skipped
+  entirely. If your app currently relies on one of these and you are
+  migrating to a config file, plan to capture the equivalent behaviour in
+  the file (or in code) instead.
 * Sections omitted from the file leave the corresponding global provider
   unset (a no-op provider), per the specification.
 * Setting ``disabled: true`` at the top level turns the SDK into a no-op.
