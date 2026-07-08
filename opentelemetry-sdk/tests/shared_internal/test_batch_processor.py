@@ -141,6 +141,47 @@ class TestBatchProcessor:
         batch_processor._batch_processor.emit(telemetry)
         exporter.export.assert_called_once()
 
+    def test_telemetry_not_delayed_by_wakeup_race_condition(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=20,
+            max_export_batch_size=10,
+            schedule_delay_millis=5000,
+            export_timeout_millis=500,
+        )
+        bp = batch_processor._batch_processor
+
+        # We hook the _worker_awaken.clear method to simulate a burst of telemetry
+        # arriving exactly after _export has finished but before the signal is cleared.
+        original_clear = bp._worker_awaken.clear
+
+        def hooked_clear():
+            # Emit a full batch right before the event is cleared.
+            # This simulates a concurrent thread filling the queue and calling .set()
+            for _ in range(10):
+                bp.emit(telemetry)
+            original_clear()
+
+        bp._worker_awaken.clear = hooked_clear
+
+        # Trigger the first export loop
+        for _ in range(10):
+            bp.emit(telemetry)
+
+        # Wait for the worker to process the first batch, hit our hook, and go back to sleep.
+        # The worker will sleep for schedule_delay_millis (5 seconds) if the bug is present.
+        # We wait just a little bit (0.5s) to give it a chance to export the second batch.
+        time.sleep(0.5)
+
+        # If the bug is present, the second batch is stuck in the queue and export is only called once.
+        # If the bug is fixed, the second batch is exported immediately.
+        assert exporter.export.call_count == 2, "Race condition detected: missed wakeup signal"
+
+        batch_processor.shutdown()
+
     # pylint: disable=no-self-use
     def test_force_flush_flushes_telemetry(
         self, batch_processor_class, telemetry
