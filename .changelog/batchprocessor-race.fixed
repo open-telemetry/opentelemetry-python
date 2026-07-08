@@ -1,0 +1,1 @@
+Fixed a missed wakeup race condition in `BatchProcessor` that could cause up to 5 seconds of export latency when the batch queue fills.
