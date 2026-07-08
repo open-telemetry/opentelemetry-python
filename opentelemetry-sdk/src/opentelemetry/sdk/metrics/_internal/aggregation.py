@@ -3,13 +3,13 @@
 
 # pylint: disable=too-many-lines
 
+import math
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from collections.abc import Callable, Sequence
 from enum import IntEnum
 from functools import partial
 from logging import getLogger
-from math import inf
 from threading import Lock
 from typing import (
     Generic,
@@ -464,6 +464,12 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             boundaries = (
                 _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
             )
+        if boundaries:
+            for idx, bound in enumerate(boundaries):
+                if not math.isfinite(bound):
+                    raise ValueError(f"invalid boundary: {bound!r}")
+                if idx and boundaries[idx - 1] >= bound:
+                    raise ValueError("boundaries must be strictly increasing")
         super().__init__(
             attributes,
             reservoir_builder=partial(
@@ -479,13 +485,13 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._record_min_max = record_min_max
 
         self._value = None
-        self._min = inf
-        self._max = -inf
+        self._min = math.inf
+        self._max = -math.inf
         self._sum = 0
 
         self._previous_value = None
-        self._previous_min = inf
-        self._previous_max = -inf
+        self._previous_min = math.inf
+        self._previous_max = -math.inf
         self._previous_sum = 0
 
         self._previous_collection_start_nano = self._start_time_unix_nano
@@ -529,8 +535,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             self._value = None
             self._sum = 0
-            self._min = inf
-            self._max = -inf
+            self._min = math.inf
+            self._max = -math.inf
 
             if (
                 self._instrument_aggregation_temporality
@@ -674,8 +680,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._value_positive = None
         self._value_negative = None
-        self._min = inf
-        self._max = -inf
+        self._min = math.inf
+        self._max = -math.inf
         self._sum = 0
         self._count = 0
         self._zero_count = 0
@@ -683,8 +689,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._previous_value_positive = None
         self._previous_value_negative = None
-        self._previous_min = inf
-        self._previous_max = -inf
+        self._previous_min = math.inf
+        self._previous_max = -math.inf
         self._previous_sum = 0
         self._previous_count = 0
         self._previous_zero_count = 0
@@ -830,8 +836,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             self._value_positive = None
             self._value_negative = None
             self._sum = 0
-            self._min = inf
-            self._max = -inf
+            self._min = math.inf
+            self._max = -math.inf
             self._count = 0
             self._zero_count = 0
             self._scale = None

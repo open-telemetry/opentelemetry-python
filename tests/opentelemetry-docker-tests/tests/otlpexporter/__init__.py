@@ -1,166 +1,39 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import time
-from abc import ABC, abstractmethod
+from __future__ import annotations
 
-from opentelemetry.context import (
-    _SUPPRESS_INSTRUMENTATION_KEY,
-    attach,
-    detach,
-    set_value,
-)
-from opentelemetry.sdk.metrics._internal.export import (
-    MetricExportResult,
-    PeriodicExportingMetricReader,
-)
-from opentelemetry.sdk.metrics._internal.point import (
-    Metric,
-    NumberDataPoint,
-    Sum,
-)
-from opentelemetry.sdk.metrics.export import (
-    MetricsData,
-    ResourceMetrics,
-    ScopeMetrics,
-)
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from dataclasses import dataclass, field
+from typing import Any, Generic, TypeVar
+
+ExporterT = TypeVar("ExporterT")
+
+CUSTOM_HEADERS: dict[str, str] = {
+    "x-custom-header": "custom-value",
+    "x-another-header": "another-value",
+}
 
 
-class ExportStatusSpanProcessor(SimpleSpanProcessor):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.export_status = []
+@dataclass
+class ExporterConfig(Generic[ExporterT]):
+    id: str
+    exporter_class: type[ExporterT]
+    kwargs: dict[str, Any] = field(default_factory=dict)
 
-    def on_end(self, span):
-        token = attach(set_value("suppress_instrumentation", True))
-        self.export_status.append(self.span_exporter.export((span,)))
-        detach(token)
-
-
-class ExportStatusMetricReader(PeriodicExportingMetricReader):
-    def __init__(self, exporter, **kwargs):
-        # Very short export interval for testing
-        super().__init__(exporter, export_interval_millis=1, **kwargs)
-        self.export_status = []
-
-    def _receive_metrics(self, metrics_data, timeout_millis=10_000, **kwargs):
-        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        try:
-            export_result = self._exporter.export(
-                metrics_data, timeout_millis=timeout_millis
-            )
-            self.export_status.append(export_result)
-        except Exception:
-            self.export_status.append(MetricExportResult.FAILURE)
-        finally:
-            detach(token)
+    def build(self) -> ExporterT:
+        return self.exporter_class(**self.kwargs)
 
 
-class BaseTestOTLPExporter(ABC):
-    @abstractmethod
-    def get_span_processor(self):
-        pass
-
-    @abstractmethod
-    def get_metric_reader(self):
-        pass
-
-    # pylint: disable=no-member
-    def test_export(self):
-        """Test span export"""
-        with self.tracer.start_as_current_span("foo"):
-            with self.tracer.start_as_current_span("bar"):
-                with self.tracer.start_as_current_span("baz"):
-                    pass
-
-        self.assertTrue(len(self.span_processor.export_status), 3)
-
-        for export_status in self.span_processor.export_status:
-            self.assertEqual(export_status.name, "SUCCESS")
-            self.assertEqual(export_status.value, 0)
-
-    def test_metrics_export(self):
-        """Test metrics export from full metrics SDK pipeline"""
-        counter = self.meter.create_counter("test_counter")
-        histogram = self.meter.create_histogram("test_histogram")
-        up_down_counter = self.meter.create_up_down_counter(
-            "test_up_down_counter"
-        )
-
-        counter.add(1, {"key1": "value1"})
-        counter.add(2, {"key2": "value2"})
-        histogram.record(1.5, {"key3": "value3"})
-        histogram.record(2.5, {"key4": "value4"})
-        up_down_counter.add(3, {"key5": "value5"})
-        up_down_counter.add(-1, {"key6": "value6"})
-        self.metric_reader.force_flush(timeout_millis=5000)
-        time.sleep(0.1)
-
-        # Verify at least one export happened
-        self.assertTrue(len(self.metric_reader.export_status) >= 1)
-        # Verify all exports succeeded
-        for export_status in self.metric_reader.export_status:
-            self.assertEqual(export_status.name, "SUCCESS")
-            self.assertEqual(export_status.value, 0)
-
-    @abstractmethod
-    def test_metrics_export_batch_size_two(self):
-        """Test metrics max_export_batch_size=2 directly through exporter"""
-
-    def _create_test_metrics_data(self, num_data_points=6):
-        """Create test metrics data with specified number of data points."""
-        data_points = [
-            NumberDataPoint(
-                attributes={"key": f"value{i}"},
-                start_time_unix_nano=1000000 + i,
-                time_unix_nano=2000000 + i,
-                value=i + 1.0,
-            )
-            for i in range(num_data_points)
-        ]
-        metric = Metric(
-            name="otel_test_counter_foobar",
-            description="Test counter metric for batch verification",
-            unit="1",
-            data=Sum(
-                data_points=data_points,
-                aggregation_temporality=1,  # CUMULATIVE
-                is_monotonic=True,
-            ),
-        )
-        scope_metrics = ScopeMetrics(
-            scope=InstrumentationScope(name="test_scope"),
-            metrics=[metric],
-            schema_url=None,
-        )
-        resource_metrics = ResourceMetrics(
-            resource=Resource.create({"service.name": "test-service"}),
-            scope_metrics=[scope_metrics],
-            schema_url=None,
-        )
-
-        return MetricsData(resource_metrics=[resource_metrics]), data_points
-
-    def _verify_batch_export_result(
-        self, result, data_points, batch_counter, max_batch_size=2
-    ):
-        """Verify export result and batch count for export batching tests."""
-        self.assertEqual(
-            result.name, "SUCCESS", f"Expected SUCCESS, got: {result}"
-        )
-        self.assertEqual(
-            result.value, 0, f"Expected result code 0, got: {result.value}"
-        )
-
-        expected_batches = (
-            len(data_points) + max_batch_size - 1
-        ) // max_batch_size
-        self.assertEqual(
-            batch_counter.export_call_count,
-            expected_batches,
-            f"Expected {expected_batches} export calls with max_export_batch_size={max_batch_size} and {len(data_points)} data points, "
-            f"but got {batch_counter.export_call_count} calls",
-        )
+def _attrs_to_dict(attributes) -> dict:
+    result = {}
+    for kv in attributes:
+        which = kv.value.WhichOneof("value")
+        if which == "string_value":
+            result[kv.key] = kv.value.string_value
+        elif which == "int_value":
+            result[kv.key] = kv.value.int_value
+        elif which == "double_value":
+            result[kv.key] = kv.value.double_value
+        elif which == "bool_value":
+            result[kv.key] = kv.value.bool_value
+    return result
