@@ -51,9 +51,9 @@ logging.getLogger().addHandler(handler)
 logger1 = logging.getLogger("myapp.area1")
 logger2 = logging.getLogger("myapp.area2")
 
-# Ensure log records propagate to root logger so the handler picks them up
-logger1.propagate = True
-logger2.propagate = True
+# Propagate is True by default, ensure it is not set to False so log
+# records reach the root logger handler. See
+# https://docs.python.org/3/library/logging.html#logging.Logger.propagate
 
 logger1.debug("Quick zephyrs blow, vexing daft Jim.")
 logger1.info("How quickly daft jumping zebras vex.")

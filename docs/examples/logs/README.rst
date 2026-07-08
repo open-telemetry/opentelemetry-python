@@ -12,7 +12,7 @@ The source files of these examples are available :scm_web:`here <docs/examples/l
 
    ``LoggingHandler`` has moved from the SDK to the
    ``opentelemetry-instrumentation-logging`` package in the contrib repo
-   and is no longer available in ``opentelemetry-sdk``.
+   and is deprecated in ``opentelemetry-sdk``.
 
 
 Installation
