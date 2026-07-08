@@ -13,7 +13,10 @@ Example:
     '1.0'
 """
 
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration._exceptions import (
+    ConfigurationError,
+    MissingDependencyError,
+)
 from opentelemetry.sdk._configuration._logger_provider import (
     configure_logger_provider,
     create_logger_provider,
@@ -43,6 +46,7 @@ __all__ = [
     "configure_sdk",
     "substitute_env_vars",
     "ConfigurationError",
+    "MissingDependencyError",
     "EnvSubstitutionError",
     "create_resource",
     "create_propagator",
