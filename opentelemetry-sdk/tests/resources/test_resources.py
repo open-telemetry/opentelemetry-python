@@ -659,6 +659,26 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND], sys.orig_argv[0]
         )
+        self.assertNotIn(
+            PROCESS_COMMAND_LINE,
+            aggregated_resource.attributes,
+        )
+        self.assertNotIn(
+            PROCESS_COMMAND_ARGS,
+            aggregated_resource.attributes,
+        )
+
+    @patch(
+        "sys.orig_argv",
+        ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
+    )
+    def test_process_detector_includes_command_args_on_opt_in(self):
+        initial_resource = Resource({"foo": "bar"})
+        aggregated_resource = get_aggregated_resources(
+            [ProcessResourceDetector(include_command_args=True)],
+            initial_resource,
+        )
+
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_LINE],
             " ".join(sys.orig_argv),
@@ -666,6 +686,35 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
             tuple(sys.orig_argv),
+        )
+
+    def test_process_detector_does_not_iterate_orig_argv_by_default(self):
+        class SensitiveOrigArgv:
+            def __getitem__(self, index):
+                if index == 0:
+                    return "uvicorn"
+                raise AssertionError("unexpected argv access")
+
+            def __iter__(self):
+                raise AssertionError("unexpected argv iteration")
+
+        with patch("sys.orig_argv", SensitiveOrigArgv()):
+            aggregated_resource = get_aggregated_resources(
+                [ProcessResourceDetector()],
+                Resource({"foo": "bar"}),
+            )
+
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_COMMAND],
+            "uvicorn",
+        )
+        self.assertNotIn(
+            PROCESS_COMMAND_LINE,
+            aggregated_resource.attributes,
+        )
+        self.assertNotIn(
+            PROCESS_COMMAND_ARGS,
+            aggregated_resource.attributes,
         )
 
     @patch("sys.orig_argv", ["/usr/bin/python", "-m", "myapp"])
@@ -677,6 +726,26 @@ class TestOTELResourceDetector(unittest.TestCase):
         """
         aggregated_resource = get_aggregated_resources(
             [ProcessResourceDetector()], Resource({"foo": "bar"})
+        )
+
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_COMMAND],
+            "/usr/bin/python",
+        )
+        self.assertNotIn(
+            PROCESS_COMMAND_LINE,
+            aggregated_resource.attributes,
+        )
+        self.assertNotIn(
+            PROCESS_COMMAND_ARGS,
+            aggregated_resource.attributes,
+        )
+
+    @patch("sys.orig_argv", ["/usr/bin/python", "-m", "myapp"])
+    def test_process_detector_uses_orig_argv_for_python_m_on_opt_in(self):
+        aggregated_resource = get_aggregated_resources(
+            [ProcessResourceDetector(include_command_args=True)],
+            Resource({"foo": "bar"}),
         )
 
         self.assertEqual(

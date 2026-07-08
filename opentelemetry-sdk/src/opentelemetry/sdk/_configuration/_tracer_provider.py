@@ -12,7 +12,10 @@ from opentelemetry.sdk._configuration._common import (
     _parse_otlp_file_output_stream,
     load_entry_point,
 )
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration._exceptions import (
+    ConfigurationError,
+    MissingDependencyError,
+)
 from opentelemetry.sdk._configuration.models import (
     ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
 )
@@ -116,9 +119,9 @@ def _create_otlp_http_span_exporter(
             OTLPSpanExporter,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "otlp_http span exporter requires 'opentelemetry-exporter-otlp-proto-http'. "
-            "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-otlp-proto-http",
+            feature="otlp_http span exporter",
         ) from exc
 
     compression = _map_compression(
@@ -147,9 +150,9 @@ def _create_otlp_grpc_span_exporter(
             OTLPSpanExporter,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "otlp_grpc span exporter requires 'opentelemetry-exporter-otlp-proto-grpc'. "
-            "Install it with: pip install opentelemetry-exporter-otlp-proto-grpc"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-otlp-proto-grpc",
+            feature="otlp_grpc span exporter",
         ) from exc
 
     compression = _map_compression(config.compression, grpc.Compression)
