@@ -8,12 +8,17 @@ from unittest import TestCase
 from opentelemetry.context import get_current
 from opentelemetry.trace import (
     INVALID_SPAN,
+    NonRecordingSpan,
     NoOpTracer,
     Span,
+    SpanContext,
+    SpanKind,
     Tracer,
     _agnosticcontextmanager,
     get_current_span,
+    set_span_in_context,
 )
+from opentelemetry.trace.propagation import tracecontext
 
 
 class TestTracer(TestCase):
@@ -27,6 +32,45 @@ class TestTracer(TestCase):
     def test_start_as_current_span_context_manager(self):
         with self.tracer.start_as_current_span("") as span:
             self.assertIsInstance(span, Span)
+
+    def test_apply_egress_continuation_noop_tracer_preserves_context(self):
+        propagator = tracecontext.TraceContextTextMapPropagator()
+        span_context = SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+        )
+        context = set_span_in_context(NonRecordingSpan(span_context))
+
+        with self.tracer.apply_egress_continuation(
+            kind=SpanKind.CLIENT,
+            context=context,
+            attributes={"server.address": "api.example.com"},
+        ) as injection_context:
+            carrier: dict[str, str] = {}
+            propagator.inject(carrier, context=injection_context)
+
+        self.assertIn("traceparent", carrier)
+
+    def test_apply_egress_continuation_noop_tracer_preserves_suppression(self):
+        propagator = tracecontext.TraceContextTextMapPropagator()
+        span_context = SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+        )
+        context = set_span_in_context(NonRecordingSpan(span_context))
+        context = tracecontext.suppress_trace_context_injection(context)
+
+        with self.tracer.apply_egress_continuation(
+            kind=SpanKind.CLIENT,
+            context=context,
+            attributes={"server.address": "api.example.com"},
+        ) as injection_context:
+            carrier: dict[str, str] = {}
+            propagator.inject(carrier, context=injection_context)
+
+        self.assertNotIn("traceparent", carrier)
 
     def test_start_as_current_span_decorator(self):
         # using a list to track the mock call order

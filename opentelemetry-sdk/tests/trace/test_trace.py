@@ -924,6 +924,41 @@ class TestSpanCreation(unittest.TestCase):  # pylint: disable=too-many-public-me
         self.assertNotIn("traceparent", carrier)
         self.assertNotIn("tracestate", carrier)
 
+    def test_trace_continuation_egress_with_separate_activation_suppresses_trace_context(
+        self,
+    ):
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    egress_action=(
+                        trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT
+                    ),
+                    attributes={"server.address": "api.third-party.example"},
+                    direction=trace_continuation.ContinuationDirection.EGRESS,
+                ),
+            )
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+        propagator = tracecontext.TraceContextTextMapPropagator()
+        span = tracer.start_span(
+            "client",
+            kind=trace_api.SpanKind.CLIENT,
+            attributes={"server.address": "api.third-party.example"},
+        )
+
+        with trace_api.use_span(span, end_on_exit=True):
+            carrier = {}
+            with tracer.apply_egress_continuation(
+                kind=trace_api.SpanKind.CLIENT,
+                attributes={"server.address": "api.third-party.example"},
+            ) as injection_context:
+                propagator.inject(carrier, context=injection_context)
+
+        self.assertNotIn("traceparent", carrier)
+        self.assertNotIn("tracestate", carrier)
+
     def test_trace_continuation_producer_egress_suppresses_trace_context(
         self,
     ):
