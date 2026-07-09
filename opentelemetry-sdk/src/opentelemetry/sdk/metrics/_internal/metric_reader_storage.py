@@ -1,26 +1,13 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from logging import getLogger
 from threading import RLock
 from time import time_ns
-from typing import Dict, List, Optional
 
 from opentelemetry.metrics import (
     Asynchronous,
     Counter,
-    Instrument,
     ObservableCounter,
 )
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
@@ -28,6 +15,7 @@ from opentelemetry.sdk.metrics._internal._view_instrument_match import (
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
+    AggregationTemporality,
     ExplicitBucketHistogramAggregation,
     _DropAggregation,
     _ExplicitBucketHistogramAggregation,
@@ -35,7 +23,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     _LastValueAggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
+from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogram,
@@ -64,20 +52,20 @@ class MetricReaderStorage:
     def __init__(
         self,
         sdk_config: SdkConfiguration,
-        instrument_class_temporality: Dict[type, AggregationTemporality],
-        instrument_class_aggregation: Dict[type, Aggregation],
+        instrument_class_temporality: dict[type, AggregationTemporality],
+        instrument_class_aggregation: dict[type, Aggregation],
     ) -> None:
         self._lock = RLock()
         self._sdk_config = sdk_config
-        self._instrument_view_instrument_matches: Dict[
-            Instrument, List[_ViewInstrumentMatch]
+        self._instrument_view_instrument_matches: dict[
+            _Instrument, list[_ViewInstrumentMatch]
         ] = {}
         self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
 
     def _get_or_init_view_instrument_match(
-        self, instrument: Instrument
-    ) -> List[_ViewInstrumentMatch]:
+        self, instrument: _Instrument
+    ) -> list[_ViewInstrumentMatch]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
 
@@ -123,7 +111,7 @@ class MetricReaderStorage:
                 measurement, should_sample_exemplar
             )
 
-    def collect(self) -> Optional[MetricsData]:
+    def collect(self) -> MetricsData | None:
         # Use a list instead of yielding to prevent a slow reader from holding
         # SDK locks
 
@@ -139,19 +127,23 @@ class MetricReaderStorage:
         collection_start_nanos = time_ns()
 
         with self._lock:
-            instrumentation_scope_scope_metrics: Dict[
+            instrumentation_scope_scope_metrics: dict[
                 InstrumentationScope, ScopeMetrics
             ] = {}
+
+            instrument_matches_snapshot = list(
+                self._instrument_view_instrument_matches.items()
+            )
 
             for (
                 instrument,
                 view_instrument_matches,
-            ) in self._instrument_view_instrument_matches.items():
+            ) in instrument_matches_snapshot:
                 aggregation_temporality = self._instrument_class_temporality[
                     instrument.__class__
                 ]
 
-                metrics: List[Metric] = []
+                metrics: list[Metric] = []
 
                 for view_instrument_match in view_instrument_matches:
                     data_points = view_instrument_match.collect(
@@ -249,8 +241,8 @@ class MetricReaderStorage:
 
     def _handle_view_instrument_match(
         self,
-        instrument: Instrument,
-        view_instrument_matches: List["_ViewInstrumentMatch"],
+        instrument: _Instrument,
+        view_instrument_matches: list["_ViewInstrumentMatch"],
     ) -> None:
         for view in self._sdk_config.views:
             # pylint: disable=protected-access
@@ -288,7 +280,7 @@ class MetricReaderStorage:
 
     @staticmethod
     def _check_view_instrument_compatibility(
-        view: View, instrument: Instrument
+        view: View, instrument: _Instrument
     ) -> bool:
         """
         Checks if a view and an instrument are compatible.

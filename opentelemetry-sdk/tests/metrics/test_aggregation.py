@@ -1,22 +1,10 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access
 
 from math import inf
 from time import sleep, time_ns
-from typing import Union
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -55,7 +43,7 @@ from opentelemetry.util.types import Attributes
 
 
 def measurement(
-    value: Union[int, float], attributes: Attributes = None
+    value: int | float, attributes: Attributes = None
 ) -> Measurement:
     return Measurement(
         value,
@@ -475,6 +463,79 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 10000.0,
             ),
         )
+
+    def test_create_aggregation_on_instrument_without_boundaries(self):
+        """ExplicitBucketHistogramAggregation should not crash when applied
+        to a non-Histogram instrument without explicit boundaries.
+        """
+        aggregation = ExplicitBucketHistogramAggregation()
+        result = aggregation._create_aggregation(
+            _Counter("test.counter", Mock(), Mock()),
+            Mock(),
+            _default_reservoir_factory,
+            0,
+        )
+        self.assertIsInstance(result, _ExplicitBucketHistogramAggregation)
+
+    def test_unsorted_boundaries_raise(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[100, 10, 50],
+            )
+
+    def test_duplicate_boundaries_raise(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[10, 50, 50, 100],
+            )
+
+    def test_nan_boundary_raises(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[10, float("nan"), 100],
+            )
+
+    def test_inf_boundary_raises(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[10, 50, float("inf")],
+            )
+
+    def test_negative_inf_boundary_raises(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[float("-inf"), 50, 100],
+            )
 
 
 class TestAggregationFactory(TestCase):

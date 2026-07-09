@@ -1,18 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
-import typing
+import collections.abc
 from re import compile as re_compile
 
 from typing_extensions import deprecated
@@ -49,7 +38,7 @@ class B3MultiFormat(TextMapPropagator):
     def extract(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         getter: Getter = default_getter,
     ) -> Context:
         if context is None:
@@ -130,7 +119,7 @@ class B3MultiFormat(TextMapPropagator):
     def inject(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
@@ -151,7 +140,7 @@ class B3MultiFormat(TextMapPropagator):
         setter.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         return {
             self.TRACE_ID_KEY,
             self.SPAN_ID_KEY,
@@ -169,7 +158,7 @@ class B3SingleFormat(B3MultiFormat):
     def inject(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
@@ -189,7 +178,7 @@ class B3SingleFormat(B3MultiFormat):
         setter.set(carrier, self.SINGLE_HEADER_KEY, "-".join(fields))
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         return {self.SINGLE_HEADER_KEY}
 
 
@@ -202,8 +191,8 @@ class B3Format(B3MultiFormat):
 
 
 def _extract_first_element(
-    items: typing.Iterable[CarrierT],
-) -> typing.Optional[CarrierT]:
+    items: collections.abc.Iterable[CarrierT],
+) -> CarrierT | None:
     if items is None:
         return None
     return next(iter(items), None)

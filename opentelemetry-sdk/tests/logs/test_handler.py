@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import os
@@ -38,8 +27,15 @@ from opentelemetry.trace import (
 
 # pylint: disable=too-many-public-methods
 class TestLoggingHandler(unittest.TestCase):
+    def test_warns_when_used(self):
+        with self.assertWarnsRegex(
+            DeprecationWarning,
+            "`LoggingHandler` in `opentelemetry-sdk` is deprecated",
+        ):
+            LoggingHandler()
+
     def test_handler_default_log_level(self):
-        processor, logger = set_up_test_logging(logging.NOTSET)
+        processor, logger, handler = set_up_test_logging(logging.NOTSET)
 
         # Make sure debug messages are ignored by default
         logger.debug("Debug message")
@@ -50,8 +46,10 @@ class TestLoggingHandler(unittest.TestCase):
             logger.warning("Warning message")
         self.assertEqual(processor.emit_count(), 1)
 
+        logger.removeHandler(handler)
+
     def test_handler_custom_log_level(self):
-        processor, logger = set_up_test_logging(logging.ERROR)
+        processor, logger, handler = set_up_test_logging(logging.ERROR)
 
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message test custom log level")
@@ -63,6 +61,8 @@ class TestLoggingHandler(unittest.TestCase):
         with self.assertLogs(level=logging.CRITICAL):
             logger.critical("No Time For Caution")
         self.assertEqual(processor.emit_count(), 2)
+
+        logger.removeHandler(handler)
 
     # pylint: disable=protected-access
     def test_log_record_emit_noop(self):
@@ -78,9 +78,10 @@ class TestLoggingHandler(unittest.TestCase):
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
 
+        logger.removeHandler(handler_mock)
+
     def test_log_flush_noop(self):
         no_op_logger_provider = NoOpLoggerProvider()
-        no_op_logger_provider.force_flush = Mock()
 
         logger = logging.getLogger("foo")
         handler = LoggingHandler(
@@ -91,11 +92,19 @@ class TestLoggingHandler(unittest.TestCase):
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
 
-        logger.handlers[0].flush()
-        no_op_logger_provider.force_flush.assert_not_called()
+        # the LoggingHandler flush method will call the force_flush method of LoggerProvider in
+        # a separate thread if present. NoOpLoggerProvider is not supposed to have that
+        with patch(
+            "opentelemetry.sdk._logs._internal.threading"
+        ) as threading_mock:
+            logger.handlers[0].flush()
+
+        threading_mock.Thread.assert_not_called()
+
+        logger.removeHandler(handler)
 
     def test_log_record_no_span_context(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
+        processor, logger, handler = set_up_test_logging(logging.WARNING)
 
         # Assert emit gets called for warning message
         with self.assertLogs(level=logging.WARNING):
@@ -115,8 +124,10 @@ class TestLoggingHandler(unittest.TestCase):
             INVALID_SPAN_CONTEXT.trace_flags,
         )
 
+        logger.removeHandler(handler)
+
     def test_log_record_observed_timestamp(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
+        processor, logger, handler = set_up_test_logging(logging.WARNING)
 
         with self.assertLogs(level=logging.WARNING):
             logger.warning("Warning message")
@@ -124,9 +135,11 @@ class TestLoggingHandler(unittest.TestCase):
         record = processor.get_log_record(0)
         self.assertIsNotNone(record.log_record.observed_timestamp)
 
+        logger.removeHandler(handler)
+
     def test_log_record_user_attributes(self):
         """Attributes can be injected into logs by adding them to the ReadWriteLogRecord"""
-        processor, logger = set_up_test_logging(logging.WARNING)
+        processor, logger, handler = set_up_test_logging(logging.WARNING)
 
         # Assert emit gets called for warning message
         with self.assertLogs(level=logging.WARNING):
@@ -155,9 +168,11 @@ class TestLoggingHandler(unittest.TestCase):
             isinstance(record.log_record.attributes, BoundedAttributes)
         )
 
+        logger.removeHandler(handler)
+
     def test_log_record_exception(self):
         """Exception information will be included in attributes"""
-        processor, logger = set_up_test_logging(logging.ERROR)
+        processor, logger, handler = set_up_test_logging(logging.ERROR)
 
         try:
             raise ZeroDivisionError("division by zero")
@@ -189,9 +204,11 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertTrue("division by zero" in stack_trace)
         self.assertTrue(__file__ in stack_trace)
 
+        logger.removeHandler(handler)
+
     def test_log_record_recursive_exception(self):
         """Exception information will be included in attributes even though it is recursive"""
-        processor, logger = set_up_test_logging(logging.ERROR)
+        processor, logger, handler = set_up_test_logging(logging.ERROR)
 
         try:
             raise ZeroDivisionError(
@@ -224,9 +241,11 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertTrue("division by zero" in stack_trace)
         self.assertTrue(__file__ in stack_trace)
 
+        logger.removeHandler(handler)
+
     def test_log_exc_info_false(self):
         """Exception information will not be included in attributes"""
-        processor, logger = set_up_test_logging(logging.NOTSET)
+        processor, logger, handler = set_up_test_logging(logging.NOTSET)
 
         try:
             raise ZeroDivisionError("division by zero")
@@ -251,8 +270,10 @@ class TestLoggingHandler(unittest.TestCase):
             record.log_record.attributes,
         )
 
+        logger.removeHandler(handler)
+
     def test_log_record_exception_with_object_payload(self):
-        processor, logger = set_up_test_logging(logging.ERROR)
+        processor, logger, handler = set_up_test_logging(logging.ERROR)
 
         class CustomException(Exception):
             def __str__(self):
@@ -287,8 +308,10 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertTrue("CustomException" in stack_trace)
         self.assertTrue(__file__ in stack_trace)
 
+        logger.removeHandler(handler)
+
     def test_log_record_trace_correlation(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
+        processor, logger, handler = set_up_test_logging(logging.WARNING)
 
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_as_current_span("test") as span:
@@ -307,7 +330,7 @@ class TestLoggingHandler(unittest.TestCase):
                     record.log_record.body,
                     "Critical message within span",
                 )
-                self.assertEqual(record.log_record.severity_text, "CRITICAL")
+                self.assertEqual(record.log_record.severity_text, "FATAL")
                 self.assertEqual(
                     record.log_record.severity_number,
                     SeverityNumber.FATAL,
@@ -325,8 +348,10 @@ class TestLoggingHandler(unittest.TestCase):
                     span_context.trace_flags,
                 )
 
+        logger.removeHandler(handler)
+
     def test_log_record_trace_correlation_deprecated(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
+        processor, logger, handler = set_up_test_logging(logging.WARNING)
 
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_as_current_span("test") as span:
@@ -338,7 +363,7 @@ class TestLoggingHandler(unittest.TestCase):
             self.assertEqual(
                 record.log_record.body, "Critical message within span"
             )
-            self.assertEqual(record.log_record.severity_text, "CRITICAL")
+            self.assertEqual(record.log_record.severity_text, "FATAL")
             self.assertEqual(
                 record.log_record.severity_number, SeverityNumber.FATAL
             )
@@ -349,22 +374,28 @@ class TestLoggingHandler(unittest.TestCase):
                 record.log_record.trace_flags, span_context.trace_flags
             )
 
+        logger.removeHandler(handler)
+
     def test_warning_without_formatter(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
+        processor, logger, handler = set_up_test_logging(logging.WARNING)
         logger.warning("Test message")
 
         record = processor.get_log_record(0)
         self.assertEqual(record.log_record.body, "Test message")
 
+        logger.removeHandler(handler)
+
     def test_exception_without_formatter(self):
-        processor, logger = set_up_test_logging(logging.WARNING)
+        processor, logger, handler = set_up_test_logging(logging.WARNING)
         logger.exception("Test exception")
 
         record = processor.get_log_record(0)
         self.assertEqual(record.log_record.body, "Test exception")
 
+        logger.removeHandler(handler)
+
     def test_warning_with_formatter(self):
-        processor, logger = set_up_test_logging(
+        processor, logger, handler = set_up_test_logging(
             logging.WARNING,
             formatter=logging.Formatter(
                 "%(name)s - %(levelname)s - %(message)s"
@@ -377,8 +408,10 @@ class TestLoggingHandler(unittest.TestCase):
             record.log_record.body, "foo - WARNING - Test message"
         )
 
+        logger.removeHandler(handler)
+
     def test_log_body_is_always_string_with_formatter(self):
-        processor, logger = set_up_test_logging(
+        processor, logger, handler = set_up_test_logging(
             logging.WARNING,
             formatter=logging.Formatter(
                 "%(name)s - %(levelname)s - %(message)s"
@@ -389,16 +422,20 @@ class TestLoggingHandler(unittest.TestCase):
         record = processor.get_log_record(0)
         self.assertIsInstance(record.log_record.body, str)
 
+        logger.removeHandler(handler)
+
     @patch.dict(os.environ, {"OTEL_SDK_DISABLED": "true"})
     def test_handler_root_logger_with_disabled_sdk_does_not_go_into_recursion_error(
         self,
     ):
-        processor, logger = set_up_test_logging(
+        processor, logger, handler = set_up_test_logging(
             logging.NOTSET, root_logger=True
         )
         logger.warning("hello")
 
         self.assertEqual(processor.emit_count(), 0)
+
+        logger.removeHandler(handler)
 
     @patch.dict(os.environ, {OTEL_ATTRIBUTE_COUNT_LIMIT: "3"})
     def test_otel_attribute_count_limit_respected_in_logging_handler(self):
@@ -439,6 +476,8 @@ class TestLoggingHandler(unittest.TestCase):
             f"Should have 10 dropped attributes, got {record.dropped_attributes}",
         )
 
+        logger.removeHandler(handler)
+
     @patch.dict(os.environ, {OTEL_ATTRIBUTE_COUNT_LIMIT: "5"})
     def test_otel_attribute_count_limit_includes_code_attributes(self):
         """Test that OTEL_ATTRIBUTE_COUNT_LIMIT applies to all attributes including code attributes."""
@@ -476,9 +515,11 @@ class TestLoggingHandler(unittest.TestCase):
             f"Should have 6 dropped attributes, got {record.dropped_attributes}",
         )
 
+        logger.removeHandler(handler)
+
     def test_logging_handler_without_env_var_uses_default_limit(self):
         """Test that without OTEL_ATTRIBUTE_COUNT_LIMIT, default limit (128) should apply."""
-        processor, logger = set_up_test_logging(logging.WARNING)
+        processor, logger, handler = set_up_test_logging(logging.WARNING)
 
         # Create a log record with many attributes (more than default limit of 128)
         extra_attrs = {f"attr_{i}": f"value_{i}" for i in range(150)}
@@ -505,6 +546,8 @@ class TestLoggingHandler(unittest.TestCase):
             f"Should have 25 dropped attributes, got {record.dropped_attributes}",
         )
 
+        logger.removeHandler(handler)
+
 
 def set_up_test_logging(level, formatter=None, root_logger=False):
     logger_provider = LoggerProvider()
@@ -515,7 +558,7 @@ def set_up_test_logging(level, formatter=None, root_logger=False):
     if formatter:
         handler.setFormatter(formatter)
     logger.addHandler(handler)
-    return processor, logger
+    return processor, logger, handler
 
 
 class FakeProcessor(LogRecordProcessor):

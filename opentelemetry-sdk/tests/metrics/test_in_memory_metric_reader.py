@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access
 
@@ -20,6 +9,11 @@ from unittest.mock import Mock
 
 from opentelemetry.metrics import Observation
 from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics._internal.point import (
+    MetricsData,
+    ResourceMetrics,
+    ScopeMetrics,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
@@ -27,14 +21,20 @@ from opentelemetry.sdk.metrics.export import (
     NumberDataPoint,
     Sum,
 )
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class TestInMemoryMetricReader(TestCase):
     def test_no_metrics(self):
-        mock_collect_callback = Mock(return_value=[])
+        mock_collect_callback = Mock(
+            return_value=MetricsData(resource_metrics=[])
+        )
         reader = InMemoryMetricReader()
         reader._set_collect_callback(mock_collect_callback)
-        self.assertEqual(reader.get_metrics_data(), [])
+        self.assertEqual(
+            reader.get_metrics_data(), MetricsData(resource_metrics=[])
+        )
         mock_collect_callback.assert_called_once()
 
     def test_converts_metrics_to_list(self):
@@ -55,15 +55,32 @@ class TestInMemoryMetricReader(TestCase):
                 is_monotonic=True,
             ),
         )
-        mock_collect_callback = Mock(return_value=(metric,))
+        metric_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    scope_metrics=[
+                        ScopeMetrics(
+                            metrics=[metric],
+                            scope=InstrumentationScope(name="test"),
+                            schema_url="",
+                        )
+                    ],
+                    resource=Resource.create(),
+                    schema_url="",
+                )
+            ]
+        )
+        mock_collect_callback = Mock(return_value=metric_data)
         reader = InMemoryMetricReader()
         reader._set_collect_callback(mock_collect_callback)
 
         returned_metrics = reader.get_metrics_data()
         mock_collect_callback.assert_called_once()
-        self.assertIsInstance(returned_metrics, tuple)
-        self.assertEqual(len(returned_metrics), 1)
-        self.assertIs(returned_metrics[0], metric)
+        self.assertIsNotNone(returned_metrics)
+        self.assertIs(
+            returned_metrics.resource_metrics[0].scope_metrics[0].metrics[0],
+            metric,
+        )
 
     def test_shutdown(self):
         # shutdown should always be successful

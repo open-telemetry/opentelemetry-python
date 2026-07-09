@@ -1,26 +1,20 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # type: ignore
 
+import copy
+import logging
+import threading
 import unittest
-from typing import MutableSequence
+import unittest.mock
+from collections.abc import MutableSequence
 
 from opentelemetry.attributes import (
     BoundedAttributes,
     _clean_attribute,
     _clean_extended_attribute,
+    _clean_extended_attribute_value,
 )
 
 
@@ -277,19 +271,47 @@ class TestBoundedAttributes(unittest.TestCase):
         with self.assertRaises(TypeError):
             bdict["should-not-work"] = "dict immutable"
 
-    def test_locking(self):
-        """Supporting test case for a commit titled: Fix class BoundedAttributes to have RLock rather than Lock. See #3858.
-        The change was introduced because __iter__ of the class BoundedAttributes holds lock, and we observed some deadlock symptoms
-        in the codebase. This test case is to verify that the fix works as expected.
+    def test_no_deadlock_on_reentrant_logging(self):
+        """Regression test for #3858.
+
+        The deadlock scenario: a logging handler intercepts the warning
+        emitted by _clean_attribute for an invalid value and calls __setitem__
+        on the same BoundedAttributes instance from the same thread.
+        With _clean_attribute called inside the lock this caused a deadlock.
+        With _clean_attribute called before the lock is acquired, no deadlock
+        occurs.
         """
         bdict = BoundedAttributes(immutable=False)
 
-        with bdict._lock:  # pylint: disable=protected-access
-            for num in range(100):
-                bdict[str(num)] = num
+        class ReentrantHandler(logging.Handler):
+            def emit(self, _record):
+                # Simulates Sentry intercepting the OTel warning and writing
+                # back into the same BoundedAttributes on the same thread.
+                bdict["reentrant.key"] = "set_by_handler"
 
-        for num in range(100):
-            self.assertEqual(bdict[str(num)], num)
+        otel_logger = logging.getLogger("opentelemetry.attributes")
+        handler = ReentrantHandler()
+        otel_logger.addHandler(handler)
+        try:
+            completed = threading.Event()
+
+            def run():
+                # None is an invalid attribute value and triggers _logger.warning
+                # in _clean_attribute, which fires the ReentrantHandler above.
+                bdict["trigger.key"] = None
+                completed.set()
+
+            thread = threading.Thread(target=run, daemon=True)
+            thread.start()
+            thread.join(timeout=2.0)
+
+            self.assertTrue(
+                completed.is_set(),
+                "Deadlock detected: __setitem__ did not complete within 2s",
+            )
+            self.assertEqual(bdict.get("reentrant.key"), "set_by_handler")
+        finally:
+            otel_logger.removeHandler(handler)
 
     # pylint: disable=no-self-use
     def test_extended_attributes(self):
@@ -320,3 +342,38 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertEqual(
             "<DummyWSGIRequest method=GET path=/example/>", cleaned_value
         )
+
+    def test_invalid_anyvalue_type_raises_typeerror(self):
+        class BadStr:
+            def __str__(self):
+                raise RuntimeError("boom")
+
+        with self.assertRaises(TypeError):
+            _clean_extended_attribute_value(BadStr(), None)
+
+    def test_deepcopy(self):
+        bdict = BoundedAttributes(4, self.base, immutable=False)
+        bdict.dropped = 10
+        bdict_copy = copy.deepcopy(bdict)
+
+        for key in bdict_copy:
+            self.assertEqual(bdict_copy[key], bdict[key])
+
+        self.assertEqual(bdict_copy.dropped, bdict.dropped)
+        self.assertEqual(bdict_copy.maxlen, bdict.maxlen)
+        self.assertEqual(bdict_copy.max_value_len, bdict.max_value_len)
+
+        bdict_copy["name"] = "Bob"
+        self.assertNotEqual(bdict_copy["name"], bdict["name"])
+
+        bdict["age"] = 99
+        self.assertNotEqual(bdict["age"], bdict_copy["age"])
+
+    def test_deepcopy_preserves_immutability(self):
+        bdict = BoundedAttributes(
+            maxlen=4, attributes=self.base, immutable=True
+        )
+        bdict_copy = copy.deepcopy(bdict)
+
+        with self.assertRaises(TypeError):
+            bdict_copy["invalid"] = "invalid"

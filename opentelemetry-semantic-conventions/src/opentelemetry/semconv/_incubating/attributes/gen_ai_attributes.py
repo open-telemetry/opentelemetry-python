@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 from typing import Final
@@ -30,6 +19,11 @@ The unique identifier of the GenAI agent.
 GEN_AI_AGENT_NAME: Final = "gen_ai.agent.name"
 """
 Human-readable name of the GenAI agent provided by the application.
+"""
+
+GEN_AI_AGENT_VERSION: Final = "gen_ai.agent.version"
+"""
+The version of the GenAI agent.
 """
 
 GEN_AI_COMPLETION: Final = "gen_ai.completion"
@@ -169,6 +163,11 @@ GEN_AI_PROMPT: Final = "gen_ai.prompt"
 Deprecated: Removed, no replacement at this time.
 """
 
+GEN_AI_PROMPT_NAME: Final = "gen_ai.prompt.name"
+"""
+The name of the prompt that uniquely identifies it.
+"""
+
 GEN_AI_PROVIDER_NAME: Final = "gen_ai.provider.name"
 """
 The Generative AI provider as identified by the client or server instrumentation.
@@ -233,6 +232,11 @@ GEN_AI_REQUEST_STOP_SEQUENCES: Final = "gen_ai.request.stop_sequences"
 List of sequences that the model will use to stop generating further tokens.
 """
 
+GEN_AI_REQUEST_STREAM: Final = "gen_ai.request.stream"
+"""
+Indicates whether the GenAI request was made in streaming mode.
+"""
+
 GEN_AI_REQUEST_TEMPERATURE: Final = "gen_ai.request.temperature"
 """
 The temperature setting for the GenAI request.
@@ -261,6 +265,32 @@ The unique identifier for the completion.
 GEN_AI_RESPONSE_MODEL: Final = "gen_ai.response.model"
 """
 The name of the model that generated the response.
+"""
+
+GEN_AI_RESPONSE_TIME_TO_FIRST_CHUNK: Final = (
+    "gen_ai.response.time_to_first_chunk"
+)
+"""
+Time to first chunk in a streaming response, measured from request issuance, in seconds. The value is measured from when the client issues the generation request to when the first chunk is received in the response stream.
+"""
+
+GEN_AI_RETRIEVAL_DOCUMENTS: Final = "gen_ai.retrieval.documents"
+"""
+The documents retrieved.
+Note: Instrumentations MUST follow [Retrieval documents JSON schema](/docs/gen-ai/gen-ai-retrieval-documents.json).
+When the attribute is recorded on events, it MUST be recorded in structured
+form. When recorded on spans, it MAY be recorded as a JSON string if structured
+format is not supported and SHOULD be recorded in structured form otherwise.
+
+Each document object SHOULD contain at least the following properties:
+`id` (string): A unique identifier for the document, `score` (double): The relevance score of the document.
+"""
+
+GEN_AI_RETRIEVAL_QUERY_TEXT: Final = "gen_ai.retrieval.query.text"
+"""
+The query text used for retrieval.
+Note: > [!Warning]
+> This attribute may contain sensitive information.
 """
 
 GEN_AI_SYSTEM: Final = "gen_ai.system"
@@ -327,16 +357,16 @@ deserialize it to an object. When recorded on spans, it MAY be recorded as a JSO
 
 GEN_AI_TOOL_DEFINITIONS: Final = "gen_ai.tool.definitions"
 """
-The list of source system tool definitions available to the GenAI agent or model.
-Note: The value of this attribute matches source system tool definition format.
+The list of tool definitions available to the GenAI agent or model.
+Note: Instrumentations MUST follow [Tool Definitions JSON Schema](/docs/gen-ai/gen-ai-tool-definitions.json).
 
-It's expected to be an array of objects where each object represents a tool definition. In case a serialized string is available
-to the instrumentation, the instrumentation SHOULD do the best effort to
-deserialize it to an array. When recorded on spans, it MAY be recorded as a JSON string if structured format is not supported and SHOULD be recorded in structured form otherwise.
+When the attribute is recorded on events, it MUST be recorded in structured
+form. When recorded on spans, it MAY be recorded as a JSON string if structured
+format is not supported and SHOULD be recorded in structured form otherwise.
 
 Since this attribute could be large, it's NOT RECOMMENDED to populate
-it by default. Instrumentations MAY provide a way to enable
-populating this attribute.
+non-required properties by default. Instrumentations MAY provide a way
+to enable populating optional properties.
 """
 
 GEN_AI_TOOL_DESCRIPTION: Final = "gen_ai.tool.description"
@@ -359,6 +389,22 @@ Function: A tool executed on the client-side, where the agent generates paramete
 Datastore: A tool used by the agent to access and query structured or unstructured external data for retrieval-augmented tasks or knowledge updates.
 """
 
+GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS: Final = (
+    "gen_ai.usage.cache_creation.input_tokens"
+)
+"""
+The number of input tokens written to a provider-managed cache.
+Note: The value SHOULD be included in `gen_ai.usage.input_tokens`.
+"""
+
+GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: Final = (
+    "gen_ai.usage.cache_read.input_tokens"
+)
+"""
+The number of input tokens served from a provider-managed cache.
+Note: The value SHOULD be included in `gen_ai.usage.input_tokens`.
+"""
+
 GEN_AI_USAGE_COMPLETION_TOKENS: Final = "gen_ai.usage.completion_tokens"
 """
 Deprecated: Replaced by `gen_ai.usage.output_tokens`.
@@ -367,6 +413,10 @@ Deprecated: Replaced by `gen_ai.usage.output_tokens`.
 GEN_AI_USAGE_INPUT_TOKENS: Final = "gen_ai.usage.input_tokens"
 """
 The number of tokens used in the GenAI input (prompt).
+Note: This value SHOULD include all types of input tokens, including cached tokens.
+Instrumentations SHOULD make a best effort to populate this value, using a total
+provided by the provider when available or, depending on the provider API,
+by summing different token types parsed from the provider output.
 """
 
 GEN_AI_USAGE_OUTPUT_TOKENS: Final = "gen_ai.usage.output_tokens"
@@ -377,6 +427,20 @@ The number of tokens used in the GenAI response (completion).
 GEN_AI_USAGE_PROMPT_TOKENS: Final = "gen_ai.usage.prompt_tokens"
 """
 Deprecated: Replaced by `gen_ai.usage.input_tokens`.
+"""
+
+GEN_AI_USAGE_REASONING_OUTPUT_TOKENS: Final = (
+    "gen_ai.usage.reasoning.output_tokens"
+)
+"""
+The number of output tokens used for reasoning (e.g. chain-of-thought, extended thinking).
+Note: The value SHOULD be included in `gen_ai.usage.output_tokens`.
+"""
+
+GEN_AI_WORKFLOW_NAME: Final = "gen_ai.workflow.name"
+"""
+Human-readable name of the GenAI workflow provided by the application.
+Note: This attribute can be populated in different frameworks eg: name of the first chain in LangChain OR name of the crew in CrewAI.
 """
 
 
@@ -411,12 +475,16 @@ class GenAiOperationNameValues(Enum):
     """Text completions operation such as [OpenAI Completions API (Legacy)](https://platform.openai.com/docs/api-reference/completions)."""
     EMBEDDINGS = "embeddings"
     """Embeddings operation such as [OpenAI Create embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create)."""
+    RETRIEVAL = "retrieval"
+    """Retrieval operation such as [OpenAI Search Vector Store API](https://platform.openai.com/docs/api-reference/vector-stores/search)."""
     CREATE_AGENT = "create_agent"
     """Create GenAI agent."""
     INVOKE_AGENT = "invoke_agent"
     """Invoke GenAI agent."""
     EXECUTE_TOOL = "execute_tool"
     """Execute a tool."""
+    INVOKE_WORKFLOW = "invoke_workflow"
+    """Invoke GenAI workflow."""
 
 
 class GenAiOutputTypeValues(Enum):
@@ -446,7 +514,7 @@ class GenAiProviderNameValues(Enum):
     AZURE_AI_INFERENCE = "azure.ai.inference"
     """Azure AI Inference."""
     AZURE_AI_OPENAI = "azure.ai.openai"
-    """[Azure OpenAI](https://azure.microsoft.com/products/ai-services/openai-service/)."""
+    """[Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview)."""
     IBM_WATSONX_AI = "ibm.watsonx.ai"
     """[IBM Watsonx AI](https://www.ibm.com/products/watsonx-ai)."""
     AWS_BEDROCK = "aws.bedrock"

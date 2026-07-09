@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from typing import Final
 
@@ -43,6 +32,16 @@ value `REDACTED`:
 
 This list is subject to change over time.
 
+Matching of query parameter keys against the sensitive list SHOULD be case-sensitive.
+
+![Development](https://img.shields.io/badge/-development-blue)
+Instrumentation MAY provide a way to override this list via declarative configuration.
+If so, it SHOULD use the `sensitive_query_parameters` property
+(an array of case-sensitive strings with minimum items 0) under
+`.instrumentation/development.general.sanitization.url`.
+This list is a full override of the default sensitive query parameter keys,
+it is not a list of keys in addition to the defaults.
+
 When a query string value is redacted, the query string key SHOULD still be preserved, e.g.
 `https://www.example.com/path?color=blue&sig=REDACTED`.
 """
@@ -67,6 +66,15 @@ Query string values for the following keys SHOULD be redacted by default and rep
 * [`X-Goog-Signature`](https://cloud.google.com/storage/docs/access-control/signed-urls)
 
 This list is subject to change over time.
+
+Matching of query parameter keys against the sensitive list SHOULD be case-sensitive.
+
+Instrumentation MAY provide a way to override this list via declarative configuration.
+If so, it SHOULD use the `sensitive_query_parameters` property
+(an array of case-sensitive strings with minimum items 0) under
+`.instrumentation/development.general.sanitization.url`.
+This list is a full override of the default sensitive query parameter keys,
+it is not a list of keys in addition to the defaults.
 
 When a query string value is redacted, the query string key SHOULD still be preserved, e.g.
 `q=OpenTelemetry&sig=REDACTED`.

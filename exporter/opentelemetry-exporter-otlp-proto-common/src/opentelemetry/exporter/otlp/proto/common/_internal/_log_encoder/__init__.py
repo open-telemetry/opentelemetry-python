@@ -1,18 +1,7 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from collections import defaultdict
-from typing import List, Sequence
+from collections.abc import Sequence
 
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
@@ -50,17 +39,16 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
         if readable_log_record.log_record.trace_id == 0
         else _encode_trace_id(readable_log_record.log_record.trace_id)
     )
-    body = readable_log_record.log_record.body
     return PB2LogRecord(
         time_unix_nano=readable_log_record.log_record.timestamp,
         observed_time_unix_nano=readable_log_record.log_record.observed_timestamp,
         span_id=span_id,
         trace_id=trace_id,
         flags=int(readable_log_record.log_record.trace_flags),
-        body=_encode_value(body, allow_null=True),
+        body=_encode_value(readable_log_record.log_record.body),
         severity_text=readable_log_record.log_record.severity_text,
         attributes=_encode_attributes(
-            readable_log_record.log_record.attributes, allow_null=True
+            readable_log_record.log_record.attributes
         ),
         dropped_attributes_count=readable_log_record.dropped_attributes,
         severity_number=getattr(
@@ -72,7 +60,7 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
 
 def _encode_resource_logs(
     batch: Sequence[ReadableLogRecord],
-) -> List[ResourceLogs]:
+) -> list[ResourceLogs]:
     sdk_resource_logs = defaultdict(lambda: defaultdict(list))
 
     for readable_log in batch:

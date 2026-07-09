@@ -1,29 +1,13 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import (
     Any,
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Optional,
     TypeVar,
 )
 
@@ -67,11 +51,9 @@ def _encode_resource(resource: Resource) -> PB2Resource:
     return PB2Resource(attributes=_encode_attributes(resource.attributes))
 
 
-def _encode_value(
-    value: Any, allow_null: bool = False
-) -> Optional[PB2AnyValue]:
-    if allow_null is True and value is None:
-        return None
+def _encode_value(value: Any) -> PB2AnyValue:
+    if value is None:
+        return PB2AnyValue()
     if isinstance(value, bool):
         return PB2AnyValue(bool_value=value)
     if isinstance(value, str):
@@ -84,45 +66,19 @@ def _encode_value(
         return PB2AnyValue(bytes_value=value)
     if isinstance(value, Sequence):
         return PB2AnyValue(
-            array_value=PB2ArrayValue(
-                values=_encode_array(value, allow_null=allow_null)
-            )
+            array_value=PB2ArrayValue(values=[_encode_value(v) for v in value])
         )
-    elif isinstance(value, Mapping):
+    if isinstance(value, Mapping):
         return PB2AnyValue(
             kvlist_value=PB2KeyValueList(
-                values=[
-                    _encode_key_value(str(k), v, allow_null=allow_null)
-                    for k, v in value.items()
-                ]
+                values=[_encode_key_value(str(k), v) for k, v in value.items()]
             )
         )
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
 
-def _encode_key_value(
-    key: str, value: Any, allow_null: bool = False
-) -> PB2KeyValue:
-    return PB2KeyValue(
-        key=key, value=_encode_value(value, allow_null=allow_null)
-    )
-
-
-def _encode_array(
-    array: Sequence[Any], allow_null: bool = False
-) -> Sequence[PB2AnyValue]:
-    if not allow_null:
-        # Let the exception get raised by _encode_value()
-        return [_encode_value(v, allow_null=allow_null) for v in array]
-
-    return [
-        _encode_value(v, allow_null=allow_null)
-        if v is not None
-        # Use an empty AnyValue to represent None in an array. Behavior may change pending
-        # https://github.com/open-telemetry/opentelemetry-specification/issues/4392
-        else PB2AnyValue()
-        for v in array
-    ]
+def _encode_key_value(key: str, value: Any) -> PB2KeyValue:
+    return PB2KeyValue(key=key, value=_encode_value(value))
 
 
 def _encode_span_id(span_id: int) -> bytes:
@@ -134,29 +90,25 @@ def _encode_trace_id(trace_id: int) -> bytes:
 
 
 def _encode_attributes(
-    attributes: _ExtendedAttributes,
-    allow_null: bool = False,
-) -> Optional[List[PB2KeyValue]]:
-    if attributes:
-        pb2_attributes = []
-        for key, value in attributes.items():
-            # pylint: disable=broad-exception-caught
-            try:
-                pb2_attributes.append(
-                    _encode_key_value(key, value, allow_null=allow_null)
-                )
-            except Exception as error:
-                _logger.exception("Failed to encode key %s: %s", key, error)
-    else:
-        pb2_attributes = None
+    attributes: _ExtendedAttributes | None,
+) -> list[PB2KeyValue]:
+    if not attributes:
+        return []
+    pb2_attributes = []
+    for key, value in attributes.items():
+        # pylint: disable=broad-exception-caught
+        try:
+            pb2_attributes.append(_encode_key_value(key, value))
+        except Exception as error:
+            _logger.exception("Failed to encode key %s: %s", key, error)
     return pb2_attributes
 
 
 def _get_resource_data(
-    sdk_resource_scope_data: Dict[Resource, _ResourceDataT],
+    sdk_resource_scope_data: dict[Resource, _ResourceDataT],
     resource_class: Callable[..., _TypingResourceT],
     name: str,
-) -> List[_TypingResourceT]:
+) -> list[_TypingResourceT]:
     resource_data = []
 
     for (
@@ -170,7 +122,7 @@ def _get_resource_data(
             resource_class(
                 **{
                     "resource": collector_resource,
-                    "scope_{}".format(name): scope_data.values(),
+                    f"scope_{name}": scope_data.values(),
                 }
             )
         )
