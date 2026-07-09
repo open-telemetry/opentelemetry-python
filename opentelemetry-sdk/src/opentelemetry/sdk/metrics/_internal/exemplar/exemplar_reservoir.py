@@ -1,29 +1,12 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Callable, Mapping, Sequence
 from random import randrange
 from typing import (
     Any,
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
 )
 
 from opentelemetry import trace
@@ -49,7 +32,7 @@ class ExemplarReservoir(ABC):
     @abstractmethod
     def offer(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -65,7 +48,7 @@ class ExemplarReservoir(ABC):
         raise NotImplementedError("ExemplarReservoir.offer is not implemented")
 
     @abstractmethod
-    def collect(self, point_attributes: Attributes) -> List[Exemplar]:
+    def collect(self, point_attributes: Attributes) -> list[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
         sampling period
 
@@ -84,16 +67,16 @@ class ExemplarReservoir(ABC):
 
 class ExemplarBucket:
     def __init__(self) -> None:
-        self.__value: Union[int, float] = 0
+        self.__value: int | float = 0
         self.__attributes: Attributes = None
         self.__time_unix_nano: int = 0
-        self.__span_id: Optional[int] = None
-        self.__trace_id: Optional[int] = None
+        self.__span_id: int | None = None
+        self.__trace_id: int | None = None
         self.__offered: bool = False
 
     def offer(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -117,7 +100,7 @@ class ExemplarBucket:
 
         self.__offered = True
 
-    def collect(self, point_attributes: Attributes) -> Optional[Exemplar]:
+    def collect(self, point_attributes: Attributes) -> Exemplar | None:
         """May return an Exemplar and resets the bucket for the next sampling period."""
         if not self.__offered:
             return None
@@ -169,7 +152,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
             ExemplarBucket
         )
 
-    def collect(self, point_attributes: Attributes) -> List[Exemplar]:
+    def collect(self, point_attributes: Attributes) -> list[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
         sampling period
 
@@ -194,7 +177,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
 
     def offer(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -222,7 +205,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     @abstractmethod
     def _find_bucket_index(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -267,7 +250,7 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -298,7 +281,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def offer(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -313,7 +296,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: Union[int, float],
+        value: int | float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -324,9 +307,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         return len(self._boundaries)
 
 
-ExemplarReservoirBuilder = Callable[[Dict[str, Any]], ExemplarReservoir]
-ExemplarReservoirBuilder.__doc__ = """ExemplarReservoir builder.
-
-It may receive the Aggregation parameters it is bounded to; e.g.
-the _ExplicitBucketHistogramAggregation will provide the boundaries.
-"""
+# ExemplarReservoirBuilder: A callable that takes Aggregation parameters
+# (e.g. boundaries for _ExplicitBucketHistogramAggregation) and returns
+# an ExemplarReservoir instance.
+ExemplarReservoirBuilder = Callable[[dict[str, Any]], ExemplarReservoir]

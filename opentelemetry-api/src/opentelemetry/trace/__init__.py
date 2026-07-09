@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """
 The OpenTelemetry tracing API describes the classes used to generate
@@ -74,11 +63,11 @@ either implicit or explicit context propagation consistently throughout.
 """
 
 import os
-import typing
 from abc import ABC, abstractmethod
+from collections.abc import Iterator, Sequence
 from enum import Enum
 from logging import getLogger
-from typing import Iterator, Optional, Sequence, cast
+from typing import cast
 
 from typing_extensions import deprecated
 
@@ -156,7 +145,7 @@ class Link(_LinkBase):
         return 0
 
 
-_Links = Optional[Sequence[Link]]
+_Links = Sequence[Link] | None
 
 
 class SpanKind(Enum):
@@ -193,9 +182,9 @@ class TracerProvider(ABC):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -208,7 +197,7 @@ class TracerProvider(ABC):
         Args:
             instrumenting_module_name: The uniquely identifiable name for instrumentation
                 scope, such as instrumentation library, package, module or class name.
-                ``__name__`` may not be used as this can result in
+                ``__name__`` should be avoided as this can result in
                 different tracer names if the tracers are in different files.
                 It is better to use a fixed string that can be imported where
                 needed and used consistently as the name of the tracer.
@@ -236,9 +225,9 @@ class NoOpTracerProvider(TracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
         return NoOpTracer()
@@ -258,9 +247,9 @@ class ProxyTracerProvider(TracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ) -> "Tracer":
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
@@ -288,11 +277,11 @@ class Tracer(ABC):
     def start_span(
         self,
         name: str,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: Optional[int] = None,
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
@@ -343,11 +332,11 @@ class Tracer(ABC):
     def start_as_current_span(
         self,
         name: str,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: Optional[int] = None,
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
@@ -419,15 +408,15 @@ class ProxyTracer(Tracer):
     def __init__(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ):
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
         self._schema_url = schema_url
         self._attributes = attributes
-        self._real_tracer: Optional[Tracer] = None
+        self._real_tracer: Tracer | None = None
         self._noop_tracer = NoOpTracer()
 
     @property
@@ -463,30 +452,60 @@ class NoOpTracer(Tracer):
     def start_span(
         self,
         name: str,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: Optional[int] = None,
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
-        return INVALID_SPAN
+        current_span = get_current_span(context)
+        if isinstance(current_span, NonRecordingSpan):
+            return current_span
+        parent_span_context = current_span.get_span_context()
+        if parent_span_context is not None and not isinstance(
+            parent_span_context, SpanContext
+        ):
+            logger.warning(
+                "Invalid span context for %s: %s",
+                current_span,
+                parent_span_context,
+            )
+            return INVALID_SPAN
+
+        return NonRecordingSpan(context=parent_span_context)
 
     @_agnosticcontextmanager
     def start_as_current_span(
         self,
         name: str,
-        context: Optional[Context] = None,
+        context: Context | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: Optional[int] = None,
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
     ) -> Iterator["Span"]:
-        yield INVALID_SPAN
+        span = self.start_span(
+            name=name,
+            context=context,
+            kind=kind,
+            attributes=attributes,
+            links=links,
+            start_time=start_time,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
+        )
+        with use_span(
+            span,
+            end_on_exit=end_on_exit,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
+        ) as span:
+            yield span
 
 
 @deprecated("You should use NoOpTracer. Deprecated since version 1.9.0.")
@@ -498,16 +517,16 @@ class _DefaultTracer(NoOpTracer):
 
 
 _TRACER_PROVIDER_SET_ONCE = Once()
-_TRACER_PROVIDER: Optional[TracerProvider] = None
+_TRACER_PROVIDER: TracerProvider | None = None
 _PROXY_TRACER_PROVIDER = ProxyTracerProvider()
 
 
 def get_tracer(
     instrumenting_module_name: str,
-    instrumenting_library_version: typing.Optional[str] = None,
-    tracer_provider: Optional[TracerProvider] = None,
-    schema_url: typing.Optional[str] = None,
-    attributes: typing.Optional[types.Attributes] = None,
+    instrumenting_library_version: str | None = None,
+    tracer_provider: TracerProvider | None = None,
+    schema_url: str | None = None,
+    attributes: types.Attributes | None = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 

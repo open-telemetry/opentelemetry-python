@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 """Zipkin Exporter Transport Encoder
 
@@ -20,8 +9,9 @@ Base module and abstract class for concrete transport encoders to extend.
 import abc
 import json
 import logging
+from collections.abc import Sequence
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, TypeVar
+from typing import Any, TypeVar
 
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.trace import Event
@@ -114,7 +104,7 @@ class Encoder(abc.ABC):
         pass
 
     @staticmethod
-    def _get_parent_id(span_context) -> Optional[int]:
+    def _get_parent_id(span_context) -> int | None:
         if isinstance(span_context, Span):
             parent_id = span_context.parent.span_id
         elif isinstance(span_context, SpanContext):
@@ -124,8 +114,8 @@ class Encoder(abc.ABC):
         return parent_id
 
     def _extract_tags_from_dict(
-        self, tags_dict: Optional[Dict]
-    ) -> Dict[str, str]:
+        self, tags_dict: dict | None
+    ) -> dict[str, str]:
         tags = {}
         if not tags_dict:
             return tags
@@ -194,7 +184,7 @@ class Encoder(abc.ABC):
 
         return json.dumps(tag_value_elements, separators=(",", ":"))
 
-    def _extract_tags_from_span(self, span: Span) -> Dict[str, str]:
+    def _extract_tags_from_span(self, span: Span) -> dict[str, str]:
         tags = self._extract_tags_from_dict(span.attributes)
         if span.resource:
             tags.update(self._extract_tags_from_dict(span.resource.attributes))
@@ -228,8 +218,8 @@ class Encoder(abc.ABC):
         return tags
 
     def _extract_annotations_from_events(
-        self, events: Optional[List[Event]]
-    ) -> Optional[List[Dict]]:
+        self, events: list[Event] | None
+    ) -> list[dict] | None:
         if not events:
             return None
 
@@ -280,7 +270,7 @@ class JsonEncoder(Encoder):
         return json.dumps(encoded_spans)
 
     @staticmethod
-    def _encode_local_endpoint(local_endpoint: NodeEndpoint) -> Dict:
+    def _encode_local_endpoint(local_endpoint: NodeEndpoint) -> dict:
         encoded_local_endpoint = {"serviceName": local_endpoint.service_name}
         if local_endpoint.ipv4 is not None:
             encoded_local_endpoint["ipv4"] = str(local_endpoint.ipv4)

@@ -1,20 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=W0212,W0222,W0221
-import typing
 import unittest
+from unittest.mock import Mock
 
 import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
@@ -26,9 +15,9 @@ class TestProvider(_logs.NoOpLoggerProvider):
     def get_logger(
         self,
         name: str,
-        version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[_ExtendedAttributes] = None,
+        version: str | None = None,
+        schema_url: str | None = None,
+        attributes: _ExtendedAttributes | None = None,
     ) -> _logs.Logger:
         return LoggerTest(name)
 
@@ -36,7 +25,7 @@ class TestProvider(_logs.NoOpLoggerProvider):
 class LoggerTest(_logs.NoOpLogger):
     def emit(
         self,
-        record: typing.Optional[_logs.LogRecord] = None,
+        record: _logs.LogRecord | None = None,
         *,
         timestamp=None,
         observed_timestamp=None,
@@ -46,6 +35,7 @@ class LoggerTest(_logs.NoOpLogger):
         body=None,
         attributes=None,
         event_name=None,
+        exception: BaseException | None = None,
     ) -> None:
         pass
 
@@ -74,3 +64,13 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         # references to the old provider still work but return real logger now
         real_logger = provider.get_logger("proxy-test")
         self.assertIsInstance(real_logger, LoggerTest)
+
+    def test_proxy_logger_forwards_record_with_exception(self):
+        logger = _logs_internal.ProxyLogger("proxy-test")
+        logger._real_logger = Mock(spec=LoggerTest("proxy-test"))
+        record = _logs.LogRecord(exception=ValueError("boom"))
+
+        self.assertIsNotNone(logger._real_logger)
+        logger.emit(record)
+
+        logger._real_logger.emit.assert_called_once_with(record)

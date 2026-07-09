@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from platform import system
 from time import sleep
@@ -18,6 +7,7 @@ from unittest import TestCase
 
 from pytest import mark
 
+from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk.metrics import Histogram, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -46,6 +36,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
+        # Disable SDK metrics
+        # pylint: disable=protected-access
+        reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
         histogram = meter.create_histogram("histogram")
@@ -159,7 +152,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         provider.shutdown()
 
     @mark.skipif(
-        system() != "Linux",
+        system() == "Windows",
         reason=(
             "Tests fail because Windows time_ns resolution is too low so "
             "two different time measurements may end up having the exact same"
@@ -177,6 +170,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
+        # Disable SDK metrics
+        # pylint: disable=protected-access
+        reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
         histogram = meter.create_histogram("histogram")

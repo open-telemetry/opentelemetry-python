@@ -1,18 +1,8 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import collections.abc
 import logging
 import sys
 import typing
@@ -26,14 +16,27 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk._shared_internal import BatchProcessor
+from opentelemetry.metrics import MeterProvider, get_meter_provider
+from opentelemetry.sdk._shared_internal import (
+    BatchProcessor,
+)
+from opentelemetry.sdk._shared_internal._processor_metrics import (
+    create_processor_metrics,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
+from opentelemetry.semconv._incubating.attributes.otel_attributes import (
+    OtelComponentTypeValues,
+)
 
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
@@ -62,8 +65,8 @@ class SpanExporter:
     """
 
     def export(
-        self, spans: typing.Sequence[ReadableSpan]
-    ) -> "SpanExportResult":  # pyright: ignore[reportReturnType]
+        self, spans: collections.abc.Sequence[ReadableSpan]
+    ) -> SpanExportResult:  # pyright: ignore[reportReturnType]
         """Exports a batch of telemetry data.
 
         Args:
@@ -93,11 +96,24 @@ class SimpleSpanProcessor(SpanProcessor):
     passes ended spans directly to the configured `SpanExporter`.
     """
 
-    def __init__(self, span_exporter: SpanExporter):
+    def __init__(
+        self,
+        span_exporter: SpanExporter,
+        *,
+        meter_provider: MeterProvider | None = None,
+    ):
         self.span_exporter = span_exporter
+        self._metrics = create_processor_metrics(
+            "traces",
+            OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
+            meter_provider or get_meter_provider(),
+            enabled=parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
+        )
 
     def on_start(
-        self, span: Span, parent_context: typing.Optional[Context] = None
+        self, span: Span, parent_context: Context | None = None
     ) -> None:
         pass
 
@@ -108,11 +124,15 @@ class SimpleSpanProcessor(SpanProcessor):
         if not (span.context and span.context.trace_flags.sampled):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        error: Exception | None = None
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught
-        except Exception:
+        except Exception as err:
+            error = err
             logger.exception("Exception while exporting Span.")
+        finally:
+            self._metrics.finish_items(1, error)
         detach(token)
 
     def shutdown(self) -> None:
@@ -147,6 +167,8 @@ class BatchSpanProcessor(SpanProcessor):
         schedule_delay_millis: float | None = None,
         max_export_batch_size: int | None = None,
         export_timeout_millis: float | None = None,
+        *,
+        meter_provider: MeterProvider | None = None,
     ):
         if max_queue_size is None:
             max_queue_size = BatchSpanProcessor._default_max_queue_size()
@@ -178,6 +200,15 @@ class BatchSpanProcessor(SpanProcessor):
             export_timeout_millis,
             max_queue_size,
             "Span",
+            create_processor_metrics(
+                "traces",
+                OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR,
+                meter_provider or get_meter_provider(),
+                capacity=max_queue_size,
+                enabled=parse_boolean_environment_variable(
+                    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+                ),
+            ),
         )
 
     # Added for backward compatibility. Not recommended to directly access/use underlying exporter.
@@ -201,7 +232,7 @@ class BatchSpanProcessor(SpanProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: typing.Optional[int] = None) -> bool:
+    def force_flush(self, timeout_millis: int | None = None) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
@@ -300,15 +331,17 @@ class ConsoleSpanExporter(SpanExporter):
         self,
         service_name: str | None = None,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[
+        formatter: collections.abc.Callable[
             [ReadableSpan], str
-        ] = lambda span: span.to_json() + linesep,
+        ] = lambda span: (span.to_json() + linesep),
     ):
         self.out = out
         self.formatter = formatter
         self.service_name = service_name
 
-    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
+    def export(
+        self, spans: collections.abc.Sequence[ReadableSpan]
+    ) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
         self.out.flush()

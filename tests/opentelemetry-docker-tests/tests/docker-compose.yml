@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   otopencensus:
     image: rafaeljesus/opencensus-collector:latest
@@ -8,7 +6,12 @@ services:
         - "8888:8888"
         - "55678:55678"
   otcollector:
-    image: otel/opentelemetry-collector:0.31.0
+    image: otel/opentelemetry-collector:0.149.0
+    command: ["--config=/etc/otelcol/collector-config.yaml"]
+    volumes:
+      - ./collector-config.yaml:/etc/otelcol/collector-config.yaml
     ports:
-        - "4317:4317"
-        - "4318:55681"
+      - "4317:4317"
+      - "4318:4318"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
