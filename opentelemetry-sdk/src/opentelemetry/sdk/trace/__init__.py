@@ -1,22 +1,10 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-lines
 import abc
 import atexit
 import concurrent.futures
-import fnmatch
 import json
 import logging
 import os
@@ -24,23 +12,19 @@ import threading
 import traceback
 import typing
 import weakref
+from collections.abc import (
+    Callable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from dataclasses import dataclass
-from functools import lru_cache
 from os import environ
 from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
     Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Type,
-    Union,
 )
 from warnings import filterwarnings
 
@@ -56,16 +40,22 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
     OTEL_SDK_DISABLED,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
 )
+from opentelemetry.sdk.environment_variables._internal import (
+    parse_boolean_environment_variable,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace._tracer_metrics import create_tracer_metrics
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
+from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationInfo,
     InstrumentationScope,
@@ -80,8 +70,6 @@ from opentelemetry.trace import NoOpTracer, SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
-
-from ._tracer_metrics import TracerMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +96,7 @@ class SpanProcessor:
     def on_start(
         self,
         span: "Span",
-        parent_context: Optional[context_api.Context] = None,
+        parent_context: context_api.Context | None = None,
     ) -> None:
         """Called when a :class:`opentelemetry.trace.Span` is started.
 
@@ -143,7 +131,7 @@ class SpanProcessor:
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # pylint: disable=no-self-use
         """Export all ended spans to the configured Exporter that have not yet
         been exported.
 
@@ -154,6 +142,7 @@ class SpanProcessor:
         Returns:
             False if the timeout is exceeded, True otherwise.
         """
+        return True
 
 
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
@@ -182,7 +171,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
     def on_start(
         self,
         span: "Span",
-        parent_context: Optional[context_api.Context] = None,
+        parent_context: context_api.Context | None = None,
     ) -> None:
         for sp in self._span_processors:
             sp.on_start(span, parent_context=parent_context)
@@ -216,15 +205,19 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             given timeout, False otherwise.
         """
         deadline_ns = time_ns() + timeout_millis * 1000000
+        all_flushed = True
         for sp in self._span_processors:
             current_time_ns = time_ns()
             if current_time_ns >= deadline_ns:
                 return False
 
-            if not sp.force_flush((deadline_ns - current_time_ns) // 1000000):
-                return False
+            if (
+                sp.force_flush((deadline_ns - current_time_ns) // 1000000)
+                is False
+            ):
+                all_flushed = False
 
-        return True
+        return all_flushed
 
 
 class ConcurrentMultiSpanProcessor(SpanProcessor):
@@ -252,9 +245,13 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             # Only the main thread is kept in forked processed, the executor
             # needs to be re-instantiated to get a fresh pool of threads:
             weak_reinit = weakref.WeakMethod(self._init_executor)
-            os.register_at_fork(
-                after_in_child=lambda: weak_reinit()(num_threads)
-            )
+
+            def _after_in_child() -> None:
+                reinit = weak_reinit()
+                if reinit is not None:
+                    reinit(num_threads)
+
+            os.register_at_fork(after_in_child=_after_in_child)
 
     def _init_executor(self, num_threads: int) -> None:
         self._executor = concurrent.futures.ThreadPoolExecutor(
@@ -282,7 +279,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
     def on_start(
         self,
         span: "Span",
-        parent_context: Optional[context_api.Context] = None,
+        parent_context: context_api.Context | None = None,
     ) -> None:
         self._submit_and_await(
             lambda sp: sp.on_start, span, parent_context=parent_context
@@ -323,14 +320,14 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             return False
 
         for future in done_futures:
-            if not future.result():
+            if future.result() is False:
                 return False
 
         return True
 
 
 class EventBase(abc.ABC):
-    def __init__(self, name: str, timestamp: Optional[int] = None) -> None:
+    def __init__(self, name: str, timestamp: int | None = None) -> None:
         self._name = name
         if timestamp is None:
             self._timestamp = time_ns()
@@ -366,8 +363,8 @@ class Event(EventBase):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: Optional[int] = None,
-        limit: Optional[int] = _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+        timestamp: int | None = None,
+        limit: int | None = _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     ) -> None:
         super().__init__(name, timestamp)
         self._attributes = attributes
@@ -415,18 +412,18 @@ class ReadableSpan:
     def __init__(
         self,
         name: str,
-        context: Optional[trace_api.SpanContext] = None,
-        parent: Optional[trace_api.SpanContext] = None,
-        resource: Optional[Resource] = None,
+        context: trace_api.SpanContext | None = None,
+        parent: trace_api.SpanContext | None = None,
+        resource: Resource | None = None,
         attributes: types.Attributes = None,
         events: Sequence[Event] = (),
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        instrumentation_info: Optional[InstrumentationInfo] = None,
+        instrumentation_info: InstrumentationInfo | None = None,
         status: Status = Status(StatusCode.UNSET),
-        start_time: Optional[int] = None,
-        end_time: Optional[int] = None,
-        instrumentation_scope: Optional[InstrumentationScope] = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
     ) -> None:
         self._name = name
         self._context = context
@@ -467,7 +464,7 @@ class ReadableSpan:
     def name(self) -> str:
         return self._name
 
-    def get_span_context(self):
+    def get_span_context(self) -> trace_api.SpanContext | None:
         return self._context
 
     @property
@@ -479,15 +476,15 @@ class ReadableSpan:
         return self._kind
 
     @property
-    def parent(self) -> Optional[trace_api.SpanContext]:
+    def parent(self) -> trace_api.SpanContext | None:
         return self._parent
 
     @property
-    def start_time(self) -> Optional[int]:
+    def start_time(self) -> int | None:
         return self._start_time
 
     @property
-    def end_time(self) -> Optional[int]:
+    def end_time(self) -> int | None:
         return self._end_time
 
     @property
@@ -500,11 +497,11 @@ class ReadableSpan:
 
     @property
     def events(self) -> Sequence[Event]:
-        return tuple(event for event in self._events)
+        return tuple(self._events)
 
     @property
     def links(self) -> Sequence[trace_api.Link]:
-        return tuple(link for link in self._links)
+        return tuple(self._links)
 
     @property
     def resource(self) -> Resource:
@@ -514,14 +511,14 @@ class ReadableSpan:
     @deprecated(
         "You should use instrumentation_scope. Deprecated since version 1.11.1."
     )
-    def instrumentation_info(self) -> Optional[InstrumentationInfo]:
+    def instrumentation_info(self) -> InstrumentationInfo | None:
         return self._instrumentation_info
 
     @property
-    def instrumentation_scope(self) -> Optional[InstrumentationScope]:
+    def instrumentation_scope(self) -> InstrumentationScope | None:
         return self._instrumentation_scope
 
-    def to_json(self, indent: Optional[int] = 4):
+    def to_json(self, indent: int | None = 4):
         parent_id = None
         if self.parent is not None:
             parent_id = f"0x{trace_api.format_span_id(self.parent.span_id)}"
@@ -559,7 +556,7 @@ class ReadableSpan:
         return json.dumps(f_span, indent=indent)
 
     @staticmethod
-    def _format_context(context: SpanContext) -> Dict[str, str]:
+    def _format_context(context: SpanContext) -> dict[str, str]:
         return {
             "trace_id": f"0x{trace_api.format_trace_id(context.trace_id)}",
             "span_id": f"0x{trace_api.format_span_id(context.span_id)}",
@@ -569,13 +566,13 @@ class ReadableSpan:
     @staticmethod
     def _format_attributes(
         attributes: types.Attributes,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         if attributes is not None and not isinstance(attributes, dict):
             return dict(attributes)
         return attributes
 
     @staticmethod
-    def _format_events(events: Sequence[Event]) -> List[Dict[str, Any]]:
+    def _format_events(events: Sequence[Event]) -> list[dict[str, Any]]:
         return [
             {
                 "name": event.name,
@@ -588,7 +585,7 @@ class ReadableSpan:
         ]
 
     @staticmethod
-    def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:
+    def _format_links(links: Sequence[trace_api.Link]) -> list[dict[str, Any]]:
         return [
             {
                 "context": Span._format_context(  # pylint: disable=protected-access
@@ -649,14 +646,14 @@ class SpanLimits:
 
     def __init__(
         self,
-        max_attributes: Optional[int] = None,
-        max_events: Optional[int] = None,
-        max_links: Optional[int] = None,
-        max_span_attributes: Optional[int] = None,
-        max_event_attributes: Optional[int] = None,
-        max_link_attributes: Optional[int] = None,
-        max_attribute_length: Optional[int] = None,
-        max_span_attribute_length: Optional[int] = None,
+        max_attributes: int | None = None,
+        max_events: int | None = None,
+        max_links: int | None = None,
+        max_span_attributes: int | None = None,
+        max_event_attributes: int | None = None,
+        max_link_attributes: int | None = None,
+        max_attribute_length: int | None = None,
+        max_span_attribute_length: int | None = None,
     ):
         # span events and links count
         self.max_events = self._from_env_if_absent(
@@ -725,8 +722,8 @@ class SpanLimits:
 
     @classmethod
     def _from_env_if_absent(
-        cls, value: Optional[int], env_var: str, default: Optional[int] = None
-    ) -> Optional[int]:
+        cls, value: int | None, env_var: str, default: int | None = None
+    ) -> int | None:
         if value == cls.UNSET:
             return None
 
@@ -783,7 +780,9 @@ class Span(trace_api.Span, ReadableSpan):
         parent: This span's parent's `opentelemetry.trace.SpanContext`, or
             None if this is a root span
         sampler: The sampler used to create this span
-        trace_config: TODO
+        trace_config:  Unused. Originally intended for trace-level configuration
+            from the OpenTelemetry protocol, but the upstream ``TraceConfig``
+            proto was removed. Retained for backwards compatibility.
         resource: Entity producing telemetry
         attributes: The span's attributes to be exported
         events: Timestamped events to be exported
@@ -803,21 +802,22 @@ class Span(trace_api.Span, ReadableSpan):
         self,
         name: str,
         context: trace_api.SpanContext,
-        parent: Optional[trace_api.SpanContext] = None,
-        sampler: Optional[sampling.Sampler] = None,
+        parent: trace_api.SpanContext | None = None,
+        sampler: sampling.Sampler | None = None,
         trace_config: None = None,  # TODO
-        resource: Optional[Resource] = None,
+        resource: Resource | None = None,
         attributes: types.Attributes = None,
-        events: Optional[Sequence[Event]] = None,
+        events: Sequence[Event] | None = None,
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
-        instrumentation_info: Optional[InstrumentationInfo] = None,
+        instrumentation_info: InstrumentationInfo | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         limits=_UnsetLimits,
-        instrumentation_scope: Optional[InstrumentationScope] = None,
-        record_end_metrics: Optional[Callable[[], None]] = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        *,
+        record_end_metrics: Callable[[], None] | None = None,
     ) -> None:
         if resource is None:
             resource = Resource.create({})
@@ -880,8 +880,8 @@ class Span(trace_api.Span, ReadableSpan):
 
         return BoundedList.from_seq(self._limits.max_links, valid_links)
 
-    def get_span_context(self):
-        return self._context
+    def get_span_context(self) -> trace_api.SpanContext:
+        return typing.cast(trace_api.SpanContext, self._context)
 
     def set_attributes(
         self, attributes: Mapping[str, types.AttributeValue]
@@ -891,11 +891,15 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Setting attribute on ended span.")
                 return
 
-            for key, value in attributes.items():
-                self._attributes[key] = value
+            self._attributes._set_items(attributes)  # pylint: disable=protected-access
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        return self.set_attributes({key: value})
+        with self._lock:
+            if self._end_time is not None:
+                logger.warning("Setting attribute on ended span.")
+                return
+
+            self._attributes[key] = value
 
     @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
@@ -905,7 +909,7 @@ class Span(trace_api.Span, ReadableSpan):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: Optional[int] = None,
+        timestamp: int | None = None,
     ) -> None:
         attributes = BoundedAttributes(
             self._limits.max_event_attributes,
@@ -963,8 +967,8 @@ class Span(trace_api.Span, ReadableSpan):
 
     def start(
         self,
-        start_time: Optional[int] = None,
-        parent_context: Optional[context_api.Context] = None,
+        start_time: int | None = None,
+        parent_context: context_api.Context | None = None,
     ) -> None:
         with self._lock:
             if self._start_time is not None:
@@ -976,7 +980,7 @@ class Span(trace_api.Span, ReadableSpan):
 
         self._span_processor.on_start(self, parent_context=parent_context)
 
-    def end(self, end_time: Optional[int] = None) -> None:
+    def end(self, end_time: int | None = None) -> None:
         with self._lock:
             if self._start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
@@ -985,6 +989,7 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             self._end_time = end_time if end_time is not None else time_ns()
+            self._attributes._immutable = True  # pylint: disable=protected-access
 
         if self._record_end_metrics:
             self._record_end_metrics()
@@ -1002,8 +1007,8 @@ class Span(trace_api.Span, ReadableSpan):
     @_check_span_ended
     def set_status(
         self,
-        status: typing.Union[Status, StatusCode],
-        description: typing.Optional[str] = None,
+        status: Status | StatusCode,
+        description: str | None = None,
     ) -> None:
         # Ignore future calls if status is already set to OK
         # Ignore calls to set to StatusCode.UNSET
@@ -1031,9 +1036,9 @@ class Span(trace_api.Span, ReadableSpan):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
         if exc_val is not None and self.is_recording():
@@ -1047,7 +1052,7 @@ class Span(trace_api.Span, ReadableSpan):
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description=f"{exc_type.__name__}: {exc_val}",
+                        description=(f"{type(exc_val).__name__}: {exc_val}"),
                     )
                 )
 
@@ -1057,16 +1062,11 @@ class Span(trace_api.Span, ReadableSpan):
         self,
         exception: BaseException,
         attributes: types.Attributes = None,
-        timestamp: Optional[int] = None,
+        timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
-        # TODO: keep only exception as first argument after baseline is 3.10
-        stacktrace = "".join(
-            traceback.format_exception(
-                type(exception), value=exception, tb=exception.__traceback__
-            )
-        )
+        stacktrace = "".join(traceback.format_exception(exception))
         module = type(exception).__module__
         qualname = type(exception).__qualname__
         exception_type = (
@@ -1099,6 +1099,10 @@ class _Span(Span):
 class _TracerConfig:
     is_enabled: bool
 
+    @classmethod
+    def default(cls):
+        return cls(is_enabled=True)
+
 
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`."""
@@ -1107,16 +1111,15 @@ class Tracer(trace_api.Tracer):
         self,
         sampler: sampling.Sampler,
         resource: Resource,
-        span_processor: Union[
-            SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
-        ],
+        span_processor: SynchronousMultiSpanProcessor
+        | ConcurrentMultiSpanProcessor,
         id_generator: IdGenerator,
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
         instrumentation_scope: InstrumentationScope,
-        meter_provider: Optional[metrics_api.MeterProvider] = None,
         *,
-        _tracer_provider: Optional["TracerProvider"] = None,
+        meter_provider: metrics_api.MeterProvider | None = None,
+        _tracer_config: _TracerConfig | None = None,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
@@ -1125,30 +1128,32 @@ class Tracer(trace_api.Tracer):
         self.instrumentation_info = instrumentation_info
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
-        self._tracer_provider = _tracer_provider
+        self._tracer_config = _tracer_config or _TracerConfig.default()
 
         meter_provider = meter_provider or metrics_api.get_meter_provider()
-        self._tracer_metrics = TracerMetrics(meter_provider)
+        self._tracer_metrics = create_tracer_metrics(
+            meter_provider,
+            parse_boolean_environment_variable(
+                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+            ),
+        )
+
+    def _set_tracer_config(self, tracer_config: _TracerConfig):
+        self._tracer_config = tracer_config
 
     def _is_enabled(self) -> bool:
         """If the tracer is not enabled, start_span will create a NonRecordingSpan"""
-
-        if not self._tracer_provider:
-            return True
-        tracer_config = self._tracer_provider._tracer_configurator(  # pylint: disable=protected-access
-            self._instrumentation_scope
-        )
-        return tracer_config.is_enabled
+        return self._tracer_config.is_enabled
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
     def start_as_current_span(
         self,
         name: str,
-        context: Optional[context_api.Context] = None,
+        context: context_api.Context | None = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: Optional[Sequence[trace_api.Link]] = (),
-        start_time: Optional[int] = None,
+        links: Sequence[trace_api.Link] | None = (),
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
@@ -1174,14 +1179,15 @@ class Tracer(trace_api.Tracer):
     def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
-        context: Optional[context_api.Context] = None,
+        context: context_api.Context | None = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: Optional[Sequence[trace_api.Link]] = (),
-        start_time: Optional[int] = None,
+        links: Sequence[trace_api.Link] | None = (),
+        start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
+        links = links or ()
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()
@@ -1218,6 +1224,17 @@ class Tracer(trace_api.Tracer):
             if sampling_result.decision.is_sampled()
             else trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT)
         )
+
+        if parent_span_context is None:
+            random_trace_id = self.id_generator.is_trace_id_random()
+        else:
+            random_trace_id = parent_span_context.trace_flags.random_trace_id
+
+        if random_trace_id:
+            trace_flags = trace_api.TraceFlags(
+                trace_flags | trace_api.TraceFlags.RANDOM_TRACE_ID
+            )
+
         span_context = trace_api.SpanContext(
             trace_id,
             self.id_generator.generate_span_id(),
@@ -1239,7 +1256,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent_span_context,
                 sampler=self.sampler,
                 resource=self.resource,
-                attributes=sampling_result.attributes.copy(),
+                attributes=sampling_result.attributes,
                 span_processor=self.span_processor,
                 kind=kind,
                 links=links,
@@ -1257,42 +1274,9 @@ class Tracer(trace_api.Tracer):
 
 
 _TracerConfiguratorT = Callable[[InstrumentationScope], _TracerConfig]
-_InstrumentationScopePredicateT = Callable[[InstrumentationScope], bool]
-_TracerConfiguratorRulesT = Sequence[
-    tuple[_InstrumentationScopePredicateT, _TracerConfig]
-]
+_RuleBasedTracerConfigurator = RuleBasedConfigurator[_TracerConfig]
 
 
-# TODO: share this with configurators for other signals
-def _scope_name_matches_glob(
-    glob_pattern: str,
-) -> _InstrumentationScopePredicateT:
-    def inner(scope: InstrumentationScope) -> bool:
-        return fnmatch.fnmatch(scope.name, glob_pattern)
-
-    return inner
-
-
-class _RuleBasedTracerConfigurator:
-    def __init__(
-        self,
-        *,
-        rules: _TracerConfiguratorRulesT,
-        default_config: _TracerConfig,
-    ):
-        self._rules = rules
-        self._default_config = default_config
-
-    def __call__(self, tracer_scope: InstrumentationScope) -> _TracerConfig:
-        for predicate, tracer_config in self._rules:
-            if predicate(tracer_scope):
-                return tracer_config
-
-        # if no rule matched return the default config
-        return self._default_config
-
-
-@lru_cache
 def _default_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
@@ -1303,18 +1287,17 @@ def _default_tracer_configurator(
     implementing this interface returning a Tracer Config."""
     return _RuleBasedTracerConfigurator(
         rules=[],
-        default_config=_TracerConfig(is_enabled=True),
-    )(tracer_scope=tracer_scope)
+        default_config=_TracerConfig.default(),
+    )(tracer_scope)
 
 
-@lru_cache
 def _disable_tracer_configurator(
     tracer_scope: InstrumentationScope,
 ) -> _TracerConfig:
     return _RuleBasedTracerConfigurator(
         rules=[],
         default_config=_TracerConfig(is_enabled=False),
-    )(tracer_scope=tracer_scope)
+    )(tracer_scope)
 
 
 class TracerProvider(trace_api.TracerProvider):
@@ -1322,17 +1305,17 @@ class TracerProvider(trace_api.TracerProvider):
 
     def __init__(
         self,
-        sampler: Optional[sampling.Sampler] = None,
-        resource: Optional[Resource] = None,
+        sampler: sampling.Sampler | None = None,
+        resource: Resource | None = None,
         shutdown_on_exit: bool = True,
-        active_span_processor: Union[
-            SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor, None
-        ] = None,
-        id_generator: Optional[IdGenerator] = None,
-        span_limits: Optional[SpanLimits] = None,
-        meter_provider: Optional[metrics_api.MeterProvider] = None,
+        active_span_processor: SynchronousMultiSpanProcessor
+        | ConcurrentMultiSpanProcessor
+        | None = None,
+        id_generator: IdGenerator | None = None,
+        span_limits: SpanLimits | None = None,
         *,
-        _tracer_configurator: Optional[_TracerConfiguratorT] = None,
+        meter_provider: metrics_api.MeterProvider | None = None,
+        _tracer_configurator: _TracerConfiguratorT | None = None,
     ) -> None:
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
@@ -1360,34 +1343,48 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracer_configurator = (
             _tracer_configurator or _default_tracer_configurator
         )
+        self._tracers_lock = threading.Lock()
+        self._tracers: dict[InstrumentationScope, Tracer] = {}
 
     def _set_tracer_configurator(
         self, *, tracer_configurator: _TracerConfiguratorT
     ):
         """This is the function used to update the TracerProvider TracerConfigurator
 
-        Setting a new TracerConfigurator for a TracerProvider will make all the Tracers created from
-        this TracerProvider reference the new TracerConfigurator.
-
-        The tracer checks its configuration at span creation time. Since this is an hot path
-        it's important that it'll execute quickly so it is suggested to memoize it with
-        functools.lru_cache.
-        If your TracerConfigurator is using some dynamic rules you can still use functools.lru_cache
-        decorator if you remember to clear its cache with the decorator cache_clear() function when
-        the rules change.
+        Setting a new TracerConfigurator for a TracerProvider will update the
+        TracerConfig of all Tracers create by this TracerProvider.
         """
         self._tracer_configurator = tracer_configurator
+        with self._tracers_lock:
+            for instrumentation_scope, tracer in self._tracers.items():
+                tracer_config = self._apply_tracer_configurator(
+                    instrumentation_scope
+                )
+                # pylint: disable-next=protected-access
+                tracer._set_tracer_config(tracer_config)
 
     @property
     def resource(self) -> Resource:
         return self._resource
 
+    def _apply_tracer_configurator(
+        self, instrumentation_scope: InstrumentationScope
+    ):
+        try:
+            return self._tracer_configurator(instrumentation_scope)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception(
+                "Failed to create a Tracer Config for %s, using default Tracer config",
+                instrumentation_scope,
+            )
+            return _TracerConfig.default()
+
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-        attributes: typing.Optional[types.Attributes] = None,
+        instrumenting_library_version: str | None = None,
+        schema_url: str | None = None,
+        attributes: types.Attributes | None = None,
     ) -> "trace_api.Tracer":
         if self._disabled:
             return NoOpTracer()
@@ -1412,22 +1409,32 @@ class TracerProvider(trace_api.TracerProvider):
             schema_url,
         )
 
-        tracer = Tracer(
-            self.sampler,
-            self.resource,
-            self._active_span_processor,
-            self.id_generator,
-            instrumentation_info,
-            self._span_limits,
-            InstrumentationScope(
-                instrumenting_module_name,
-                instrumenting_library_version,
-                schema_url,
-                attributes,
-            ),
-            self._meter_provider,
-            _tracer_provider=self,
+        instrumentation_scope = InstrumentationScope(
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
+            attributes,
         )
+
+        with self._tracers_lock:
+            if instrumentation_scope in self._tracers:
+                return self._tracers[instrumentation_scope]
+
+            tracer_config = self._apply_tracer_configurator(
+                instrumentation_scope
+            )
+            tracer = Tracer(
+                self.sampler,
+                self.resource,
+                self._active_span_processor,
+                self.id_generator,
+                instrumentation_info,
+                self._span_limits,
+                instrumentation_scope,
+                meter_provider=self._meter_provider,
+                _tracer_config=tracer_config,
+            )
+            self._tracers[instrumentation_scope] = tracer
 
         return tracer
 

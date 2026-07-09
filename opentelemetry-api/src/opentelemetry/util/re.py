@@ -1,20 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Mapping
 from logging import getLogger
 from re import compile, split
-from typing import Dict, List, Mapping
 from urllib.parse import unquote
 
 from typing_extensions import deprecated
@@ -75,8 +64,8 @@ def parse_env_headers(s: str, liberal: bool = False) -> Mapping[str, str]:
     If ``liberal`` is True we try to parse ``s`` anyway to be more compatible
     with other languages SDKs that accept non URL-encoded headers by default.
     """
-    headers: Dict[str, str] = {}
-    headers_list: List[str] = split(_DELIMITER_PATTERN, s)
+    headers: dict[str, str] = {}
+    headers_list: list[str] = split(_DELIMITER_PATTERN, s)
     for header in headers_list:
         if not header:  # empty string
             continue

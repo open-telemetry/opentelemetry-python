@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -22,6 +25,15 @@ from os.path import isdir, join
 from django.conf import settings
 
 settings.configure()
+
+# Provide AnyValue in opentelemetry.attributes module's namespace so the
+# "AnyValue" forward reference in opentelemetry.util.types._ExtendedAttributes
+# resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
+# BoundedAttributes (whose __globals__ is the attributes module). Docs-only.
+import opentelemetry.attributes  # noqa: E402
+from opentelemetry.util.types import AnyValue as _AnyValue  # noqa: E402
+
+opentelemetry.attributes.AnyValue = _AnyValue
 
 
 source_dirs = [
@@ -174,6 +186,14 @@ nitpick_ignore = [
         "py:class",
         "AnyValue",
     ),
+    (
+        "py:class",
+        "_ExtendedAttributes",
+    ),
+    ("py:class", "Token"),
+    # ``from os import PathLike`` renders as the bare name ``PathLike`` in the
+    # file exporter type hints, which sphinx cannot resolve to os.PathLike.
+    ("py:class", "PathLike"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -202,6 +222,10 @@ autodoc_default_options = {
     "exclude-members": ",".join(_exclude_members),
 }
 
+# Napoleon configuration to avoid duplication with autodoc for dataclass fields
+# Use ivar (instance variable) style for documenting attributes
+napoleon_use_ivar = True
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -224,11 +248,11 @@ scm_raw_web = "https://raw.githubusercontent.com/" + REPO + branch
 scm_web = "https://github.com/" + REPO + "blob/" + branch
 
 # Store variables in the epilogue so they are globally available.
-rst_epilog = """
-.. |SCM_WEB| replace:: {s}
-.. |SCM_RAW_WEB| replace:: {sr}
-.. |SCM_BRANCH| replace:: {b}
-""".format(s=scm_web, sr=scm_raw_web, b=branch)
+rst_epilog = f"""
+.. |SCM_WEB| replace:: {scm_web}
+.. |SCM_RAW_WEB| replace:: {scm_raw_web}
+.. |SCM_BRANCH| replace:: {branch}
+"""
 
 # used to have links to repo files
 extlinks = {

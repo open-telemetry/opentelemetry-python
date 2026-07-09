@@ -14,10 +14,15 @@
     * Release builds now should pass.
   * Merge the release PR.
   * Merge the PR to main (this can be done separately from [making the release](#making-the-release))
+    * ⚠️ **Merge `core` first**: To avoid a merge queue deadlock with `contrib`, you must merge the `core` PR to `main` first. We skip `alls-green` in the core merge queue ([ci.yml](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/ci.yml)) for this PR, which unblocks `contrib` once merged.
 
 ## Preparing a new patch release
 
-* Backport pull request(s) to the release branch.
+### Backporting
+	
+Creating manual backports of pull request(s) requires the `backport` label to be added in order to have a green CI.
+
+To use the workflow to backport pull request(s) to the release branch:
   * Run the [Backport workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/backport.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, then enter the pull request number that you want to backport,
@@ -25,8 +30,9 @@
   * Add the label `backport` to the generated pull request.
   * In case label automation doesn't work, just close and reopen the PR so that the workflow will take into account the label automation we have in place.
   * Review and merge the backport pull request that it generates.
-* Merge a pull request to the release branch updating the `CHANGELOG.md`.
-  * The heading for the unreleased entries should be `## Unreleased`.
+
+### Preparing a patch release
+
 * Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/prepare-patch-release.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.

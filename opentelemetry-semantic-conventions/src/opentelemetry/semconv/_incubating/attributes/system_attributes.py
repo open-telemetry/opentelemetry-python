@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 from typing import Final
@@ -50,6 +39,13 @@ The filesystem state.
 SYSTEM_FILESYSTEM_TYPE: Final = "system.filesystem.type"
 """
 The filesystem type.
+"""
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_STATE: Final = (
+    "system.memory.linux.hugepages.state"
+)
+"""
+The Linux HugePages memory state.
 """
 
 SYSTEM_MEMORY_LINUX_SLAB_STATE: Final = "system.memory.linux.slab.state"
@@ -142,6 +138,13 @@ class SystemFilesystemTypeValues(Enum):
     """ext4."""
 
 
+class SystemMemoryLinuxHugepagesStateValues(Enum):
+    FREE = "free"
+    """free."""
+    USED = "used"
+    """used."""
+
+
 class SystemMemoryLinuxSlabStateValues(Enum):
     RECLAIMABLE = "reclaimable"
     """reclaimable."""
@@ -155,7 +158,7 @@ class SystemMemoryStateValues(Enum):
     FREE = "free"
     """free."""
     SHARED = "shared"
-    """Deprecated: Removed, report shared memory usage with `metric.system.memory.shared` metric."""
+    """Deprecated: Removed, report shared memory usage with `metric.system.memory.linux.shared` metric."""
     BUFFERS = "buffers"
     """buffers."""
     CACHED = "cached"

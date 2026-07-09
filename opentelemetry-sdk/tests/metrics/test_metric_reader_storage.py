@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access,invalid-name
 
@@ -79,7 +68,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(view1, view2),
             ),
             MagicMock(
@@ -146,7 +134,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(view1, view2),
             ),
             MagicMock(
@@ -251,12 +238,11 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         MockViewInstrumentMatch.side_effect = mock_view_instrument_match_ctor
 
         instrument1 = Mock(name="instrument1")
-        view1 = mock_view_matching(instrument1)
+        view1 = mock_view_matching("view1", instrument1)
         storage = MetricReaderStorage(
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(view1,),
             ),
             MagicMock(
@@ -275,15 +261,18 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # race sending many measurements concurrently
         self.run_with_many_threads(send_measurement)
 
-        # _ViewInstrumentMatch constructor should have only been called once
-        self.assertEqual(mock_view_instrument_match_ctor.call_count, 1)
+        # Only one cached entry should exist for the instrument, with exactly
+        # one view-instrument match — duplicate initialization is the bug we're guarding against
+        self.assertIn(instrument1, storage._instrument_view_instrument_matches)
+        self.assertEqual(
+            len(storage._instrument_view_instrument_matches[instrument1]), 1
+        )
 
     def test_race_collect_with_new_instruments(self):
         storage = MetricReaderStorage(
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(View(instrument_name="test"),),
             ),
             MagicMock(
@@ -329,7 +318,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(),
             ),
             MagicMock(
@@ -365,7 +353,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(
                         instrument_name="name", aggregation=DropAggregation()
@@ -393,7 +380,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(View(instrument_name="name"),),
             ),
             MagicMock(
@@ -440,7 +426,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(
                         instrument_name="observable_counter",
@@ -489,7 +474,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="observable_counter_0", name="foo"),
                     View(instrument_name="observable_counter_1", name="foo"),
@@ -547,7 +531,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="bar", name="foo"),
                     View(instrument_name="baz", name="foo"),
@@ -616,7 +599,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="foo"),
                     View(instrument_name="bar"),
@@ -669,7 +651,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="bar", name="foo"),
                     View(instrument_name="baz", name="foo"),
@@ -720,7 +701,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="bar", name="foo"),
                     View(instrument_name="baz", name="foo"),
@@ -767,7 +747,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="observable_counter_0", name="foo"),
                     View(instrument_name="observable_counter_1", name="foo"),
@@ -822,7 +801,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="observable_counter", name="foo"),
                     View(instrument_name="histogram", name="foo"),
@@ -877,7 +855,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="observable_counter_0", name="foo"),
                     View(instrument_name="observable_counter_1", name="foo"),
@@ -932,7 +909,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                metric_readers=(),
                 views=(
                     View(instrument_name="up_down_counter", name="foo"),
                     View(

@@ -13,6 +13,8 @@ Before you can contribute, you will need to sign the [Contributor License Agreem
 
 Please also read the [OpenTelemetry Contributor Guide](https://github.com/open-telemetry/community/blob/main/guides/contributor/README.md).
 
+If you are using AI agents to assist with contributions, please read [AGENTS.md](AGENTS.md) for guidance on how to use them responsibly in this project.
+
 # Find your right repo
 
 This is the main repo for OpenTelemetry Python. Nevertheless, there are other repos that are related to this project.
@@ -70,6 +72,45 @@ You can run `tox` with the following arguments:
 - `tox -e docker-tests-{otlpexporter,opencensus}` to run tests in both or either one location.
 - `tox -e tracecontext` to run integration tests for tracecontext.
 - `tox -e precommit` to run all `pre-commit` actions
+
+The `docker-tests-otlpexporter` tests use
+[inline-snapshot](https://github.com/15r10nk/inline-snapshot) to assert
+on expected values inline in the test code. If you need to create or
+update a snapshot, run the tests with `--inline-snapshot=create` or
+`--inline-snapshot=fix` (see the
+[inline-snapshot docs](https://15r10nk.github.io/inline-snapshot/latest/)
+for all options).
+
+### Changelog
+
+This project uses [towncrier](https://towncrier.readthedocs.io/) to manage the changelog. Instead of editing `CHANGELOG.md` directly, each PR should include a changelog fragment file in the `.changelog/` directory.
+
+**Creating a changelog fragment:**
+
+Create a file named `.changelog/<PR_NUMBER>.<TYPE>` where `TYPE` is one of: `added`, `changed`, `deprecated`, `removed`, `fixed`.
+
+The file should contain a one-line description of the change. For example, `.changelog/1234.added`:
+
+```
+`opentelemetry-sdk`: add support for new feature
+```
+
+**Writing a good changelog entry:**
+
+- Write in imperative tone, as if completing the phrase "This change will..."
+- Keep entries concise — ideally under 80 characters
+- Prefix with the affected package name when applicable (e.g. `` `opentelemetry-sdk`: ... ``)
+- Don't include the PR number — towncrier adds it automatically
+
+**Preview the changelog:**
+
+```console
+towncrier build --draft --version Unreleased
+```
+
+The CI will verify that a changelog fragment exists and that `CHANGELOG.md` is not directly modified.
+
+If your change does not need a changelog entry, add the "Skip Changelog" label to the PR.
 
 `ruff check` and `ruff format` are executed when `tox -e ruff` is run. We strongly recommend you to configure [pre-commit](https://pre-commit.com/) locally to run `ruff` and `rstcheck` automatically before each commit by installing it as git hooks. You just need to [install pre-commit](https://pre-commit.com/#install) in your environment:
 
@@ -144,7 +185,7 @@ CONTRIB_REPO_SHA=dde62cebffe519c35875af6d06fae053b3be65ec tox
 ```
 
 The continuation integration overrides that environment variable with as per the configuration
-[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test_0.yml#L14).
+[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test.yml#L14).
 
 ### Benchmarks
 
@@ -232,7 +273,14 @@ git commit
 git push fork feature
 ```
 
-Open a pull request against the main `opentelemetry-python` repo.
+Open a pull request (PR) against the main `opentelemetry-python` repo.
+
+A descriptive PR title will help the community better triage and review your changes. Make sure to prefix with the name(s) of the package/subdirectory/domain that your PR updates. Following any of these examples will help:
+
+* "opentelemetry-sdk: make test_force_flush_late_by_timeout less flaky on pypy/windows"
+* "opentelemetry-exporter-otlp-proto-http: enable typechecking"
+* "docs: replace TODO placeholders with API and SDK overview descriptions"
+* "feat(config): Add TracerProvider support for declarative config"
 
 Pull requests are also tested for their compatibility with packages distributed
 by OpenTelemetry in the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git).
@@ -291,6 +339,12 @@ Please fork this repo in a personal Github account instead.
 
 One of the maintainers will merge the PR once it is **ready to merge**.
 
+### Stale PRs
+
+PRs with no activity for 14 days will be automatically marked as stale and closed after a further 14 days of inactivity. To prevent a PR from being marked stale, ensure there is regular activity (commits, comments, reviews, etc).
+
+Project managers can also exempt a PR from this by applying one of the following labels: `hold`, `WIP`, `blocked by spec`, `do not merge`.
+
 ## Design Choices
 
 As with other OpenTelemetry clients, opentelemetry-python follows the
@@ -322,6 +376,16 @@ Register this module with the `opentelemetry_environment_variables` entry point 
 automatically load as options for the `opentelemetry-instrument` command.
 
 ## Style Guide
+
+* All Python files must include the following SPDX license header as the first
+  two lines (or immediately after a shebang line):
+
+  ```python
+  # Copyright The OpenTelemetry Authors
+  # SPDX-License-Identifier: Apache-2.0
+  ```
+
+  This is enforced by CI via `tox -e lint-license-header-check`.
 
 * docstrings should adhere to the [Google Python Style
   Guide](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)

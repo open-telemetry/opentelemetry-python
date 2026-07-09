@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from itertools import count
 from logging import ERROR
@@ -21,7 +10,7 @@ from unittest import TestCase
 from pytest import mark
 
 from opentelemetry.context import Context
-from opentelemetry.metrics import Observation
+from opentelemetry.metrics import NoOpMeterProvider, Observation
 from opentelemetry.sdk.metrics import Counter, MeterProvider, ObservableCounter
 from opentelemetry.sdk.metrics._internal.exemplar import AlwaysOnExemplarFilter
 from opentelemetry.sdk.metrics.export import (
@@ -33,7 +22,7 @@ from opentelemetry.sdk.metrics.view import SumAggregation
 
 class TestSumAggregation(TestCase):
     @mark.skipif(
-        system() != "Linux",
+        system() == "Windows",
         reason=(
             "Tests fail because Windows time_ns resolution is too low so "
             "two different time measurements may end up having the exact same"
@@ -68,6 +57,9 @@ class TestSumAggregation(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
+        # Disable SDK metrics
+        # pylint: disable=protected-access
+        reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
         meter.create_observable_counter(
@@ -156,7 +148,7 @@ class TestSumAggregation(TestCase):
             self.assertIsNone(metrics_data)
 
     @mark.skipif(
-        system() != "Linux",
+        system() == "Windows",
         reason=(
             "Tests fail because Windows time_ns resolution is too low so "
             "two different time measurements may end up having the exact same"
@@ -191,6 +183,9 @@ class TestSumAggregation(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
+        # Disable SDK metrics
+        # pylint: disable=protected-access
+        reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
         meter.create_observable_counter(
@@ -251,7 +246,7 @@ class TestSumAggregation(TestCase):
             self.assertIsNone(metrics_data)
 
     @mark.skipif(
-        system() != "Linux",
+        system() == "Windows",
         reason=(
             "Tests fail because Windows time_ns resolution is too low so "
             "two different time measurements may end up having the exact same"
@@ -267,6 +262,9 @@ class TestSumAggregation(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
+        # Disable SDK metrics
+        # pylint: disable=protected-access
+        reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
         counter = meter.create_counter("counter")
@@ -378,7 +376,7 @@ class TestSumAggregation(TestCase):
         provider.shutdown()
 
     @mark.skipif(
-        system() != "Linux",
+        system() == "Windows",
         reason=(
             "Tests fail because Windows time_ns resolution is too low so "
             "two different time measurements may end up having the exact same"
@@ -394,6 +392,9 @@ class TestSumAggregation(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
+        # Disable SDK metrics
+        # pylint: disable=protected-access
+        reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
         counter = meter.create_counter("counter")

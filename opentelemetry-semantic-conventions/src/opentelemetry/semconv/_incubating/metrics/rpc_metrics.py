@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
 from typing import Final
@@ -19,7 +8,7 @@ from opentelemetry.metrics import Histogram, Meter
 
 RPC_CLIENT_CALL_DURATION: Final = "rpc.client.call.duration"
 """
-Measures the duration of outbound remote procedure calls (RPC)
+Measures the duration of an outgoing Remote Procedure Call (RPC)
 Instrument: histogram
 Unit: s
 Note: When this metric is reported alongside an RPC client span, the metric value
@@ -28,10 +17,10 @@ SHOULD be the same as the RPC client span duration.
 
 
 def create_rpc_client_call_duration(meter: Meter) -> Histogram:
-    """Measures the duration of outbound remote procedure calls (RPC)"""
+    """Measures the duration of an outgoing Remote Procedure Call (RPC)"""
     return meter.create_histogram(
         name=RPC_CLIENT_CALL_DURATION,
-        description="Measures the duration of outbound remote procedure calls (RPC).",
+        description="Measures the duration of an outgoing Remote Procedure Call (RPC).",
         unit="s",
     )
 
@@ -53,10 +42,7 @@ def create_rpc_client_duration(meter: Meter) -> Histogram:
 
 RPC_CLIENT_REQUEST_SIZE: Final = "rpc.client.request.size"
 """
-Measures the size of RPC request messages (uncompressed)
-Instrument: histogram
-Unit: By
-Note: **Streaming**: Recorded per message in a streaming batch.
+Deprecated: Removed, no replacement at this time.
 """
 
 
@@ -86,10 +72,7 @@ def create_rpc_client_requests_per_rpc(meter: Meter) -> Histogram:
 
 RPC_CLIENT_RESPONSE_SIZE: Final = "rpc.client.response.size"
 """
-Measures the size of RPC response messages (uncompressed)
-Instrument: histogram
-Unit: By
-Note: **Streaming**: Recorded per response in a streaming batch.
+Deprecated: Removed, no replacement at this time.
 """
 
 
@@ -119,7 +102,7 @@ def create_rpc_client_responses_per_rpc(meter: Meter) -> Histogram:
 
 RPC_SERVER_CALL_DURATION: Final = "rpc.server.call.duration"
 """
-Measures the duration of inbound remote procedure calls (RPC)
+Measures the duration of an incoming Remote Procedure Call (RPC)
 Instrument: histogram
 Unit: s
 Note: When this metric is reported alongside an RPC server span, the metric value
@@ -128,10 +111,10 @@ SHOULD be the same as the RPC server span duration.
 
 
 def create_rpc_server_call_duration(meter: Meter) -> Histogram:
-    """Measures the duration of inbound remote procedure calls (RPC)"""
+    """Measures the duration of an incoming Remote Procedure Call (RPC)"""
     return meter.create_histogram(
         name=RPC_SERVER_CALL_DURATION,
-        description="Measures the duration of inbound remote procedure calls (RPC).",
+        description="Measures the duration of an incoming Remote Procedure Call (RPC).",
         unit="s",
     )
 
@@ -153,10 +136,7 @@ def create_rpc_server_duration(meter: Meter) -> Histogram:
 
 RPC_SERVER_REQUEST_SIZE: Final = "rpc.server.request.size"
 """
-Measures the size of RPC request messages (uncompressed)
-Instrument: histogram
-Unit: By
-Note: **Streaming**: Recorded per message in a streaming batch.
+Deprecated: Removed, no replacement at this time.
 """
 
 
@@ -186,10 +166,7 @@ def create_rpc_server_requests_per_rpc(meter: Meter) -> Histogram:
 
 RPC_SERVER_RESPONSE_SIZE: Final = "rpc.server.response.size"
 """
-Measures the size of RPC response messages (uncompressed)
-Instrument: histogram
-Unit: By
-Note: **Streaming**: Recorded per response in a streaming batch.
+Deprecated: Removed, no replacement at this time.
 """
 
 

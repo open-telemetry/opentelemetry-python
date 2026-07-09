@@ -1,9 +1,15 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+from __future__ import annotations
+
 import abc
 import logging
 import re
 import types as python_types
 import typing
 import warnings
+from collections.abc import Iterator, Mapping, Sequence
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -57,7 +63,7 @@ class Span(abc.ABC):
     """A span represents a single operation within a trace."""
 
     @abc.abstractmethod
-    def end(self, end_time: typing.Optional[int] = None) -> None:
+    def end(self, end_time: int | None = None) -> None:
         """Sets the current time as the span's end time.
 
         The span's end time is the wall time at which the operation finished.
@@ -67,7 +73,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_span_context(self) -> "SpanContext":
+    def get_span_context(self) -> SpanContext:
         """Gets the span's SpanContext.
 
         Get an immutable, serializable identifier for this span that can be
@@ -79,7 +85,7 @@ class Span(abc.ABC):
 
     @abc.abstractmethod
     def set_attributes(
-        self, attributes: typing.Mapping[str, types.AttributeValue]
+        self, attributes: Mapping[str, types.AttributeValue]
     ) -> None:
         """Sets Attributes.
 
@@ -108,7 +114,7 @@ class Span(abc.ABC):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        timestamp: int | None = None,
     ) -> None:
         """Adds an `Event`.
 
@@ -119,7 +125,7 @@ class Span(abc.ABC):
 
     def add_link(  # pylint: disable=no-self-use
         self,
-        context: "SpanContext",
+        context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
         """Adds a `Link`.
@@ -159,8 +165,8 @@ class Span(abc.ABC):
     @abc.abstractmethod
     def set_status(
         self,
-        status: typing.Union[Status, StatusCode],
-        description: typing.Optional[str] = None,
+        status: Status | StatusCode,
+        description: str | None = None,
     ) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status.
@@ -171,12 +177,12 @@ class Span(abc.ABC):
         self,
         exception: BaseException,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
         """Records an exception as a span event."""
 
-    def __enter__(self) -> "Span":
+    def __enter__(self) -> Span:
         """Invoked when `Span` is used as a context manager.
 
         Returns the `Span` itself.
@@ -185,9 +191,9 @@ class Span(abc.ABC):
 
     def __exit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[python_types.TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: python_types.TracebackType | None,
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
 
@@ -197,31 +203,39 @@ class Span(abc.ABC):
 class TraceFlags(int):
     """A bitmask that represents options specific to the trace.
 
-    The only supported option is the "sampled" flag (``0x01``). If set, this
-    flag indicates that the trace may have been sampled upstream.
+    Supported flags:
+    - "sampled" (``0x01``): Indicates the trace may have been sampled upstream.
+    - "random-trace-id" (``0x02``): Indicates the trace ID was generated
+    randomly, with at least the 7 rightmost bytes (56 bits) selected with
+    uniform distribution.
 
     See the `W3C Trace Context - Traceparent`_ spec for details.
 
     .. _W3C Trace Context - Traceparent:
-        https://www.w3.org/TR/trace-context/#trace-flags
+        https://www.w3.org/TR/trace-context-2/#trace-flags
     """
 
     DEFAULT = 0x00
     SAMPLED = 0x01
+    RANDOM_TRACE_ID = 0x02
 
     @classmethod
-    def get_default(cls) -> "TraceFlags":
+    def get_default(cls) -> TraceFlags:
         return cls(cls.DEFAULT)
 
     @property
     def sampled(self) -> bool:
         return bool(self & TraceFlags.SAMPLED)
 
+    @property
+    def random_trace_id(self) -> bool:
+        return bool(self & TraceFlags.RANDOM_TRACE_ID)
+
 
 DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()
 
 
-class TraceState(typing.Mapping[str, str]):
+class TraceState(Mapping[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
@@ -234,9 +248,7 @@ class TraceState(typing.Mapping[str, str]):
 
     def __init__(
         self,
-        entries: typing.Optional[
-            typing.Sequence[typing.Tuple[str, str]]
-        ] = None,
+        entries: Sequence[tuple[str, str]] | None = None,
     ) -> None:
         self._dict = {}  # type: dict[str, str]
         if entries is None:
@@ -265,7 +277,7 @@ class TraceState(typing.Mapping[str, str]):
     def __getitem__(self, key: str) -> str:
         return self._dict[key]
 
-    def __iter__(self) -> typing.Iterator[str]:
+    def __iter__(self) -> Iterator[str]:
         return iter(self._dict)
 
     def __len__(self) -> int:
@@ -278,7 +290,7 @@ class TraceState(typing.Mapping[str, str]):
         ]
         return str(pairs)
 
-    def add(self, key: str, value: str) -> "TraceState":
+    def add(self, key: str, value: str) -> TraceState:
         """Adds a key-value pair to tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
 
@@ -309,7 +321,7 @@ class TraceState(typing.Mapping[str, str]):
         new_state = [(key, value)] + list(self._dict.items())
         return TraceState(new_state)
 
-    def update(self, key: str, value: str) -> "TraceState":
+    def update(self, key: str, value: str) -> TraceState:
         """Updates a key-value pair in tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
 
@@ -334,7 +346,7 @@ class TraceState(typing.Mapping[str, str]):
         new_state = [(key, value), *prev_state.items()]
         return TraceState(new_state)
 
-    def delete(self, key: str) -> "TraceState":
+    def delete(self, key: str) -> TraceState:
         """Deletes a key-value from tracestate.
 
         Args:
@@ -365,7 +377,7 @@ class TraceState(typing.Mapping[str, str]):
         return ",".join(key + "=" + value for key, value in self._dict.items())
 
     @classmethod
-    def from_header(cls, header_list: typing.List[str]) -> "TraceState":
+    def from_header(cls, header_list: list[str]) -> TraceState:
         """Parses one or more w3c tracestate header into a TraceState.
 
         Args:
@@ -383,7 +395,7 @@ class TraceState(typing.Mapping[str, str]):
         """
         pairs = {}  # type: dict[str, str]
         for header in header_list:
-            members: typing.List[str] = re.split(_delimiter_pattern, header)
+            members: list[str] = re.split(_delimiter_pattern, header)
             for member in members:
                 # empty members are valid, but no need to process further.
                 if not member:
@@ -395,7 +407,7 @@ class TraceState(typing.Mapping[str, str]):
                         member,
                     )
                     return cls()
-                groups: typing.Tuple[str, ...] = match.groups()
+                groups: tuple[str, ...] = match.groups()
                 key, _eq, value = groups
                 # duplicate keys are not legal in header
                 if key in pairs:
@@ -404,7 +416,7 @@ class TraceState(typing.Mapping[str, str]):
         return cls(list(pairs.items()))
 
     @classmethod
-    def get_default(cls) -> "TraceState":
+    def get_default(cls) -> TraceState:
         return cls()
 
     def keys(self) -> typing.KeysView[str]:
@@ -422,9 +434,7 @@ _TRACE_ID_MAX_VALUE = 2**128 - 1
 _SPAN_ID_MAX_VALUE = 2**64 - 1
 
 
-class SpanContext(
-    typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
-):
+class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
     """The state of a Span to propagate between processes.
 
     This class includes the immutable attributes of a :class:`.Span` that must
@@ -443,9 +453,9 @@ class SpanContext(
         trace_id: int,
         span_id: int,
         is_remote: bool,
-        trace_flags: typing.Optional["TraceFlags"] = DEFAULT_TRACE_OPTIONS,
-        trace_state: typing.Optional["TraceState"] = DEFAULT_TRACE_STATE,
-    ) -> "SpanContext":
+        trace_flags: TraceFlags | None = DEFAULT_TRACE_OPTIONS,
+        trace_state: TraceState | None = DEFAULT_TRACE_STATE,
+    ) -> SpanContext:
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
         if trace_state is None:
@@ -463,7 +473,7 @@ class SpanContext(
 
     def __getnewargs__(
         self,
-    ) -> typing.Tuple[int, int, bool, "TraceFlags", "TraceState"]:
+    ) -> tuple[int, int, bool, TraceFlags, TraceState]:
         return (
             self.trace_id,
             self.span_id,
@@ -485,11 +495,11 @@ class SpanContext(
         return self[2]  # pylint: disable=unsubscriptable-object
 
     @property
-    def trace_flags(self) -> "TraceFlags":
+    def trace_flags(self) -> TraceFlags:
         return self[3]  # pylint: disable=unsubscriptable-object
 
     @property
-    def trace_state(self) -> "TraceState":
+    def trace_state(self) -> TraceState:
         return self[4]  # pylint: disable=unsubscriptable-object
 
     @property
@@ -516,20 +526,20 @@ class NonRecordingSpan(Span):
     All operations are no-op except context propagation.
     """
 
-    def __init__(self, context: "SpanContext") -> None:
+    def __init__(self, context: SpanContext) -> None:
         self._context = context
 
-    def get_span_context(self) -> "SpanContext":
+    def get_span_context(self) -> SpanContext:
         return self._context
 
     def is_recording(self) -> bool:
         return False
 
-    def end(self, end_time: typing.Optional[int] = None) -> None:
+    def end(self, end_time: int | None = None) -> None:
         pass
 
     def set_attributes(
-        self, attributes: typing.Mapping[str, types.AttributeValue]
+        self, attributes: Mapping[str, types.AttributeValue]
     ) -> None:
         pass
 
@@ -540,13 +550,13 @@ class NonRecordingSpan(Span):
         self,
         name: str,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        timestamp: int | None = None,
     ) -> None:
         pass
 
     def add_link(
         self,
-        context: "SpanContext",
+        context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
         pass
@@ -556,8 +566,8 @@ class NonRecordingSpan(Span):
 
     def set_status(
         self,
-        status: typing.Union[Status, StatusCode],
-        description: typing.Optional[str] = None,
+        status: Status | StatusCode,
+        description: str | None = None,
     ) -> None:
         pass
 
@@ -565,7 +575,7 @@ class NonRecordingSpan(Span):
         self,
         exception: BaseException,
         attributes: types.Attributes = None,
-        timestamp: typing.Optional[int] = None,
+        timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
         pass

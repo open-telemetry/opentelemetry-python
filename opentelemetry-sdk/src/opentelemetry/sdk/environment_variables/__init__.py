@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 OTEL_SDK_DISABLED = "OTEL_SDK_DISABLED"
 """
@@ -18,6 +7,27 @@ OTEL_SDK_DISABLED = "OTEL_SDK_DISABLED"
 
 The :envvar:`OTEL_SDK_DISABLED` environment variable disables the SDK for all signals
 Default: "false"
+"""
+
+OTEL_CONFIG_FILE = "OTEL_CONFIG_FILE"
+"""
+.. envvar:: OTEL_CONFIG_FILE
+
+The :envvar:`OTEL_CONFIG_FILE` environment variable points the SDK at a
+declarative configuration file (YAML or JSON). When set, the file is the
+sole source for SDK construction. Spec-defined ``OTEL_*`` variables with
+schema equivalents are ignored. Env vars may still be read indirectly by
+components the file enables (e.g. resource detectors) and via
+``${env:VAR}`` substitution inside the file.
+
+Python-implementation extensions outside the spec (``OTEL_PYTHON_*``
+variables such as ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
+:envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR`) are also bypassed when
+:envvar:`OTEL_CONFIG_FILE` is set, because the env-var initialisation path
+is skipped entirely in favour of the declarative file. Honouring these
+alongside a config file is tracked separately.
+
+See the OpenTelemetry declarative configuration specification for details.
 """
 
 OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
@@ -79,7 +89,7 @@ OTEL_BLRP_SCHEDULE_DELAY = "OTEL_BLRP_SCHEDULE_DELAY"
 .. envvar:: OTEL_BLRP_SCHEDULE_DELAY
 
 The :envvar:`OTEL_BLRP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports of the BatchLogRecordProcessor.
-Default: 5000
+Default: 1000
 """
 
 OTEL_BLRP_EXPORT_TIMEOUT = "OTEL_BLRP_EXPORT_TIMEOUT"
@@ -494,6 +504,19 @@ Entry point providers should implement the following:
 Note: This environment variable is experimental and subject to change.
 """
 
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES = (
+    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES"
+)
+"""
+.. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES
+
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES` stores a comma-separated list of human-readable
+gRPC error codes that are considered retryable for the OTLP gRPC exporters (e.g. `UNAVAILABLE, DEADLINE_EXCEEDED`).
+Supported error codes are defined in `grpc.StatusCode` and are parsed in a case-insensitive manner.
+
+Note: This environment variable is experimental and subject to change.
+"""
+
 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
@@ -714,6 +737,10 @@ enable/disable the auto instrumentation for the python logging module.
 Default: False
 
 Note: Logs SDK and its related settings are experimental.
+
+.. warning::
+
+    This option is deprecated, instead you should install `opentelemetry-instrumentation-logging`.
 """
 
 
@@ -773,6 +800,13 @@ of names of resource detectors. These names must be the same as the names of
 entry points for the ```opentelemetry_resource_detector``` entry point. This is an
 experimental feature and the name of this variable and its behavior can change
 in a non-backwards compatible way.
+
+Detectors are run in the order they are listed and their attributes are merged
+in that order, with later detectors taking precedence over earlier ones on
+conflicting keys. The ``otel`` detector (which reads
+:envvar:`OTEL_RESOURCE_ATTRIBUTES` and :envvar:`OTEL_SERVICE_NAME`) is always
+appended last unless explicitly placed elsewhere in the list, ensuring
+environment variable attributes take highest priority among detectors.
 """
 
 OTEL_EXPORTER_PROMETHEUS_HOST = "OTEL_EXPORTER_PROMETHEUS_HOST"
@@ -809,4 +843,39 @@ Default: opentelemetry.sdk.trace._default_tracer_configurator
 
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.
+"""
+
+OTEL_PYTHON_METER_CONFIGURATOR = "OTEL_PYTHON_METER_CONFIGURATOR"
+"""
+.. envvar:: OTEL_PYTHON_METER_CONFIGURATOR
+
+The :envvar:`OTEL_PYTHON_METER_CONFIGURATOR` environment variable allows users to set a
+custom Meter Configurator function.
+Default: opentelemetry.sdk.metrics._internal._default_meter_configurator
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
+"""
+
+OTEL_PYTHON_LOGGER_CONFIGURATOR = "OTEL_PYTHON_LOGGER_CONFIGURATOR"
+"""
+.. envvar:: OTEL_PYTHON_LOGGER_CONFIGURATOR
+
+The :envvar:`OTEL_PYTHON_LOGGER_CONFIGURATOR` environment variable allows users to set a
+custom Logger Configurator function.
+Default: opentelemetry.sdk._logs._internal._default_logger_configurator
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
+"""
+
+OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED = (
+    "OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED"
+)
+"""
+.. envvar:: OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
+
+The :envvar:`OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED` environment variable enables
+metrics emitted by the SDK about its own internal state.
+Default: "false"
 """

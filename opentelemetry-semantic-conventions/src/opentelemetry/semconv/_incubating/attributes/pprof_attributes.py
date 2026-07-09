@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from typing import Final
 
@@ -58,4 +47,16 @@ Frames with Function.function_name fully matching the regexp will be dropped fro
 PPROF_PROFILE_KEEP_FRAMES: Final = "pprof.profile.keep_frames"
 """
 Frames with Function.function_name fully matching the regexp will be kept, even if it matches drop_frames.
+"""
+
+PPROF_SCOPE_DEFAULT_SAMPLE_TYPE: Final = "pprof.scope.default_sample_type"
+"""
+Records the pprof's default_sample_type in the original profile. Not set if the default sample type was missing.
+Note: This attribute, if present, MUST be set at the scope level (resource_profiles[].scope_profiles[].scope.attributes[]).
+"""
+
+PPROF_SCOPE_SAMPLE_TYPE_ORDER: Final = "pprof.scope.sample_type_order"
+"""
+Records the indexes of the sample types in the original profile.
+Note: This attribute, if present, MUST be set at the scope level (resource_profiles[].scope_profiles[].scope.attributes[]).
 """
