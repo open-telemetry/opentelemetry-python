@@ -128,6 +128,20 @@ class TestOTLPMetricExporter(TestCase):
             ),
         }
 
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http.metric_exporter.encode_metrics",
+        side_effect=ValueError("encoding failed"),
+    )
+    def test_encoding_error_returns_failure(self, _mock_encode):
+        exporter = OTLPMetricExporter(meter_provider=self.meter_provider)
+        with self.assertLogs(
+            "opentelemetry.exporter.otlp.proto.http.metric_exporter",
+            level="ERROR",
+        ) as log:
+            result = exporter.export(self.metrics["sum_int"])
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        self.assertIn("Failed to encode metrics batch", log.records[0].message)
+
     def test_constructor_default(self):
         exporter = OTLPMetricExporter()
 

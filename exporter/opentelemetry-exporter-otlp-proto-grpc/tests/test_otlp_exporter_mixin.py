@@ -462,6 +462,22 @@ class TestOTLPExporterMixin(TestCase):
                 "Shutdown in progress, aborting retry.",
             )
 
+    def test_encoding_error_returns_failure(self):
+        exporter = OTLPSpanExporterForTesting(
+            insecure=True, meter_provider=self.meter_provider
+        )
+        encoding_error = ValueError("encoding failed")
+        with patch.object(
+            exporter, "_translate_data", side_effect=encoding_error
+        ):
+            with self.assertLogs(
+                "opentelemetry.exporter.otlp.proto.grpc.exporter",
+                level="ERROR",
+            ) as log:
+                result = exporter.export([self.span])
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertIn("Failed to encode traces batch", log.records[0].message)
+
     def test_export_over_closed_grpc_channel(self):
         # pylint: disable=protected-access
 
