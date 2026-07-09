@@ -13,7 +13,7 @@ class InMemorySpanExporter(SpanExporter):
     """Implementation of :class:`.SpanExporter` that stores spans in memory.
 
     This class can be used for testing purposes. It stores the exported spans
-    in a list in memory that can be retrieved using the
+    in a deque in memory that can be retrieved using the
     :func:`.get_finished_spans` method.
 
     Args:
