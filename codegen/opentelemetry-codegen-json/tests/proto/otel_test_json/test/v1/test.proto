@@ -1,0 +1,59 @@
+// Copyright The OpenTelemetry Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package otel_test_json.test.v1;
+
+message TestMessage {
+  enum TestEnum {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+
+  // Scalar types
+  string name = 1;
+  int32 int_value = 2;
+  bool bool_value = 3;
+  double double_value = 4;
+
+  // Special OTLP types
+  int64 int64_value = 5;
+  uint64 uint64_value = 6;
+  bytes bytes_value = 7;
+
+  // Hex encoded fields (per OTLP spec)
+  bytes trace_id = 8;
+  bytes span_id = 9;
+
+  // Repeated fields
+  repeated string list_strings = 10;
+  repeated int32 list_ints = 11;
+
+  // Nested message and enum
+  TestEnum enum_value = 12;
+  SubMessage sub_message = 13;
+  repeated SubMessage list_messages = 14;
+
+  // Oneof group
+  oneof test_oneof {
+    string oneof_string = 15;
+    int32 oneof_int = 16;
+  }
+}
+
+message SubMessage {
+  string content = 1;
+}

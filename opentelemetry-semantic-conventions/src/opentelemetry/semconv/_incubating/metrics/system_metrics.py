@@ -1,27 +1,9 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 
-from typing import (
-    Callable,
-    Final,
-    Generator,
-    Iterable,
-    Optional,
-    Sequence,
-    Union,
-)
+from collections.abc import Callable, Generator, Iterable, Sequence
+from typing import Final
 
 from opentelemetry.metrics import (
     CallbackOptions,
@@ -33,10 +15,11 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = Union[
-    Callable[[CallbackOptions], Iterable[Observation]],
-    Generator[Iterable[Observation], CallbackOptions, None],
-]
+CallbackT = (
+    Callable[[CallbackOptions], Iterable[Observation]]
+    | Generator[Iterable[Observation], CallbackOptions, None]
+)
+
 
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
 """
@@ -47,7 +30,7 @@ Unit: Hz
 
 
 def create_system_cpu_frequency(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Operating frequency of the logical CPU in Hertz"""
     return meter.create_observable_gauge(
@@ -120,7 +103,7 @@ Unit: 1
 
 
 def create_system_cpu_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """For each logical CPU, the utilization is calculated as the change in cumulative CPU time (cpu.time) over a measurement interval, divided by the elapsed time"""
     return meter.create_observable_gauge(
@@ -288,7 +271,7 @@ Unit: 1
 
 
 def create_system_filesystem_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Fraction of filesystem bytes used"""
     return meter.create_observable_gauge(
@@ -301,43 +284,31 @@ def create_system_filesystem_utilization(
 
 SYSTEM_LINUX_MEMORY_AVAILABLE: Final = "system.linux.memory.available"
 """
-An estimate of how much memory is available for starting new applications, without causing swapping
-Instrument: updowncounter
-Unit: By
-Note: This is an alternative to `system.memory.usage` metric with `state=free`.
-Linux starting from 3.14 exports "available" memory. It takes "free" memory as a baseline, and then factors in kernel-specific values.
-This is supposed to be more accurate than just "free" memory.
-For reference, see the calculations [here](https://superuser.com/a/980821).
-See also `MemAvailable` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+Deprecated: Replaced by `system.memory.linux.available`.
 """
 
 
-def create_system_linux_memory_available(meter: Meter) -> UpDownCounter:
-    """An estimate of how much memory is available for starting new applications, without causing swapping"""
-    return meter.create_up_down_counter(
+def create_system_linux_memory_available(meter: Meter) -> Counter:
+    """The number of packets transferred"""
+    return meter.create_counter(
         name=SYSTEM_LINUX_MEMORY_AVAILABLE,
-        description="An estimate of how much memory is available for starting new applications, without causing swapping.",
-        unit="By",
+        description="The number of packets transferred.",
+        unit="{packet}",
     )
 
 
 SYSTEM_LINUX_MEMORY_SLAB_USAGE: Final = "system.linux.memory.slab.usage"
 """
-Reports the memory used by the Linux kernel for managing caches of frequently used objects
-Instrument: updowncounter
-Unit: By
-Note: The sum over the `reclaimable` and `unreclaimable` state values in `linux.memory.slab.usage` SHOULD be equal to the total slab memory available on the system.
-Note that the total slab memory is not constant and may vary over time.
-See also the [Slab allocator](https://blogs.oracle.com/linux/post/understanding-linux-kernel-memory-statistics) and `Slab` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+Deprecated: Replaced by `system.memory.linux.slab.usage`.
 """
 
 
-def create_system_linux_memory_slab_usage(meter: Meter) -> UpDownCounter:
-    """Reports the memory used by the Linux kernel for managing caches of frequently used objects"""
-    return meter.create_up_down_counter(
+def create_system_linux_memory_slab_usage(meter: Meter) -> Counter:
+    """The number of packets transferred"""
+    return meter.create_counter(
         name=SYSTEM_LINUX_MEMORY_SLAB_USAGE,
-        description="Reports the memory used by the Linux kernel for managing caches of frequently used objects.",
-        unit="By",
+        description="The number of packets transferred.",
+        unit="{packet}",
     )
 
 
@@ -358,7 +329,158 @@ def create_system_memory_limit(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_MEMORY_SHARED: Final = "system.memory.shared"
+SYSTEM_MEMORY_LINUX_AVAILABLE: Final = "system.memory.linux.available"
+"""
+An estimate of how much memory is available for starting new applications, without causing swapping
+Instrument: updowncounter
+Unit: By
+Note: This is an alternative to `system.memory.usage` metric with `state=free`.
+Linux starting from 3.14 exports "available" memory. It takes "free" memory as a baseline, and then factors in kernel-specific values.
+This is supposed to be more accurate than just "free" memory.
+For reference, see the calculations [here](https://superuser.com/a/980821).
+See also `MemAvailable` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+"""
+
+
+def create_system_memory_linux_available(meter: Meter) -> UpDownCounter:
+    """An estimate of how much memory is available for starting new applications, without causing swapping"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_AVAILABLE,
+        description="An estimate of how much memory is available for starting new applications, without causing swapping.",
+        unit="By",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_LIMIT: Final = (
+    "system.memory.linux.hugepages.limit"
+)
+"""
+Total number of hugepages available
+Instrument: updowncounter
+Unit: {page}
+"""
+
+
+def create_system_memory_linux_hugepages_limit(meter: Meter) -> UpDownCounter:
+    """Total number of hugepages available"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_LIMIT,
+        description="Total number of hugepages available.",
+        unit="{page}",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_PAGE_SIZE: Final = (
+    "system.memory.linux.hugepages.page_size"
+)
+"""
+System hugepage size in bytes
+Instrument: updowncounter
+Unit: By
+"""
+
+
+def create_system_memory_linux_hugepages_page_size(
+    meter: Meter,
+) -> UpDownCounter:
+    """System hugepage size in bytes"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_PAGE_SIZE,
+        description="System hugepage size in bytes.",
+        unit="By",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_RESERVED: Final = (
+    "system.memory.linux.hugepages.reserved"
+)
+"""
+Number of reserved hugepages
+Instrument: updowncounter
+Unit: {page}
+Note: Hugepages for which a commitment to allocate has been made, but no allocation has yet been made.
+This is reported as a separate metric rather than a `usage` state because reserved pages are already counted in `free` pages.
+They represent a subset of free pages that cannot be used for non-reserved allocations.
+"""
+
+
+def create_system_memory_linux_hugepages_reserved(
+    meter: Meter,
+) -> UpDownCounter:
+    """Number of reserved hugepages"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_RESERVED,
+        description="Number of reserved hugepages.",
+        unit="{page}",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_SURPLUS: Final = (
+    "system.memory.linux.hugepages.surplus"
+)
+"""
+Number of surplus hugepages
+Instrument: updowncounter
+Unit: {page}
+Note: Overcommitted hugepages beyond the persistent pool.
+This is reported as a separate metric rather than a `usage` state because surplus pages can be in either `used` or `free` state.
+Including them in `usage` would break the convention that `usage` states sum to the `limit`.
+"""
+
+
+def create_system_memory_linux_hugepages_surplus(
+    meter: Meter,
+) -> UpDownCounter:
+    """Number of surplus hugepages"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_SURPLUS,
+        description="Number of surplus hugepages.",
+        unit="{page}",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_USAGE: Final = (
+    "system.memory.linux.hugepages.usage"
+)
+"""
+Number of hugepages in use by state
+Instrument: updowncounter
+Unit: {page}
+"""
+
+
+def create_system_memory_linux_hugepages_usage(meter: Meter) -> UpDownCounter:
+    """Number of hugepages in use by state"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_USAGE,
+        description="Number of hugepages in use by state.",
+        unit="{page}",
+    )
+
+
+SYSTEM_MEMORY_LINUX_HUGEPAGES_UTILIZATION: Final = (
+    "system.memory.linux.hugepages.utilization"
+)
+"""
+Percentage of hugepages in use by state
+Instrument: gauge
+Unit: 1
+"""
+
+
+def create_system_memory_linux_hugepages_utilization(
+    meter: Meter, callbacks: Sequence[CallbackT] | None
+) -> ObservableGauge:
+    """Percentage of hugepages in use by state"""
+    return meter.create_observable_gauge(
+        name=SYSTEM_MEMORY_LINUX_HUGEPAGES_UTILIZATION,
+        callbacks=callbacks,
+        description="Percentage of hugepages in use by state.",
+        unit="1",
+    )
+
+
+SYSTEM_MEMORY_LINUX_SHARED: Final = "system.memory.linux.shared"
 """
 Shared memory used (mostly by tmpfs)
 Instrument: updowncounter
@@ -368,11 +490,46 @@ Note: Equivalent of `shared` from [`free` command](https://man7.org/linux/man-pa
 """
 
 
-def create_system_memory_shared(meter: Meter) -> UpDownCounter:
+def create_system_memory_linux_shared(meter: Meter) -> UpDownCounter:
     """Shared memory used (mostly by tmpfs)"""
     return meter.create_up_down_counter(
-        name=SYSTEM_MEMORY_SHARED,
+        name=SYSTEM_MEMORY_LINUX_SHARED,
         description="Shared memory used (mostly by tmpfs).",
+        unit="By",
+    )
+
+
+SYSTEM_MEMORY_LINUX_SLAB_USAGE: Final = "system.memory.linux.slab.usage"
+"""
+Reports the memory used by the Linux kernel for managing caches of frequently used objects
+Instrument: updowncounter
+Unit: By
+Note: The sum over the `reclaimable` and `unreclaimable` state values in `memory.linux.slab.usage` SHOULD be equal to the total slab memory available on the system.
+Note that the total slab memory is not constant and may vary over time.
+See also the [Slab allocator](https://blogs.oracle.com/linux/post/understanding-linux-kernel-memory-statistics) and `Slab` in [/proc/meminfo](https://man7.org/linux/man-pages/man5/proc.5.html).
+"""
+
+
+def create_system_memory_linux_slab_usage(meter: Meter) -> UpDownCounter:
+    """Reports the memory used by the Linux kernel for managing caches of frequently used objects"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_LINUX_SLAB_USAGE,
+        description="Reports the memory used by the Linux kernel for managing caches of frequently used objects.",
+        unit="By",
+    )
+
+
+SYSTEM_MEMORY_SHARED: Final = "system.memory.shared"
+"""
+Deprecated: Replaced by `system.memory.linux.shared`.
+"""
+
+
+def create_system_memory_shared(meter: Meter) -> UpDownCounter:
+    """Deprecated, use `system.memory.linux.shared` instead"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_MEMORY_SHARED,
+        description="Deprecated, use `system.memory.linux.shared` instead.",
         unit="By",
     )
 
@@ -403,7 +560,7 @@ Unit: 1
 
 
 def create_system_memory_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Percentage of memory bytes in use"""
     return meter.create_observable_gauge(
@@ -614,7 +771,7 @@ Unit: 1
 
 
 def create_system_paging_utilization(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """Swap (unix) or pagefile (windows) utilization"""
     return meter.create_observable_gauge(
@@ -670,7 +827,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 
 
 def create_system_uptime(
-    meter: Meter, callbacks: Optional[Sequence[CallbackT]]
+    meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
     """The time the system has been running"""
     return meter.create_observable_gauge(

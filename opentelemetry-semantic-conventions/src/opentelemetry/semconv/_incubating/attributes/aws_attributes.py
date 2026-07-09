@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 from typing import Final
@@ -209,7 +198,7 @@ Note: This may be different from `cloud.resource_id` if an alias is involved.
 
 AWS_LAMBDA_RESOURCE_MAPPING_ID: Final = "aws.lambda.resource_mapping.id"
 """
-The UUID of the [AWS Lambda EvenSource Mapping](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-eventsourcemapping.html). An event source is mapped to a lambda function. It's contents are read by Lambda and used to trigger a function. This isn't available in the lambda execution context or the lambda runtime environtment. This is going to be populated by the AWS SDK for each language when that UUID is present. Some of these operations are Create/Delete/Get/List/Update EventSourceMapping.
+The UUID of the [AWS Lambda EvenSource Mapping](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-eventsourcemapping.html). An event source is mapped to a lambda function. It's contents are read by Lambda and used to trigger a function. This isn't available in the lambda execution context or the lambda runtime environment. This is going to be populated by the AWS SDK for each language when that UUID is present. Some of these operations are Create/Delete/Get/List/Update EventSourceMapping.
 """
 
 AWS_LOG_GROUP_ARNS: Final = "aws.log.group.arns"
@@ -312,7 +301,7 @@ This applies in particular to the following operations:
 
 AWS_SECRETSMANAGER_SECRET_ARN: Final = "aws.secretsmanager.secret.arn"
 """
-The ARN of the Secret stored in the Secrets Mangger.
+The ARN of the Secret stored in the Secrets Manager.
 """
 
 AWS_SNS_TOPIC_ARN: Final = "aws.sns.topic.arn"

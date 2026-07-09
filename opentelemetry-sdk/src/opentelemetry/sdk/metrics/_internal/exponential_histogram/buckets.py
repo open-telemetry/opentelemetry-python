@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from math import ceil, log2
 
@@ -182,9 +171,9 @@ class Buckets:
         # pylint: disable=protected-access
         # pylint: disable=attribute-defined-outside-init
         # pylint: disable=invalid-name
-        copy._Buckets__index_base = self._Buckets__index_base
-        copy._Buckets__index_start = self._Buckets__index_start
-        copy._Buckets__index_end = self._Buckets__index_end
+        copy._Buckets__index_base = self._Buckets__index_base  # type: ignore[reportArgumentType]
+        copy._Buckets__index_start = self._Buckets__index_start  # type: ignore[reportArgumentType]
+        copy._Buckets__index_end = self._Buckets__index_end  # type: ignore[reportArgumentType]
         copy._counts = [0 for _ in self._counts]
 
         return copy

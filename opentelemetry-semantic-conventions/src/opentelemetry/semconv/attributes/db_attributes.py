@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 from typing import Final
@@ -72,14 +61,19 @@ calls involving complex queries.
 Summary may be available to the instrumentation through
 instrumentation hooks or other means. If it is not available, instrumentations
 that support query parsing SHOULD generate a summary following
-[Generating query summary](/docs/database/database-spans.md#generating-a-summary-of-the-query)
+[Generating query summary](/docs/db/database-spans.md#generating-a-summary-of-the-query)
 section.
+
+For batch operations, if the individual operations are known to have the same query summary
+then that query summary SHOULD be used prepended by `BATCH `,
+otherwise `db.query.summary` SHOULD be `BATCH` or some other database
+system specific term if more applicable.
 """
 
 DB_QUERY_TEXT: Final = "db.query.text"
 """
 The database query being executed.
-Note: For sanitization see [Sanitization of `db.query.text`](/docs/database/database-spans.md#sanitization-of-dbquerytext).
+Note: For sanitization see [Sanitization of `db.query.text`](/docs/db/database-spans.md#sanitization-of-dbquerytext).
 For batch operations, if the individual operations are known to have the same query text then that query text SHOULD be used, otherwise all of the individual query texts SHOULD be concatenated with separator `; ` or some other database system specific separator if more applicable.
 Parameterized query text SHOULD NOT be sanitized. Even though parameterized query text can potentially have sensitive data, by using a parameterized query the user is giving a strong signal that any sensitive data will be passed as parameter values, and the benefit to observability of capturing the static part of the query text by default outweighs the risk.
 """

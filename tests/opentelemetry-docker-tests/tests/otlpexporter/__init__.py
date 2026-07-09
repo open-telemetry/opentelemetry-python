@@ -1,48 +1,39 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
-from abc import ABC, abstractmethod
+from __future__ import annotations
 
-from opentelemetry.context import attach, detach, set_value
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from dataclasses import dataclass, field
+from typing import Any, Generic, TypeVar
+
+ExporterT = TypeVar("ExporterT")
+
+CUSTOM_HEADERS: dict[str, str] = {
+    "x-custom-header": "custom-value",
+    "x-another-header": "another-value",
+}
 
 
-class ExportStatusSpanProcessor(SimpleSpanProcessor):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.export_status = []
+@dataclass
+class ExporterConfig(Generic[ExporterT]):
+    id: str
+    exporter_class: type[ExporterT]
+    kwargs: dict[str, Any] = field(default_factory=dict)
 
-    def on_end(self, span):
-        token = attach(set_value("suppress_instrumentation", True))
-        self.export_status.append(self.span_exporter.export((span,)))
-        detach(token)
+    def build(self) -> ExporterT:
+        return self.exporter_class(**self.kwargs)
 
 
-class BaseTestOTLPExporter(ABC):
-    @abstractmethod
-    def get_span_processor(self):
-        pass
-
-    # pylint: disable=no-member
-    def test_export(self):
-        with self.tracer.start_as_current_span("foo"):
-            with self.tracer.start_as_current_span("bar"):
-                with self.tracer.start_as_current_span("baz"):
-                    pass
-
-        self.assertTrue(len(self.span_processor.export_status), 3)
-
-        for export_status in self.span_processor.export_status:
-            self.assertEqual(export_status.name, "SUCCESS")
-            self.assertEqual(export_status.value, 0)
+def _attrs_to_dict(attributes) -> dict:
+    result = {}
+    for kv in attributes:
+        which = kv.value.WhichOneof("value")
+        if which == "string_value":
+            result[kv.key] = kv.value.string_value
+        elif which == "int_value":
+            result[kv.key] = kv.value.int_value
+        elif which == "double_value":
+            result[kv.key] = kv.value.double_value
+        elif which == "bool_value":
+            result[kv.key] = kv.value.bool_value
+    return result

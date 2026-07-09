@@ -1,25 +1,15 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import abc
 import typing
+from collections.abc import Iterable, Mapping, MutableMapping
 
 from opentelemetry.context.context import Context
 
 CarrierT = typing.TypeVar("CarrierT")
 # pylint: disable=invalid-name
-CarrierValT = typing.Union[typing.List[str], str]
+CarrierValT = list[str] | str
 
 
 class Getter(abc.ABC, typing.Generic[CarrierT]):
@@ -28,9 +18,7 @@ class Getter(abc.ABC, typing.Generic[CarrierT]):
     """
 
     @abc.abstractmethod
-    def get(
-        self, carrier: CarrierT, key: str
-    ) -> typing.Optional[typing.List[str]]:
+    def get(self, carrier: CarrierT, key: str) -> list[str] | None:
         """Function that can retrieve zero
         or more values from the carrier. In the case that
         the value does not exist, returns None.
@@ -44,7 +32,7 @@ class Getter(abc.ABC, typing.Generic[CarrierT]):
         """
 
     @abc.abstractmethod
-    def keys(self, carrier: CarrierT) -> typing.List[str]:
+    def keys(self, carrier: CarrierT) -> list[str]:
         """Function that can retrieve all the keys in a carrier object.
 
         Args:
@@ -72,10 +60,10 @@ class Setter(abc.ABC, typing.Generic[CarrierT]):
         """
 
 
-class DefaultGetter(Getter[typing.Mapping[str, CarrierValT]]):
+class DefaultGetter(Getter[Mapping[str, CarrierValT]]):
     def get(
-        self, carrier: typing.Mapping[str, CarrierValT], key: str
-    ) -> typing.Optional[typing.List[str]]:
+        self, carrier: Mapping[str, CarrierValT], key: str
+    ) -> list[str] | None:
         """Getter implementation to retrieve a value from a dictionary.
 
         Args:
@@ -87,13 +75,11 @@ class DefaultGetter(Getter[typing.Mapping[str, CarrierValT]]):
         val = carrier.get(key, None)
         if val is None:
             return None
-        if isinstance(val, typing.Iterable) and not isinstance(val, str):
+        if isinstance(val, Iterable) and not isinstance(val, str):
             return list(val)
         return [val]
 
-    def keys(
-        self, carrier: typing.Mapping[str, CarrierValT]
-    ) -> typing.List[str]:
+    def keys(self, carrier: Mapping[str, CarrierValT]) -> list[str]:
         """Keys implementation that returns all keys from a dictionary."""
         return list(carrier.keys())
 
@@ -101,10 +87,10 @@ class DefaultGetter(Getter[typing.Mapping[str, CarrierValT]]):
 default_getter: Getter[CarrierT] = DefaultGetter()  # type: ignore
 
 
-class DefaultSetter(Setter[typing.MutableMapping[str, CarrierValT]]):
+class DefaultSetter(Setter[MutableMapping[str, CarrierValT]]):
     def set(
         self,
-        carrier: typing.MutableMapping[str, CarrierValT],
+        carrier: MutableMapping[str, CarrierValT],
         key: str,
         value: CarrierValT,
     ) -> None:
@@ -134,7 +120,7 @@ class TextMapPropagator(abc.ABC):
     def extract(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         getter: Getter[CarrierT] = default_getter,
     ) -> Context:
         """Create a Context from values in the carrier.
@@ -162,7 +148,7 @@ class TextMapPropagator(abc.ABC):
     def inject(
         self,
         carrier: CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Context | None = None,
         setter: Setter[CarrierT] = default_setter,
     ) -> None:
         """Inject values from a Context into a carrier.
@@ -185,7 +171,7 @@ class TextMapPropagator(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> set[str]:
         """
         Gets the fields set in the carrier by the `inject` method.
 

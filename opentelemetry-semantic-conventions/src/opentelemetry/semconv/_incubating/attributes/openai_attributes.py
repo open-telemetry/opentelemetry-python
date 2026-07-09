@@ -1,19 +1,13 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
 from typing import Final
+
+OPENAI_API_TYPE: Final = "openai.api.type"
+"""
+The type of OpenAI API being used.
+"""
 
 OPENAI_REQUEST_SERVICE_TIER: Final = "openai.request.service_tier"
 """
@@ -31,6 +25,13 @@ OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = (
 """
 A fingerprint to track any eventual change in the Generative AI environment.
 """
+
+
+class OpenaiApiTypeValues(Enum):
+    CHAT_COMPLETIONS = "chat_completions"
+    """The OpenAI [Chat Completions API](https://developers.openai.com/api/reference/chat-completions/overview)."""
+    RESPONSES = "responses"
+    """The OpenAI [Responses API](https://developers.openai.com/api/reference/responses/overview)."""
 
 
 class OpenaiRequestServiceTierValues(Enum):

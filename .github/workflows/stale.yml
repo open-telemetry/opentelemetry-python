@@ -1,0 +1,37 @@
+name: Mark stale PRs
+
+on:
+  schedule:
+    - cron: "12 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stale:
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-pr-stale: 14
+          days-before-pr-close: 14
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          stale-pr-message: >
+            This PR has been automatically marked as stale because it has not had
+            any activity for 14 days. It will be closed if no further activity
+            occurs within 14 days of this comment.
+
+            If you're still working on this, please add a comment or push new commits.
+          close-pr-message: >
+            This PR has been closed due to inactivity. Please reopen if you would
+            like to continue working on it.
+          exempt-pr-labels: "hold,WIP,blocked by spec,do not merge"
+          # TODO: Revert back to default of 30 after we have cleared the backlog of stale PRs.
+          operations-per-run: 500

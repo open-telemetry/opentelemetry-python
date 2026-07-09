@@ -1,29 +1,38 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 
 import os
-import typing
-from collections.abc import MutableMapping
+import re
+from collections.abc import Mapping, MutableMapping
 
 from opentelemetry.propagators.textmap import Getter, Setter
 
 
-class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
+def _normalize_key(key: str) -> str:
+    if not key:
+        return "_"
+    result = re.sub(r"[^A-Za-z0-9_]", "_", key).upper()
+    if result and result[0].isdigit():
+        result = "_" + result
+    return result
+
+
+def _is_normalized_key(key: str) -> bool:
+    if not key:
+        return False
+    if "0" <= key[0] <= "9":
+        return False
+    return all(
+        "A" <= char <= "Z" or "0" <= char <= "9" or char == "_" for char in key
+    )
+
+
+class EnvironmentGetter(Getter[Mapping[str, str]]):
     """Getter implementation for extracting context and baggage from environment variables.
 
-    EnvironmentGetter creates a case-insensitive lookup from the current environment
-    variables at initialization time and provides simple data access without validation.
+    EnvironmentGetter creates a lookup from the current environment variables
+    whose names are already normalized at initialization time and provides
+    simple data access without validation.
 
     Per the OpenTelemetry specification, environment variables are treated as immutable
     within a process. For environments where context-carrying environment variables
@@ -36,39 +45,34 @@ class EnvironmentGetter(Getter[typing.Mapping[str, str]]):
     """
 
     def __init__(self):
-        # Create case-insensitive lookup from current environment
-        # Per spec: "creates an in-memory copy of the current environment variables"
-        self.carrier: typing.Dict[str, str] = {
-            k.lower(): v for k, v in os.environ.items()
+        # Per spec, Get reads only normalized environment variable names.
+        self.carrier: dict[str, str] = {
+            k: v for k, v in os.environ.items() if _is_normalized_key(k)
         }
 
-    def get(
-        self, carrier: typing.Mapping[str, str], key: str
-    ) -> typing.Optional[typing.List[str]]:
+    def get(self, carrier: Mapping[str, str], key: str) -> list[str] | None:
         """Get a value from the environment carrier for the given key.
 
         Args:
             carrier: Not used; maintained for interface compatibility with Getter[CarrierT]
-            key: The key to look up (case-insensitive)
+            key: The key to look up (will be normalized)
 
         Returns:
             A list with a single string value if the key exists, None otherwise.
         """
-        val = self.carrier.get(key.lower())
+        val = self.carrier.get(_normalize_key(key))
         if val is None:
             return None
-        if isinstance(val, typing.Iterable) and not isinstance(val, str):
-            return list(val)
         return [val]
 
-    def keys(self, carrier: typing.Mapping[str, str]) -> typing.List[str]:
+    def keys(self, carrier: Mapping[str, str]) -> list[str]:
         """Get all keys from the environment carrier.
 
         Args:
             carrier: Not used; maintained for interface compatibility with Getter[CarrierT]
 
         Returns:
-            List of all environment variable keys (lowercase).
+            List of all already-normalized environment variable keys.
         """
         return list(self.carrier.keys())
 
@@ -93,7 +97,7 @@ class EnvironmentSetter(Setter[MutableMapping[str, str]]):
 
         Args:
             carrier: Dictionary to store environment variables
-            key: The key to set (will be converted to uppercase)
+            key: The key to set (normalized)
             value: The value to set
         """
-        carrier[key.upper()] = value
+        carrier[_normalize_key(key)] = value
