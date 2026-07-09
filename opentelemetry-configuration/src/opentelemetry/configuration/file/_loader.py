@@ -10,15 +10,35 @@ import os
 from pathlib import Path
 from typing import Any
 
-import jsonschema
-import yaml
-
 from opentelemetry.configuration._conversion import _dict_to_dataclass
-from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration._exceptions import (
+    ConfigurationError,
+    MissingDependencyError,
+)
 from opentelemetry.configuration.file._env_substitution import (
     substitute_env_vars,
 )
 from opentelemetry.configuration.models import OpenTelemetryConfiguration
+
+try:
+    import yaml
+except ImportError as exc:
+    raise MissingDependencyError(
+        package="pyyaml",
+        feature="File configuration",
+        install_name="opentelemetry-sdk",
+        extras="file-configuration",
+    ) from exc
+
+try:
+    import jsonschema
+except ImportError as exc:
+    raise MissingDependencyError(
+        package="jsonschema",
+        feature="File configuration",
+        install_name="opentelemetry-sdk",
+        extras="file-configuration",
+    ) from exc
 
 # Schema version vendored in schema.json. ``file_format`` values are accepted
 # per the configuration spec's versioning rules: the major version must match,
