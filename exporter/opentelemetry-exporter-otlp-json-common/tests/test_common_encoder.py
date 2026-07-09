@@ -9,7 +9,6 @@ from logging import ERROR
 from unittest.mock import patch
 
 from opentelemetry.exporter.otlp.json.common._internal import (
-    _encode_array,
     _encode_attributes,
     _encode_instrumentation_scope,
     _encode_key_value,
@@ -55,6 +54,11 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 _COMMON_LOGGER_NAME = "opentelemetry.exporter.otlp.json.common._internal"
+
+
+class CallingStrRaisesException:
+    def __str__(self):
+        raise ValueError("Cannot encode")
 
 
 class TestCommonEncoder(unittest.TestCase):
@@ -151,29 +155,23 @@ class TestCommonEncoder(unittest.TestCase):
         result_dict = result.to_dict()
         self.assertIn("kvlistValue", result_dict)
 
-    def test_encode_value_none_not_allowed(self):
-        with self.assertRaises(TypeError):
-            _encode_value(None)
-
-    def test_encode_value_none_allowed(self):
-        result = _encode_value(None, allow_null=True)
-        self.assertIsNone(result)
+    def test_encode_null(self):
+        result = _encode_value(None)
+        self.assertEqual(result, JSONAnyValue())
 
     def test_encode_array_with_nulls(self):
-        result = _encode_array([1, None, 2], allow_null=True)
-        self.assertEqual(
-            result,
-            [
-                JSONAnyValue(int_value=1),
-                JSONAnyValue(),
-                JSONAnyValue(int_value=2),
-            ],
+        result = _encode_value([1, None, 2])
+        expected = JSONAnyValue(
+            array_value=JSONArrayValue(
+                values=[
+                    JSONAnyValue(int_value=1),
+                    JSONAnyValue(),
+                    JSONAnyValue(int_value=2),
+                ]
+            )
         )
-        self.assertEqual(result[1].to_dict(), {})
-
-    def test_encode_array_none_raises(self):
-        with self.assertRaises(TypeError):
-            _encode_array([1, None, 2], allow_null=False)
+        self.assertEqual(result, expected)
+        self.assertEqual(result.array_value.values[1].to_dict(), {})
 
     def test_encode_key_value(self):
         result = _encode_key_value("mykey", "myval")
@@ -254,7 +252,9 @@ class TestCommonEncoder(unittest.TestCase):
 
     def test_encode_attributes_error_skips_bad_key(self):
         with self.assertLogs(level=ERROR) as error:
-            result = _encode_attributes({"a": 1, "bad_key": None, "b": 2})
+            result = _encode_attributes(
+                {"a": 1, "bad_key": CallingStrRaisesException(), "b": 2}
+            )
 
         self.assertEqual(len(error.records), 1)
         self.assertEqual(error.records[0].msg, "Failed to encode key %s: %s")
@@ -268,10 +268,14 @@ class TestCommonEncoder(unittest.TestCase):
             ],
         )
 
-    def test_encode_attributes_error_list_none(self):
+    def test_encode_attributes_error_list_unencodable_item(self):
         with self.assertLogs(level=ERROR) as error:
             result = _encode_attributes(
-                {"a": 1, "bad_key": ["test", None, "test"], "b": 2}
+                {
+                    "a": 1,
+                    "bad_key": ["test", CallingStrRaisesException(), "test"],
+                    "b": 2,
+                }
             )
 
         self.assertEqual(len(error.records), 1)

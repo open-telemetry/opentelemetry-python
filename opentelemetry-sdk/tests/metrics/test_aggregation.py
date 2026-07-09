@@ -477,6 +477,66 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
         self.assertIsInstance(result, _ExplicitBucketHistogramAggregation)
 
+    def test_unsorted_boundaries_raise(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[100, 10, 50],
+            )
+
+    def test_duplicate_boundaries_raise(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[10, 50, 50, 100],
+            )
+
+    def test_nan_boundary_raises(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[10, float("nan"), 100],
+            )
+
+    def test_inf_boundary_raises(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[10, 50, float("inf")],
+            )
+
+    def test_negative_inf_boundary_raises(self):
+        with self.assertRaises(ValueError):
+            _ExplicitBucketHistogramAggregation(
+                Mock(),
+                AggregationTemporality.DELTA,
+                0,
+                _default_reservoir_factory(
+                    _ExplicitBucketHistogramAggregation
+                ),
+                boundaries=[float("-inf"), 50, 100],
+            )
+
 
 class TestAggregationFactory(TestCase):
     def test_sum_factory(self):

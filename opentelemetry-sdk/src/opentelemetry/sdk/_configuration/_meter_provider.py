@@ -9,9 +9,13 @@ from opentelemetry import metrics
 from opentelemetry.sdk._configuration._common import (
     _map_compression,
     _parse_headers,
+    _parse_otlp_file_output_stream,
     load_entry_point,
 )
-from opentelemetry.sdk._configuration._exceptions import ConfigurationError
+from opentelemetry.sdk._configuration._exceptions import (
+    ConfigurationError,
+    MissingDependencyError,
+)
 from opentelemetry.sdk._configuration.models import (
     Aggregation as AggregationConfig,
 )
@@ -20,6 +24,9 @@ from opentelemetry.sdk._configuration.models import (
 )
 from opentelemetry.sdk._configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
+)
+from opentelemetry.sdk._configuration.models import (
+    ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
     ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
@@ -279,9 +286,9 @@ def _create_otlp_http_metric_exporter(
             OTLPMetricExporter,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "otlp_http metric exporter requires 'opentelemetry-exporter-otlp-proto-http'. "
-            "Install it with: pip install opentelemetry-exporter-otlp-proto-http"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-otlp-proto-http",
+            feature="otlp_http metric exporter",
         ) from exc
 
     compression = _map_compression(
@@ -316,9 +323,9 @@ def _create_otlp_grpc_metric_exporter(
             OTLPMetricExporter,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "otlp_grpc metric exporter requires 'opentelemetry-exporter-otlp-proto-grpc'. "
-            "Install it with: pip install opentelemetry-exporter-otlp-proto-grpc"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-otlp-proto-grpc",
+            feature="otlp_grpc metric exporter",
         ) from exc
 
     compression = _map_compression(config.compression, grpc.Compression)
@@ -339,10 +346,45 @@ def _create_otlp_grpc_metric_exporter(
     )
 
 
+def _create_otlp_file_development_metric_exporter(
+    config: ExperimentalOtlpFileMetricExporterConfig,
+) -> MetricExporter:
+    """Create an OTLP file (JSON Lines) metric exporter from config."""
+    try:
+        # pylint: disable=import-outside-toplevel,no-name-in-module
+        from opentelemetry.exporter.otlp.json.file.metric_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+            FileMetricExporter,
+        )
+    except ImportError as exc:
+        raise ConfigurationError(
+            "otlp_file_development metric exporter requires 'opentelemetry-exporter-otlp-json-file'. "
+            "Install it with: pip install opentelemetry-exporter-otlp-json-file"
+        ) from exc
+
+    path = _parse_otlp_file_output_stream(config.output_stream)
+    preferred_temporality = _map_temporality(config.temporality_preference)
+    preferred_aggregation = _map_histogram_aggregation(
+        config.default_histogram_aggregation
+    )
+    return (
+        FileMetricExporter(
+            path,
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
+        if path is not None
+        else FileMetricExporter(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
+    )
+
+
 _METRIC_EXPORTER_REGISTRY: dict = {
     "otlp_http": _create_otlp_http_metric_exporter,
     "otlp_grpc": _create_otlp_grpc_metric_exporter,
     "console": _create_console_metric_exporter,
+    "otlp_file_development": _create_otlp_file_development_metric_exporter,
 }
 
 
@@ -356,11 +398,6 @@ def _create_push_metric_exporter(
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_metrics_exporter`` entry point group.
     """
-    if config.otlp_file_development is not None:
-        raise ConfigurationError(
-            "otlp_file_development metric exporter is experimental "
-            "and not yet supported."
-        )
     for name, factory in _METRIC_EXPORTER_REGISTRY.items():
         value = getattr(config, name, None)
         if value is not None:
@@ -372,7 +409,7 @@ def _create_push_metric_exporter(
         )
     raise ConfigurationError(
         "No exporter type specified in push metric exporter config. "
-        "Supported types: console, otlp_http, otlp_grpc."
+        "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
     )
 
 
@@ -417,22 +454,24 @@ def _create_prometheus_metric_reader(
             start_http_server,
         )
     except ImportError as exc:
-        raise ConfigurationError(
-            "prometheus pull metric exporter requires "
-            "'opentelemetry-exporter-prometheus'. "
-            "Install it with: pip install opentelemetry-exporter-prometheus"
+        raise MissingDependencyError(
+            package="opentelemetry-exporter-prometheus",
+            feature="prometheus pull metric exporter",
         ) from exc
 
-    disable_target_info = bool(config.without_target_info_development)
+    disable_target_info = (
+        config.target_info_enabled_development is not None
+        and not config.target_info_enabled_development
+    )
 
-    if config.without_scope_info is not None:
+    if config.scope_info_enabled is not None:
         _logger.warning(
-            "without_scope_info is not yet supported for "
+            "scope_info_enabled is not yet supported for "
             "Prometheus metric exporter and will be ignored."
         )
-    if config.with_resource_constant_labels is not None:
+    if config.resource_constant_labels is not None:
         _logger.warning(
-            "with_resource_constant_labels is not yet supported for "
+            "resource_constant_labels is not yet supported for "
             "Prometheus metric exporter and will be ignored."
         )
 
