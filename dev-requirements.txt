@@ -2,14 +2,14 @@ pylint==3.3.4
 httpretty==1.1.4
 mocket==3.14.1
 pyright==1.1.405
-sphinx==7.1.2
-sphinx-rtd-theme==2.0.0rc4
+sphinx==8.1.3
+sphinx-rtd-theme==3.1.0
 sphinx-autodoc-typehints==1.25.2
 pytest==7.4.4
 pytest-cov==4.1.0
 readme-renderer==42.0
 markupsafe==2.1.3
-bleach==4.1.0 # This dependency was updated to a breaking version.
+bleach==6.4.0 # This dependency was updated to a breaking version.
 codespell==2.1.0
 requests==2.32.3
 ruamel.yaml==0.17.21
