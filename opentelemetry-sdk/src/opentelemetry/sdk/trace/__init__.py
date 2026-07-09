@@ -1174,32 +1174,39 @@ class Tracer(trace_api.Tracer):
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
         )
-        token = None
-        if kind in (trace_api.SpanKind.CLIENT, trace_api.SpanKind.PRODUCER):
-            egress_action = self._continuation_decider.should_inject(
-                context=context,
-                kind=kind,
-                attributes=attributes,
+        with trace_api.use_span(
+            span,
+            end_on_exit=end_on_exit,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
+        ) as span:
+            yield span
+
+    @_agnosticcontextmanager  # pylint: disable=protected-access
+    def apply_egress_continuation(
+        self,
+        kind: trace_api.SpanKind,
+        context: context_api.Context | None = None,
+        attributes: types.Attributes = None,
+    ) -> Iterator[context_api.Context]:
+        injection_context = context or context_api.get_current()
+        egress_action = self._continuation_decider.should_inject(
+            context=injection_context,
+            kind=kind,
+            attributes=attributes,
+        )
+        if (
+            egress_action
+            is trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT
+        ):
+            injection_context = tracecontext.suppress_trace_context_injection(
+                injection_context
             )
-            if (
-                egress_action
-                is trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT
-            ):
-                egress_context = tracecontext.suppress_trace_context_injection(
-                    context
-                )
-                token = context_api.attach(egress_context)
-        try:
-            with trace_api.use_span(
-                span,
-                end_on_exit=end_on_exit,
-                record_exception=record_exception,
-                set_status_on_exception=set_status_on_exception,
-            ) as span:
-                yield span
-        finally:
-            if token is not None:
-                context_api.detach(token)
+        else:
+            injection_context = tracecontext.enable_trace_context_injection(
+                injection_context
+            )
+        yield injection_context
 
     def start_span(  # pylint: disable=too-many-locals
         self,

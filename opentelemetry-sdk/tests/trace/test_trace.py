@@ -876,7 +876,50 @@ class TestSpanCreation(unittest.TestCase):  # pylint: disable=too-many-public-me
             attributes={"server.address": "api.third-party.example"},
         ):
             carrier = {}
-            propagator.inject(carrier)
+            with tracer.apply_egress_continuation(
+                kind=trace_api.SpanKind.CLIENT,
+                attributes={"server.address": "api.third-party.example"},
+            ) as injection_context:
+                propagator.inject(carrier, context=injection_context)
+
+        self.assertNotIn("traceparent", carrier)
+        self.assertNotIn("tracestate", carrier)
+
+    def test_trace_continuation_egress_with_start_span_suppresses_trace_context(
+        self,
+    ):
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    egress_action=(
+                        trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT
+                    ),
+                    attributes={"server.address": "api.third-party.example"},
+                    direction=trace_continuation.ContinuationDirection.EGRESS,
+                ),
+            )
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+        propagator = tracecontext.TraceContextTextMapPropagator()
+        span = tracer.start_span(
+            "client",
+            kind=trace_api.SpanKind.CLIENT,
+            attributes={"server.address": "api.third-party.example"},
+        )
+        context = trace_api.set_span_in_context(span)
+
+        try:
+            carrier = {}
+            with tracer.apply_egress_continuation(
+                kind=trace_api.SpanKind.CLIENT,
+                context=context,
+                attributes={"server.address": "api.third-party.example"},
+            ) as injection_context:
+                propagator.inject(carrier, context=injection_context)
+        finally:
+            span.end()
 
         self.assertNotIn("traceparent", carrier)
         self.assertNotIn("tracestate", carrier)
@@ -907,10 +950,70 @@ class TestSpanCreation(unittest.TestCase):  # pylint: disable=too-many-public-me
             attributes={"messaging.destination.name": "jobs"},
         ):
             carrier = {}
-            propagator.inject(carrier)
+            with tracer.apply_egress_continuation(
+                kind=trace_api.SpanKind.PRODUCER,
+                attributes={"messaging.destination.name": "jobs"},
+            ) as injection_context:
+                propagator.inject(carrier, context=injection_context)
 
         self.assertNotIn("traceparent", carrier)
         self.assertNotIn("tracestate", carrier)
+
+    def test_trace_continuation_nested_egress_inject_overrides_suppression(
+        self,
+    ):
+        decider = trace_continuation.RuleBasedTraceContinuationDecider(
+            rules=(
+                trace_continuation.TraceContinuationRule(
+                    egress_action=(
+                        trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT
+                    ),
+                    attributes={"server.address": "api.third-party.example"},
+                    direction=trace_continuation.ContinuationDirection.EGRESS,
+                ),
+                trace_continuation.TraceContinuationRule(
+                    egress_action=(
+                        trace_continuation.EgressAction.INJECT_TRACE_CONTEXT
+                    ),
+                    attributes={"server.address": "internal.example.com"},
+                    direction=trace_continuation.ContinuationDirection.EGRESS,
+                ),
+            )
+        )
+        tracer = TracerProvider(_continuation_decider=decider).get_tracer(
+            __name__
+        )
+        propagator = tracecontext.TraceContextTextMapPropagator()
+
+        with tracer.start_as_current_span(
+            "client",
+            kind=trace_api.SpanKind.CLIENT,
+        ) as span:
+            with tracer.apply_egress_continuation(
+                kind=trace_api.SpanKind.CLIENT,
+                attributes={"server.address": "api.third-party.example"},
+            ) as suppressed_context:
+                suppressed_carrier = {}
+                propagator.inject(
+                    suppressed_carrier, context=suppressed_context
+                )
+
+                injected_carrier = {}
+                with tracer.apply_egress_continuation(
+                    kind=trace_api.SpanKind.CLIENT,
+                    context=suppressed_context,
+                    attributes={"server.address": "internal.example.com"},
+                ) as injection_context:
+                    propagator.inject(
+                        injected_carrier, context=injection_context
+                    )
+
+        self.assertNotIn("traceparent", suppressed_carrier)
+        self.assertIn("traceparent", injected_carrier)
+        self.assertIn(
+            format(span.get_span_context().trace_id, "032x"),
+            injected_carrier["traceparent"],
+        )
 
     def test_trace_continuation_egress_returns_propagation_action(self):
         decider = trace_continuation.RuleBasedTraceContinuationDecider(

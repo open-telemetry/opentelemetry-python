@@ -5,6 +5,7 @@
 import asyncio
 from unittest import TestCase
 
+from opentelemetry.context import get_current
 from opentelemetry.trace import (
     INVALID_SPAN,
     NoOpTracer,
@@ -40,6 +41,10 @@ class TestTracer(TestCase):
                 calls.append(1)
                 yield INVALID_SPAN
                 calls.append(9)
+
+            @_agnosticcontextmanager  # pylint: disable=protected-access
+            def apply_egress_continuation(self, *args, **kwargs):  # type: ignore
+                yield get_current()
 
         mock_tracer = MockTracer()
 

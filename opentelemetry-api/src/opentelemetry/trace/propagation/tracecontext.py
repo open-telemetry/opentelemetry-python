@@ -24,6 +24,15 @@ def suppress_trace_context_injection(
     )
 
 
+def enable_trace_context_injection(
+    context: Context | None = None,
+) -> Context:
+    """Returns a context that allows W3C Trace Context injection."""
+    return context_api.set_value(
+        _SUPPRESS_TRACE_CONTEXT_INJECTION_KEY, False, context
+    )
+
+
 def is_trace_context_injection_suppressed(
     context: Context | None = None,
 ) -> bool:
