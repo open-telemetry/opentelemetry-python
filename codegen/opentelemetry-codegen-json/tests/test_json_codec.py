@@ -1,12 +1,15 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import enum
 import math
+from typing import Any
 
 import pytest  # type: ignore
 
 from opentelemetry.codegen.json.runtime.json_codec import (
     decode_base64,
+    decode_enum,
     decode_float,
     decode_hex,
     decode_int64,
@@ -18,6 +21,12 @@ from opentelemetry.codegen.json.runtime.json_codec import (
     encode_repeated,
     validate_type,
 )
+
+
+class _Color(enum.IntEnum):
+    RED = 0
+    GREEN = 1
+    BLUE = 2
 
 
 @pytest.mark.parametrize(
@@ -189,3 +198,31 @@ def test_validate_type() -> None:
         match=r"Field 'field' expected \(<class 'int'>, <class 'float'>\), got str",
     ):
         validate_type("s", (int, float), "field")
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (1, _Color.GREEN),
+        ("GREEN", _Color.GREEN),
+        (0, _Color.RED),
+        ("RED", _Color.RED),
+    ],
+)
+def test_decode_enum(value: int | str, expected: _Color) -> None:
+    assert decode_enum(value, _Color, "field") is expected
+
+
+@pytest.mark.parametrize(
+    "value, expected_error",
+    [
+        ([], TypeError),
+        (99, ValueError),
+        ("NOT_A_COLOR", KeyError),
+    ],
+)
+def test_decode_enum_errors(
+    value: Any, expected_error: type[Exception]
+) -> None:
+    with pytest.raises(expected_error):
+        decode_enum(value, _Color, "field")
