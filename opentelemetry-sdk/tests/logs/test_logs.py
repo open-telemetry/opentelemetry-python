@@ -3,6 +3,7 @@
 
 # pylint: disable=protected-access
 
+import logging
 import unittest
 from unittest.mock import Mock, patch
 
@@ -16,14 +17,19 @@ from opentelemetry.sdk._logs import (
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk._logs._internal import (
+    _OTEL_LOG_LEVEL_TO_PYTHON,
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
+    _configure_otel_log_level,
     _disable_logger_configurator,
     _LoggerConfig,
     _RuleBasedLoggerConfigurator,
     create_logger_metrics,
 )
-from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
+from opentelemetry.sdk.environment_variables import (
+    OTEL_LOG_LEVEL,
+    OTEL_SDK_DISABLED,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
@@ -451,3 +457,87 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(
             attributes[exception_attributes.EXCEPTION_TYPE], "RuntimeError"
         )
+
+
+class TestOtelLogLevelEnvVar(unittest.TestCase):
+    """Tests for OTEL_LOG_LEVEL → SDK internal logger level."""
+
+    def setUp(self):
+        self._otel_logger = logging.getLogger("opentelemetry")
+
+    def tearDown(self):
+        self._otel_logger.setLevel(logging.NOTSET)
+
+    def test_otel_log_level_to_python_mapping_accepted_keys(self):
+        expected_keys = {
+            "trace",
+            "debug",
+            "info",
+            "warn",
+            "warning",
+            "error",
+            "critical",
+        }
+        self.assertEqual(set(_OTEL_LOG_LEVEL_TO_PYTHON.keys()), expected_keys)
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: ""})
+    def test_unset_env_var_does_not_modify_logger_level(self):
+        _configure_otel_log_level()
+        self.assertEqual(self._otel_logger.level, logging.NOTSET)
+
+    def test_invalid_value_warns_and_leaves_level_unchanged(self):
+        for invalid in ("INVALID", "verbose", "none", "0"):
+            with self.subTest(invalid=invalid):
+                with patch.dict("os.environ", {OTEL_LOG_LEVEL: invalid}):
+                    with self.assertLogs(
+                        "opentelemetry.sdk._logs._internal",
+                        level=logging.WARNING,
+                    ):
+                        _configure_otel_log_level()
+                self.assertEqual(self._otel_logger.level, logging.NOTSET)
+
+    def test_case_insensitive(self):
+        for env_value, expected_level in (
+            ("DEBUG", logging.DEBUG),
+            ("WARN", logging.WARNING),
+            ("Warning", logging.WARNING),
+            ("cRiTiCaL", logging.CRITICAL),
+        ):
+            with self.subTest(env_value=env_value):
+                with patch.dict("os.environ", {OTEL_LOG_LEVEL: env_value}):
+                    _configure_otel_log_level()
+                self.assertEqual(self._otel_logger.level, expected_level)
+                self._otel_logger.setLevel(logging.NOTSET)
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "critical"})
+    def test_level_propagates_to_child_loggers(self):
+        _configure_otel_log_level()
+        self.assertEqual(
+            self._otel_logger.getChild("sdk").getEffectiveLevel(),
+            logging.CRITICAL,
+        )
+        self.assertEqual(
+            self._otel_logger.getChild("exporter").getEffectiveLevel(),
+            logging.CRITICAL,
+        )
+        self.assertEqual(
+            self._otel_logger.getChild("instrumentation").getEffectiveLevel(),
+            logging.CRITICAL,
+        )
+
+    def test_all_valid_values_map_to_correct_level(self):
+        cases = [
+            ("trace", logging.DEBUG),
+            ("debug", logging.DEBUG),
+            ("info", logging.INFO),
+            ("warn", logging.WARNING),
+            ("warning", logging.WARNING),
+            ("error", logging.ERROR),
+            ("critical", logging.CRITICAL),
+        ]
+        for env_value, expected_level in cases:
+            with self.subTest(env_value=env_value):
+                with patch.dict("os.environ", {OTEL_LOG_LEVEL: env_value}):
+                    _configure_otel_log_level()
+                self.assertEqual(self._otel_logger.level, expected_level)
+                self._otel_logger.setLevel(logging.NOTSET)
