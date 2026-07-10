@@ -31,6 +31,15 @@ dependencies = [
   "typing-extensions >= 4.5.0",
 ]
 
+[project.optional-dependencies]
+# Deprecated alias: declarative configuration lives in the
+# `opentelemetry-configuration` package. This extras group is kept so that
+# existing `opentelemetry-sdk[file-configuration]` install lines keep
+# working; new users should install `opentelemetry-configuration` directly.
+file-configuration = [
+  "opentelemetry-configuration == 0.65b0.dev",
+]
+
 [project.entry-points.opentelemetry_environment_variables]
 sdk = "opentelemetry.sdk.environment_variables"
 
