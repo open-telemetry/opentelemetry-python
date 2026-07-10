@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: Add support for activating instrumentors from a declarative configuration file via the `instrumentation/development.python` section. Instrumentors can declare a `configuration` attribute to have their options validated through the same type-coercion pipeline used for SDK component configuration.

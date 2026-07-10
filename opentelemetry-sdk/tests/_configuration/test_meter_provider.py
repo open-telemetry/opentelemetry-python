@@ -24,9 +24,6 @@ from opentelemetry.sdk._configuration.models import (
     ConsoleMetricExporter as ConsoleMetricExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
-    ExemplarFilter as ExemplarFilterConfig,
-)
-from opentelemetry.sdk._configuration.models import (
     ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
 )
 from opentelemetry.sdk._configuration.models import (
@@ -71,8 +68,6 @@ from opentelemetry.sdk._configuration.models import (
     View as ViewConfig,
 )
 from opentelemetry.sdk.metrics import (
-    AlwaysOffExemplarFilter,
-    AlwaysOnExemplarFilter,
     Counter,
     Histogram,
     MeterProvider,
@@ -934,6 +929,29 @@ class TestCreateViews(unittest.TestCase):
             view._aggregation, ExponentialBucketHistogramAggregation
         )
 
+    def test_stream_aggregation_base2_exponential_record_min_max(self):
+        for record_min_max, expected in [
+            (True, True),
+            (False, False),
+            (None, True),
+        ]:
+            with self.subTest(record_min_max=record_min_max):
+                view = self._get_view(
+                    self._make_view_config(
+                        stream_kwargs={
+                            "aggregation": AggregationConfig(
+                                base2_exponential_bucket_histogram=Base2Config(
+                                    record_min_max=record_min_max
+                                )
+                            )
+                        }
+                    )
+                )
+                self.assertIsInstance(
+                    view._aggregation, ExponentialBucketHistogramAggregation
+                )
+                self.assertEqual(view._aggregation._record_min_max, expected)
+
     def test_stream_aggregation_last_value(self):
         view = self._get_view(
             self._make_view_config(
@@ -957,39 +975,3 @@ class TestCreateViews(unittest.TestCase):
             )
         )
         self.assertIsInstance(view._aggregation, DefaultAggregation)
-
-
-class TestExemplarFilter(unittest.TestCase):
-    @staticmethod
-    def _make_config(exemplar_filter):
-        return MeterProviderConfig(readers=[], exemplar_filter=exemplar_filter)
-
-    def test_always_on(self):
-        provider = create_meter_provider(
-            self._make_config(ExemplarFilterConfig.always_on)
-        )
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, AlwaysOnExemplarFilter
-        )
-
-    def test_always_off(self):
-        provider = create_meter_provider(
-            self._make_config(ExemplarFilterConfig.always_off)
-        )
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, AlwaysOffExemplarFilter
-        )
-
-    def test_trace_based(self):
-        provider = create_meter_provider(
-            self._make_config(ExemplarFilterConfig.trace_based)
-        )
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter
-        )
-
-    def test_absent_defaults_to_trace_based(self):
-        provider = create_meter_provider(MeterProviderConfig(readers=[]))
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter
-        )
