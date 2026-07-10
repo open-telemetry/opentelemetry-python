@@ -16,13 +16,15 @@ The source files of this example are available :scm_web:`here
 <docs/examples/declarative-config/>`.
 
 Install the declarative-config package, the auto-instrumentation entry point,
-and the OTLP/HTTP exporter:
+the OTLP/HTTP exporter, and the ``requests`` instrumentation used by this
+example:
 
 .. code-block:: sh
 
     pip install opentelemetry-configuration \
         opentelemetry-distro \
-        opentelemetry-exporter-otlp-proto-http
+        opentelemetry-exporter-otlp-proto-http \
+        opentelemetry-instrumentation-requests
 
 Start an OTLP-capable backend locally so there is somewhere to send data. Write
 the following file:
@@ -73,7 +75,10 @@ auto-instrumentation apply it. No configuration code lives in ``app.py``:
     export OTEL_CONFIG_FILE=$(pwd)/otel-config.yaml
     opentelemetry-instrument python app.py
 
-You should see the exported span in the Collector's debug output.
+You should see the exported span in the Collector's debug output. The
+``instrumentation/development.python`` section in ``otel-config.yaml``
+activates the ``requests`` instrumentation so outgoing HTTP calls made by
+``app.py`` are automatically traced without any code changes.
 
 Environment variable substitution
 ----------------------------------

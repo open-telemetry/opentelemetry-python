@@ -206,6 +206,13 @@ def _create_aggregation(config: AggregationConfig) -> Aggregation:
             kwargs["max_scale"] = (
                 config.base2_exponential_bucket_histogram.max_scale
             )
+        if (
+            config.base2_exponential_bucket_histogram.record_min_max
+            is not None
+        ):
+            kwargs["record_min_max"] = (
+                config.base2_exponential_bucket_histogram.record_min_max
+            )
         return ExponentialBucketHistogramAggregation(**kwargs)
     if config.last_value is not None:
         return LastValueAggregation()
