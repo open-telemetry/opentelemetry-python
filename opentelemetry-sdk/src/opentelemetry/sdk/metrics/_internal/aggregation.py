@@ -629,6 +629,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exponential-bucket-histogram-aggregation)
         max_size: int = 160,
         max_scale: int = 20,
+        record_min_max: bool = True,
     ):
         # max_size is the maximum capacity of the positive and negative
         # buckets.
@@ -677,6 +678,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._start_time_unix_nano = start_time_unix_nano
         self._max_size = max_size
         self._max_scale = max_scale
+        self._record_min_max = record_min_max
 
         self._value_positive = None
         self._value_negative = None
@@ -715,8 +717,9 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             self._sum += measurement_value
 
-            self._min = min(self._min, measurement_value)
-            self._max = max(self._max, measurement_value)
+            if self._record_min_max:
+                self._min = min(self._min, measurement_value)
+                self._max = max(self._max, measurement_value)
 
             self._count += 1
 
@@ -1313,13 +1316,28 @@ class DefaultAggregation(Aggregation):
 
 
 class ExponentialBucketHistogramAggregation(Aggregation):
+    """This aggregation informs the SDK to collect:
+
+    - Count of Measurement values falling using a base-2 exponential formula.
+    - Arithmetic sum of Measurement values in population. This SHOULD NOT be collected when used with instruments that record negative measurements, e.g. UpDownCounter or ObservableGauge.
+    - Min (optional) Measurement value in population.
+    - Max (optional) Measurement value in population.
+
+    Args:
+        max_size: Maximum number of buckets in each of the positive and negative ranges, not counting the special zero bucket.
+        max_scale: Maximum scale factor.
+        record_min_max: Whether to record min and max.
+    """
+
     def __init__(
         self,
         max_size: int = 160,
         max_scale: int = 20,
+        record_min_max: bool = True,
     ):
         self._max_size = max_size
         self._max_scale = max_scale
+        self._record_min_max = record_min_max
 
     def _create_aggregation(
         self,
@@ -1345,6 +1363,7 @@ class ExponentialBucketHistogramAggregation(Aggregation):
             start_time_unix_nano,
             max_size=self._max_size,
             max_scale=self._max_scale,
+            record_min_max=self._record_min_max,
         )
 
 
