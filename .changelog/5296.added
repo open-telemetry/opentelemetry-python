@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: Make it possible to limit the size of stored spans in InMemorySpanExporter
