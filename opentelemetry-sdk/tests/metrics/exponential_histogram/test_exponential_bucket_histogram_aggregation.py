@@ -7,7 +7,7 @@
 from inspect import currentframe
 from itertools import permutations
 from logging import WARNING
-from math import ldexp
+from math import inf, ldexp
 from random import Random, randrange
 from sys import float_info, maxsize
 from time import time_ns
@@ -111,6 +111,65 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
         mock_logarithm_mapping.assert_called_with(100)
+
+    def test_create_aggregation_record_min_max(self):
+        for record_min_max, expected in [
+            (None, True),
+            (True, True),
+            (False, False),
+        ]:
+            with self.subTest(record_min_max=record_min_max):
+                kwargs = (
+                    {}
+                    if record_min_max is None
+                    else {"record_min_max": record_min_max}
+                )
+                exponential_bucket_histogram_aggregation = (
+                    ExponentialBucketHistogramAggregation(**kwargs)
+                )._create_aggregation(Mock(), Mock(), Mock(), Mock())
+
+                self.assertEqual(
+                    exponential_bucket_histogram_aggregation._record_min_max,
+                    expected,
+                )
+
+    def test_min_max(self):
+        """
+        `record_min_max` indicates the aggregator to record the minimum and
+        maximum value in the population
+        """
+
+        now = time_ns()
+
+        for record_min_max, expected_min, expected_max in [
+            (True, 1, 9999),
+            (False, inf, -inf),
+        ]:
+            with self.subTest(record_min_max=record_min_max):
+                ctx = Context()
+                exponential_histogram_aggregation = (
+                    _ExponentialBucketHistogramAggregation(
+                        Mock(),
+                        _default_reservoir_factory(
+                            _ExponentialBucketHistogramAggregation
+                        ),
+                        AggregationTemporality.CUMULATIVE,
+                        0,
+                        record_min_max=record_min_max,
+                    )
+                )
+
+                for value in [2, 4, 1, 9999]:
+                    exponential_histogram_aggregation.aggregate(
+                        Measurement(value, now, Mock(), ctx)
+                    )
+
+                self.assertEqual(
+                    exponential_histogram_aggregation._min, expected_min
+                )
+                self.assertEqual(
+                    exponential_histogram_aggregation._max, expected_max
+                )
 
     def assertInEpsilon(self, first, second, epsilon):
         self.assertLessEqual(first, (second * (1 + epsilon)))

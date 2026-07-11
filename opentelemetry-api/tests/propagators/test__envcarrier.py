@@ -67,74 +67,64 @@ class TestEnvironmentGetter(unittest.TestCase):
 
     def test_get_existing_env_var(self):
         """Test retrieving an existing environment variable."""
-        with patch.dict(os.environ, {"TEST_KEY": "test_value"}):
-            getter = EnvironmentGetter()
-            result = getter.get({}, "test_key")
-            self.assertEqual(result, ["test_value"])
+        getter = EnvironmentGetter()
+        result = getter.get({"TEST_KEY": "test_value"}, "test_key")
+        self.assertEqual(result, ["test_value"])
 
-    def test_get_case_insensitive(self):
-        """Test case insensitive lookup for environment variables."""
-        with patch.dict(os.environ, {"TEST_KEY": "test_value"}):
-            getter = EnvironmentGetter()
-            self.assertEqual(getter.get({}, "test_key"), ["test_value"])
-            self.assertEqual(getter.get({}, "TEST_KEY"), ["test_value"])
-            self.assertEqual(getter.get({}, "Test_Key"), ["test_value"])
+    def test_get_normalizes_requested_key_case(self):
+        """Test that requested key case is normalized."""
+        getter = EnvironmentGetter()
+        carrier = {"TEST_KEY": "test_value"}
+        self.assertEqual(getter.get(carrier, "test_key"), ["test_value"])
+        self.assertEqual(getter.get(carrier, "TEST_KEY"), ["test_value"])
+        self.assertEqual(getter.get(carrier, "Test_Key"), ["test_value"])
 
     def test_get_nonexistent_env_var(self):
         """Test retrieving a non-existent environment variable."""
-        with patch.dict(os.environ, {}, clear=True):
-            getter = EnvironmentGetter()
-            result = getter.get({}, "nonexistent_key")
-            self.assertIsNone(result)
+        getter = EnvironmentGetter()
+        result = getter.get({}, "nonexistent_key")
+        self.assertIsNone(result)
 
     def test_get_empty_value(self):
         """Test retrieving an environment variable with empty value."""
-        with patch.dict(os.environ, {"EMPTY_KEY": ""}):
-            getter = EnvironmentGetter()
-            result = getter.get({}, "empty_key")
-            self.assertEqual(result, [""])
+        getter = EnvironmentGetter()
+        result = getter.get({"EMPTY_KEY": ""}, "empty_key")
+        self.assertEqual(result, [""])
 
     def test_get_empty_key_maps_to_underscore(self):
         """Test empty key lookup uses the normalized underscore name."""
-        with patch.dict(os.environ, {"_": "underscore_value"}, clear=True):
-            getter = EnvironmentGetter()
-            result = getter.get({}, "")
-            self.assertEqual(result, ["underscore_value"])
+        getter = EnvironmentGetter()
+        result = getter.get({"_": "underscore_value"}, "")
+        self.assertEqual(result, ["underscore_value"])
 
     def test_get_with_special_characters(self):
         """Test environment variables with special characters."""
-        with patch.dict(
-            os.environ, {"TEST_KEY": "value with spaces and !@#$%"}
-        ):
-            getter = EnvironmentGetter()
-            result = getter.get({}, "test_key")
-            self.assertEqual(result, ["value with spaces and !@#$%"])
+        getter = EnvironmentGetter()
+        result = getter.get(
+            {"TEST_KEY": "value with spaces and !@#$%"}, "test_key"
+        )
+        self.assertEqual(result, ["value with spaces and !@#$%"])
 
     def test_get_ignores_non_normalized_env_var_name(self):
         """Test that non-normalized environment variable names are ignored."""
-        with patch.dict(os.environ, {"X-B3-TRACEID": "ignored"}, clear=True):
-            getter = EnvironmentGetter()
-            self.assertIsNone(getter.get({}, "x-b3-traceid"))
-            self.assertIsNone(getter.get({}, "X_B3_TRACEID"))
+        getter = EnvironmentGetter()
+        carrier = {"X-B3-TRACEID": "ignored"}
+        self.assertIsNone(getter.get(carrier, "x-b3-traceid"))
+        self.assertIsNone(getter.get(carrier, "X_B3_TRACEID"))
 
     def test_get_prefers_normalized_env_var_name(self):
         """Test deterministic lookup when normalized names collide."""
-        with patch.dict(
-            os.environ,
-            {"X_B3_TRACEID": "expected", "X-B3-TRACEID": "ignored"},
-            clear=True,
-        ):
-            getter = EnvironmentGetter()
-            self.assertEqual(getter.get({}, "x-b3-traceid"), ["expected"])
+        getter = EnvironmentGetter()
+        carrier = {"X_B3_TRACEID": "expected", "X-B3-TRACEID": "ignored"}
+        self.assertEqual(getter.get(carrier, "x-b3-traceid"), ["expected"])
 
     def test_keys(self):
         """Test getting all environment variable keys."""
         test_env = {"KEY1": "value1", "KEY2": "value2", "KEY3": "value3"}
-        with patch.dict(os.environ, test_env, clear=True):
-            getter = EnvironmentGetter()
-            keys = getter.keys({})
-            expected_keys = {"KEY1", "KEY2", "KEY3"}
-            self.assertEqual(set(keys), expected_keys)
+        getter = EnvironmentGetter()
+        keys = getter.keys(test_env)
+        expected_keys = {"KEY1", "KEY2", "KEY3"}
+        self.assertEqual(set(keys), expected_keys)
 
     def test_keys_ignores_non_normalized_env_var_names(self):
         """Test that keys returns only already-normalized names."""
@@ -144,44 +134,40 @@ class TestEnvironmentGetter(unittest.TestCase):
             "1START": "ignored",
             "_1START": "value2",
         }
-        with patch.dict(os.environ, test_env, clear=True):
-            getter = EnvironmentGetter()
-            keys = getter.keys({})
-            self.assertEqual(set(keys), {"KEY1", "_1START"})
+        getter = EnvironmentGetter()
+        keys = getter.keys(test_env)
+        self.assertEqual(set(keys), {"KEY1", "_1START"})
 
     def test_keys_empty_environment(self):
         """Test getting keys when environment is empty."""
+        getter = EnvironmentGetter()
+        keys = getter.keys({})
+        self.assertEqual(keys, [])
+
+    def test_uses_carrier_parameter(self):
+        """Test that getter reads from the supplied carrier."""
+        getter = EnvironmentGetter()
+        result = getter.get({"TEST_KEY": "test_value"}, "test_key")
+        self.assertEqual(result, ["test_value"])
+        self.assertIsNone(getter.get({}, "test_key"))
+
+    def test_reads_current_carrier_without_snapshot(self):
+        """Test that getter sees current carrier values."""
+        getter = EnvironmentGetter()
+        carrier = {}
+        self.assertIsNone(getter.get(carrier, "test_key"))
+
+        carrier["TEST_KEY"] = "new_value"
+        self.assertEqual(getter.get(carrier, "test_key"), ["new_value"])
+
+    def test_extracts_from_os_environ_when_provided_as_carrier(self):
+        """Test using os.environ directly as the carrier."""
         with patch.dict(os.environ, {}, clear=True):
             getter = EnvironmentGetter()
-            keys = getter.keys({})
-            self.assertEqual(keys, [])
+            self.assertIsNone(getter.get(os.environ, "test_key"))
 
-    def test_uses_snapshot_not_carrier_parameter(self):
-        """Test that getter uses internal snapshot, not carrier parameter.
-
-        The carrier parameter exists for interface compatibility with
-        Getter[CarrierT], but EnvironmentGetter reads from os.environ at
-        initialization, creating an immutable snapshot.
-        """
-        with patch.dict(os.environ, {"TEST_KEY": "test_value"}):
-            getter = EnvironmentGetter()
-            # Both return same value from snapshot, carrier is ignored
-            result1 = getter.get({}, "test_key")
-            result2 = getter.get({"test_key": "different"}, "test_key")
-            self.assertEqual(result1, ["test_value"])
-            self.assertEqual(result2, ["test_value"])
-
-    def test_snapshot_immutability(self):
-        """Test that getter snapshot doesn't see changes after initialization."""
-        with patch.dict(os.environ, {}, clear=True):
-            getter = EnvironmentGetter()
-            self.assertIsNone(getter.get({}, "test_key"))
-
-            # Add environment variable after initialization
             os.environ["TEST_KEY"] = "new_value"
-
-            # Getter should still not see the new value
-            self.assertIsNone(getter.get({}, "test_key"))
+            self.assertEqual(getter.get(os.environ, "test_key"), ["new_value"])
 
 
 class TestEnvironmentSetter(unittest.TestCase):
@@ -271,7 +257,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
         """Helper: Extract context from environment variables."""
         with patch.dict(os.environ, env_vars, clear=True):
             getter = EnvironmentGetter()
-            return self.propagator.extract({}, getter=getter)
+            return self.propagator.extract(os.environ, getter=getter)
 
     def _inject_to_env(self, context):
         """Helper: Inject context into environment dict."""
@@ -359,7 +345,9 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
 
         with patch.dict(os.environ, {"TRACEPARENT": "invalid"}, clear=True):
             getter = EnvironmentGetter()
-            ctx = self.propagator.extract({}, context=orig_ctx, getter=getter)
+            ctx = self.propagator.extract(
+                os.environ, context=orig_ctx, getter=getter
+            )
 
         self.assertDictEqual(ctx, orig_ctx)
 
@@ -450,8 +438,8 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
         with patch.dict(os.environ, test_env, clear=True):
             getter = EnvironmentGetter()
             # Propagator uses lowercase keys
-            self.assertIsNotNone(getter.get({}, "traceparent"))
-            self.assertIsNotNone(getter.get({}, "tracestate"))
+            self.assertIsNotNone(getter.get(os.environ, "traceparent"))
+            self.assertIsNotNone(getter.get(os.environ, "tracestate"))
 
     @patch("opentelemetry.trace.INVALID_SPAN_CONTEXT")
     @patch("opentelemetry.trace.get_current_span")
@@ -495,7 +483,7 @@ class TestEnvironmentCarrierWithBaggage(unittest.TestCase):
         """Helper: Extract baggage from environment variables."""
         with patch.dict(os.environ, env_vars, clear=True):
             getter = EnvironmentGetter()
-            return self.propagator.extract({}, getter=getter)
+            return self.propagator.extract(os.environ, getter=getter)
 
     def _inject_to_env(self, context):
         """Helper: Inject baggage into environment dict."""
@@ -599,7 +587,7 @@ class TestEnvironmentCarrierWithCompositePropagator(unittest.TestCase):
 
         with patch.dict(os.environ, env_vars, clear=True):
             getter = EnvironmentGetter()
-            ctx = self.propagator.extract({}, getter=getter)
+            ctx = self.propagator.extract(os.environ, getter=getter)
 
         # Verify traceparent was extracted
         span_context = trace.get_current_span(ctx).get_span_context()
@@ -635,7 +623,7 @@ class TestEnvironmentCarrierWithCompositePropagator(unittest.TestCase):
         """Test behavior with completely empty environment."""
         with patch.dict(os.environ, {}, clear=True):
             getter = EnvironmentGetter()
-            ctx = self.propagator.extract({}, getter=getter)
+            ctx = self.propagator.extract(os.environ, getter=getter)
 
             # Should not crash, return valid context
             self.assertIsInstance(ctx, Context)
