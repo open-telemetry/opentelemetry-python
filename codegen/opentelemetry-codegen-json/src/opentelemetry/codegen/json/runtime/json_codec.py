@@ -269,9 +269,7 @@ def decode_enum(
         The corresponding enum member.
     """
     if isinstance(value, bool):
-        raise TypeError(
-            f"Field '{field_name}' expected int or str, got bool"
-        )
+        raise TypeError(f"Field '{field_name}' expected int or str, got bool")
     validate_type(value, (int, str), field_name)
     if isinstance(value, str):
         try:
