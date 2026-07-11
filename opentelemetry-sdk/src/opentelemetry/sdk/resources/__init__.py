@@ -510,6 +510,14 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
     UUID for service.instance.id to uniquely identify each service instance.
     The ID is shared across all detector instances within the same process and
     regenerated automatically when the process PID changes (e.g. after a fork).
+
+    Note: because this detector is process dependent, providers refresh it
+    automatically after a fork and merge the newly detected value on top of
+    the existing resource. This means that if a user explicitly sets
+    `service.instance.id` (e.g. via OTEL_RESOURCE_ATTRIBUTES or
+    Resource.create(attributes=...)), that value will be overwritten with a
+    newly generated UUID the next time the process forks. This differs from
+    Resource.create(), which does preserve user supplied overrides.
     """
 
     def is_process_dependent(self) -> bool:
