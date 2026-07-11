@@ -1,0 +1,2 @@
+`opentelemetry-api`, `opentelemetry-sdk`: Removed deprecated Events API/SDK. Use `LogRecord` with the `event_name` field set instead.
+
