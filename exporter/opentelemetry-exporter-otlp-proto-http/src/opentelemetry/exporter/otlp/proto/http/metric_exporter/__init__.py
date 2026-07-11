@@ -343,19 +343,15 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return MetricExportResult.FAILURE
 
-        num_items = 0
-        for resource_metrics in metrics_data.resource_metrics:
-            for scope_metrics in resource_metrics.scope_metrics:
-                for metric in scope_metrics.metrics:
-                    num_items += len(metric.data.data_points)
-
         export_request = encode_metrics(metrics_data)
         deadline_sec = time() + self._timeout
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:
             return self._export_with_retries(
-                export_request, deadline_sec, num_items
+                export_request,
+                deadline_sec,
+                _count_data_points(export_request),
             )
 
         # Else, export in batches of configured size
@@ -367,7 +363,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             export_result = self._export_with_retries(
                 split_metrics_data,
                 deadline_sec,
-                num_items,
+                _count_data_points(split_metrics_data),
             )
             if export_result != MetricExportResult.SUCCESS:
                 return MetricExportResult.FAILURE
@@ -402,6 +398,18 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             .lower()
             == "true",
         )
+
+
+def _count_data_points(export_request: ExportMetricsServiceRequest) -> int:
+    """Count the number of data points in an encoded metrics export request."""
+    count = 0
+    for resource_metrics in export_request.resource_metrics:
+        for scope_metrics in resource_metrics.scope_metrics:
+            for metric in scope_metrics.metrics:
+                field_name = metric.WhichOneof("data")
+                if field_name:
+                    count += len(getattr(metric, field_name).data_points)
+    return count
 
 
 def _split_metrics_data(
