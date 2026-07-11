@@ -21,12 +21,11 @@ configuration schema, and applies it globally.
 Installing
 ----------
 
-File configuration relies on optional dependencies (``pyyaml`` and
-``jsonschema``). Install them with the ``file-configuration`` extra:
+Declarative configuration lives in a separate, experimental package:
 
 .. code-block:: sh
 
-    pip install "opentelemetry-sdk[file-configuration]"
+    pip install opentelemetry-configuration
 
 Enabling with an environment variable
 -------------------------------------
@@ -94,6 +93,31 @@ OTLP/HTTP. The source is available :scm_web:`here
                 headers:
                   - name: api-key
                     value: ${OTLP_API_KEY}
+
+Instrumentation
+---------------
+
+The ``instrumentation/development.python`` section activates Python
+instrumentors by their ``opentelemetry_instrumentor`` entry-point name. Set
+``enabled: false`` to suppress an instrumentor without removing its entry, and
+pass any other keys as keyword arguments to ``instrument()``:
+
+.. code-block:: yaml
+
+    instrumentation/development:
+      python:
+        requests:
+          enabled: true
+        urllib3:
+          enabled: true
+          max_spans_per_request: 10
+
+If the instrumentor class declares a ``configuration`` class attribute pointing
+to a dataclass, the options are validated and type-coerced through the same
+pipeline used for SDK component configuration before being forwarded to
+``instrument()``. Instrumentors that are already active (for example because
+``opentelemetry-instrument`` ran before the file was applied) are silently
+skipped.
 
 Environment variable substitution
 ----------------------------------

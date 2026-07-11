@@ -128,6 +128,56 @@ class TestOTLPMetricExporter(TestCase):
             ),
         }
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    @patch.object(Session, "post")
+    def test_split_export_records_per_split_data_point_count(self, mock_post):
+        # When a batch is split, each split must record its own data-point
+        # count in the self-observability metric, not the whole-batch count.
+        resp = Response()
+        resp.status_code = 200
+        mock_post.return_value = resp
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        attributes={"a": 1}, schema_url="resource_schema_url"
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="name", version="version"
+                            ),
+                            metrics=[
+                                _generate_sum("s1", 1),
+                                _generate_sum("s2", 2),
+                                _generate_sum("s3", 3),
+                            ],
+                            schema_url="scope_schema_url",
+                        )
+                    ],
+                    schema_url="resource_schema_url",
+                )
+            ]
+        )
+        exporter = OTLPMetricExporter(
+            max_export_batch_size=1, meter_provider=self.meter_provider
+        )
+        self.assertEqual(
+            exporter.export(metrics_data), MetricExportResult.SUCCESS
+        )
+        self.assertEqual(mock_post.call_count, 3)
+        internal = self.metric_reader.get_metrics_data()
+        scope_metrics = internal.resource_metrics[0].scope_metrics[0]
+        exported = next(
+            metric
+            for metric in scope_metrics.metrics
+            if metric.name == "otel.sdk.exporter.metric_data_point.exported"
+        )
+        total = sum(dp.value for dp in exported.data.data_points)
+        self.assertEqual(total, 3)
+
     def test_constructor_default(self):
         exporter = OTLPMetricExporter()
 
