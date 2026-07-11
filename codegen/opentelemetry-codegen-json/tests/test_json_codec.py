@@ -217,6 +217,8 @@ def test_decode_enum(value: int | str, expected: _Color) -> None:
     "value, expected_error",
     [
         ([], TypeError),
+        (True, TypeError),
+        (False, TypeError),
         (99, ValueError),
         ("NOT_A_COLOR", KeyError),
     ],
@@ -226,3 +228,11 @@ def test_decode_enum_errors(
 ) -> None:
     with pytest.raises(expected_error):
         decode_enum(value, _Color, "field")
+
+
+def test_decode_enum_error_messages_include_field_name() -> None:
+    with pytest.raises(ValueError, match="field"):
+        decode_enum(99, _Color, "field")
+
+    with pytest.raises(KeyError, match="field"):
+        decode_enum("NOT_A_COLOR", _Color, "field")

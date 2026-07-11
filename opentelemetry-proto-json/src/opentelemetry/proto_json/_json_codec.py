@@ -268,7 +268,21 @@ def decode_enum(
     Returns:
         The corresponding enum member.
     """
+    if isinstance(value, bool):
+        raise TypeError(
+            f"Field '{field_name}' expected int or str, got bool"
+        )
     validate_type(value, (int, str), field_name)
     if isinstance(value, str):
-        return enum_type[value]
-    return enum_type(value)
+        try:
+            return enum_type[value]
+        except KeyError:
+            raise KeyError(
+                f"Invalid enum name '{value}' for field '{field_name}'"
+            ) from None
+    try:
+        return enum_type(value)
+    except ValueError:
+        raise ValueError(
+            f"Invalid enum value {value} for field '{field_name}'"
+        ) from None
