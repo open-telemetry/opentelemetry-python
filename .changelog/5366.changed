@@ -1,0 +1,1 @@
+`opentelemetry-api`: remove env carrier environment snapshot caching, you now have to pass explicitly the mapping where to get the environment variables from as the `EnvironmentGetter.get` first argument.
