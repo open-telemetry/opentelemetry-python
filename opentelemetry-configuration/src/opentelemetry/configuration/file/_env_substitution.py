@@ -19,18 +19,21 @@ class EnvSubstitutionError(Exception):
 
 
 def substitute_env_vars(text: str) -> str:
-    """Substitute environment variables in configuration text.
+    """Substitute environment variables within a configuration scalar value.
 
-    Supports the following syntax:
+    Substitution is applied per scalar value after the configuration file has
+    been parsed, so comments and mapping keys are never touched. Supports the
+    following syntax:
+
     - ${VAR}: Substitute with environment variable VAR. Raises error if not found.
     - ${VAR:-default}: Substitute with VAR if set, otherwise use default value.
     - $$: Escape sequence for literal $.
 
     Args:
-        text: Configuration text with potential ${VAR} placeholders.
+        text: A scalar value with potential ${VAR} placeholders.
 
     Returns:
-        Text with environment variables substituted.
+        The value with environment variables substituted.
 
     Raises:
         EnvSubstitutionError: If a required environment variable is not found.
@@ -70,23 +73,11 @@ def substitute_env_vars(text: str) -> str:
                 f"Environment variable '{var_name}' not found and no default provided"
             )
 
-        # Per spec: "It MUST NOT be possible to inject YAML structures by
-        # environment variables." Newlines are the primary injection vector —
-        # a value like "legit\nmalicious_key: val" would create extra YAML
-        # keys if substituted verbatim. Wrap such values in a YAML
-        # double-quoted scalar so the newline is treated as literal text.
-        # Simple values (no newlines) are returned as-is so that YAML type
-        # coercion still applies per spec ("Node types MUST be interpreted
-        # after environment variable substitution takes place").
-        if "\n" in value or "\r" in value:
-            escaped = (
-                value.replace("\\", "\\\\")
-                .replace('"', '\\"')
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t")
-            )
-            return f'"{escaped}"'
+        # Substitution runs on an already-parsed scalar value, so the result
+        # cannot inject new YAML structure regardless of its contents (a
+        # newline in the value stays a literal character within this one
+        # scalar). Type interpretation for standalone references is handled by
+        # the loader, which re-resolves the node tag after substitution.
         return value
 
     return re.sub(pattern, replace_var, text)

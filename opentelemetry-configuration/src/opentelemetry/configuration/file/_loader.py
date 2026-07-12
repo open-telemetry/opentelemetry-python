@@ -7,6 +7,7 @@ import importlib.resources
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,7 @@ from opentelemetry.configuration._exceptions import (
     MissingDependencyError,
 )
 from opentelemetry.configuration.file._env_substitution import (
+    EnvSubstitutionError,
     substitute_env_vars,
 )
 from opentelemetry.configuration.models import OpenTelemetryConfiguration
@@ -65,14 +67,107 @@ def _get_schema() -> dict:
 
 _logger = logging.getLogger(__name__)
 
+_YAML_STR_TAG = "tag:yaml.org,2002:str"
+
+# A scalar whose entire value is a single ``${VAR}`` / ``${VAR:-default}``
+# reference. Only such standalone references (when unquoted) have their type
+# re-interpreted after substitution; embedded or multiple references resolve to
+# a string per the configuration spec. A leading ``$$`` escape does not match,
+# so ``$${VAR}`` is treated as an embedded (string) value.
+_STANDALONE_ENV_REF = re.compile(
+    r"\A\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}\Z"
+)
+
+
+def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
+    """Apply env-var substitution to string scalar values in a YAML node tree.
+
+    Substitution runs after parsing on scalar *values* only, so comments and
+    mapping keys are never candidates (per the configuration spec). For an
+    unquoted standalone ``${VAR}`` reference the node's type tag is re-resolved
+    from the substituted value so YAML type coercion still applies (e.g.
+    ``${LIMIT}`` -> int); quoted or embedded references stay strings.
+    """
+    if isinstance(node, yaml.ScalarNode):
+        if node.tag == _YAML_STR_TAG:
+            raw = node.value
+            node.value = substitute_env_vars(raw)
+            if node.style is None and _STANDALONE_ENV_REF.match(raw):
+                node.tag = loader.resolve(
+                    yaml.ScalarNode, node.value, (True, False)
+                )
+    elif isinstance(node, yaml.SequenceNode):
+        for item in node.value:
+            _substitute_env_in_yaml_node(item, loader)
+    elif isinstance(node, yaml.MappingNode):
+        # Recurse into values only; keys are not substitution candidates.
+        for _key_node, value_node in node.value:
+            _substitute_env_in_yaml_node(value_node, loader)
+
+
+def _substitute_env_in_json_value(value: Any) -> Any:
+    """Recursively apply env-var substitution to string values in JSON data.
+
+    JSON has explicit types and no comments, so substitution applies only to
+    string values (the result stays a string) and mapping keys are left as-is.
+    """
+    if isinstance(value, str):
+        return substitute_env_vars(value)
+    if isinstance(value, list):
+        return [_substitute_env_in_json_value(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: _substitute_env_in_json_value(val)
+            for key, val in value.items()
+        }
+    return value
+
+
+def _parse_config_content(
+    content: str, suffix: str, file_path: str | os.PathLike[str]
+) -> Any:
+    """Parse configuration text and substitute environment variables.
+
+    Parsing happens first, so ``${VAR}`` references in comments and mapping
+    keys are never substitution candidates; substitution then runs on scalar
+    values, with YAML node types re-resolved for standalone references.
+
+    Raises:
+        ConfigurationError: If the content cannot be parsed or substitution of
+            a required environment variable fails.
+    """
+    try:
+        if suffix == ".json":
+            return _substitute_env_in_json_value(json.loads(content))
+        yaml_loader = yaml.SafeLoader(content)
+        try:
+            root_node = yaml_loader.get_single_node()
+            if root_node is None:
+                return None
+            _substitute_env_in_yaml_node(root_node, yaml_loader)
+            return yaml_loader.construct_document(root_node)
+        finally:
+            yaml_loader.dispose()
+    except EnvSubstitutionError as exc:
+        raise ConfigurationError(
+            f"Environment variable substitution failed: {exc}"
+        ) from exc
+    except yaml.YAMLError as exc:
+        _logger.exception("Failed to parse YAML from %s", file_path)
+        raise ConfigurationError(f"Failed to parse YAML: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        _logger.exception("Failed to parse JSON from %s", file_path)
+        raise ConfigurationError(f"Failed to parse JSON: {exc}") from exc
+
 
 def load_config_file(
     file_path: str | os.PathLike[str],
 ) -> OpenTelemetryConfiguration:
     """Load and parse an OpenTelemetry configuration file.
 
-    Supports YAML and JSON formats. Performs environment variable substitution
-    before parsing.
+    Supports YAML and JSON formats. Environment variable substitution is
+    performed after parsing, on scalar values only, so ``${VAR}`` references in
+    comments or mapping keys are left untouched.
 
     Args:
         file_path: Path to the configuration file (.yaml, .yml, or .json).
@@ -109,32 +204,17 @@ def load_config_file(
             f"Failed to read configuration file: {file_path}"
         ) from exc
 
-    # Perform environment variable substitution
-    try:
-        content = substitute_env_vars(content)
-    except Exception as exc:
-        raise ConfigurationError(
-            f"Environment variable substitution failed: {exc}"
-        ) from exc
-
-    # Parse based on file extension
+    # Parse the file, then substitute environment variables in scalar values.
+    # Parsing first means comments and mapping keys are never substitution
+    # candidates, and node types are still resolved after substitution.
     suffix = path.suffix.lower()
-    try:
-        if suffix in (".yaml", ".yml"):
-            data = yaml.safe_load(content)
-        elif suffix == ".json":
-            data = json.loads(content)
-        else:
-            _logger.error("Unsupported file format: %s", suffix)
-            raise ConfigurationError(
-                f"Unsupported file format: {suffix}. Use .yaml, .yml, or .json"
-            )
-    except yaml.YAMLError as exc:
-        _logger.exception("Failed to parse YAML from %s", file_path)
-        raise ConfigurationError(f"Failed to parse YAML: {exc}") from exc
-    except json.JSONDecodeError as exc:
-        _logger.exception("Failed to parse JSON from %s", file_path)
-        raise ConfigurationError(f"Failed to parse JSON: {exc}") from exc
+    if suffix not in (".yaml", ".yml", ".json"):
+        _logger.error("Unsupported file format: %s", suffix)
+        raise ConfigurationError(
+            f"Unsupported file format: {suffix}. Use .yaml, .yml, or .json"
+        )
+
+    data = _parse_config_content(content, suffix, file_path)
 
     if data is None:
         _logger.error("Configuration file is empty: %s", file_path)
