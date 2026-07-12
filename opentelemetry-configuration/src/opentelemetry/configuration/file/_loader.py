@@ -90,18 +90,37 @@ def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
     ``${LIMIT}`` -> int); quoted or embedded references stay strings.
     """
     if isinstance(node, yaml.ScalarNode):
+        # A ``ScalarNode`` is a leaf -- one configuration value. Only a
+        # ``str``-tagged one can hold a ``${VAR}`` reference (nodes the parser
+        # already typed as int, float, bool or null cannot), so those are the
+        # only substitution candidates.
         if node.tag == _YAML_STR_TAG:
+            # ``node.value`` is the raw text of this one value (never a key or
+            # comment). Replace any ${VAR} / ${VAR:-default} / $$ in it.
             raw = node.value
             node.value = substitute_env_vars(raw)
+            # The spec says node types are interpreted *after* substitution,
+            # but only for a value that is exactly one reference and written
+            # unquoted (``style is None``). Example: ``count: ${N}`` with
+            # ``N=42`` must yield the int 42, not the string "42". In that case
+            # re-run YAML's implicit type resolution on the substituted text
+            # and retag the node. A quoted (``"${N}"``) or embedded
+            # (``foo-${N}``) value keeps its ``str`` tag and stays a string.
             if node.style is None and _STANDALONE_ENV_REF.match(raw):
+                # ``resolve`` returns the implicit tag (int/float/bool/null/
+                # str) YAML would assign to ``node.value``; the ``(True, False)``
+                # implicit-flag pair marks it as a plain scalar so that
+                # type-guessing applies, exactly as during normal parsing.
                 node.tag = loader.resolve(
                     yaml.ScalarNode, node.value, (True, False)
                 )
     elif isinstance(node, yaml.SequenceNode):
+        # A sequence (list): each item is itself a value node -- recurse.
         for item in node.value:
             _substitute_env_in_yaml_node(item, loader)
     elif isinstance(node, yaml.MappingNode):
-        # Recurse into values only; keys are not substitution candidates.
+        # A mapping (dict): recurse into values only; keys are not
+        # substitution candidates per the spec.
         for _key_node, value_node in node.value:
             _substitute_env_in_yaml_node(value_node, loader)
 
