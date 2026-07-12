@@ -89,6 +89,26 @@ def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
     from the substituted value so YAML type coercion still applies (e.g.
     ``${LIMIT}`` -> int); quoted or embedded references stay strings.
     """
+    # Worked example: a node value that makes all three checks below true.
+    #
+    # YAML (with environment LIMIT=100):
+    #     attribute_limits:
+    #       attribute_count_limit: ${LIMIT}
+    #
+    # The parser hands this function the value node of attribute_count_limit,
+    # which has value="${LIMIT}", tag=str, style=None (plain/unquoted). Then:
+    #
+    #   1. isinstance(node, yaml.ScalarNode) -> True: it is a leaf value.
+    #   2. node.tag == _YAML_STR_TAG -> True: "${LIMIT}" is not a number or
+    #      bool, so the parser tagged it str. We substitute in place, giving
+    #      node.value = "100".
+    #   3. node.style is None and _STANDALONE_ENV_REF.match(raw) -> True:
+    #      it was unquoted and the whole value is a single reference. We
+    #      re-resolve the tag: resolve("100") -> int, and construct_document()
+    #      later builds the integer 100 (not the string "100").
+    #
+    # Counter-cases that reach check 3 but stop there: "${LIMIT}" quoted fails
+    # the style test; x${LIMIT} fails the regex. Both keep the str tag.
     if isinstance(node, yaml.ScalarNode):
         # A ``ScalarNode`` is a leaf -- one configuration value. Only a
         # ``str``-tagged one can hold a ``${VAR}`` reference (nodes the parser
