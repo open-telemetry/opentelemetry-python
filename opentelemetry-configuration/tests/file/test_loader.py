@@ -376,7 +376,7 @@ class TestFileFormatValidation(unittest.TestCase):
 
 
 class TestEnvVarSubstitutionScope(unittest.TestCase):
-    """Substitution applies only to scalar values, per the config spec.
+    """Substitution applies only to configuration values, per the config spec.
 
     These exercise the YAML node walker directly so the spec's type and
     scope rules can be asserted without the JSON schema constraining shape.

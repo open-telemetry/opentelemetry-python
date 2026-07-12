@@ -86,10 +86,10 @@ def substitute_env_vars(configuration_value: str) -> str:
                 f"Environment variable '{var_name}' not found and no default provided"
             )
 
-        # Substitution runs on an already-parsed scalar value, so the result
-        # cannot inject new YAML structure regardless of its contents (a
-        # newline in the value stays a literal character within this one
-        # scalar). Type interpretation for standalone references is handled by
+        # Substitution runs on an already-parsed configuration value, so the
+        # result cannot inject new YAML structure regardless of its contents
+        # (a newline in the value stays a literal character within this one
+        # value). Type interpretation for standalone references is handled by
         # the loader, which re-resolves the node tag after substitution.
         return value
 

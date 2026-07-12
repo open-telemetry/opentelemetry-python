@@ -110,8 +110,8 @@ line2: value2"""
     def test_newline_in_value_returned_verbatim(self):
         """A newline in a value is returned as-is.
 
-        Substitution runs per scalar value after parsing, so it does not
-        escape or quote newlines; YAML injection is prevented structurally
+        Substitution runs per configuration value after parsing, so it does
+        not escape or quote newlines; YAML injection is prevented structurally
         (see the loader tests), not by rewriting the value here.
         """
         with patch.dict(os.environ, {"MULTI": "line1\nline2"}):

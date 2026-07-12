@@ -69,21 +69,22 @@ _logger = logging.getLogger(__name__)
 
 _YAML_STR_TAG = "tag:yaml.org,2002:str"
 
-# A scalar whose entire value is a single ``${VAR}`` / ``${VAR:-default}``
-# reference. Only such standalone references (when unquoted) have their type
-# re-interpreted after substitution; embedded or multiple references resolve to
-# a string per the configuration spec. A leading ``$$`` escape does not match,
-# so ``$${VAR}`` is treated as an embedded (string) value.
+# A configuration value whose entire content is a single ``${VAR}`` /
+# ``${VAR:-default}`` reference. Only such standalone references (when
+# unquoted) have their type re-interpreted after substitution; embedded or
+# multiple references resolve to a string per the configuration spec. A
+# leading ``$$`` escape does not match, so ``$${VAR}`` is treated as an
+# embedded (string) value.
 _STANDALONE_ENV_REF = re.compile(
     r"\A\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}\Z"
 )
 
 
 def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
-    """Apply env-var substitution to string scalar values in a YAML node tree.
+    """Apply env-var substitution to string configuration values in a node tree.
 
-    Substitution runs after parsing on scalar *values* only, so comments and
-    mapping keys are never candidates (per the configuration spec). For an
+    Substitution runs after parsing on configuration values only, so comments
+    and mapping keys are never candidates (per the configuration spec). For an
     unquoted standalone ``${VAR}`` reference the node's type tag is re-resolved
     from the substituted value so YAML type coercion still applies (e.g.
     ``${LIMIT}`` -> int); quoted or embedded references stay strings.
@@ -129,8 +130,9 @@ def _parse_config_content(
     """Parse configuration text and substitute environment variables.
 
     Parsing happens first, so ``${VAR}`` references in comments and mapping
-    keys are never substitution candidates; substitution then runs on scalar
-    values, with YAML node types re-resolved for standalone references.
+    keys are never substitution candidates; substitution then runs on
+    configuration values, with YAML node types re-resolved for standalone
+    references.
 
     Raises:
         ConfigurationError: If the content cannot be parsed or substitution of
@@ -166,8 +168,8 @@ def load_config_file(
     """Load and parse an OpenTelemetry configuration file.
 
     Supports YAML and JSON formats. Environment variable substitution is
-    performed after parsing, on scalar values only, so ``${VAR}`` references in
-    comments or mapping keys are left untouched.
+    performed after parsing, on configuration values only, so ``${VAR}``
+    references in comments or mapping keys are left untouched.
 
     Args:
         file_path: Path to the configuration file (.yaml, .yml, or .json).
@@ -204,7 +206,7 @@ def load_config_file(
             f"Failed to read configuration file: {file_path}"
         ) from exc
 
-    # Parse the file, then substitute environment variables in scalar values.
+    # Parse the file, then substitute env vars in configuration values only.
     # Parsing first means comments and mapping keys are never substitution
     # candidates, and node types are still resolved after substitution.
     suffix = path.suffix.lower()
