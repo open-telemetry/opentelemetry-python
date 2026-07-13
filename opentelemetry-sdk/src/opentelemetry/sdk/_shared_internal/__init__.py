@@ -154,6 +154,12 @@ class BatchProcessor(Generic[Telemetry]):
             # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#batching-processor.
             # Shutdown will interrupt this sleep. Emit will interrupt this sleep only if the queue is bigger then threshold.
             sleep_interrupted = self._worker_awaken.wait(self._schedule_delay)
+            # Clear the event before exporting, not after. A wakeup signaled by
+            # `emit` between the export loop finishing and a late `clear` would
+            # be erased, leaving a full batch stuck in the queue for up to
+            # `schedule_delay`. Clearing first means any `set` that arrives
+            # while exporting is kept for the next `wait`.
+            self._worker_awaken.clear()
             if self._shutdown:
                 break
             self._export(
@@ -161,7 +167,6 @@ class BatchProcessor(Generic[Telemetry]):
                 if sleep_interrupted
                 else BatchExportStrategy.EXPORT_AT_LEAST_ONE_BATCH
             )
-            self._worker_awaken.clear()
         self._export(BatchExportStrategy.EXPORT_ALL)
 
     def _export(self, batch_strategy: BatchExportStrategy) -> None:

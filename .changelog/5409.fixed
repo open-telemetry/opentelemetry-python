@@ -1,0 +1,1 @@
+Fix missed wakeup race in `BatchProcessor` that could delay span/log export by a full schedule delay when a batch filled while the worker was clearing its wakeup event

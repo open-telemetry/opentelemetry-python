@@ -119,6 +119,56 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry])
         batch_processor.shutdown()
 
+    # pylint: disable=no-self-use
+    def test_wakeup_not_lost_when_batch_fills_during_event_clear(
+        self, batch_processor_class, telemetry
+    ):
+        # Regression test for a missed wakeup race: if `emit` filled a batch
+        # and set `_worker_awaken` after the worker's export loop drained the
+        # queue but before the worker cleared the event, the signal was erased
+        # and the batch sat in the queue for a full schedule delay.
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=100,
+            max_export_batch_size=10,
+            # Will not be reached during the test; if the wakeup is lost the
+            # asserts below fail long before this delay elapses.
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        processor = batch_processor._batch_processor
+        original_clear = processor._worker_awaken.clear
+        raced = threading.Event()
+
+        def emit_batch_then_clear():
+            # Fill a full batch (which calls `_worker_awaken.set()`) at the
+            # exact point the worker is about to clear the event, simulating
+            # an application thread that raced with the worker.
+            if not raced.is_set():
+                raced.set()
+                for _ in range(10):
+                    processor.emit(telemetry)
+            original_clear()
+
+        processor._worker_awaken.clear = emit_batch_then_clear
+        # Trigger the first export; the worker wakes, exports this batch, and
+        # then races with the batch emitted from the clear hook.
+        for _ in range(10):
+            processor.emit(telemetry)
+
+        deadline = time.time() + 5
+        while time.time() < deadline:
+            exported = sum(
+                len(call.args[0]) for call in exporter.export.call_args_list
+            )
+            if exported == 20:
+                break
+            time.sleep(0.01)
+        assert exported == 20
+        assert len(processor._queue) == 0
+        batch_processor.shutdown()
+
     def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(
         self, batch_processor_class, telemetry
     ):
