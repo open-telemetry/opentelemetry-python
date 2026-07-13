@@ -119,6 +119,25 @@ jobs:
       - name: Run tests
         run: tox -e lint-opentelemetry-sdk
 
+  lint-opentelemetry-configuration:
+    name: opentelemetry-configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e lint-opentelemetry-configuration
+
   lint-opentelemetry-semantic-conventions:
     name: opentelemetry-semantic-conventions
     runs-on: ubuntu-latest
@@ -213,6 +232,25 @@ jobs:
 
       - name: Run tests
         run: tox -e lint-opentelemetry-exporter-http-transport
+
+  lint-opentelemetry-exporter-otlpcommon-latest:
+    name: opentelemetry-exporter-otlpcommon-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install tox
+        run: pip install tox-uv
+
+      - name: Run tests
+        run: tox -e lint-opentelemetry-exporter-otlpcommon-latest
 
   lint-opentelemetry-exporter-opencensus:
     name: opentelemetry-exporter-opencensus

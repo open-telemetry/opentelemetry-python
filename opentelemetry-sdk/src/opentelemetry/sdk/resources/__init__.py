@@ -56,9 +56,8 @@ import platform
 import socket
 import sys
 import threading
-import typing
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
@@ -87,7 +86,7 @@ except ImportError:
     pass
 
 LabelValue = AttributeValue
-Attributes = typing.Mapping[str, LabelValue]
+Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -228,7 +227,7 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = dict(self.attributes).copy()
+        merged_attributes = dict(self.attributes)
         merged_attributes.update(other.attributes)
 
         if self.schema_url == "":
@@ -322,7 +321,24 @@ class OTELResourceDetector(ResourceDetector):
 
 
 class ProcessResourceDetector(ResourceDetector):
-    # pylint: disable=no-self-use
+    """Detect process resource attributes.
+
+    Args:
+        raise_on_error: Raise errors from detection instead of logging them.
+        include_command_args: Include ``process.command_args`` and
+            ``process.command_line``. These attributes can contain sensitive
+            command-line values, so they are excluded by default.
+    """
+
+    def __init__(
+        self,
+        raise_on_error: bool = False,
+        *,
+        include_command_args: bool = False,
+    ) -> None:
+        super().__init__(raise_on_error=raise_on_error)
+        self._include_command_args = include_command_args
+
     def detect(self) -> "Resource":
         _runtime_version = ".".join(
             map(
@@ -341,14 +357,10 @@ class ProcessResourceDetector(ResourceDetector):
         # Use sys.orig_argv, which preserves the original arguments received
         # by the interpreter. This correctly captures ``python -m <module>``
         # invocations where sys.argv is rewritten to the resolved module path
-        # and the ``-m <module>`` information is lost. sys.orig_argv also
-        # aligns with /proc/<pid>/cmdline, which the OTel semantic
-        # conventions reference for these attributes.
-        _process_argv = list(sys.orig_argv)
-        _process_command = _process_argv[0] if _process_argv else ""
-        _process_command_line = " ".join(_process_argv)
-        _process_command_args = _process_argv
-        resource_info = {
+        # and the ``-m <module>`` information is lost. Only read argv[0] by
+        # default because full command arguments are opt-in.
+        _process_command = sys.orig_argv[0] if sys.orig_argv else ""
+        resource_info: dict[str, AttributeValue] = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
             PROCESS_RUNTIME_VERSION: _runtime_version,
@@ -356,9 +368,12 @@ class ProcessResourceDetector(ResourceDetector):
             PROCESS_EXECUTABLE_NAME: _process_executable_name,
             PROCESS_EXECUTABLE_PATH: _process_executable_path,
             PROCESS_COMMAND: _process_command,
-            PROCESS_COMMAND_LINE: _process_command_line,
-            PROCESS_COMMAND_ARGS: _process_command_args,
         }
+        if self._include_command_args:
+            _process_argv = list(sys.orig_argv)
+            resource_info[PROCESS_COMMAND_LINE] = " ".join(_process_argv)
+            resource_info[PROCESS_COMMAND_ARGS] = _process_argv
+
         if hasattr(os, "getppid"):
             # pypy3 does not have getppid()
             resource_info[PROCESS_PARENT_PID] = os.getppid()

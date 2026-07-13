@@ -37,6 +37,7 @@ from opentelemetry.sdk._logs.export import (
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_CONFIG_FILE,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -315,20 +316,6 @@ def _init_logging(
         provider.add_log_record_processor(
             export_processor(exporter_class(**exporter_args))
         )
-
-    # silence warnings from internal users until we drop the deprecated Events API
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=DeprecationWarning)
-        # pylint: disable=import-outside-toplevel
-        from opentelemetry._events import (  # noqa: PLC0415
-            set_event_logger_provider,
-        )
-        from opentelemetry.sdk._events import (  # noqa: PLC0415
-            EventLoggerProvider,
-        )
-
-        event_logger_provider = EventLoggerProvider(logger_provider=provider)
-        set_event_logger_provider(event_logger_provider)
 
     if setup_logging_handler:
         warnings.warn(
@@ -720,4 +707,34 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
+        if config_file := environ.get(OTEL_CONFIG_FILE):
+            # Declarative configuration lives in the separate
+            # ``opentelemetry-configuration`` package. Import lazily so the
+            # SDK has no runtime dependency on it; users who don't set
+            # ``OTEL_CONFIG_FILE`` never pay the import cost.
+            try:
+                # opentelemetry-configuration is an optional runtime dep
+                # and is not installed in this package's lint env, so
+                # silence the static-analysis no-name-in-module on the
+                # conditional import.
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.configuration import (  # noqa: PLC0415
+                    configure_sdk,
+                    load_config_file,
+                )
+            except ImportError as exc:
+                raise RuntimeError(
+                    f"{OTEL_CONFIG_FILE} is set but "
+                    "opentelemetry-configuration is not installed. "
+                    "Install it with: pip install opentelemetry-configuration"
+                ) from exc
+
+            if kwargs:
+                _logger.warning(
+                    "%s is set; ignoring configurator kwargs: %s",
+                    OTEL_CONFIG_FILE,
+                    sorted(kwargs),
+                )
+            configure_sdk(load_config_file(config_file))
+            return
         _initialize_components(**kwargs)

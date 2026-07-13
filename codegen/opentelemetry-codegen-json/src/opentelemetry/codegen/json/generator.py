@@ -879,8 +879,8 @@ class OtlpJsonGenerator:
         if field_desc.label == descriptor.FieldDescriptorProto.LABEL_REPEATED:
             return f"builtins.list[{base_type}]"
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_ENUM:
-            return f"typing.Union[{base_type}, builtins.int, None]"
-        return f"typing.Optional[{base_type}]"
+            return f"{base_type} | builtins.int | None"
+        return f"{base_type} | None"
 
     def _resolve_message_type(self, type_name: str, proto_file: str) -> str:
         """
