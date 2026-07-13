@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: declarative config environment variable substitution now replaces an unset variable that has no default with an empty value instead of raising an error, per the configuration spec.

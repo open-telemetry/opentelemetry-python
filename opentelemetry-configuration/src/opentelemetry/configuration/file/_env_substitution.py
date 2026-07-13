@@ -3,18 +3,16 @@
 
 """Environment variable substitution for configuration files."""
 
-import logging
 import os
 import re
 
-_logger = logging.getLogger(__name__)
-
 
 class EnvSubstitutionError(Exception):
-    """Raised when environment variable substitution fails.
+    """Error raised when environment variable substitution fails.
 
-    This occurs when a ${VAR} reference is found but the environment
-    variable is not set and no default value is provided.
+    Retained as part of the public API for backward compatibility. An unset
+    variable without a default is no longer an error (it is replaced with an
+    empty value per the configuration spec), so this is not currently raised.
     """
 
 
@@ -22,18 +20,22 @@ def substitute_env_vars(text: str) -> str:
     """Substitute environment variables in configuration text.
 
     Supports the following syntax:
-    - ${VAR}: Substitute with environment variable VAR. Raises error if not found.
+    - ${VAR}: Substitute with environment variable VAR, or an empty value if
+      VAR is not set.
     - ${VAR:-default}: Substitute with VAR if set, otherwise use default value.
     - $$: Escape sequence for literal $.
+
+    Per the declarative configuration specification, a referenced environment
+    variable that is not set and has no default is replaced with an empty
+    value (which the YAML parser then interprets as null). This matches the
+    behavior of the Java and Node.js implementations and lets configuration
+    files be shared across languages.
 
     Args:
         text: Configuration text with potential ${VAR} placeholders.
 
     Returns:
         Text with environment variables substituted.
-
-    Raises:
-        EnvSubstitutionError: If a required environment variable is not found.
 
     Examples:
         >>> os.environ['SERVICE_NAME'] = 'my-service'
@@ -60,15 +62,9 @@ def substitute_env_vars(text: str) -> str:
         value = os.environ.get(var_name)
 
         if value is None:
-            if has_default:
-                return default_value or ""
-            _logger.error(
-                "Environment variable '%s' not found and no default provided",
-                var_name,
-            )
-            raise EnvSubstitutionError(
-                f"Environment variable '{var_name}' not found and no default provided"
-            )
+            # An unset variable is replaced with its default if one is
+            # provided, otherwise with an empty value, per the spec.
+            return (default_value or "") if has_default else ""
 
         # Per spec: "It MUST NOT be possible to inject YAML structures by
         # environment variables." Newlines are the primary injection vector —
