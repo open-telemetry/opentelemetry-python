@@ -8,6 +8,7 @@ import base64
 import concurrent.futures
 import json
 import logging
+import os
 import threading
 import traceback
 import warnings
@@ -26,7 +27,7 @@ from typing import (  # noqa
     cast,
     overload,
 )
-from weakref import WeakSet
+from weakref import WeakMethod, WeakSet
 
 from typing_extensions import deprecated
 
@@ -55,13 +56,18 @@ from opentelemetry.sdk._logs._internal._logger_metrics import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
     OTEL_SDK_DISABLED,
 )
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import (
+    Resource,
+    _get_process_dependent_resource,
+)
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
@@ -132,19 +138,27 @@ class LogRecordLimits:
     - Else if the global limit has a default value, the default value will be used.
 
     Args:
-        max_attributes: Maximum number of attributes that can be added to a span, event, and link.
+        max_attributes: Maximum number of attributes that can be added to a log record (global fallback).
             Environment variable: ``OTEL_ATTRIBUTE_COUNT_LIMIT``
             Default: {_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}
-        max_attribute_length: Maximum length an attribute value can have. Values longer than
-            the specified length will be truncated.
+        max_attribute_length: Maximum length an attribute value can have (global fallback). Values
+            longer than the specified length will be truncated.
+        max_log_record_attributes: Maximum number of attributes that can be added to a log record.
+            Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT``
+            Falls back to ``max_attributes`` when unset.
+        max_log_record_attribute_length: Maximum length a log record attribute value can have.
+            Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT``
+            Falls back to ``max_attribute_length`` when unset.
     """
 
     def __init__(
         self,
         max_attributes: int | None = None,
         max_attribute_length: int | None = None,
+        max_log_record_attributes: int | None = None,
+        max_log_record_attribute_length: int | None = None,
     ):
-        # attribute count
+        # global attribute count
         global_max_attributes = self._from_env_if_absent(
             max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
         )
@@ -154,14 +168,32 @@ class LogRecordLimits:
             else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
         )
 
-        # attribute length
+        # global attribute length
         self.max_attribute_length = self._from_env_if_absent(
             max_attribute_length,
             OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
         )
 
+        self.max_log_record_attributes = self._from_env_if_absent(
+            max_log_record_attributes,
+            OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT,
+            default=self.max_attributes,
+        )
+
+        self.max_log_record_attribute_length = self._from_env_if_absent(
+            max_log_record_attribute_length,
+            OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+            default=self.max_attribute_length,
+        )
+
     def __repr__(self):
-        return f"{type(self).__name__}(max_attributes={self.max_attributes}, max_attribute_length={self.max_attribute_length})"
+        return (
+            f"{type(self).__name__}("
+            f"max_attributes={self.max_attributes}, "
+            f"max_attribute_length={self.max_attribute_length}, "
+            f"max_log_record_attributes={self.max_log_record_attributes}, "
+            f"max_log_record_attribute_length={self.max_log_record_attribute_length})"
+        )
 
     @classmethod
     def _from_env_if_absent(
@@ -267,12 +299,13 @@ class ReadWriteLogRecord:
 
     def __post_init__(self):
         self.log_record.attributes = BoundedAttributes(
-            maxlen=self.limits.max_attributes,
+            maxlen=self.limits.max_log_record_attributes,
             attributes=self.log_record.attributes
             if self.log_record.attributes
             else None,
             immutable=False,
-            max_value_len=self.limits.max_attribute_length,
+            max_value_len=self.limits.max_log_record_attribute_length,
+            extended_attributes=True,
         )
         if self.dropped_attributes > 0:
             warnings.warn(
@@ -708,6 +741,9 @@ class Logger(APILogger):
     def _set_logger_config(self, logger_config: _LoggerConfig) -> None:
         self._logger_config = logger_config
 
+    def _set_resource(self, resource: Resource) -> None:
+        self._resource = resource
+
     @property
     def instrumentation_scope(self):
         return self._instrumentation_scope
@@ -827,10 +863,30 @@ class LoggerProvider(APILoggerProvider):
         self._logger_cache_lock = Lock()
         self._active_loggers: WeakSet[Logger] = WeakSet()
         self._active_loggers_lock = Lock()
+        if hasattr(os, "register_at_fork"):
+            weak_at_fork = WeakMethod(self._handle_fork)
+
+            def _after_in_child() -> None:
+                if at_fork := weak_at_fork():
+                    at_fork()
+
+            os.register_at_fork(after_in_child=_after_in_child)
+
+    def _handle_fork(self) -> None:
+        self._logger_cache_lock = Lock()
+        self._active_loggers_lock = Lock()
+        self._update_resource(_get_process_dependent_resource())
 
     @property
     def resource(self):
         return self._resource
+
+    def _update_resource(self, resource: Resource) -> None:
+        with self._active_loggers_lock:
+            self._resource = self._resource.merge(resource)
+            for logger in list(self._active_loggers):
+                # pylint: disable-next=protected-access
+                logger._set_resource(self._resource)
 
     def _get_logger_no_cache(
         self,
@@ -912,7 +968,7 @@ class LoggerProvider(APILoggerProvider):
         """
         self._logger_configurator = logger_configurator
         with self._active_loggers_lock:
-            for logger in self._active_loggers:
+            for logger in list(self._active_loggers):
                 # pylint: disable-next=protected-access
                 logger._set_logger_config(
                     self._apply_logger_configurator(

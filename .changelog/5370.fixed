@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: fix the OTLP HTTP metric exporter self-observability metrics over-counting data points when `max_export_batch_size` splits a batch; each split now reports its own data-point count instead of the whole-batch count.
