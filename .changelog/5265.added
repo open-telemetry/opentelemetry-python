@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add `MissingDependencyError` exception for declarative configuration and use it for missing optional dependency errors

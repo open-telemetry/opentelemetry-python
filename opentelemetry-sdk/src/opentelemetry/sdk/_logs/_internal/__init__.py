@@ -50,6 +50,8 @@ from opentelemetry.sdk._logs._internal._logger_metrics import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
     OTEL_SDK_DISABLED,
 )
@@ -127,19 +129,27 @@ class LogRecordLimits:
     - Else if the global limit has a default value, the default value will be used.
 
     Args:
-        max_attributes: Maximum number of attributes that can be added to a span, event, and link.
+        max_attributes: Maximum number of attributes that can be added to a log record (global fallback).
             Environment variable: ``OTEL_ATTRIBUTE_COUNT_LIMIT``
             Default: {_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}
-        max_attribute_length: Maximum length an attribute value can have. Values longer than
-            the specified length will be truncated.
+        max_attribute_length: Maximum length an attribute value can have (global fallback). Values
+            longer than the specified length will be truncated.
+        max_log_record_attributes: Maximum number of attributes that can be added to a log record.
+            Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT``
+            Falls back to ``max_attributes`` when unset.
+        max_log_record_attribute_length: Maximum length a log record attribute value can have.
+            Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT``
+            Falls back to ``max_attribute_length`` when unset.
     """
 
     def __init__(
         self,
         max_attributes: int | None = None,
         max_attribute_length: int | None = None,
+        max_log_record_attributes: int | None = None,
+        max_log_record_attribute_length: int | None = None,
     ):
-        # attribute count
+        # global attribute count
         global_max_attributes = self._from_env_if_absent(
             max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
         )
@@ -149,14 +159,32 @@ class LogRecordLimits:
             else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
         )
 
-        # attribute length
+        # global attribute length
         self.max_attribute_length = self._from_env_if_absent(
             max_attribute_length,
             OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
         )
 
+        self.max_log_record_attributes = self._from_env_if_absent(
+            max_log_record_attributes,
+            OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT,
+            default=self.max_attributes,
+        )
+
+        self.max_log_record_attribute_length = self._from_env_if_absent(
+            max_log_record_attribute_length,
+            OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+            default=self.max_attribute_length,
+        )
+
     def __repr__(self):
-        return f"{type(self).__name__}(max_attributes={self.max_attributes}, max_attribute_length={self.max_attribute_length})"
+        return (
+            f"{type(self).__name__}("
+            f"max_attributes={self.max_attributes}, "
+            f"max_attribute_length={self.max_attribute_length}, "
+            f"max_log_record_attributes={self.max_log_record_attributes}, "
+            f"max_log_record_attribute_length={self.max_log_record_attribute_length})"
+        )
 
     @classmethod
     def _from_env_if_absent(
@@ -262,12 +290,12 @@ class ReadWriteLogRecord:
 
     def __post_init__(self):
         self.log_record.attributes = BoundedAttributes(
-            maxlen=self.limits.max_attributes,
+            maxlen=self.limits.max_log_record_attributes,
             attributes=self.log_record.attributes
             if self.log_record.attributes
             else None,
             immutable=False,
-            max_value_len=self.limits.max_attribute_length,
+            max_value_len=self.limits.max_log_record_attribute_length,
             extended_attributes=True,
         )
         if self.dropped_attributes > 0:
