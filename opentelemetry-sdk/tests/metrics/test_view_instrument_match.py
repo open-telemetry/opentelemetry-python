@@ -114,9 +114,17 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         match.consume_measurement(measurement1)
         match.consume_measurement(measurement2)
-        assert len(match._attributes_aggregation) == 1
+
+        self.assertEqual(
+            len(match._attributes_aggregation),
+            1,
+        )
+
         aggr_key = list(match._attributes_aggregation.keys())[0]
-        assert dict(aggr_key) == {"method": "GET"}
+        self.assertDictEqual(
+            dict(aggr_key),
+            {"method": "GET"},
+        )
 
     def test_view_instrument_match_exclude_removes_attributes(self):
         instrument1 = Mock(name="instrument1")
@@ -146,7 +154,10 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         match.consume_measurement(measurement)
         aggr_key = list(match._attributes_aggregation.keys())[0]
-        assert "user_id" not in dict(aggr_key)
+        self.assertNotIn(
+            "user_id",
+            dict(aggr_key),
+        )
 
     def test_view_instrument_match_include_then_exclude(self):
         instrument1 = Mock(name="instrument1")
@@ -177,7 +188,10 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         match.consume_measurement(measurement)
         aggr_key = list(match._attributes_aggregation.keys())[0]
-        assert dict(aggr_key) == {"method": "GET"}
+        self.assertDictEqual(
+            dict(aggr_key),
+            {"method": "GET"},
+        )
 
     def test_consume_measurement(self):
         instrument1 = Mock(name="instrument1")
