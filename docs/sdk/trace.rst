@@ -9,7 +9,6 @@ Submodules
    trace.export
    trace.id_generator
    trace.sampling
-   util.instrumentation
 
 .. automodule:: opentelemetry.sdk.trace
     :members:
