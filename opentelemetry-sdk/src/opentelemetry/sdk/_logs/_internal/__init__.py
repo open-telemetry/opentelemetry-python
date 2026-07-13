@@ -8,6 +8,7 @@ import base64
 import concurrent.futures
 import json
 import logging
+import os
 import threading
 import traceback
 import warnings
@@ -21,7 +22,7 @@ from typing import (  # noqa
     cast,
     overload,
 )
-from weakref import WeakSet
+from weakref import WeakMethod, WeakSet
 
 from typing_extensions import deprecated
 
@@ -58,7 +59,10 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import (
+    Resource,
+    _get_process_dependent_resource,
+)
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
@@ -718,6 +722,9 @@ class Logger(APILogger):
     def _set_logger_config(self, logger_config: _LoggerConfig) -> None:
         self._logger_config = logger_config
 
+    def _set_resource(self, resource: Resource) -> None:
+        self._resource = resource
+
     @property
     def instrumentation_scope(self):
         return self._instrumentation_scope
@@ -837,10 +844,30 @@ class LoggerProvider(APILoggerProvider):
         self._logger_cache_lock = Lock()
         self._active_loggers: WeakSet[Logger] = WeakSet()
         self._active_loggers_lock = Lock()
+        if hasattr(os, "register_at_fork"):
+            weak_at_fork = WeakMethod(self._handle_fork)
+
+            def _after_in_child() -> None:
+                if at_fork := weak_at_fork():
+                    at_fork()
+
+            os.register_at_fork(after_in_child=_after_in_child)
+
+    def _handle_fork(self) -> None:
+        self._logger_cache_lock = Lock()
+        self._active_loggers_lock = Lock()
+        self._update_resource(_get_process_dependent_resource())
 
     @property
     def resource(self):
         return self._resource
+
+    def _update_resource(self, resource: Resource) -> None:
+        with self._active_loggers_lock:
+            self._resource = self._resource.merge(resource)
+            for logger in list(self._active_loggers):
+                # pylint: disable-next=protected-access
+                logger._set_resource(self._resource)
 
     def _get_logger_no_cache(
         self,
@@ -922,7 +949,7 @@ class LoggerProvider(APILoggerProvider):
         """
         self._logger_configurator = logger_configurator
         with self._active_loggers_lock:
-            for logger in self._active_loggers:
+            for logger in list(self._active_loggers):
                 # pylint: disable-next=protected-access
                 logger._set_logger_config(
                     self._apply_logger_configurator(
