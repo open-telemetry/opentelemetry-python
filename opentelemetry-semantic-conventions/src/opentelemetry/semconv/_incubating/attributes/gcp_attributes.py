@@ -143,6 +143,12 @@ GCP_GCE_INSTANCE_HOSTNAME: Final = "gcp.gce.instance.hostname"
 The hostname of a GCE instance. This is the full value of the default or [custom hostname](https://cloud.google.com/compute/docs/instances/custom-hostname-vm).
 """
 
+GCP_GCE_INSTANCE_LABELS_TEMPLATE: Final = "gcp.gce.instance.labels"
+"""
+GCE instance labels, `<key>` being the label name and the value being the label value.
+Note: For example, a GCE instance label `team` with value `observability` SHOULD be recorded as the `gcp.gce.instance.labels.team` attribute with value `"observability"`. The `<key>` MUST be the exact GCE instance label key.
+"""
+
 GCP_GCE_INSTANCE_NAME: Final = "gcp.gce.instance.name"
 """
 The instance name of a GCE instance. This is the value provided by `host.name`, the visible name of the instance in the Cloud Console UI, and the prefix for the default hostname of the instance as defined by the [default internal DNS name](https://cloud.google.com/compute/docs/internal-dns#instance-fully-qualified-domain-names).
