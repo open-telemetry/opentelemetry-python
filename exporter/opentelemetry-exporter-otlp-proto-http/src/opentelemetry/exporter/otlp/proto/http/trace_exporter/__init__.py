@@ -101,7 +101,12 @@ class OTLPSpanExporter(SpanExporter):
             max_request_size: Maximum size in bytes of a serialized request,
                 measured before compression. A request exceeding this size is
                 dropped before being sent. Defaults to 64 MiB; a value of 0 (or
-                any non-positive value) disables the limit.
+                any non-positive value) disables the limit. Batch processors
+                group spans by count rather than serialized size, so a batch
+                whose serialized request exceeds this limit is dropped as a
+                whole and recorded as a failed export; reduce the processor's
+                ``max_export_batch_size`` (or raise/disable this limit) if
+                batches may approach it.
             meter_provider: MeterProvider used for the exporter's own metrics.
         """
         self._shutdown_in_progress = threading.Event()

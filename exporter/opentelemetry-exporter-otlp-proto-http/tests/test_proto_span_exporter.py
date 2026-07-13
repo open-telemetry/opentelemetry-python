@@ -595,6 +595,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         finally:
             server.shutdown()
             thread.join()
+            server.server_close()
         self.assertEqual(result, SpanExportResult.SUCCESS)
         self.assertEqual(len(server.received_bodies), 1)
         self.assertGreater(len(server.received_bodies[0]), 0)
@@ -611,6 +612,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         finally:
             server.shutdown()
             thread.join()
+            server.server_close()
         self.assertEqual(result, SpanExportResult.FAILURE)
         self.assertEqual(server.received_bodies, [])
 
