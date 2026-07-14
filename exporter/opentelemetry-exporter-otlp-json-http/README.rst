@@ -6,8 +6,10 @@ OpenTelemetry Collector JSON over HTTP Exporter
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-otlp-json-http.svg
    :target: https://pypi.org/project/opentelemetry-exporter-otlp-json-http/
 
-This library allows to export data to the OpenTelemetry Collector using the
-OpenTelemetry Protocol using OTLP JSON over HTTP.
+This library exports OpenTelemetry traces, metrics and logs using the
+OpenTelemetry Protocol (OTLP) JSON encoding over HTTP. It can be used to
+send data to any backend that accepts OTLP JSON such as the OpenTelemetry
+Collector.
 
 Installation
 ------------
@@ -17,10 +19,38 @@ Installation
      pip install opentelemetry-exporter-otlp-json-http
 
 
+Usage
+-----
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.json.http import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    resource = Resource.create({
+        "service.name": "service"
+    })
+
+    trace.set_tracer_provider(TracerProvider(resource=resource))
+    tracer = trace.get_tracer(__name__)
+
+    otlp_exporter = OTLPSpanExporter()
+
+    span_processor = BatchSpanProcessor(otlp_exporter)
+
+    trace.get_tracer_provider().add_span_processor(span_processor)
+
+    with tracer.start_as_current_span("foo"):
+        print("Hello world!")
+
+
 References
 ----------
 
-* `OpenTelemetry Collector Exporter <https://opentelemetry-python.readthedocs.io/en/latest/exporter/otlp/otlp.html>`_
+* `OpenTelemetry OTLP Exporters <https://opentelemetry-python.readthedocs.io/en/latest/exporter/otlp/otlp.html>`_
 * `OpenTelemetry Collector <https://github.com/open-telemetry/opentelemetry-collector/>`_
 * `OpenTelemetry <https://opentelemetry.io/>`_
 * `OpenTelemetry Protocol Specification <https://github.com/open-telemetry/oteps/blob/main/text/0035-opentelemetry-protocol.md>`_

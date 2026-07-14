@@ -2,15 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This library allows exporting OpenTelemetry telemetry to an OTLP collector
-using the OTLP JSON over HTTP wire format.
+This library allows exporting OpenTelemetry telemetry using the OTLP JSON
+over HTTP wire format to any backend that accepts OTLP JSON.
 
 Usage
 -----
 
 The **OTLP JSON HTTP Exporter** exports `OpenTelemetry`_ traces, metrics,
-and logs to an `OTLP`_ collector via HTTP, using OTLP JSON encoding instead
-of protobuf.
+and logs via HTTP to any `OTLP`_-compatible backend using OTLP JSON
+encoding instead of protobuf.
 
 Three exporters are provided:
 
