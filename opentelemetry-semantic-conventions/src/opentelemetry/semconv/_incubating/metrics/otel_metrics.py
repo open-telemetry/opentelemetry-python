@@ -14,6 +14,9 @@ Unit: {log_record}
 Note: For successful exports, `error.type` MUST NOT be set. For failed exports, `error.type` MUST contain the failure cause.
 For exporters with partial success semantics (e.g. OTLP with `rejected_log_records`), rejected log records MUST count as failed and only non-rejected log records count as success.
 If no rejection reason is available, `rejected` SHOULD be used as value for `error.type`.
+If the exporter retries failed export attempts, the export operation is considered finished only after the final attempt has concluded.
+Each log record MUST be counted exactly once per export operation: intermediate failed attempts that are followed by a retry MUST NOT increment the counter,
+and `error.type` reflects the cause of the final attempt.
 """
 
 
@@ -31,7 +34,8 @@ OTEL_SDK_EXPORTER_LOG_INFLIGHT: Final = "otel.sdk.exporter.log.inflight"
 The number of log records which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)
 Instrument: updowncounter
 Unit: {log_record}
-Note: For successful exports, `error.type` MUST NOT be set. For failed exports, `error.type` MUST contain the failure cause.
+Note: Log records are counted as inflight from when they are passed to the exporter until the export operation has concluded.
+If the exporter retries failed export attempts, log records remain inflight across all retry attempts and any backoff between them.
 """
 
 
@@ -54,6 +58,9 @@ Unit: {data_point}
 Note: For successful exports, `error.type` MUST NOT be set. For failed exports, `error.type` MUST contain the failure cause.
 For exporters with partial success semantics (e.g. OTLP with `rejected_data_points`), rejected data points MUST count as failed and only non-rejected data points count as success.
 If no rejection reason is available, `rejected` SHOULD be used as value for `error.type`.
+If the exporter retries failed export attempts, the export operation is considered finished only after the final attempt has concluded.
+Each metric data point MUST be counted exactly once per export operation: intermediate failed attempts that are followed by a retry MUST NOT increment the counter,
+and `error.type` reflects the cause of the final attempt.
 """
 
 
@@ -75,7 +82,8 @@ OTEL_SDK_EXPORTER_METRIC_DATA_POINT_INFLIGHT: Final = (
 The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)
 Instrument: updowncounter
 Unit: {data_point}
-Note: For successful exports, `error.type` MUST NOT be set. For failed exports, `error.type` MUST contain the failure cause.
+Note: Metric data points are counted as inflight from when they are passed to the exporter until the export operation has concluded.
+If the exporter retries failed export attempts, metric data points remain inflight across all retry attempts and any backoff between them.
 """
 
 
@@ -100,6 +108,9 @@ Unit: s
 Note: This metric defines successful operations using the full success definitions for [http](https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success-1)
 and [grpc](https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success). Anything else is defined as an unsuccessful operation. For successful
 operations, `error.type` MUST NOT be set. For unsuccessful export operations, `error.type` MUST contain a relevant failure cause.
+If the exporter retries failed export attempts, exactly one observation MUST be recorded per export operation,
+covering the wall-clock duration from the start of the first attempt through the conclusion of the final attempt (including any backoff between attempts).
+`error.type` reflects the cause of the final attempt.
 """
 
 
@@ -120,6 +131,9 @@ Unit: {span}
 Note: For successful exports, `error.type` MUST NOT be set. For failed exports, `error.type` MUST contain the failure cause.
 For exporters with partial success semantics (e.g. OTLP with `rejected_spans`), rejected spans MUST count as failed and only non-rejected spans count as success.
 If no rejection reason is available, `rejected` SHOULD be used as value for `error.type`.
+If the exporter retries failed export attempts, the export operation is considered finished only after the final attempt has concluded.
+Each span MUST be counted exactly once per export operation: intermediate failed attempts that are followed by a retry MUST NOT increment the counter,
+and `error.type` reflects the cause of the final attempt.
 """
 
 
@@ -156,7 +170,8 @@ OTEL_SDK_EXPORTER_SPAN_INFLIGHT: Final = "otel.sdk.exporter.span.inflight"
 The number of spans which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)
 Instrument: updowncounter
 Unit: {span}
-Note: For successful exports, `error.type` MUST NOT be set. For failed exports, `error.type` MUST contain the failure cause.
+Note: Spans are counted as inflight from when they are passed to the exporter until the export operation has concluded.
+If the exporter retries failed export attempts, spans remain inflight across all retry attempts and any backoff between them.
 """
 
 
@@ -234,6 +249,8 @@ The number of log records for which the processing has finished, either successf
 Instrument: counter
 Unit: {log_record}
 Note: For successful processing, `error.type` MUST NOT be set. For failed processing, `error.type` MUST contain the failure cause.
+SDK Batching Log Record Processors MUST use `queue_full` as the value of `error.type` for log records dropped due to a full queue.
+SDK Log Record Processors MUST use `already_shutdown` as the value of `error.type` for log records dropped because the processor has already been shut down.
 For the SDK Simple and Batching Log Record Processor a log record is considered to be processed already when it has been submitted to the exporter,
 not when the corresponding export call has finished.
 """
@@ -294,6 +311,8 @@ The number of spans for which the processing has finished, either successful or 
 Instrument: counter
 Unit: {span}
 Note: For successful processing, `error.type` MUST NOT be set. For failed processing, `error.type` MUST contain the failure cause.
+SDK Batching Span Processors MUST use `queue_full` as the value of `error.type` for spans dropped due to a full queue.
+SDK Span Processors MUST use `already_shutdown` as the value of `error.type` for spans dropped because the processor has already been shut down.
 For the SDK Simple and Batching Span Processor a span is considered to be processed already when it has been submitted to the exporter, not when the corresponding export call has finished.
 """
 
