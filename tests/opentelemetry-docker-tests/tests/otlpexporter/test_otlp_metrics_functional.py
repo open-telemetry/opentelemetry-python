@@ -10,6 +10,9 @@ import pytest
 from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
+from opentelemetry.exporter.otlp.json.file.metric_exporter import (
+    FileMetricExporter,
+)
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter as GRPCMetricExporter,
 )
@@ -32,7 +35,7 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
-from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, new_otlp_file
 
 METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
     ExporterConfig(
@@ -78,6 +81,11 @@ METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
         id="grpc-headers",
         exporter_class=GRPCMetricExporter,
         kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
+    ),
+    ExporterConfig(
+        id="file",
+        exporter_class=FileMetricExporter,
+        lazy_kwargs=lambda: {"path": new_otlp_file("metrics")},
     ),
 ]
 

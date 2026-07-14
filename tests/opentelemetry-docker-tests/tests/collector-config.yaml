@@ -5,6 +5,18 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  otlp_json_file/traces:
+    include: [/otlp-file-data/traces/*.jsonl]
+    start_at: beginning
+    include_file_name: false
+  otlp_json_file/metrics:
+    include: [/otlp-file-data/metrics/*.jsonl]
+    start_at: beginning
+    include_file_name: false
+  otlp_json_file/logs:
+    include: [/otlp-file-data/logs/*.jsonl]
+    start_at: beginning
+    include_file_name: false
 
 exporters:
   otlphttp:
@@ -13,11 +25,11 @@ exporters:
 service:
   pipelines:
     traces:
-      receivers: [otlp]
+      receivers: [otlp, otlp_json_file/traces]
       exporters: [otlphttp]
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, otlp_json_file/metrics]
       exporters: [otlphttp]
     logs:
-      receivers: [otlp]
+      receivers: [otlp, otlp_json_file/logs]
       exporters: [otlphttp]

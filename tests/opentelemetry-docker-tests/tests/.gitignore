@@ -1,0 +1,3 @@
+# JSON output written by the OTLP JSON File exporter during docker tests and
+# tailed by the collector's otlp_json_file receiver (see docker-compose.yml).
+otlp-file-data/**/*.jsonl

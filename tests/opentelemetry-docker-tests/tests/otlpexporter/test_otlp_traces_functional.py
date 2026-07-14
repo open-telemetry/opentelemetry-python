@@ -16,6 +16,9 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
 from opentelemetry.exporter.otlp.proto.http import (
     Compression as HTTPCompression,
 )
+from opentelemetry.exporter.otlp.json.file.trace_exporter import (
+    FileSpanExporter,
+)
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter as HTTPSpanExporter,
 )
@@ -24,7 +27,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 from opentelemetry.trace import Link, SpanContext, StatusCode, TraceFlags
 
-from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, new_otlp_file
 
 TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
     ExporterConfig(
@@ -70,6 +73,11 @@ TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
         id="grpc-headers",
         exporter_class=GRPCSpanExporter,
         kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
+    ),
+    ExporterConfig(
+        id="file",
+        exporter_class=FileSpanExporter,
+        lazy_kwargs=lambda: {"path": new_otlp_file("traces")},
     ),
 ]
 
