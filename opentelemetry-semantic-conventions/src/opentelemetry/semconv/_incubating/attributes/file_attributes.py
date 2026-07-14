@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import Enum
 from typing import Final
 
 FILE_ACCESSED: Final = "file.accessed"
@@ -60,6 +61,21 @@ FILE_INODE: Final = "file.inode"
 Inode representing the file in the filesystem.
 """
 
+FILE_LOCK_MECHANISM: Final = "file.lock.mechanism"
+"""
+The lock mechanism such as noted by [POSIX](https://pubs.opengroup.org/onlinepubs/9699919799/functions/fcntl.html).
+"""
+
+FILE_LOCK_MODE: Final = "file.lock.mode"
+"""
+Mode of lock or operation such as documented by [POSIX](https://pubs.opengroup.org/onlinepubs/9699919799/functions/fcntl.html).
+"""
+
+FILE_LOCK_TYPE: Final = "file.lock.type"
+"""
+The lock type as represented by i.e. [POSIX](https://pubs.opengroup.org/onlinepubs/9699919799/functions/fcntl.html)'s l_type.
+"""
+
 FILE_MODE: Final = "file.mode"
 """
 Mode of the file in octal representation.
@@ -100,3 +116,10 @@ FILE_SYMBOLIC_LINK_TARGET_PATH: Final = "file.symbolic_link.target_path"
 Path to the target of a symbolic link.
 Note: This attribute is only applicable to symbolic links.
 """
+
+
+class FileLockTypeValues(Enum):
+    READ = "read"
+    """read."""
+    WRITE = "write"
+    """write."""
