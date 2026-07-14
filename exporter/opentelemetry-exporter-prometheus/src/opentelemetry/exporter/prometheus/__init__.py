@@ -52,7 +52,7 @@ API
 """
 
 from collections import deque
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
 from json import dumps
 from logging import getLogger
@@ -100,6 +100,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
@@ -255,6 +256,11 @@ class PrometheusMetricReader(MetricReader):
         scope_info_enabled: Whether to include instrumentation scope labels on
             exported metrics. Scope labels are exported by default.
         prefix: Prefix added to exported Prometheus metric names.
+        preferred_aggregation: A mapping between instrument classes and
+            aggregation instances used to override the default aggregation of
+            the corresponding instrument classes. Classes not included in the
+            mapping retain their default aggregation. See
+            :class:`~opentelemetry.sdk.metrics.export.MetricReader` for details.
     """
 
     def __init__(
@@ -262,6 +268,7 @@ class PrometheusMetricReader(MetricReader):
         disable_target_info: bool = False,
         prefix: str = "",
         scope_info_enabled: bool = True,
+        preferred_aggregation: Mapping[type, Aggregation] | None = None,
         *,
         registry: CollectorRegistry = REGISTRY,
     ) -> None:
@@ -274,6 +281,9 @@ class PrometheusMetricReader(MetricReader):
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             },
+            preferred_aggregation=dict(preferred_aggregation)
+            if preferred_aggregation is not None
+            else None,
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(
