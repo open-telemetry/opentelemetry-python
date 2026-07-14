@@ -29,6 +29,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
@@ -36,6 +37,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
@@ -497,3 +499,98 @@ class TestOTLPSpanExporter(unittest.TestCase):
         )
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
+
+
+class TestOTLPSpanExporterInsecure(unittest.TestCase):
+    def test_insecure_default_is_false(self):
+        exporter = OTLPSpanExporter()
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)
+
+    def test_insecure_true_disables_verification(self):
+        exporter = OTLPSpanExporter(insecure=True)
+        self.assertTrue(exporter._insecure)
+        self.assertFalse(exporter._certificate_file)
+
+    def test_insecure_false_keeps_verification(self):
+        exporter = OTLPSpanExporter(insecure=False)
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)
+
+    def test_insecure_true_ignores_certificate_file(self):
+        exporter = OTLPSpanExporter(
+            insecure=True, certificate_file="/path/to/cert.pem"
+        )
+        self.assertTrue(exporter._insecure)
+        self.assertFalse(exporter._certificate_file)
+
+    def test_insecure_false_uses_certificate_file(self):
+        exporter = OTLPSpanExporter(
+            insecure=False, certificate_file="/path/to/cert.pem"
+        )
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, "/path/to/cert.pem")
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_INSECURE: "true"},
+    )
+    def test_signal_env_var_sets_insecure(self):
+        exporter = OTLPSpanExporter()
+        self.assertTrue(exporter._insecure)
+        self.assertFalse(exporter._certificate_file)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_INSECURE: "true"},
+    )
+    def test_generic_env_var_sets_insecure(self):
+        exporter = OTLPSpanExporter()
+        self.assertTrue(exporter._insecure)
+        self.assertFalse(exporter._certificate_file)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_TRACES_INSECURE: "false",
+            OTEL_EXPORTER_OTLP_INSECURE: "true",
+        },
+    )
+    def test_signal_env_var_takes_priority_over_generic(self):
+        exporter = OTLPSpanExporter()
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_INSECURE: "true"},
+    )
+    def test_constructor_takes_priority_over_env_var(self):
+        exporter = OTLPSpanExporter(insecure=False)
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_INSECURE: "TRUE"},
+    )
+    def test_env_var_case_insensitive(self):
+        exporter = OTLPSpanExporter()
+        self.assertTrue(exporter._insecure)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_INSECURE: "  true  "},
+    )
+    def test_env_var_strips_whitespace(self):
+        exporter = OTLPSpanExporter()
+        self.assertTrue(exporter._insecure)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_INSECURE: "invalid"},
+    )
+    def test_env_var_invalid_value_is_false(self):
+        exporter = OTLPSpanExporter()
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)

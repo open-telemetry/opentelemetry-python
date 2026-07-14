@@ -41,6 +41,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
+    _resolve_insecure,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
@@ -66,12 +67,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+    OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
@@ -122,6 +125,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
+        insecure: bool | None = None,
         *,
         meter_provider: MeterProvider | None = None,
     ):
@@ -145,6 +149,10 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             max_export_batch_size: Maximum number of data points to export in a single request.
                 If not set there is no limit to the number of data points in a request.
                 If it is set and the number of data points exceeds the max, the request will be split.
+            insecure: Whether to disable TLS certificate verification. If True, the
+                exporter will not verify the server's TLS certificate. Can also be
+                configured via OTEL_EXPORTER_OTLP_METRICS_INSECURE or
+                OTEL_EXPORTER_OTLP_INSECURE environment variables.
         """
         self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
@@ -153,10 +161,22 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
             ),
         )
-        self._certificate_file = certificate_file or environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+        self._insecure = _resolve_insecure(
+            insecure,
+            OTEL_EXPORTER_OTLP_METRICS_INSECURE,
+            OTEL_EXPORTER_OTLP_INSECURE,
         )
+        if self._insecure:
+            self._certificate_file = False
+        else:
+            self._certificate_file = (
+                certificate_file
+                if certificate_file is not None
+                else environ.get(
+                    OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+                    environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+                )
+            )
         self._client_key_file = client_key_file or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
             environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
@@ -748,3 +768,5 @@ def _append_metrics_path(endpoint: str) -> str:
     if endpoint.endswith("/"):
         return endpoint + DEFAULT_METRICS_EXPORT_PATH
     return endpoint + f"/{DEFAULT_METRICS_EXPORT_PATH}"
+
+
