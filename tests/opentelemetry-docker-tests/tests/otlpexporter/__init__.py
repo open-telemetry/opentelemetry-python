@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
@@ -19,9 +20,14 @@ class ExporterConfig(Generic[ExporterT]):
     id: str
     exporter_class: type[ExporterT]
     kwargs: dict[str, Any] = field(default_factory=dict)
+    lazy_kwargs: dict[str, Callable[[], Any]] = field(default_factory=dict)
 
     def build(self) -> ExporterT:
-        return self.exporter_class(**self.kwargs)
+        kwargs = {
+            **self.kwargs,
+            **{key: factory() for key, factory in self.lazy_kwargs.items()},
+        }
+        return self.exporter_class(**kwargs)
 
 
 def _attrs_to_dict(attributes) -> dict:

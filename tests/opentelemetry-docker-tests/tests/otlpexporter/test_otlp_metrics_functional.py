@@ -10,6 +10,18 @@ import pytest
 from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
+from opentelemetry.exporter.http.transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.http.transport._urllib3 import (
+    Urllib3HTTPTransport,
+)
+from opentelemetry.exporter.otlp.common.http import (
+    Compression as JSONCompression,
+)
+from opentelemetry.exporter.otlp.json.http.metric_exporter import (
+    OTLPMetricExporter as JSONMetricExporter,
+)
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter as GRPCMetricExporter,
 )
@@ -78,6 +90,54 @@ METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
         id="grpc-headers",
         exporter_class=GRPCMetricExporter,
         kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
+    ),
+    ExporterConfig(
+        id="json-urllib3",
+        exporter_class=JSONMetricExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/metrics"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-urllib3-deflate",
+        exporter_class=JSONMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": JSONCompression.DEFLATE,
+        },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-urllib3-gzip",
+        exporter_class=JSONMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": JSONCompression.GZIP,
+        },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests",
+        exporter_class=JSONMetricExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/metrics"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests-deflate",
+        exporter_class=JSONMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": JSONCompression.DEFLATE,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests-gzip",
+        exporter_class=JSONMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": JSONCompression.GZIP,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
     ),
 ]
 

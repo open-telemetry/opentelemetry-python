@@ -10,6 +10,18 @@ import pytest
 from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
+from opentelemetry.exporter.http.transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.http.transport._urllib3 import (
+    Urllib3HTTPTransport,
+)
+from opentelemetry.exporter.otlp.common.http import (
+    Compression as JSONCompression,
+)
+from opentelemetry.exporter.otlp.json.http.trace_exporter import (
+    OTLPSpanExporter as JSONSpanExporter,
+)
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter as GRPCSpanExporter,
 )
@@ -70,6 +82,54 @@ TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
         id="grpc-headers",
         exporter_class=GRPCSpanExporter,
         kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
+    ),
+    ExporterConfig(
+        id="json-urllib3",
+        exporter_class=JSONSpanExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/traces"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-urllib3-deflate",
+        exporter_class=JSONSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "compression": JSONCompression.DEFLATE,
+        },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-urllib3-gzip",
+        exporter_class=JSONSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "compression": JSONCompression.GZIP,
+        },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests",
+        exporter_class=JSONSpanExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/traces"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests-deflate",
+        exporter_class=JSONSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "compression": JSONCompression.DEFLATE,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests-gzip",
+        exporter_class=JSONSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "compression": JSONCompression.GZIP,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
     ),
 ]
 
