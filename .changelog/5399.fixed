@@ -1,0 +1,1 @@
+`opentelemetry-api`: Prevent in-place mutation of `Context` via inherited `dict` methods
