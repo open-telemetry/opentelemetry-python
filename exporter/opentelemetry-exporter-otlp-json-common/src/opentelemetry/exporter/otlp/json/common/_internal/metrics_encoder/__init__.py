@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# type: ignore[reportArgumentType]
 # pyright: reportCallIssue=false
 
 from __future__ import annotations
@@ -121,7 +122,7 @@ def split_metrics_data(
         ):
             scope_metrics_batch = []
             resource_metrics_batch.append(
-                replace(resource_metrics, scope_metrics=scope_metrics_batch)  # type: ignore[reportArgumentType]
+                replace(resource_metrics, scope_metrics=scope_metrics_batch)
             )
 
         if (
@@ -130,7 +131,7 @@ def split_metrics_data(
         ):
             metrics_batch = []
             scope_metrics_batch.append(
-                replace(scope_metrics, metrics=metrics_batch)  # type: ignore[reportArgumentType]
+                replace(scope_metrics, metrics=metrics_batch)
             )
 
         data_points_batch: list = []
@@ -158,16 +159,12 @@ def split_metrics_data(
                 )
                 batch_size = 0
 
-        # A metric whose last point exactly filled the previous batch
-        # leaves a dangling empty batch here.
-        _prune_if_empty(
-            resource_metrics_batch,
-            scope_metrics_batch,
-            metrics_batch,
-            data_points_batch,
-        )
+        if not batch_size:
+            resource_metrics_batch = []
+            scope_metrics_batch = []
+            metrics_batch = []
 
-    if batch_size > 0:
+    if batch_size:
         yield JSONExportMetricsServiceRequest(
             resource_metrics=resource_metrics_batch
         )
@@ -194,12 +191,18 @@ def _iter_metric_data_points(
                         "Tried to split and export an unsupported metric type. Skipping."
                     )
                     continue
+                dps = getattr(metric, field_name).data_points
+                if not dps:
+                    _logger.warning(
+                        "Unexpected empty metric datapoints. Skipping."
+                    )
+                    continue
                 yield (
                     resource_metrics,
                     scope_metrics,
                     metric,
                     field_name,
-                    getattr(metric, field_name).data_points,
+                    dps,
                 )
 
 
@@ -209,7 +212,7 @@ def _build_metric_with_data_points(
     data_points: list,
 ) -> JSONMetric:
     new_data = replace(getattr(metric, field_name), data_points=data_points)
-    return replace(metric, **{field_name: new_data})  # type: ignore[reportArgumentType]
+    return replace(metric, **{field_name: new_data})
 
 
 def _build_empty_metric_batches(
@@ -224,9 +227,9 @@ def _build_empty_metric_batches(
     metrics_batch = [
         _build_metric_with_data_points(metric, field_name, data_points_batch)
     ]
-    scope_metrics_batch = [replace(scope_metrics, metrics=metrics_batch)]  # type: ignore[reportArgumentType]
+    scope_metrics_batch = [replace(scope_metrics, metrics=metrics_batch)]
     resource_metrics_batch = [
-        replace(resource_metrics, scope_metrics=scope_metrics_batch)  # type: ignore[reportArgumentType]
+        replace(resource_metrics, scope_metrics=scope_metrics_batch)
     ]
     return (
         resource_metrics_batch,
@@ -234,23 +237,6 @@ def _build_empty_metric_batches(
         metrics_batch,
         data_points_batch,
     )
-
-
-def _prune_if_empty(
-    resource_metrics_batch: list[JSONResourceMetrics],
-    scope_metrics_batch: list[JSONScopeMetrics],
-    metrics_batch: list[JSONMetric],
-    data_points_batch: list,
-) -> None:
-    if data_points_batch:
-        return
-    metrics_batch.pop()
-    if metrics_batch:
-        return
-    scope_metrics_batch.pop()
-    if scope_metrics_batch:
-        return
-    resource_metrics_batch.pop()
 
 
 def _encode_resource_metrics(
