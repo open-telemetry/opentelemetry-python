@@ -57,8 +57,16 @@ def _load_session_from_envvar(
         _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
     ) or environ.get(cred_envvar)
     if _credential_env:
-        # pylint: disable-next=import-outside-toplevel
-        import requests  # noqa: PLC0415
+        try:
+            # pylint: disable-next=import-outside-toplevel
+            import requests  # noqa: PLC0415
+        except ImportError as exc:
+            raise ImportError(
+                "The 'requests' package is required to load a credential "
+                "provider session but is not installed. Install it with "
+                "`pip install opentelemetry-exporter-otlp-proto-http[requests]` "
+                "or `pip install requests`."
+            ) from exc
 
         try:
             maybe_session = next(

@@ -4,6 +4,7 @@
 # pylint: disable=protected-access
 
 import os
+import sys
 import unittest
 from logging import WARNING
 from unittest.mock import patch
@@ -21,6 +22,7 @@ from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._common import (
     _DEFAULT_TIMEOUT,
     _build_transport,
+    _load_session_from_envvar,
     _normalize_compression,
     _resolve_compression,
     _resolve_endpoint,
@@ -29,6 +31,8 @@ from opentelemetry.exporter.otlp.proto.http._common import (
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -504,3 +508,20 @@ class TestBuildTransport(unittest.TestCase):
             verify="cert.pem", cert=None, session=session
         )
         self.assertIs(result, mock_transport.return_value)
+
+
+class TestLoadSessionFromEnvvar(unittest.TestCase):
+    @patch.dict(
+        os.environ,
+        {_OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER: "custom"},
+    )
+    @patch.dict(sys.modules, {"requests": None})
+    def test_missing_requests_raises_helpful_error(self):
+        with self.assertRaises(ImportError) as cm:
+            _load_session_from_envvar(
+                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER
+            )
+        self.assertIn(
+            "opentelemetry-exporter-otlp-proto-http[requests]",
+            str(cm.exception),
+        )
