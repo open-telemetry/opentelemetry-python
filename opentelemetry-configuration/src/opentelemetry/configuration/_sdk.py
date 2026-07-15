@@ -10,7 +10,7 @@ entry point for "apply this config" on the declarative path.
 
 from __future__ import annotations
 
-from logging import getLogger
+from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING, getLogger
 
 from opentelemetry.configuration._logger_provider import (
     configure_logger_provider,
@@ -37,30 +37,30 @@ _logger = getLogger(__name__)
 # The numbered variants (debug2, info3, …) are sub-levels within the same
 # Python tier, so they collapse to the same level constant.
 _SEVERITY_TO_LOGGING_LEVEL: dict[SeverityNumber, int] = {
-    SeverityNumber.trace: logging.DEBUG,
-    SeverityNumber.trace2: logging.DEBUG,
-    SeverityNumber.trace3: logging.DEBUG,
-    SeverityNumber.trace4: logging.DEBUG,
-    SeverityNumber.debug: logging.DEBUG,
-    SeverityNumber.debug2: logging.DEBUG,
-    SeverityNumber.debug3: logging.DEBUG,
-    SeverityNumber.debug4: logging.DEBUG,
-    SeverityNumber.info: logging.INFO,
-    SeverityNumber.info2: logging.INFO,
-    SeverityNumber.info3: logging.INFO,
-    SeverityNumber.info4: logging.INFO,
-    SeverityNumber.warn: logging.WARNING,
-    SeverityNumber.warn2: logging.WARNING,
-    SeverityNumber.warn3: logging.WARNING,
-    SeverityNumber.warn4: logging.WARNING,
-    SeverityNumber.error: logging.ERROR,
-    SeverityNumber.error2: logging.ERROR,
-    SeverityNumber.error3: logging.ERROR,
-    SeverityNumber.error4: logging.ERROR,
-    SeverityNumber.fatal: logging.CRITICAL,
-    SeverityNumber.fatal2: logging.CRITICAL,
-    SeverityNumber.fatal3: logging.CRITICAL,
-    SeverityNumber.fatal4: logging.CRITICAL,
+    SeverityNumber.trace: DEBUG,
+    SeverityNumber.trace2: DEBUG,
+    SeverityNumber.trace3: DEBUG,
+    SeverityNumber.trace4: DEBUG,
+    SeverityNumber.debug: DEBUG,
+    SeverityNumber.debug2: DEBUG,
+    SeverityNumber.debug3: DEBUG,
+    SeverityNumber.debug4: DEBUG,
+    SeverityNumber.info: INFO,
+    SeverityNumber.info2: INFO,
+    SeverityNumber.info3: INFO,
+    SeverityNumber.info4: INFO,
+    SeverityNumber.warn: WARNING,
+    SeverityNumber.warn2: WARNING,
+    SeverityNumber.warn3: WARNING,
+    SeverityNumber.warn4: WARNING,
+    SeverityNumber.error: ERROR,
+    SeverityNumber.error2: ERROR,
+    SeverityNumber.error3: ERROR,
+    SeverityNumber.error4: ERROR,
+    SeverityNumber.fatal: CRITICAL,
+    SeverityNumber.fatal2: CRITICAL,
+    SeverityNumber.fatal3: CRITICAL,
+    SeverityNumber.fatal4: CRITICAL,
 }
 
 
@@ -91,8 +91,8 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
         >>> configure_sdk(config)
     """
     if config.log_level is not None:
-        level = _SEVERITY_TO_LOGGING_LEVEL.get(config.log_level, logging.INFO)
-        logging.getLogger("opentelemetry").setLevel(level)
+        level = _SEVERITY_TO_LOGGING_LEVEL.get(config.log_level, INFO)
+        getLogger("opentelemetry").setLevel(level)
 
     if config.disabled:
         _logger.warning(
