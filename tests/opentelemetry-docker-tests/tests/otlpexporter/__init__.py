@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 from uuid import uuid4
 
 ExporterT = TypeVar("ExporterT")
@@ -16,8 +16,7 @@ CUSTOM_HEADERS: dict[str, str] = {
     "x-another-header": "another-value",
 }
 
-# Directory bind-mounted into the collector container (see docker-compose.yml).
-# Created at runtime (gitignored) and resolved relative to this package.
+# Directory bind mounted into the collector container (see docker-compose.yml).
 OTLP_FILE_DATA_DIR = Path(__file__).parent / "otlp-file-data"
 
 
@@ -33,12 +32,8 @@ class ExporterConfig(Generic[ExporterT]):
         return self.exporter_class(**self.kwargs, **extra)
 
 
-def make_otlp_file(signal: str) -> str:
-    """Return a unique .jsonl path under the collector-mounted directory.
-
-    ``signal`` is one of ``"traces"``, ``"metrics"``, ``"logs"`` and selects the
-    subdirectory the collector's ``otlp_json_file/<signal>`` receiver tails.
-    """
+def make_otlp_file(signal: Literal["traces", "metrics", "logs"]) -> str:
+    """Return a unique .jsonl path under the collector mounted directory."""
     directory = OTLP_FILE_DATA_DIR / signal
     directory.mkdir(parents=True, exist_ok=True)
     return str(directory / f"{uuid4().hex}.jsonl")
