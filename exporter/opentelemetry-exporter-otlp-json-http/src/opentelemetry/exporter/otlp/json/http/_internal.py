@@ -106,7 +106,7 @@ def _resolve_compression(compression_env_var: str) -> Compression:
 
 
 def _build_transport(
-    certificate_file: str | bool | None,
+    certificate_file: str | None,
     client_key_file: str | None,
     client_certificate_file: str | None,
     certificate_env_var: str,
