@@ -33,6 +33,7 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_ENDPOINT,
     DEFAULT_METRICS_EXPORT_PATH,
     OTLPMetricExporter,
+    _count_data_points,
     _get_split_resource_metrics_pb2,
     _split_metrics_data,
 )
@@ -579,6 +580,59 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(result, MetricExportResult.SUCCESS)
         # First batch + retry of second batch
         self.assertEqual(len(Mocket.request_list()), 3)
+
+    def test_count_data_points(self):
+        request = encode_metrics(
+            self._create_metrics_data_multiple_data_points(5)
+        )
+        self.assertEqual(_count_data_points(request), 5)
+        self.assertEqual(_count_data_points(ExportMetricsServiceRequest()), 0)
+
+    @mocketize
+    def test_export_records_per_batch_data_point_count(self):
+        Entry.register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            Response(status=200),
+            Response(status=200),
+        )
+
+        # 3 data points, batch size of 2: requires 2 batches
+        metrics_data = self._create_metrics_data_multiple_data_points(3)
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT, max_export_batch_size=2
+        )
+
+        with patch.object(
+            exporter._metrics,
+            "export_operation",
+            wraps=exporter._metrics.export_operation,
+        ) as mock_op:
+            result = exporter.export(metrics_data)
+
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        # Each batch reports only its own data points (sums to 3), rather
+        # than the total (3) being reported for every batch (== 6).
+        counts = [call.args[0] for call in mock_op.call_args_list]
+        self.assertEqual(counts, [2, 1])
+
+    @mocketize
+    def test_export_records_total_data_point_count_single_batch(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+
+        metrics_data = self._create_metrics_data_multiple_data_points(2)
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT)
+
+        with patch.object(
+            exporter._metrics,
+            "export_operation",
+            wraps=exporter._metrics.export_operation,
+        ) as mock_op:
+            result = exporter.export(metrics_data)
+
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        counts = [call.args[0] for call in mock_op.call_args_list]
+        self.assertEqual(counts, [2])
 
     def test_aggregation_temporality(self):
         cumulative_all = {

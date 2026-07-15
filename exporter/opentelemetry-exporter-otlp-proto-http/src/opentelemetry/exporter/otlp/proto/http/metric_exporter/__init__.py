@@ -232,9 +232,10 @@ class OTLPMetricExporter(MetricExporter):
     def _export_batch(
         self,
         export_request: ExportMetricsServiceRequest,
-        num_items: int,
     ) -> MetricExportResult:
-        with self._metrics.export_operation(num_items) as result:
+        with self._metrics.export_operation(
+            _count_data_points(export_request)
+        ) as result:
             export_result = self._client.export(
                 export_request.SerializeToString()
             )
@@ -258,12 +259,6 @@ class OTLPMetricExporter(MetricExporter):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return MetricExportResult.FAILURE
 
-        num_items = 0
-        for resource_metrics in metrics_data.resource_metrics:
-            for scope_metrics in resource_metrics.scope_metrics:
-                for metric in scope_metrics.metrics:
-                    num_items += len(metric.data.data_points)
-
         try:
             export_request = encode_metrics(metrics_data)
         # pylint: disable-next=broad-exception-caught
@@ -273,12 +268,12 @@ class OTLPMetricExporter(MetricExporter):
 
         # If no batch size configured, export as single batch with retries as configured
         if self._max_export_batch_size is None:
-            return self._export_batch(export_request, num_items)
+            return self._export_batch(export_request)
 
         for batch in _split_metrics_data(
             export_request, self._max_export_batch_size
         ):
-            export_result = self._export_batch(batch, num_items)
+            export_result = self._export_batch(batch)
             if export_result != MetricExportResult.SUCCESS:
                 return MetricExportResult.FAILURE
 
@@ -307,6 +302,18 @@ class OTLPMetricExporter(MetricExporter):
             .lower()
             == "true",
         )
+
+
+def _count_data_points(export_request: ExportMetricsServiceRequest) -> int:
+    """Count the number of data points in an encoded metrics export request."""
+    count = 0
+    for resource_metrics in export_request.resource_metrics:
+        for scope_metrics in resource_metrics.scope_metrics:
+            for metric in scope_metrics.metrics:
+                field_name = metric.WhichOneof("data")
+                if field_name:
+                    count += len(getattr(metric, field_name).data_points)
+    return count
 
 
 def _split_metrics_data(
