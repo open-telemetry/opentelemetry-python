@@ -18,7 +18,7 @@ class EnvSubstitutionError(Exception):
     """
 
 
-def substitute_env_vars(configuration_value: str) -> str:
+def substitute_env_vars(text: str) -> str:
     """Substitute environment variables within a configuration value.
 
     A configuration value is a single value from the parsed configuration file
@@ -42,8 +42,7 @@ def substitute_env_vars(configuration_value: str) -> str:
     - $$: Escape sequence for literal $.
 
     Args:
-        configuration_value: A configuration value with potential ${VAR}
-            placeholders.
+        text: A configuration value with potential ${VAR} placeholders.
 
     Returns:
         The configuration value with environment variables substituted.
@@ -93,4 +92,4 @@ def substitute_env_vars(configuration_value: str) -> str:
         # the loader, which re-resolves the node tag after substitution.
         return value
 
-    return re.sub(pattern, replace_var, configuration_value)
+    return re.sub(pattern, replace_var, text)
