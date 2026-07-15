@@ -93,7 +93,8 @@ from opentelemetry.sdk.util.instrumentation import (
 )
 from opentelemetry.test.metrictestutil import _generate_sum
 from opentelemetry.test.mock_test_classes import IterEntryPoint
-from .. import _mock_clock
+
+from .. import _mock_clock  # noqa: TID252
 
 _TEST_ENDPOINT = "http://localhost:4318/v1/metrics"
 _USER_AGENT = "OTel-OTLP-Exporter-Python/" + __version__
