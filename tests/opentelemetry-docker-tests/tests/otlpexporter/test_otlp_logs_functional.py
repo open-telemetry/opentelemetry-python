@@ -31,7 +31,7 @@ from opentelemetry.sdk._logs.export import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
-from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, new_otlp_file
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, make_otlp_file
 
 LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
     ExporterConfig(
@@ -81,7 +81,7 @@ LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
     ExporterConfig(
         id="file",
         exporter_class=FileLogExporter,
-        lazy_kwargs=lambda: {"path": new_otlp_file("logs")},
+        lazy_kwargs={"path": lambda: make_otlp_file("logs")},
     ),
 ]
 

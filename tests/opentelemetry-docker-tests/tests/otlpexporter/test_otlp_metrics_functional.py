@@ -35,7 +35,7 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
-from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, new_otlp_file
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, make_otlp_file
 
 METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
     ExporterConfig(
@@ -85,7 +85,7 @@ METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
     ExporterConfig(
         id="file",
         exporter_class=FileMetricExporter,
-        lazy_kwargs=lambda: {"path": new_otlp_file("metrics")},
+        lazy_kwargs={"path": lambda: make_otlp_file("metrics")},
     ),
 ]
 

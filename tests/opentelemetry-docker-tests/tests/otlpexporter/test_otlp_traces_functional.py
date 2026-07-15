@@ -27,7 +27,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 from opentelemetry.trace import Link, SpanContext, StatusCode, TraceFlags
 
-from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, new_otlp_file
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, make_otlp_file
 
 TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
     ExporterConfig(
@@ -77,7 +77,7 @@ TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
     ExporterConfig(
         id="file",
         exporter_class=FileSpanExporter,
-        lazy_kwargs=lambda: {"path": new_otlp_file("traces")},
+        lazy_kwargs={"path": lambda: make_otlp_file("traces")},
     ),
 ]
 

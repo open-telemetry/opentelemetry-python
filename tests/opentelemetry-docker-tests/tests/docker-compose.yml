@@ -10,7 +10,7 @@ services:
     command: ["--config=/etc/otelcol/collector-config.yaml"]
     volumes:
       - ./collector-config.yaml:/etc/otelcol/collector-config.yaml
-      - ./otlp-file-data:/otlp-file-data
+      - ./otlpexporter/otlp-file-data:/otlp-file-data
     ports:
       - "4317:4317"
       - "4318:4318"

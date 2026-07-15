@@ -17,8 +17,8 @@ CUSTOM_HEADERS: dict[str, str] = {
 }
 
 # Directory bind-mounted into the collector container (see docker-compose.yml).
-# Resolved relative to the compose file, which sits one level above this package.
-OTLP_FILE_DATA_DIR = Path(__file__).parent.parent / "otlp-file-data"
+# Created at runtime (gitignored) and resolved relative to this package.
+OTLP_FILE_DATA_DIR = Path(__file__).parent / "otlp-file-data"
 
 
 @dataclass
@@ -26,14 +26,14 @@ class ExporterConfig(Generic[ExporterT]):
     id: str
     exporter_class: type[ExporterT]
     kwargs: dict[str, Any] = field(default_factory=dict)
-    lazy_kwargs: Callable[[], dict[str, Any]] | None = None
+    lazy_kwargs: dict[str, Callable[[], Any]] = field(default_factory=dict)
 
     def build(self) -> ExporterT:
-        extra = self.lazy_kwargs() if self.lazy_kwargs is not None else {}
+        extra = {key: factory() for key, factory in self.lazy_kwargs.items()}
         return self.exporter_class(**self.kwargs, **extra)
 
 
-def new_otlp_file(signal: str) -> str:
+def make_otlp_file(signal: str) -> str:
     """Return a unique .jsonl path under the collector-mounted directory.
 
     ``signal`` is one of ``"traces"``, ``"metrics"``, ``"logs"`` and selects the
