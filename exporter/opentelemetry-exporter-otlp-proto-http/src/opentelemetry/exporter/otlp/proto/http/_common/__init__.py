@@ -167,7 +167,7 @@ def _resolve_compression(compression_env_var: str) -> _http.Compression:
 
 
 def _build_transport(
-    certificate_file: str | bool | None,
+    certificate_file: str | None,
     client_key_file: str | None,
     client_certificate_file: str | None,
     certificate_env_var: str,
@@ -175,15 +175,12 @@ def _build_transport(
     client_certificate_env_var: str,
     session: requests.Session | None,
 ) -> BaseHTTPTransport:
-    verify: bool | str
-    if certificate_file is None:
-        verify = (
-            os.environ.get(certificate_env_var)
-            or os.environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE)
-            or True
-        )
-    else:
-        verify = certificate_file
+    verify: bool | str = (
+        certificate_file
+        or os.environ.get(certificate_env_var)
+        or os.environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE)
+        or True
+    )
     client_key_file = (
         client_key_file
         or os.environ.get(client_key_env_var)

@@ -451,18 +451,6 @@ class TestBuildTransport(unittest.TestCase):
                 True,
                 "cert2.pem",
             ),
-            (
-                "explicit_false_disables_verification_over_env",
-                {
-                    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "env-cert.pem",
-                    OTEL_EXPORTER_OTLP_CERTIFICATE: "general-cert.pem",
-                },
-                False,
-                None,
-                None,
-                False,
-                None,
-            ),
         ]
         for (
             label,

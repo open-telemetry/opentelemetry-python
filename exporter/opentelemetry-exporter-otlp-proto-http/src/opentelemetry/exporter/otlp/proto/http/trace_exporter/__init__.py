@@ -66,7 +66,7 @@ class OTLPSpanExporter(SpanExporter):
     def __init__(
         self,
         endpoint: str | None = None,
-        certificate_file: str | bool | None = None,
+        certificate_file: str | None = None,
         client_key_file: str | None = None,
         client_certificate_file: str | None = None,
         headers: Mapping[str, str] | None = None,
@@ -96,7 +96,7 @@ class OTLPSpanExporter(SpanExporter):
     def __init__(
         self,
         endpoint: str | None = None,
-        certificate_file: str | bool | None = None,
+        certificate_file: str | None = None,
         client_key_file: str | None = None,
         client_certificate_file: str | None = None,
         headers: Mapping[str, str] | None = None,

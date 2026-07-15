@@ -9,13 +9,14 @@ from unittest.mock import Mock, patch
 def _mock_clock(
     shutdown_event: Mock | None = None,
 ) -> Iterator[Callable[[float], None]]:
-    _now = [0.0]
+    _now = 0.0
 
     def advance(delta: float) -> None:
-        _now[0] += delta
+        nonlocal _now
+        _now += delta
 
     def get_time() -> float:
-        return _now[0]
+        return _now
 
     if shutdown_event is not None:
 
