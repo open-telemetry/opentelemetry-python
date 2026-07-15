@@ -29,6 +29,28 @@ def write_pyproject(target, dependencies):
     )
 
 
+def write_versioned_project(target, name, version):
+    version_file = target / "src" / "opentelemetry" / "version" / "__init__.py"
+    version_file.parent.mkdir(parents=True)
+    version_file.write_text(
+        f'__version__ = "{version}"\n',
+        encoding="utf-8",
+    )
+    target.mkdir(exist_ok=True)
+    target.joinpath("pyproject.toml").write_text(
+        dedent(
+            f"""
+            [project]
+            name = "{name}"
+
+            [tool.hatch.version]
+            path = "src/opentelemetry/version/__init__.py"
+            """
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_update_dependencies_matches_exact_package_name(tmp_path):
     eachdist = load_eachdist()
     target = tmp_path / "target"
@@ -68,3 +90,38 @@ def test_update_patch_dependencies_matches_exact_package_name(tmp_path):
     pyproject = target.joinpath("pyproject.toml").read_text(encoding="utf-8")
     assert '"opentelemetry-proto == 1.43.1",' in pyproject
     assert '"opentelemetry-proto-json == 1.43.0",' in pyproject
+
+
+def test_update_version_files_matches_exact_project_name(tmp_path):
+    eachdist = load_eachdist()
+    proto = tmp_path / "opentelemetry-proto"
+    proto_json = tmp_path / "opentelemetry-proto-json"
+    write_versioned_project(
+        proto,
+        "opentelemetry-proto",
+        "1.44.0.dev",
+    )
+    write_versioned_project(
+        proto_json,
+        "opentelemetry-proto-json",
+        "0.65b0.dev",
+    )
+
+    eachdist.update_version_files(
+        [proto, proto_json],
+        "1.45.0.dev",
+        ["opentelemetry-proto"],
+    )
+
+    assert (
+        proto.joinpath("src/opentelemetry/version/__init__.py").read_text(
+            encoding="utf-8"
+        )
+        == '__version__ = "1.45.0.dev"\n'
+    )
+    assert (
+        proto_json.joinpath("src/opentelemetry/version/__init__.py").read_text(
+            encoding="utf-8"
+        )
+        == '__version__ = "0.65b0.dev"\n'
+    )

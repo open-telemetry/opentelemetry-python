@@ -561,12 +561,15 @@ def find(name, path):
 
 
 def filter_packages(targets, packages):
+    package_names = set(packages)
     filtered_packages = []
     for target in targets:
-        for pkg in packages:
-            if pkg in str(target):
-                filtered_packages.append(target)
-                break
+        pyproject = target.joinpath("pyproject.toml")
+        if not pyproject.exists():
+            continue
+        target_name = load(pyproject).get("project", {}).get("name")
+        if target_name in package_names:
+            filtered_packages.append(target)
     return filtered_packages
 
 
