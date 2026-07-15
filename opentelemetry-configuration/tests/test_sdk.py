@@ -134,22 +134,22 @@ class TestConfigureSdkLogLevel(unittest.TestCase):
     def tearDown(self):
         logging.getLogger("opentelemetry").setLevel(self._original_level)
 
-    @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    @patch("opentelemetry.configuration._sdk.configure_propagator")
+    @patch("opentelemetry.configuration._sdk.configure_logger_provider")
+    @patch("opentelemetry.configuration._sdk.configure_meter_provider")
+    @patch("opentelemetry.configuration._sdk.configure_tracer_provider")
+    @patch("opentelemetry.configuration._sdk.create_resource")
     def test_sets_opentelemetry_logger_level(self, *_mocks):
         configure_sdk(_config(log_level=SeverityNumber.warn))
         self.assertEqual(
             logging.getLogger("opentelemetry").level, logging.WARNING
         )
 
-    @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    @patch("opentelemetry.configuration._sdk.configure_propagator")
+    @patch("opentelemetry.configuration._sdk.configure_logger_provider")
+    @patch("opentelemetry.configuration._sdk.configure_meter_provider")
+    @patch("opentelemetry.configuration._sdk.configure_tracer_provider")
+    @patch("opentelemetry.configuration._sdk.create_resource")
     def test_absent_log_level_leaves_logger_unchanged(self, *_mocks):
         logging.getLogger("opentelemetry").setLevel(logging.ERROR)
         configure_sdk(_config())
@@ -157,11 +157,11 @@ class TestConfigureSdkLogLevel(unittest.TestCase):
             logging.getLogger("opentelemetry").level, logging.ERROR
         )
 
-    @patch("opentelemetry.sdk._configuration._sdk.configure_propagator")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_logger_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_meter_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.configure_tracer_provider")
-    @patch("opentelemetry.sdk._configuration._sdk.create_resource")
+    @patch("opentelemetry.configuration._sdk.configure_propagator")
+    @patch("opentelemetry.configuration._sdk.configure_logger_provider")
+    @patch("opentelemetry.configuration._sdk.configure_meter_provider")
+    @patch("opentelemetry.configuration._sdk.configure_tracer_provider")
+    @patch("opentelemetry.configuration._sdk.create_resource")
     def test_severity_number_variants_map_correctly(self, *_mocks):
         cases = [
             (SeverityNumber.trace, logging.DEBUG),
