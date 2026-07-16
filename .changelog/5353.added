@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: document that Python-implementation extensions (`OTEL_PYTHON_*` variables) are bypassed when `OTEL_CONFIG_FILE` is set. The env-var initialisation path is skipped entirely in favour of the declarative file; honouring these alongside a config file is tracked as a follow-up.
