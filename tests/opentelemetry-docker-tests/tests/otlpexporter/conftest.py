@@ -9,18 +9,6 @@ import pytest
 
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
-from . import OTLP_FILE_DATA_DIR
-
-
-@pytest.fixture(scope="session", autouse=True)
-def clean_otlp_file_data() -> None:
-    """Remove stale .jsonl files so the collector doesn't replay old runs."""
-    for signal in ("traces", "metrics", "logs"):
-        directory = OTLP_FILE_DATA_DIR / signal
-        directory.mkdir(parents=True, exist_ok=True)
-        for stale in directory.glob("*.jsonl"):
-            stale.unlink()
-
 
 @pytest.fixture(scope="class")
 def server() -> Iterator[OtlpProtoTestServer]:
