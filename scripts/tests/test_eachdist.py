@@ -2,8 +2,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import importlib.util
+from configparser import ConfigParser
 from pathlib import Path
 from textwrap import dedent
+
+from toml import load
+
+PACKAGE_ROOT_GLOBS = (
+    "opentelemetry-*/pyproject.toml",
+    "exporter/opentelemetry-*/pyproject.toml",
+    "propagator/opentelemetry-*/pyproject.toml",
+    "shim/opentelemetry-*/pyproject.toml",
+    "tests/opentelemetry-*/pyproject.toml",
+    "codegen/opentelemetry-*/pyproject.toml",
+)
+PRIVATE_PACKAGE_CLASSIFIER = "Private :: Do Not Upload"
 
 
 def load_eachdist():
@@ -48,6 +61,41 @@ def write_versioned_project(target, name, version):
             """
         ),
         encoding="utf-8",
+    )
+
+
+def project_root():
+    return Path(__file__).parents[2]
+
+
+def package_name(pyproject):
+    project = load(pyproject)["project"]
+    if PRIVATE_PACKAGE_CLASSIFIER in project.get("classifiers", ()):
+        return None
+    return project["name"]
+
+
+def test_all_release_packages_are_listed_in_eachdist():
+    root = project_root()
+    releasable_package_names = {
+        name
+        for package_glob in PACKAGE_ROOT_GLOBS
+        for pyproject in root.glob(package_glob)
+        if (name := package_name(pyproject)) is not None
+    }
+
+    config = ConfigParser()
+    config.read(root / "eachdist.ini")
+    eachdist_package_names = set(config["stable"]["packages"].split()) | set(
+        config["prerelease"]["packages"].split()
+    )
+
+    missing_package_names = sorted(
+        releasable_package_names - eachdist_package_names
+    )
+    assert not missing_package_names, (
+        "packages missing from eachdist.ini: "
+        f"{', '.join(missing_package_names)}"
     )
 
 
