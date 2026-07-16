@@ -26,6 +26,12 @@ from opentelemetry.configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
 )
 from opentelemetry.configuration.models import (
+    ExperimentalMeterConfig as MeterConfigConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalMeterConfigurator as MeterConfiguratorConfig,
+)
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
 )
 from opentelemetry.configuration.models import (
@@ -76,6 +82,10 @@ from opentelemetry.sdk.metrics import (
     UpDownCounter,
     _Gauge,
 )
+from opentelemetry.sdk.metrics._internal import (
+    _MeterConfig,
+    _RuleBasedMeterConfigurator,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     ConsoleMetricExporter,
@@ -94,6 +104,7 @@ from opentelemetry.sdk.metrics.view import (
     View,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
 _logger = logging.getLogger(__name__)
 
@@ -567,6 +578,39 @@ def _create_exemplar_filter(
     )
 
 
+def _to_meter_config(config: MeterConfigConfig | None) -> _MeterConfig:
+    """Map an experimental per-meter config to an SDK ``_MeterConfig``.
+
+    Only ``enabled`` is honored — it is the sole field the SDK
+    ``_MeterConfig`` exposes. An absent ``enabled`` leaves the meter enabled.
+    """
+    if config is None or config.enabled is None:
+        return _MeterConfig.default()
+    return _MeterConfig(is_enabled=config.enabled)
+
+
+def _create_meter_configurator(
+    config: MeterConfiguratorConfig,
+) -> _RuleBasedMeterConfigurator:
+    """Build a rule-based meter configurator from experimental config.
+
+    Each entry in ``meters`` maps an instrumentation-scope name glob to a
+    per-meter config; ``default_config`` applies to scopes matching no glob.
+    Rules are evaluated in order, so earlier entries take precedence.
+    """
+    rules = [
+        (
+            _scope_name_matches_glob(matcher.name),
+            _to_meter_config(matcher.config),
+        )
+        for matcher in (config.meters or [])
+    ]
+    return _RuleBasedMeterConfigurator(
+        rules=rules,
+        default_config=_to_meter_config(config.default_config),
+    )
+
+
 def create_meter_provider(
     config: MeterProviderConfig | None,
     resource: Resource | None = None,
@@ -600,11 +644,19 @@ def create_meter_provider(
             for view_config in config.views:
                 views.append(_create_view(view_config))
 
+    meter_configurator = (
+        _create_meter_configurator(config.meter_configurator_development)
+        if config is not None
+        and config.meter_configurator_development is not None
+        else None
+    )
+
     return MeterProvider(
         resource=resource,
         metric_readers=readers,
         exemplar_filter=exemplar_filter,  # type: ignore[arg-type]
         views=views,
+        _meter_configurator=meter_configurator,
     )
 
 
