@@ -293,6 +293,21 @@ class ResourceDetector(abc.ABC):
         """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly"""
         raise NotImplementedError()
 
+    # pylint: disable-next=no-self-use
+    def is_process_dependent(self) -> bool:
+        """Return whether this detector depends on the current process identity.
+
+        Process dependent detectors may return resource attributes that become
+        stale after a process identity change, such as :func:`os.fork`.
+        Detectors returning ``True`` should be re-run after such changes so the
+        resulting :class:`Resource` describes the current process.
+
+        Returns:
+            ``True`` if this detector should be re-run after process identity
+            changes otherwise ``False``.
+        """
+        return False
+
 
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
@@ -338,6 +353,10 @@ class ProcessResourceDetector(ResourceDetector):
     ) -> None:
         super().__init__(raise_on_error=raise_on_error)
         self._include_command_args = include_command_args
+
+    # pylint: disable=no-self-use
+    def is_process_dependent(self) -> bool:
+        return True
 
     def detect(self) -> "Resource":
         _runtime_version = ".".join(
@@ -491,7 +510,18 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
     UUID for service.instance.id to uniquely identify each service instance.
     The ID is shared across all detector instances within the same process and
     regenerated automatically when the process PID changes (e.g. after a fork).
+
+    Note: because this detector is process dependent, providers refresh it
+    automatically after a fork and merge the newly detected value on top of
+    the existing resource. This means that if a user explicitly sets
+    `service.instance.id` (e.g. via OTEL_RESOURCE_ATTRIBUTES or
+    Resource.create(attributes=...)), that value will be overwritten with a
+    newly generated UUID the next time the process forks. This differs from
+    Resource.create(), which does preserve user supplied overrides.
     """
+
+    def is_process_dependent(self) -> bool:
+        return True
 
     def detect(self) -> "Resource":
         # pylint: disable-next=global-statement
@@ -575,6 +605,17 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
                 name,
             )
     return detectors
+
+
+def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
+    return get_aggregated_resources(
+        [
+            detector
+            for detector in _build_resource_detectors()
+            if detector.is_process_dependent()
+        ],
+        Resource.get_empty(),
+    )
 
 
 def get_aggregated_resources(

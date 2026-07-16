@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add `force_flush` method to `LogRecordExporter` ABC

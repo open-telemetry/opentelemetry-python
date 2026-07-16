@@ -35,3 +35,5 @@ class ProfileFrameTypeValues(Enum):
     """[Go](https://wikipedia.org/wiki/Go_(programming_language)),."""
     RUST = "rust"
     """[Rust](https://wikipedia.org/wiki/Rust_(programming_language))."""
+    LUAJIT = "luajit"
+    """[LuaJIT](https://en.wikipedia.org/wiki/LuaJIT)."""
