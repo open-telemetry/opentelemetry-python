@@ -14,6 +14,28 @@ The source files of these examples are available :scm_web:`here <docs/examples/l
    ``opentelemetry-instrumentation-logging`` package in the contrib repo
    and is deprecated in ``opentelemetry-sdk``.
 
+.. warning::
+   If you configure logging using ``logging.config.dictConfig``, be aware
+   that it may clear existing handlers on the root logger, including the
+   OTel handler. To avoid losing telemetry, save and restore the root
+   logger handlers around the ``dictConfig`` call:
+
+   .. code-block:: python
+
+      import logging
+      import logging.config
+
+      # Save OTel handlers before calling dictConfig
+      otel_handlers = logging.getLogger().handlers[:]
+
+      logging.config.dictConfig({
+          "version": 1,
+          "root": {"level": "DEBUG"},
+      })
+
+      # Re-apply saved handlers
+      for handler in otel_handlers:
+          logging.getLogger().addHandler(handler)
 
 Installation
 ------------
