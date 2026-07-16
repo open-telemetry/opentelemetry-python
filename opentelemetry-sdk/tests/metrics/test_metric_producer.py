@@ -229,6 +229,7 @@ class TestMetricProducer(TestCase):
             )
         )
 
+    # pylint: disable-next=no-self-use
     def test_producer_receives_remaining_timeout_budget(self):
         producer = _FakeProducer()
         reader = InMemoryMetricReader(metric_producers=[producer])
