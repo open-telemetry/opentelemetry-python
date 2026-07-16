@@ -1,0 +1,1 @@
+docs: warn about `dictConfig` clearing OTel handlers in logs example
