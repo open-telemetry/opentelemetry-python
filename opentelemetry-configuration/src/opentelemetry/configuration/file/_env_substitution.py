@@ -7,15 +7,6 @@ import os
 import re
 
 
-class EnvSubstitutionError(Exception):
-    """Error raised when environment variable substitution fails.
-
-    Retained as part of the public API for backward compatibility. An unset
-    variable without a default is no longer an error (it is replaced with an
-    empty value per the configuration spec), so this is not currently raised.
-    """
-
-
 def substitute_env_vars(text: str) -> str:
     """Substitute environment variables in configuration text.
 

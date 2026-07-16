@@ -1,1 +1,1 @@
-`opentelemetry-configuration`: declarative config environment variable substitution now replaces an unset variable that has no default with an empty value instead of raising an error, per the configuration spec.
+`opentelemetry-configuration`: declarative config environment variable substitution now replaces an unset variable that has no default with an empty value instead of raising an error, per the configuration spec. Resource attributes whose value resolves to null (an unset `${VAR}` with no default) are skipped with a warning instead of being inserted as a null value.
