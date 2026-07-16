@@ -26,8 +26,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-api == 1.44.0.dev",
-  "opentelemetry-sdk == 1.44.0.dev",
+  "opentelemetry-api == 1.44.0",
+  "opentelemetry-sdk == 1.44.0",
   "pyyaml >= 5.4",
   "jsonschema >= 4.0",
 ]

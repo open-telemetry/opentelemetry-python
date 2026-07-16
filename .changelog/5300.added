@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: add log record limits environment variables `OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT` and `OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT`

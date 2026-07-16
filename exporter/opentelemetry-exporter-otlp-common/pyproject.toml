@@ -26,12 +26,12 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "opentelemetry-sdk ~= 1.44.0.dev",
+  "opentelemetry-sdk ~= 1.44.0",
 ]
 
 [project.optional-dependencies]
 http = [
-  "opentelemetry-exporter-http-transport == 0.65b0.dev",
+  "opentelemetry-exporter-http-transport == 0.65b0",
 ]
 
 [project.urls]
