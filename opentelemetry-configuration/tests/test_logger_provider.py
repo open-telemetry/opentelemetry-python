@@ -26,6 +26,15 @@ from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
 from opentelemetry.configuration.models import (
+    ExperimentalLoggerConfig as LoggerConfigConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalLoggerConfigurator as LoggerConfiguratorConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalLoggerMatcherAndConfig as LoggerMatcherAndConfig,
+)
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
 from opentelemetry.configuration.models import (
@@ -42,6 +51,7 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     NameStringValuePair,
+    SeverityNumber,
 )
 from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -59,6 +69,7 @@ from opentelemetry.sdk._logs._internal.export import (
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class TestCreateLoggerProviderBasic(unittest.TestCase):
@@ -490,6 +501,104 @@ class TestLogRecordLimits(unittest.TestCase):
         ) as mock_logger:
             create_logger_provider(config)
             mock_logger.warning.assert_not_called()
+
+
+# Configurator tests access the SDK LoggerProvider private
+# _apply_logger_configurator to assert the wired config takes effect.
+# pylint: disable=protected-access
+class TestLoggerConfigurator(unittest.TestCase):
+    @staticmethod
+    def _enabled(provider, name):
+        return provider._apply_logger_configurator(
+            InstrumentationScope(name)
+        ).is_enabled
+
+    def test_no_configurator_leaves_loggers_enabled(self):
+        provider = create_logger_provider(LoggerProviderConfig(processors=[]))
+        self.assertTrue(self._enabled(provider, "any.scope"))
+
+    def test_matching_glob_disables_logger(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            logger_configurator_development=LoggerConfiguratorConfig(
+                default_config=LoggerConfigConfig(enabled=True),
+                loggers=[
+                    LoggerMatcherAndConfig(
+                        name="noisy.*",
+                        config=LoggerConfigConfig(enabled=False),
+                    )
+                ],
+            ),
+        )
+        provider = create_logger_provider(config)
+        self.assertFalse(self._enabled(provider, "noisy.http"))
+        self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_default_config_applies_to_unmatched_scopes(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            logger_configurator_development=LoggerConfiguratorConfig(
+                default_config=LoggerConfigConfig(enabled=False),
+                loggers=[
+                    LoggerMatcherAndConfig(
+                        name="keep.*",
+                        config=LoggerConfigConfig(enabled=True),
+                    )
+                ],
+            ),
+        )
+        provider = create_logger_provider(config)
+        self.assertTrue(self._enabled(provider, "keep.me"))
+        self.assertFalse(self._enabled(provider, "other"))
+
+    def test_first_matching_rule_wins(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            logger_configurator_development=LoggerConfiguratorConfig(
+                loggers=[
+                    LoggerMatcherAndConfig(
+                        name="a.*",
+                        config=LoggerConfigConfig(enabled=False),
+                    ),
+                    LoggerMatcherAndConfig(
+                        name="a.b",
+                        config=LoggerConfigConfig(enabled=True),
+                    ),
+                ],
+            ),
+        )
+        provider = create_logger_provider(config)
+        self.assertFalse(self._enabled(provider, "a.b"))
+
+    def test_absent_enabled_defaults_to_enabled(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            logger_configurator_development=LoggerConfiguratorConfig(
+                default_config=LoggerConfigConfig(),
+            ),
+        )
+        provider = create_logger_provider(config)
+        self.assertTrue(self._enabled(provider, "any.scope"))
+
+    def test_unsupported_fields_log_warning(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            logger_configurator_development=LoggerConfiguratorConfig(
+                default_config=LoggerConfigConfig(
+                    enabled=True,
+                    minimum_severity=SeverityNumber.warn,
+                ),
+            ),
+        )
+        with self.assertLogs(
+            "opentelemetry.configuration._logger_provider",
+            level="WARNING",
+        ) as cm:
+            create_logger_provider(config)
+        self.assertTrue(
+            any("minimum_severity" in msg for msg in cm.output),
+            "Expected warning about unsupported minimum_severity/trace_based",
+        )
 
 
 if __name__ == "__main__":
