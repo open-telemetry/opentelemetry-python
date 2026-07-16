@@ -41,6 +41,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
+    _resolve_endpoint_to_signal,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
@@ -147,12 +148,17 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
                 If it is set and the number of data points exceeds the max, the request will be split.
         """
         self._shutdown_in_progress = threading.Event()
-        self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
-            _append_metrics_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
-        )
+        if endpoint is not None:
+            self._endpoint = _resolve_endpoint_to_signal(
+                endpoint, DEFAULT_METRICS_EXPORT_PATH
+            )
+        else:
+            self._endpoint = environ.get(
+                OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+                _append_metrics_path(
+                    environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+                ),
+            )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
