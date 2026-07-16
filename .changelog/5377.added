@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: add `record_min_max` option to `ExponentialBucketHistogramAggregation`, matching the option already available on `ExplicitBucketHistogramAggregation` and required by the specification
