@@ -27,12 +27,12 @@ classifiers = [
 ]
 dependencies = [
   "opentelemetry-api ~= 1.15",
-  "opentelemetry-sdk ~= 1.44.0.dev",
+  "opentelemetry-sdk ~= 1.45.0.dev",
 ]
 
 [project.optional-dependencies]
 http = [
-  "opentelemetry-exporter-http-transport == 0.65b0.dev",
+  "opentelemetry-exporter-http-transport == 0.66b0.dev",
 ]
 
 [project.urls]

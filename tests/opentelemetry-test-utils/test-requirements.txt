@@ -17,3 +17,4 @@ wrapt==1.16.0
 ./exporter/opentelemetry-exporter-otlp-proto-common ; platform_python_implementation != 'PyPy'
 ./exporter/opentelemetry-exporter-otlp-proto-grpc ; platform_python_implementation != 'PyPy'
 ./exporter/opentelemetry-exporter-otlp-common ; platform_python_implementation != 'PyPy'
+./exporter/opentelemetry-exporter-otlp-proto-http ; platform_python_implementation != 'PyPy'

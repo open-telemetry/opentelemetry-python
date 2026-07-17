@@ -561,12 +561,15 @@ def find(name, path):
 
 
 def filter_packages(targets, packages):
+    package_names = set(packages)
     filtered_packages = []
     for target in targets:
-        for pkg in packages:
-            if pkg in str(target):
-                filtered_packages.append(target)
-                break
+        pyproject = target.joinpath("pyproject.toml")
+        if not pyproject.exists():
+            continue
+        target_name = load(pyproject).get("project", {}).get("name")
+        if target_name in package_names:
+            filtered_packages.append(target)
     return filtered_packages
 
 
@@ -601,7 +604,7 @@ def update_dependencies(targets, version, packages):
     operators_pattern = "|".join(re.escape(op) for op in operators)
 
     for pkg in packages:
-        search = rf"({basename(pkg)}[^,]*)({operators_pattern})(.*\.dev)"
+        search = rf"({basename(pkg)}(?:\[[^\]]+\])?\s*)({operators_pattern})(.*\.dev)"
         replace = r"\1\2 " + version
         update_files(
             targets,
@@ -618,7 +621,10 @@ def update_patch_dependencies(targets, version, prev_version, packages):
     operators_pattern = "|".join(re.escape(op) for op in operators)
 
     for pkg in packages:
-        search = rf"({basename(pkg)}[^,]*?)(\s?({operators_pattern})\s?)(.*{prev_version})"
+        search = (
+            rf"({basename(pkg)}(?:\[[^\]]+\])?\s*)"
+            rf"(\s?({operators_pattern})\s?)(.*{re.escape(prev_version)})"
+        )
         replace = r"\g<1>\g<2>" + version
         print(f"{search=}\t{replace=}\t{pkg=}")
         update_files(
