@@ -26,11 +26,11 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "opentelemetry-sdk ~= 1.44.0.dev",
-  "opentelemetry-proto-json == 0.65b0.dev",
-  "opentelemetry-exporter-otlp-common == 0.65b0.dev",
-  "opentelemetry-exporter-otlp-json-common == 0.65b0.dev",
-  "opentelemetry-exporter-http-transport[urllib3] == 0.65b0.dev",
+  "opentelemetry-sdk ~= 1.45.0.dev",
+  "opentelemetry-proto-json == 0.66b0.dev",
+  "opentelemetry-exporter-otlp-common == 0.66b0.dev",
+  "opentelemetry-exporter-otlp-json-common == 0.66b0.dev",
+  "opentelemetry-exporter-http-transport[urllib3] == 0.66b0.dev",
 ]
 
 [project.entry-points.opentelemetry_traces_exporter]
