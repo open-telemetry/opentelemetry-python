@@ -1,3 +1,8 @@
+Flask + uWSGI Example
+=====================
+
+The source files of this example are available :scm_web:`here <docs/examples/fork-process-model/flask-uwsgi/>`.
+
 Installation
 ------------
 .. code-block:: sh
