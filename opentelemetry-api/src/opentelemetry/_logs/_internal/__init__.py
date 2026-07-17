@@ -175,7 +175,8 @@ class Logger(ABC):
     ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
-    def enabled(  # pylint: disable=no-self-use
+    @abstractmethod
+    def enabled(
         self,
         *,
         context: Context | None = None,
@@ -190,7 +191,6 @@ class Logger(ABC):
         The returned value may change over time and should be checked each time
         before emitting a log record.
         """
-        return True
 
 
 class NoOpLogger(Logger):
