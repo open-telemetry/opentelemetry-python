@@ -1,1 +1,0 @@
-`opentelemetry-configuration`: declarative configuration moves from `opentelemetry.sdk._configuration` into the new public `opentelemetry-configuration` package (`opentelemetry.configuration` namespace), published experimentally. `opentelemetry-sdk[file-configuration]` continues to work as an alias that installs `opentelemetry-configuration` alongside the SDK.
