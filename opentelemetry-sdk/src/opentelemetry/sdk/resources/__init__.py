@@ -293,6 +293,21 @@ class ResourceDetector(abc.ABC):
         """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly"""
         raise NotImplementedError()
 
+    # pylint: disable-next=no-self-use
+    def is_process_dependent(self) -> bool:
+        """Return whether this detector depends on the current process identity.
+
+        Process dependent detectors may return resource attributes that become
+        stale after a process identity change, such as :func:`os.fork`.
+        Detectors returning ``True`` should be re-run after such changes so the
+        resulting :class:`Resource` describes the current process.
+
+        Returns:
+            ``True`` if this detector should be re-run after process identity
+            changes otherwise ``False``.
+        """
+        return False
+
 
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
@@ -321,7 +336,28 @@ class OTELResourceDetector(ResourceDetector):
 
 
 class ProcessResourceDetector(ResourceDetector):
+    """Detect process resource attributes.
+
+    Args:
+        raise_on_error: Raise errors from detection instead of logging them.
+        include_command_args: Include ``process.command_args`` and
+            ``process.command_line``. These attributes can contain sensitive
+            command-line values, so they are excluded by default.
+    """
+
+    def __init__(
+        self,
+        raise_on_error: bool = False,
+        *,
+        include_command_args: bool = False,
+    ) -> None:
+        super().__init__(raise_on_error=raise_on_error)
+        self._include_command_args = include_command_args
+
     # pylint: disable=no-self-use
+    def is_process_dependent(self) -> bool:
+        return True
+
     def detect(self) -> "Resource":
         _runtime_version = ".".join(
             map(
@@ -340,14 +376,10 @@ class ProcessResourceDetector(ResourceDetector):
         # Use sys.orig_argv, which preserves the original arguments received
         # by the interpreter. This correctly captures ``python -m <module>``
         # invocations where sys.argv is rewritten to the resolved module path
-        # and the ``-m <module>`` information is lost. sys.orig_argv also
-        # aligns with /proc/<pid>/cmdline, which the OTel semantic
-        # conventions reference for these attributes.
-        _process_argv = list(sys.orig_argv)
-        _process_command = _process_argv[0] if _process_argv else ""
-        _process_command_line = " ".join(_process_argv)
-        _process_command_args = _process_argv
-        resource_info = {
+        # and the ``-m <module>`` information is lost. Only read argv[0] by
+        # default because full command arguments are opt-in.
+        _process_command = sys.orig_argv[0] if sys.orig_argv else ""
+        resource_info: dict[str, AttributeValue] = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
             PROCESS_RUNTIME_VERSION: _runtime_version,
@@ -355,9 +387,12 @@ class ProcessResourceDetector(ResourceDetector):
             PROCESS_EXECUTABLE_NAME: _process_executable_name,
             PROCESS_EXECUTABLE_PATH: _process_executable_path,
             PROCESS_COMMAND: _process_command,
-            PROCESS_COMMAND_LINE: _process_command_line,
-            PROCESS_COMMAND_ARGS: _process_command_args,
         }
+        if self._include_command_args:
+            _process_argv = list(sys.orig_argv)
+            resource_info[PROCESS_COMMAND_LINE] = " ".join(_process_argv)
+            resource_info[PROCESS_COMMAND_ARGS] = _process_argv
+
         if hasattr(os, "getppid"):
             # pypy3 does not have getppid()
             resource_info[PROCESS_PARENT_PID] = os.getppid()
@@ -475,7 +510,18 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
     UUID for service.instance.id to uniquely identify each service instance.
     The ID is shared across all detector instances within the same process and
     regenerated automatically when the process PID changes (e.g. after a fork).
+
+    Note: because this detector is process dependent, providers refresh it
+    automatically after a fork and merge the newly detected value on top of
+    the existing resource. This means that if a user explicitly sets
+    `service.instance.id` (e.g. via OTEL_RESOURCE_ATTRIBUTES or
+    Resource.create(attributes=...)), that value will be overwritten with a
+    newly generated UUID the next time the process forks. This differs from
+    Resource.create(), which does preserve user supplied overrides.
     """
+
+    def is_process_dependent(self) -> bool:
+        return True
 
     def detect(self) -> "Resource":
         # pylint: disable-next=global-statement
@@ -559,6 +605,17 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
                 name,
             )
     return detectors
+
+
+def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
+    return get_aggregated_resources(
+        [
+            detector
+            for detector in _build_resource_detectors()
+            if detector.is_process_dependent()
+        ],
+        Resource.get_empty(),
+    )
 
 
 def get_aggregated_resources(

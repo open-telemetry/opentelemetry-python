@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 from collections.abc import Sequence
-from os import PathLike
 from typing import IO, Any, overload
 
 from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
@@ -30,7 +30,7 @@ class FileLogExporter(LogRecordExporter):
     @overload
     def __init__(
         self,
-        path: str | PathLike[str],
+        path: str | os.PathLike[str],
     ) -> None: ...
 
     @overload
@@ -47,7 +47,7 @@ class FileLogExporter(LogRecordExporter):
 
     def __init__(
         self,
-        path: str | PathLike[str] | None = None,
+        path: str | os.PathLike[str] | None = None,
         *,
         stream: IO[str] | None = None,
     ) -> None:
@@ -74,5 +74,5 @@ class FileLogExporter(LogRecordExporter):
         self._exporter.shutdown()
 
     # pylint: disable-next=no-self-use
-    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
         return True
