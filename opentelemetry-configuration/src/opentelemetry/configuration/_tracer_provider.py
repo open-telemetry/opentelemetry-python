@@ -29,6 +29,12 @@ from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
 from opentelemetry.configuration.models import (
+    ExperimentalTracerConfig as TracerConfigConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTracerConfigurator as TracerConfiguratorConfig,
+)
+from opentelemetry.configuration.models import (
     IdGenerator as IdGeneratorConfig,
 )
 from opentelemetry.configuration.models import (
@@ -64,6 +70,8 @@ from opentelemetry.sdk.trace import (
     _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
     SpanLimits,
     TracerProvider,
+    _RuleBasedTracerConfigurator,
+    _TracerConfig,
 )
 from opentelemetry.sdk.trace._sampling_experimental import (
     ComposableSampler,
@@ -98,6 +106,7 @@ from opentelemetry.sdk.trace.sampling import (
     Sampler,
     TraceIdRatioBased,
 )
+from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 from opentelemetry.trace import SpanKind as TraceSpanKind
 
 _logger = logging.getLogger(__name__)
@@ -436,6 +445,39 @@ def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
     )
 
 
+def _to_tracer_config(config: TracerConfigConfig | None) -> _TracerConfig:
+    """Map an experimental per-tracer config to an SDK ``_TracerConfig``.
+
+    Only ``enabled`` is honored — it is the sole field the SDK
+    ``_TracerConfig`` exposes. An absent ``enabled`` leaves the tracer enabled.
+    """
+    if config is None or config.enabled is None:
+        return _TracerConfig.default()
+    return _TracerConfig(is_enabled=config.enabled)
+
+
+def _create_tracer_configurator(
+    config: TracerConfiguratorConfig,
+) -> _RuleBasedTracerConfigurator:
+    """Build a rule-based tracer configurator from experimental config.
+
+    Each entry in ``tracers`` maps an instrumentation-scope name glob to a
+    per-tracer config; ``default_config`` applies to scopes matching no glob.
+    Rules are evaluated in order, so earlier entries take precedence.
+    """
+    rules = [
+        (
+            _scope_name_matches_glob(matcher.name),
+            _to_tracer_config(matcher.config),
+        )
+        for matcher in (config.tracers or [])
+    ]
+    return _RuleBasedTracerConfigurator(
+        rules=rules,
+        default_config=_to_tracer_config(config.default_config),
+    )
+
+
 def create_tracer_provider(
     config: TracerProviderConfig | None,
     resource: Resource | None = None,
@@ -475,11 +517,19 @@ def create_tracer_provider(
         )
     )
 
+    tracer_configurator = (
+        _create_tracer_configurator(config.tracer_configurator_development)
+        if config is not None
+        and config.tracer_configurator_development is not None
+        else None
+    )
+
     provider = TracerProvider(
         resource=resource,
         sampler=sampler,
         span_limits=span_limits,
         id_generator=id_generator,
+        _tracer_configurator=tracer_configurator,
     )
 
     if config is not None:
