@@ -3,7 +3,7 @@
 
 
 from collections.abc import Callable
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 from logging import getLogger
 
 from opentelemetry.metrics import Instrument
@@ -161,11 +161,17 @@ class View:
                 return False
 
         if self._instrument_name is not None:
-            if not fnmatch(instrument.name, self._instrument_name):
+            # Instrument names are treated case-insensitively and are stored
+            # lower-cased by the SDK, so the pattern is lower-cased to match.
+            # fnmatchcase is used instead of fnmatch so it does not rely
+            # on the host platform's filename case sensitivity (normcase).
+            if not fnmatchcase(instrument.name, self._instrument_name.lower()):
                 return False
 
         if self._instrument_unit is not None:
-            if not fnmatch(instrument.unit, self._instrument_unit):
+            # Units are case-sensitive; fnmatchcase keeps matching consistent
+            # across platforms.
+            if not fnmatchcase(instrument.unit, self._instrument_unit):
                 return False
 
         if self._meter_name is not None:
