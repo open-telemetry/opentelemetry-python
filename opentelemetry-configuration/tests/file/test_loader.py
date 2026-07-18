@@ -344,7 +344,10 @@ class TestFileFormatValidation(unittest.TestCase):
             os.unlink(path)
 
     def test_supported_version_is_accepted(self):
-        config = self._load(self._SUPPORTED)
+        with self.assertNoLogs(
+            "opentelemetry.configuration.file._loader", level="WARNING"
+        ):
+            config = self._load(self._SUPPORTED)
         self.assertEqual(config.file_format, self._SUPPORTED)
 
     def test_pre_release_meta_tag_is_accepted(self):
@@ -363,12 +366,6 @@ class TestFileFormatValidation(unittest.TestCase):
         self.assertTrue(
             any("newer minor version" in message for message in logs.output)
         )
-
-    def test_supported_minor_does_not_warn(self):
-        with self.assertNoLogs(
-            "opentelemetry.configuration.file._loader", level="WARNING"
-        ):
-            self._load(self._SUPPORTED)
 
     def test_unsupported_major_is_rejected(self):
         versions = [f"{_SUPPORTED_SCHEMA_MAJOR + 1}.0"]
