@@ -75,7 +75,7 @@ After running the query script, check the MySQL general log contents:
 
 .. code-block:: sh
 
-    docker exec -it books-db tail -f /var/log/general.log
+    docker exec -it books-db tail -f /var/log.general.log
 
 For each instrumented ``SELECT`` call, a query was made and logged with
 a sqlcomment appended. For example:
