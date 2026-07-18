@@ -14,6 +14,10 @@ from opentelemetry.configuration.file import (
     ConfigurationError,
     load_config_file,
 )
+from opentelemetry.configuration.file._loader import (
+    _SUPPORTED_SCHEMA_MAJOR,
+    _SUPPORTED_SCHEMA_MINOR,
+)
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
@@ -325,6 +329,8 @@ tracer_provider:
 class TestFileFormatValidation(unittest.TestCase):
     """Validate the file_format version per the configuration spec."""
 
+    _SUPPORTED = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR}"
+
     @staticmethod
     def _load(file_format: str) -> OpenTelemetryConfiguration:
         with tempfile.NamedTemporaryFile(
@@ -338,26 +344,37 @@ class TestFileFormatValidation(unittest.TestCase):
             os.unlink(path)
 
     def test_supported_version_is_accepted(self):
-        config = self._load("1.0")
-        self.assertEqual(config.file_format, "1.0")
+        config = self._load(self._SUPPORTED)
+        self.assertEqual(config.file_format, self._SUPPORTED)
 
     def test_pre_release_meta_tag_is_accepted(self):
-        # The meta tag is stripped; "1.0-rc.2" is treated as 1.0.
-        config = self._load("1.0-rc.2")
-        self.assertEqual(config.file_format, "1.0-rc.2")
+        # The meta tag is stripped, so the version is read as the supported one.
+        version = f"{self._SUPPORTED}-rc.2"
+        config = self._load(version)
+        self.assertEqual(config.file_format, version)
 
     def test_newer_minor_is_accepted_with_warning(self):
+        version = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR + 1}"
         with self.assertLogs(
             "opentelemetry.configuration.file._loader", level="WARNING"
         ) as logs:
-            config = self._load("1.1")
-        self.assertEqual(config.file_format, "1.1")
+            config = self._load(version)
+        self.assertEqual(config.file_format, version)
         self.assertTrue(
             any("newer minor version" in message for message in logs.output)
         )
 
+    def test_supported_minor_does_not_warn(self):
+        with self.assertNoLogs(
+            "opentelemetry.configuration.file._loader", level="WARNING"
+        ):
+            self._load(self._SUPPORTED)
+
     def test_unsupported_major_is_rejected(self):
-        for version in ("2.0", "0.4"):
+        versions = [f"{_SUPPORTED_SCHEMA_MAJOR + 1}.0"]
+        if _SUPPORTED_SCHEMA_MAJOR > 0:
+            versions.append(f"{_SUPPORTED_SCHEMA_MAJOR - 1}.0")
+        for version in versions:
             with self.subTest(version=version):
                 with self.assertRaises(ConfigurationError) as ctx:
                     self._load(version)
