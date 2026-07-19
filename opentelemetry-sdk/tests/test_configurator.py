@@ -1487,6 +1487,21 @@ class TestConfigurator(TestCase):
         }
         mock_init_comp.assert_called_once_with(**kwargs)
 
+    def test_custom_configurator_with_init_args(self):
+        class ConfiguratorWithArgs(_OTelSDKConfigurator):
+            def __init__(self, name, strict=False):
+                super().__init__()
+                self.name = name
+                self.strict = strict
+
+            def _configure(self, **kwargs):
+                pass
+
+        configurator = ConfiguratorWithArgs("TEST_NAME", strict=True)
+        self.assertEqual(configurator.name, "TEST_NAME")
+        self.assertTrue(configurator.strict)
+        self.assertIs(configurator, ConfiguratorWithArgs("TEST_NAME"))
+
 
 # Any test that calls _init_logging with setup_logging_handler=True
 # should call _init_logging within this context manager, to
