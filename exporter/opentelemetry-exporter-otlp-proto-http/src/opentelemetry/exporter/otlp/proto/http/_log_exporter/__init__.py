@@ -133,7 +133,6 @@ class OTLPLogExporter(LogRecordExporter):
             )
             or requests.Session()
         )
-        self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
         # let users override our defaults
         self._session.headers.update(self._headers)
