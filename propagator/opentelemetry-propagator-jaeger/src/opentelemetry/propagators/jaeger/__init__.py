@@ -131,7 +131,7 @@ def _extract_first_element(
 
 def _parse_trace_id_header(
     items: collections.abc.Iterable[CarrierT],
-) -> tuple[int]:
+) -> tuple[int, int, int]:
     invalid_header_result = (trace.INVALID_TRACE_ID, trace.INVALID_SPAN_ID, 0)
 
     header = _extract_first_element(items)
