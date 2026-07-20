@@ -8,6 +8,7 @@ from threading import Lock
 from time import time_ns
 from typing import cast
 
+from opentelemetry.metrics._internal.instrument import _MetricsAdvisory
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
@@ -39,6 +40,14 @@ class _ViewInstrumentMatch:
         self._description = (
             self._view._description or self._instrument.description
         )
+        # A view that specifies attribute keys takes precedence over the
+        # instrument's attributes advisory. The advisory only applies when no
+        # view configures this aspect of the stream
+        self._attribute_keys = self._view._attribute_keys
+        if self._attribute_keys is None:
+            advisory = getattr(self._instrument, "_advisory", None)
+            if isinstance(advisory, _MetricsAdvisory):
+                self._attribute_keys = advisory.attributes
         if not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation = self._view._aggregation._create_aggregation(
                 self._instrument,
@@ -87,11 +96,11 @@ class _ViewInstrumentMatch:
     def consume_measurement(
         self, measurement: Measurement, should_sample_exemplar: bool = True
     ) -> None:
-        if self._view._attribute_keys is not None:
+        if self._attribute_keys is not None:
             attributes = {}
 
             for key, value in (measurement.attributes or {}).items():
-                if key in self._view._attribute_keys:
+                if key in self._attribute_keys:
                     attributes[key] = value
         elif measurement.attributes is not None:
             attributes = dict(measurement.attributes)
