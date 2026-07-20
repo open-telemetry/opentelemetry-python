@@ -31,15 +31,54 @@ _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 @dataclass(frozen=True)
 class _MetricsAdvisory:
     attributes: frozenset[str] | None = None
-    explicit_bucket_boundaries: Sequence[float] | None = None
+    explicit_bucket_boundaries: tuple[float, ...] | None = None
 
 
-def _normalize_attributes_advisory(
+def _validate_attributes_advisory(
     attributes_advisory: Sequence[str] | None,
 ) -> frozenset[str] | None:
-    return (
-        None if attributes_advisory is None else frozenset(attributes_advisory)
+    """Returns the advisory as a frozenset of attribute keys, otherwise logs a
+    warning and returns `None` so the advisory is ignored."""
+
+    if attributes_advisory is None:
+        return None
+
+    if isinstance(attributes_advisory, Sequence) and not isinstance(
+        attributes_advisory, str
+    ):
+        try:
+            if all(isinstance(entry, str) for entry in attributes_advisory):
+                return frozenset(attributes_advisory)
+        except (KeyError, TypeError):
+            pass
+
+    _logger.warning("_attributes_advisory must be a sequence of strings")
+    return None
+
+
+def _validate_explicit_bucket_boundaries_advisory(
+    explicit_bucket_boundaries_advisory: Sequence[float] | None,
+) -> tuple[float, ...] | None:
+    """Returns the advisory as a tuple of numbers, otherwise logs a warning and
+    returns `None` so the advisory is ignored."""
+
+    if explicit_bucket_boundaries_advisory is None:
+        return None
+
+    if isinstance(explicit_bucket_boundaries_advisory, Sequence):
+        try:
+            if all(
+                isinstance(entry, (float, int))
+                for entry in explicit_bucket_boundaries_advisory
+            ):
+                return tuple(explicit_bucket_boundaries_advisory)
+        except (KeyError, TypeError):
+            pass
+
+    _logger.warning(
+        "explicit_bucket_boundaries_advisory must be a sequence of numbers"
     )
+    return None
 
 
 @dataclass(frozen=True)

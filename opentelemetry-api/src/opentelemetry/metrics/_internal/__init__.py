@@ -56,7 +56,6 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
     _MetricsAdvisory,
-    _normalize_attributes_advisory,
     _ProxyCounter,
     _ProxyGauge,
     _ProxyHistogram,
@@ -64,6 +63,8 @@ from opentelemetry.metrics._internal.instrument import (
     _ProxyObservableGauge,
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
+    _validate_attributes_advisory,
+    _validate_explicit_bucket_boundaries_advisory,
 )
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
@@ -739,7 +740,7 @@ class NoOpMeter(Meter):
             unit,
             description,
             _MetricsAdvisory(
-                attributes=_normalize_attributes_advisory(_attributes_advisory)
+                attributes=_validate_attributes_advisory(_attributes_advisory)
             ),
         )
         if status.conflict:
@@ -773,7 +774,7 @@ class NoOpMeter(Meter):
             unit,
             description,
             _MetricsAdvisory(
-                attributes=_normalize_attributes_advisory(_attributes_advisory)
+                attributes=_validate_attributes_advisory(_attributes_advisory)
             ),
         )
         if status.conflict:
@@ -806,7 +807,7 @@ class NoOpMeter(Meter):
             unit,
             description,
             _MetricsAdvisory(
-                attributes=_normalize_attributes_advisory(_attributes_advisory)
+                attributes=_validate_attributes_advisory(_attributes_advisory)
             ),
         )
         if status.conflict:
@@ -840,7 +841,7 @@ class NoOpMeter(Meter):
             unit,
             description,
             _MetricsAdvisory(
-                attributes=_normalize_attributes_advisory(_attributes_advisory)
+                attributes=_validate_attributes_advisory(_attributes_advisory)
             ),
         )
         if status.conflict:
@@ -875,10 +876,10 @@ class NoOpMeter(Meter):
             unit,
             description,
             _MetricsAdvisory(
-                attributes=_normalize_attributes_advisory(
-                    _attributes_advisory
+                attributes=_validate_attributes_advisory(_attributes_advisory),
+                explicit_bucket_boundaries=_validate_explicit_bucket_boundaries_advisory(
+                    explicit_bucket_boundaries_advisory
                 ),
-                explicit_bucket_boundaries=explicit_bucket_boundaries_advisory,
             ),
         )
         if status.conflict:
@@ -913,7 +914,7 @@ class NoOpMeter(Meter):
             unit,
             description,
             _MetricsAdvisory(
-                attributes=_normalize_attributes_advisory(_attributes_advisory)
+                attributes=_validate_attributes_advisory(_attributes_advisory)
             ),
         )
         if status.conflict:
@@ -948,7 +949,7 @@ class NoOpMeter(Meter):
             unit,
             description,
             _MetricsAdvisory(
-                attributes=_normalize_attributes_advisory(_attributes_advisory)
+                attributes=_validate_attributes_advisory(_attributes_advisory)
             ),
         )
         if status.conflict:
