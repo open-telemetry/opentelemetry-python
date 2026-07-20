@@ -1,7 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from time import time_ns
+import threading
+from time import sleep, time_ns
 from unittest import TestCase
 
 from opentelemetry import trace
@@ -82,6 +83,66 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         self.assertEqual(len(new_exemplars), 2)
         self.assertEqual(new_exemplars[0].value, 4.0)
         self.assertEqual(new_exemplars[1].value, 5.0)
+
+    def test_concurrent_offer_and_collect_does_not_raise(self):
+        """Regression test for #5431.
+
+        ``offer()`` and ``collect()`` must be synchronized so that
+        ``collect()``→``_reset()`` cannot zero ``_measurements_seen`` between
+        the ``_measurements_seen += 1`` increment and the
+        ``randrange(0, self._measurements_seen)`` call in
+        ``_find_bucket_index``. Without the lock, that race produces
+        ``ValueError: empty range for randrange() (0, 0, 0)`` under concurrent
+        offer/collect.
+
+        size=1 maximizes the probability of hitting the randrange branch on
+        every offer after the first one, so the race shows up quickly.
+        """
+        reservoir = SimpleFixedSizeExemplarReservoir(size=1)
+        stop = threading.Event()
+        errors: list[BaseException] = []
+
+        def offer_loop() -> None:
+            i = 0
+            while not stop.is_set():
+                try:
+                    reservoir.offer(
+                        float(i), time_ns(), {"k": str(i)}, Context()
+                    )
+                    i += 1
+                except BaseException as e:  # noqa: BLE001 - surface any error
+                    errors.append(e)
+                    return
+
+        def collect_loop() -> None:
+            while not stop.is_set():
+                try:
+                    reservoir.collect({})
+                except BaseException as e:  # noqa: BLE001 - surface any error
+                    errors.append(e)
+                    return
+
+        threads = [
+            threading.Thread(target=offer_loop),
+            threading.Thread(target=offer_loop),
+            threading.Thread(target=collect_loop),
+        ]
+        for t in threads:
+            t.start()
+
+        # Bounded run. The race is reproducible in well under a second on
+        # Python 3.10+; 1.0s gives headroom on slow CI runners without
+        # noticeably slowing down the test suite.
+        sleep(1.0)
+        stop.set()
+        for t in threads:
+            t.join(timeout=5.0)
+
+        self.assertEqual(
+            errors,
+            [],
+            f"expected no errors under concurrent offer/collect, got: {errors}",
+        )
 
 
 class TestAlignedHistogramBucketExemplarReservoir(TestCase):

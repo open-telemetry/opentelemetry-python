@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
 from random import randrange
+from threading import Lock
 from typing import (
     Any,
 )
@@ -151,6 +152,14 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         self._reservoir_storage: Mapping[int, ExemplarBucket] = defaultdict(
             ExemplarBucket
         )
+        # Guards `_reservoir_storage` and the subclass-specific reservoir state
+        # (e.g. `SimpleFixedSizeExemplarReservoir._measurements_seen`) against the
+        # offer()↔collect() race documented in #5431. Without it, collect() can
+        # run _reset() and zero `_measurements_seen` between the increment and the
+        # `randrange(0, self._measurements_seen)` call in `_find_bucket_index`,
+        # producing `ValueError: empty range for randrange() (0, 0, 0)`, and the
+        # `defaultdict` can also be read-while-written during collect()'s iteration.
+        self._lock: Lock = Lock()
 
     def collect(self, point_attributes: Attributes) -> list[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
@@ -164,16 +173,17 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
             exemplars contain the attributes that were filtered out by the aggregator,
             but recorded alongside the original measurement.
         """
-        exemplars = [
-            e
-            for e in (
-                bucket.collect(point_attributes)
-                for _, bucket in sorted(self._reservoir_storage.items())
-            )
-            if e is not None
-        ]
-        self._reset()
-        return exemplars
+        with self._lock:
+            exemplars = [
+                e
+                for e in (
+                    bucket.collect(point_attributes)
+                    for _, bucket in sorted(self._reservoir_storage.items())
+                )
+                if e is not None
+            ]
+            self._reset()
+            return exemplars
 
     def offer(
         self,
@@ -190,17 +200,18 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
             attributes: Measurement attributes
             context: Measurement context
         """
-        try:
-            index = self._find_bucket_index(
-                value, time_unix_nano, attributes, context
-            )
+        with self._lock:
+            try:
+                index = self._find_bucket_index(
+                    value, time_unix_nano, attributes, context
+                )
 
-            self._reservoir_storage[index].offer(
-                value, time_unix_nano, attributes, context
-            )
-        except BucketIndexError:
-            # Ignore invalid bucket index
-            pass
+                self._reservoir_storage[index].offer(
+                    value, time_unix_nano, attributes, context
+                )
+            except BucketIndexError:
+                # Ignore invalid bucket index
+                pass
 
     @abstractmethod
     def _find_bucket_index(
@@ -287,12 +298,13 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         context: Context,
     ) -> None:
         """Offers a measurement to be sampled."""
-        index = self._find_bucket_index(
-            value, time_unix_nano, attributes, context
-        )
-        self._reservoir_storage[index].offer(
-            value, time_unix_nano, attributes, context
-        )
+        with self._lock:
+            index = self._find_bucket_index(
+                value, time_unix_nano, attributes, context
+            )
+            self._reservoir_storage[index].offer(
+                value, time_unix_nano, attributes, context
+            )
 
     def _find_bucket_index(
         self,
