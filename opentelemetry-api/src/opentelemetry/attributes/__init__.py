@@ -177,10 +177,16 @@ class BoundedAttributes(MutableMapping):
             with self._lock:
                 self.dropped += len(attributes)
             return
-        cleaned_items = [
-            (key, _clean_attribute_value(val, self.max_value_len))
-            for key, val in attributes.items()
-        ]
+        cleaned_items = []
+        for key, val in attributes.items():
+            if not key or not isinstance(key, str):
+                _logger.warning(
+                    "invalid key `%s`. must be non-empty string. Dropping key from attributes.",
+                    key,
+                )
+                self.dropped += 1
+                continue
+            cleaned_items.append((key, _clean_attribute_value(val, self.max_value_len)))
         with self._lock:
             for key, value in cleaned_items:
                 self._setitem_locked(key, value)
