@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from opentelemetry.sdk._logs._internal import (
+    ConcurrentMultiLogRecordProcessor,
     LogDroppedAttributesWarning,
     Logger,
     LoggerProvider,
@@ -12,9 +13,11 @@ from opentelemetry.sdk._logs._internal import (
     LogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,
+    SynchronousMultiLogRecordProcessor,
 )
 
 __all__ = [
+    "ConcurrentMultiLogRecordProcessor",
     "Logger",
     "LoggerProvider",
     "LoggingHandler",
@@ -25,4 +28,5 @@ __all__ = [
     "LogRecordDroppedAttributesWarning",
     "ReadableLogRecord",
     "ReadWriteLogRecord",
+    "SynchronousMultiLogRecordProcessor",
 ]

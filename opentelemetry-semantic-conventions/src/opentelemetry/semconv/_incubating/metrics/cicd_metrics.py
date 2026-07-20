@@ -61,7 +61,7 @@ def create_cicd_pipeline_run_errors(meter: Meter) -> Counter:
 
 CICD_SYSTEM_ERRORS: Final = "cicd.system.errors"
 """
-The number of errors in a component of the CICD system (eg. controller, scheduler, agent)
+The number of errors in a component of the CI/CD system (eg. controller, scheduler, agent)
 Instrument: counter
 Unit: {error}
 Note: Errors in pipeline run execution are explicitly excluded. Ie a test failure is not counted in this metric.
@@ -69,26 +69,26 @@ Note: Errors in pipeline run execution are explicitly excluded. Ie a test failur
 
 
 def create_cicd_system_errors(meter: Meter) -> Counter:
-    """The number of errors in a component of the CICD system (eg. controller, scheduler, agent)"""
+    """The number of errors in a component of the CI/CD system (eg. controller, scheduler, agent)"""
     return meter.create_counter(
         name=CICD_SYSTEM_ERRORS,
-        description="The number of errors in a component of the CICD system (eg. controller, scheduler, agent).",
+        description="The number of errors in a component of the CI/CD system (eg. controller, scheduler, agent).",
         unit="{error}",
     )
 
 
 CICD_WORKER_COUNT: Final = "cicd.worker.count"
 """
-The number of workers on the CICD system by state
+The number of workers on the CI/CD system by state
 Instrument: updowncounter
-Unit: {count}
+Unit: {worker}
 """
 
 
 def create_cicd_worker_count(meter: Meter) -> UpDownCounter:
-    """The number of workers on the CICD system by state"""
+    """The number of workers on the CI/CD system by state"""
     return meter.create_up_down_counter(
         name=CICD_WORKER_COUNT,
-        description="The number of workers on the CICD system by state.",
-        unit="{count}",
+        description="The number of workers on the CI/CD system by state.",
+        unit="{worker}",
     )
