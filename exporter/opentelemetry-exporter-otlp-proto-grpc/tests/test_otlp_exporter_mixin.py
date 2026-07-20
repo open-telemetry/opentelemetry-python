@@ -45,6 +45,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
@@ -608,6 +609,21 @@ class TestOTLPExporterMixin(TestCase):
             )
             self.assertEqual(mock_trace_service.num_requests, 2)
             self.assertAlmostEqual(after - before, 1.4, 1)
+
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_TIMEOUT: "invalid"})
+    def test_invalid_timeout_from_env_uses_default(self):
+        # pylint: disable=protected-access
+        with self.assertLogs(level=WARNING) as warning:
+            exporter = OTLPSpanExporterForTesting(insecure=True)
+        self.assertEqual(exporter._timeout, 10)
+        self.assertIn("Invalid value", warning.records[0].message)
+        self.assertIn(OTEL_EXPORTER_OTLP_TIMEOUT, warning.records[0].message)
+
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_TIMEOUT: "15"})
+    def test_timeout_zero_takes_priority_over_env(self):
+        # pylint: disable=protected-access
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0)
+        self.assertEqual(exporter._timeout, 0)
 
     def test_channel_options_set_correctly(self):
         """Test that gRPC channel options are set correctly for keepalive and reconnection"""

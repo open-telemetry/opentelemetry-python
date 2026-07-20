@@ -10,6 +10,9 @@ from logging import getLogger
 from os import environ
 
 from grpc import ChannelCredentials, Compression, StatusCode
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _timeout_from_env,
+)
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
 )
@@ -125,10 +128,7 @@ class OTLPMetricExporter(
                 OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
             )
 
-        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
-        environ_timeout = (
-            float(environ_timeout) if environ_timeout is not None else None
-        )
+        environ_timeout = _timeout_from_env(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
 
         compression = (
             environ_to_compression(OTEL_EXPORTER_OTLP_METRICS_COMPRESSION)
@@ -149,7 +149,7 @@ class OTLPMetricExporter(
             insecure=insecure,
             credentials=credentials,
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS),
-            timeout=timeout or environ_timeout,
+            timeout=timeout if timeout is not None else environ_timeout,
             compression=compression,
             channel_options=channel_options,
             retryable_error_codes=retryable_error_codes,

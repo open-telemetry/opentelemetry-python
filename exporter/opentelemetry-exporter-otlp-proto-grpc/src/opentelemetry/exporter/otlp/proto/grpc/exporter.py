@@ -49,6 +49,7 @@ from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
+    _timeout_from_env,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
@@ -350,8 +351,10 @@ class OTLPExporterMixin(
         else:
             self._channel_options = tuple(_OTLP_GRPC_CHANNEL_OPTIONS)
 
-        self._timeout = timeout or float(
-            environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
+        self._timeout = (
+            timeout
+            if timeout is not None
+            else _timeout_from_env(OTEL_EXPORTER_OTLP_TIMEOUT, default=10)
         )
         self._collector_kwargs = None
 

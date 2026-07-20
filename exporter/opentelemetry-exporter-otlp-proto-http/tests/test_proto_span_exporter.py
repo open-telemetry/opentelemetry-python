@@ -250,6 +250,37 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     @patch.dict(
         "os.environ",
+        {OTEL_EXPORTER_OTLP_TIMEOUT: "invalid"},
+    )
+    def test_exporter_env_invalid_timeout(self):
+        with self.assertLogs(level=WARNING) as warning:
+            exporter = OTLPSpanExporter()
+        self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
+        self.assertIn("Invalid value", warning.records[0].message)
+        self.assertIn(OTEL_EXPORTER_OTLP_TIMEOUT, warning.records[0].message)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "invalid",
+            OTEL_EXPORTER_OTLP_TIMEOUT: OS_ENV_TIMEOUT,
+        },
+    )
+    def test_exporter_env_invalid_traces_timeout_falls_back(self):
+        with self.assertLogs(level=WARNING):
+            exporter = OTLPSpanExporter()
+        self.assertEqual(exporter._timeout, float(OS_ENV_TIMEOUT))
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TIMEOUT: OS_ENV_TIMEOUT},
+    )
+    def test_exporter_constructor_timeout_zero_takes_priority(self):
+        exporter = OTLPSpanExporter(timeout=0)
+        self.assertEqual(exporter._timeout, 0)
+
+    @patch.dict(
+        "os.environ",
         {OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT},
     )
     def test_exporter_env_endpoint_without_slash(self):

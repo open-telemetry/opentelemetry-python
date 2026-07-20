@@ -27,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
+    _timeout_from_env,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
@@ -189,10 +190,13 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         self._headers = headers or parse_env_headers(
             headers_string, liberal=True
         )
-        self._timeout = timeout or float(
-            environ.get(
+        self._timeout = (
+            timeout
+            if timeout is not None
+            else _timeout_from_env(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
-                environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
+                OTEL_EXPORTER_OTLP_TIMEOUT,
+                default=DEFAULT_TIMEOUT,
             )
         )
         self._compression = compression or _compression_from_env()
