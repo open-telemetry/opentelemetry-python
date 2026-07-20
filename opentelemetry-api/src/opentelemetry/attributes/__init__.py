@@ -139,8 +139,7 @@ class BoundedAttributes(MutableMapping):
         self._lock = threading.Lock()
         self._immutable = False
         if attributes:
-            for key, value in attributes.items():
-                self[key] = value
+            self._set_items(attributes)
         self._immutable = immutable
 
     def __repr__(self) -> str:
@@ -149,11 +148,14 @@ class BoundedAttributes(MutableMapping):
     def __getitem__(self, key: str) -> types.AttributeValue:
         return self._dict[key]
 
-    def __setitem__(self, key: str, value: types.AnyValue) -> None:
+    def _raise_if_immutable(self) -> None:
         if self._immutable:
             raise TypeError(
                 "Cannot mutate this instance, as it was created with immutable=True."
             )
+
+    def __setitem__(self, key: str, value: types.AnyValue) -> None:
+        self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
                 self.dropped += 1
@@ -170,10 +172,7 @@ class BoundedAttributes(MutableMapping):
             self._setitem_locked(key, cleaned)
 
     def _set_items(self, attributes: Mapping[str, types.AnyValue]) -> None:
-        if self._immutable:
-            raise TypeError(
-                "Cannot mutate this instance, as it was created with immutable=True."
-            )
+        self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
                 self.dropped += len(attributes)
@@ -200,10 +199,7 @@ class BoundedAttributes(MutableMapping):
         self._dict[key] = value
 
     def __delitem__(self, key: str) -> None:
-        if self._immutable:
-            raise TypeError(
-                "Cannot mutate this instance, as it was created with immutable=True."
-            )
+        self._raise_if_immutable()
         del self._dict[key]
 
     def __iter__(self):
