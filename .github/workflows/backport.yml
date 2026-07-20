@@ -21,7 +21,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
