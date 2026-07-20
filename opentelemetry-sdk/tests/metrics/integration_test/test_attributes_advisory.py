@@ -51,9 +51,7 @@ class TestAttributesAdvisory(TestCase):
             getattr(meter, create_method)(
                 "testinstrument",
                 callbacks=[
-                    lambda options, values=attributes: [
-                        Observation(1, values)
-                    ]
+                    lambda options, values=attributes: [Observation(1, values)]
                 ],
                 **create_kwargs,
             )
@@ -161,9 +159,9 @@ class TestAttributesAdvisory(TestCase):
                     instrument=instrument, invalid_advisory=invalid_advisory
                 ):
                     reader = InMemoryMetricReader()
-                    meter = MeterProvider(
-                        metric_readers=[reader]
-                    ).get_meter("m")
+                    meter = MeterProvider(metric_readers=[reader]).get_meter(
+                        "m"
+                    )
 
                     # the warning is emitted when the instrument is created
                     with self.assertLogs(level=WARNING) as log:
