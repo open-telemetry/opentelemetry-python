@@ -4,6 +4,7 @@
 # pylint: disable=too-many-lines
 
 import os
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -178,6 +179,23 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(kwargs["timeout"], 10)
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNone(kwargs["credentials"])
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "invalid"},
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables_invalid_timeout(self, mock_exporter_mixin):
+        with self.assertLogs(level=WARNING) as warning:
+            OTLPSpanExporter()
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+        self.assertIsNone(kwargs["timeout"])
+        self.assertIn("Invalid value", warning.records[0].message)
+        self.assertIn(
+            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT, warning.records[0].message
+        )
 
     @patch.dict(
         "os.environ",

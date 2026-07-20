@@ -6,9 +6,11 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Mapping, Sequence
+from os import environ
 from typing import (
     Any,
     TypeVar,
+    overload,
 )
 
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
@@ -33,6 +35,38 @@ _logger = logging.getLogger(__name__)
 
 _TypingResourceT = TypeVar("_TypingResourceT")
 _ResourceDataT = TypeVar("_ResourceDataT")
+
+
+@overload
+def _timeout_from_env(*environ_keys: str, default: float) -> float: ...
+
+
+@overload
+def _timeout_from_env(
+    *environ_keys: str, default: None = None
+) -> float | None: ...
+
+
+def _timeout_from_env(
+    *environ_keys: str, default: float | None = None
+) -> float | None:
+    """Return the first environment variable in ``environ_keys`` holding a
+    valid float, or ``default`` if none does.
+
+    Unset or empty variables are skipped silently; variables with a
+    non-numeric value are skipped with a warning.
+    """
+    for environ_key in environ_keys:
+        value = environ.get(environ_key)
+        if value is None or not value.strip():
+            continue
+        try:
+            return float(value)
+        except ValueError:
+            _logger.warning(
+                "Invalid value %r for %s, ignoring it.", value, environ_key
+            )
+    return default
 
 
 def _encode_instrumentation_scope(
