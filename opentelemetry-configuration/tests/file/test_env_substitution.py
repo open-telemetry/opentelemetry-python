@@ -107,37 +107,22 @@ line2: value2"""
         result = substitute_env_vars("$$$$")
         self.assertEqual(result, "$$")
 
-    def test_newline_in_value_prevents_yaml_injection(self):
-        """Values containing newlines must not inject YAML structure.
+    def test_newline_in_value_returned_verbatim(self):
+        """A newline in a value is returned as-is.
 
-        Per spec: "It MUST NOT be possible to inject YAML structures by
-        environment variables." A value like "legit\\nmalicious_key: val"
-        must be emitted as a quoted scalar, not raw YAML.
+        Substitution runs per configuration value after parsing, so it does
+        not escape or quote newlines; YAML injection is prevented structurally
+        (see the loader tests), not by rewriting the value here.
         """
-        with patch.dict(
-            os.environ,
-            {"SERVICE_NAME": "legit-service\nmalicious_key: injected_value"},
-        ):
-            result = substitute_env_vars(
-                "file_format: '1.0'\nservice_name: ${SERVICE_NAME}"
-            )
-        parsed = yaml.safe_load(result)
-        self.assertNotIn("malicious_key", parsed)
-        self.assertIn("legit-service", parsed["service_name"])
-
-    def test_newline_in_value_preserved_as_literal(self):
-        """Newline within a value is preserved as a literal newline character."""
         with patch.dict(os.environ, {"MULTI": "line1\nline2"}):
-            result = substitute_env_vars("key: ${MULTI}")
-        parsed = yaml.safe_load(result)
-        self.assertEqual(parsed["key"], "line1\nline2")
+            result = substitute_env_vars("${MULTI}")
+        self.assertEqual(result, "line1\nline2")
 
-    def test_carriage_return_in_value_is_escaped(self):
-        """Carriage return in value is escaped, not injected."""
+    def test_carriage_return_in_value_returned_verbatim(self):
+        """A carriage return in a value is returned as-is, not escaped."""
         with patch.dict(os.environ, {"VAL": "text\r\nmore"}):
-            result = substitute_env_vars("key: ${VAL}")
-        parsed = yaml.safe_load(result)
-        self.assertIsInstance(parsed["key"], str)
+            result = substitute_env_vars("${VAL}")
+        self.assertEqual(result, "text\r\nmore")
 
     def test_type_coercion_preserved_for_simple_values(self):
         """Simple values without newlines still undergo YAML type coercion per spec."""

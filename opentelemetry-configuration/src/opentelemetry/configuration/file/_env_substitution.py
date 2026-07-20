@@ -19,30 +19,45 @@ class EnvSubstitutionError(Exception):
 
 
 def substitute_env_vars(text: str) -> str:
-    """Substitute environment variables in configuration text.
+    """Substitute environment variables within a configuration value.
+
+    A configuration value is a single value from the parsed configuration file
+    (the value of one key or one list item), never a key, a comment, or a whole
+    mapping/list. Substitution is applied per configuration value after the
+    file has been parsed, so comments and mapping keys are never touched.
+
+    For example, given the YAML::
+
+        service_name: ${SERVICE_NAME}
+        endpoint: http://${HOST}:${PORT}
+
+    the configuration values are ``${SERVICE_NAME}`` and
+    ``http://${HOST}:${PORT}``; this function is called once with each, and
+    never with the keys ``service_name`` or ``endpoint``.
 
     Supports the following syntax:
+
     - ${VAR}: Substitute with environment variable VAR. Raises error if not found.
     - ${VAR:-default}: Substitute with VAR if set, otherwise use default value.
     - $$: Escape sequence for literal $.
 
     Args:
-        text: Configuration text with potential ${VAR} placeholders.
+        text: A configuration value with potential ${VAR} placeholders.
 
     Returns:
-        Text with environment variables substituted.
+        The configuration value with environment variables substituted.
 
     Raises:
         EnvSubstitutionError: If a required environment variable is not found.
 
     Examples:
         >>> os.environ['SERVICE_NAME'] = 'my-service'
-        >>> substitute_env_vars('name: ${SERVICE_NAME}')
-        'name: my-service'
-        >>> substitute_env_vars('name: ${MISSING:-default}')
-        'name: default'
-        >>> substitute_env_vars('price: $$100')
-        'price: $100'
+        >>> substitute_env_vars('${SERVICE_NAME}')
+        'my-service'
+        >>> substitute_env_vars('${MISSING:-default}')
+        'default'
+        >>> substitute_env_vars('$$100')
+        '$100'
     """
     # Pattern matches $$ (escape sequence) or ${VAR_NAME} / ${VAR_NAME:-default_value}
     # Handling both in a single pass ensures $$ followed by ${VAR} works correctly
@@ -70,23 +85,11 @@ def substitute_env_vars(text: str) -> str:
                 f"Environment variable '{var_name}' not found and no default provided"
             )
 
-        # Per spec: "It MUST NOT be possible to inject YAML structures by
-        # environment variables." Newlines are the primary injection vector —
-        # a value like "legit\nmalicious_key: val" would create extra YAML
-        # keys if substituted verbatim. Wrap such values in a YAML
-        # double-quoted scalar so the newline is treated as literal text.
-        # Simple values (no newlines) are returned as-is so that YAML type
-        # coercion still applies per spec ("Node types MUST be interpreted
-        # after environment variable substitution takes place").
-        if "\n" in value or "\r" in value:
-            escaped = (
-                value.replace("\\", "\\\\")
-                .replace('"', '\\"')
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t")
-            )
-            return f'"{escaped}"'
+        # Substitution runs on an already-parsed configuration value, so the
+        # result cannot inject new YAML structure regardless of its contents
+        # (a newline in the value stays a literal character within this one
+        # value). Type interpretation for standalone references is handled by
+        # the loader, which re-resolves the node tag after substitution.
         return value
 
     return re.sub(pattern, replace_var, text)

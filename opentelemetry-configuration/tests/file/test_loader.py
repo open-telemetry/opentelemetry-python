@@ -7,12 +7,18 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import yaml
+
 from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
 )
 from opentelemetry.configuration.file import (
     ConfigurationError,
     load_config_file,
+)
+from opentelemetry.configuration.file._loader import (
+    _substitute_env_in_json_value,
+    _substitute_env_in_yaml_node,
 )
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
@@ -367,3 +373,125 @@ class TestFileFormatValidation(unittest.TestCase):
         with self.assertRaises(ConfigurationError) as ctx:
             self._load("not-a-version")
         self.assertIn("file_format", str(ctx.exception))
+
+
+class TestEnvVarSubstitutionScope(unittest.TestCase):
+    """Substitution applies only to configuration values, per the config spec.
+
+    These exercise the YAML node walker directly so the spec's type and
+    scope rules can be asserted without the JSON schema constraining shape.
+    """
+
+    @staticmethod
+    def _substitute_yaml(text: str):
+        loader = yaml.SafeLoader(text)
+        try:
+            node = loader.get_single_node()
+            _substitute_env_in_yaml_node(node, loader)
+            return loader.construct_document(node)
+        finally:
+            loader.dispose()
+
+    def test_unquoted_standalone_reference_is_type_coerced(self):
+        with patch.dict(os.environ, {"N": "42", "FLAG": "true"}):
+            result = self._substitute_yaml("count: ${N}\nflag: ${FLAG}")
+        self.assertEqual(result["count"], 42)
+        self.assertIsInstance(result["count"], int)
+        self.assertIs(result["flag"], True)
+
+    def test_quoted_reference_stays_string(self):
+        with patch.dict(os.environ, {"N": "42"}):
+            result = self._substitute_yaml('count: "${N}"')
+        self.assertEqual(result["count"], "42")
+
+    def test_embedded_reference_resolves_to_string(self):
+        with patch.dict(os.environ, {"N": "42"}):
+            result = self._substitute_yaml("name: svc-${N}")
+        self.assertEqual(result["name"], "svc-42")
+
+    def test_mapping_key_is_not_substituted(self):
+        # A ${VAR} in a key position is left verbatim and triggers no lookup,
+        # so an undefined variable there does not raise.
+        with patch.dict(os.environ, {}, clear=True):
+            result = self._substitute_yaml("${UNDEFINED_KEY}: value")
+        self.assertEqual(result, {"${UNDEFINED_KEY}": "value"})
+
+    def test_escape_sequence_is_not_a_reference(self):
+        with patch.dict(os.environ, {}, clear=True):
+            result = self._substitute_yaml("literal: $${NOT_A_VAR}")
+        self.assertEqual(result["literal"], "${NOT_A_VAR}")
+
+    def test_value_newline_cannot_inject_mapping_keys(self):
+        with patch.dict(os.environ, {"VAL": "legit\nmalicious_key: injected"}):
+            result = self._substitute_yaml("service_name: ${VAL}")
+        self.assertEqual(list(result), ["service_name"])
+        self.assertEqual(
+            result["service_name"], "legit\nmalicious_key: injected"
+        )
+
+
+class TestJsonEnvVarSubstitution(unittest.TestCase):
+    """JSON substitution touches only string values, not keys or non-strings."""
+
+    def test_string_values_substituted_keys_untouched(self):
+        with patch.dict(os.environ, {"V": "resolved"}):
+            result = _substitute_env_in_json_value(
+                {"${KEY}": "${V}", "nested": ["${V}", 1, True, None]}
+            )
+        self.assertEqual(
+            result,
+            {"${KEY}": "resolved", "nested": ["resolved", 1, True, None]},
+        )
+
+
+class TestEnvVarSubstitutionEndToEnd(unittest.TestCase):
+    """End-to-end loader behavior for issue #5406."""
+
+    @staticmethod
+    def _load_yaml(text: str) -> OpenTelemetryConfiguration:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", delete=False
+        ) as fh:
+            fh.write(text)
+            path = fh.name
+        try:
+            return load_config_file(path)
+        finally:
+            os.unlink(path)
+
+    def test_undefined_variable_in_comment_does_not_crash(self):
+        # The reported bug: a ${VAR} inside a comment must be ignored, so an
+        # undefined variable there no longer aborts loading.
+        text = (
+            "file_format: '1.0'\n"
+            "# documented default uses ${UNDEFINED_VAR} - not substituted\n"
+            "disabled: false\n"
+        )
+        with patch.dict(os.environ, {}, clear=True):
+            config = self._load_yaml(text)
+        self.assertEqual(config.file_format, "1.0")
+        self.assertIs(config.disabled, False)
+
+    def test_standalone_reference_coerces_type_for_schema(self):
+        # An integer field populated from ${VAR} must be an int so it passes
+        # JSON-schema validation.
+        text = (
+            "file_format: '1.0'\n"
+            "attribute_limits:\n"
+            "  attribute_count_limit: ${LIMIT}\n"
+        )
+        with patch.dict(os.environ, {"LIMIT": "100"}):
+            config = self._load_yaml(text)
+        self.assertEqual(config.attribute_limits.attribute_count_limit, 100)
+
+    def test_quoted_reference_for_int_field_fails_schema(self):
+        # Quoting forces a string, which is invalid for an integer field.
+        text = (
+            "file_format: '1.0'\n"
+            "attribute_limits:\n"
+            '  attribute_count_limit: "${LIMIT}"\n'
+        )
+        with patch.dict(os.environ, {"LIMIT": "100"}):
+            with self.assertRaises(ConfigurationError) as ctx:
+                self._load_yaml(text)
+        self.assertIn("schema", str(ctx.exception).lower())
