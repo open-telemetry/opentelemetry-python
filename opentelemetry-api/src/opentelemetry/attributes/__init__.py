@@ -186,7 +186,9 @@ class BoundedAttributes(MutableMapping):
                 )
                 self.dropped += 1
                 continue
-            cleaned_items.append((key, _clean_attribute_value(val, self.max_value_len)))
+            cleaned_items.append(
+                (key, _clean_attribute_value(val, self.max_value_len))
+            )
         with self._lock:
             for key, value in cleaned_items:
                 self._setitem_locked(key, value)
