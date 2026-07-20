@@ -87,12 +87,20 @@ class _ViewInstrumentMatch:
     def consume_measurement(
         self, measurement: Measurement, should_sample_exemplar: bool = True
     ) -> None:
-        if self._view._attribute_keys is not None:
+        attribute_keys = self._view._attribute_keys
+        excluded_attribute_keys = self._view._excluded_attribute_keys
+        if attribute_keys is not None or excluded_attribute_keys is not None:
             attributes = {}
 
             for key, value in (measurement.attributes or {}).items():
-                if key in self._view._attribute_keys:
-                    attributes[key] = value
+                if attribute_keys is not None and key not in attribute_keys:
+                    continue
+                if (
+                    excluded_attribute_keys is not None
+                    and key in excluded_attribute_keys
+                ):
+                    continue
+                attributes[key] = value
         elif measurement.attributes is not None:
             attributes = dict(measurement.attributes)
         else:

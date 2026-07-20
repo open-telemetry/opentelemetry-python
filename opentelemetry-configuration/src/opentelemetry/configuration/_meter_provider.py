@@ -238,15 +238,13 @@ def _create_view(config: ViewConfig) -> View:
                 f"Unknown instrument type: {selector.instrument_type!r}"
             )
 
-    attribute_keys: set[str] | None = None
+    attribute_keys: list[str] | None = None
+    excluded_attribute_keys: list[str] | None = None
     if stream.attribute_keys is not None:
-        if stream.attribute_keys.excluded:
-            _logger.warning(
-                "attribute_keys.excluded is not supported by the Python SDK View; "
-                "the exclusion list will be ignored."
-            )
         if stream.attribute_keys.included is not None:
-            attribute_keys = set(stream.attribute_keys.included)
+            attribute_keys = stream.attribute_keys.included
+        if stream.attribute_keys.excluded is not None:
+            excluded_attribute_keys = stream.attribute_keys.excluded
 
     aggregation = None
     if stream.aggregation is not None:
@@ -262,6 +260,7 @@ def _create_view(config: ViewConfig) -> View:
         name=stream.name,
         description=stream.description,
         attribute_keys=attribute_keys,
+        excluded_attribute_keys=excluded_attribute_keys,
         aggregation=aggregation,
     )
 

@@ -211,6 +211,51 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             _DropAggregation,
         )
 
+    def test_consume_measurement_excluded_attribute_keys(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+
+        for name, view_kwargs, attributes, expected_key in (
+            (
+                "exclude drops listed keys and keeps all others",
+                {"excluded_attribute_keys": {"f"}},
+                {"c": "d", "f": "g"},
+                frozenset([("c", "d")]),
+            ),
+            (
+                "include and disjoint exclude combine",
+                {"attribute_keys": {"c"}, "excluded_attribute_keys": {"f"}},
+                {"a": "b", "c": "d", "f": "g"},
+                frozenset([("c", "d")]),
+            ),
+        ):
+            with self.subTest(name):
+                view_instrument_match = _ViewInstrumentMatch(
+                    view=View(
+                        instrument_name="instrument1",
+                        name="name",
+                        aggregation=self.mock_aggregation_factory,
+                        **view_kwargs,
+                    ),
+                    instrument=instrument1,
+                    instrument_class_aggregation=MagicMock(
+                        **{"__getitem__.return_value": DefaultAggregation()}
+                    ),
+                )
+                view_instrument_match.consume_measurement(
+                    Measurement(
+                        value=0,
+                        time_unix_nano=time_ns(),
+                        instrument=instrument1,
+                        context=Context(),
+                        attributes=attributes,
+                    )
+                )
+                self.assertEqual(
+                    view_instrument_match._attributes_aggregation,
+                    {expected_key: self.mock_created_aggregation},
+                )
+
     def test_collect(self):
         instrument1 = _Counter(
             "instrument1",

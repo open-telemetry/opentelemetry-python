@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from fnmatch import fnmatch
 from logging import getLogger
 
@@ -77,6 +77,12 @@ class View:
             a set of attribute keys. If not `None` then only the measurement attributes that
             are in ``attribute_keys`` will be used to identify the metric stream.
 
+        excluded_attribute_keys: This is a metric stream customizing attribute:
+            this is a set of attribute keys. If not `None` then the measurement attributes
+            whose keys are in ``excluded_attribute_keys`` will be dropped and all other
+            attributes will be used to identify the metric stream. A key must not appear in
+            both ``attribute_keys`` and ``excluded_attribute_keys``.
+
         aggregation: This is a metric stream customizing attribute: the
             aggregation instance to use when data is aggregated for the
             corresponding metrics stream. If `None` an instance of
@@ -102,7 +108,8 @@ class View:
         meter_schema_url: str | None = None,
         name: str | None = None,
         description: str | None = None,
-        attribute_keys: set[str] | None = None,
+        attribute_keys: Iterable[str] | None = None,
+        excluded_attribute_keys: Iterable[str] | None = None,
         aggregation: Aggregation | None = None,
         exemplar_reservoir_factory: Callable[
             [type[_Aggregation]], ExemplarReservoirBuilder
@@ -136,8 +143,28 @@ class View:
                 "characters in instrument_name"
             )
 
-        # _name, _description, _aggregation, _exemplar_reservoir_factory and
-        # _attribute_keys will be accessed when instantiating a _ViewInstrumentMatch.
+        attribute_keys = (
+            frozenset(attribute_keys) if attribute_keys is not None else None
+        )
+        excluded_attribute_keys = (
+            frozenset(excluded_attribute_keys)
+            if excluded_attribute_keys is not None
+            else None
+        )
+
+        if (
+            attribute_keys is not None
+            and excluded_attribute_keys is not None
+            and (attribute_keys & excluded_attribute_keys)
+        ):
+            raise ValueError(
+                f"View {name} declared with attribute keys present in both "
+                "attribute_keys and excluded_attribute_keys"
+            )
+
+        # _name, _description, _aggregation, _exemplar_reservoir_factory,
+        # _attribute_keys and _excluded_attribute_keys will be accessed when
+        # instantiating a _ViewInstrumentMatch.
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
@@ -148,6 +175,7 @@ class View:
 
         self._description = description
         self._attribute_keys = attribute_keys
+        self._excluded_attribute_keys = excluded_attribute_keys
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = (
             exemplar_reservoir_factory or _default_reservoir_factory

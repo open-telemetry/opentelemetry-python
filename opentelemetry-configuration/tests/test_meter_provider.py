@@ -876,15 +876,28 @@ class TestCreateViews(unittest.TestCase):
         )
         self.assertEqual(view._attribute_keys, {"key1", "key2"})
 
-    def test_stream_attribute_keys_excluded_logs_warning(self):
-        config = self._make_view_config(
-            stream_kwargs={"attribute_keys": IncludeExclude(excluded=["key1"])}
+    def test_stream_attribute_keys_excluded(self):
+        view = self._get_view(
+            self._make_view_config(
+                stream_kwargs={
+                    "attribute_keys": IncludeExclude(excluded=["key1"])
+                }
+            )
         )
-        with self.assertLogs(
-            "opentelemetry.configuration._meter_provider", level="WARNING"
-        ) as log:
-            create_meter_provider(config)
-        self.assertTrue(any("excluded" in msg for msg in log.output))
+        self.assertEqual(view._excluded_attribute_keys, {"key1"})
+
+    def test_stream_attribute_keys_included_and_excluded(self):
+        view = self._get_view(
+            self._make_view_config(
+                stream_kwargs={
+                    "attribute_keys": IncludeExclude(
+                        included=["key1"], excluded=["key2"]
+                    )
+                }
+            )
+        )
+        self.assertEqual(view._attribute_keys, {"key1"})
+        self.assertEqual(view._excluded_attribute_keys, {"key2"})
 
     def test_stream_aggregation_drop(self):
         view = self._get_view(

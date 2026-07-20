@@ -105,3 +105,29 @@ class TestView(TestCase):
     def test_view_name(self):
         with self.assertRaises(Exception):
             View(name="name", instrument_name="instrument_name*")
+
+    def test_overlapping_attribute_keys(self):
+        with self.assertRaises(ValueError):
+            View(
+                instrument_name="instrument_name",
+                attribute_keys={"a", "b"},
+                excluded_attribute_keys={"b"},
+            )
+
+    def test_disjoint_attribute_keys(self):
+        view = View(
+            instrument_name="instrument_name",
+            attribute_keys={"a", "b"},
+            excluded_attribute_keys={"c"},
+        )
+        self.assertEqual(view._attribute_keys, {"a", "b"})
+        self.assertEqual(view._excluded_attribute_keys, {"c"})
+
+    def test_attribute_keys_normalized(self):
+        view = View(
+            instrument_name="instrument_name",
+            attribute_keys=["a", "b", "a"],
+            excluded_attribute_keys=["c"],
+        )
+        self.assertEqual(view._attribute_keys, {"a", "b"})
+        self.assertEqual(view._excluded_attribute_keys, {"c"})
