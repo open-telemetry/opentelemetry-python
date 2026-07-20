@@ -11,6 +11,9 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.util._importlib_metadata import entry_points
 
+# 64 MiB, in bytes.
+_DEFAULT_MAX_REQUEST_SIZE = 64 * 1024 * 1024
+
 
 class RequestPayloadTooLargeError(Exception):
     """A serialized OTLP request exceeded the configured ``max_request_size``.

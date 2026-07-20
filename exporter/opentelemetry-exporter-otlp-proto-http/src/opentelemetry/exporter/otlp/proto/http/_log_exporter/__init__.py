@@ -25,6 +25,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_MAX_REQUEST_SIZE,
     RequestPayloadTooLargeError,
     _is_request_too_large,
     _is_retryable,
@@ -72,7 +73,6 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 DEFAULT_TIMEOUT = 10  # in seconds
-_DEFAULT_MAX_REQUEST_SIZE = 64 * 1024 * 1024  # 64 MiB, in bytes
 _MAX_RETRYS = 6
 
 
