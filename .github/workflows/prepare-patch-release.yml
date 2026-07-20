@@ -12,7 +12,7 @@ jobs:
       pull-requests: write # required for adding labels to PRs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         run: pip install toml towncrier
@@ -93,7 +93,7 @@ jobs:
         run: |
           gh pr edit ${{ steps.create_pr.outputs.pr_url }}  --add-label "prepare-release"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
 
