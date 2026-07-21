@@ -1,7 +1,7 @@
 SDK Metrics
 ===========
 
-Some SDK components can emit telemetry about their internal state according to the `semantic conventions for OpenTelemetry SDK metrics <https://opentelemetry.io/docs/specs/semconv/otel/sdk-metrics/>`. At the time of writing these semantic conventions are still in development and in order to have then exported you need to set the ``OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED`` environment variable to ``true``.
+Some SDK components can emit telemetry about their internal state according to the `semantic conventions for OpenTelemetry SDK metrics <https://opentelemetry.io/docs/specs/semconv/otel/sdk-metrics/>`. At the time of writing these semantic conventions are still in development and in order to have them exported you need to set the ``OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED`` environment variable to ``true``.
 
 The provided :scm_web:`sdk_metrics.py <docs/examples/metrics/sdk-metrics/sdk_metrics.py>` example shows how to setup manually the SDK in order to send them.
 
