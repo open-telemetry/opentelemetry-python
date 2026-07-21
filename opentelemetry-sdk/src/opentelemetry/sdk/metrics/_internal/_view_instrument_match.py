@@ -105,7 +105,10 @@ class _ViewInstrumentMatch:
                 if key not in self._view._exclude_attribute_keys
             }
 
-        if self._view._attribute_keys is not None or self._view._exclude_attribute_keys:
+        if (
+            self._view._attribute_keys is not None
+            or self._view._exclude_attribute_keys
+        ):
             measurement = Measurement(
                 value=measurement.value,
                 time_unix_nano=measurement.time_unix_nano,

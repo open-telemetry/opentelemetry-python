@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from fnmatch import fnmatch
 from logging import getLogger
 
@@ -108,14 +108,14 @@ class View:
         meter_schema_url: str | None = None,
         name: str | None = None,
         description: str | None = None,
-        attribute_keys: set[str] | None = None,
+        attribute_keys: Iterable[str] | None = None,
         aggregation: Aggregation | None = None,
         exemplar_reservoir_factory: Callable[
             [type[_Aggregation]], ExemplarReservoirBuilder
         ]
         | None = None,
         instrument_unit: str | None = None,
-        exclude_attribute_keys: set[str] | None = None,
+        exclude_attribute_keys: Iterable[str] | None = None,
     ):
         if (
             instrument_type
@@ -143,6 +143,15 @@ class View:
                 "characters in instrument_name"
             )
 
+        if attribute_keys is not None and exclude_attribute_keys is not None:
+            overlap = set(attribute_keys).intersection(exclude_attribute_keys)
+
+            if overlap:
+                raise Exception(
+                    "attribute_keys and exclude_attribute_keys "
+                    f"must be disjoint. Overlapping keys: "
+                    f"{sorted(overlap)}"
+                )
         # _name, _description, _aggregation, _exemplar_reservoir_factory and
         # _attribute_keys will be accessed when instantiating a _ViewInstrumentMatch.
         self._name = name
