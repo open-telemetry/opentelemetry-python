@@ -244,7 +244,7 @@ exclude_attribute_keys: list[str] | None = None
         if stream.attribute_keys.excluded is not None:
             exclude_attribute_keys = stream.attribute_keys.excluded
         if stream.attribute_keys.included is not None:
-            attribute_keys = set(stream.attribute_keys.included)
+            attribute_keys = stream.attribute_keys.included
 
     aggregation = None
     if stream.aggregation is not None:
