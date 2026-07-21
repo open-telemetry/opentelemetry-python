@@ -6,12 +6,14 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator, Iterable, Sequence
+from copy import deepcopy
 from dataclasses import dataclass
 from logging import getLogger
 from re import compile as re_compile
 from typing import (
     Generic,
     TypeVar,
+    cast,
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
@@ -46,6 +48,7 @@ class CallbackOptions:
 
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
+SyncInstrumentT = TypeVar("SyncInstrumentT", bound="Synchronous")
 # pylint: disable=invalid-name
 CallbackT = (
     Callable[[CallbackOptions], Iterable[Observation]]
@@ -159,6 +162,9 @@ class Asynchronous(Instrument):
 class Counter(Synchronous):
     """A Counter is a synchronous `Instrument` which supports non-negative increments."""
 
+    def _bind(self, attributes: Attributes) -> "_BoundCounter":
+        return _BoundCounter(self, attributes)
+
     @abstractmethod
     def add(
         self,
@@ -216,6 +222,9 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
 
 class UpDownCounter(Synchronous):
     """An UpDownCounter is a synchronous `Instrument` which supports increments and decrements."""
+
+    def _bind(self, attributes: Attributes) -> "_BoundUpDownCounter":
+        return _BoundUpDownCounter(self, attributes)
 
     @abstractmethod
     def add(
@@ -370,6 +379,9 @@ class Histogram(Synchronous):
     ) -> None:
         pass
 
+    def _bind(self, attributes: Attributes) -> "_BoundHistogram":
+        return _BoundHistogram(self, attributes)
+
     @abstractmethod
     def record(
         self,
@@ -493,6 +505,9 @@ class _ProxyObservableGauge(
 class Gauge(Synchronous):
     """A Gauge is a synchronous `Instrument` which can be used to record non-additive values as they occur."""
 
+    def _bind(self, attributes: Attributes) -> "_BoundGauge":
+        return _BoundGauge(self, attributes)
+
     @abstractmethod
     def set(
         self,
@@ -552,4 +567,77 @@ class _ProxyGauge(
             self._name,
             self._unit,
             self._description,
+        )
+
+
+class _BoundInstrument(Generic[SyncInstrumentT]):
+    def __init__(
+        self, instrument: SyncInstrumentT, attributes: Attributes
+    ) -> None:
+        if isinstance(instrument, _BoundInstrument):
+            attributes = {**instrument._attributes, **(attributes or {})}
+            instrument = cast(SyncInstrumentT, instrument._instrument)
+        self._instrument: SyncInstrumentT = instrument
+        self._attributes: dict = (
+            {} if attributes is None else deepcopy(dict(attributes))
+        )
+
+
+class _BoundCounter(_BoundInstrument["Counter"], Counter):
+    def add(
+        self,
+        amount: int | float,
+        attributes: Attributes | None = None,
+        context: Context | None = None,
+    ) -> None:
+        if not attributes:
+            self._instrument.add(amount, self._attributes, context)
+            return
+        self._instrument.add(
+            amount, {**self._attributes, **attributes}, context
+        )
+
+
+class _BoundUpDownCounter(_BoundInstrument["UpDownCounter"], UpDownCounter):
+    def add(
+        self,
+        amount: int | float,
+        attributes: Attributes | None = None,
+        context: Context | None = None,
+    ) -> None:
+        if not attributes:
+            self._instrument.add(amount, self._attributes, context)
+            return
+        self._instrument.add(
+            amount, {**self._attributes, **attributes}, context
+        )
+
+
+class _BoundHistogram(_BoundInstrument["Histogram"], Histogram):
+    def record(
+        self,
+        amount: int | float,
+        attributes: Attributes | None = None,
+        context: Context | None = None,
+    ) -> None:
+        if not attributes:
+            self._instrument.record(amount, self._attributes, context)
+            return
+        self._instrument.record(
+            amount, {**self._attributes, **attributes}, context
+        )
+
+
+class _BoundGauge(_BoundInstrument["Gauge"], Gauge):
+    def set(
+        self,
+        amount: int | float,
+        attributes: Attributes | None = None,
+        context: Context | None = None,
+    ) -> None:
+        if not attributes:
+            self._instrument.set(amount, self._attributes, context)
+            return
+        self._instrument.set(
+            amount, {**self._attributes, **attributes}, context
         )

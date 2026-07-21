@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# pylint: disable=no-self-use
+# pylint: disable=no-self-use,protected-access
 
 from logging import WARNING
 
@@ -577,3 +577,44 @@ class TestHistogram(TestCase):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
             Histogram("name", Mock(), Mock())
+
+
+class TestBind(TestCase):
+    _sync_instruments = [
+        (_Counter, "add"),
+        (_UpDownCounter, "add"),
+        (_Histogram, "record"),
+        (_Gauge, "set"),
+    ]
+
+    def test_bound_record_flows_through_consumer(self):
+        cases = [
+            ({"key": "value"}, None, {"key": "value"}),
+            (None, None, {}),
+            (
+                {"key": "value", "keep": 1},
+                {"key": "override", "new": 2},
+                {"key": "override", "keep": 1, "new": 2},
+            ),
+        ]
+        for cls, method in self._sync_instruments:
+            for bound_attrs, call_attrs, expected in cases:
+                with self.subTest(
+                    instrument=cls.__name__, bound_attrs=bound_attrs
+                ):
+                    mc = Mock()
+                    instrument = cls("name", Mock(), mc)
+                    bound = instrument._bind(bound_attrs)
+                    getattr(bound, method)(1.0, call_attrs)
+                    mc.consume_measurement.assert_called_once()
+                    measurement = mc.consume_measurement.call_args.args[0]
+                    self.assertEqual(measurement.value, 1.0)
+                    self.assertEqual(measurement.attributes, expected)
+
+    def test_bound_record_invalid(self):
+        mc = Mock()
+        counter = _Counter("name", Mock(), mc)
+        bound = counter._bind({"key": "value"})
+        with self.assertLogs(level=WARNING):
+            bound.add(-1.0)
+        mc.consume_measurement.assert_not_called()

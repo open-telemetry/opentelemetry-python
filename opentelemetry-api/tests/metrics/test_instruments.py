@@ -2,8 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 # type: ignore
 
+# pylint: disable=protected-access
+
 from inspect import Signature, isabstract, signature
 from unittest import TestCase
+from unittest.mock import Mock, patch
 
 from opentelemetry.metrics import (
     Counter,
@@ -19,6 +22,14 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
     _Gauge,
+)
+from opentelemetry.metrics._internal.instrument import (
+    NoOpGauge,
+    _BoundCounter,
+    _BoundGauge,
+    _BoundHistogram,
+    _BoundUpDownCounter,
+    _ProxyCounter,
 )
 
 # FIXME Test that the instrument methods can be called concurrently safely.
@@ -713,3 +724,64 @@ class TestObservableUpDownCounter(TestCase):
             ],
             "",
         )
+
+
+class TestBind(TestCase):
+    _sync_instruments = [
+        (NoOpCounter, _BoundCounter, Counter, "add"),
+        (NoOpUpDownCounter, _BoundUpDownCounter, UpDownCounter, "add"),
+        (NoOpHistogram, _BoundHistogram, Histogram, "record"),
+        (NoOpGauge, _BoundGauge, _Gauge, "set"),
+    ]
+
+    def test_record_delegates_with_merged_attributes(self):
+        cases = [
+            ({"key": "value"}, None, {"key": "value"}),
+            (None, None, {}),
+            (
+                {"key": "value", "keep": 1},
+                {"key": "override", "new": 2},
+                {"key": "override", "keep": 1, "new": 2},
+            ),
+        ]
+        for noop_cls, bound_cls, api_cls, method in self._sync_instruments:
+            for bound_attrs, call_attrs, expected in cases:
+                with self.subTest(
+                    bound=bound_cls.__name__, bound_attrs=bound_attrs
+                ):
+                    instrument = noop_cls("name")
+                    bound = instrument._bind(bound_attrs)
+                    self.assertIsInstance(bound, bound_cls)
+                    self.assertIsInstance(bound, api_cls)
+                    self.assertIs(bound._instrument, instrument)
+                    with patch.object(instrument, method) as record:
+                        getattr(bound, method)(7, call_attrs)
+                        record.assert_called_once_with(7, expected, None)
+
+    def test_bind_deepcopies_attributes(self):
+        counter = NoOpCounter("name")
+        attributes = {"nested": {"a": 1}}
+        bound = counter._bind(attributes)
+        attributes["nested"]["a"] = 999
+        self.assertEqual(bound._attributes, {"nested": {"a": 1}})
+
+    def test_rebind_flattens(self):
+        counter = NoOpCounter("name")
+        bound = counter._bind({"a": 1})._bind({"b": 2, "a": 3})
+        self.assertIsInstance(bound, _BoundCounter)
+        self.assertIs(bound._instrument, counter)
+        self.assertEqual(bound._attributes, {"a": 3, "b": 2})
+
+    def test_proxy_bind(self):
+        proxy = _ProxyCounter("name")
+        bound = proxy._bind({"key": "value"})
+        self.assertIsInstance(bound, _BoundCounter)
+        self.assertIs(bound._instrument, proxy)
+
+        bound.add(1)
+
+        meter = Mock()
+        proxy.on_meter_set(meter)
+        real = proxy._real_instrument
+        bound.add(2, {"extra": 1})
+        real.add.assert_called_once_with(2, {"key": "value", "extra": 1}, None)
