@@ -242,7 +242,7 @@ attribute_keys: list[str] | None = None
 exclude_attribute_keys: list[str] | None = None
     if stream.attribute_keys is not None:
         if stream.attribute_keys.excluded is not None:
-            exclude_attribute_keys = set(stream.attribute_keys.excluded)
+            exclude_attribute_keys = stream.attribute_keys.excluded
         if stream.attribute_keys.included is not None:
             attribute_keys = set(stream.attribute_keys.included)
 
