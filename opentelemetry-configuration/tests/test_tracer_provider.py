@@ -16,6 +16,9 @@ from opentelemetry.configuration._tracer_provider import (
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
 from opentelemetry.configuration.models import (
+    AttributeNameValue,
+)
+from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
 from opentelemetry.configuration.models import (
@@ -40,7 +43,34 @@ from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
 from opentelemetry.configuration.models import (
+    ExperimentalRuleBasedTraceContinuationDecider as RuleBasedTraceContinuationDeciderConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalRuleBasedTraceContinuationDeciderAttributePatterns as TraceContinuationAttributePatternsConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalRuleBasedTraceContinuationDeciderAttributeValues as TraceContinuationAttributeValuesConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalRuleBasedTraceContinuationDeciderConditions as TraceContinuationConditionsConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalRuleBasedTraceContinuationDeciderRule as TraceContinuationRuleConfig,
+)
+from opentelemetry.configuration.models import (
     ExperimentalSpanParent as SpanParentConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTraceContinuationDecider as TraceContinuationDeciderConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTraceContinuationDirection as TraceContinuationDirectionConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTraceContinuationEgressAction as TraceContinuationEgressActionConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTraceContinuationStrategy as TraceContinuationStrategyConfig,
 )
 from opentelemetry.configuration.models import (
     IdGenerator as IdGeneratorConfig,
@@ -93,6 +123,12 @@ from opentelemetry.sdk.trace.sampling import (
     ParentBased,
     Sampler,
     TraceIdRatioBased,
+)
+from opentelemetry.sdk.trace.trace_continuation import (
+    ALWAYS_CONTINUE,
+    ALWAYS_RESTART_WITH_LINK,
+    ALWAYS_RESTART_WITHOUT_LINK,
+    EgressAction,
 )
 from opentelemetry.trace import SpanContext, TraceFlags
 from opentelemetry.trace import SpanKind as TraceSpanKind
@@ -907,3 +943,445 @@ class TestCreateIdGenerator(unittest.TestCase):
         """Empty IdGenerator config (no type specified) raises ConfigurationError."""
         with self.assertRaises(ConfigurationError):
             self._make_provider(IdGeneratorConfig())
+
+
+class TestCreateTraceContinuationDecider(unittest.TestCase):
+    @staticmethod
+    def _make_provider(trace_continuation_decider_config):
+        return create_tracer_provider(
+            TracerProviderConfig(
+                processors=[],
+                trace_continuation_decider_development=(
+                    trace_continuation_decider_config
+                ),
+            )
+        )
+
+    @staticmethod
+    def _remote_parent_context():
+        remote_parent = SpanContext(
+            TRACE_ID,
+            SPAN_ID,
+            is_remote=True,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        )
+        return remote_parent, trace_api.set_span_in_context(
+            trace_api.NonRecordingSpan(remote_parent)
+        )
+
+    @staticmethod
+    def _rule(**kwargs):
+        return TraceContinuationRuleConfig(**kwargs)
+
+    @staticmethod
+    def _conditions(**kwargs):
+        return TraceContinuationConditionsConfig(**kwargs)
+
+    @staticmethod
+    def _attribute_values(key, values):
+        return TraceContinuationAttributeValuesConfig(key=key, values=values)
+
+    @staticmethod
+    def _attribute_patterns(key, included=None, excluded=None):
+        return TraceContinuationAttributePatternsConfig(
+            key=key,
+            included=included,
+            excluded=excluded,
+        )
+
+    def test_always_continue(self):
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(always_continue_development={})
+        )
+        self.assertIs(provider._continuation_decider, ALWAYS_CONTINUE)
+
+    def test_always_restart_with_link(self):
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                always_restart_with_link_development={}
+            )
+        )
+        self.assertIs(provider._continuation_decider, ALWAYS_RESTART_WITH_LINK)
+
+    def test_always_restart_without_link(self):
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                always_restart_without_link_development={}
+            )
+        )
+        self.assertIs(
+            provider._continuation_decider, ALWAYS_RESTART_WITHOUT_LINK
+        )
+
+    def test_absent_decider_uses_sdk_default(self):
+        provider = create_tracer_provider(TracerProviderConfig(processors=[]))
+        self.assertIsNone(provider._continuation_decider)
+
+    def test_rule_based_first_match_wins(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.restart_with_link,
+                            conditions=self._conditions(
+                                attribute_patterns=[
+                                    self._attribute_patterns(
+                                        "http.route", ["/webhooks/*"]
+                                    )
+                                ]
+                            ),
+                        ),
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.continue_,
+                            conditions=self._conditions(
+                                attribute_values=[
+                                    self._attribute_values(
+                                        "http.route", ["/webhooks/partner"]
+                                    )
+                                ]
+                            ),
+                        ),
+                    ]
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        root = tracer.start_span(
+            "root", context, attributes={"http.route": "/webhooks/partner"}
+        )
+
+        self.assertIsNone(root.parent)
+        self.assertNotEqual(
+            root.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(len(root.links), 1)
+        self.assertEqual(root.links[0].context, remote_parent)
+
+    def test_rule_based_default_ingress_strategy(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.continue_,
+                            conditions=self._conditions(
+                                attribute_patterns=[
+                                    self._attribute_patterns(
+                                        "http.route", ["/internal/*"]
+                                    )
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_ingress_strategy=(
+                        TraceContinuationStrategyConfig.restart_without_link
+                    ),
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        root = tracer.start_span(
+            "root", context, attributes={"http.route": "/webhooks/partner"}
+        )
+
+        self.assertIsNone(root.parent)
+        self.assertNotEqual(
+            root.get_span_context().trace_id, remote_parent.trace_id
+        )
+        self.assertEqual(root.links, ())
+
+    def test_rule_based_matches_all_conditions(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.continue_,
+                            span_kind=SpanKindConfig.server,
+                            conditions=self._conditions(
+                                attribute_patterns=[
+                                    self._attribute_patterns(
+                                        "http.route", ["/internal/*"]
+                                    )
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_ingress_strategy=(
+                        TraceContinuationStrategyConfig.restart_without_link
+                    ),
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        child = tracer.start_span(
+            "child",
+            context,
+            kind=TraceSpanKind.SERVER,
+            attributes={"http.route": "/internal/users"},
+        )
+
+        self.assertEqual(child.parent, remote_parent)
+        self.assertEqual(
+            child.get_span_context().trace_id,
+            remote_parent.trace_id,
+        )
+        self.assertEqual(child.links, ())
+
+    def test_rule_based_egress_action(self):
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.egress,
+                            egress_action=(
+                                TraceContinuationEgressActionConfig.suppress_trace_context
+                            ),
+                            span_kind=SpanKindConfig.client,
+                        ),
+                    ]
+                )
+            )
+        )
+        decider = provider._continuation_decider
+        self.assertEqual(
+            decider.get_description(), "RuleBasedTraceContinuationDecider"
+        )
+        self.assertEqual(
+            decider.should_inject(kind=TraceSpanKind.CLIENT),
+            EgressAction.SUPPRESS_TRACE_CONTEXT,
+        )
+
+    def test_rule_based_adds_link_attributes(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.restart_with_link,
+                            conditions=self._conditions(
+                                attribute_patterns=[
+                                    self._attribute_patterns(
+                                        "http.route", ["/webhooks/*"]
+                                    )
+                                ]
+                            ),
+                            link_attributes=[
+                                AttributeNameValue(
+                                    name="otel.trace_continuation.reason",
+                                    value="external_webhook",
+                                )
+                            ],
+                        ),
+                    ]
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        root = tracer.start_span(
+            "root", context, attributes={"http.route": "/webhooks/partner"}
+        )
+
+        self.assertEqual(len(root.links), 1)
+        self.assertEqual(
+            root.links[0].attributes,
+            {"otel.trace_continuation.reason": "external_webhook"},
+        )
+
+    def test_rule_based_expands_multiple_attribute_values(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.continue_,
+                            conditions=self._conditions(
+                                attribute_values=[
+                                    self._attribute_values(
+                                        "http.route", ["/health", "/ready"]
+                                    )
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_ingress_strategy=(
+                        TraceContinuationStrategyConfig.restart_without_link
+                    ),
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        health = tracer.start_span(
+            "health", context, attributes={"http.route": "/health"}
+        )
+        ready = tracer.start_span(
+            "ready", context, attributes={"http.route": "/ready"}
+        )
+        other = tracer.start_span(
+            "other", context, attributes={"http.route": "/other"}
+        )
+
+        self.assertEqual(health.parent, remote_parent)
+        self.assertEqual(ready.parent, remote_parent)
+        self.assertIsNone(other.parent)
+
+    def test_no_decider_type_raises_configuration_error(self):
+        with self.assertRaises(ConfigurationError):
+            self._make_provider(TraceContinuationDeciderConfig())
+
+    def test_rule_based_attribute_values_stringifies_values(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.continue_,
+                            conditions=self._conditions(
+                                attribute_values=[
+                                    self._attribute_values(
+                                        "http.response.status_code", ["404"]
+                                    )
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_ingress_strategy=(
+                        TraceContinuationStrategyConfig.restart_without_link
+                    ),
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        child = tracer.start_span(
+            "child",
+            context,
+            attributes={"http.response.status_code": 404},
+        )
+
+        self.assertEqual(child.parent, remote_parent)
+
+    def test_rule_based_attribute_values_match_exactly(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.continue_,
+                            conditions=self._conditions(
+                                attribute_values=[
+                                    self._attribute_values(
+                                        "http.response.status_code", ["4*"]
+                                    )
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_ingress_strategy=(
+                        TraceContinuationStrategyConfig.restart_without_link
+                    ),
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        root = tracer.start_span(
+            "root",
+            context,
+            attributes={"http.response.status_code": "404"},
+        )
+
+        self.assertIsNone(root.parent)
+        self.assertNotEqual(
+            root.get_span_context().trace_id, remote_parent.trace_id
+        )
+
+    def test_rule_based_duplicate_attribute_conditions_are_anded(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.continue_,
+                            conditions=self._conditions(
+                                attribute_values=[
+                                    self._attribute_values(
+                                        "http.route", ["/health", "/ready"]
+                                    ),
+                                    self._attribute_values(
+                                        "http.route", ["/ready", "/live"]
+                                    ),
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_ingress_strategy=(
+                        TraceContinuationStrategyConfig.restart_without_link
+                    ),
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        ready = tracer.start_span(
+            "ready", context, attributes={"http.route": "/ready"}
+        )
+        health = tracer.start_span(
+            "health", context, attributes={"http.route": "/health"}
+        )
+
+        self.assertEqual(ready.parent, remote_parent)
+        self.assertIsNone(health.parent)
+
+    def test_rule_based_attribute_patterns_exclude_values(self):
+        remote_parent, context = self._remote_parent_context()
+        provider = self._make_provider(
+            TraceContinuationDeciderConfig(
+                rule_based_development=RuleBasedTraceContinuationDeciderConfig(
+                    rules=[
+                        self._rule(
+                            direction=TraceContinuationDirectionConfig.ingress,
+                            strategy=TraceContinuationStrategyConfig.continue_,
+                            conditions=self._conditions(
+                                attribute_patterns=[
+                                    self._attribute_patterns(
+                                        "http.route",
+                                        included=["/internal/*"],
+                                        excluded=["/internal/health"],
+                                    )
+                                ]
+                            ),
+                        ),
+                    ],
+                    default_ingress_strategy=(
+                        TraceContinuationStrategyConfig.restart_without_link
+                    ),
+                )
+            )
+        )
+        tracer = provider.get_tracer(__name__)
+        users = tracer.start_span(
+            "users", context, attributes={"http.route": "/internal/users"}
+        )
+        health = tracer.start_span(
+            "health", context, attributes={"http.route": "/internal/health"}
+        )
+
+        self.assertEqual(users.parent, remote_parent)
+        self.assertIsNone(health.parent)
