@@ -1,0 +1,21 @@
+[package]
+name = "opentelemetry-process-context"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "opentelemetry_process_context"
+crate-type = ["cdylib"]
+
+[dependencies]
+prost = "0.13"
+
+[dependencies.pyo3]
+version = "0.28.2"
+features = ["abi3-py39"]
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.31", features = ["mman", "fs", "time"] }
+
+[dev-dependencies]
+serial_test = "3"

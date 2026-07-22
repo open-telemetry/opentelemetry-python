@@ -573,28 +573,49 @@ def filter_packages(targets, packages):
     return filtered_packages
 
 
-def update_version_files(targets, version, packages):
-    print("updating version/__init__.py files")
-
+def update_dunder_version_file(version_file_path, version):
     search = "__version__ .*"
     replace = f'__version__ = "{version}"'
 
+    with open(version_file_path) as file:
+        text = file.read()
+
+    if replace in text:
+        print(f"{version_file_path} already contains {replace}")
+        return
+
+    with open(version_file_path, "w", encoding="utf-8") as file:
+        file.write(re.sub(search, replace, text))
+
+
+def update_version_files(targets, version, packages):
+    print("updating version/__init__.py files")
+
     for target in filter_packages(targets, packages):
-        version_file_path = target.joinpath(
-            load(target.joinpath("pyproject.toml"))["tool"]["hatch"][
-                "version"
-            ]["path"]
+        pyproject = load(target.joinpath("pyproject.toml"))
+        hatch_version = (
+            pyproject.get("tool", {}).get("hatch", {}).get("version")
         )
 
-        with open(version_file_path) as file:
-            text = file.read()
-
-        if replace in text:
-            print(f"{version_file_path} already contains {replace}")
+        if hatch_version:
+            # Hatch packages declare a dynamic version sourced from a file
+            # containing a `__version__` assignment.
+            update_dunder_version_file(
+                target.joinpath(hatch_version["path"]), version
+            )
             continue
 
-        with open(version_file_path, "w", encoding="utf-8") as file:
-            file.write(re.sub(search, replace, text))
+        # Maturin packages keep a static `version` under
+        # `[project]` in pyproject.toml as the source of truth and is also
+        # mirrored in a version.py for introspection. Update both.
+        update_files(
+            [target],
+            "pyproject.toml",
+            r'(?m)^version = ".*"$',
+            f'version = "{version}"',
+        )
+        for version_file_path in target.glob("src/**/version.py"):
+            update_dunder_version_file(version_file_path, version)
 
 
 def update_dependencies(targets, version, packages):
