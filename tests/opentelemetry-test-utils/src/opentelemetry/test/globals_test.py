@@ -36,16 +36,10 @@ def reset_logging_globals() -> None:
 
 # pylint: disable=protected-access
 def reset_event_globals() -> None:
-    """WARNING: only use this for tests."""
-    from opentelemetry import (  # pylint: disable=import-outside-toplevel # noqa: PLC0415
-        _events as events_api,
-    )
+    """Deprecated no-op kept for backward compatibility.
 
-    events_api._EVENT_LOGGER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
-    events_api._EVENT_LOGGER_PROVIDER = None  # type: ignore[attr-defined]
-    events_api._PROXY_EVENT_LOGGER_PROVIDER = (
-        events_api.ProxyEventLoggerProvider()
-    )  # type: ignore[attr-defined]
+    The Events API has been removed; this function does nothing.
+    """
 
 
 class TraceGlobalsTest(unittest.TestCase):
@@ -94,15 +88,13 @@ class LoggingGlobalsTest(unittest.TestCase):
 
 
 class EventsGlobalsTest(unittest.TestCase):
-    """Resets logging API globals in setUp/tearDown
+    """Deprecated no-op kept for backward compatibility.
 
-    Use as a base class or mixin for your test that modifies logging API globals.
+    The Events API has been removed; this class does nothing.
     """
 
-    def setUp(self) -> None:
+    def setUp(self) -> None:  # pylint: disable=useless-parent-delegation
         super().setUp()
-        reset_event_globals()
 
-    def tearDown(self) -> None:
+    def tearDown(self) -> None:  # pylint: disable=useless-parent-delegation
         super().tearDown()
-        reset_event_globals()

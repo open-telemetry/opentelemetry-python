@@ -1,0 +1,58 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+"""OpenTelemetry SDK File Configuration.
+
+This module provides support for configuring the OpenTelemetry SDK
+using declarative configuration files (YAML or JSON).
+
+Example:
+    >>> from opentelemetry.configuration.file import load_config_file
+    >>> config = load_config_file("otel-config.yaml")
+    >>> print(config.file_format)
+    '1.0'
+"""
+
+from opentelemetry.configuration._exceptions import (
+    ConfigurationError,
+    MissingDependencyError,
+)
+from opentelemetry.configuration._logger_provider import (
+    configure_logger_provider,
+    create_logger_provider,
+)
+from opentelemetry.configuration._meter_provider import (
+    configure_meter_provider,
+    create_meter_provider,
+)
+from opentelemetry.configuration._propagator import (
+    configure_propagator,
+    create_propagator,
+)
+from opentelemetry.configuration._resource import create_resource
+from opentelemetry.configuration._sdk import configure_sdk
+from opentelemetry.configuration._tracer_provider import (
+    configure_tracer_provider,
+    create_tracer_provider,
+)
+from opentelemetry.configuration.file._env_substitution import (
+    substitute_env_vars,
+)
+from opentelemetry.configuration.file._loader import load_config_file
+
+__all__ = [
+    "load_config_file",
+    "configure_sdk",
+    "substitute_env_vars",
+    "ConfigurationError",
+    "MissingDependencyError",
+    "create_resource",
+    "create_propagator",
+    "configure_propagator",
+    "create_logger_provider",
+    "configure_logger_provider",
+    "create_tracer_provider",
+    "configure_tracer_provider",
+    "create_meter_provider",
+    "configure_meter_provider",
+]
