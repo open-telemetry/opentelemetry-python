@@ -1,0 +1,63 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+# Declarative configuration for the rolldice reference application.
+#
+# NOTE: With the exception of env var substitution syntax,
+# SDKs ignore environment variables when interpreting config files.
+#
+# Schema docs: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/schema-docs.md
+
+file_format: "1.0"
+disabled: false
+
+resource:
+  attributes:
+    - name: service.name
+      value: ${OTEL_SERVICE_NAME:-rolldice}
+  attributes_list: ${OTEL_RESOURCE_ATTRIBUTES:-}
+  detection/development:
+    detectors:
+      - service:
+      - process:
+      - container:
+      - host:
+
+propagator:
+  composite:
+    - tracecontext:
+    - baggage:
+
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}/v1/traces
+    - simple:
+        exporter:
+          console: {}
+  sampler:
+    parent_based:
+      root:
+        always_on:
+
+meter_provider:
+  readers:
+    - periodic:
+        exporter:
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}/v1/metrics
+    - periodic:
+        exporter:
+          console: {}
+
+logger_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}/v1/logs
+    - batch:
+        exporter:
+          console: {}
