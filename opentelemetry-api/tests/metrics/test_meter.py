@@ -13,22 +13,41 @@ from opentelemetry.metrics import Meter, NoOpMeter
 
 class ChildMeter(Meter):
     # pylint: disable=signature-differs
-    def create_counter(self, name, unit="", description=""):
-        super().create_counter(name, unit=unit, description=description)
+    def create_counter(
+        self, name, unit="", description="", *, _attributes_advisory=None
+    ):
+        super().create_counter(
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
+        )
 
-    def create_up_down_counter(self, name, unit="", description=""):
+    def create_up_down_counter(
+        self, name, unit="", description="", *, _attributes_advisory=None
+    ):
         super().create_up_down_counter(
-            name, unit=unit, description=description
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
         )
 
     def create_observable_counter(
-        self, name, callbacks, unit="", description=""
+        self,
+        name,
+        callbacks,
+        unit="",
+        description="",
+        *,
+        _attributes_advisory=None,
     ):
         super().create_observable_counter(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _attributes_advisory=_attributes_advisory,
         )
 
     def create_histogram(
@@ -38,35 +57,58 @@ class ChildMeter(Meter):
         description="",
         *,
         explicit_bucket_boundaries_advisory=None,
+        _attributes_advisory=None,
     ):
         super().create_histogram(
             name,
             unit=unit,
             description=description,
             explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
+            _attributes_advisory=_attributes_advisory,
         )
 
-    def create_gauge(self, name, unit="", description=""):
-        super().create_gauge(name, unit=unit, description=description)
+    def create_gauge(
+        self, name, unit="", description="", *, _attributes_advisory=None
+    ):
+        super().create_gauge(
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
+        )
 
     def create_observable_gauge(
-        self, name, callbacks, unit="", description=""
+        self,
+        name,
+        callbacks,
+        unit="",
+        description="",
+        *,
+        _attributes_advisory=None,
     ):
         super().create_observable_gauge(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _attributes_advisory=_attributes_advisory,
         )
 
     def create_observable_up_down_counter(
-        self, name, callbacks, unit="", description=""
+        self,
+        name,
+        callbacks,
+        unit="",
+        description="",
+        *,
+        _attributes_advisory=None,
     ):
         super().create_observable_up_down_counter(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _attributes_advisory=_attributes_advisory,
         )
 
 
@@ -130,6 +172,38 @@ class TestMeter(TestCase):
                 getattr(test_meter, f"create_{instrument_name}")(
                     instrument_name,
                 )
+
+    def test_repeated_instrument_names_with_different_attributes_advisory(
+        self,
+    ):
+        test_meter = NoOpMeter("name")
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "histogram",
+            "gauge",
+            "observable_counter",
+            "observable_up_down_counter",
+            "observable_gauge",
+        ]:
+            with self.subTest(instrument_name=instrument_name):
+                create_instrument = getattr(
+                    test_meter, f"create_{instrument_name}"
+                )
+                create_instrument(
+                    instrument_name, _attributes_advisory=["a", "b"]
+                )
+
+                with self.assertNoLogs(level=WARNING):
+                    create_instrument(
+                        instrument_name, _attributes_advisory=["b", "a"]
+                    )
+
+                with self.assertLogs(level=WARNING):
+                    create_instrument(
+                        instrument_name, _attributes_advisory=["c"]
+                    )
 
     def test_create_counter(self):
         """

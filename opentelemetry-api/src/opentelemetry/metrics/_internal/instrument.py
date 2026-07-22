@@ -29,8 +29,56 @@ _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 
 
 @dataclass(frozen=True)
-class _MetricsHistogramAdvisory:
-    explicit_bucket_boundaries: Sequence[float] | None = None
+class _MetricsAdvisory:
+    attributes: frozenset[str] | None = None
+    explicit_bucket_boundaries: tuple[float, ...] | None = None
+
+
+def _validate_attributes_advisory(
+    attributes_advisory: Sequence[str] | None,
+) -> frozenset[str] | None:
+    """Returns the advisory as a frozenset of attribute keys, otherwise logs a
+    warning and returns `None` so the advisory is ignored."""
+
+    if attributes_advisory is None:
+        return None
+
+    if isinstance(attributes_advisory, Sequence) and not isinstance(
+        attributes_advisory, str
+    ):
+        try:
+            if all(isinstance(entry, str) for entry in attributes_advisory):
+                return frozenset(attributes_advisory)
+        except (KeyError, TypeError):
+            pass
+
+    _logger.warning("_attributes_advisory must be a sequence of strings")
+    return None
+
+
+def _validate_explicit_bucket_boundaries_advisory(
+    explicit_bucket_boundaries_advisory: Sequence[float] | None,
+) -> tuple[float, ...] | None:
+    """Returns the advisory as a tuple of numbers, otherwise logs a warning and
+    returns `None` so the advisory is ignored."""
+
+    if explicit_bucket_boundaries_advisory is None:
+        return None
+
+    if isinstance(explicit_bucket_boundaries_advisory, Sequence):
+        try:
+            if all(
+                isinstance(entry, (float, int))
+                for entry in explicit_bucket_boundaries_advisory
+            ):
+                return tuple(explicit_bucket_boundaries_advisory)
+        except (KeyError, TypeError):
+            pass
+
+    _logger.warning(
+        "explicit_bucket_boundaries_advisory must be a sequence of numbers"
+    )
+    return None
 
 
 @dataclass(frozen=True)
@@ -62,6 +110,8 @@ class Instrument(ABC):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
         pass
 
@@ -107,10 +157,13 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
         self._name = name
         self._unit = unit
         self._description = description
+        self._attributes_advisory = _attributes_advisory
         self._real_instrument: InstrumentT | None = None
 
     def on_meter_set(self, meter: "metrics.Meter") -> None:
@@ -133,8 +186,15 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
-        super().__init__(name, unit, description)
+        super().__init__(
+            name,
+            unit,
+            description,
+            _attributes_advisory=_attributes_advisory,
+        )
         self._callbacks = callbacks
 
 
@@ -152,8 +212,15 @@ class Asynchronous(Instrument):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
+        )
 
 
 class Counter(Synchronous):
@@ -184,8 +251,15 @@ class NoOpCounter(Counter):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
+        )
 
     def add(
         self,
@@ -211,6 +285,7 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
             self._name,
             self._unit,
             self._description,
+            _attributes_advisory=self._attributes_advisory,
         )
 
 
@@ -246,8 +321,15 @@ class NoOpUpDownCounter(UpDownCounter):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
+        )
 
     def add(
         self,
@@ -273,6 +355,7 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
             self._name,
             self._unit,
             self._description,
+            _attributes_advisory=self._attributes_advisory,
         )
 
 
@@ -291,12 +374,15 @@ class NoOpObservableCounter(ObservableCounter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _attributes_advisory=_attributes_advisory,
         )
 
 
@@ -311,6 +397,7 @@ class _ProxyObservableCounter(
             self._callbacks,
             self._unit,
             self._description,
+            _attributes_advisory=self._attributes_advisory,
         )
 
 
@@ -330,12 +417,15 @@ class NoOpObservableUpDownCounter(ObservableUpDownCounter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _attributes_advisory=_attributes_advisory,
         )
 
 
@@ -351,6 +441,7 @@ class _ProxyObservableUpDownCounter(
             self._callbacks,
             self._unit,
             self._description,
+            _attributes_advisory=self._attributes_advisory,
         )
 
 
@@ -367,6 +458,8 @@ class Histogram(Synchronous):
         unit: str = "",
         description: str = "",
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
         pass
 
@@ -402,12 +495,15 @@ class NoOpHistogram(Histogram):
         unit: str = "",
         description: str = "",
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
         super().__init__(
             name,
             unit=unit,
             description=description,
             explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
+            _attributes_advisory=_attributes_advisory,
         )
 
     def record(
@@ -426,8 +522,15 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         unit: str = "",
         description: str = "",
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
+        )
         self._explicit_bucket_boundaries_advisory = (
             explicit_bucket_boundaries_advisory
         )
@@ -447,6 +550,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
             self._unit,
             self._description,
             explicit_bucket_boundaries_advisory=self._explicit_bucket_boundaries_advisory,
+            _attributes_advisory=self._attributes_advisory,
         )
 
 
@@ -466,12 +570,15 @@ class NoOpObservableGauge(ObservableGauge):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _attributes_advisory=_attributes_advisory,
         )
 
 
@@ -487,6 +594,7 @@ class _ProxyObservableGauge(
             self._callbacks,
             self._unit,
             self._description,
+            _attributes_advisory=self._attributes_advisory,
         )
 
 
@@ -522,8 +630,15 @@ class NoOpGauge(Gauge):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
+        )
 
     def set(
         self,
@@ -552,4 +667,5 @@ class _ProxyGauge(
             self._name,
             self._unit,
             self._description,
+            _attributes_advisory=self._attributes_advisory,
         )
