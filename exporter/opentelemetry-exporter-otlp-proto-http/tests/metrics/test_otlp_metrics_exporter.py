@@ -47,6 +47,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
@@ -54,6 +55,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
+    OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
@@ -1559,3 +1561,98 @@ def _number_data_point(value: int) -> pb2.NumberDataPoint:
         time_unix_nano=1641946016139533244,
         as_int=value,
     )
+
+
+class TestOTLPMetricExporterInsecure(TestCase):
+    def test_insecure_default_is_false(self):
+        exporter = OTLPMetricExporter()
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)
+
+    def test_insecure_true_disables_verification(self):
+        exporter = OTLPMetricExporter(insecure=True)
+        self.assertTrue(exporter._insecure)
+        self.assertFalse(exporter._certificate_file)
+
+    def test_insecure_false_keeps_verification(self):
+        exporter = OTLPMetricExporter(insecure=False)
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)
+
+    def test_insecure_true_ignores_certificate_file(self):
+        exporter = OTLPMetricExporter(
+            insecure=True, certificate_file="/path/to/cert.pem"
+        )
+        self.assertTrue(exporter._insecure)
+        self.assertFalse(exporter._certificate_file)
+
+    def test_insecure_false_uses_certificate_file(self):
+        exporter = OTLPMetricExporter(
+            insecure=False, certificate_file="/path/to/cert.pem"
+        )
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, "/path/to/cert.pem")
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_INSECURE: "true"},
+    )
+    def test_signal_env_var_sets_insecure(self):
+        exporter = OTLPMetricExporter()
+        self.assertTrue(exporter._insecure)
+        self.assertFalse(exporter._certificate_file)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_INSECURE: "true"},
+    )
+    def test_generic_env_var_sets_insecure(self):
+        exporter = OTLPMetricExporter()
+        self.assertTrue(exporter._insecure)
+        self.assertFalse(exporter._certificate_file)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_METRICS_INSECURE: "false",
+            OTEL_EXPORTER_OTLP_INSECURE: "true",
+        },
+    )
+    def test_signal_env_var_takes_priority_over_generic(self):
+        exporter = OTLPMetricExporter()
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_INSECURE: "true"},
+    )
+    def test_constructor_takes_priority_over_env_var(self):
+        exporter = OTLPMetricExporter(insecure=False)
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_INSECURE: "TRUE"},
+    )
+    def test_env_var_case_insensitive(self):
+        exporter = OTLPMetricExporter()
+        self.assertTrue(exporter._insecure)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_INSECURE: "  true  "},
+    )
+    def test_env_var_strips_whitespace(self):
+        exporter = OTLPMetricExporter()
+        self.assertTrue(exporter._insecure)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_INSECURE: "invalid"},
+    )
+    def test_env_var_invalid_value_is_false(self):
+        exporter = OTLPMetricExporter()
+        self.assertFalse(exporter._insecure)
+        self.assertEqual(exporter._certificate_file, True)

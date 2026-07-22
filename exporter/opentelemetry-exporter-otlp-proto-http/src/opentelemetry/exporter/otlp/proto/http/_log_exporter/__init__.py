@@ -27,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._common import (
     _is_retryable,
     _load_session_from_envvar,
+    _resolve_insecure,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import ReadableLogRecord
@@ -43,12 +44,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_INSECURE,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
@@ -84,6 +87,7 @@ class OTLPLogExporter(LogRecordExporter):
         timeout: float | None = None,
         compression: Compression | None = None,
         session: requests.Session | None = None,
+        insecure: bool | None = None,
         *,
         meter_provider: MeterProvider | None = None,
     ):
@@ -94,11 +98,22 @@ class OTLPLogExporter(LogRecordExporter):
                 environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
             ),
         )
-        # Keeping these as instance variables because they are used in tests
-        self._certificate_file = certificate_file or environ.get(
-            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+        self._insecure = _resolve_insecure(
+            insecure,
+            OTEL_EXPORTER_OTLP_LOGS_INSECURE,
+            OTEL_EXPORTER_OTLP_INSECURE,
         )
+        if self._insecure:
+            self._certificate_file = False
+        else:
+            self._certificate_file = (
+                certificate_file
+                if certificate_file is not None
+                else environ.get(
+                    OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+                    environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
+                )
+            )
         self._client_key_file = client_key_file or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
             environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
@@ -291,3 +306,5 @@ def _append_logs_path(endpoint: str) -> str:
     if endpoint.endswith("/"):
         return endpoint + DEFAULT_LOGS_EXPORT_PATH
     return endpoint + f"/{DEFAULT_LOGS_EXPORT_PATH}"
+
+

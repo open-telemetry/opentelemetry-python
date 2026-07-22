@@ -20,6 +20,25 @@ def _is_retryable(resp: requests.Response) -> bool:
     return False
 
 
+def _resolve_insecure(
+    insecure: bool | None,
+    signal_env_var: str,
+    generic_env_var: str,
+) -> bool:
+    """Resolve the insecure flag from the constructor argument or environment variables.
+
+    Priority: constructor argument > signal-specific env var > generic env var > default (False).
+
+    Per the OpenTelemetry spec, empty environment variable values are treated as unset.
+    """
+    if insecure is not None:
+        return insecure
+    env_value = environ.get(signal_env_var) or environ.get(generic_env_var)
+    if env_value is not None:
+        return env_value.strip().lower() == "true"
+    return False
+
+
 def _load_session_from_envvar(
     cred_envvar: Literal[
         "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER",
