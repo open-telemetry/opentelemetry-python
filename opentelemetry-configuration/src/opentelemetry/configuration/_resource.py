@@ -113,6 +113,15 @@ def create_resource(config: ResourceConfig | None) -> Resource:
 
     if config.attributes:
         for attr in config.attributes:
+            # An unset ${VAR} with no default substitutes an empty value that
+            # the YAML parser reads as null. Skip such attributes rather than
+            # inserting a None (or coercing it into garbage like "None"/0).
+            if attr.value is None:
+                _logger.warning(
+                    "Ignoring resource attribute '%s' with empty value",
+                    attr.name,
+                )
+                continue
             config_attrs[attr.name] = _coerce_attribute_value(attr)
 
     schema_url = config.schema_url
