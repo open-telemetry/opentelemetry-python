@@ -837,7 +837,6 @@ dependencies = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-sdk" },
     { name = "pyyaml" },
-    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -846,7 +845,6 @@ requires-dist = [
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
     { name = "pyyaml", specifier = ">=5.4" },
-    { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
 
 [[package]]

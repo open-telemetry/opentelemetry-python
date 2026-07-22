@@ -6,23 +6,6 @@
 import os
 import re
 
-from typing_extensions import deprecated
-
-
-@deprecated(
-    "EnvSubstitutionError is no longer raised: an unset environment variable "
-    "without a default now substitutes an empty value per the declarative "
-    "configuration specification. Deprecated since version 0.66b0."
-)
-class EnvSubstitutionError(Exception):
-    """Raised when environment variable substitution fails.
-
-    .. deprecated:: 0.66b0
-        No longer raised. An unset ``${VAR}`` reference with no default is
-        substituted with an empty value instead of raising. Retained only for
-        backward compatibility and will be removed in a future release.
-    """
-
 
 def substitute_env_vars(text: str) -> str:
     """Substitute environment variables in configuration text.
@@ -72,7 +55,7 @@ def substitute_env_vars(text: str) -> str:
         if value is None:
             # An unset variable is replaced with its default if one is
             # provided, otherwise with an empty value, per the spec.
-            return (default_value or "") if has_default else ""
+            return default_value or ""
 
         # Per spec: "It MUST NOT be possible to inject YAML structures by
         # environment variables." Newlines are the primary injection vector —

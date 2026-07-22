@@ -36,7 +36,6 @@ from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
 )
 from opentelemetry.configuration.file._env_substitution import (
-    EnvSubstitutionError,
     substitute_env_vars,
 )
 from opentelemetry.configuration.file._loader import load_config_file
@@ -45,7 +44,6 @@ __all__ = [
     "load_config_file",
     "configure_sdk",
     "substitute_env_vars",
-    "EnvSubstitutionError",
     "ConfigurationError",
     "MissingDependencyError",
     "create_resource",
