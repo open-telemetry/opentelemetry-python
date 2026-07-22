@@ -5,6 +5,7 @@
 
 import gc
 import math
+import os
 import weakref
 from logging import WARNING
 from time import sleep, time_ns
@@ -306,6 +307,41 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             weak_ref(),
             "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
         )
+
+    @pytest.mark.skipif(not hasattr(os, "fork"), reason="needs *nix")
+    def test_garbage_collected_processor_does_not_crash_on_fork(self):
+        import os
+        import sys
+
+        exporter = FakeMetricsExporter(
+            preferred_aggregation={
+                Counter: LastValueAggregation(),
+            },
+        )
+        processor = PeriodicExportingMetricReader(exporter)
+        processor.shutdown()
+        del processor
+        gc.collect()
+
+        # The bug causes an unraisable exception to be printed to stderr.
+        # We redirect stderr to a pipe before fork to capture it.
+        r_fd, w_fd = os.pipe()
+
+        pid = os.fork()
+        if pid == 0:
+            os.close(r_fd)
+            os.dup2(w_fd, sys.stderr.fileno())
+            # os.fork() has already run the at_fork hooks.
+            os._exit(0)
+
+        os.close(w_fd)
+        _, status = os.waitpid(pid, 0)
+        self.assertEqual(status, 0)
+
+        child_stderr = os.read(r_fd, 1024).decode("utf-8")
+        os.close(r_fd)
+
+        self.assertNotIn("TypeError", child_stderr)
 
     @patch.dict(
         "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}

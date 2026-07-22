@@ -215,6 +215,41 @@ class TestBatchProcessor:
         # Then the reference to the processor should no longer exist
         assert weak_ref() is None
 
+    @unittest.skipUnless(
+        hasattr(os, "fork"),
+        "needs *nix",
+    )
+    def test_garbage_collected_processor_does_not_crash_on_fork(
+        self, batch_processor_class, telemetry
+    ):
+        import sys
+        
+        exporter = Mock()
+        processor = batch_processor_class(exporter)
+        processor.shutdown()
+        del processor
+        gc.collect()
+
+        # The bug causes an unraisable exception to be printed to stderr.
+        # We redirect stderr to a pipe before fork to capture it.
+        r_fd, w_fd = os.pipe()
+
+        pid = os.fork()
+        if pid == 0:
+            os.close(r_fd)
+            os.dup2(w_fd, sys.stderr.fileno())
+            # os.fork() has already run the at_fork hooks.
+            os._exit(0)
+
+        os.close(w_fd)
+        _, status = os.waitpid(pid, 0)
+        assert status == 0
+        
+        child_stderr = os.read(r_fd, 1024).decode("utf-8")
+        os.close(r_fd)
+        
+        assert "TypeError" not in child_stderr
+
     def test_shutdown_allows_1_export_to_finish(
         self, batch_processor_class, telemetry
     ):
