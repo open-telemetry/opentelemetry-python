@@ -6,6 +6,7 @@ import gc
 import logging
 import multiprocessing
 import os
+import sys
 import threading
 import time
 import unittest
@@ -222,8 +223,6 @@ class TestBatchProcessor:
     def test_garbage_collected_processor_does_not_crash_on_fork(
         self, batch_processor_class, telemetry
     ):
-        import sys
-        
         exporter = Mock()
         processor = batch_processor_class(exporter)
         processor.shutdown()
@@ -233,19 +232,41 @@ class TestBatchProcessor:
         # The bug causes an unraisable exception to be printed to stderr.
         # We redirect stderr to a pipe before fork to capture it.
         r_fd, w_fd = os.pipe()
+        
+        # Save original stderr and redirect it to the pipe
+        # We also temporarily restore the default sys.unraisablehook. Pytest overrides
+        # it to capture exceptions in memory, which would be lost on os._exit(0).
+        old_fd = os.dup(sys.stderr.fileno())
+        os.dup2(w_fd, sys.stderr.fileno())
+        old_hook = sys.unraisablehook
+        sys.unraisablehook = sys.__unraisablehook__
 
         pid = os.fork()
         if pid == 0:
             os.close(r_fd)
-            os.dup2(w_fd, sys.stderr.fileno())
             # os.fork() has already run the at_fork hooks.
             os._exit(0)
 
+        # Restore original stderr and hook in parent
+        sys.unraisablehook = old_hook
+        os.dup2(old_fd, sys.stderr.fileno())
+        os.close(old_fd)
         os.close(w_fd)
+
         _, status = os.waitpid(pid, 0)
         assert status == 0
         
-        child_stderr = os.read(r_fd, 1024).decode("utf-8")
+        os.set_blocking(r_fd, False)
+        child_stderr = b""
+        while True:
+            try:
+                chunk = os.read(r_fd, 4096)
+                if not chunk:
+                    break
+                child_stderr += chunk
+            except BlockingIOError:
+                break
+        child_stderr = child_stderr.decode("utf-8")
         os.close(r_fd)
         
         assert "TypeError" not in child_stderr
