@@ -994,10 +994,11 @@ source = { editable = "exporter/opentelemetry-exporter-otlp-proto-http" }
 dependencies = [
     { name = "googleapis-common-protos" },
     { name = "opentelemetry-api" },
+    { name = "opentelemetry-exporter-http-transport", extra = ["urllib3"] },
+    { name = "opentelemetry-exporter-otlp-common" },
     { name = "opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-proto" },
     { name = "opentelemetry-sdk" },
-    { name = "requests" },
     { name = "typing-extensions" },
 ]
 
@@ -1005,19 +1006,26 @@ dependencies = [
 gcp-auth = [
     { name = "opentelemetry-exporter-credential-provider-gcp" },
 ]
+requests = [
+    { name = "opentelemetry-exporter-http-transport", extra = ["requests"] },
+    { name = "requests" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "googleapis-common-protos", specifier = "~=1.52" },
     { name = "opentelemetry-api", editable = "opentelemetry-api" },
     { name = "opentelemetry-exporter-credential-provider-gcp", marker = "extra == 'gcp-auth'", specifier = ">=0.59b0" },
+    { name = "opentelemetry-exporter-http-transport", extras = ["requests"], marker = "extra == 'requests'", editable = "exporter/opentelemetry-exporter-http-transport" },
+    { name = "opentelemetry-exporter-http-transport", extras = ["urllib3"], editable = "exporter/opentelemetry-exporter-http-transport" },
+    { name = "opentelemetry-exporter-otlp-common", editable = "exporter/opentelemetry-exporter-otlp-common" },
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },
     { name = "opentelemetry-proto", editable = "opentelemetry-proto" },
     { name = "opentelemetry-sdk", editable = "opentelemetry-sdk" },
-    { name = "requests", specifier = "~=2.7" },
+    { name = "requests", marker = "extra == 'requests'", specifier = "~=2.7" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
-provides-extras = ["gcp-auth"]
+provides-extras = ["gcp-auth", "requests"]
 
 [[package]]
 name = "opentelemetry-exporter-prometheus"
@@ -1098,6 +1106,7 @@ dependencies = [
     { name = "opentelemetry-codegen-json" },
     { name = "opentelemetry-configuration" },
     { name = "opentelemetry-exporter-http-transport" },
+    { name = "opentelemetry-exporter-otlp-common" },
     { name = "opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-exporter-otlp-json-file" },
     { name = "opentelemetry-exporter-otlp-proto-common" },
@@ -1129,6 +1138,7 @@ requires-dist = [
     { name = "opentelemetry-codegen-json", editable = "codegen/opentelemetry-codegen-json" },
     { name = "opentelemetry-configuration", editable = "opentelemetry-configuration" },
     { name = "opentelemetry-exporter-http-transport", editable = "exporter/opentelemetry-exporter-http-transport" },
+    { name = "opentelemetry-exporter-otlp-common", editable = "exporter/opentelemetry-exporter-otlp-common" },
     { name = "opentelemetry-exporter-otlp-json-common", editable = "exporter/opentelemetry-exporter-otlp-json-common" },
     { name = "opentelemetry-exporter-otlp-json-file", editable = "exporter/opentelemetry-exporter-otlp-json-file" },
     { name = "opentelemetry-exporter-otlp-proto-common", editable = "exporter/opentelemetry-exporter-otlp-proto-common" },

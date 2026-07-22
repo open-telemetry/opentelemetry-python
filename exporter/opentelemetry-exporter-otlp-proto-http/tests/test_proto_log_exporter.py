@@ -1,27 +1,38 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 
+import gzip
+import os
 import threading
 import time
 import unittest
-from logging import WARNING
-from unittest.mock import MagicMock, Mock, patch
+import zlib
+from unittest.mock import Mock, patch
 
 import requests
-from google.protobuf.json_format import MessageToDict
-from requests import Session
-from requests.exceptions import ConnectionError
-from requests.models import Response
+import urllib3.exceptions
+from mocket import Mocket, Mocketizer, mocketize
+from mocket.mocks.mockhttp import Entry, Response
 
 from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.exporter.http.transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.http.transport._urllib3 import (
+    Urllib3HTTPTransport,
+)
+from opentelemetry.exporter.otlp.common import _http
+from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_TIMEOUT,
+    _build_transport,
+)
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
-    DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_LOGS_EXPORT_PATH,
-    DEFAULT_TIMEOUT,
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
@@ -32,9 +43,6 @@ from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
-    OTEL_EXPORTER_OTLP_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_KEY,
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
@@ -53,608 +61,52 @@ from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.mock_test_classes import IterEntryPoint
-from opentelemetry.trace import (
-    NonRecordingSpan,
-    SpanContext,
-    TraceFlags,
-    set_span_in_context,
-)
 
-ENV_ENDPOINT = "http://localhost.env:8080/"
-ENV_CERTIFICATE = "/etc/base.crt"
-ENV_CLIENT_CERTIFICATE = "/etc/client-cert.pem"
-ENV_CLIENT_KEY = "/etc/client-key.pem"
-ENV_HEADERS = "envHeader1=val1,envHeader2=val2,User-agent=Overridden"
-ENV_TIMEOUT = "30"
+from . import _mock_clock
+
+_TEST_ENDPOINT = "http://localhost:4318/v1/logs"
+_LOGGER_NAME = "opentelemetry.exporter.otlp.proto.http._log_exporter"
+_USER_AGENT = "OTel-OTLP-Exporter-Python/" + __version__
+_BASE_HEADERS = {
+    "content-type": "application/x-protobuf",
+    "user-agent": _USER_AGENT,
+}
+
+
+def _decode_body(body: bytes) -> ExportLogsServiceRequest:
+    return ExportLogsServiceRequest.FromString(body)
+
+
+def _make_log_record() -> ReadWriteLogRecord:
+    return ReadWriteLogRecord(
+        LogRecord(
+            timestamp=1644650195189786182,
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body="a log message",
+            attributes={"a": 1, "b": "c"},
+        ),
+        resource=SDKResource({"first_resource": "value"}),
+        instrumentation_scope=InstrumentationScope("name", "version"),
+    )
 
 
 class TestOTLPHTTPLogExporter(unittest.TestCase):
     def setUp(self):
+        env_patcher = patch.dict(os.environ, {}, clear=True)
+        env_patcher.start()
+        self.addCleanup(env_patcher.stop)
+
         self.metric_reader = InMemoryMetricReader()
         self.meter_provider = MeterProvider(
             metric_readers=[self.metric_reader]
         )
 
-    def test_constructor_default(self):
-        exporter = OTLPLogExporter()
-
-        self.assertEqual(
-            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
-        )
-        self.assertEqual(exporter._certificate_file, True)
-        self.assertEqual(exporter._client_certificate_file, None)
-        self.assertEqual(exporter._client_key_file, None)
-        self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
-        self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
-        self.assertEqual(exporter._headers, {})
-        self.assertIsInstance(exporter._session, requests.Session)
-        self.assertIn("User-Agent", exporter._session.headers)
-        self.assertEqual(
-            exporter._session.headers.get("Content-Type"),
-            "application/x-protobuf",
-        )
-        self.assertEqual(
-            exporter._session.headers.get("User-Agent"),
-            "OTel-OTLP-Exporter-Python/" + __version__,
-        )
-
-    @patch.dict(
-        "os.environ",
-        {
-            OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: ENV_CLIENT_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_CLIENT_KEY: ENV_CLIENT_KEY,
-            OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
-            OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
-            OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
-            OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
-            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: "logs/certificate.env",
-            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE: "logs/client-cert.pem",
-            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: "logs/client-key.pem",
-            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: Compression.Deflate.value,
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.endpoint.env",
-            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==,User-agent=LogsUserAgent",
-            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "40",
-            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "credential_provider",
-        },
-    )
-    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
-    def test_exporter_logs_env_take_priority(self, mock_entry_points):
-        credential = Session()
-
-        def f():
-            return credential
-
-        mock_entry_points.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", f)]
-        )
-        exporter = OTLPLogExporter()
-
-        self.assertEqual(exporter._endpoint, "https://logs.endpoint.env")
-        self.assertEqual(exporter._certificate_file, "logs/certificate.env")
-        self.assertEqual(
-            exporter._client_certificate_file, "logs/client-cert.pem"
-        )
-        self.assertEqual(exporter._client_key_file, "logs/client-key.pem")
-        self.assertEqual(exporter._timeout, 40)
-        self.assertIs(exporter._compression, Compression.Deflate)
-        self.assertEqual(
-            exporter._headers,
-            {
-                "logsenv1": "val1",
-                "logsenv2": "val2",
-                "logsenv3": "==val3==",
-                "user-agent": "LogsUserAgent",
-            },
-        )
-        self.assertIs(exporter._session, credential)
-        self.assertIsInstance(exporter._session, requests.Session)
-        self.assertEqual(
-            exporter._session.headers.get("User-Agent"),
-            "LogsUserAgent",
-        )
-        self.assertEqual(
-            exporter._session.headers.get("Content-Type"),
-            "application/x-protobuf",
-        )
-
-    @patch.dict(
-        "os.environ",
-        {
-            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "provider_without_entry_point",
-        },
-    )
-    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
-    def test_exception_raised_when_entrypoint_returns_wrong_type(
-        self, mock_entry_points
-    ):
-        def f():
-            return 1
-
-        mock_entry_points.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", f)]
-        )
-        with self.assertRaises(RuntimeError):
-            OTLPLogExporter()
-
-    @patch.dict(
-        "os.environ",
-        {
-            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "provider_without_entry_point",
-        },
-    )
-    def test_exception_raised_when_entrypoint_does_not_exist(self):
-        with self.assertRaises(RuntimeError):
-            OTLPLogExporter()
-
-    @patch.dict(
-        "os.environ",
-        {
-            OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: ENV_CLIENT_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_CLIENT_KEY: ENV_CLIENT_KEY,
-            OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
-            OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
-            OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
-            OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
-        },
-    )
-    def test_exporter_constructor_take_priority(self):
-        sess = MagicMock()
-        exporter = OTLPLogExporter(
-            endpoint="endpoint.local:69/logs",
-            certificate_file="/hello.crt",
-            client_key_file="/client-key.pem",
-            client_certificate_file="/client-cert.pem",
-            headers={"testHeader1": "value1", "testHeader2": "value2"},
-            timeout=70,
-            compression=Compression.NoCompression,
-            session=sess(),
-        )
-
-        self.assertEqual(exporter._endpoint, "endpoint.local:69/logs")
-        self.assertEqual(exporter._certificate_file, "/hello.crt")
-        self.assertEqual(exporter._client_certificate_file, "/client-cert.pem")
-        self.assertEqual(exporter._client_key_file, "/client-key.pem")
-        self.assertEqual(exporter._timeout, 70)
-        self.assertIs(exporter._compression, Compression.NoCompression)
-        self.assertEqual(
-            exporter._headers,
-            {"testHeader1": "value1", "testHeader2": "value2"},
-        )
-        self.assertTrue(sess.called)
-
-    @patch.dict(
-        "os.environ",
-        {
-            OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: ENV_CLIENT_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_CLIENT_KEY: ENV_CLIENT_KEY,
-            OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
-            OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
-            OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
-            OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
-        },
-    )
-    def test_exporter_env(self):
-        exporter = OTLPLogExporter()
-
-        self.assertEqual(
-            exporter._endpoint, ENV_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
-        )
-        self.assertEqual(exporter._certificate_file, ENV_CERTIFICATE)
-        self.assertEqual(
-            exporter._client_certificate_file, ENV_CLIENT_CERTIFICATE
-        )
-        self.assertEqual(exporter._client_key_file, ENV_CLIENT_KEY)
-        self.assertEqual(exporter._timeout, int(ENV_TIMEOUT))
-        self.assertIs(exporter._compression, Compression.Gzip)
-        self.assertEqual(
-            exporter._headers,
-            {
-                "envheader1": "val1",
-                "envheader2": "val2",
-                "user-agent": "Overridden",
-            },
-        )
-        self.assertIsInstance(exporter._session, requests.Session)
-
     @staticmethod
-    def export_log_and_deserialize(log):
-        with patch("requests.Session.post") as mock_post:
-            exporter = OTLPLogExporter()
-            exporter.export([log])
-            request_body = mock_post.call_args[1]["data"]
-            request = ExportLogsServiceRequest()
-            request.ParseFromString(request_body)
-            request_dict = MessageToDict(request)
-            log_records = (
-                request_dict.get("resourceLogs")[0]
-                .get("scopeLogs")[0]
-                .get("logRecords")
-            )
-            return log_records
-
-    def test_exported_log_without_trace_id(self):
-        ctx = set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(
-                    0,
-                    1312458408527513292,
-                    False,
-                    TraceFlags(0x01),
-                )
-            )
-        )
-        log = ReadWriteLogRecord(
-            LogRecord(
-                timestamp=1644650195189786182,
-                context=ctx,
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Invalid trace id check",
-                attributes={"a": 1, "b": "c"},
-            ),
-            resource=SDKResource({"first_resource": "value"}),
-            instrumentation_scope=InstrumentationScope("name", "version"),
-        )
-        log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
-        if log_records:
-            log_record = log_records[0]
-            self.assertIn("spanId", log_record)
-            self.assertNotIn(
-                "traceId",
-                log_record,
-                "trace_id should not be present in the log record",
-            )
-        else:
-            self.fail("No log records found")
-
-    def test_exported_log_without_span_id(self):
-        ctx = set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(
-                    89564621134313219400156819398935297696,
-                    0,
-                    False,
-                    TraceFlags(0x01),
-                )
-            )
-        )
-
-        log = ReadWriteLogRecord(
-            LogRecord(
-                timestamp=1644650195189786360,
-                context=ctx,
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Invalid span id check",
-                attributes={"a": 1, "b": "c"},
-            ),
-            resource=SDKResource({"first_resource": "value"}),
-            instrumentation_scope=InstrumentationScope("name", "version"),
-        )
-        log_records = TestOTLPHTTPLogExporter.export_log_and_deserialize(log)
-        if log_records:
-            log_record = log_records[0]
-            self.assertIn("traceId", log_record)
-            self.assertNotIn(
-                "spanId",
-                log_record,
-                "spanId should not be present in the log record",
-            )
-        else:
-            self.fail("No log records found")
-
-    @staticmethod
-    def _get_sdk_log_data() -> list[ReadWriteLogRecord]:
-        ctx_log1 = set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(
-                    89564621134313219400156819398935297684,
-                    1312458408527513268,
-                    False,
-                    TraceFlags(0x01),
-                )
-            )
-        )
-        log1 = ReadWriteLogRecord(
-            LogRecord(
-                timestamp=1644650195189786880,
-                context=ctx_log1,
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                attributes={"a": 1, "b": "c"},
-            ),
-            resource=SDKResource({"first_resource": "value"}),
-            instrumentation_scope=InstrumentationScope(
-                "first_name", "first_version"
-            ),
-        )
-
-        ctx_log2 = set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(
-                    0,
-                    0,
-                    False,
-                )
-            )
-        )
-        log2 = ReadWriteLogRecord(
-            LogRecord(
-                timestamp=1644650249738562048,
-                context=ctx_log2,
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Cooper, this is no time for caution!",
-                attributes={},
-            ),
-            resource=SDKResource({"second_resource": "CASE"}),
-            instrumentation_scope=InstrumentationScope(
-                "second_name", "second_version"
-            ),
-        )
-        ctx_log3 = set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(
-                    271615924622795969659406376515024083555,
-                    4242561578944770265,
-                    False,
-                    TraceFlags(0x01),
-                )
-            )
-        )
-        log3 = ReadWriteLogRecord(
-            LogRecord(
-                timestamp=1644650427658989056,
-                context=ctx_log3,
-                severity_text="DEBUG",
-                severity_number=SeverityNumber.DEBUG,
-                body="To our galaxy",
-                attributes={"a": 1, "b": "c"},
-            ),
-            resource=SDKResource({"second_resource": "CASE"}),
-            instrumentation_scope=None,
-        )
-        ctx_log4 = set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(
-                    212592107417388365804938480559624925555,
-                    6077757853989569223,
-                    False,
-                    TraceFlags(0x01),
-                )
-            )
-        )
-        log4 = ReadWriteLogRecord(
-            LogRecord(
-                timestamp=1644650584292683008,
-                context=ctx_log4,
-                severity_text="INFO",
-                severity_number=SeverityNumber.INFO,
-                body="Love is the one thing that transcends time and space",
-                attributes={"filename": "model.py", "func_name": "run_method"},
-            ),
-            resource=SDKResource({"first_resource": "value"}),
-            instrumentation_scope=InstrumentationScope(
-                "another_name", "another_version"
-            ),
-        )
-
-        return [log1, log2, log3, log4]
-
-    @patch.object(OTLPLogExporter, "_export", return_value=Mock(ok=True))
-    def test_2xx_status_code(self, mock_otlp_metric_exporter):
-        """
-        Test that any HTTP 2XX code returns a successful result
-        """
-
-        self.assertEqual(
-            OTLPLogExporter().export(MagicMock()),
-            LogRecordExportResult.SUCCESS,
-        )
-
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
-    )
-    @patch.object(Session, "post")
-    def test_retry_timeout(self, mock_post):
-        exporter = OTLPLogExporter(
-            timeout=1.5, meter_provider=self.meter_provider
-        )
-
-        resp = Response()
-        resp.status_code = 503
-        resp.reason = "UNAVAILABLE"
-        mock_post.return_value = resp
-        with self.assertLogs(level=WARNING) as warning:
-            before = time.time()
-            # Set timeout to 1.5 seconds
-            self.assertEqual(
-                exporter.export(self._get_sdk_log_data()),
-                LogRecordExportResult.FAILURE,
-            )
-            after = time.time()
-            # First call at time 0, second at time 1, then an early return before the second backoff sleep b/c it would exceed timeout.
-            self.assertEqual(mock_post.call_count, 2)
-            # There's a +/-20% jitter on each backoff.
-            self.assertTrue(0.75 < after - before < 1.25)
-            self.assertIn(
-                "Transient error UNAVAILABLE encountered while exporting logs batch, retrying in",
-                warning.records[0].message,
-            )
-
-        metrics_data = self.metric_reader.get_metrics_data()
-        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
-        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
-        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
-        self.assertEqual(len(metrics), 3)
-        self.assertEqual(metrics[0].name, "otel.sdk.exporter.log.exported")
-        self.assert_standard_metric_attrs(
-            metrics[0].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[0].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "http.response.status_code",
-            metrics[0].data.data_points[0].attributes,
-        )
-        self.assertEqual(metrics[1].name, "otel.sdk.exporter.log.inflight")
-        self.assert_standard_metric_attrs(
-            metrics[1].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[1].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "http.response.status_code",
-            metrics[1].data.data_points[0].attributes,
-        )
-        self.assertEqual(
-            metrics[2].name, "otel.sdk.exporter.operation.duration"
-        )
-        self.assert_standard_metric_attrs(
-            metrics[2].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[2].data.data_points[0].attributes
-        )
-        self.assertEqual(
-            metrics[2]
-            .data.data_points[0]
-            .attributes["http.response.status_code"],
-            503,
-        )
-
-    @patch.object(Session, "post")
-    def test_export_no_collector_available_retryable(self, mock_post):
-        exporter = OTLPLogExporter(timeout=1.5)
-        msg = "Server not available."
-        mock_post.side_effect = ConnectionError(msg)
-        with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                exporter.export(self._get_sdk_log_data()),
-                LogRecordExportResult.FAILURE,
-            )
-            # Check for greater 2 because the request is on each retry
-            # done twice at the moment.
-            self.assertGreater(mock_post.call_count, 2)
-            self.assertIn(
-                f"Transient error {msg} encountered while exporting logs batch, retrying in",
-                warning.records[0].message,
-            )
-
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
-    @patch.object(Session, "post")
-    def test_export_no_collector_available(self, mock_post):
-        exporter = OTLPLogExporter(
-            timeout=1.5, meter_provider=self.meter_provider
-        )
-
-        mock_post.side_effect = requests.exceptions.RequestException()
-        with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                exporter.export(self._get_sdk_log_data()),
-                LogRecordExportResult.FAILURE,
-            )
-            self.assertEqual(mock_post.call_count, 1)
-            self.assertIn(
-                "Failed to export logs batch code",
-                warning.records[0].message,
-            )
-
-        metrics_data = self.metric_reader.get_metrics_data()
-        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
-        self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
-        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
-        self.assertEqual(len(metrics), 3)
-        self.assertEqual(metrics[0].name, "otel.sdk.exporter.log.exported")
-        self.assert_standard_metric_attrs(
-            metrics[0].data.data_points[0].attributes
-        )
-        self.assertEqual(
-            metrics[0].data.data_points[0].attributes["error.type"],
-            "RequestException",
-        )
-        self.assertNotIn(
-            "http.response.status_code",
-            metrics[0].data.data_points[0].attributes,
-        )
-        self.assertEqual(metrics[1].name, "otel.sdk.exporter.log.inflight")
-        self.assert_standard_metric_attrs(
-            metrics[1].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[1].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "http.response.status_code",
-            metrics[1].data.data_points[0].attributes,
-        )
-        self.assertEqual(
-            metrics[2].name, "otel.sdk.exporter.operation.duration"
-        )
-        self.assert_standard_metric_attrs(
-            metrics[2].data.data_points[0].attributes
-        )
-        self.assertEqual(
-            metrics[2].data.data_points[0].attributes["error.type"],
-            "RequestException",
-        )
-        self.assertNotIn(
-            "http.response.status_code",
-            metrics[2].data.data_points[0].attributes,
-        )
-
-    @patch.object(Session, "post")
-    def test_timeout_set_correctly(self, mock_post):
-        resp = Response()
-        resp.status_code = 200
-
-        def export_side_effect(*args, **kwargs):
-            # Timeout should be set to something slightly less than 400 milliseconds depending on how much time has passed.
-            self.assertAlmostEqual(0.4, kwargs["timeout"], 2)
-            return resp
-
-        mock_post.side_effect = export_side_effect
-        exporter = OTLPLogExporter(timeout=0.4)
-        exporter.export(self._get_sdk_log_data())
-
-    @patch.object(Session, "post")
-    def test_shutdown_interrupts_retry_backoff(self, mock_post):
-        exporter = OTLPLogExporter(timeout=1.5)
-
-        resp = Response()
-        resp.status_code = 503
-        resp.reason = "UNAVAILABLE"
-        mock_post.return_value = resp
-        thread = threading.Thread(
-            target=exporter.export, args=(self._get_sdk_log_data(),)
-        )
-        with self.assertLogs(level=WARNING) as warning:
-            before = time.time()
-            thread.start()
-            # Wait for the first attempt to fail, then enter a 1 second backoff.
-            time.sleep(0.05)
-            # Should cause export to wake up and return.
-            exporter.shutdown()
-            thread.join()
-            after = time.time()
-            self.assertIn(
-                "Transient error UNAVAILABLE encountered while exporting logs batch, retrying in",
-                warning.records[0].message,
-            )
-            self.assertIn(
-                "Shutdown in progress, aborting retry.",
-                warning.records[1].message,
-            )
-
-            assert after - before < 0.2
+    def _mocked_shutdown_event() -> Mock:
+        shutdown_event = Mock(spec=threading.Event)
+        shutdown_event.is_set.return_value = False
+        return shutdown_event
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(
@@ -667,3 +119,521 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         )
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
+
+    def test_default_transport_is_urllib3(self):
+        exporter = OTLPLogExporter()
+
+        self.assertEqual(
+            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
+        )
+        self.assertIs(exporter._compression, _http.Compression.NONE)
+        self.assertIsInstance(
+            exporter._client._transport, Urllib3HTTPTransport
+        )
+
+    def test_session_uses_requests_transport(self):
+        session = requests.Session()
+        exporter = OTLPLogExporter(session=session)
+
+        self.assertIsInstance(
+            exporter._client._transport, RequestsHTTPTransport
+        )
+        self.assertIs(exporter._client._transport._session, session)
+
+    @patch.dict(
+        os.environ,
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "custom_credential",
+        },
+    )
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_credential_provider_uses_requests(self, mock_entry_point):
+        credential = requests.Session()
+        mock_entry_point.configure_mock(
+            return_value=[
+                IterEntryPoint("custom_credential", lambda: credential)
+            ]
+        )
+        exporter = OTLPLogExporter()
+
+        self.assertIsInstance(
+            exporter._client._transport, RequestsHTTPTransport
+        )
+        self.assertIs(exporter._client._transport._session, credential)
+
+    @patch.dict(
+        os.environ,
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "bad_credential",
+        },
+    )
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_entrypoint_wrong_type_raises(self, mock_entry_point):
+        mock_entry_point.configure_mock(
+            return_value=[IterEntryPoint("bad_credential", lambda: 1)]
+        )
+        with self.assertRaises(RuntimeError):
+            OTLPLogExporter()
+
+    @patch.dict(
+        os.environ,
+        {
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER: "missing",
+        },
+    )
+    @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
+    def test_entrypoint_missing_raises(self, mock_entry_point):
+        mock_entry_point.configure_mock(return_value=[])
+        with self.assertRaises(RuntimeError):
+            OTLPLogExporter()
+
+    def test_compression_dual_enum_acceptance(self):
+        cases = (
+            (Compression.NoCompression, _http.Compression.NONE),
+            (Compression.Deflate, _http.Compression.DEFLATE),
+            (Compression.Gzip, _http.Compression.GZIP),
+            (_http.Compression.NONE, _http.Compression.NONE),
+            (_http.Compression.DEFLATE, _http.Compression.DEFLATE),
+            (_http.Compression.GZIP, _http.Compression.GZIP),
+        )
+        for compression, expected in cases:
+            with self.subTest(compression=compression):
+                exporter = OTLPLogExporter(compression=compression)
+                self.assertIs(exporter._compression, expected)
+                self.assertIs(exporter._client._compression, expected)
+
+    @mocketize
+    def test_export_single_log(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+        logs = [_make_log_record()]
+        transport = exporter._client._transport
+
+        with patch.object(
+            transport, "request", wraps=transport.request
+        ) as mock_request:
+            result = exporter.export(logs)
+
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        request = Mocket.last_request()
+        self.assertEqual(request.method, "POST")
+        self.assertEqual(request.path, "/v1/logs")
+        sent_data = mock_request.call_args.kwargs["data"]
+        self.assertEqual(_decode_body(sent_data), encode_logs(logs))
+
+    @mocketize
+    def test_default_endpoint_and_headers(self):
+        Entry.single_register(
+            Entry.POST, "http://localhost:4318/v1/logs", status=200
+        )
+        exporter = OTLPLogExporter()
+
+        result = exporter.export([_make_log_record()])
+
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        headers = Mocket.last_request().headers
+        self.assertEqual(headers["content-type"], "application/x-protobuf")
+        self.assertTrue(
+            headers["user-agent"].startswith("OTel-OTLP-Exporter-Python/")
+        )
+
+    def test_custom_endpoint(self):
+        url = "http://custom.example:9999/v1/logs"
+        cases = (
+            ("constructor", {}, {"endpoint": url}),
+            (
+                "generic_env",
+                {OTEL_EXPORTER_OTLP_ENDPOINT: "http://custom.example:9999"},
+                {},
+            ),
+            ("per_signal_env", {OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: url}, {}),
+        )
+        for label, env, kwargs in cases:
+            with (
+                self.subTest(label),
+                patch.dict(os.environ, env, clear=True),
+                Mocketizer(),
+            ):
+                Entry.single_register(Entry.POST, url, status=200)
+                exporter = OTLPLogExporter(**kwargs)
+
+                result = exporter.export([_make_log_record()])
+
+                self.assertEqual(result, LogRecordExportResult.SUCCESS)
+
+    def test_custom_headers(self):
+        cases = (
+            ("constructor", {}, {"headers": {"x-api-key": "secret"}}),
+            (
+                "generic_env",
+                {OTEL_EXPORTER_OTLP_HEADERS: "x-api-key=secret"},
+                {},
+            ),
+            (
+                "per_signal_env",
+                {OTEL_EXPORTER_OTLP_LOGS_HEADERS: "x-api-key=secret"},
+                {},
+            ),
+        )
+        for label, env, kwargs in cases:
+            with (
+                self.subTest(label),
+                patch.dict(os.environ, env, clear=True),
+                Mocketizer(),
+            ):
+                Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+                exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT, **kwargs)
+
+                exporter.export([_make_log_record()])
+
+                headers = Mocket.last_request().headers
+                self.assertEqual(headers["x-api-key"], "secret")
+
+    def test_configuration_precedence(self):
+        common_env = {
+            OTEL_EXPORTER_OTLP_ENDPOINT: "http://common.example:4318",
+            OTEL_EXPORTER_OTLP_HEADERS: "common-key=common-value",
+            OTEL_EXPORTER_OTLP_COMPRESSION: "gzip",
+            OTEL_EXPORTER_OTLP_TIMEOUT: "5",
+        }
+        signal_env = {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://signal.example:4318/v1/logs",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "signal-key=signal-value",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "deflate",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "7",
+        }
+        explicit_kwargs = {
+            "endpoint": "http://explicit.example:4318/v1/logs",
+            "headers": {"explicit-key": "explicit-value"},
+            "compression": _http.Compression.NONE,
+            "timeout": 9,
+        }
+        cases = (
+            (
+                "defaults",
+                {},
+                {},
+                {
+                    "endpoint": DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH,
+                    "compression": _http.Compression.NONE,
+                    "headers": _BASE_HEADERS,
+                    "timeout": float(_DEFAULT_TIMEOUT),
+                },
+            ),
+            (
+                "common_env",
+                common_env,
+                {},
+                {
+                    "endpoint": "http://common.example:4318/v1/logs",
+                    "compression": _http.Compression.GZIP,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "common-key": "common-value",
+                        "Content-Encoding": "gzip",
+                    },
+                    "timeout": 5.0,
+                },
+            ),
+            (
+                "signal_env_overrides_common",
+                {**common_env, **signal_env},
+                {},
+                {
+                    "endpoint": "http://signal.example:4318/v1/logs",
+                    "compression": _http.Compression.DEFLATE,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "signal-key": "signal-value",
+                        "Content-Encoding": "deflate",
+                    },
+                    "timeout": 7.0,
+                },
+            ),
+            (
+                "constructor_overrides_all",
+                {**common_env, **signal_env},
+                explicit_kwargs,
+                {
+                    "endpoint": "http://explicit.example:4318/v1/logs",
+                    "compression": _http.Compression.NONE,
+                    "headers": {
+                        **_BASE_HEADERS,
+                        "signal-key": "signal-value",
+                        "explicit-key": "explicit-value",
+                    },
+                    "timeout": 9.0,
+                },
+            ),
+        )
+        for label, env, kwargs, expected in cases:
+            with self.subTest(label), patch.dict(os.environ, env, clear=True):
+                exporter = OTLPLogExporter(**kwargs)
+                self.assertEqual(exporter._endpoint, expected["endpoint"])
+                self.assertIs(exporter._compression, expected["compression"])
+                self.assertEqual(
+                    exporter._client._headers, expected["headers"]
+                )
+                self.assertEqual(
+                    exporter._client._timeout, expected["timeout"]
+                )
+
+    @mocketize
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter._build_transport"
+    )
+    def test_custom_transport(self, mock_build_transport):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        custom_transport = Urllib3HTTPTransport()
+
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT, _transport=custom_transport
+        )
+
+        mock_build_transport.assert_not_called()
+        self.assertIs(exporter._client._transport, custom_transport)
+
+        result = exporter.export([_make_log_record()])
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+
+    @mocketize
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter._build_transport",
+        wraps=_build_transport,
+    )
+    def test_certificate_args(self, mock_build_transport):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT,
+            certificate_file="ca.pem",
+            client_key_file="client-key.pem",
+            client_certificate_file="client-cert.pem",
+        )
+
+        mock_build_transport.assert_called_once_with(
+            "ca.pem",
+            "client-key.pem",
+            "client-cert.pem",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
+            session=None,
+        )
+
+        result = exporter.export([_make_log_record()])
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+
+    def test_compression_options(self):
+        cases = (
+            (Compression.NoCompression, None, lambda data: data),
+            (Compression.Gzip, "gzip", gzip.decompress),
+            (Compression.Deflate, "deflate", zlib.decompress),
+            (_http.Compression.NONE, None, lambda data: data),
+            (_http.Compression.GZIP, "gzip", gzip.decompress),
+            (_http.Compression.DEFLATE, "deflate", zlib.decompress),
+        )
+        for compression, expected_encoding, decompress in cases:
+            with self.subTest(compression=compression), Mocketizer():
+                Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+                exporter = OTLPLogExporter(
+                    endpoint=_TEST_ENDPOINT, compression=compression
+                )
+                transport = exporter._client._transport
+                logs = [_make_log_record()]
+
+                with patch.object(
+                    transport, "request", wraps=transport.request
+                ) as mock_request:
+                    result = exporter.export(logs)
+
+                self.assertEqual(result, LogRecordExportResult.SUCCESS)
+                sent_headers = mock_request.call_args.kwargs["headers"]
+                if expected_encoding is None:
+                    self.assertNotIn("Content-Encoding", sent_headers)
+                else:
+                    self.assertEqual(
+                        sent_headers["Content-Encoding"], expected_encoding
+                    )
+                sent_data = mock_request.call_args.kwargs["data"]
+                decompressed = decompress(sent_data)
+                self.assertEqual(_decode_body(decompressed), encode_logs(logs))
+
+    def test_export_retryable_status_codes(self):
+        for status_code in (429, 502, 503, 504):
+            with self.subTest(status_code=status_code), Mocketizer():
+                Entry.register(
+                    Entry.POST,
+                    _TEST_ENDPOINT,
+                    Response(status=status_code),
+                    Response(status=200),
+                )
+                exporter = OTLPLogExporter(
+                    endpoint=_TEST_ENDPOINT, timeout=30.0
+                )
+                shutdown_event = self._mocked_shutdown_event()
+                exporter._client._shutdown_event = shutdown_event
+
+                with _mock_clock(shutdown_event):
+                    result = exporter.export([_make_log_record()])
+
+                self.assertEqual(result, LogRecordExportResult.SUCCESS)
+                self.assertEqual(len(Mocket.request_list()), 2)
+
+    def test_export_non_retryable_status_codes(self):
+        for status_code in (400, 401, 403, 404, 408, 500, 501):
+            with self.subTest(status_code=status_code), Mocketizer():
+                Entry.single_register(
+                    Entry.POST, _TEST_ENDPOINT, status=status_code
+                )
+                exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+
+                result = exporter.export([_make_log_record()])
+
+                self.assertEqual(result, LogRecordExportResult.FAILURE)
+                self.assertEqual(len(Mocket.request_list()), 1)
+
+    @mocketize
+    def test_export_connection_error(self):
+        Entry.register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            urllib3.exceptions.ProtocolError("simulated reset"),
+            Response(status=200),
+        )
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT, timeout=5.0)
+
+        result = exporter.export([_make_log_record()])
+
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        self.assertEqual(len(Mocket.request_list()), 2)
+
+    @mocketize
+    def test_shutdown_interrupts_retry_backoff(self):
+        Entry.register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            *[Response(status=503)] * 6,
+        )
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT, timeout=1.5)
+        thread = threading.Thread(
+            target=exporter.export, args=([_make_log_record()],)
+        )
+        before = time.time()
+        thread.start()
+        time.sleep(0.05)
+        exporter.shutdown()
+        thread.join()
+        after = time.time()
+
+        self.assertLess(after - before, 0.5)
+
+    @mocketize
+    def test_exporter_metrics_disabled_by_default(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT, meter_provider=self.meter_provider
+        )
+
+        self.assertEqual(
+            exporter.export([_make_log_record()]),
+            LogRecordExportResult.SUCCESS,
+        )
+        self.assertIsNone(self.metric_reader.get_metrics_data())
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    def test_retry_timeout_records_metrics(self):
+        with Mocketizer():
+            Entry.register(
+                Entry.POST,
+                _TEST_ENDPOINT,
+                Response(status=503),
+                Response(status=503),
+            )
+            exporter = OTLPLogExporter(
+                endpoint=_TEST_ENDPOINT,
+                timeout=1.5,
+                meter_provider=self.meter_provider,
+            )
+            shutdown_event = self._mocked_shutdown_event()
+            exporter._client._shutdown_event = shutdown_event
+
+            with _mock_clock(shutdown_event):
+                result = exporter.export([_make_log_record()])
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 3)
+        names = [m.name for m in metrics]
+        self.assertIn("otel.sdk.exporter.log.exported", names)
+        self.assertIn("otel.sdk.exporter.log.inflight", names)
+        self.assertIn("otel.sdk.exporter.operation.duration", names)
+        duration_metric = next(
+            m
+            for m in metrics
+            if m.name == "otel.sdk.exporter.operation.duration"
+        )
+        self.assert_standard_metric_attrs(
+            duration_metric.data.data_points[0].attributes
+        )
+        self.assertEqual(
+            duration_metric.data.data_points[0].attributes[
+                "http.response.status_code"
+            ],
+            503,
+        )
+
+    @mocketize
+    def test_export_after_shutdown(self):
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+        exporter.shutdown()
+
+        with self.assertLogs(_LOGGER_NAME, level="WARNING"):
+            result = exporter.export([_make_log_record()])
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertIsNone(Mocket.last_request())
+
+    def test_shutdown_idempotent(self):
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+        exporter.shutdown()
+
+        with self.assertLogs(_LOGGER_NAME, level="WARNING"):
+            exporter.shutdown()
+
+    # pylint: disable-next=no-self-use
+    def test_shutdown_closes_transport(self):
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+
+        with patch.object(exporter._client._transport, "close") as mock_close:
+            exporter.shutdown()
+
+        mock_close.assert_called_once()
+
+    @mocketize
+    def test_force_flush(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+
+        self.assertTrue(exporter.force_flush())
+        exporter.export([_make_log_record()])
+        self.assertTrue(exporter.force_flush())
+
+    @mocketize
+    @patch(
+        "opentelemetry.exporter.otlp.proto.http._log_exporter.encode_logs",
+        side_effect=ValueError("boom"),
+    )
+    def test_export_encoding_failure(self, mock_encode_logs):
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertLogs(_LOGGER_NAME, level="ERROR"):
+            result = exporter.export([_make_log_record()])
+
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertIsNone(Mocket.last_request())

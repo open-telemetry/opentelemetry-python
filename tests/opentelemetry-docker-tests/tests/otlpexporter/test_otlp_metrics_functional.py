@@ -10,6 +10,12 @@ import pytest
 from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
+from opentelemetry.exporter.http.transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.http.transport._urllib3 import (
+    Urllib3HTTPTransport,
+)
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter as GRPCMetricExporter,
 )
@@ -36,33 +42,70 @@ from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict
 
 METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
     ExporterConfig(
-        id="http",
+        id="http-urllib3",
         exporter_class=HTTPMetricExporter,
         kwargs={"endpoint": "http://localhost:4318/v1/metrics"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-deflate",
+        id="http-requests",
+        exporter_class=HTTPMetricExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/metrics"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-deflate",
         exporter_class=HTTPMetricExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/metrics",
             "compression": HTTPCompression.Deflate,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-gzip",
+        id="http-requests-deflate",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": HTTPCompression.Deflate,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-gzip",
         exporter_class=HTTPMetricExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/metrics",
             "compression": HTTPCompression.Gzip,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-headers",
+        id="http-requests-gzip",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": HTTPCompression.Gzip,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-headers",
         exporter_class=HTTPMetricExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/metrics",
             "headers": CUSTOM_HEADERS,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-requests-headers",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "headers": CUSTOM_HEADERS,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
     ),
     ExporterConfig(
         id="grpc",

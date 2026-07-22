@@ -14,6 +14,8 @@ wrapt==1.16.0
 # these are required for weaver integration tests, we're running that only on linux / CPython
 # because of lack of support for gRPC wheels on some platforms
 ./opentelemetry-proto ; platform_python_implementation != 'PyPy'
+./exporter/opentelemetry-exporter-http-transport[urllib3] ; platform_python_implementation != 'PyPy'
+./exporter/opentelemetry-exporter-otlp-common ; platform_python_implementation != 'PyPy'
 ./exporter/opentelemetry-exporter-otlp-proto-common ; platform_python_implementation != 'PyPy'
 ./exporter/opentelemetry-exporter-otlp-proto-grpc ; platform_python_implementation != 'PyPy'
 ./exporter/opentelemetry-exporter-otlp-proto-http ; platform_python_implementation != 'PyPy'
