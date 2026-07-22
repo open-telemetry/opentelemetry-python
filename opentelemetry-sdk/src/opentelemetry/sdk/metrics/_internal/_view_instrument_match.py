@@ -19,6 +19,7 @@ from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
+from opentelemetry.util.types import AttributeValue
 
 _logger = getLogger(__name__)
 
@@ -98,7 +99,15 @@ class _ViewInstrumentMatch:
         else:
             attributes = {}
 
-        aggr_key = frozenset(attributes.items())
+        try:
+            aggr_key = frozenset(attributes.items())
+        except TypeError:
+            for attr_key, value in attributes.items():
+                if isinstance(value, Sequence) and not isinstance(
+                    value, (str, bytes)
+                ):
+                    attributes[attr_key] = cast(AttributeValue, tuple(value))
+            aggr_key = frozenset(attributes.items())
 
         if aggr_key not in self._attributes_aggregation:
             with self._lock:
