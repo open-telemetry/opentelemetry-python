@@ -30,9 +30,11 @@ from warnings import filterwarnings
 
 from typing_extensions import deprecated
 
+from opentelemetry import _logs
 from opentelemetry import context as context_api
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
@@ -85,6 +87,23 @@ _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
 
 
 _ENV_VALUE_UNSET = ""
+
+# OTEL_SEMCONV_EXCEPTION_SIGNAL_OPT_IN is an experimental, transitional opt-in
+# that may be removed once exceptions-as-logs is stable, so it is kept private
+# here rather than exported from opentelemetry.sdk.environment_variables. See
+# https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-logs/.
+_OTEL_SEMCONV_EXCEPTION_SIGNAL_OPT_IN = "OTEL_SEMCONV_EXCEPTION_SIGNAL_OPT_IN"
+_EXCEPTION_SIGNAL_LOGS = "logs"
+_EXCEPTION_SIGNAL_LOGS_DUP = "logs/dup"
+
+
+def _exception_signal_opt_in() -> str:
+    """Returns the OTEL_SEMCONV_EXCEPTION_SIGNAL_OPT_IN value.
+
+    Anything other than ``logs``/``logs/dup`` (unset or unrecognized) keeps the
+    existing span-event behavior.
+    """
+    return environ.get(_OTEL_SEMCONV_EXCEPTION_SIGNAL_OPT_IN, _ENV_VALUE_UNSET)
 
 
 class SpanProcessor:
@@ -1068,7 +1087,13 @@ class Span(trace_api.Span, ReadableSpan):
         timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
-        """Records an exception as a span event."""
+        """Records an exception as a span event and/or a log.
+
+        By default the exception is recorded as a span event. Set
+        ``OTEL_SEMCONV_EXCEPTION_SIGNAL_OPT_IN`` to ``logs`` to record it
+        as a log instead, or ``logs/dup`` to record both. See
+        https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-logs/.
+        """
         stacktrace = "".join(traceback.format_exception(exception))
         module = type(exception).__module__
         qualname = type(exception).__qualname__
@@ -1077,6 +1102,19 @@ class Span(trace_api.Span, ReadableSpan):
             if module and module != "builtins"
             else qualname
         )
+
+        signal = _exception_signal_opt_in()
+        if signal in (_EXCEPTION_SIGNAL_LOGS, _EXCEPTION_SIGNAL_LOGS_DUP):
+            self._record_exception_log(
+                exception_type=exception_type,
+                exception_message=str(exception),
+                stacktrace=stacktrace,
+                attributes=attributes,
+                timestamp=timestamp,
+            )
+            if signal == _EXCEPTION_SIGNAL_LOGS:
+                return
+
         _attributes: MutableMapping[str, types.AttributeValue] = {
             EXCEPTION_TYPE: exception_type,
             EXCEPTION_MESSAGE: str(exception),
@@ -1087,6 +1125,44 @@ class Span(trace_api.Span, ReadableSpan):
             _attributes.update(attributes)
         self.add_event(
             name="exception", attributes=_attributes, timestamp=timestamp
+        )
+
+    def _record_exception_log(
+        self,
+        *,
+        exception_type: str,
+        exception_message: str,
+        stacktrace: str,
+        attributes: types.Attributes,
+        timestamp: int | None,
+    ) -> None:
+        """Emits the exception as a log correlated with this span."""
+        log_attributes: dict[str, types.AttributeValue] = {
+            EXCEPTION_TYPE: exception_type,
+            EXCEPTION_MESSAGE: exception_message,
+            EXCEPTION_STACKTRACE: stacktrace,
+        }
+        if attributes:
+            log_attributes.update(attributes)
+
+        scope = self.instrumentation_scope
+        exception_logger = _logs.get_logger(
+            scope.name if scope else __name__,
+            (scope.version or "") if scope else "",
+            schema_url=scope.schema_url if scope else None,
+        )
+        # Exceptions are recorded at severity ERROR. The `exception.escaped`
+        # attribute is intentionally omitted as it is deprecated for the logs
+        # representation.
+        exception_logger.emit(
+            LogRecord(
+                timestamp=timestamp if timestamp is not None else time_ns(),
+                context=trace_api.set_span_in_context(self),
+                event_name="exception",
+                severity_number=SeverityNumber.ERROR,
+                severity_text="ERROR",
+                attributes=log_attributes,
+            )
         )
 
 
