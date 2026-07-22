@@ -212,6 +212,39 @@ file in the package it is testing. Make sure that the file name begins with
 
 ## Pull Requests
 
+### Issues and Assignment
+
+Every pull request in this repository needs to be tied to an issue, and its author needs to be
+assigned to that issue. The process works like this:
+
+1. **Anyone can open an issue.** When you do, please explain what you would like to see addressed.
+   This gives maintainers, approvers and the rest of the community a chance to discuss the idea and
+   reach consensus on whether it is something we want to do, and how.
+2. **Once the issue is considered valid**, an [Approver](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver)
+   or [Maintainer](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer)
+   will assign it to whoever is going to work on the corresponding pull request. If you would like
+   to be the one implementing it, say so on the issue, or reach out on [Slack](https://slack.cncf.io/)
+   or during the Python SIG meeting, and a maintainer will assign it to you.
+3. **Every pull request must reference the issue it addresses**, and its author must be the
+   assignee of that issue. Pull requests that are opened without a referenced issue, or whose
+   author is not assigned to that issue, will be closed automatically. Draft pull requests opened
+   to help illustrate a proposal that is still being discussed on its issue are exempt from this
+   until they are marked ready for review.
+
+We want to be clear that this process is not meant to discourage contributions or add unnecessary
+bureaucracy — everyone is still very welcome to open issues and work on them. It exists because the
+number of pull requests being generated with the help of AI coding tools has grown substantially,
+and this makes it difficult for our relatively small group of maintainers and approvers to review
+everything with the attention it deserves. Reaching agreement on an issue before any code is
+written lets us focus our limited review time on changes the community has already agreed are
+worth making.
+
+If writing some code helps you illustrate what you have in mind, you are welcome to open a
+[draft pull request](https://github.blog/2019-02-14-introducing-draft-pull-requests/) and link it
+from the issue discussion, even before the issue has been assigned. It is a great way to make a
+proposal concrete while it is still being discussed. Once the issue reaches consensus and is
+assigned, you can mark the pull request ready for review.
+
 ### How to Structure Pull Requests
 
 Smaller PRs get merged faster, improve review quality, and reduce the risk of conflicts. Please keep PRs small and focused:

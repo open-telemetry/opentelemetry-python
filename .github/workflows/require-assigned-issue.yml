@@ -1,0 +1,89 @@
+# This action requires that any PR references an issue via GitHub's closing
+# keywords (e.g. "Fixes #1234") or manual linking, and that the PR author is
+# assigned to that issue. PRs that don't meet both conditions are closed
+# automatically. Draft PRs are exempt until marked ready for review.
+# See CONTRIBUTING.md#issues-and-assignment for the full process.
+#
+# This uses pull_request_target (rather than pull_request) because PRs from
+# forks only get a read-only GITHUB_TOKEN under pull_request, and commenting
+# on / closing the PR requires write access. The job never checks out PR
+# code, only calls the GitHub API, so this is safe to do.
+
+name: require-assigned-issue
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  require-assigned-issue:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      pull-requests: write
+    steps:
+      - name: Check for a linked, assigned issue
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+
+            const exemptActors = ["dependabot[bot]", "otelbot[bot]"];
+            if (exemptActors.includes(author)) {
+              return;
+            }
+
+            const { repository } = await github.graphql(
+              `query($owner: String!, $repo: String!, $number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $number) {
+                    closingIssuesReferences(first: 10) {
+                      nodes {
+                        number
+                        assignees(first: 20) {
+                          nodes { login }
+                        }
+                      }
+                    }
+                  }
+                }
+              }`,
+              { owner, repo, number: pr.number }
+            );
+
+            const linkedIssues = repository.pullRequest.closingIssuesReferences.nodes;
+            const isAssignedToOne = linkedIssues.some((issue) =>
+              issue.assignees.nodes.some((assignee) => assignee.login === author)
+            );
+
+            if (linkedIssues.length > 0 && isAssignedToOne) {
+              return;
+            }
+
+            const contributingUrl =
+              "https://github.com/open-telemetry/opentelemetry-python/blob/main/CONTRIBUTING.md#issues-and-assignment";
+
+            const body =
+              linkedIssues.length === 0
+                ? `Thanks for opening this PR! Every PR in this repository needs to reference an issue that has already been discussed and assigned to its author (see [CONTRIBUTING.md](${contributingUrl})).\n\nThis PR doesn't appear to be linked to an issue yet. Please open an issue describing the change (if one doesn't already exist), get assigned to it by a maintainer or approver, and link it from this PR's description (e.g. \`Fixes #1234\`).\n\nClosing for now — feel free to reopen once the above is in place.`
+                : `Thanks for opening this PR! It references ${linkedIssues.map((issue) => `#${issue.number}`).join(", ")}, but you aren't currently assigned to ${linkedIssues.length > 1 ? "any of those issues" : "that issue"}.\n\nPer our [contribution process](${contributingUrl}), a maintainer or approver needs to assign you to the issue before a PR is opened against it. Please ask on the issue, on [Slack](https://slack.cncf.io/), or during the Python SIG meeting, and reopen this PR once you've been assigned.`;
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr.number,
+              body,
+            });
+
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: pr.number,
+              state: "closed",
+            });
