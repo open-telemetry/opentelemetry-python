@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 @contextmanager
 def _mock_clock(
-    shutdown_event: Mock | None = None,
+    shutdown_event: Mock,
 ) -> Iterator[Callable[[float], None]]:
     _now = 0.0
 
@@ -18,13 +18,11 @@ def _mock_clock(
     def get_time() -> float:
         return _now
 
-    if shutdown_event is not None:
+    def _wait(duration: float) -> bool:
+        advance(duration)
+        return False
 
-        def _wait(duration: float) -> bool:
-            advance(duration)
-            return False
-
-        shutdown_event.wait.side_effect = _wait
+    shutdown_event.wait.side_effect = _wait
 
     with patch(
         "opentelemetry.exporter.otlp.common.http.time.time",
