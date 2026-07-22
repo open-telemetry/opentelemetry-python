@@ -260,7 +260,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = True
         self._exporter.shutdown()
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:  # pylint: disable=no-self-use
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:  # pylint: disable=no-self-use
         return True
 
 
@@ -353,7 +353,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: int | None = None) -> bool:
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod

@@ -384,7 +384,7 @@ class LogRecordProcessor(abc.ABC):
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
 
     @abc.abstractmethod
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
         """Export all the received logs to the configured Exporter that have not yet
         been exported.
 
@@ -429,7 +429,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         for lp in self._log_record_processors:
             lp.shutdown()
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
         """Force flush the log processors one by one
 
         Args:
@@ -501,7 +501,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     def shutdown(self) -> None:
         self._submit_and_wait(lambda lp: lp.shutdown)
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
         """Force flush the log processors in parallel.
 
         Args:
@@ -977,7 +977,7 @@ class LoggerProvider(APILoggerProvider):
             atexit.unregister(self._at_exit_handler)
             self._at_exit_handler = None
 
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
         """Force flush the log processors.
 
         Args:
