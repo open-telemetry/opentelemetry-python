@@ -224,6 +224,39 @@ class TestCreateResourceAttributes(unittest.TestCase):
         resource = create_resource(config)
         self.assertEqual(list(resource.attributes["k"]), [True, False])  # type: ignore[arg-type]
 
+    def test_none_value_attribute_skipped_with_warning(self):
+        """An unset ${VAR} with no default yields a null value; it must be
+        skipped (not inserted as None or coerced) and a warning logged."""
+        with self.assertLogs(
+            "opentelemetry.configuration._resource", level="WARNING"
+        ) as cm:
+            config = ResourceConfig(
+                attributes=[
+                    AttributeNameValue(name="empty", value=None),
+                    AttributeNameValue(name="env", value="production"),
+                ]
+            )
+            resource = create_resource(config)
+        self.assertNotIn("empty", resource.attributes)
+        self.assertEqual(resource.attributes["env"], "production")
+        self.assertTrue(any("empty" in msg for msg in cm.output))
+
+    def test_none_value_typed_attribute_skipped(self):
+        """A null value with a declared type must be skipped, not coerced
+        (int(None)/str(None) would raise or produce garbage)."""
+        with self.assertLogs(
+            "opentelemetry.configuration._resource", level="WARNING"
+        ):
+            config = ResourceConfig(
+                attributes=[
+                    AttributeNameValue(
+                        name="k", value=None, type=AttributeType.int
+                    )
+                ]
+            )
+            resource = create_resource(config)
+        self.assertNotIn("k", resource.attributes)
+
     def test_attribute_type_bool_array_string_values(self):
         """bool_array must use _coerce_bool, not plain bool() — 'false' must be False."""
         config = ResourceConfig(
