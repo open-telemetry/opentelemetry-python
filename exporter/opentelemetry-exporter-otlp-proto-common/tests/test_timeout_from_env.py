@@ -11,18 +11,24 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 
 
 class TestTimeoutFromEnv(unittest.TestCase):
-    @patch.dict("os.environ", {"TEST_TIMEOUT": "15"})
-    def test_valid_value(self):
-        self.assertEqual(_timeout_from_env("TEST_TIMEOUT", default=10), 15)
-
-    @patch.dict("os.environ", {}, clear=True)
-    def test_unset_returns_default(self):
-        self.assertEqual(_timeout_from_env("TEST_TIMEOUT", default=10), 10)
-        self.assertIsNone(_timeout_from_env("TEST_TIMEOUT"))
-
-    @patch.dict("os.environ", {"TEST_TIMEOUT": " "})
-    def test_empty_value_returns_default(self):
-        self.assertEqual(_timeout_from_env("TEST_TIMEOUT", default=10), 10)
+    def test_simple_cases(self):
+        cases = [
+            ("valid value", {"TEST_TIMEOUT": "15"}, 10, 15),
+            ("unset falls back to default", {}, 10, 10),
+            ("unset with no default returns None", {}, None, None),
+            (
+                "empty/whitespace falls back to default",
+                {"TEST_TIMEOUT": " "},
+                10,
+                10,
+            ),
+        ]
+        for name, env, default, expected in cases:
+            with self.subTest(name), patch.dict("os.environ", env, clear=True):
+                self.assertEqual(
+                    _timeout_from_env("TEST_TIMEOUT", default=default),
+                    expected,
+                )
 
     @patch.dict("os.environ", {"TEST_TIMEOUT": "abc"})
     def test_invalid_value_warns_and_returns_default(self):

@@ -64,7 +64,9 @@ def _timeout_from_env(
             return float(value)
         except ValueError:
             _logger.warning(
-                "Invalid value %r for %s, ignoring it.", value, environ_key
+                "Invalid value %r for environment variable %s, ignoring it.",
+                value,
+                environ_key,
             )
     return default
 
