@@ -21,10 +21,10 @@ from opentelemetry.exporter.http.transport._base import (
 )
 
 # pylint: disable-next=import-error
-from opentelemetry.exporter.otlp.common._http import (
+from opentelemetry.exporter.otlp.common.http import (
     Compression,
-    OTLPHTTPClient,
     _extract_retry_after,
+    _OTLPHTTPClient,
 )
 
 
@@ -49,7 +49,7 @@ def _mock_clock(
         shutdown_event.wait.side_effect = _wait
 
     with patch(
-        "opentelemetry.exporter.otlp.common._http.time.time",
+        "opentelemetry.exporter.otlp.common.http.time.time",
         side_effect=get_time,
     ):
         yield advance
@@ -115,7 +115,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
         compression=Compression.NONE,
         jitter=0.0,
     ):
-        return OTLPHTTPClient(
+        return _OTLPHTTPClient(
             transport=transport,
             endpoint="http://example.test/v1/traces",
             timeout=timeout,
@@ -147,7 +147,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 self.assertIsNone(result.error)
 
     @patch(
-        "opentelemetry.exporter.otlp.common._http.time.time",
+        "opentelemetry.exporter.otlp.common.http.time.time",
         side_effect=(100.0, 100.0, 100.0),
     )
     def test_export_request_arguments(self, mock_time):
@@ -479,7 +479,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
         client._shutdown_event = shutdown_event
 
         with patch(
-            "opentelemetry.exporter.otlp.common._http.time.time",
+            "opentelemetry.exporter.otlp.common.http.time.time",
             return_value=base,
         ):
             result = client.export(b"payload")
@@ -509,7 +509,7 @@ class TestOTLPHTTPClient(unittest.TestCase):
         client._shutdown_event = shutdown_event
 
         with patch(
-            "opentelemetry.exporter.otlp.common._http.time.time",
+            "opentelemetry.exporter.otlp.common.http.time.time",
             return_value=base,
         ):
             result = client.export(b"payload")

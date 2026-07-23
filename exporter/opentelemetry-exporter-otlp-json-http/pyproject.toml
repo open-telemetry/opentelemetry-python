@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "opentelemetry-exporter-otlp-json-file"
+name = "opentelemetry-exporter-otlp-json-http"
 dynamic = ["version"]
-description = "OpenTelemetry JSON File Exporter"
+description = "OpenTelemetry OTLP JSON Exporter"
 readme = "README.rst"
 license = "Apache-2.0"
 requires-python = ">=3.10"
@@ -26,26 +26,28 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
+  "opentelemetry-sdk ~= 1.45.0.dev",
+  "opentelemetry-proto-json == 0.66b0.dev",
   "opentelemetry-exporter-otlp-common == 0.66b0.dev",
   "opentelemetry-exporter-otlp-json-common == 0.66b0.dev",
-  "opentelemetry-sdk ~= 1.45.0.dev",
+  "opentelemetry-exporter-http-transport[urllib3] == 0.66b0.dev",
 ]
 
 [project.entry-points.opentelemetry_traces_exporter]
-otlp_json_file = "opentelemetry.exporter.otlp.json.file.trace_exporter:FileSpanExporter"
+otlp_json_http = "opentelemetry.exporter.otlp.json.http.trace_exporter:OTLPSpanExporter"
 
 [project.entry-points.opentelemetry_metrics_exporter]
-otlp_json_file = "opentelemetry.exporter.otlp.json.file.metric_exporter:FileMetricExporter"
+otlp_json_http = "opentelemetry.exporter.otlp.json.http.metric_exporter:OTLPMetricExporter"
 
 [project.entry-points.opentelemetry_logs_exporter]
-otlp_json_file = "opentelemetry.exporter.otlp.json.file._log_exporter:FileLogExporter"
+otlp_json_http = "opentelemetry.exporter.otlp.json.http._log_exporter:OTLPLogExporter"
 
 [project.urls]
-Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-json-file"
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-json-http"
 Repository = "https://github.com/open-telemetry/opentelemetry-python"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/otlp/json/file/version/__init__.py"
+path = "src/opentelemetry/exporter/otlp/json/http/version/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
