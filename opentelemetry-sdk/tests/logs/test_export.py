@@ -328,7 +328,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         # formatting was applied
 
         # string msg with no args - getMessage bypasses formatting and sets the string directly
-        logger.warning("a string with a percent-s: %s")
+        logger.warning("a string with a percent-s: %s")  # pylint: disable=logging-too-few-args
         # string msg with args - getMessage formats args into the msg
         logger.warning("a string with a percent-s: %s", "and arg")
         # non-string msg with args - getMessage stringifies msg and formats args into it
