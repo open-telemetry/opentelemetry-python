@@ -532,8 +532,7 @@ class PeriodicExportingMetricReader(MetricReader):
                 weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
 
                 def _after_in_child() -> None:
-                    at_fork = weak_at_fork()
-                    if at_fork is not None:
+                    if at_fork := weak_at_fork():
                         at_fork()
 
                 os.register_at_fork(after_in_child=_after_in_child)
