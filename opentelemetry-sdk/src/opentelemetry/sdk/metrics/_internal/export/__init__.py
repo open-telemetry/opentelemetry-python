@@ -6,7 +6,7 @@ import math
 import os
 import weakref
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from enum import Enum
 from logging import getLogger
 from os import environ, linesep
@@ -55,7 +55,10 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _ObservableUpDownCounter,
     _UpDownCounter,
 )
-from opentelemetry.sdk.metrics._internal.point import MetricsData
+from opentelemetry.sdk.metrics._internal.point import (
+    MetricsData,
+    ScopeMetrics,
+)
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
@@ -178,6 +181,34 @@ class ConsoleMetricExporter(MetricExporter):
         return True
 
 
+class MetricProducer(ABC):
+    """Interface bridging third-party metric sources into a :class:`MetricReader`.
+
+    An implementation is registered on a ``MetricReader`` (via its
+    ``metric_producers`` argument) and its metrics are collected alongside the
+    SDK's own internal state whenever the reader collects. See the OpenTelemetry
+    metrics SDK specification on
+    `MetricProducer <https://opentelemetry.io/docs/specs/otel/metrics/sdk/#metricproducer>`__.
+    """
+
+    @abstractmethod
+    def produce(
+        self, timeout_millis: float = 10_000
+    ) -> Iterable[ScopeMetrics]:
+        """Returns the producer's metrics as an iterable of ``ScopeMetrics``.
+
+        A producer SHOULD emit a single ``InstrumentationScope`` that identifies
+        the producer itself.
+
+        Args:
+            timeout_millis: Amount of time in milliseconds before the produce
+                operation should time out.
+
+        Returns:
+            An iterable of :class:`~opentelemetry.sdk.metrics.export.ScopeMetrics`.
+        """
+
+
 class MetricReader(ABC):
     # pylint: disable=too-many-branches,broad-exception-raised
     """
@@ -207,6 +238,9 @@ class MetricReader(ABC):
             default aggregations. The aggregation defined here will be
             overridden by an aggregation defined by a view that is not
             `DefaultAggregation`.
+        metric_producers: A sequence of `MetricProducer` instances that bridge
+            third-party metric sources. Their metrics are collected alongside
+            the SDK's own metrics whenever this reader collects.
 
     .. document protected _receive_metrics which is a intended to be overridden by subclass
     .. automethod:: _receive_metrics
@@ -221,8 +255,12 @@ class MetricReader(ABC):
         ]
         | None = None,
         *,
+        metric_producers: Sequence[MetricProducer] = (),
         otel_component_type: OtelComponentTypeValues | None = None,
     ) -> None:
+        self._metric_producers: tuple[MetricProducer, ...] = tuple(
+            metric_producers
+        )
         self._collect: (
             Callable[
                 [
@@ -432,10 +470,13 @@ class InMemoryMetricReader(MetricReader):
             type, opentelemetry.sdk.metrics.view.Aggregation
         ]
         | None = None,
+        *,
+        metric_producers: Sequence[MetricProducer] = (),
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
+            metric_producers=metric_producers,
         )
         self._lock = RLock()
         self._metrics_data: MetricsData | None = None
@@ -478,11 +519,14 @@ class PeriodicExportingMetricReader(MetricReader):
         exporter: MetricExporter,
         export_interval_millis: float | None = None,
         export_timeout_millis: float | None = None,
+        *,
+        metric_producers: Sequence[MetricProducer] = (),
     ) -> None:
         # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
             preferred_temporality=exporter._preferred_temporality,
             preferred_aggregation=exporter._preferred_aggregation,
+            metric_producers=metric_producers,
             otel_component_type=OtelComponentTypeValues.PERIODIC_METRIC_READER,
         )
 
