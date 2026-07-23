@@ -1,0 +1,91 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+import unittest
+
+from google.rpc.status_pb2 import Status
+from requests.models import Response
+
+from opentelemetry.exporter.otlp.proto.http._common import _parse_response_body
+
+
+def _make_response(
+    content: bytes,
+    content_type: str,
+    reason: str = "Bad Request",
+    status_code: int = 400,
+) -> Response:
+    resp = Response()
+    resp.status_code = status_code
+    resp.reason = reason
+    resp._content = content  # pylint: disable=protected-access
+    resp.headers["Content-Type"] = content_type
+    return resp
+
+
+class TestParseResponseBody(unittest.TestCase):
+    def test_protobuf_content_type_with_error_message(self):
+        status = Status(code=8, message="quota exceeded for project")
+        resp = _make_response(
+            content=status.SerializeToString(),
+            content_type="application/x-protobuf",
+        )
+        self.assertEqual(
+            _parse_response_body(resp),
+            "quota exceeded for project",
+        )
+
+    def test_protobuf_content_type_without_message_falls_back_to_reason(self):
+        status = Status(code=2)
+        resp = _make_response(
+            content=status.SerializeToString(),
+            content_type="application/x-protobuf",
+            reason="Bad Request",
+        )
+        self.assertEqual(
+            _parse_response_body(resp),
+            "Bad Request",
+        )
+
+    def test_protobuf_content_type_with_charset_parameter(self):
+        status = Status(code=8, message="quota exceeded")
+        resp = _make_response(
+            content=status.SerializeToString(),
+            content_type="application/x-protobuf; charset=utf-8",
+        )
+        self.assertEqual(
+            _parse_response_body(resp),
+            "quota exceeded",
+        )
+
+    def test_unknown_content_type_returns_text(self):
+        resp = _make_response(
+            content=b"something went wrong",
+            content_type="text/plain",
+        )
+        self.assertEqual(
+            _parse_response_body(resp),
+            "something went wrong",
+        )
+
+    def test_empty_body_returns_reason(self):
+        resp = _make_response(
+            content=b"",
+            content_type="application/x-protobuf",
+            reason="Service Unavailable",
+        )
+        self.assertEqual(
+            _parse_response_body(resp),
+            "Service Unavailable",
+        )
+
+    def test_malformed_protobuf_body_falls_back_to_reason(self):
+        resp = _make_response(
+            content=b"\xff\xfe invalid protobuf",
+            content_type="application/x-protobuf",
+            reason="Bad Request",
+        )
+        self.assertEqual(
+            _parse_response_body(resp),
+            "Bad Request",
+        )
