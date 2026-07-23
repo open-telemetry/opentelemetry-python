@@ -241,7 +241,7 @@ class TestBatchProcessor:
         # it to capture exceptions in memory, which would be lost on os._exit(0).
         old_fd = os.dup(sys.stderr.fileno())
         old_hook = sys.unraisablehook
-        
+
         try:
             os.dup2(w_fd, sys.stderr.fileno())
             sys.unraisablehook = sys.__unraisablehook__
@@ -251,7 +251,7 @@ class TestBatchProcessor:
                 os.close(r_fd)
                 # os.fork() has already run the at_fork hooks.
                 os._exit(0)
-                
+
             os.waitpid(pid, 0)
         finally:
             # Restore original stderr and hook in parent

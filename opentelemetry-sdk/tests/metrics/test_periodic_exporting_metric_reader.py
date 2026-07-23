@@ -309,7 +309,10 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
         )
 
-    @pytest.mark.skipif(not hasattr(os, "fork") or not hasattr(os, "register_at_fork"), reason="needs fork and register_at_fork")
+    @pytest.mark.skipif(
+        not hasattr(os, "fork") or not hasattr(os, "register_at_fork"),
+        reason="needs fork and register_at_fork",
+    )
     def test_garbage_collected_processor_does_not_crash_on_fork(self):
         exporter = FakeMetricsExporter(
             preferred_aggregation={
@@ -333,7 +336,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         # it to capture exceptions in memory, which would be lost on os._exit(0).
         old_fd = os.dup(sys.stderr.fileno())
         old_hook = sys.unraisablehook
-        
+
         try:
             os.dup2(w_fd, sys.stderr.fileno())
             sys.unraisablehook = sys.__unraisablehook__
@@ -343,7 +346,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
                 os.close(r_fd)
                 # os.fork() has already run the at_fork hooks.
                 os._exit(0)
-                
+
             _, status = os.waitpid(pid, 0)
             self.assertEqual(status, 0)
         finally:
