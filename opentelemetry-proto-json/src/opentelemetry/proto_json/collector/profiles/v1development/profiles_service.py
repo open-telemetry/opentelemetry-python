@@ -8,17 +8,14 @@ from __future__ import annotations
 
 import builtins
 import dataclasses
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.profiles.v1development.profiles
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportProfilesServiceRequest(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportProfilesServiceRequest
@@ -64,7 +61,7 @@ class ExportProfilesServiceRequest(opentelemetry.proto_json._json_codec.JsonMess
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportProfilesServiceResponse(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportProfilesServiceResponse
@@ -105,7 +102,7 @@ class ExportProfilesServiceResponse(opentelemetry.proto_json._json_codec.JsonMes
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportProfilesPartialSuccess(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportProfilesPartialSuccess

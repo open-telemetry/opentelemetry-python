@@ -6,12 +6,14 @@ from __future__ import annotations
 import abc
 import base64
 import collections.abc
+import enum
 import json
 import math
 import typing
 
 T = typing.TypeVar("T")
 M = typing.TypeVar("M", bound="JsonMessage")
+EnumT = typing.TypeVar("EnumT", bound=enum.IntEnum)
 
 
 class JsonMessage(abc.ABC):
@@ -246,3 +248,41 @@ def validate_type(
             f"Field '{field_name}' expected {expected_types}, "
             f"got {type(value).__name__}"
         )
+
+
+def decode_enum(
+    value: typing.Any,
+    enum_type: type[EnumT],
+    field_name: str,
+) -> EnumT:
+    """
+    Decode a JSON enum value into an enum member.
+
+    Per the ProtoJSON spec, parsers must accept both enum names (str)
+    and integer values (int).
+
+    Args:
+        value: The enum name or integer value to decode.
+        enum_type: The enum class to decode into.
+        field_name: The name of the field being decoded (for error messages).
+    Returns:
+        The corresponding enum member.
+    """
+    if isinstance(value, bool):
+        raise TypeError(
+            f"Field '{field_name}' expected int or str, got bool"
+        )
+    validate_type(value, (int, str), field_name)
+    if isinstance(value, str):
+        try:
+            return enum_type[value]
+        except KeyError:
+            raise KeyError(
+                f"Invalid enum name '{value}' for field '{field_name}'"
+            ) from None
+    try:
+        return enum_type(value)
+    except ValueError:
+        raise ValueError(
+            f"Invalid enum value {value} for field '{field_name}'"
+        ) from None
