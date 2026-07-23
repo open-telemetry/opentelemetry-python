@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: a declarative config key present with an empty (null) value on an object-typed node (e.g. `always_on:` or a `- service:` detector) is now treated the same as an explicit empty mapping (`always_on: {}`) instead of failing sampler type dispatch or silently skipping the detector.

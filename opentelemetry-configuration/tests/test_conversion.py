@@ -42,6 +42,13 @@ class _WithEnum:
     filter: ExemplarFilter | None = None
 
 
+@dataclass
+class _WithMapping:
+    # ``dict[str, Any]``-typed node, like the sampler/detector leaf configs.
+    option: dict[str, Any] | None = None
+    name: str | None = None
+
+
 class TestDictToDataclass(unittest.TestCase):
     def test_raises_on_non_dataclass(self):
         # _dict_to_dataclass is internal and assumes cls is a dataclass.
@@ -108,3 +115,23 @@ class TestDictToDataclass(unittest.TestCase):
             {"filter": ExemplarFilter.trace_based}, _WithEnum
         )
         self.assertIs(result.filter, ExemplarFilter.trace_based)
+
+    def test_present_null_mapping_coerced_to_empty_dict(self):
+        # A key present with a null YAML value (e.g. ``option:``) on a
+        # dict-typed node means "select with empty config", so it must become
+        # an empty mapping rather than None. Regression test for #5451.
+        result = _dict_to_dataclass({"option": None}, _WithMapping)
+        self.assertEqual(result.option, {})
+
+    def test_explicit_empty_mapping_preserved(self):
+        result = _dict_to_dataclass({"option": {}}, _WithMapping)
+        self.assertEqual(result.option, {})
+
+    def test_absent_mapping_stays_none(self):
+        # An omitted optional section must remain unset, unlike a present null.
+        result = _dict_to_dataclass({"name": "x"}, _WithMapping)
+        self.assertIsNone(result.option)
+
+    def test_present_null_scalar_stays_none(self):
+        result = _dict_to_dataclass({"name": None}, _WithMapping)
+        self.assertIsNone(result.name)

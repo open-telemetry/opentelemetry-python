@@ -40,11 +40,18 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
     dataclasses. Other values (primitives, enums, ``dict[str, Any]`` aliases)
     pass through unchanged.
     """
-    if value is None:
-        return None
-
     unwrapped = _unwrap_optional(type_hint)
     origin = get_origin(unwrapped)
+
+    if value is None:
+        # A mapping key present with an empty (null) YAML value parses to
+        # ``None``. For ``dict[str, Any]``-typed nodes the declarative-config
+        # spec treats a present null as "select this with an empty config" —
+        # e.g. ``always_on:`` is equivalent to ``always_on: {}``. Coerce it to
+        # an empty mapping so downstream ``is not None`` type dispatch selects
+        # it. Scalar and dataclass fields keep ``None`` (an absent optional
+        # section stays unset).
+        return {} if origin is dict else None
 
     # list[X] — recurse on each element
     if origin is list and isinstance(value, list):
