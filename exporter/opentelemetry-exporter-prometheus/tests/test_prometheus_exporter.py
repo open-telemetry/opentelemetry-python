@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
-
+# pylint: disable=too-many-lines
+from collections.abc import Callable
 from textwrap import dedent
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -69,11 +70,13 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         prefix: str = "",
         scope: InstrumentationScope | None = None,
         scope_info_enabled: bool = False,
+        resource: Resource | None = None,
+        resource_attr_filter: Callable[[str], bool] | None = None,
     ) -> None:
         metrics_data = MetricsData(
             resource_metrics=[
                 ResourceMetrics(
-                    resource=Mock(),
+                    resource=resource or Mock(),
                     scope_metrics=[
                         ScopeMetrics(
                             scope=scope or Mock(),
@@ -90,6 +93,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             disable_target_info=True,
             scope_info_enabled=scope_info_enabled,
             prefix=prefix,
+            resource_attr_filter=resource_attr_filter,
         )
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
@@ -866,6 +870,177 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(
                 labels[_OTEL_SCOPE_SCHEMA_URL_LABEL], "schema_url"
             )
+
+    def test_resource_attr_filter_default(self):
+        metric = _generate_gauge(
+            "test_gauge",
+            42,
+            attributes={"env": "prod"},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource({"service.name": "my-service"}),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector(
+            disable_target_info=True, scope_info_enabled=False
+        )
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            labels = prometheus_metric.samples[0].labels
+            self.assertNotIn("service_name", labels)
+            self.assertEqual(labels["env"], "prod")
+
+    def test_resource_attr_filter_labels(self):
+        metric = _generate_gauge(
+            "test_gauge",
+            42,
+            attributes={"env": "prod"},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        {"service.name": "my-service", "host.name": "myhost"}
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector(
+            disable_target_info=True,
+            scope_info_enabled=False,
+            resource_attr_filter=lambda key: key == "service.name",
+        )
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            labels = prometheus_metric.samples[0].labels
+            self.assertEqual(labels["service_name"], "my-service")
+            self.assertEqual(labels["env"], "prod")
+            self.assertNotIn("host_name", labels)
+
+    def test_resource_attr_filter_receives_raw_keys(self):
+        metric = _generate_gauge(
+            "test_gauge",
+            42,
+            attributes={},
+            description="testdesc",
+            unit="",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        {"service.name": "my-service", "hostname": "myhost"}
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+        collector = _CustomCollector(
+            disable_target_info=True,
+            scope_info_enabled=False,
+            resource_attr_filter=lambda key: "." in key,
+        )
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            labels = prometheus_metric.samples[0].labels
+            self.assertEqual(labels["service_name"], "my-service")
+            self.assertNotIn("hostname", labels)
+
+    def test_resource_attr_filter_text_format(self):
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={"env": "prod"},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{env="prod",service_name="my-service"} 42.0
+                """
+            ),
+            resource=Resource({"service.name": "my-service"}),
+            resource_attr_filter=lambda key: True,
+        )
+
+    def test_resource_attr_filter_with_scope_labels_text_format(self):
+        scope = InstrumentationScope(name="library.test", version="1.0")
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{otel_scope_name="library.test",otel_scope_schema_url="",otel_scope_version="1.0",service_name="my-service"} 42.0
+                """
+            ),
+            scope=scope,
+            scope_info_enabled=True,
+            resource=Resource({"service.name": "my-service"}),
+            resource_attr_filter=lambda key: True,
+        )
+
+    def test_resource_attr_filter_point_attr_precedence_text_format(self):
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={"env": "point-env"},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{env="point-env"} 42.0
+                """
+            ),
+            resource=Resource({"env": "resource-env"}),
+            resource_attr_filter=lambda key: True,
+        )
 
     def test_multiple_data_points_with_different_label_sets(self):
         hist_point_1 = HistogramDataPoint(

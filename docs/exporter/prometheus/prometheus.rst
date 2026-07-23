@@ -79,6 +79,47 @@ To omit instrumentation scope labels from exported metrics, set
 
     reader = PrometheusMetricReader(scope_info_enabled=False)
 
+Resource labels
+-------------------
+
+By default, resource attributes are exported on the ``target_info`` metric. To
+also add selected resource attributes as Prometheus labels on every exported
+metric, pass a ``resource_attr_filter`` callback to ``PrometheusMetricReader``.
+The callback receives the original resource attribute key and returns ``True``
+for attributes that should be copied to metric labels::
+
+    from prometheus_client import start_http_server
+
+    from opentelemetry import metrics
+    from opentelemetry.exporter.prometheus import PrometheusMetricReader
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
+    resource = Resource.create(
+        attributes={
+            SERVICE_NAME: "checkout-service",
+            "service.namespace": "shop",
+            "deployment.environment": "production",
+        }
+    )
+
+    start_http_server(port=9464, addr="localhost")
+    included_resource_attrs = {SERVICE_NAME, "service.namespace"}
+    reader = PrometheusMetricReader(
+        resource_attr_filter=lambda key: key in included_resource_attrs
+    )
+    provider = MeterProvider(resource=resource, metric_readers=[reader])
+    metrics.set_meter_provider(provider)
+
+    meter = metrics.get_meter(__name__)
+    counter = meter.create_counter("orders")
+    counter.add(1)
+
+The exported metric includes ``service_name="checkout-service"`` and
+``service_namespace="shop"`` labels. Resource attribute keys are sanitized to
+valid Prometheus label names, and metric attributes with the same sanitized name
+take precedence over copied resource attributes.
+
 Configuration
 -------------
 
