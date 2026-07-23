@@ -7,10 +7,7 @@ from unittest.mock import patch
 
 import yaml
 
-from opentelemetry.configuration.file import (
-    EnvSubstitutionError,
-    substitute_env_vars,
-)
+from opentelemetry.configuration.file import substitute_env_vars
 
 
 class TestEnvSubstitution(unittest.TestCase):
@@ -40,12 +37,17 @@ class TestEnvSubstitution(unittest.TestCase):
             result = substitute_env_vars("name: ${SERVICE_NAME:-default}")
             self.assertEqual(result, "name: actual")
 
-    def test_missing_variable_raises_error(self):
-        """Test ${VAR} raises error when variable missing."""
+    def test_missing_variable_without_default_substitutes_empty(self):
+        """An unset ${VAR} without a default is replaced with an empty value.
+
+        Per the declarative configuration spec, unset variables without
+        defaults are replaced with an empty value, which YAML then reads as
+        null. This matches the Java and Node.js implementations.
+        """
         with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaises(EnvSubstitutionError) as ctx:
-                substitute_env_vars("name: ${MISSING_VAR}")
-            self.assertIn("MISSING_VAR", str(ctx.exception))
+            result = substitute_env_vars("name: ${MISSING_VAR}")
+            self.assertEqual(result, "name: ")
+            self.assertIsNone(yaml.safe_load(result)["name"])
 
     def test_dollar_sign_escape(self):
         """Test $$ escapes to literal $."""
