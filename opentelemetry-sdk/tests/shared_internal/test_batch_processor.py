@@ -230,7 +230,7 @@ class TestBatchProcessor:
         del processor
         gc.collect()
 
-        self.assertIsNone(w_ref())
+        assert w_ref() is None
 
         # The bug causes an unraisable exception to be printed to stderr.
         # We redirect stderr to a pipe before fork to capture it.
