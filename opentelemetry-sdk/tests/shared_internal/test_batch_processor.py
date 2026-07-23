@@ -232,7 +232,7 @@ class TestBatchProcessor:
         # The bug causes an unraisable exception to be printed to stderr.
         # We redirect stderr to a pipe before fork to capture it.
         r_fd, w_fd = os.pipe()
-        
+
         # Save original stderr and redirect it to the pipe
         # We also temporarily restore the default sys.unraisablehook. Pytest overrides
         # it to capture exceptions in memory, which would be lost on os._exit(0).
@@ -255,7 +255,7 @@ class TestBatchProcessor:
 
         _, status = os.waitpid(pid, 0)
         assert status == 0
-        
+
         os.set_blocking(r_fd, False)
         child_stderr = b""
         while True:
@@ -268,7 +268,7 @@ class TestBatchProcessor:
                 break
         child_stderr = child_stderr.decode("utf-8")
         os.close(r_fd)
-        
+
         assert "TypeError" not in child_stderr
 
     def test_shutdown_allows_1_export_to_finish(
