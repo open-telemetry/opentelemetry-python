@@ -118,8 +118,7 @@ class BatchProcessor(Generic[Telemetry]):
             weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
 
             def _after_in_child() -> None:
-                reinit = weak_reinit()
-                if reinit is not None:
+                if reinit := weak_reinit():
                     reinit()
 
             os.register_at_fork(after_in_child=_after_in_child)
