@@ -137,19 +137,25 @@ class TestConfigLoader(unittest.TestCase):
         finally:
             os.unlink(temp_path)
 
-    def test_missing_required_env_var(self):
-        """Test error when required env var is missing."""
+    def test_unset_env_var_without_default_substitutes_empty(self):
+        """An unset env var without a default resolves to an empty value.
+
+        Per the declarative configuration spec, an unset ``${VAR}`` reference
+        with no default is replaced with an empty value rather than raising,
+        so the file still loads. A default (``${ENV:-production}``) is still
+        applied when its variable is unset.
+        """
         config_path = self.test_data_dir / "config_with_env_vars.yaml"
 
         with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(str(config_path))
+            config = load_config_file(str(config_path))
 
-            # Should mention substitution or env var error
-            self.assertTrue(
-                "substitution" in str(ctx.exception).lower()
-                or "environment" in str(ctx.exception).lower()
-            )
+        attributes = {
+            attribute.name: attribute.value
+            for attribute in config.resource.attributes
+        }
+        self.assertIsNone(attributes["service.name"])
+        self.assertEqual(attributes["deployment.environment"], "production")
 
     def test_yml_extension(self):
         """Test .yml extension is supported."""
