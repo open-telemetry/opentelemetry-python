@@ -309,7 +309,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
         )
 
-    @pytest.mark.skipif(not hasattr(os, "fork"), reason="needs *nix")
+    @pytest.mark.skipif(not hasattr(os, "fork") or not hasattr(os, "register_at_fork"), reason="needs fork and register_at_fork")
     def test_garbage_collected_processor_does_not_crash_on_fork(self):
         exporter = FakeMetricsExporter(
             preferred_aggregation={
@@ -317,9 +317,12 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             },
         )
         processor = PeriodicExportingMetricReader(exporter)
+        w_ref = weakref.ref(processor)
         processor.shutdown()
         del processor
         gc.collect()
+
+        self.assertIsNone(w_ref())
 
         # The bug causes an unraisable exception to be printed to stderr.
         # We redirect stderr to a pipe before fork to capture it.
@@ -329,24 +332,26 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         # We also temporarily restore the default sys.unraisablehook. Pytest overrides
         # it to capture exceptions in memory, which would be lost on os._exit(0).
         old_fd = os.dup(sys.stderr.fileno())
-        os.dup2(w_fd, sys.stderr.fileno())
         old_hook = sys.unraisablehook
-        sys.unraisablehook = sys.__unraisablehook__
+        
+        try:
+            os.dup2(w_fd, sys.stderr.fileno())
+            sys.unraisablehook = sys.__unraisablehook__
 
-        pid = os.fork()
-        if pid == 0:
-            os.close(r_fd)
-            # os.fork() has already run the at_fork hooks.
-            os._exit(0)
-
-        # Restore original stderr and hook in parent
-        sys.unraisablehook = old_hook
-        os.dup2(old_fd, sys.stderr.fileno())
-        os.close(old_fd)
-        os.close(w_fd)
-
-        _, status = os.waitpid(pid, 0)
-        self.assertEqual(status, 0)
+            pid = os.fork()
+            if pid == 0:
+                os.close(r_fd)
+                # os.fork() has already run the at_fork hooks.
+                os._exit(0)
+                
+            _, status = os.waitpid(pid, 0)
+            self.assertEqual(status, 0)
+        finally:
+            # Restore original stderr and hook in parent
+            sys.unraisablehook = old_hook
+            os.dup2(old_fd, sys.stderr.fileno())
+            os.close(old_fd)
+            os.close(w_fd)
 
         os.set_blocking(r_fd, False)
         child_stderr = b""
