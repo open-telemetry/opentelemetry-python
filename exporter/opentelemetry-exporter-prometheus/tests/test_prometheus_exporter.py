@@ -21,6 +21,7 @@ from opentelemetry.exporter.prometheus import (
     _CustomCollector,
 )
 from opentelemetry.metrics import NoOpMeterProvider
+from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -31,6 +32,7 @@ from opentelemetry.sdk.metrics.export import (
     ResourceMetrics,
     ScopeMetrics,
 )
+from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.metrictestutil import (
@@ -920,3 +922,33 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 """
             ),
         )
+
+    def test_preferred_aggregation(self):
+        custom_aggregation = {
+            HistogramInstrument: ExplicitBucketHistogramAggregation(
+                boundaries=[1.0, 5.0, 10.0]
+            )
+        }
+        reader = PrometheusMetricReader(
+            preferred_aggregation=custom_aggregation,
+            registry=CollectorRegistry(),
+        )
+        provider = MeterProvider(
+            metric_readers=[reader], shutdown_on_exit=False
+        )
+        meter = provider.get_meter("test")
+        histogram = meter.create_histogram("test_histogram")
+        histogram.record(5)
+
+        result = list(reader._collector.collect())
+        self.assertTrue(result)
+        bucket_bounds = [
+            sample.labels["le"]
+            for metric_family in result
+            for sample in metric_family.samples
+            if "le" in sample.labels
+        ]
+        self.assertIn("1.0", bucket_bounds)
+        self.assertIn("5.0", bucket_bounds)
+        self.assertIn("10.0", bucket_bounds)
+        reader.shutdown()
