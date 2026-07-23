@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: add a `max_request_size` argument to the OTLP HTTP exporters (traces, logs, metrics); serialized requests larger than the limit are dropped before sending, measured before compression. Defaults to 64 MiB (enabled); set to 0 to disable. Mirrors opentelemetry-go#8157.
