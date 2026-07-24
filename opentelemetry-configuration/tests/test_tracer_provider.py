@@ -16,6 +16,9 @@ from opentelemetry.configuration._tracer_provider import (
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
 from opentelemetry.configuration.models import (
+    AttributeLimits,
+)
+from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
 from opentelemetry.configuration.models import (
@@ -851,11 +854,15 @@ class TestCreateSpanLimits(unittest.TestCase):
             {
                 "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT": "1",
                 "OTEL_SPAN_EVENT_COUNT_LIMIT": "2",
+                "OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT": "3",
+                "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "4",
             },
         ):
             provider = self._create_with_limits(SpanLimitsConfig())
         self.assertEqual(provider._span_limits.max_span_attributes, 128)
         self.assertEqual(provider._span_limits.max_events, 128)
+        self.assertIsNone(provider._span_limits.max_attribute_length)
+        self.assertIsNone(provider._span_limits.max_span_attribute_length)
 
 
 class TestCreateIdGenerator(unittest.TestCase):
@@ -907,3 +914,66 @@ class TestCreateIdGenerator(unittest.TestCase):
         """Empty IdGenerator config (no type specified) raises ConfigurationError."""
         with self.assertRaises(ConfigurationError):
             self._make_provider(IdGeneratorConfig())
+
+
+class TestGlobalAttributeLimitsFallback(unittest.TestCase):
+    # pylint: disable=no-self-use
+
+    def test_global_attribute_count_limit_used_when_no_per_signal_limits(self):
+        global_limits = AttributeLimits(attribute_count_limit=42)
+        provider = create_tracer_provider(
+            TracerProviderConfig(processors=[]),
+            global_attribute_limits=global_limits,
+        )
+        self.assertEqual(provider._span_limits.max_span_attributes, 42)
+
+    def test_global_attribute_value_length_limit_used_when_no_per_signal_limits(
+        self,
+    ):
+        global_limits = AttributeLimits(attribute_value_length_limit=64)
+        provider = create_tracer_provider(
+            TracerProviderConfig(processors=[]),
+            global_attribute_limits=global_limits,
+        )
+        self.assertEqual(provider._span_limits.max_attribute_length, 64)
+
+    def test_per_signal_limits_take_precedence_over_global(self):
+        global_limits = AttributeLimits(
+            attribute_count_limit=99,
+            attribute_value_length_limit=99,
+        )
+        provider = create_tracer_provider(
+            TracerProviderConfig(
+                processors=[],
+                limits=SpanLimitsConfig(
+                    attribute_count_limit=7,
+                    attribute_value_length_limit=16,
+                ),
+            ),
+            global_attribute_limits=global_limits,
+        )
+        self.assertEqual(provider._span_limits.max_span_attributes, 7)
+        self.assertEqual(provider._span_limits.max_attribute_length, 16)
+
+    def test_global_limits_absent_uses_sdk_defaults(self):
+        provider = create_tracer_provider(
+            TracerProviderConfig(processors=[]),
+        )
+        self.assertEqual(provider._span_limits.max_span_attributes, 128)
+        self.assertIsNone(provider._span_limits.max_attribute_length)
+
+    def test_global_limits_absent_does_not_read_env_vars(self):
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_ATTRIBUTE_COUNT_LIMIT": "1",
+                "OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT": "2",
+                "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "3",
+            },
+        ):
+            provider = create_tracer_provider(
+                TracerProviderConfig(processors=[]),
+            )
+        self.assertEqual(provider._span_limits.max_span_attributes, 128)
+        self.assertIsNone(provider._span_limits.max_attribute_length)
+        self.assertIsNone(provider._span_limits.max_span_attribute_length)

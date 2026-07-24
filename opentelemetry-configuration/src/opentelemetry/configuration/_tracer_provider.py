@@ -17,6 +17,9 @@ from opentelemetry.configuration._exceptions import (
     MissingDependencyError,
 )
 from opentelemetry.configuration.models import (
+    AttributeLimits,
+)
+from opentelemetry.configuration.models import (
     ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
 )
 from opentelemetry.configuration.models import (
@@ -400,16 +403,30 @@ def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
     return ParentBased(**kwargs)
 
 
-def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
+def _create_span_limits(
+    config: SpanLimitsConfig,
+    global_limits: AttributeLimits | None = None,
+) -> SpanLimits:
     """Create SpanLimits from config.
 
-    Absent fields use the OTel spec defaults (128 for counts, unlimited for lengths).
+    Absent fields fall back to global_limits (if provided), then to OTel spec
+    defaults (128 for counts, unlimited for lengths).
     Explicit values suppress env-var reading — matching Java SDK behavior.
     """
+    attribute_count_limit = config.attribute_count_limit
+    if attribute_count_limit is None and global_limits is not None:
+        attribute_count_limit = global_limits.attribute_count_limit
+
+    attribute_value_length_limit = config.attribute_value_length_limit
+    if attribute_value_length_limit is None and global_limits is not None:
+        attribute_value_length_limit = (
+            global_limits.attribute_value_length_limit
+        )
+
     return SpanLimits(
         max_span_attributes=(
-            config.attribute_count_limit
-            if config.attribute_count_limit is not None
+            attribute_count_limit
+            if attribute_count_limit is not None
             else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
         ),
         max_events=(
@@ -432,13 +449,23 @@ def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
             if config.link_attribute_count_limit is not None
             else _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
         ),
-        max_attribute_length=config.attribute_value_length_limit,
+        max_attribute_length=(
+            attribute_value_length_limit
+            if attribute_value_length_limit is not None
+            else SpanLimits.UNSET
+        ),
+        max_span_attribute_length=(
+            attribute_value_length_limit
+            if attribute_value_length_limit is not None
+            else SpanLimits.UNSET
+        ),
     )
 
 
 def create_tracer_provider(
     config: TracerProviderConfig | None,
     resource: Resource | None = None,
+    global_attribute_limits: AttributeLimits | None = None,
 ) -> TracerProvider:
     """Create an SDK TracerProvider from declarative config.
 
@@ -449,6 +476,8 @@ def create_tracer_provider(
     Args:
         config: TracerProvider config from the parsed config file, or None.
         resource: Resource to attach to the provider.
+        global_attribute_limits: Top-level attribute_limits from the root config,
+            used as a fallback when per-signal limits are not specified.
 
     Returns:
         A configured TracerProvider.
@@ -463,17 +492,14 @@ def create_tracer_provider(
         if config is not None and config.id_generator is not None
         else None
     )
-    span_limits = (
-        _create_span_limits(config.limits)
-        if config is not None and config.limits is not None
-        else SpanLimits(
-            max_span_attributes=_DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-            max_events=_DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT,
-            max_links=_DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
-            max_event_attributes=_DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
-            max_link_attributes=_DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+    if config is not None and config.limits is not None:
+        span_limits = _create_span_limits(
+            config.limits, global_attribute_limits
         )
-    )
+    else:
+        span_limits = _create_span_limits(
+            SpanLimitsConfig(), global_attribute_limits
+        )
 
     provider = TracerProvider(
         resource=resource,
@@ -492,6 +518,7 @@ def create_tracer_provider(
 def configure_tracer_provider(
     config: TracerProviderConfig | None,
     resource: Resource | None = None,
+    global_attribute_limits: AttributeLimits | None = None,
 ) -> None:
     """Configure the global TracerProvider from declarative config.
 
@@ -502,7 +529,11 @@ def configure_tracer_provider(
     Args:
         config: TracerProvider config from the parsed config file, or None.
         resource: Resource to attach to the provider.
+        global_attribute_limits: Top-level attribute_limits from the root config,
+            used as a fallback when per-signal limits are not specified.
     """
     if config is None:
         return
-    trace.set_tracer_provider(create_tracer_provider(config, resource))
+    trace.set_tracer_provider(
+        create_tracer_provider(config, resource, global_attribute_limits)
+    )
