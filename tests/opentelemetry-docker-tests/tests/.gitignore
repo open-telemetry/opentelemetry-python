@@ -1,0 +1,4 @@
+# Directory the OTLP JSON File exporter writes to during docker tests, created at
+# runtime and tailed by the collector's otlp_json_file receiver (see
+# docker-compose.yml).
+otlpexporter/otlp-file-data/

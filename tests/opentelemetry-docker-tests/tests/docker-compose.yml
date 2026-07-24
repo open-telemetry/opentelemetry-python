@@ -6,10 +6,11 @@ services:
         - "8888:8888"
         - "55678:55678"
   otcollector:
-    image: otel/opentelemetry-collector:0.149.0
+    image: otel/opentelemetry-collector-contrib:0.156.0
     command: ["--config=/etc/otelcol/collector-config.yaml"]
     volumes:
       - ./collector-config.yaml:/etc/otelcol/collector-config.yaml
+      - ./otlpexporter/otlp-file-data:/otlp-file-data
     ports:
       - "4317:4317"
       - "4318:4318"
