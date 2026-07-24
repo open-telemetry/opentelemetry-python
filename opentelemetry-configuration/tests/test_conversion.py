@@ -5,8 +5,8 @@
 # pylint: disable=protected-access
 
 import unittest
-from dataclasses import dataclass
-from typing import Any, ClassVar
+from dataclasses import dataclass, field
+from typing import Any
 
 from opentelemetry.configuration._common import _additional_properties
 from opentelemetry.configuration._conversion import _dict_to_dataclass
@@ -34,7 +34,9 @@ class _Outer:
 @dataclass
 class _WithExtras:
     known: str | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(
+        default_factory=dict, init=False
+    )
 
 
 @dataclass

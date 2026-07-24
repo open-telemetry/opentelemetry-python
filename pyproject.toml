@@ -176,7 +176,7 @@ use-title-as-name = true
 use-union-operator = true
 target-python-version = "3.10"
 custom-template-dir = "opentelemetry-configuration/codegen"
-additional-imports = "typing.ClassVar,opentelemetry.configuration._common._additional_properties"
+additional-imports = "dataclasses.field,opentelemetry.configuration._common._additional_properties"
 
 [tool.towncrier]
 directory = ".changelog"
