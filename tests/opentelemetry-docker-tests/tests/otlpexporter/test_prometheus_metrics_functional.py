@@ -38,8 +38,21 @@ _PROMETHEUS_PORT = 9464
 _CUMULATIVE = AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
 
 _DEFAULT_HISTOGRAM_BOUNDS = [
-    0.0, 5.0, 10.0, 25.0, 50.0, 75.0, 100.0, 250.0,
-    500.0, 750.0, 1000.0, 2500.0, 5000.0, 7500.0, 10000.0,
+    0.0,
+    5.0,
+    10.0,
+    25.0,
+    50.0,
+    75.0,
+    100.0,
+    250.0,
+    500.0,
+    750.0,
+    1000.0,
+    2500.0,
+    5000.0,
+    7500.0,
+    10000.0,
 ]
 
 
@@ -282,7 +295,22 @@ class TestPrometheusMetricsExporter:
         assert list(data_point.explicit_bounds) == _DEFAULT_HISTOGRAM_BOUNDS
         # 5 -> (0, 5], 15 -> (10, 25], 150 -> (100, 250].
         assert list(data_point.bucket_counts) == [
-            0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+            0,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
         ]
 
     def test_data_point_attributes(
