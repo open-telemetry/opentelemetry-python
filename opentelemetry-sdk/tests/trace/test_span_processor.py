@@ -480,11 +480,11 @@ class TestConcurrentMultiSpanProcessor(
         flushed = multi_processor.force_flush(timeout_millis=25)
         # let the thread executing the late_mock continue
         wait_event.set()
+        multi_processor.shutdown()
 
         self.assertFalse(flushed)
         for mock_processor in mocks:
             self.assertEqual(1, mock_processor.force_flush.call_count)
-        multi_processor.shutdown()
 
     def test_force_flush_late_by_span_processor(self):
         multi_processor = trace.ConcurrentMultiSpanProcessor(5)
