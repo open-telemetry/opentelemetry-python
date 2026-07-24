@@ -1,1 +1,1 @@
-`opentelemetry-propagator-jaeger`: fix return type annotation of `_parse_trace_id_header` from `tuple[int]` to `tuple[int, int, int]`
+`opentelemetry-propagator-jaeger`: fix typing issues and enable pyright typechecking for the package
