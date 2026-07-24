@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: retry only 429/502/503/504 and honour `Retry-After`, per the OTLP spec

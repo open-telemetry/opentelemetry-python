@@ -1539,6 +1539,45 @@ class TestOTLPMetricExporter(TestCase):
             )
 
     @patch.object(Session, "post")
+    def test_too_many_requests_is_retried(self, mock_post):
+        exporter = OTLPMetricExporter(timeout=1.5)
+
+        resp = Response()
+        resp.status_code = 429
+        resp.reason = "TOO MANY REQUESTS"
+        mock_post.return_value = resp
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+        # Retried once, then an early return before the second backoff sleep
+        # because it would exceed the timeout.
+        self.assertEqual(mock_post.call_count, 2)
+        self.assertIn(
+            "Transient error TOO MANY REQUESTS encountered while exporting metrics batch, retrying in",
+            warning.records[0].message,
+        )
+
+    @patch.object(Session, "post")
+    def test_retry_after_header_overrides_backoff(self, mock_post):
+        exporter = OTLPMetricExporter(timeout=1.5)
+
+        resp = Response()
+        resp.status_code = 429
+        resp.reason = "TOO MANY REQUESTS"
+        resp.headers["Retry-After"] = "10"
+        mock_post.return_value = resp
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.FAILURE,
+        )
+        # The server asked for longer than the remaining timeout allows, so the
+        # batch is dropped without a second attempt. The exponential backoff it
+        # replaced would have been ~1s and left room for a retry.
+        self.assertEqual(mock_post.call_count, 1)
+
+    @patch.object(Session, "post")
     def test_timeout_set_correctly(self, mock_post):
         resp = Response()
         resp.status_code = 200
