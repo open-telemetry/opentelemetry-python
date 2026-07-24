@@ -12,7 +12,7 @@ corresponding dataclass types.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import fields, is_dataclass
+from dataclasses import MISSING, fields, is_dataclass
 from enum import Enum
 from types import UnionType
 from typing import Any, TypeVar, Union, get_args, get_origin, get_type_hints
@@ -33,6 +33,24 @@ def _unwrap_optional(type_hint: Any) -> Any:
     return type_hint
 
 
+def _is_empty_constructible_dataclass(unwrapped: Any) -> bool:
+    """True if ``unwrapped`` is a dataclass type instantiable with no args.
+
+    A dataclass with only optional fields (all have a default or
+    default_factory) can be built as ``cls()``; one with a required field
+    cannot, and coercing a present null into it would raise ``TypeError``.
+    """
+    return (
+        isinstance(unwrapped, type)
+        and is_dataclass(unwrapped)
+        and all(
+            field.default is not MISSING
+            or field.default_factory is not MISSING
+            for field in fields(unwrapped)
+        )
+    )
+
+
 def _convert_value(value: Any, type_hint: Any) -> Any:
     """Convert a value according to its type hint.
 
@@ -40,11 +58,24 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
     dataclasses. Other values (primitives, enums, ``dict[str, Any]`` aliases)
     pass through unchanged.
     """
-    if value is None:
-        return None
-
     unwrapped = _unwrap_optional(type_hint)
     origin = get_origin(unwrapped)
+
+    if value is None:
+        # A mapping key present with an empty (null) YAML value parses to
+        # ``None``, which is otherwise indistinguishable from an absent key.
+        # For object-typed nodes the declarative-config spec treats a present
+        # null as "select this with an empty config" — e.g. ``always_on:`` is
+        # equivalent to ``always_on: {}`` and a metric ``console:`` exporter to
+        # ``console: {}``. Substitute an empty mapping and let the dict/
+        # dataclass handling below build it, so downstream ``is not None`` type
+        # dispatch selects it. Scalar fields — and dataclasses with required
+        # fields, which cannot be defaulted — keep ``None``, so an absent
+        # optional section stays unset.
+        if origin is dict or _is_empty_constructible_dataclass(unwrapped):
+            value = {}
+        else:
+            return None
 
     # list[X] — recurse on each element
     if origin is list and isinstance(value, list):

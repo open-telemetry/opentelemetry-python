@@ -9,6 +9,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._meter_provider import (
     configure_meter_provider,
     create_meter_provider,
@@ -180,6 +181,23 @@ class TestCreateMetricReaders(unittest.TestCase):
     def test_console_exporter(self):
         config = self._make_periodic_config(
             PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
+        )
+        provider = create_meter_provider(config)
+        reader = provider._metric_readers[0]
+        self.assertIsInstance(reader, PeriodicExportingMetricReader)
+        self.assertIsInstance(reader._exporter, ConsoleMetricExporter)
+
+    def test_null_valued_console_exporter_from_parsed_config(self):
+        # Regression test for #5451: a dataclass-typed exporter written as
+        # ``console:`` (present, null) must behave like ``console: {}`` rather
+        # than requiring an explicit empty mapping.
+        config = _dict_to_dataclass(
+            {
+                "readers": [
+                    {"periodic": {"exporter": {"console": None}}},
+                ]
+            },
+            MeterProviderConfig,
         )
         provider = create_meter_provider(config)
         reader = provider._metric_readers[0]
