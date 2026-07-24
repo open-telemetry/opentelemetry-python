@@ -98,6 +98,24 @@ class _ViewInstrumentMatch:
         else:
             attributes = {}
 
+        if self._view._exclude_attribute_keys:
+            attributes = {
+                key: value
+                for key, value in attributes.items()
+                if key not in self._view._exclude_attribute_keys
+            }
+
+        if (
+            self._view._attribute_keys is not None
+            or self._view._exclude_attribute_keys
+        ):
+            measurement = Measurement(
+                value=measurement.value,
+                time_unix_nano=measurement.time_unix_nano,
+                instrument=measurement.instrument,
+                context=measurement.context,
+                attributes=attributes,
+            )
         aggr_key = frozenset(attributes.items())
 
         if aggr_key not in self._attributes_aggregation:
