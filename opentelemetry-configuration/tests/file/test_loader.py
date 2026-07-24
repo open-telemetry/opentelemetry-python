@@ -327,6 +327,42 @@ tracer_provider:
         self.assertIsInstance(processors[0], BatchSpanProcessor)
         self.assertIsInstance(processors[0].span_exporter, ConsoleSpanExporter)
 
+    def test_null_valued_required_field_node_survives_conversion(self):
+        # Regression test for #5451: ``jaeger_remote_development`` is nullable
+        # in the schema (so ``jaeger_remote_development:`` passes validation and
+        # is NOT rejected before conversion), yet its model has required
+        # fields. Coercing the present null into it would raise TypeError, so
+        # it must be left as None instead. The rest of the config still loads.
+        yaml = """
+file_format: '1.0'
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          console:
+  sampler:
+    jaeger_remote_development:
+"""
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", delete=False
+        ) as fh:
+            fh.write(yaml)
+            path = fh.name
+        try:
+            config = load_config_file(path)
+        finally:
+            os.unlink(path)
+
+        # Schema accepted the null, and conversion left the required-field
+        # node unset rather than crashing.
+        self.assertIsNone(
+            config.tracer_provider.sampler.jaeger_remote_development
+        )
+        # A sibling nullable dict-typed node (console:) was still coerced.
+        self.assertEqual(
+            config.tracer_provider.processors[0].batch.exporter.console, {}
+        )
+
 
 class TestFileFormatValidation(unittest.TestCase):
     """Validate the file_format version per the configuration spec."""

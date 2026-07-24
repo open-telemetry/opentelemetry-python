@@ -11,6 +11,7 @@ from typing import Any, ClassVar
 from opentelemetry.configuration._common import _additional_properties
 from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration.models import ExemplarFilter
+from opentelemetry.configuration.models import Sampler as SamplerConfig
 
 
 @dataclass
@@ -47,18 +48,6 @@ class _WithMapping:
     # ``dict[str, Any]``-typed node, like the sampler/detector leaf configs.
     option: dict[str, Any] | None = None
     name: str | None = None
-
-
-@dataclass
-class _RequiredField:
-    # A dataclass that cannot be instantiated with no arguments.
-    required: int
-    optional: str | None = None
-
-
-@dataclass
-class _WithRequiredHolder:
-    required_field: _RequiredField | None = None
 
 
 class TestDictToDataclass(unittest.TestCase):
@@ -101,12 +90,14 @@ class TestDictToDataclass(unittest.TestCase):
         self.assertEqual(result.name, "test")
 
     def test_present_null_dataclass_with_required_field_stays_none(self):
-        # A dataclass that cannot be instantiated with no arguments is left as
-        # None rather than raising a TypeError.
+        # ``jaeger_remote_development`` is nullable in the schema but its model
+        # (ExperimentalJaegerRemoteSampler) has required fields, so it cannot
+        # be defaulted. A present null must stay None rather than raising a
+        # TypeError trying to instantiate it. Regression test for #5451.
         result = _dict_to_dataclass(
-            {"required_field": None}, _WithRequiredHolder
+            {"jaeger_remote_development": None}, SamplerConfig
         )
-        self.assertIsNone(result.required_field)
+        self.assertIsNone(result.jaeger_remote_development)
 
     def test_missing_optional_fields_default_to_none(self):
         result = _dict_to_dataclass({}, _Outer)
