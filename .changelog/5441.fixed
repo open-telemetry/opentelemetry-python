@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix `TypeError` when instantiating a `_BaseConfigurator` subclass whose `__init__` takes arguments
