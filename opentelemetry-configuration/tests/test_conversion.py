@@ -49,6 +49,18 @@ class _WithMapping:
     name: str | None = None
 
 
+@dataclass
+class _RequiredField:
+    # A dataclass that cannot be instantiated with no arguments.
+    required: int
+    optional: str | None = None
+
+
+@dataclass
+class _WithRequiredHolder:
+    required_field: _RequiredField | None = None
+
+
 class TestDictToDataclass(unittest.TestCase):
     def test_raises_on_non_dataclass(self):
         # _dict_to_dataclass is internal and assumes cls is a dataclass.
@@ -79,10 +91,22 @@ class TestDictToDataclass(unittest.TestCase):
         self.assertEqual(result.middle.items[0].value, 1)
         self.assertEqual(result.middle.items[1].value, 2)
 
-    def test_none_value_preserved(self):
+    def test_present_null_dataclass_coerced_to_empty_instance(self):
+        # A present-null value on a dataclass-typed node that can be built with
+        # no arguments (e.g. a metric ``console:`` exporter) becomes a
+        # defaulted instance, not None. Regression test for #5451.
         result = _dict_to_dataclass({"middle": None, "name": "test"}, _Outer)
-        self.assertIsNone(result.middle)
+        self.assertIsInstance(result.middle, _Middle)
+        self.assertIsNone(result.middle.inner)
         self.assertEqual(result.name, "test")
+
+    def test_present_null_dataclass_with_required_field_stays_none(self):
+        # A dataclass that cannot be instantiated with no arguments is left as
+        # None rather than raising a TypeError.
+        result = _dict_to_dataclass(
+            {"required_field": None}, _WithRequiredHolder
+        )
+        self.assertIsNone(result.required_field)
 
     def test_missing_optional_fields_default_to_none(self):
         result = _dict_to_dataclass({}, _Outer)

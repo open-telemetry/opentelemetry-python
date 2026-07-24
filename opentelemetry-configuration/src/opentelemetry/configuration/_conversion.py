@@ -12,7 +12,7 @@ corresponding dataclass types.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import fields, is_dataclass
+from dataclasses import MISSING, fields, is_dataclass
 from enum import Enum
 from types import UnionType
 from typing import Any, TypeVar, Union, get_args, get_origin, get_type_hints
@@ -33,6 +33,39 @@ def _unwrap_optional(type_hint: Any) -> Any:
     return type_hint
 
 
+def _coerce_present_null(unwrapped: Any, origin: Any) -> Any:
+    """Map a present null value to the empty config its type implies.
+
+    A mapping key present with an empty (null) YAML value parses to ``None``,
+    which is otherwise indistinguishable from an absent key. For object-typed
+    nodes the declarative-config spec treats a present null as "select this
+    with an empty config" — e.g. ``always_on:`` is equivalent to
+    ``always_on: {}`` and a ``console:`` exporter to ``console: {}``.
+
+    ``dict[str, Any]`` aliases become an empty mapping and dataclasses that
+    can be built with no arguments become a defaulted instance, so downstream
+    ``is not None`` type dispatch selects them. Scalar fields — and
+    dataclasses with required fields, which cannot be defaulted — keep
+    ``None``, so an absent optional section stays unset.
+    """
+    if origin is dict:
+        return {}
+    # A dataclass type annotation has no typing origin (``get_origin`` is
+    # ``None``); only instantiate when every field is optional.
+    if (
+        origin is None
+        and isinstance(unwrapped, type)
+        and is_dataclass(unwrapped)
+        and all(
+            field.default is not MISSING
+            or field.default_factory is not MISSING
+            for field in fields(unwrapped)
+        )
+    ):
+        return _dict_to_dataclass({}, unwrapped)
+    return None
+
+
 def _convert_value(value: Any, type_hint: Any) -> Any:
     """Convert a value according to its type hint.
 
@@ -44,14 +77,7 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
     origin = get_origin(unwrapped)
 
     if value is None:
-        # A mapping key present with an empty (null) YAML value parses to
-        # ``None``. For ``dict[str, Any]``-typed nodes the declarative-config
-        # spec treats a present null as "select this with an empty config" —
-        # e.g. ``always_on:`` is equivalent to ``always_on: {}``. Coerce it to
-        # an empty mapping so downstream ``is not None`` type dispatch selects
-        # it. Scalar and dataclass fields keep ``None`` (an absent optional
-        # section stays unset).
-        return {} if origin is dict else None
+        return _coerce_present_null(unwrapped, origin)
 
     # list[X] — recurse on each element
     if origin is list and isinstance(value, list):
