@@ -379,6 +379,21 @@ class LogRecordProcessor(abc.ABC):
         on error handling expectations.
         """
 
+    def enabled(  # pylint: disable=no-self-use
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        """Returns whether this processor would emit a record for the given arguments.
+
+        Processors that support filtering MAY override this method. The default
+        implementation returns ``True``.
+        """
+        return True  # pylint: disable=unused-argument
+
     @abc.abstractmethod
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
@@ -423,6 +438,27 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         for lp in self._log_record_processors:
             lp.on_emit(log_record)
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        processors = self._log_record_processors
+        if not processors:
+            return False
+        return any(
+            lp.enabled(
+                context=context,
+                instrumentation_scope=instrumentation_scope,
+                severity_number=severity_number,
+                event_name=event_name,
+            )
+            for lp in processors
+        )
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -497,6 +533,27 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        processors = self._log_record_processors
+        if not processors:
+            return False
+        return any(
+            lp.enabled(
+                context=context,
+                instrumentation_scope=instrumentation_scope,
+                severity_number=severity_number,
+                event_name=event_name,
+            )
+            for lp in processors
+        )
 
     def shutdown(self) -> None:
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -718,6 +775,22 @@ class Logger(APILogger):
 
     def _is_enabled(self) -> bool:
         return self._logger_config.is_enabled
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        if not self._is_enabled():
+            return False
+        return self._multi_log_record_processor.enabled(
+            context=context,
+            instrumentation_scope=self._instrumentation_scope,
+            severity_number=severity_number,
+            event_name=event_name,
+        )
 
     def _set_logger_config(self, logger_config: _LoggerConfig) -> None:
         self._logger_config = logger_config

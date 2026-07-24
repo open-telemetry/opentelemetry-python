@@ -74,3 +74,33 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         logger.emit(record)
 
         logger._real_logger.emit.assert_called_once_with(record)
+
+    def test_proxy_logger_enabled_delegates_to_real_logger(self):
+        logger = _logs_internal.ProxyLogger("proxy-test")
+        real_logger = Mock(spec=LoggerTest("proxy-test"))
+        real_logger.enabled.return_value = True
+        logger._real_logger = real_logger
+
+        result = logger.enabled(
+            severity_number=_logs.SeverityNumber.INFO, event_name="test"
+        )
+
+        self.assertTrue(result)
+        real_logger.enabled.assert_called_once_with(
+            context=None,
+            severity_number=_logs.SeverityNumber.INFO,
+            event_name="test",
+        )
+
+    def test_proxy_logger_enabled_falls_back_to_noop(self):
+        logger = _logs_internal.ProxyLogger("proxy-test")
+        self.assertFalse(logger.enabled())
+
+    def test_noop_logger_enabled_returns_false(self):
+        logger = _logs.NoOpLogger("noop-test")
+        self.assertFalse(logger.enabled())
+        self.assertFalse(
+            logger.enabled(
+                severity_number=_logs.SeverityNumber.ERROR, event_name="e"
+            )
+        )
