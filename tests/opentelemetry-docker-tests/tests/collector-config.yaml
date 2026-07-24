@@ -5,6 +5,13 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: otel-python-e2e
+          scrape_interval: 1s
+          static_configs:
+            - targets: ['host.docker.internal:9464']
 
 exporters:
   otlphttp:
@@ -17,6 +24,9 @@ service:
       exporters: [otlphttp]
     metrics:
       receivers: [otlp]
+      exporters: [otlphttp]
+    metrics/prometheus:
+      receivers: [prometheus]
       exporters: [otlphttp]
     logs:
       receivers: [otlp]
