@@ -170,6 +170,34 @@ class TestTraceContextFormat(unittest.TestCase):
         FORMAT.inject(output, context=ctx)
         self.assertFalse("traceparent" in output)
 
+    def test_suppress_trace_context_injection(self):
+        """Do not propagate trace context when injection is suppressed."""
+        output: dict[str, str] = {}
+        span = trace.NonRecordingSpan(
+            trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
+        )
+        ctx = trace.set_span_in_context(span)
+        ctx = tracecontext.suppress_trace_context_injection(ctx)
+
+        FORMAT.inject(output, context=ctx)
+
+        self.assertFalse("traceparent" in output)
+        self.assertFalse("tracestate" in output)
+
+    def test_enable_trace_context_injection(self):
+        """Propagate trace context after inherited suppression is cleared."""
+        output: dict[str, str] = {}
+        span = trace.NonRecordingSpan(
+            trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
+        )
+        ctx = trace.set_span_in_context(span)
+        ctx = tracecontext.suppress_trace_context_injection(ctx)
+        ctx = tracecontext.enable_trace_context_injection(ctx)
+
+        FORMAT.inject(output, context=ctx)
+
+        self.assertTrue("traceparent" in output)
+
     def test_tracestate_empty_header(self):
         """Test tracestate with an additional empty header (should be ignored)"""
         span = trace.get_current_span(
