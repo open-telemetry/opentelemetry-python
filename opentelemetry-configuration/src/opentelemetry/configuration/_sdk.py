@@ -10,7 +10,7 @@ entry point for "apply this config" on the declarative path.
 
 from __future__ import annotations
 
-from logging import getLogger
+from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING, getLogger
 
 from opentelemetry.configuration._logger_provider import (
     configure_logger_provider,
@@ -26,9 +26,42 @@ from opentelemetry.configuration._tracer_provider import (
 from opentelemetry.configuration.instrumentation import (
     configure_instrumentation,
 )
-from opentelemetry.configuration.models import OpenTelemetryConfiguration
+from opentelemetry.configuration.models import (
+    OpenTelemetryConfiguration,
+    SeverityNumber,
+)
 
 _logger = getLogger(__name__)
+
+# Maps OTel SeverityNumber groups to Python logging levels.
+# The numbered variants (debug2, info3, …) are sub-levels within the same
+# Python tier, so they collapse to the same level constant.
+_SEVERITY_TO_LOGGING_LEVEL: dict[SeverityNumber, int] = {
+    SeverityNumber.trace: DEBUG,
+    SeverityNumber.trace2: DEBUG,
+    SeverityNumber.trace3: DEBUG,
+    SeverityNumber.trace4: DEBUG,
+    SeverityNumber.debug: DEBUG,
+    SeverityNumber.debug2: DEBUG,
+    SeverityNumber.debug3: DEBUG,
+    SeverityNumber.debug4: DEBUG,
+    SeverityNumber.info: INFO,
+    SeverityNumber.info2: INFO,
+    SeverityNumber.info3: INFO,
+    SeverityNumber.info4: INFO,
+    SeverityNumber.warn: WARNING,
+    SeverityNumber.warn2: WARNING,
+    SeverityNumber.warn3: WARNING,
+    SeverityNumber.warn4: WARNING,
+    SeverityNumber.error: ERROR,
+    SeverityNumber.error2: ERROR,
+    SeverityNumber.error3: ERROR,
+    SeverityNumber.error4: ERROR,
+    SeverityNumber.fatal: CRITICAL,
+    SeverityNumber.fatal2: CRITICAL,
+    SeverityNumber.fatal3: CRITICAL,
+    SeverityNumber.fatal4: CRITICAL,
+}
 
 
 def configure_sdk(config: OpenTelemetryConfiguration) -> None:
@@ -42,6 +75,9 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     behavior.
 
     Honors the top-level ``disabled`` flag: when true, no globals are set.
+    The ``log_level`` field, when present, is applied to the internal
+    ``opentelemetry`` logger regardless of ``disabled`` — it configures
+    SDK self-diagnostics, not telemetry emission.
 
     Args:
         config: Parsed ``OpenTelemetryConfiguration`` (typically from
@@ -54,6 +90,10 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
         >>> config = load_config_file("otel-config.yaml")
         >>> configure_sdk(config)
     """
+    if config.log_level is not None:
+        level = _SEVERITY_TO_LOGGING_LEVEL.get(config.log_level, INFO)
+        getLogger("opentelemetry").setLevel(level)
+
     if config.disabled:
         _logger.warning(
             "Declarative configuration has disabled=true; skipping SDK setup."
