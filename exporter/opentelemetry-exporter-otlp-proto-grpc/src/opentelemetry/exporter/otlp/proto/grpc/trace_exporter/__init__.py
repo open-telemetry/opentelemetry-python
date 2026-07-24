@@ -9,6 +9,9 @@ from collections.abc import Sequence as TypingSequence
 from os import environ
 
 from grpc import ChannelCredentials, Compression, StatusCode
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
+    OtelComponentTypeValues,
+)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -49,9 +52,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.semconv._incubating.attributes.otel_attributes import (
-    OtelComponentTypeValues,
-)
 
 logger = logging.getLogger(__name__)
 

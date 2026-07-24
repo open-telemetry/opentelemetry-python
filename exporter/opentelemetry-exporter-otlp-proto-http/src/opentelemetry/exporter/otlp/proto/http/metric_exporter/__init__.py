@@ -22,7 +22,8 @@ import requests
 from requests.exceptions import ConnectionError
 from typing_extensions import deprecated
 
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
+    OtelComponentTypeValues,
     create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -92,9 +93,6 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
     Histogram as HistogramType,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.semconv._incubating.attributes.otel_attributes import (
-    OtelComponentTypeValues,
-)
 from opentelemetry.semconv.attributes.http_attributes import (
     HTTP_RESPONSE_STATUS_CODE,
 )

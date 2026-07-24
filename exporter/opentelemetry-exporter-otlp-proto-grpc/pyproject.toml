@@ -33,6 +33,7 @@ dependencies = [
   "opentelemetry-api ~= 1.15",
   "opentelemetry-proto == 1.45.0.dev",
   "opentelemetry-sdk ~= 1.45.0.dev",
+  "opentelemetry-exporter-otlp-common == 0.66b0.dev",
   "opentelemetry-exporter-otlp-proto-common == 1.45.0.dev",
   "typing-extensions >= 4.6.0",
 ]
