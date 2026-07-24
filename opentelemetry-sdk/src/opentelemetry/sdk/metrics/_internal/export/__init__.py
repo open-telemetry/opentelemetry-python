@@ -531,9 +531,11 @@ class PeriodicExportingMetricReader(MetricReader):
             if hasattr(os, "register_at_fork"):
                 weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
 
-                os.register_at_fork(
-                    after_in_child=lambda: weak_at_fork()()  # pylint: disable=unnecessary-lambda
-                )
+                def _after_in_child() -> None:
+                    if at_fork := weak_at_fork():
+                        at_fork()
+
+                os.register_at_fork(after_in_child=_after_in_child)
         elif self._export_interval_millis <= 0:
             raise ValueError(
                 f"interval value {self._export_interval_millis} is invalid \
