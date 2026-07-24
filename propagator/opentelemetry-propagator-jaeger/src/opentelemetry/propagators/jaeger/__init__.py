@@ -31,7 +31,7 @@ class JaegerPropagator(TextMapPropagator):
         self,
         carrier: CarrierT,
         context: Context | None = None,
-        getter: Getter = default_getter,
+        getter: Getter[CarrierT] = default_getter,
     ) -> Context:
         if context is None:
             context = Context()
@@ -62,17 +62,17 @@ class JaegerPropagator(TextMapPropagator):
         self,
         carrier: CarrierT,
         context: Context | None = None,
-        setter: Setter = default_setter,
+        setter: Setter[CarrierT] = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
         span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 
-        # Non-recording spans do not have a parent
-        span_parent_id = (
-            span.parent.span_id if span.is_recording() and span.parent else 0
-        )
+        # Non-recording spans do not have a parent; the API Span type does not
+        # declare a parent attribute, so it has to be accessed via getattr
+        parent = getattr(span, "parent", None) if span.is_recording() else None
+        span_parent_id = parent.span_id if parent else 0
         trace_flags = span_context.trace_flags
         if trace_flags.sampled:
             trace_flags |= self.DEBUG_FLAG
@@ -101,7 +101,12 @@ class JaegerPropagator(TextMapPropagator):
     def fields(self) -> set[str]:
         return {self.TRACE_ID_KEY}
 
-    def _extract_baggage(self, getter, carrier, context):
+    def _extract_baggage(
+        self,
+        getter: Getter[CarrierT],
+        carrier: CarrierT,
+        context: Context,
+    ) -> Context:
         baggage_keys = [
             key
             for key in getter.keys(carrier)
@@ -109,6 +114,8 @@ class JaegerPropagator(TextMapPropagator):
         ]
         for key in baggage_keys:
             value = _extract_first_element(getter.get(carrier, key))
+            if value is None:
+                continue
             context = baggage.set_baggage(
                 key.replace(self.BAGGAGE_PREFIX, ""),
                 urllib.parse.unquote(value).strip(),
@@ -122,16 +129,16 @@ def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
 
 
 def _extract_first_element(
-    items: collections.abc.Iterable[CarrierT],
-) -> CarrierT | None:
+    items: collections.abc.Iterable[str] | None,
+) -> str | None:
     if items is None:
         return None
     return next(iter(items), None)
 
 
 def _parse_trace_id_header(
-    items: collections.abc.Iterable[CarrierT],
-) -> tuple[int]:
+    items: collections.abc.Iterable[str],
+) -> tuple[int, int, int]:
     invalid_header_result = (trace.INVALID_TRACE_ID, trace.INVALID_SPAN_ID, 0)
 
     header = _extract_first_element(items)
@@ -143,17 +150,21 @@ def _parse_trace_id_header(
         return invalid_header_result
 
     trace_id_str, span_id_str, _parent_id_str, flags_str = fields
-    flags = _int_from_hex_str(flags_str, None)
+    flags = _int_from_hex_str(flags_str)
     if flags is None:
         return invalid_header_result
 
-    trace_id = _int_from_hex_str(trace_id_str, trace.INVALID_TRACE_ID)
-    span_id = _int_from_hex_str(span_id_str, trace.INVALID_SPAN_ID)
+    trace_id = _int_from_hex_str(trace_id_str)
+    if trace_id is None:
+        trace_id = trace.INVALID_TRACE_ID
+    span_id = _int_from_hex_str(span_id_str)
+    if span_id is None:
+        span_id = trace.INVALID_SPAN_ID
     return trace_id, span_id, flags
 
 
-def _int_from_hex_str(identifier: str, default: int | None) -> int | None:
+def _int_from_hex_str(identifier: str) -> int | None:
     try:
         return int(identifier, 16)
     except ValueError:
-        return default
+        return None

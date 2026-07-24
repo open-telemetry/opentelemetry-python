@@ -133,7 +133,8 @@ include = [
   "exporter/opentelemetry-exporter-otlp-proto-http",
   "exporter/opentelemetry-exporter-otlp-json-common",
   "exporter/opentelemetry-exporter-otlp-common",
-  "codegen/opentelemetry-codegen-json"
+  "codegen/opentelemetry-codegen-json",
+  "propagator/opentelemetry-propagator-jaeger",
 ]
 
 exclude = [
@@ -154,6 +155,7 @@ exclude = [
   "exporter/opentelemetry-exporter-otlp-json-common/tests",
   "exporter/opentelemetry-exporter-otlp-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
+  "propagator/opentelemetry-propagator-jaeger/tests",
 ]
 
 # When packages are correct typed add them to the strict list
