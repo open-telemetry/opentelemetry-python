@@ -34,7 +34,7 @@ metrics.set_meter_provider(meter_provider)
 metric_exporter = OTLPMetricExporter(meter_provider=meter_provider)
 metric_reader = PeriodicExportingMetricReader(
     metric_exporter,
-    export_interval_millis=250, # Intentionally low for example purposes only
+    export_interval_millis=250,  # Intentionally low for example purposes only
 )
 meter_provider.add_metric_reader(metric_reader)
 
