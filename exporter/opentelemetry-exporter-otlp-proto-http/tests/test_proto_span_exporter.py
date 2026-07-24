@@ -1,9 +1,11 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import gzip
 import threading
 import time
 import unittest
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
@@ -12,6 +14,9 @@ from requests import Session
 from requests.exceptions import ConnectionError
 from requests.models import Response
 
+from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
+    encode_spans,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
@@ -63,7 +68,27 @@ BASIC_SPAN = _Span(
 )
 
 
-# pylint: disable=protected-access
+class _RecordingOTLPHandler(BaseHTTPRequestHandler):
+    # do_POST is the required override name from BaseHTTPRequestHandler.
+    def do_POST(self):  # pylint: disable=invalid-name
+        content_length = int(self.headers.get("Content-Length", 0))
+        self.server.received_bodies.append(self.rfile.read(content_length))
+        self.send_response(200)
+        self.end_headers()
+
+    def log_message(self, *args):  # silence the test server's stderr logging
+        pass
+
+
+def _start_recording_server():
+    server = HTTPServer(("127.0.0.1", 0), _RecordingOTLPHandler)
+    server.received_bodies = []
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server, thread
+
+
+# pylint: disable=protected-access,too-many-public-methods
 class TestOTLPSpanExporter(unittest.TestCase):
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()
@@ -485,6 +510,111 @@ class TestOTLPSpanExporter(unittest.TestCase):
             )
 
             assert after - before < 0.2
+
+    def test_max_request_size_default(self):
+        exporter = OTLPSpanExporter()
+        self.assertEqual(exporter._max_request_size, 64 * 1024 * 1024)
+
+    @patch.object(Session, "post")
+    def test_oversized_payload_dropped_before_send(self, mock_post):
+        exporter = OTLPSpanExporter(max_request_size=1)
+        self.assertEqual(
+            exporter.export([BASIC_SPAN]), SpanExportResult.FAILURE
+        )
+        mock_post.assert_not_called()
+
+    @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
+    def test_max_request_size_zero_disables(self, _mock_export):
+        exporter = OTLPSpanExporter(max_request_size=0)
+        self.assertEqual(
+            exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS
+        )
+
+    @patch.object(Session, "post")
+    def test_negative_max_request_size_disables_limit(self, mock_post):
+        resp = Response()
+        resp.status_code = 200
+        mock_post.return_value = resp
+        exporter = OTLPSpanExporter(max_request_size=-1)
+        self.assertEqual(
+            exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS
+        )
+        mock_post.assert_called()
+
+    @patch.object(Session, "post")
+    def test_oversized_payload_measured_before_compression(self, mock_post):
+        # The limit applies to the uncompressed serialized request. Build a
+        # highly compressible batch whose gzip size is below a limit that the
+        # uncompressed size still exceeds, then assert it is still dropped --
+        # which can only hold if size is measured before compression.
+        spans = [BASIC_SPAN] * 200
+        uncompressed = encode_spans(spans).SerializePartialToString()
+        compressed = gzip.compress(uncompressed)
+        limit = (len(compressed) + len(uncompressed)) // 2
+        # Guard the discriminating condition: compressed < limit < uncompressed.
+        self.assertLess(len(compressed), limit)
+        self.assertLess(limit, len(uncompressed))
+        exporter = OTLPSpanExporter(
+            max_request_size=limit, compression=Compression.Gzip
+        )
+        self.assertEqual(exporter.export(spans), SpanExportResult.FAILURE)
+        mock_post.assert_not_called()
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    @patch.object(Session, "post")
+    def test_oversized_payload_records_failure_metric(self, mock_post):
+        exporter = OTLPSpanExporter(
+            max_request_size=1, meter_provider=self.meter_provider
+        )
+        self.assertEqual(
+            exporter.export([BASIC_SPAN]), SpanExportResult.FAILURE
+        )
+        mock_post.assert_not_called()
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        exported = next(
+            metric
+            for metric in scope_metrics.metrics
+            if metric.name == "otel.sdk.exporter.span.exported"
+        )
+        self.assertEqual(
+            exported.data.data_points[0].attributes["error.type"],
+            "RequestPayloadTooLargeError",
+        )
+
+    def test_end_to_end_export_sends_request_over_http(self):
+        server, thread = _start_recording_server()
+        port = server.server_address[1]
+        try:
+            exporter = OTLPSpanExporter(
+                endpoint=f"http://127.0.0.1:{port}/v1/traces"
+            )
+            result = exporter.export([BASIC_SPAN])
+        finally:
+            server.shutdown()
+            thread.join()
+            server.server_close()
+        self.assertEqual(result, SpanExportResult.SUCCESS)
+        self.assertEqual(len(server.received_bodies), 1)
+        self.assertGreater(len(server.received_bodies[0]), 0)
+
+    def test_end_to_end_oversized_request_never_reaches_server(self):
+        server, thread = _start_recording_server()
+        port = server.server_address[1]
+        try:
+            exporter = OTLPSpanExporter(
+                endpoint=f"http://127.0.0.1:{port}/v1/traces",
+                max_request_size=1,
+            )
+            result = exporter.export([BASIC_SPAN])
+        finally:
+            server.shutdown()
+            thread.join()
+            server.server_close()
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertEqual(server.received_bodies, [])
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(

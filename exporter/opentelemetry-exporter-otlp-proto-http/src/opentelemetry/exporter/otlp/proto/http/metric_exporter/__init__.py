@@ -39,6 +39,9 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_MAX_REQUEST_SIZE,
+    RequestPayloadTooLargeError,
+    _is_request_too_large,
     _is_retryable,
     _load_session_from_envvar,
 )
@@ -123,6 +126,7 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         *,
+        max_request_size: int | None = None,
         meter_provider: MeterProvider | None = None,
     ):
         """OTLP HTTP metrics exporter
@@ -145,6 +149,14 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             max_export_batch_size: Maximum number of data points to export in a single request.
                 If not set there is no limit to the number of data points in a request.
                 If it is set and the number of data points exceeds the max, the request will be split.
+            max_request_size: Maximum size in bytes of a serialized request, measured before
+                compression. A request exceeding this size is dropped before being sent. Defaults
+                to 64 MiB; a value of 0 (or any non-positive value) disables the limit. Requests
+                are sized after any ``max_export_batch_size`` splitting; a batch whose serialized
+                request still exceeds this limit is dropped as a whole and recorded as a failed
+                export. Reduce ``max_export_batch_size`` (or raise/disable this limit) if batches
+                may approach it.
+            meter_provider: MeterProvider used for the exporter's own metrics.
         """
         self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
@@ -204,6 +216,11 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
             preferred_temporality, preferred_aggregation
         )
         self._max_export_batch_size: int | None = max_export_batch_size
+        self._max_request_size = (
+            _DEFAULT_MAX_REQUEST_SIZE
+            if max_request_size is None
+            else max_request_size
+        )
         self._shutdown = False
 
         self._metrics = create_exporter_metrics(
@@ -271,6 +288,19 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         """
         with self._metrics.export_operation(num_items) as result:
             serialized_data = export_request.SerializeToString()
+            if _is_request_too_large(serialized_data, self._max_request_size):
+                _logger.warning(
+                    "Dropping metrics batch: serialized size %d bytes exceeds "
+                    "max_request_size %d bytes.",
+                    len(serialized_data),
+                    self._max_request_size,
+                )
+                result.error = RequestPayloadTooLargeError(
+                    f"Serialized metrics request size {len(serialized_data)} "
+                    f"bytes exceeds max_request_size "
+                    f"{self._max_request_size} bytes."
+                )
+                return MetricExportResult.FAILURE
             deadline_sec = time() + self._timeout
             for retry_num in range(_MAX_RETRYS):
                 # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
