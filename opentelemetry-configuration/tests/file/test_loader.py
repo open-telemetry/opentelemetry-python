@@ -282,11 +282,11 @@ tracer_provider:
         trace_id_ratio_based: {ratio: 0.5}
 """
 
-    def _load(self) -> OpenTelemetryConfiguration:
+    def _load(self, yaml: str | None = None) -> OpenTelemetryConfiguration:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".yaml", delete=False
         ) as fh:
-            fh.write(self._YAML)
+            fh.write(self._YAML if yaml is None else yaml)
             path = fh.name
         try:
             return load_config_file(path)
@@ -333,7 +333,8 @@ tracer_provider:
         # is NOT rejected before conversion), yet its model has required
         # fields. Coercing the present null into it would raise TypeError, so
         # it must be left as None instead. The rest of the config still loads.
-        yaml = """
+        config = self._load(
+            """
 file_format: '1.0'
 tracer_provider:
   processors:
@@ -343,15 +344,7 @@ tracer_provider:
   sampler:
     jaeger_remote_development:
 """
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as fh:
-            fh.write(yaml)
-            path = fh.name
-        try:
-            config = load_config_file(path)
-        finally:
-            os.unlink(path)
+        )
 
         # Schema accepted the null, and conversion left the required-field
         # node unset rather than crashing.
