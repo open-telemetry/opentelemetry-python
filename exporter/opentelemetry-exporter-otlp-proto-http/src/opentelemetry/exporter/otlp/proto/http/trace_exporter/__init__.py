@@ -19,6 +19,9 @@ from requests.exceptions import ConnectionError
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
     create_exporter_metrics,
 )
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _timeout_from_env,
+)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -140,10 +143,13 @@ class OTLPSpanExporter(SpanExporter):
         self._headers = headers or parse_env_headers(
             headers_string, liberal=True
         )
-        self._timeout = timeout or float(
-            environ.get(
+        self._timeout = (
+            timeout
+            if timeout is not None
+            else _timeout_from_env(
                 OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
-                environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
+                OTEL_EXPORTER_OTLP_TIMEOUT,
+                default=DEFAULT_TIMEOUT,
             )
         )
         self._max_request_size = (
