@@ -17,6 +17,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
     ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
     _DropAggregation,
     _ExplicitBucketHistogramAggregation,
     _ExponentialBucketHistogramAggregation,
@@ -293,7 +294,11 @@ class MetricReaderStorage:
 
         # pylint: disable=protected-access
         if isinstance(instrument, Asynchronous) and isinstance(
-            view._aggregation, ExplicitBucketHistogramAggregation
+            view._aggregation,
+            (
+                ExplicitBucketHistogramAggregation,
+                ExponentialBucketHistogramAggregation,
+            ),
         ):
             _logger.warning(
                 "View %s and instrument %s will produce "
