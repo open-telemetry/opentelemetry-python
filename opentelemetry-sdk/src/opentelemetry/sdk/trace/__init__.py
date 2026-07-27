@@ -416,10 +416,12 @@ class ReadableSpan:
         start_time: int | None = None,
         end_time: int | None = None,
         instrumentation_scope: InstrumentationScope | None = None,
+        span_type: str | None = None,
     ) -> None:
         self._name = name
         self._context = context
         self._kind = kind
+        self._span_type = span_type
         self._instrumentation_info = instrumentation_info
         self._instrumentation_scope = instrumentation_scope
         self._parent = parent
@@ -466,6 +468,11 @@ class ReadableSpan:
     @property
     def kind(self) -> trace_api.SpanKind:
         return self._kind
+
+    @property
+    def span_type(self) -> str | None:
+        """Semantic convention definition this span follows, if any."""
+        return self._span_type
 
     @property
     def parent(self) -> trace_api.SpanContext | None:
@@ -540,6 +547,8 @@ class ReadableSpan:
             "links": self._format_links(self._links),
             "resource": json.loads(self.resource.to_json()),
         }
+        if self._span_type is not None:
+            f_span["span_type"] = self._span_type
 
         return json.dumps(f_span, indent=indent)
 
@@ -788,6 +797,7 @@ class Span(trace_api.Span, ReadableSpan):
         instrumentation_scope: InstrumentationScope | None = None,
         *,
         record_end_metrics: Callable[[], None] | None = None,
+        span_type: str | None = None,
     ) -> None:
         if resource is None:
             resource = Resource.create({})
@@ -796,6 +806,7 @@ class Span(trace_api.Span, ReadableSpan):
             context=context,
             parent=parent,
             kind=kind,
+            span_type=span_type,
             resource=resource,
             instrumentation_info=instrumentation_info,
             instrumentation_scope=instrumentation_scope,
@@ -933,6 +944,7 @@ class Span(trace_api.Span, ReadableSpan):
             events=self._events,
             links=self._links,
             kind=self.kind,
+            span_type=self._span_type,
             status=self._status,
             start_time=self._start_time,
             end_time=self._end_time,
@@ -1116,6 +1128,8 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        *,
+        span_type: str | None = None,
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(
             name=name,
@@ -1126,6 +1140,7 @@ class Tracer(trace_api.Tracer):
             start_time=start_time,
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
+            span_type=span_type,
         )
         with trace_api.use_span(
             span,
@@ -1145,6 +1160,8 @@ class Tracer(trace_api.Tracer):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        *,
+        span_type: str | None = None,
     ) -> trace_api.Span:
         links = links or ()
         parent_span_context = trace_api.get_current_span(context).get_span_context()
@@ -1168,7 +1185,9 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         # The sampler may also modify the parent span context's tracestate
-        sampling_result = self.sampler.should_sample(context, trace_id, name, kind, attributes, links)
+        sampling_result = self.sampler.should_sample(
+            context, trace_id, name, kind, attributes, links, span_type=span_type
+        )
 
         trace_flags = (
             trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
@@ -1206,6 +1225,7 @@ class Tracer(trace_api.Tracer):
                 attributes=sampling_result.attributes,
                 span_processor=self.span_processor,
                 kind=kind,
+                span_type=span_type,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
