@@ -17,8 +17,10 @@ from opentelemetry.sdk._logs import (
     ReadableLogRecord,
 )
 from opentelemetry.sdk.environment_variables import OTEL_ATTRIBUTE_COUNT_LIMIT
-from opentelemetry.semconv._incubating.attributes import code_attributes
-from opentelemetry.semconv.attributes import exception_attributes
+from opentelemetry.semconv.attributes import (
+    exception_attributes,
+    code_attributes,
+)
 from opentelemetry.trace import (
     INVALID_SPAN_CONTEXT,
     set_span_in_context,
