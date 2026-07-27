@@ -86,7 +86,7 @@ except ImportError:
     pass
 
 LabelValue = AttributeValue
-Attributes = Mapping[str, LabelValue]
+Attributes = Mapping[str, LabelValue] | None
 logger = logging.getLogger(__name__)
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID

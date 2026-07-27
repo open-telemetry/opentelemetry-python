@@ -258,25 +258,28 @@ class TestResources(unittest.TestCase):
 
     def test_invalid_resource_attribute_values(self):
         # This class has no __str__ or __repr__ method, so BoundedAttributes does
-        # not attempt to convert ends up dropping it.
+        # not attempt to convert it to a string and defaults to returning None.
         class NoStrNoRepr:
             def __init__(self):
                 pass
 
+        # Empty key will get dropped.
         with self.assertLogs(level=WARNING):
             resource = Resource(
                 {
                     SERVICE_NAME: "test",
                     "bad-type": NoStrNoRepr(),
+                    "": "empty-key-value",
                 }
             )
         self.assertEqual(
             resource.attributes,
             {
                 SERVICE_NAME: "test",
+                "bad-type": None,
             },
         )
-        self.assertEqual(len(resource.attributes), 1)
+        self.assertEqual(len(resource.attributes), 2)
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = get_aggregated_resources([])
