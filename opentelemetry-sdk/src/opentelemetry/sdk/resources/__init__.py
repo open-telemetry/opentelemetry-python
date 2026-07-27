@@ -85,8 +85,9 @@ try:
 except ImportError:
     pass
 
-logger = logging.getLogger(__name__)
 LabelValue = AttributeValue
+Attributes = Mapping[str, LabelValue]
+logger = logging.getLogger(__name__)
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
 CLOUD_REGION = ResourceAttributes.CLOUD_REGION
