@@ -7,12 +7,12 @@ import traceback
 from opentelemetry._logs import LogRecord
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.semconv.attributes import exception_attributes
-from opentelemetry.util.types import AnyValue, Attributes
+from opentelemetry.util.types import Attributes, AttributeValue
 
 
 def _get_exception_attributes(
     exception: BaseException,
-) -> dict[str, AnyValue]:
+) -> dict[str, AttributeValue]:
     stacktrace = "".join(
         traceback.format_exception(
             type(exception), value=exception, tb=exception.__traceback__
@@ -102,7 +102,7 @@ def _create_log_record_with_exception(
     context=None,
     severity_number=None,
     severity_text: str | None = None,
-    body: AnyValue | None = None,
+    body: AttributeValue | None = None,
     attributes: Attributes = None,
     event_name: str | None = None,
     exception: BaseException | None = None,

@@ -57,6 +57,7 @@ hist49 = meter.create_histogram("test_histogram_49_bound")
 hist50 = meter.create_histogram("test_histogram_50_bound")
 hist1000 = meter.create_histogram("test_histogram_1000_bound")
 
+
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record(benchmark, num_labels):
     labels = {}
@@ -67,6 +68,7 @@ def test_histogram_record(benchmark, num_labels):
         hist.record(random.random() * MAX_BOUND_VALUE)
 
     benchmark(benchmark_histogram_record)
+
 
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record_10(benchmark, num_labels):

@@ -1,18 +1,34 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# pyright: reportUnnecessaryIsInstance=false
+
 import copy
 import logging
 import threading
 from collections.abc import Mapping, MutableMapping, Sequence
 from types import MappingProxyType, NoneType
-from typing import overload
+from typing import Any, overload
 
 from typing_extensions import deprecated
 
 from opentelemetry.util import types
 
 _logger = logging.getLogger(__name__)
+
+
+@overload
+def _clean_attribute_value(
+    value: Mapping[str, types.AttributeValue],
+    max_string_value_length: int | None,
+) -> Mapping[str, types.AttributeValue]: ...
+
+
+@overload
+def _clean_attribute_value(
+    value: types.AttributeValue,
+    max_string_value_length: int | None,
+) -> types.AttributeValue: ...
 
 
 def _clean_attribute_value(
@@ -48,7 +64,7 @@ def _clean_attribute_value(
             _clean_attribute_value(v, max_string_value_length) for v in value
         )
     if isinstance(value, Mapping):
-        cleaned_mapping = {}
+        cleaned_mapping: dict[str, types.AttributeValue] = {}
         for key, val in value.items():
             # Spec says to convert unknown types to strings if possible (here and below too).
             if not isinstance(key, str):
@@ -130,7 +146,7 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
         max_value_len: int | None = None,
         extended_attributes: bool = False,
     ) -> None:
-        if maxlen is not None and (not isinstance(maxlen, int) or maxlen < 0):
+        if maxlen is not None and maxlen < 0:
             raise ValueError("maxlen must be valid int greater or equal to 0")
         self._dict: dict[str, types.AttributeValue] = {}
         self.maxlen = maxlen
@@ -150,11 +166,9 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
 
     def _raise_if_immutable(self) -> None:
         if self._immutable:
-            raise TypeError(
-                "Cannot mutate this instance, as it was created with immutable=True."
-            )
+            raise TypeError("Cannot mutate immutable BoundedAttributes")
 
-    def __setitem__(self, key: str, value: types.AnyValue) -> None:
+    def __setitem__(self, key: str, value: types.AttributeValue) -> None:
         self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
@@ -171,29 +185,22 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
         with self._lock:
             self._setitem_locked(key, cleaned)
 
-    def _set_items(self, attributes: Mapping[str, types.AnyValue]) -> None:
+    def _set_items(
+        self, attributes: Mapping[str, types.AttributeValue]
+    ) -> None:
         self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
                 self.dropped += len(attributes)
             return
-        cleaned_items = []
-        for key, val in attributes.items():
-            if not key or not isinstance(key, str):
-                _logger.warning(
-                    "invalid key `%s`. must be non-empty string. Dropping key from attributes.",
-                    key,
-                )
-                self.dropped += 1
-                continue
-            cleaned_items.append(
-                (key, _clean_attribute_value(val, self.max_value_len))
-            )
+        cleaned_attributes: Mapping[str, types.AttributeValue] = (
+            _clean_attribute_value(attributes, self.max_value_len)
+        )
         with self._lock:
-            for key, value in cleaned_items:
+            for key, value in cleaned_attributes.items():
                 self._setitem_locked(key, value)
 
-    def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
+    def _setitem_locked(self, key: str, value: types.AttributeValue) -> None:
         if key in self._dict:
             del self._dict[key]
         if self.maxlen is not None and len(self._dict) >= self.maxlen:
@@ -219,7 +226,7 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
     def __len__(self) -> int:
         return len(self._dict)
 
-    def __deepcopy__(self, memo: dict) -> "BoundedAttributes":
+    def __deepcopy__(self, memo: dict[int, Any]) -> "BoundedAttributes":
         copy_ = BoundedAttributes(
             maxlen=self.maxlen,
             immutable=self._immutable,
@@ -233,5 +240,5 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
             copy_.dropped = self.dropped
         return copy_
 
-    def copy(self):
+    def copy(self) -> MutableMapping[str, types.AttributeValue]:
         return self._dict.copy()

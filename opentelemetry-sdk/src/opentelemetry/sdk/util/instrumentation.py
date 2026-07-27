@@ -8,8 +8,8 @@ from typing_extensions import deprecated
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.util.types import (  # TODO: see if we can remove F401 when using new sphinx version # noqa: F401 # pylint: disable=unused-import
-    AnyValue,
     Attributes,
+    AttributeValue,
 )
 
 

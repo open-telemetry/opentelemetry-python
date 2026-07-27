@@ -40,7 +40,7 @@ from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import AnyValue, Attributes
+from opentelemetry.util.types import Attributes, AttributeValue
 
 _logger = getLogger(__name__)
 
@@ -62,7 +62,7 @@ class LogRecord(ABC):
         context: Context | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
+        body: AttributeValue = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -82,7 +82,7 @@ class LogRecord(ABC):
         trace_flags: TraceFlags | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
+        body: AttributeValue = None,
         attributes: Attributes = None,
     ) -> None: ...
 
@@ -97,7 +97,7 @@ class LogRecord(ABC):
         trace_flags: TraceFlags | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
+        body: AttributeValue = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -146,7 +146,7 @@ class Logger(ABC):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: AttributeValue | None = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -168,7 +168,7 @@ class Logger(ABC):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: AttributeValue | None = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -191,7 +191,7 @@ class NoOpLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: AttributeValue | None = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -212,7 +212,7 @@ class NoOpLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: AttributeValue | None = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -259,7 +259,7 @@ class ProxyLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: AttributeValue | None = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
@@ -280,7 +280,7 @@ class ProxyLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
+        body: AttributeValue | None = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,

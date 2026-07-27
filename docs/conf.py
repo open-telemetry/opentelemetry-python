@@ -34,9 +34,13 @@ settings.configure()
 # modules that annotate with it
 import builtins  # noqa: E402
 
-from opentelemetry.util.types import AnyValue  # noqa: E402
+from opentelemetry.util.types import (  # noqa: E402
+    AnyValue,
+    AttributeValue,
+)
 
 builtins.AnyValue = AnyValue
+builtins.AttributeValue = AttributeValue
 
 
 source_dirs = [
