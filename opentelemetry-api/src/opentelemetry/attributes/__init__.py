@@ -84,7 +84,7 @@ def _clean_attribute_value(
     return None
 
 
-class BoundedAttributes(MutableMapping):
+class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
     """A dict with a fixed max capacity which cleans and potentially drops values to ensure they are valid attribute values.
 
     Args:
@@ -132,7 +132,7 @@ class BoundedAttributes(MutableMapping):
     ) -> None:
         if maxlen is not None and (not isinstance(maxlen, int) or maxlen < 0):
             raise ValueError("maxlen must be valid int greater or equal to 0")
-        self._dict = {}
+        self._dict: dict[str, types.AttributeValue] = {}
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len

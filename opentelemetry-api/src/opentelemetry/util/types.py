@@ -17,3 +17,19 @@ AnyValue = AttributeValue = (
     | None
 )
 Attributes = Mapping[str, AnyValue] | None
+
+# Deprecated type, do not use.
+AttributesAsKey = tuple[
+    tuple[
+        str,
+        str
+        | bool
+        | int
+        | float
+        | tuple[str | None, ...]
+        | tuple[bool | None, ...]
+        | tuple[int | None, ...]
+        | tuple[float | None, ...],
+    ],
+    ...,
+]

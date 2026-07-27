@@ -12,7 +12,7 @@ import os
 import threading
 import traceback
 import warnings
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from os import environ
 from threading import Lock
@@ -20,8 +20,6 @@ from time import time_ns
 from types import NoneType
 from typing import (  # noqa
     Any,
-    Mapping,
-    Sequence,
     Tuple,
     Union,
     cast,
