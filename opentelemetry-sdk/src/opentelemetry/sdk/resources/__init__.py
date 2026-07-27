@@ -74,7 +74,7 @@ from opentelemetry.sdk.version import (
     __version__ as _OPENTELEMETRY_SDK_VERSION,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util.types import Attributes, AttributeValue
+from opentelemetry.util.types import AttributeValue
 
 psutil: ModuleType | None = None
 

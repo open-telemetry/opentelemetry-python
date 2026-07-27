@@ -66,6 +66,12 @@ def _clean_attribute_value(
     if isinstance(value, Mapping):
         cleaned_mapping: dict[str, types.AttributeValue] = {}
         for key, val in value.items():
+            if not key:
+                _logger.warning(
+                    "invalid attribute key `%s`. must be non-empty string. Dropping key from attributes.",
+                    key,
+                )
+                continue
             # Spec says to convert unknown types to strings if possible (here and below too).
             if not isinstance(key, str):
                 _logger.warning(
@@ -197,6 +203,7 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
             _clean_attribute_value(attributes, self.max_value_len)
         )
         with self._lock:
+            self.dropped += len(attributes) - len(cleaned_attributes)
             for key, value in cleaned_attributes.items():
                 self._setitem_locked(key, value)
 
