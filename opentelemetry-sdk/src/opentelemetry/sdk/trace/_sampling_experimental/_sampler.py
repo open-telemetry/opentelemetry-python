@@ -28,6 +28,8 @@ class _CompositeSampler(Sampler):
         attributes: Attributes | None = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
+        *,
+        span_type: str | None = None,
     ) -> SamplingResult:
         ot_trace_state = OtelTraceState.parse(trace_state)
 
