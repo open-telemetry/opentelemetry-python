@@ -69,8 +69,8 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
 )
 from opentelemetry.semconv.attributes import (
-    exception_attributes,
     code_attributes,
+    exception_attributes,
 )
 from opentelemetry.trace import (
     format_span_id,
