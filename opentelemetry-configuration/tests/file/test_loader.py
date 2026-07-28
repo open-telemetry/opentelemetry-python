@@ -137,19 +137,25 @@ class TestConfigLoader(unittest.TestCase):
         finally:
             os.unlink(temp_path)
 
-    def test_missing_required_env_var(self):
-        """Test error when required env var is missing."""
+    def test_unset_env_var_without_default_substitutes_empty(self):
+        """An unset env var without a default resolves to an empty value.
+
+        Per the declarative configuration spec, an unset ``${VAR}`` reference
+        with no default is replaced with an empty value rather than raising,
+        so the file still loads. A default (``${ENV:-production}``) is still
+        applied when its variable is unset.
+        """
         config_path = self.test_data_dir / "config_with_env_vars.yaml"
 
         with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(str(config_path))
+            config = load_config_file(str(config_path))
 
-            # Should mention substitution or env var error
-            self.assertTrue(
-                "substitution" in str(ctx.exception).lower()
-                or "environment" in str(ctx.exception).lower()
-            )
+        attributes = {
+            attribute.name: attribute.value
+            for attribute in config.resource.attributes
+        }
+        self.assertIsNone(attributes["service.name"])
+        self.assertEqual(attributes["deployment.environment"], "production")
 
     def test_yml_extension(self):
         """Test .yml extension is supported."""
@@ -276,11 +282,11 @@ tracer_provider:
         trace_id_ratio_based: {ratio: 0.5}
 """
 
-    def _load(self) -> OpenTelemetryConfiguration:
+    def _load(self, yaml: str | None = None) -> OpenTelemetryConfiguration:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".yaml", delete=False
         ) as fh:
-            fh.write(self._YAML)
+            fh.write(self._YAML if yaml is None else yaml)
             path = fh.name
         try:
             return load_config_file(path)
@@ -320,6 +326,35 @@ tracer_provider:
         self.assertEqual(len(processors), 1)
         self.assertIsInstance(processors[0], BatchSpanProcessor)
         self.assertIsInstance(processors[0].span_exporter, ConsoleSpanExporter)
+
+    def test_null_valued_required_field_node_survives_conversion(self):
+        # Regression test for #5451: ``jaeger_remote_development`` is nullable
+        # in the schema (so ``jaeger_remote_development:`` passes validation and
+        # is NOT rejected before conversion), yet its model has required
+        # fields. Coercing the present null into it would raise TypeError, so
+        # it must be left as None instead. The rest of the config still loads.
+        config = self._load(
+            """
+file_format: '1.0'
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          console:
+  sampler:
+    jaeger_remote_development:
+"""
+        )
+
+        # Schema accepted the null, and conversion left the required-field
+        # node unset rather than crashing.
+        self.assertIsNone(
+            config.tracer_provider.sampler.jaeger_remote_development
+        )
+        # A sibling nullable dict-typed node (console:) was still coerced.
+        self.assertEqual(
+            config.tracer_provider.processors[0].batch.exporter.console, {}
+        )
 
 
 class TestFileFormatValidation(unittest.TestCase):
