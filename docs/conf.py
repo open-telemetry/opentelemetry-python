@@ -99,6 +99,7 @@ intersphinx_mapping = {
     "wrapt": ("https://wrapt.readthedocs.io/en/latest/", None),
     "pymongo": ("https://pymongo.readthedocs.io/en/stable/", None),
     "grpc": ("https://grpc.github.io/grpc/python/", None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
 }
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky
@@ -194,6 +195,8 @@ nitpick_ignore = [
     # ``from os import PathLike`` renders as the bare name ``PathLike`` in the
     # file exporter type hints, which sphinx cannot resolve to os.PathLike.
     ("py:class", "PathLike"),
+    ("py:class", "BaseHTTPTransport"),
+    ("py:class", "opentelemetry.exporter.otlp.common._http.Compression"),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
