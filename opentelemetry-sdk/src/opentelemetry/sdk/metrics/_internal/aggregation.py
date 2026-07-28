@@ -644,13 +644,13 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         if max_size < self._min_max_size:
             raise ValueError(
                 f"Buckets max size {max_size} is smaller than "
-                "minimum max size {self._min_max_size}"
+                f"minimum max size {self._min_max_size}"
             )
 
         if max_size > self._max_max_size:
             raise ValueError(
                 f"Buckets max size {max_size} is larger than "
-                "maximum max size {self._max_max_size}"
+                f"maximum max size {self._max_max_size}"
             )
         if max_scale > 20:
             _logger.warning(
