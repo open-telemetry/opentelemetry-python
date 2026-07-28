@@ -11,6 +11,17 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.util._importlib_metadata import entry_points
 
+# 64 MiB, in bytes.
+_DEFAULT_MAX_REQUEST_SIZE = 64 * 1024 * 1024
+
+
+class RequestPayloadTooLargeError(Exception):
+    """A serialized OTLP request exceeded the configured ``max_request_size``.
+
+    The class name is emitted as the ``error.type`` attribute on the exporter's
+    failed-export metric, so renaming it changes observable telemetry.
+    """
+
 
 def _is_retryable(resp: requests.Response) -> bool:
     if resp.status_code == 408:
@@ -18,6 +29,19 @@ def _is_retryable(resp: requests.Response) -> bool:
     if resp.status_code >= 500 and resp.status_code <= 599:
         return True
     return False
+
+
+def _is_request_too_large(
+    serialized_data: bytes, max_request_size: int
+) -> bool:
+    """Return True if the serialized request exceeds a positive size limit.
+
+    The size is measured on the uncompressed serialized request, matching the
+    OTLP specification's "before compression" request-size limit. A
+    ``max_request_size`` of ``0`` (or any non-positive value) disables the
+    check.
+    """
+    return max_request_size > 0 and len(serialized_data) > max_request_size
 
 
 def _load_session_from_envvar(
