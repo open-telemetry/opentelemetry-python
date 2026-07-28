@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from os import environ
-from typing import Literal
+from typing import Literal, Mapping
 
 import requests
+from email.utils import parsedate_to_datetime
+from datetime import datetime, timezone
 
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER,
@@ -24,11 +26,41 @@ class RequestPayloadTooLargeError(Exception):
 
 
 def _is_retryable(resp: requests.Response) -> bool:
-    if resp.status_code == 408:
+    if resp.status_code in (408, 429):
         return True
-    if resp.status_code >= 500 and resp.status_code <= 599:
+    if 500 <= resp.status_code <= 599:
         return True
     return False
+
+
+def _get_retry_after_seconds(headers: Mapping[str, str] | None) -> float | None:
+    """Parse Retry-After header into seconds if present.
+
+    Supports both delta-seconds and HTTP-date formats.
+    """
+    if not headers:
+        return None
+    value = headers.get("Retry-After")
+    if not value:
+        return None
+    value = value.strip()
+    # delta-seconds
+    if value.isdigit():
+        try:
+            seconds = int(value)
+            return max(0, float(seconds))
+        except Exception:
+            return None
+    # HTTP-date
+    try:
+        dt = parsedate_to_datetime(value)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        delta = (dt - now).total_seconds()
+        return max(0.0, delta)
+    except Exception:
+        return None
 
 
 def _is_request_too_large(

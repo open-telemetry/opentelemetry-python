@@ -27,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._common import (
     _DEFAULT_MAX_REQUEST_SIZE,
     RequestPayloadTooLargeError,
+    _get_retry_after_seconds,
     _is_request_too_large,
     _is_retryable,
     _load_session_from_envvar,
@@ -157,13 +158,33 @@ class OTLPLogExporter(LogRecordExporter):
             else max_request_size
         )
         self._compression = compression or _compression_from_env()
-        self._session = (
-            session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
-            )
-            or requests.Session()
+
+        session_from_env = _load_session_from_envvar(
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
         )
+        if session is not None:
+            self._session = session
+        elif session_from_env is not None:
+            self._session = session_from_env
+        else:
+            use_httpx = (
+                os.environ.get("OTEL_EXPORTER_OTLP_HTTP_TRANSPORT", "")
+                .strip()
+                .lower()
+                == "httpx"
+            )
+            if use_httpx:
+                try:
+                    from opentelemetry.exporter.otlp.proto.http._common._transport_httpx import (
+                        HttpxSession,
+                    )
+
+                    self._session = HttpxSession()
+                except Exception:
+                    self._session = requests.Session()
+            else:
+                self._session = requests.Session()
+
         self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
         # let users override our defaults
@@ -200,10 +221,6 @@ class OTLPLogExporter(LogRecordExporter):
         if timeout_sec is None:
             timeout_sec = self._timeout
 
-        # By default, keep-alive is enabled in Session's request
-        # headers. Backends may choose to close the connection
-        # while a post happens which causes an unhandled
-        # exception. This try/except will retry the post on such exceptions
         try:
             resp = self._session.post(
                 url=self._endpoint,
@@ -246,8 +263,7 @@ class OTLPLogExporter(LogRecordExporter):
                 return LogRecordExportResult.FAILURE
             deadline_sec = time() + self._timeout
             for retry_num in range(_MAX_RETRYS):
-                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
+                base_backoff = 2**retry_num * random.uniform(0.8, 1.2)
                 export_error: Exception | None = None
                 try:
                     resp = self._export(serialized_data, deadline_sec - time())
@@ -258,10 +274,14 @@ class OTLPLogExporter(LogRecordExporter):
                     export_error = error
                     retryable = isinstance(error, ConnectionError)
                     status_code = None
+                    retry_after = None
                 else:
                     reason = resp.reason
                     retryable = _is_retryable(resp)
                     status_code = resp.status_code
+                    retry_after = _get_retry_after_seconds(getattr(resp, "headers", None))
+
+                backoff_seconds = base_backoff if retry_after is None else max(base_backoff, retry_after)
 
                 if not retryable:
                     _logger.error(
