@@ -5,6 +5,8 @@ from contextlib import contextmanager
 from unittest.mock import Mock, patch
 
 
+# Helper context manager to mock blocking wait operations and calls to
+# get the current time in order to avoid wasting wall clock time.
 @contextmanager
 def _mock_clock(
     shutdown_event: Mock,
