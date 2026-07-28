@@ -49,6 +49,30 @@ _logger = logging.getLogger(__name__)
 _DEFAULT_ENDPOINT = "http://localhost:4318"
 _DEFAULT_TIMEOUT = 10
 
+# 64 MiB, in bytes.
+_DEFAULT_MAX_REQUEST_SIZE = 64 * 1024 * 1024
+
+
+class RequestPayloadTooLargeError(Exception):
+    """A serialized OTLP request exceeded the configured ``max_request_size``.
+
+    The class name is emitted as the ``error.type`` attribute on the exporter's
+    failed-export metric, so renaming it changes observable telemetry.
+    """
+
+
+def _is_request_too_large(
+    serialized_data: bytes, max_request_size: int
+) -> bool:
+    """Return True if the serialized request exceeds a positive size limit.
+
+    The size is measured on the uncompressed serialized request, matching the
+    OTLP specification's "before compression" request-size limit. A
+    ``max_request_size`` of ``0`` (or any non-positive value) disables the
+    check.
+    """
+    return 0 < max_request_size < len(serialized_data)
+
 
 def _load_session_from_envvar(
     cred_envvar: _CredentialEnvVar,

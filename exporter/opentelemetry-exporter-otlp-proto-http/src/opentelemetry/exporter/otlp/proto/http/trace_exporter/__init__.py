@@ -18,7 +18,10 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_MAX_REQUEST_SIZE,
+    RequestPayloadTooLargeError,
     _build_transport,
+    _is_request_too_large,
     _load_session_from_envvar,
     _normalize_compression,
     _resolve_compression,
@@ -74,6 +77,7 @@ class OTLPSpanExporter(SpanExporter):
         compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         *,
+        max_request_size: int | None = None,
         meter_provider: MeterProvider | None = None,
     ) -> None: ...
 
@@ -89,6 +93,7 @@ class OTLPSpanExporter(SpanExporter):
         compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         *,
+        max_request_size: int | None = None,
         meter_provider: MeterProvider | None = None,
         _transport: BaseHTTPTransport,
     ) -> None: ...
@@ -104,9 +109,32 @@ class OTLPSpanExporter(SpanExporter):
         compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         *,
+        max_request_size: int | None = None,
         meter_provider: MeterProvider | None = None,
         _transport: BaseHTTPTransport | None = None,
     ) -> None:
+        """OTLP HTTP span exporter.
+
+        Args:
+            endpoint: Target URL to which the exporter is going to send spans.
+            certificate_file: Path to the CA certificate file for TLS.
+            client_key_file: Path to the client key file for mTLS.
+            client_certificate_file: Path to the client certificate file for mTLS.
+            headers: Headers to send with each export request.
+            timeout: Timeout in seconds for each export request.
+            compression: Compression to use; one of none, gzip, deflate.
+            session: Requests session to use at export.
+            max_request_size: Maximum size in bytes of a serialized request,
+                measured before compression. A request exceeding this size is
+                dropped before being sent. Defaults to 64 MiB; a value of 0 (or
+                any non-positive value) disables the limit. Batch processors
+                group spans by count rather than serialized size, so a batch
+                whose serialized request exceeds this limit is dropped as a
+                whole and recorded as a failed export; reduce the processor's
+                ``max_export_batch_size`` (or raise/disable this limit) if
+                batches may approach it.
+            meter_provider: MeterProvider used for the exporter's own metrics.
+        """
         self._endpoint = endpoint or _resolve_endpoint(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, DEFAULT_TRACES_EXPORT_PATH
         )
@@ -124,6 +152,11 @@ class OTLPSpanExporter(SpanExporter):
             or _load_session_from_envvar(
                 _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
             ),
+        )
+        self._max_request_size = (
+            _DEFAULT_MAX_REQUEST_SIZE
+            if max_request_size is None
+            else max_request_size
         )
         self._client = _http.OTLPHTTPClient(
             transport=transport,
@@ -165,6 +198,20 @@ class OTLPSpanExporter(SpanExporter):
             except Exception as error:
                 _logger.error("Failed to encode span batch: %s", error)
                 result.error = error
+                return SpanExportResult.FAILURE
+
+            if _is_request_too_large(serialized_data, self._max_request_size):
+                _logger.warning(
+                    "Dropping span batch: serialized size %d bytes exceeds "
+                    "max_request_size %d bytes.",
+                    len(serialized_data),
+                    self._max_request_size,
+                )
+                result.error = RequestPayloadTooLargeError(
+                    f"Serialized span request size {len(serialized_data)} "
+                    f"bytes exceeds max_request_size "
+                    f"{self._max_request_size} bytes."
+                )
                 return SpanExportResult.FAILURE
 
             export_result = self._client.export(serialized_data)

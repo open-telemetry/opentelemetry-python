@@ -31,7 +31,10 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
 )
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._common import (
+    _DEFAULT_MAX_REQUEST_SIZE,
+    RequestPayloadTooLargeError,
     _build_transport,
+    _is_request_too_large,
     _load_session_from_envvar,
     _normalize_compression,
     _resolve_compression,
@@ -117,6 +120,7 @@ class OTLPMetricExporter(MetricExporter):
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         *,
+        max_request_size: int | None = None,
         meter_provider: MeterProvider | None = None,
     ) -> None: ...
 
@@ -136,6 +140,7 @@ class OTLPMetricExporter(MetricExporter):
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         *,
+        max_request_size: int | None = None,
         meter_provider: MeterProvider | None = None,
         _transport: BaseHTTPTransport,
     ) -> None: ...
@@ -155,6 +160,7 @@ class OTLPMetricExporter(MetricExporter):
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         *,
+        max_request_size: int | None = None,
         meter_provider: MeterProvider | None = None,
         _transport: BaseHTTPTransport | None = None,
     ) -> None:
@@ -178,6 +184,14 @@ class OTLPMetricExporter(MetricExporter):
             max_export_batch_size: Maximum number of data points to export in a single request.
                 If not set there is no limit to the number of data points in a request.
                 If it is set and the number of data points exceeds the max, the request will be split.
+            max_request_size: Maximum size in bytes of a serialized request, measured before
+                compression. A request exceeding this size is dropped before being sent. Defaults
+                to 64 MiB; a value of 0 (or any non-positive value) disables the limit. Requests
+                are sized after any ``max_export_batch_size`` splitting; a batch whose serialized
+                request still exceeds this limit is dropped as a whole and recorded as a failed
+                export. Reduce ``max_export_batch_size`` (or raise/disable this limit) if batches
+                may approach it.
+            meter_provider: MeterProvider used for the exporter's own metrics.
         """
         MetricExporter.__init__(
             self,
@@ -216,6 +230,11 @@ class OTLPMetricExporter(MetricExporter):
             logger=_logger,
         )
         self._max_export_batch_size: int | None = max_export_batch_size
+        self._max_request_size = (
+            _DEFAULT_MAX_REQUEST_SIZE
+            if max_request_size is None
+            else max_request_size
+        )
         self._shutdown = False
 
         self._metrics = create_exporter_metrics(
@@ -236,9 +255,21 @@ class OTLPMetricExporter(MetricExporter):
         with self._metrics.export_operation(
             _count_data_points(export_request)
         ) as result:
-            export_result = self._client.export(
-                export_request.SerializeToString()
-            )
+            serialized_data = export_request.SerializeToString()
+            if _is_request_too_large(serialized_data, self._max_request_size):
+                _logger.warning(
+                    "Dropping metrics batch: serialized size %d bytes exceeds "
+                    "max_request_size %d bytes.",
+                    len(serialized_data),
+                    self._max_request_size,
+                )
+                result.error = RequestPayloadTooLargeError(
+                    f"Serialized metrics request size {len(serialized_data)} "
+                    f"bytes exceeds max_request_size "
+                    f"{self._max_request_size} bytes."
+                )
+                return MetricExportResult.FAILURE
+            export_result = self._client.export(serialized_data)
             if not export_result.success:
                 result.error = export_result.error
                 result.error_attrs = (

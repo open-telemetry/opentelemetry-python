@@ -115,6 +115,88 @@ class TestOTLPSpanExporter(unittest.TestCase):
         shutdown_event.is_set.return_value = False
         return shutdown_event
 
+    def test_max_request_size_default(self):
+        exporter = OTLPSpanExporter()
+        self.assertEqual(exporter._max_request_size, 64 * 1024 * 1024)
+
+    @mocketize
+    def test_oversized_payload_dropped_before_send(self):
+        exporter = OTLPSpanExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=1
+        )
+        result = exporter.export(self._make_span())
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertEqual(len(Mocket.request_list()), 0)
+
+    @mocketize
+    def test_max_request_size_zero_disables(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPSpanExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=0
+        )
+        result = exporter.export(self._make_span())
+        self.assertEqual(result, SpanExportResult.SUCCESS)
+
+    @mocketize
+    def test_negative_max_request_size_disables_limit(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPSpanExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=-1
+        )
+        result = exporter.export(self._make_span())
+        self.assertEqual(result, SpanExportResult.SUCCESS)
+        self.assertEqual(len(Mocket.request_list()), 1)
+
+    @mocketize
+    def test_oversized_payload_measured_before_compression(self):
+        # The limit applies to the uncompressed serialized request. Build a
+        # highly compressible batch whose gzip size is below a limit that the
+        # uncompressed size still exceeds, then assert it is still dropped --
+        # which can only hold if size is measured before compression.
+        for _ in range(200):
+            with self._tracer.start_as_current_span("test-span"):
+                pass
+        spans = self._finished_spans()
+        uncompressed = encode_spans(spans).SerializePartialToString()
+        compressed = gzip.compress(uncompressed)
+        limit = (len(compressed) + len(uncompressed)) // 2
+        # Guard the discriminating condition: compressed < limit < uncompressed.
+        self.assertLess(len(compressed), limit)
+        self.assertLess(limit, len(uncompressed))
+        exporter = OTLPSpanExporter(
+            endpoint=_TEST_ENDPOINT,
+            max_request_size=limit,
+            compression=Compression.Gzip,
+        )
+        result = exporter.export(spans)
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertEqual(len(Mocket.request_list()), 0)
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    @mocketize
+    def test_oversized_payload_records_failure_metric(self):
+        exporter = OTLPSpanExporter(
+            endpoint=_TEST_ENDPOINT,
+            max_request_size=1,
+            meter_provider=self.meter_provider,
+        )
+        result = exporter.export(self._make_span())
+        self.assertEqual(result, SpanExportResult.FAILURE)
+        self.assertEqual(len(Mocket.request_list()), 0)
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        exported = next(
+            metric
+            for metric in scope_metrics.metrics
+            if metric.name == "otel.sdk.exporter.span.exported"
+        )
+        self.assertEqual(
+            exported.data.data_points[0].attributes["error.type"],
+            "RequestPayloadTooLargeError",
+        )
+
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(
             attributes["otel.component.type"], "otlp_http_span_exporter"

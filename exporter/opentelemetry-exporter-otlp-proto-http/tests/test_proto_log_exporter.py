@@ -91,6 +91,7 @@ def _make_log_record() -> ReadWriteLogRecord:
     )
 
 
+# pylint: disable=too-many-public-methods
 class TestOTLPHTTPLogExporter(unittest.TestCase):
     def setUp(self):
         env_patcher = patch.dict(os.environ, {}, clear=True)
@@ -107,6 +108,62 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         shutdown_event = Mock(spec=threading.Event)
         shutdown_event.is_set.return_value = False
         return shutdown_event
+
+    def test_max_request_size_default(self):
+        self.assertEqual(OTLPLogExporter()._max_request_size, 64 * 1024 * 1024)
+
+    @mocketize
+    def test_oversized_payload_dropped_before_send(self):
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=1
+        )
+        result = exporter.export([_make_log_record()])
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertEqual(len(Mocket.request_list()), 0)
+
+    @mocketize
+    def test_max_request_size_zero_disables(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=0
+        )
+        result = exporter.export([_make_log_record()])
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+
+    @mocketize
+    def test_negative_max_request_size_disables_limit(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=-1
+        )
+        result = exporter.export([_make_log_record()])
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        self.assertEqual(len(Mocket.request_list()), 1)
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    @mocketize
+    def test_oversized_payload_records_failure_metric(self):
+        exporter = OTLPLogExporter(
+            endpoint=_TEST_ENDPOINT,
+            max_request_size=1,
+            meter_provider=self.meter_provider,
+        )
+        result = exporter.export([_make_log_record()])
+        self.assertEqual(result, LogRecordExportResult.FAILURE)
+        self.assertEqual(len(Mocket.request_list()), 0)
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        exported = next(
+            metric
+            for metric in scope_metrics.metrics
+            if metric.name == "otel.sdk.exporter.log.exported"
+        )
+        self.assertEqual(
+            exported.data.data_points[0].attributes["error.type"],
+            "RequestPayloadTooLargeError",
+        )
 
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(

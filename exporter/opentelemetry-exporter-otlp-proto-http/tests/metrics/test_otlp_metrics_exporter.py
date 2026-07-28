@@ -188,6 +188,128 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
 
+    def test_max_request_size_default(self):
+        self.assertEqual(
+            OTLPMetricExporter()._max_request_size, 64 * 1024 * 1024
+        )
+
+    @mocketize
+    def test_oversized_payload_dropped_before_send(self):
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=1
+        )
+        result = exporter.export(self.metrics["sum_int"])
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        self.assertEqual(len(Mocket.request_list()), 0)
+
+    @mocketize
+    def test_max_request_size_zero_disables(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=0
+        )
+        result = exporter.export(self.metrics["sum_int"])
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+
+    @mocketize
+    def test_negative_max_request_size_disables_limit(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT, max_request_size=-1
+        )
+        result = exporter.export(self.metrics["sum_int"])
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(len(Mocket.request_list()), 1)
+
+    @mocketize
+    def test_oversized_payload_dropped_with_batch_splitting(self):
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT,
+            max_request_size=1,
+            max_export_batch_size=1,
+        )
+        result = exporter.export(self.metrics["sum_int"])
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        self.assertEqual(len(Mocket.request_list()), 0)
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    @mocketize
+    def test_oversized_payload_records_failure_metric(self):
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT,
+            max_request_size=1,
+            meter_provider=self.meter_provider,
+        )
+        result = exporter.export(self.metrics["sum_int"])
+        self.assertEqual(result, MetricExportResult.FAILURE)
+        self.assertEqual(len(Mocket.request_list()), 0)
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        exported = next(
+            metric
+            for metric in scope_metrics.metrics
+            if metric.name == "otel.sdk.exporter.metric_data_point.exported"
+        )
+        self.assertEqual(
+            exported.data.data_points[0].attributes["error.type"],
+            "RequestPayloadTooLargeError",
+        )
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    @mocketize
+    def test_split_export_records_per_split_data_point_count(self):
+        Entry.register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            Response(status=200),
+            Response(status=200),
+            Response(status=200),
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        attributes={"a": 1}, schema_url="resource_schema_url"
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="name", version="version"
+                            ),
+                            metrics=[
+                                _generate_sum("s1", 1),
+                                _generate_sum("s2", 2),
+                                _generate_sum("s3", 3),
+                            ],
+                            schema_url="scope_schema_url",
+                        )
+                    ],
+                    schema_url="resource_schema_url",
+                )
+            ]
+        )
+        exporter = OTLPMetricExporter(
+            endpoint=_TEST_ENDPOINT,
+            max_export_batch_size=1,
+            meter_provider=self.meter_provider,
+        )
+        result = exporter.export(metrics_data)
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(len(Mocket.request_list()), 3)
+        internal = self.metric_reader.get_metrics_data()
+        scope_metrics = internal.resource_metrics[0].scope_metrics[0]
+        exported = next(
+            metric
+            for metric in scope_metrics.metrics
+            if metric.name == "otel.sdk.exporter.metric_data_point.exported"
+        )
+        total = sum(dp.value for dp in exported.data.data_points)
+        self.assertEqual(total, 3)
+
     def test_default_transport_is_urllib3(self):
         exporter = OTLPMetricExporter()
 
