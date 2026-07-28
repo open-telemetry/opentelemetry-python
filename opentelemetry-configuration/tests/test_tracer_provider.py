@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
+from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._tracer_provider import (
     configure_tracer_provider,
     create_tracer_provider,
@@ -248,6 +249,39 @@ class TestCreateSampler(unittest.TestCase):
     def test_no_sampler_raises_configuration_error(self):
         with self.assertRaises(ConfigurationError):
             self._make_provider(SamplerConfig())
+
+    def test_null_valued_always_on_from_parsed_config(self):
+        # Regression test for #5451: a leaf sampler written as ``always_on:``
+        # (present, null) is parsed to ``None`` by the YAML loader. It must be
+        # treated the same as ``always_on: {}`` rather than failing type
+        # dispatch.
+        sampler_config = _dict_to_dataclass({"always_on": None}, SamplerConfig)
+        provider = self._make_provider(sampler_config)
+        self.assertIs(provider.sampler, ALWAYS_ON)
+
+    def test_null_valued_parent_based_delegates_from_parsed_config(self):
+        # Regression test for #5451: the exact parent_based config from the
+        # issue, where every leaf delegate is written with a null value.
+        sampler_config = _dict_to_dataclass(
+            {
+                "parent_based": {
+                    "root": {"always_on": None},
+                    "remote_parent_sampled": {"always_on": None},
+                    "remote_parent_not_sampled": {"always_off": None},
+                    "local_parent_sampled": {"always_on": None},
+                    "local_parent_not_sampled": {"always_off": None},
+                }
+            },
+            SamplerConfig,
+        )
+        provider = self._make_provider(sampler_config)
+        sampler = provider.sampler
+        self.assertIsInstance(sampler, ParentBased)
+        self.assertIs(sampler._root, ALWAYS_ON)
+        self.assertIs(sampler._remote_parent_sampled, ALWAYS_ON)
+        self.assertIs(sampler._remote_parent_not_sampled, ALWAYS_OFF)
+        self.assertIs(sampler._local_parent_sampled, ALWAYS_ON)
+        self.assertIs(sampler._local_parent_not_sampled, ALWAYS_OFF)
 
     def test_user_defined_sampler_loaded_via_entry_point(self):
         mock_sampler = MagicMock(spec=Sampler)

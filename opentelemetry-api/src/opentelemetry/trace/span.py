@@ -513,7 +513,8 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
 
     def __delattr__(self, *args: str) -> None:
         _logger.debug(
-            "Immutable type, ignoring call to set attribute", stack_info=True
+            "Immutable type, ignoring call to delete attribute",
+            stack_info=True,
         )
 
     def __repr__(self) -> str:
