@@ -11,6 +11,7 @@ from typing import Any, ClassVar
 from opentelemetry.configuration._common import _additional_properties
 from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration.models import ExemplarFilter
+from opentelemetry.configuration.models import Sampler as SamplerConfig
 
 
 @dataclass
@@ -40,6 +41,13 @@ class _WithExtras:
 @dataclass
 class _WithEnum:
     filter: ExemplarFilter | None = None
+
+
+@dataclass
+class _WithMapping:
+    # ``dict[str, Any]``-typed node, like the sampler/detector leaf configs.
+    option: dict[str, Any] | None = None
+    name: str | None = None
 
 
 class TestDictToDataclass(unittest.TestCase):
@@ -72,10 +80,24 @@ class TestDictToDataclass(unittest.TestCase):
         self.assertEqual(result.middle.items[0].value, 1)
         self.assertEqual(result.middle.items[1].value, 2)
 
-    def test_none_value_preserved(self):
+    def test_present_null_dataclass_coerced_to_empty_instance(self):
+        # A present-null value on a dataclass-typed node that can be built with
+        # no arguments (e.g. a metric ``console:`` exporter) becomes a
+        # defaulted instance, not None. Regression test for #5451.
         result = _dict_to_dataclass({"middle": None, "name": "test"}, _Outer)
-        self.assertIsNone(result.middle)
+        self.assertIsInstance(result.middle, _Middle)
+        self.assertIsNone(result.middle.inner)
         self.assertEqual(result.name, "test")
+
+    def test_present_null_dataclass_with_required_field_stays_none(self):
+        # ``jaeger_remote_development`` is nullable in the schema but its model
+        # (ExperimentalJaegerRemoteSampler) has required fields, so it cannot
+        # be defaulted. A present null must stay None rather than raising a
+        # TypeError trying to instantiate it. Regression test for #5451.
+        result = _dict_to_dataclass(
+            {"jaeger_remote_development": None}, SamplerConfig
+        )
+        self.assertIsNone(result.jaeger_remote_development)
 
     def test_missing_optional_fields_default_to_none(self):
         result = _dict_to_dataclass({}, _Outer)
@@ -108,3 +130,23 @@ class TestDictToDataclass(unittest.TestCase):
             {"filter": ExemplarFilter.trace_based}, _WithEnum
         )
         self.assertIs(result.filter, ExemplarFilter.trace_based)
+
+    def test_present_null_mapping_coerced_to_empty_dict(self):
+        # A key present with a null YAML value (e.g. ``option:``) on a
+        # dict-typed node means "select with empty config", so it must become
+        # an empty mapping rather than None. Regression test for #5451.
+        result = _dict_to_dataclass({"option": None}, _WithMapping)
+        self.assertEqual(result.option, {})
+
+    def test_explicit_empty_mapping_preserved(self):
+        result = _dict_to_dataclass({"option": {}}, _WithMapping)
+        self.assertEqual(result.option, {})
+
+    def test_absent_mapping_stays_none(self):
+        # An omitted optional section must remain unset, unlike a present null.
+        result = _dict_to_dataclass({"name": "x"}, _WithMapping)
+        self.assertIsNone(result.option)
+
+    def test_present_null_scalar_stays_none(self):
+        result = _dict_to_dataclass({"name": None}, _WithMapping)
+        self.assertIsNone(result.name)
