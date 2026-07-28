@@ -391,6 +391,18 @@ class TestFileFormatValidation(unittest.TestCase):
         config = self._load(version)
         self.assertEqual(config.file_format, version)
 
+    @unittest.skipIf(
+        _SUPPORTED_SCHEMA_MINOR == 0,
+        "No older minor version to validate against",
+    )
+    def test_older_minor_is_accepted(self):
+        version = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR - 1}"
+        with self.assertNoLogs(
+            "opentelemetry.configuration.file._loader", level="WARNING"
+        ):
+            config = self._load(version)
+        self.assertEqual(config.file_format, version)
+
     def test_newer_minor_is_accepted_with_warning(self):
         version = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR + 1}"
         with self.assertLogs(
@@ -403,9 +415,7 @@ class TestFileFormatValidation(unittest.TestCase):
         )
 
     def test_unsupported_major_is_rejected(self):
-        versions = [f"{_SUPPORTED_SCHEMA_MAJOR + 1}.0"]
-        if _SUPPORTED_SCHEMA_MAJOR > 0:
-            versions.append(f"{_SUPPORTED_SCHEMA_MAJOR - 1}.0")
+        versions = ["0.4", f"{_SUPPORTED_SCHEMA_MAJOR + 1}.0"]
         for version in versions:
             with self.subTest(version=version):
                 with self.assertRaises(ConfigurationError) as ctx:
