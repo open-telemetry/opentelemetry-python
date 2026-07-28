@@ -44,6 +44,11 @@ Installation
 Run the Example
 ---------------
 
+The runnable source files are
+:scm_web:`multi_destination_traces.py <docs/examples/multi-destination-exporting/multi_destination_traces.py>`,
+:scm_web:`multi_destination_metrics.py <docs/examples/multi-destination-exporting/multi_destination_metrics.py>`,
+and :scm_web:`multi_destination_logs.py <docs/examples/multi-destination-exporting/multi_destination_logs.py>`.
+
 .. code-block:: sh
 
     python multi_destination_traces.py

@@ -37,8 +37,8 @@ error handlers are installed: ``error_handler_0``  will handle
 Execution
 ---------
 
-An example is provided in the
-``opentelemetry-python/docs/examples/error_handler/example.py``.
+An example is provided in
+:scm_web:`example.py <docs/examples/error_handler/example.py>`.
 
 You can just run it, you should get output similar to this one:
 
@@ -74,7 +74,7 @@ The ``opentelemetry-sdk.error_handler`` module includes documentation that
 explains how this works. We recommend you read it also, here is just a small
 summary.
 
-In ``example.py`` we use ``GlobalErrorHandler`` as a context manager in several
+In :scm_web:`example.py <docs/examples/error_handler/example.py>` we use ``GlobalErrorHandler`` as a context manager in several
 places, for example:
 
 
