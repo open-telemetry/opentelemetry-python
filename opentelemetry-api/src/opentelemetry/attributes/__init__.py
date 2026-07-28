@@ -185,7 +185,8 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
                 "invalid key `%s`. must be non-empty string. Dropping key from attributes.",
                 key,
             )
-            self.dropped += 1
+            with self._lock:
+                self.dropped += 1
             return
         cleaned = _clean_attribute_value(value, self.max_value_len)
         with self._lock:
