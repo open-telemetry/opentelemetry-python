@@ -7,6 +7,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration._resource import create_resource
 from opentelemetry.configuration.models import (
@@ -375,6 +376,17 @@ class TestServiceResourceDetector(unittest.TestCase):
         with patch.dict(os.environ, {"OTEL_SERVICE_NAME": "env-svc"}):
             resource = create_resource(config)
         self.assertEqual(resource.attributes[SERVICE_NAME], "explicit-svc")
+
+    def test_null_valued_detector_from_parsed_config(self):
+        # Regression test for #5451: a detector written as ``- service:``
+        # (present, null) is parsed to ``{"service": None}``. It must run the
+        # detector just like ``- service: {}`` rather than being skipped.
+        config = _dict_to_dataclass(
+            {"detection_development": {"detectors": [{"service": None}]}},
+            ResourceConfig,
+        )
+        resource = create_resource(config)
+        self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
 
     def test_service_detector_not_run_when_absent(self):
         resource = create_resource(ResourceConfig())

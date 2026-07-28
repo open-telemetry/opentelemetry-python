@@ -128,6 +128,82 @@ class TestOTLPMetricExporter(TestCase):
             ),
         }
 
+    def test_max_request_size_default(self):
+        self.assertEqual(
+            OTLPMetricExporter()._max_request_size, 64 * 1024 * 1024
+        )
+
+    @patch.object(Session, "post")
+    def test_oversized_payload_dropped_before_send(self, mock_post):
+        exporter = OTLPMetricExporter(max_request_size=1)
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.FAILURE,
+        )
+        mock_post.assert_not_called()
+
+    @patch.object(OTLPMetricExporter, "_export", return_value=Mock(ok=True))
+    def test_max_request_size_zero_disables(self, _mock_export):
+        exporter = OTLPMetricExporter(max_request_size=0)
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.SUCCESS,
+        )
+
+    @patch.object(Session, "post")
+    def test_negative_max_request_size_disables_limit(self, mock_post):
+        resp = Response()
+        resp.status_code = 200
+        mock_post.return_value = resp
+        exporter = OTLPMetricExporter(max_request_size=-1)
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.SUCCESS,
+        )
+        mock_post.assert_called()
+
+    @patch.object(Session, "post")
+    def test_oversized_payload_dropped_with_batch_splitting_enabled(
+        self, mock_post
+    ):
+        # With batch-splitting enabled, the byte check still applies to each
+        # post-split request, so a too-small limit drops every split before
+        # sending (an oversized split aborts the batch, like any other
+        # non-retryable per-split failure).
+        exporter = OTLPMetricExporter(
+            max_request_size=1, max_export_batch_size=1
+        )
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.FAILURE,
+        )
+        mock_post.assert_not_called()
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    @patch.object(Session, "post")
+    def test_oversized_payload_records_failure_metric(self, mock_post):
+        exporter = OTLPMetricExporter(
+            max_request_size=1, meter_provider=self.meter_provider
+        )
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.FAILURE,
+        )
+        mock_post.assert_not_called()
+        metrics_data = self.metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        exported = next(
+            metric
+            for metric in scope_metrics.metrics
+            if metric.name == "otel.sdk.exporter.metric_data_point.exported"
+        )
+        self.assertEqual(
+            exported.data.data_points[0].attributes["error.type"],
+            "RequestPayloadTooLargeError",
+        )
+
     @patch.dict(
         "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
     )
