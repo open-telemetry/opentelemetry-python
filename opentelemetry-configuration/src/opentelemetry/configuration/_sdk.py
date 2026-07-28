@@ -74,10 +74,10 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     corresponding global untouched — matching the spec's "noop default"
     behavior.
 
-    Honors the top-level ``disabled`` flag: when true, no globals are set.
-    The ``log_level`` field, when present, is applied to the internal
-    ``opentelemetry`` logger regardless of ``disabled`` — it configures
-    SDK self-diagnostics, not telemetry emission.
+    Honors the top-level ``disabled`` flag: when true, the function returns
+    early without setting any globals. The ``log_level`` field, when present
+    and not disabled, is applied to the internal ``opentelemetry`` logger to
+    control the verbosity of SDK self-diagnostics.
 
     Args:
         config: Parsed ``OpenTelemetryConfiguration`` (typically from

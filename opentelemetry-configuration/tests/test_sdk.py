@@ -197,10 +197,11 @@ class TestConfigureSdkLogLevel(unittest.TestCase):
                     expected_level,
                 )
 
-    def test_log_level_applies_even_when_disabled(self):
+    def test_log_level_not_applied_when_disabled(self):
+        logging.getLogger("opentelemetry").setLevel(logging.WARNING)
         configure_sdk(_config(disabled=True, log_level=SeverityNumber.error))
         self.assertEqual(
-            logging.getLogger("opentelemetry").level, logging.ERROR
+            logging.getLogger("opentelemetry").level, logging.WARNING
         )
 
 
