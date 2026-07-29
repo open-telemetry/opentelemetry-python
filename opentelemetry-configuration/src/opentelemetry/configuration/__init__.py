@@ -32,6 +32,7 @@ behaviour may change between minor versions.
 from opentelemetry.configuration._config_provider import (
     ConfigProperties,
     ConfigProvider,
+    NoOpConfigProvider,
     get_config_provider,
     set_config_provider,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "ConfigProperties",
     "ConfigProvider",
     "ConfigurationError",
+    "NoOpConfigProvider",
     "OpenTelemetryConfiguration",
     "configure_sdk",
     "get_config_provider",
