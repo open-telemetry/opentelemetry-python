@@ -33,7 +33,7 @@ asgiref==3.7.2
     # via
     #   -c dev-requirements.txt
     #   opentelemetry-test-utils
-certifi==2017.4.17
+certifi==2023.7.22
     # via requests
 charset-normalizer==2.0.0
     # via requests
