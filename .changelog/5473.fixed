@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: retry exports on HTTP 429 (Too Many Requests) responses
