@@ -55,12 +55,6 @@
         enabled: false,
       },
       {
-        matchManagers: ["github-actions"],
-        matchDepNames: ["python"],
-        // Disable Renovate for the python version used in GitHub Actions workflows. The version is generated based on tox envs.
-        enabled: false,
-      },
-      {
         groupName: "ci",
         matchManagers: [
           "github-actions",
@@ -76,6 +70,12 @@
           "digest",
         ],
         semanticCommitScope: "ci",
+      },
+      {
+        matchDepTypes: ["uses-with"],
+        matchDepNames: ["python"],
+        // Disable Renovate for the python version used in GitHub Actions workflows. The version is generated based on tox envs.
+        enabled: false,
       },
     ],
 }
