@@ -71,8 +71,10 @@ from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
 )
-from opentelemetry.semconv._incubating.attributes import code_attributes
-from opentelemetry.semconv.attributes import exception_attributes
+from opentelemetry.semconv.attributes import (
+    code_attributes,
+    exception_attributes,
+)
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
