@@ -172,27 +172,21 @@ class BatchProcessor(Generic[Telemetry]):
             while self._should_export_batch(batch_strategy, iteration):
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-                error: Exception | None = None
-                count = 0
+                count = min(
+                    self._max_export_batch_size,
+                    len(self._queue),
+                )
+                # Oldest records are at the back, so pop from there.
+                batch = [self._queue.pop() for _ in range(count)]
+                # Count records as processed when the batch is submitted to the
+                # exporter, independent of the export outcome.
+                self._metrics.finish_items(count)
                 try:
-                    count = min(
-                        self._max_export_batch_size,
-                        len(self._queue),
-                    )
-                    self._exporter.export(
-                        [
-                            # Oldest records are at the back, so pop from there.
-                            self._queue.pop()
-                            for _ in range(count)
-                        ]
-                    )
-                except Exception as err:  # pylint: disable=broad-exception-caught
-                    error = err
+                    self._exporter.export(batch)
+                except Exception:  # pylint: disable=broad-exception-caught
                     _logger.exception(
                         "Exception while exporting %s.", self._exporting
                     )
-                finally:
-                    self._metrics.finish_items(count, error)
                 detach(token)
 
     def emit(self, data: Telemetry) -> None:

@@ -124,16 +124,16 @@ class SimpleSpanProcessor(SpanProcessor):
         if not (span.context and span.context.trace_flags.sampled):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        error: Exception | None = None
         try:
+            # Count as processed when submitting to the exporter, independent
+            # of the export outcome.
+            self._metrics.finish_items(1)
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught
-        except Exception as err:
-            error = err
+        except Exception:
             logger.exception("Exception while exporting Span.")
         finally:
-            self._metrics.finish_items(1, error)
-        detach(token)
+            detach(token)
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()

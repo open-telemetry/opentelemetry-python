@@ -433,13 +433,12 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 1)
         self.assertEqual(metrics[0].name, "otel.sdk.processor.log.processed")
-        processed_data_points = sorted(
-            metrics[0].data.data_points,
-            key=lambda dp: dp.attributes.get("error.type", ""),
-        )
-        self.assertEqual(len(processed_data_points), 2)
+        processed_data_points = metrics[0].data.data_points
+        self.assertEqual(len(processed_data_points), 1)
         processed_data_point0 = processed_data_points[0]
-        self.assertEqual(processed_data_point0.value, 2)
+        # All 3 logs are counted as processed when submitted to the exporter,
+        # independent of the export outcome (the 3rd export fails).
+        self.assertEqual(processed_data_point0.value, 3)
         self.assertEqual(
             processed_data_point0.attributes["otel.component.type"],
             "simple_log_processor",
@@ -450,20 +449,6 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             )
         )
         self.assertIsNone(processed_data_point0.attributes.get("error.type"))
-        processed_data_point1 = processed_data_points[1]
-        self.assertEqual(processed_data_point1.value, 1)
-        self.assertEqual(
-            processed_data_point1.attributes["otel.component.type"],
-            "simple_log_processor",
-        )
-        self.assertTrue(
-            processed_data_point1.attributes["otel.component.name"].startswith(
-                "simple_log_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point1.attributes["error.type"], "RuntimeError"
-        )
 
 
 # Many more test cases for the BatchLogRecordProcessor exist under
@@ -746,7 +731,9 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             metrics[0].data.data_points,
             key=lambda dp: dp.attributes.get("error.type", ""),
         )
-        self.assertEqual(len(processed_data_points), 1)
+        # "foo" is counted as processed when submitted to the exporter (before
+        # its export call blocks); "baz" is dropped due to a full queue.
+        self.assertEqual(len(processed_data_points), 2)
         processed_data_point0 = processed_data_points[0]
         self.assertEqual(processed_data_point0.value, 1)
         self.assertEqual(
@@ -758,8 +745,12 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
                 "batching_log_processor/"
             )
         )
+        self.assertIsNone(processed_data_point0.attributes.get("error.type"))
+        processed_data_point_queue_full = processed_data_points[1]
+        self.assertEqual(processed_data_point_queue_full.value, 1)
         self.assertEqual(
-            processed_data_point0.attributes.get("error.type"), "queue_full"
+            processed_data_point_queue_full.attributes.get("error.type"),
+            "queue_full",
         )
         self.assertEqual(
             metrics[1].name, "otel.sdk.processor.log.queue.capacity"
@@ -806,9 +797,12 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             metrics[0].data.data_points,
             key=lambda dp: dp.attributes.get("error.type", ""),
         )
-        self.assertEqual(len(processed_data_points), 3)
+        # "foo", "bar" and "failed" are all counted as processed when submitted
+        # to the exporter, independent of the export outcome ("failed" raises).
+        # "baz" remains a queue_full drop.
+        self.assertEqual(len(processed_data_points), 2)
         processed_data_point0 = processed_data_points[0]
-        self.assertEqual(processed_data_point0.value, 2)
+        self.assertEqual(processed_data_point0.value, 3)
         self.assertEqual(
             processed_data_point0.attributes["otel.component.type"],
             "batching_log_processor",
@@ -831,22 +825,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             )
         )
         self.assertEqual(
-            processed_data_point1.attributes.get("error.type"),
-            "BrokenPipeError",
-        )
-        processed_data_point2 = processed_data_points[2]
-        self.assertEqual(processed_data_point2.value, 1)
-        self.assertEqual(
-            processed_data_point2.attributes["otel.component.type"],
-            "batching_log_processor",
-        )
-        self.assertTrue(
-            processed_data_point2.attributes["otel.component.name"].startswith(
-                "batching_log_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point2.attributes.get("error.type"), "queue_full"
+            processed_data_point1.attributes.get("error.type"), "queue_full"
         )
         self.assertEqual(
             metrics[1].name, "otel.sdk.processor.log.queue.capacity"
