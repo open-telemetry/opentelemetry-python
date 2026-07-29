@@ -26,6 +26,12 @@ class RequestPayloadTooLargeError(Exception):
 def _is_retryable(resp: requests.Response) -> bool:
     if resp.status_code == 408:
         return True
+    # 429 (Too Many Requests) is listed as a retryable status code by the OTLP
+    # specification, so a throttled export should be retried with backoff rather
+    # than dropped. See
+    # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md#failures-1
+    if resp.status_code == 429:
+        return True
     if resp.status_code >= 500 and resp.status_code <= 599:
         return True
     return False
