@@ -57,43 +57,90 @@ class ConfigProperties:
             dict(properties) if properties is not None else {}
         )
 
-    def get_string(self, name: str) -> str | None:
-        """Return the value of ``name`` as a ``str``, or ``None``."""
-        value = self._properties.get(name)
+    def _log_type_mismatch(self, name: str, value: Any, expected: str) -> None:
+        _logger.warning(
+            "Config property %r has type %s, expected %s; ignoring.",
+            name,
+            type(value).__name__,
+            expected,
+        )
+
+    @staticmethod
+    def _as_string(value: Any) -> str | None:
         return value if isinstance(value, str) else None
 
-    def get_bool(self, name: str) -> bool | None:
-        """Return the value of ``name`` as a ``bool``, or ``None``."""
-        value = self._properties.get(name)
+    @staticmethod
+    def _as_bool(value: Any) -> bool | None:
         return value if isinstance(value, bool) else None
 
-    def get_int(self, name: str) -> int | None:
-        """Return the value of ``name`` as an ``int``, or ``None``.
-
-        ``bool`` values are rejected (they are not treated as integers).
-        """
-        value = self._properties.get(name)
+    @staticmethod
+    def _as_int(value: Any) -> int | None:
+        # ``bool`` is a subclass of ``int`` in Python but is not an integer
+        # value for config purposes, so it is rejected.
         if isinstance(value, bool):
             return None
         return value if isinstance(value, int) else None
 
-    def get_float(self, name: str) -> float | None:
-        """Return the value of ``name`` as a ``float``, or ``None``.
-
-        Accepts ``int`` values (widened to ``float``); rejects ``bool``.
-        """
-        value = self._properties.get(name)
+    @staticmethod
+    def _as_float(value: Any) -> float | None:
         if isinstance(value, bool):
             return None
         if isinstance(value, (int, float)):
             return float(value)
         return None
 
+    def get_string(self, name: str) -> str | None:
+        """Return the value of ``name`` as a ``str``, or ``None``.
+
+        Logs a warning if ``name`` is present with an incompatible type.
+        """
+        value = self._properties.get(name)
+        result = self._as_string(value)
+        if result is None and value is not None:
+            self._log_type_mismatch(name, value, "string")
+        return result
+
+    def get_bool(self, name: str) -> bool | None:
+        """Return the value of ``name`` as a ``bool``, or ``None``.
+
+        Logs a warning if ``name`` is present with an incompatible type.
+        """
+        value = self._properties.get(name)
+        result = self._as_bool(value)
+        if result is None and value is not None:
+            self._log_type_mismatch(name, value, "bool")
+        return result
+
+    def get_int(self, name: str) -> int | None:
+        """Return the value of ``name`` as an ``int``, or ``None``.
+
+        ``bool`` values are rejected (they are not treated as integers). Logs
+        a warning if ``name`` is present with an incompatible type.
+        """
+        value = self._properties.get(name)
+        result = self._as_int(value)
+        if result is None and value is not None:
+            self._log_type_mismatch(name, value, "int")
+        return result
+
+    def get_float(self, name: str) -> float | None:
+        """Return the value of ``name`` as a ``float``, or ``None``.
+
+        Accepts ``int`` values (widened to ``float``); rejects ``bool``. Logs
+        a warning if ``name`` is present with an incompatible type.
+        """
+        value = self._properties.get(name)
+        result = self._as_float(value)
+        if result is None and value is not None:
+            self._log_type_mismatch(name, value, "float")
+        return result
+
     def get_config(self, name: str) -> ConfigProperties | None:
         """Return the sub-mapping at ``name`` as :class:`ConfigProperties`.
 
         Returns ``None`` when ``name`` is absent or its value is not a
-        mapping / dataclass node.
+        mapping / dataclass node. Logs a warning if ``name`` is present with an
+        incompatible type.
         """
         value = self._properties.get(name)
         if value is None:
@@ -102,53 +149,80 @@ class ConfigProperties:
             return ConfigProperties(_node_to_mapping(value))
         if isinstance(value, Mapping):
             return ConfigProperties(dict(value))
+        self._log_type_mismatch(name, value, "mapping")
         return None
 
     def get_config_list(self, name: str) -> list[ConfigProperties] | None:
         """Return the list at ``name`` as a list of :class:`ConfigProperties`.
 
         Each element must be a mapping / dataclass node; returns ``None``
-        when ``name`` is absent or is not a list of mappings.
+        when ``name`` is absent or is not a list of mappings. Logs a warning if
+        ``name`` is present with an incompatible type.
         """
         value = self._properties.get(name)
+        if value is None:
+            return None
         if not isinstance(value, list):
+            self._log_type_mismatch(name, value, "list of mappings")
             return None
         result: list[ConfigProperties] = []
         for item in value:
             mapping = _node_to_mapping(item)
             if not mapping and item is not None:
+                self._log_type_mismatch(name, value, "list of mappings")
                 return None
             result.append(ConfigProperties(mapping))
         return result
 
-    def get_scalar_list(self, name: str, scalar_type: type) -> list | None:
-        """Return the sequence at ``name`` as a list of ``scalar_type``.
+    def get_string_list(self, name: str) -> list[str] | None:
+        """Return the sequence at ``name`` as a list of ``str``.
 
-        Elements whose type does not match ``scalar_type`` are dropped
-        (matching Java's ``getScalarList``). ``bool`` is never treated as an
-        ``int``. Returns ``None`` when ``name`` is absent or is not a list.
+        Elements with an incompatible type are dropped. Returns ``None`` when
+        ``name`` is absent or is not a sequence.
         """
+        return self._scalar_list(name, self._as_string)
+
+    def get_bool_list(self, name: str) -> list[bool] | None:
+        """Return the sequence at ``name`` as a list of ``bool``.
+
+        Elements with an incompatible type are dropped. Returns ``None`` when
+        ``name`` is absent or is not a sequence.
+        """
+        return self._scalar_list(name, self._as_bool)
+
+    def get_int_list(self, name: str) -> list[int] | None:
+        """Return the sequence at ``name`` as a list of ``int``.
+
+        Elements with an incompatible type (including ``bool``) are dropped.
+        Returns ``None`` when ``name`` is absent or is not a sequence.
+        """
+        return self._scalar_list(name, self._as_int)
+
+    def get_float_list(self, name: str) -> list[float] | None:
+        """Return the sequence at ``name`` as a list of ``float``.
+
+        ``int`` elements are widened to ``float``; incompatible elements are
+        dropped. Returns ``None`` when ``name`` is absent or is not a sequence.
+        """
+        return self._scalar_list(name, self._as_float)
+
+    def _scalar_list(self, name: str, coerce) -> list | None:
         value = self._properties.get(name)
+        if value is None:
+            return None
         if not isinstance(value, list):
+            self._log_type_mismatch(name, value, "list of scalars")
             return None
         result: list = []
         for item in value:
-            if scalar_type is int and isinstance(item, bool):
-                continue
-            if (
-                scalar_type is float
-                and isinstance(item, int)
-                and not isinstance(item, bool)
-            ):
-                result.append(float(item))
-                continue
-            if isinstance(item, scalar_type):
-                result.append(item)
+            coerced = coerce(item)
+            if coerced is not None:
+                result.append(coerced)
         return result
 
-    def keys(self) -> list[str]:
-        """Return the property keys present in this view."""
-        return list(self._properties.keys())
+    def keys(self) -> set[str]:
+        """Return the set of property keys present in this view."""
+        return set(self._properties.keys())
 
     def __contains__(self, name: str) -> bool:
         return name in self._properties
@@ -171,18 +245,36 @@ class ConfigProvider:
 class NoOpConfigProvider(ConfigProvider):
     """A :class:`ConfigProvider` exposing empty instrumentation config.
 
-    Returned by :func:`get_config_provider` when no global provider has been
-    set, so callers can traverse the config tree without ``None`` checks —
-    mirroring ``ProxyTracerProvider`` and Java's ``ConfigProvider.noop()``.
+    Mirrors ``NoOpTracerProvider`` and Java's ``ConfigProvider.noop()`` — an
+    explicit no-op for callers that want an empty provider.
     """
 
     def __init__(self) -> None:
         super().__init__(ConfigProperties())
 
 
+class ProxyConfigProvider(ConfigProvider):
+    """A :class:`ConfigProvider` that defers to the global provider.
+
+    Returned by :func:`get_config_provider` before a real provider has been
+    set. It reads the global provider lazily on each call, so a caller that
+    obtains the provider early still sees configuration installed later —
+    mirroring ``ProxyTracerProvider`` / ``ProxyLoggerProvider``. Until a real
+    provider is set, it exposes empty instrumentation config.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(ConfigProperties())
+
+    def get_instrumentation_config(self) -> ConfigProperties:
+        if _CONFIG_PROVIDER is not None:
+            return _CONFIG_PROVIDER.get_instrumentation_config()
+        return super().get_instrumentation_config()
+
+
 _CONFIG_PROVIDER_SET_ONCE = Once()
 _CONFIG_PROVIDER: ConfigProvider | None = None
-_NOOP_CONFIG_PROVIDER = NoOpConfigProvider()
+_PROXY_CONFIG_PROVIDER = ProxyConfigProvider()
 
 
 def set_config_provider(config_provider: ConfigProvider) -> None:
@@ -206,9 +298,10 @@ def set_config_provider(config_provider: ConfigProvider) -> None:
 def get_config_provider() -> ConfigProvider:
     """Return the global :class:`ConfigProvider`.
 
-    Returns a :class:`NoOpConfigProvider` (exposing empty instrumentation
-    config) when none has been set, so callers never receive ``None``.
+    Returns a :class:`ProxyConfigProvider` when none has been set, so callers
+    never receive ``None`` and a provider obtained before
+    :func:`set_config_provider` still resolves to the one installed later.
     """
     if _CONFIG_PROVIDER is None:
-        return _NOOP_CONFIG_PROVIDER
+        return _PROXY_CONFIG_PROVIDER
     return _CONFIG_PROVIDER
