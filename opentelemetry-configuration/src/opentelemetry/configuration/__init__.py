@@ -35,6 +35,7 @@ from opentelemetry.configuration._config_provider import (
     ConfigProperties,
     ConfigProvider,
     NoOpConfigProvider,
+    ProxyConfigProvider,
     get_config_provider,
     set_config_provider,
 )
@@ -49,6 +50,7 @@ __all__ = [
     "ConfigurationError",
     "NoOpConfigProvider",
     "OpenTelemetryConfiguration",
+    "ProxyConfigProvider",
     "configure_sdk",
     "get_config_provider",
     "load_config_file",
