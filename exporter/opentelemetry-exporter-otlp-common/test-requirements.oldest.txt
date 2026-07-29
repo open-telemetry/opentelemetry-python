@@ -62,7 +62,7 @@ typing-extensions==4.15.0
     #   opentelemetry-api
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-urllib3==1.26.0
+urllib3==2.7.0
     # via
     #   mocket
     #   opentelemetry-exporter-http-transport
