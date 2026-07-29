@@ -2,15 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
+from unittest.mock import patch
 
 import opentelemetry.configuration._config_provider as config_provider_module
 from opentelemetry.configuration._config_provider import (
     ConfigProperties,
     ConfigProvider,
+    NoOpConfigProvider,
     _node_to_mapping,
     get_config_provider,
     set_config_provider,
 )
+from opentelemetry.util._once import Once
 from opentelemetry.configuration.models import (
     ExperimentalGeneralInstrumentation,
     ExperimentalInstrumentation,
@@ -139,11 +142,22 @@ class TestNodeToMapping(unittest.TestCase):
 
 class TestGlobalConfigProvider(unittest.TestCase):
     def setUp(self):
-        # Reset the module global before each test.
+        # Reset the module global and its set-once guard before each test.
         config_provider_module._CONFIG_PROVIDER = None
+        config_provider_module._CONFIG_PROVIDER_SET_ONCE = Once()
 
-    def test_get_returns_none_when_unset(self):
-        self.assertIsNone(get_config_provider())
+    def test_get_returns_noop_when_unset(self):
+        provider = get_config_provider()
+        self.assertIsInstance(provider, NoOpConfigProvider)
+        # The no-op provider exposes empty instrumentation config, so callers
+        # can traverse it without None checks.
+        self.assertEqual(
+            provider.get_instrumentation_config().keys(),
+            [],
+        )
+        self.assertIsNone(
+            provider.get_instrumentation_config().get_string("anything")
+        )
 
     def test_set_and_get(self):
         provider = ConfigProvider(ConfigProperties({"k": "v"}))
@@ -152,4 +166,17 @@ class TestGlobalConfigProvider(unittest.TestCase):
         self.assertEqual(
             get_config_provider().get_instrumentation_config().get_string("k"),
             "v",
+        )
+
+    @patch("opentelemetry.configuration._config_provider._logger")
+    def test_set_is_once_only(self, mock_logger):
+        first = ConfigProvider(ConfigProperties({"k": "first"}))
+        second = ConfigProvider(ConfigProperties({"k": "second"}))
+        set_config_provider(first)
+        set_config_provider(second)
+        # The second set is ignored and a warning is logged, matching
+        # set_tracer_provider semantics.
+        self.assertIs(get_config_provider(), first)
+        mock_logger.warning.assert_called_once_with(
+            "Overriding of current ConfigProvider is not allowed"
         )
