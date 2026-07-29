@@ -18,14 +18,15 @@
       "gen-requirements.txt",
       "dev-requirements.txt",
       "docs-requirements.txt",
+      // pyproject.toml files are intentionally excluded: package versions are managed
+      // by the release process and are not auto-updated by Renovate.
       "**/pyproject.toml",
     ],
     // pip-compile manages the oldest requirements files via lockFileMaintenance (re-runs uv pip compile --resolution lowest-direct).
     // pip_requirements is disabled for those files to avoid double-processing.
     "pip-compile": {
       managerFilePatterns: [
-        "/(^|/).*-requirements\.oldest\.txt$/",
-        "/(^|/).*-requirements\.latest\.txt$/",
+        "/(^|/).*-requirements\.(oldest|latest)\.txt$/",
       ],
     },
     // Also scan GitHub Actions workflow templates written as Jinja files.
@@ -41,6 +42,7 @@
         schedule: ["before 8am every weekday"],
       },
       {
+        groupName: "all non-patch versions",
         matchUpdateTypes: ["minor", "major"],
         schedule: ["before 8am on Monday"],
       },
@@ -64,6 +66,7 @@
         matchUpdateTypes: [
           "patch",
           "minor",
+          "major",
           "pin",
           "pinDigest",
           "digest",
