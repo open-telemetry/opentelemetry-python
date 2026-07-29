@@ -6,6 +6,7 @@ import logging
 import threading
 from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping, Sequence
+from typing import cast
 
 from opentelemetry.util import types
 
@@ -23,6 +24,10 @@ _VALID_ANY_VALUE_TYPES = (
     Sequence,
     Mapping,
 )
+
+# ``None`` is a valid AnyValue for extended attributes, so it cannot also
+# represent a value rejected by the extended-attribute cleaner.
+_INVALID_ATTRIBUTE = object()
 
 
 # TODO: Remove this workaround and revert to the simpler implementation
@@ -134,7 +139,7 @@ def _clean_attribute(
 
 def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
     value: types.AnyValue, max_len: int | None
-) -> types.AnyValue:
+) -> types.AnyValue | object:
     # for primitive types just return the value and eventually shorten the string length
     if value is None or isinstance(value, _VALID_ATTR_VALUE_TYPES):
         if max_len is not None and isinstance(value, str):
@@ -151,9 +156,11 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
                 )
                 continue
 
-            cleaned_dict[key] = _clean_extended_attribute(
+            cleaned_value = _clean_extended_attribute(
                 key=key, value=element, max_len=max_len
             )
+            if cleaned_value is not _INVALID_ATTRIBUTE:
+                cleaned_dict[key] = cast(types.AnyValue, cleaned_value)
 
         return cleaned_dict
 
@@ -174,7 +181,9 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
                 element = _clean_extended_attribute_value(
                     element, max_len=max_len
                 )
-                element_type = type(element)  # type: ignore
+                if element is _INVALID_ATTRIBUTE:
+                    return _INVALID_ATTRIBUTE
+                element_type = type(element)
 
             # The type of the sequence must be homogeneous. The first non-None
             # element determines the type of the sequence
@@ -187,7 +196,7 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
                     sequence_first_valid_type.__name__,
                     type(element).__name__,
                 )
-                return None
+                return _INVALID_ATTRIBUTE
 
             cleaned_seq.append(element)
 
@@ -211,10 +220,11 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
 
 def _clean_extended_attribute(
     key: str, value: types.AnyValue, max_len: int | None
-) -> types.AnyValue:
+) -> types.AnyValue | object:
     """Checks if attribute value is valid and cleans it if required.
 
-    The function returns the cleaned value or None if the value is not valid.
+    The function returns the cleaned value or ``_INVALID_ATTRIBUTE`` if the
+    value is not valid. ``None`` is a valid value for extended attributes.
 
     An attribute value is valid if it is an AnyValue.
     An attribute needs cleansing if:
@@ -223,13 +233,13 @@ def _clean_extended_attribute(
 
     if not (key and isinstance(key, str)):
         _logger.warning("invalid key `%s`. must be non-empty string.", key)
-        return None
+        return _INVALID_ATTRIBUTE
 
     try:
         return _clean_extended_attribute_value(value, max_len=max_len)
     except TypeError as exception:
         _logger.warning("Attribute %s: %s", key, exception)
-        return None
+        return _INVALID_ATTRIBUTE
 
 
 class BoundedAttributes(MutableMapping):  # type: ignore
@@ -283,6 +293,11 @@ class BoundedAttributes(MutableMapping):  # type: ignore
             return
         if self._extended_attributes:
             value = _clean_extended_attribute(key, value, self.max_value_len)
+            if value is _INVALID_ATTRIBUTE:
+                with self._lock:
+                    self.dropped += 1
+                return
+            value = cast(types.AnyValue, value)
         else:
             value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
             if value is None:
@@ -301,6 +316,9 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         for key, value in attributes.items():
             if self._extended_attributes:
                 cv = _clean_extended_attribute(key, value, self.max_value_len)
+                if cv is _INVALID_ATTRIBUTE:
+                    continue
+                cv = cast(types.AnyValue, cv)
             else:
                 cv = _clean_attribute(key, value, self.max_value_len)  # type: ignore
                 if cv is None:

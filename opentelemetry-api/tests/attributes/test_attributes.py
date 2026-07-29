@@ -12,6 +12,7 @@ from collections.abc import MutableSequence
 
 from opentelemetry.attributes import (
     BoundedAttributes,
+    _INVALID_ATTRIBUTE,
     _clean_attribute,
     _clean_extended_attribute,
     _clean_extended_attribute_value,
@@ -96,7 +97,9 @@ class TestExtendedAttributes(unittest.TestCase):
         self.assertEqual(_clean_extended_attribute(key, value, None), expected)
 
     def assertInvalid(self, value, key="k"):
-        self.assertIsNone(_clean_extended_attribute(key, value, None))
+        self.assertIs(
+            _clean_extended_attribute(key, value, None), _INVALID_ATTRIBUTE
+        )
 
     def test_attribute_key_validation(self):
         # only non-empty strings are valid keys
@@ -168,7 +171,6 @@ class TestExtendedAttributes(unittest.TestCase):
             "none": {},
             "valid_primitive": "str",
             "valid_sequence": ("str",),
-            "invalid_sequence": None,
             "valid_mapping": {"str": 1},
             "invalid_mapping": {},
         }
@@ -323,6 +325,26 @@ class TestBoundedAttributes(unittest.TestCase):
             bdict["key"] = "value"
 
         clean_extended_attribute_mock.assert_called_once()
+
+    def test_extended_attributes_reject_invalid_values_but_keep_none(self):
+        bdict = BoundedAttributes(extended_attributes=True, immutable=False)
+
+        bdict[""] = "invalid key"
+        bdict["none"] = None
+
+        self.assertNotIn("", bdict)
+        self.assertIn("none", bdict)
+        self.assertIsNone(bdict["none"])
+        self.assertEqual(bdict.dropped, 1)
+
+    def test_extended_attributes_batch_rejects_invalid_values(self):
+        bdict = BoundedAttributes(extended_attributes=True, immutable=False)
+
+        bdict._set_items({"": "invalid key", "none": None})
+
+        self.assertNotIn("", bdict)
+        self.assertIn("none", bdict)
+        self.assertIsNone(bdict["none"])
 
     def test_wsgi_request_conversion_to_string(self):
         """Test that WSGI request objects are converted to strings when _clean_extended_attribute is called."""
