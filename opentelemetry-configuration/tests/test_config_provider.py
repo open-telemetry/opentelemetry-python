@@ -9,6 +9,7 @@ from opentelemetry.configuration._config_provider import (
     ConfigProperties,
     ConfigProvider,
     NoOpConfigProvider,
+    ProxyConfigProvider,
     _node_to_mapping,
     get_config_provider,
     set_config_provider,
@@ -69,13 +70,36 @@ class TestConfigPropertiesScalars(unittest.TestCase):
 
     def test_keys(self):
         self.assertEqual(
-            set(self.props.keys()),
+            self.props.keys(),
             {"name", "flag", "count", "ratio", "whole"},
         )
+
+    def test_keys_returns_set(self):
+        self.assertIsInstance(self.props.keys(), set)
 
     def test_contains(self):
         self.assertIn("name", self.props)
         self.assertNotIn("nope", self.props)
+
+
+class TestConfigPropertiesTypeMismatch(unittest.TestCase):
+    @patch("opentelemetry.configuration._config_provider._logger")
+    def test_present_wrong_type_logs_warning(self, mock_logger):
+        props = ConfigProperties({"count": "not-a-number"})
+        self.assertIsNone(props.get_int("count"))
+        mock_logger.warning.assert_called_once()
+
+    @patch("opentelemetry.configuration._config_provider._logger")
+    def test_missing_key_does_not_log(self, mock_logger):
+        props = ConfigProperties({})
+        self.assertIsNone(props.get_int("count"))
+        mock_logger.warning.assert_not_called()
+
+    @patch("opentelemetry.configuration._config_provider._logger")
+    def test_get_int_rejecting_bool_logs(self, mock_logger):
+        props = ConfigProperties({"count": True})
+        self.assertIsNone(props.get_int("count"))
+        mock_logger.warning.assert_called_once()
 
 
 class TestConfigPropertiesStructured(unittest.TestCase):
@@ -102,17 +126,33 @@ class TestConfigPropertiesStructured(unittest.TestCase):
     def test_get_config_list_missing_returns_none(self):
         self.assertIsNone(ConfigProperties({}).get_config_list("servers"))
 
-    def test_get_scalar_list_strings(self):
+    def test_get_string_list_drops_non_matching(self):
         props = ConfigProperties({"names": ["a", "b", 3]})
         # Non-matching element (3) dropped.
-        self.assertEqual(props.get_scalar_list("names", str), ["a", "b"])
+        self.assertEqual(props.get_string_list("names"), ["a", "b"])
 
-    def test_get_scalar_list_ints_drops_bool(self):
+    def test_get_int_list_drops_bool(self):
         props = ConfigProperties({"nums": [1, 2, True]})
-        self.assertEqual(props.get_scalar_list("nums", int), [1, 2])
+        self.assertEqual(props.get_int_list("nums"), [1, 2])
 
-    def test_get_scalar_list_missing_returns_none(self):
-        self.assertIsNone(ConfigProperties({}).get_scalar_list("x", str))
+    def test_get_float_list_widens_int(self):
+        props = ConfigProperties({"nums": [1, 2.5]})
+        self.assertEqual(props.get_float_list("nums"), [1.0, 2.5])
+
+    def test_get_bool_list(self):
+        props = ConfigProperties({"flags": [True, False, "x"]})
+        self.assertEqual(props.get_bool_list("flags"), [True, False])
+
+    def test_get_string_list_missing_returns_none(self):
+        self.assertIsNone(ConfigProperties({}).get_string_list("x"))
+
+    @patch("opentelemetry.configuration._config_provider._logger")
+    def test_get_string_list_non_sequence_logs_and_returns_none(
+        self, mock_logger
+    ):
+        props = ConfigProperties({"names": "not-a-list"})
+        self.assertIsNone(props.get_string_list("names"))
+        mock_logger.warning.assert_called_once()
 
 
 class TestNodeToMapping(unittest.TestCase):
@@ -146,18 +186,32 @@ class TestGlobalConfigProvider(unittest.TestCase):
         config_provider_module._CONFIG_PROVIDER = None
         config_provider_module._CONFIG_PROVIDER_SET_ONCE = Once()
 
-    def test_get_returns_noop_when_unset(self):
+    def test_get_returns_proxy_when_unset(self):
         provider = get_config_provider()
-        self.assertIsInstance(provider, NoOpConfigProvider)
-        # The no-op provider exposes empty instrumentation config, so callers
-        # can traverse it without None checks.
+        self.assertIsInstance(provider, ProxyConfigProvider)
+        # The proxy exposes empty instrumentation config until one is set, so
+        # callers can traverse it without None checks.
         self.assertEqual(
             provider.get_instrumentation_config().keys(),
-            [],
+            set(),
         )
         self.assertIsNone(
             provider.get_instrumentation_config().get_string("anything")
         )
+
+    def test_proxy_forwards_to_later_set_provider(self):
+        # A caller that grabs the provider before it is set still sees the
+        # config installed later, mirroring ProxyTracerProvider.
+        proxy = get_config_provider()
+        self.assertIsInstance(proxy, ProxyConfigProvider)
+        set_config_provider(ConfigProvider(ConfigProperties({"k": "v"})))
+        self.assertEqual(
+            proxy.get_instrumentation_config().get_string("k"), "v"
+        )
+
+    def test_noop_provider_is_empty(self):
+        provider = NoOpConfigProvider()
+        self.assertEqual(provider.get_instrumentation_config().keys(), set())
 
     def test_set_and_get(self):
         provider = ConfigProvider(ConfigProperties({"k": "v"}))
