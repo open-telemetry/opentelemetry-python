@@ -8,6 +8,11 @@ repos:
         args: ["--fix", "--show-fixes"]
       # Run the formatter.
       - id: ruff-format
+      - id: ruff-format
+        name: ruff-format (markdown & towncrier)
+        types_or: [python, pyi, jupyter, markdown, text]
+        files: \.(md|added|changed|deprecated|removed|fixed)$
+        args: ["--preview"]
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
     rev: 0.6.0

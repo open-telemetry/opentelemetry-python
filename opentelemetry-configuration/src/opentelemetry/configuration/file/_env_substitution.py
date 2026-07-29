@@ -29,12 +29,12 @@ def substitute_env_vars(text: str) -> str:
         Text with environment variables substituted.
 
     Examples:
-        >>> os.environ['SERVICE_NAME'] = 'my-service'
-        >>> substitute_env_vars('name: ${SERVICE_NAME}')
+        >>> os.environ["SERVICE_NAME"] = "my-service"
+        >>> substitute_env_vars("name: ${SERVICE_NAME}")
         'name: my-service'
-        >>> substitute_env_vars('name: ${MISSING:-default}')
+        >>> substitute_env_vars("name: ${MISSING:-default}")
         'name: default'
-        >>> substitute_env_vars('price: $$100')
+        >>> substitute_env_vars("price: $$100")
         'price: $100'
     """
     # Pattern matches $$ (escape sequence) or ${VAR_NAME} / ${VAR_NAME:-default_value}

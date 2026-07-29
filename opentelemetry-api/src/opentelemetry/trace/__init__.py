@@ -355,8 +355,8 @@ class Tracer(ABC):
                 with tracer.start_as_current_span("two") as child:
                     child.add_event("child's event")
                     trace.get_current_span()  # returns child
-                trace.get_current_span()      # returns parent
-            trace.get_current_span()          # returns previously active span
+                trace.get_current_span()  # returns parent
+            trace.get_current_span()  # returns previously active span
 
         This is a convenience method for creating spans attached to the
         tracer's context. Applications that need more control over the span
@@ -374,8 +374,8 @@ class Tracer(ABC):
         This can also be used as a decorator::
 
             @tracer.start_as_current_span("name")
-            def function():
-                ...
+            def function(): ...
+
 
             function()
 
