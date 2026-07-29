@@ -21,6 +21,8 @@ from dataclasses import asdict, is_dataclass
 from logging import getLogger
 from typing import Any
 
+from opentelemetry.util._once import Once
+
 _logger = getLogger(__name__)
 
 
@@ -166,24 +168,47 @@ class ConfigProvider:
         return self._instrumentation_config
 
 
+class NoOpConfigProvider(ConfigProvider):
+    """A :class:`ConfigProvider` exposing empty instrumentation config.
+
+    Returned by :func:`get_config_provider` when no global provider has been
+    set, so callers can traverse the config tree without ``None`` checks —
+    mirroring ``ProxyTracerProvider`` and Java's ``ConfigProvider.noop()``.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(ConfigProperties())
+
+
+_CONFIG_PROVIDER_SET_ONCE = Once()
 _CONFIG_PROVIDER: ConfigProvider | None = None
+_NOOP_CONFIG_PROVIDER = NoOpConfigProvider()
 
 
 def set_config_provider(config_provider: ConfigProvider) -> None:
     """Set the global :class:`ConfigProvider`.
 
-    A warning is logged (and the value overwritten) if one is already set,
-    matching the "set once" behavior of the other declarative globals.
+    This can only be done once; a warning is logged on any further attempt and
+    the existing provider is kept, matching the set-once behavior of the other
+    OpenTelemetry globals (e.g. :func:`opentelemetry.trace.set_tracer_provider`).
     """
-    global _CONFIG_PROVIDER  # pylint: disable=global-statement
-    if _CONFIG_PROVIDER is not None:
-        _logger.warning(
-            "Overriding of current ConfigProvider is not allowed once set; "
-            "overwriting the existing instance."
-        )
-    _CONFIG_PROVIDER = config_provider
+
+    def set_cp() -> None:
+        global _CONFIG_PROVIDER  # pylint: disable=global-statement
+        _CONFIG_PROVIDER = config_provider
+
+    did_set = _CONFIG_PROVIDER_SET_ONCE.do_once(set_cp)
+
+    if not did_set:
+        _logger.warning("Overriding of current ConfigProvider is not allowed")
 
 
-def get_config_provider() -> ConfigProvider | None:
-    """Return the global :class:`ConfigProvider`, or ``None`` if unset."""
+def get_config_provider() -> ConfigProvider:
+    """Return the global :class:`ConfigProvider`.
+
+    Returns a :class:`NoOpConfigProvider` (exposing empty instrumentation
+    config) when none has been set, so callers never receive ``None``.
+    """
+    if _CONFIG_PROVIDER is None:
+        return _NOOP_CONFIG_PROVIDER
     return _CONFIG_PROVIDER
