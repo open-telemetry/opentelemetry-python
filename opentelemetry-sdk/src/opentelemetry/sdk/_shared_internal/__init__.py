@@ -178,8 +178,7 @@ class BatchProcessor(Generic[Telemetry]):
                 )
                 # Oldest records are at the back, so pop from there.
                 batch = [self._queue.pop() for _ in range(count)]
-                # Count records as processed when the batch is submitted to the
-                # exporter, independent of the export outcome.
+                # Record on submission to the exporter.
                 self._metrics.finish_items(count)
                 try:
                     self._exporter.export(batch)

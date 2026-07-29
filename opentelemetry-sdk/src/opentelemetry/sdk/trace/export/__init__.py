@@ -125,8 +125,7 @@ class SimpleSpanProcessor(SpanProcessor):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            # Count as processed when submitting to the exporter, independent
-            # of the export outcome.
+            # Record on submission to the exporter.
             self._metrics.finish_items(1)
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught

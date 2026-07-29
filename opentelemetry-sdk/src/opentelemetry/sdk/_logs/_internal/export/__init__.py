@@ -247,8 +247,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 instrumentation_scope=log_record.instrumentation_scope,
                 limits=log_record.limits,
             )
-            # Count as processed when submitting to the exporter, independent
-            # of the export outcome.
+            # Record on submission to the exporter.
             self._metrics.finish_items(1)
             self._exporter.export((readable_log_record,))
         except Exception:  # pylint: disable=broad-exception-caught
