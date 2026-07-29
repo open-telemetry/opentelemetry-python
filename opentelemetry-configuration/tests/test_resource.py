@@ -52,6 +52,12 @@ class TestCreateResourceDefaults(unittest.TestCase):
             resource.attributes[SERVICE_NAME], "unknown_service:python"
         )
 
+    def test_default_service_name_without_process_executable(self):
+        with patch("opentelemetry.configuration._resource.sys.executable", ""):
+            resource = create_resource(None)
+
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+
     def test_none_config_returns_sdk_defaults(self):
         resource = create_resource(None)
         self.assertIsInstance(resource, Resource)
