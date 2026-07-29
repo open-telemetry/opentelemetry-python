@@ -7,6 +7,7 @@ import dataclasses
 import fnmatch
 import logging
 import os
+import sys
 from collections.abc import Callable
 from typing import Any
 from urllib import parse
@@ -100,8 +101,14 @@ def create_resource(config: ResourceConfig | None) -> Resource:
         config-specified attributes merged in priority order.
     """
     # Spec requires service.name to always be present; detectors and explicit
-    # config attributes can override this default.
-    base = _DEFAULT_RESOURCE.merge(Resource({SERVICE_NAME: "unknown_service"}))
+    # config attributes can override this default. Match the SDK's fallback by
+    # including the process executable name when no service name is provided.
+    default_service_name = "unknown_service"
+    if sys.executable:
+        default_service_name += ":" + sys.executable
+    base = _DEFAULT_RESOURCE.merge(
+        Resource({SERVICE_NAME: default_service_name})
+    )
 
     if config is None:
         return base

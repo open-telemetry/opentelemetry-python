@@ -33,7 +33,25 @@ from opentelemetry.sdk.resources import (
 )
 
 
+def _default_service_name():
+    return (
+        f"unknown_service:{sys.executable}"
+        if sys.executable
+        else "unknown_service"
+    )
+
+
 class TestCreateResourceDefaults(unittest.TestCase):
+    def test_default_service_name_uses_process_executable_name(self):
+        with patch(
+            "opentelemetry.configuration._resource.sys.executable", "python"
+        ):
+            resource = create_resource(None)
+
+        self.assertEqual(
+            resource.attributes[SERVICE_NAME], "unknown_service:python"
+        )
+
     def test_none_config_returns_sdk_defaults(self):
         resource = create_resource(None)
         self.assertIsInstance(resource, Resource)
@@ -42,7 +60,9 @@ class TestCreateResourceDefaults(unittest.TestCase):
             resource.attributes[TELEMETRY_SDK_NAME], "opentelemetry"
         )
         self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(
+            resource.attributes[SERVICE_NAME], _default_service_name()
+        )
 
     def test_none_config_does_not_read_env_vars(self):
         with patch.dict(
@@ -54,19 +74,25 @@ class TestCreateResourceDefaults(unittest.TestCase):
         ):
             resource = create_resource(None)
         self.assertNotIn("foo", resource.attributes)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(
+            resource.attributes[SERVICE_NAME], _default_service_name()
+        )
 
     def test_empty_resource_config(self):
         resource = create_resource(ResourceConfig())
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(
+            resource.attributes[SERVICE_NAME], _default_service_name()
+        )
 
     def test_service_name_default_added_when_missing(self):
         config = ResourceConfig(
             attributes=[AttributeNameValue(name="env", value="staging")]
         )
         resource = create_resource(config)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(
+            resource.attributes[SERVICE_NAME], _default_service_name()
+        )
 
     def test_service_name_not_overridden_when_set(self):
         config = ResourceConfig(
@@ -361,7 +387,9 @@ class TestServiceResourceDetector(unittest.TestCase):
     def test_service_detector_no_env_var_leaves_default_service_name(self):
         with patch.dict(os.environ, {}, clear=True):
             resource = create_resource(self._config_with_service())
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(
+            resource.attributes[SERVICE_NAME], _default_service_name()
+        )
 
     def test_explicit_service_name_overrides_env_var(self):
         """Config attributes win over the service detector's env-var value."""
@@ -412,8 +440,10 @@ class TestServiceResourceDetector(unittest.TestCase):
             resource = create_resource(config)
         self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
         # service.name comes from the filter-excluded detector output, but the
-        # default "unknown_service" is still added by create_resource directly
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        # The process-specific default is still added by create_resource.
+        self.assertEqual(
+            resource.attributes[SERVICE_NAME], _default_service_name()
+        )
 
 
 class TestHostResourceDetector(unittest.TestCase):
