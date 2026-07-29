@@ -45,7 +45,6 @@
         schedule: ["before 8am every weekday"],
       },
       {
-        groupName: "all non-patch versions",
         matchUpdateTypes: ["minor", "major"],
         schedule: ["before 8am on Monday"],
       },
@@ -64,7 +63,6 @@
         matchUpdateTypes: [
           "patch",
           "minor",
-          "major",
           "pin",
           "pinDigest",
           "digest",
