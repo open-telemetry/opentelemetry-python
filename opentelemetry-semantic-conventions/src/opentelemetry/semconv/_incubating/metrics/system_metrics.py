@@ -243,6 +243,23 @@ def create_system_filesystem_limit(meter: Meter) -> UpDownCounter:
     )
 
 
+SYSTEM_FILESYSTEM_LOCK_COUNT: Final = "system.filesystem.lock.count"
+"""
+Filesystem lock counts
+Instrument: updowncounter
+Unit: {lock}
+"""
+
+
+def create_system_filesystem_lock_count(meter: Meter) -> UpDownCounter:
+    """Filesystem lock counts"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_FILESYSTEM_LOCK_COUNT,
+        description="Filesystem lock counts.",
+        unit="{lock}",
+    )
+
+
 SYSTEM_FILESYSTEM_USAGE: Final = "system.filesystem.usage"
 """
 Reports a filesystem's space usage across different states

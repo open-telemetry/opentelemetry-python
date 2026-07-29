@@ -9,6 +9,11 @@ Array of brand name and version separated by a space.
 Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.brands`).
 """
 
+BROWSER_DOCUMENT_URL_FULL: Final = "browser.document.url.full"
+"""
+Absolute URL of the current browser document according to [RFC3986](https://www.rfc-editor.org/rfc/rfc3986).
+"""
+
 BROWSER_LANGUAGE: Final = "browser.language"
 """
 Preferred language of the user using the browser.

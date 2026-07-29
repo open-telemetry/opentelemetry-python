@@ -8,9 +8,7 @@ from opentelemetry.metrics import Histogram, Meter
 
 GEN_AI_CLIENT_OPERATION_DURATION: Final = "gen_ai.client.operation.duration"
 """
-GenAI operation duration
-Instrument: histogram
-Unit: s
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 
@@ -27,10 +25,7 @@ GEN_AI_CLIENT_OPERATION_TIME_PER_OUTPUT_CHUNK: Final = (
     "gen_ai.client.operation.time_per_output_chunk"
 )
 """
-Time per output chunk, recorded for each chunk received after the first one, measured as the time elapsed from the end of the previous chunk to the end of the current chunk
-Instrument: histogram
-Unit: s
-Note: This metrics SHOULD be reported for streaming calls and SHOULD NOT be reported otherwise.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 
@@ -49,10 +44,7 @@ GEN_AI_CLIENT_OPERATION_TIME_TO_FIRST_CHUNK: Final = (
     "gen_ai.client.operation.time_to_first_chunk"
 )
 """
-Time to receive the first chunk, measured from when the client issues the generation request to when the first chunk is received in the response stream
-Instrument: histogram
-Unit: s
-Note: This metrics SHOULD be reported for streaming calls and SHOULD NOT be reported otherwise.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 
@@ -69,9 +61,7 @@ def create_gen_ai_client_operation_time_to_first_chunk(
 
 GEN_AI_CLIENT_TOKEN_USAGE: Final = "gen_ai.client.token.usage"
 """
-Number of input and output tokens used
-Instrument: histogram
-Unit: {token}
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 
@@ -86,9 +76,7 @@ def create_gen_ai_client_token_usage(meter: Meter) -> Histogram:
 
 GEN_AI_SERVER_REQUEST_DURATION: Final = "gen_ai.server.request.duration"
 """
-Generative AI server request duration such as time-to-last byte or last output token
-Instrument: histogram
-Unit: s
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 
@@ -105,9 +93,7 @@ GEN_AI_SERVER_TIME_PER_OUTPUT_TOKEN: Final = (
     "gen_ai.server.time_per_output_token"
 )
 """
-Time per output token generated after the first token for successful responses
-Instrument: histogram
-Unit: s
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 
@@ -122,9 +108,7 @@ def create_gen_ai_server_time_per_output_token(meter: Meter) -> Histogram:
 
 GEN_AI_SERVER_TIME_TO_FIRST_TOKEN: Final = "gen_ai.server.time_to_first_token"
 """
-Time to generate first token for successful responses
-Instrument: histogram
-Unit: s
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 

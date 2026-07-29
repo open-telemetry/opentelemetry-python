@@ -46,6 +46,11 @@ AZURE_COSMOSDB_RESPONSE_SUB_STATUS_CODE: Final = (
 Cosmos DB sub status code.
 """
 
+AZURE_RESOURCE_GROUP_NAME: Final = "azure.resource_group.name"
+"""
+The name of the Azure [resource group](https://learn.microsoft.com/azure/azure-resource-manager/management/manage-resource-groups-portal) the resource belongs to.
+"""
+
 AZURE_RESOURCE_PROVIDER_NAMESPACE: Final = "azure.resource_provider.namespace"
 """
 [Azure Resource Provider Namespace](https://learn.microsoft.com/azure/azure-resource-manager/management/azure-services-resource-providers) as recognized by the client.
