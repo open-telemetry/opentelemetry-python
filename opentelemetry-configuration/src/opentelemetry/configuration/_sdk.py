@@ -12,6 +12,12 @@ from __future__ import annotations
 
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING, getLogger
 
+from opentelemetry.configuration._config_provider import (
+    ConfigProperties,
+    ConfigProvider,
+    _node_to_mapping,
+    set_config_provider,
+)
 from opentelemetry.configuration._logger_provider import (
     configure_logger_provider,
 )
@@ -72,7 +78,9 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     logger provider, and text map propagator from their respective config
     sections. Sections absent from the config (``None``) leave the
     corresponding global untouched — matching the spec's "noop default"
-    behavior.
+    behavior. The global :class:`ConfigProvider` is always set, exposing the
+    ``instrumentation`` config node as a read view (empty when absent) for
+    instrumentation libraries to consume.
 
     Honors the top-level ``disabled`` flag: when true, the function returns
     early without setting any globals. The ``log_level`` field, when present
@@ -105,4 +113,11 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     configure_meter_provider(config.meter_provider, resource)
     configure_logger_provider(config.logger_provider, resource)
     configure_propagator(config.propagator)
+    set_config_provider(
+        ConfigProvider(
+            ConfigProperties(
+                _node_to_mapping(config.instrumentation_development)
+            )
+        )
+    )
     configure_instrumentation(config.instrumentation_development)
