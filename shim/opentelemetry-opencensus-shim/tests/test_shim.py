@@ -112,13 +112,15 @@ class TestShim(unittest.TestCase):
         oc_tracer = OcTracer()
         oc_span = oc_tracer.start_span("foo")
 
-        with patch.object(
+        with (
+            patch.object(
+                oc_span,
+                "_self_otel_span",
+                wraps=oc_span._self_otel_span,
+            ) as spy_otel_span,
             oc_span,
-            "_self_otel_span",
-            wraps=oc_span._self_otel_span,
-        ) as spy_otel_span:
-            with oc_span:
-                pass
+        ):
+            pass
 
         spy_otel_span.end.assert_not_called()
 

@@ -515,12 +515,14 @@ class TestContainerResourceDetector(unittest.TestCase):
 
     def test_container_detector_raises_when_package_missing(self):
         """ConfigurationError is raised when the contrib entry point is not found."""
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                create_resource(self._config_with_container())
+            create_resource(self._config_with_container())
 
     def test_container_detector_uses_contrib_when_available(self):
         """When the contrib entry point is registered, container.id is detected."""
@@ -659,9 +661,11 @@ class TestPluginResourceDetector(unittest.TestCase):
                 detectors=[ExperimentalResourceDetector(no_such_detector={})]
             )
         )
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                create_resource(config)
+            create_resource(config)

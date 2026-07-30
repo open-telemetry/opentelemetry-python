@@ -21,7 +21,7 @@ class InstrumentationInfo:
     properties.
     """
 
-    __slots__ = ("_name", "_version", "_schema_url")
+    __slots__ = ("_name", "_schema_url", "_version")
 
     @deprecated(
         "You should use InstrumentationScope. Deprecated since version 1.11.1."
@@ -81,7 +81,7 @@ class InstrumentationScope:
     properties.
     """
 
-    __slots__ = ("_name", "_version", "_schema_url", "_attributes")
+    __slots__ = ("_attributes", "_name", "_schema_url", "_version")
 
     def __init__(
         self,

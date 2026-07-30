@@ -604,7 +604,7 @@ class MeterProvider(APIMeterProvider):
         if metric_reader_error:
             metric_reader_error_string = "\n".join(
                 [
-                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    f"{metric_reader.__class__.__name__}: {error!r}"
                     for metric_reader, error in metric_reader_error.items()
                 ]
             )
@@ -654,7 +654,7 @@ class MeterProvider(APIMeterProvider):
         if metric_reader_error:
             metric_reader_error_string = "\n".join(
                 [
-                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    f"{metric_reader.__class__.__name__}: {error!r}"
                     for metric_reader, error in metric_reader_error.items()
                 ]
             )

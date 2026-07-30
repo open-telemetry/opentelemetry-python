@@ -30,8 +30,8 @@ settings.configure()
 # "AnyValue" forward reference in opentelemetry.util.types._ExtendedAttributes
 # resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
 # BoundedAttributes (whose __globals__ is the attributes module). Docs-only.
-import opentelemetry.attributes  # noqa: E402
-from opentelemetry.util.types import AnyValue as _AnyValue  # noqa: E402
+import opentelemetry.attributes
+from opentelemetry.util.types import AnyValue as _AnyValue
 
 opentelemetry.attributes.AnyValue = _AnyValue
 

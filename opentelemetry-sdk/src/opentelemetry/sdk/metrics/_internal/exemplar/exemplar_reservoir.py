@@ -32,7 +32,7 @@ class ExemplarReservoir(ABC):
     @abstractmethod
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -76,7 +76,7 @@ class ExemplarBucket:
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -177,7 +177,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -205,7 +205,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     @abstractmethod
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -250,7 +250,7 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -281,7 +281,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -296,7 +296,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,

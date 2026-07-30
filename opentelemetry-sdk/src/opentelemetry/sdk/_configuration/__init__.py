@@ -261,7 +261,7 @@ def _init_tracing(
 
 
 def _init_metrics(
-    exporters_or_readers: dict[str, type[MetricExporter] | type[MetricReader]],
+    exporters_or_readers: dict[str, type[MetricExporter | MetricReader]],
     resource: Resource | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     meter_configurator: _MeterConfiguratorT | None = None,
@@ -427,7 +427,7 @@ def _import_exporters(
     log_exporter_names: Sequence[str],
 ) -> tuple[
     dict[str, type[SpanExporter]],
-    dict[str, type[MetricExporter] | type[MetricReader]],
+    dict[str, type[MetricExporter | MetricReader]],
     dict[str, type[LogRecordExporter]],
 ]:
     trace_exporters = {}
@@ -718,7 +718,7 @@ class _OTelSDKConfigurator(_BaseConfigurator):
                 # silence the static-analysis no-name-in-module on the
                 # conditional import.
                 # pylint: disable=import-outside-toplevel,no-name-in-module
-                from opentelemetry.configuration import (  # noqa: PLC0415
+                from opentelemetry.configuration import (
                     configure_sdk,
                     load_config_file,
                 )

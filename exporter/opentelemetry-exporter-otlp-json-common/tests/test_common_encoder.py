@@ -408,12 +408,14 @@ class TestGetTemporality(unittest.TestCase):
                 self.assertEqual(result[instrument_class], expected)
 
     def test_temporality_invalid_env_logs_warning(self):
-        with patch.dict(
-            "os.environ",
-            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "INVALID"},
+        with (
+            patch.dict(
+                "os.environ",
+                {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "INVALID"},
+            ),
+            self.assertLogs(_COMMON_LOGGER_NAME, level="WARNING"),
         ):
-            with self.assertLogs(_COMMON_LOGGER_NAME, level="WARNING"):
-                result = _get_temporality(None)
+            result = _get_temporality(None)
         self.assertEqual(
             result[Counter],
             AggregationTemporality.CUMULATIVE,
