@@ -20,6 +20,121 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog start -->
 
+## Version 1.44.0/0.65b0 (2026-07-16)
+
+### Added
+
+- `opentelemetry-docker-tests`: Refactor Docker tests to properly validate
+  contents of exported telemetry
+  ([#5220](https://github.com/open-telemetry/opentelemetry-python/pull/5220))
+- `opentelemetry-exporter-otlp-common`: add shared package for common OTLP
+  utilities
+  ([#5252](https://github.com/open-telemetry/opentelemetry-python/pull/5252))
+- `opentelemetry-sdk`: add `MissingDependencyError` exception for declarative
+  configuration and use it for missing optional dependency errors
+  ([#5265](https://github.com/open-telemetry/opentelemetry-python/pull/5265))
+- `opentelemetry-sdk`: Add ability to refresh process dependent Resource
+  attributes
+  ([#5280](https://github.com/open-telemetry/opentelemetry-python/pull/5280))
+- `opentelemetry-sdk`: add `force_flush` method to `LogRecordExporter` ABC
+  ([#5294](https://github.com/open-telemetry/opentelemetry-python/pull/5294))
+- `opentelemetry-sdk`: Make it possible to limit the size of stored spans in
+  InMemorySpanExporter
+  ([#5296](https://github.com/open-telemetry/opentelemetry-python/pull/5296))
+- `opentelemetry-sdk`: add log record limits environment variables
+  `OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT` and
+  `OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT`
+  ([#5300](https://github.com/open-telemetry/opentelemetry-python/pull/5300))
+- `opentelemetry-sdk`: add support for file exporter with declarative config
+  ([#5311](https://github.com/open-telemetry/opentelemetry-python/pull/5311))
+- `opentelemetry-sdk`: expose `SynchronousMultiLogRecordProcessor` and
+  `ConcurrentMultiLogRecordProcessor` publicly
+  ([#5327](https://github.com/open-telemetry/opentelemetry-python/pull/5327))
+- `opentelemetry-sdk`: point the declarative configuration package README at
+  the shared [language support status
+  matrix](https://github.com/open-telemetry/opentelemetry-configuration/blob/main/language-support-status.md#python)
+  in the `opentelemetry-configuration` repo, so Python conformance status lives
+  alongside the other languages instead of being duplicated per language SDK.
+  ([#5347](https://github.com/open-telemetry/opentelemetry-python/pull/5347))
+- `opentelemetry-sdk`: document that Python-implementation extensions
+  (`OTEL_PYTHON_*` variables) are bypassed when `OTEL_CONFIG_FILE` is set. The
+  env-var initialisation path is skipped entirely in favour of the declarative
+  file; honouring these alongside a config file is tracked as a follow-up.
+  ([#5353](https://github.com/open-telemetry/opentelemetry-python/pull/5353))
+- `opentelemetry-sdk`: wire id_generator from declarative configuration to
+  TracerProvider
+  ([#5363](https://github.com/open-telemetry/opentelemetry-python/pull/5363))
+- `opentelemetry-sdk`: Add support for activating instrumentors from a
+  declarative configuration file via the `instrumentation/development.python`
+  section. Instrumentors can declare a `configuration` attribute to have their
+  options validated through the same type-coercion pipeline used for SDK
+  component configuration.
+  ([#5372](https://github.com/open-telemetry/opentelemetry-python/pull/5372))
+- `opentelemetry-sdk`: add `record_min_max` option to
+  `ExponentialBucketHistogramAggregation`, matching the option already
+  available on `ExplicitBucketHistogramAggregation` and required by the
+  specification
+  ([#5377](https://github.com/open-telemetry/opentelemetry-python/pull/5377))
+
+### Changed
+
+- opentelemetry-sdk: revert BoundedAttributes RLock back to Lock
+  ([#5329](https://github.com/open-telemetry/opentelemetry-python/pull/5329))
+- docs: update logs example to use `opentelemetry-instrumentation-logging`
+  ([#5344](https://github.com/open-telemetry/opentelemetry-python/pull/5344))
+- `opentelemetry-sdk`: bump declarative configuration schema to v1.1.0
+  ([#5345](https://github.com/open-telemetry/opentelemetry-python/pull/5345))
+- `opentelemetry-configuration`: declarative configuration moves from
+  `opentelemetry.sdk._configuration` into the new public
+  `opentelemetry-configuration` package (`opentelemetry.configuration`
+  namespace), published experimentally. `opentelemetry-sdk[file-configuration]`
+  continues to work as an alias that installs `opentelemetry-configuration`
+  alongside the SDK.
+  ([#5356](https://github.com/open-telemetry/opentelemetry-python/pull/5356))
+- `opentelemetry-api`: remove env carrier environment snapshot caching, you now
+  have to pass explicitly the mapping where to get the environment variables
+  from as the `EnvironmentGetter.get` first argument.
+  ([#5366](https://github.com/open-telemetry/opentelemetry-python/pull/5366))
+- `opentelemetry-semantic-conventions`: bump to 1.42.0
+  ([#5410](https://github.com/open-telemetry/opentelemetry-python/pull/5410))
+- `opentelemetry-semantic-conventions`: bump to 1.43.0
+  ([#5413](https://github.com/open-telemetry/opentelemetry-python/pull/5413))
+
+### Removed
+
+- `opentelemetry-api`, `opentelemetry-sdk`: Removed deprecated Events API/SDK.
+  Use `LogRecord` with the `event_name` field set instead.
+  ([#5293](https://github.com/open-telemetry/opentelemetry-python/pull/5293))
+
+### Fixed
+
+- `opentelemetry-sdk`: Optimize `LogRecord` memory in `BatchLogRecordProcessor`
+  by clearing the `Context` object before buffering. This is a potentially
+  breaking change for custom log exporters that access `context` from the
+  exported `ReadableLogRecord`, as the context will now be an empty `Context()`
+  instead of the original.
+  ([#4977](https://github.com/open-telemetry/opentelemetry-python/pull/4977))
+- `opentelemetry-sdk`: drop non-finite measurements (NaN and Inf) at the
+  instrument level to prevent permanent aggregation poisoning
+  ([#5336](https://github.com/open-telemetry/opentelemetry-python/pull/5336))
+- `opentelemetry-sdk`: raise `ValueError` when
+  `ExplicitBucketHistogramAggregation` boundaries are not strictly increasing
+  or finite
+  ([#5340](https://github.com/open-telemetry/opentelemetry-python/pull/5340))
+- `opentelemetry-sdk`: `ProcessResourceDetector` no longer collects or emits
+  `process.command_args` and `process.command_line` by default since the values
+  are not sanitized and may contain sensitive information. Users who depend
+  on these resource attributes must pass `include_command_args=True`.
+  ([#5364](https://github.com/open-telemetry/opentelemetry-python/pull/5364))
+- `opentelemetry-exporter-otlp-proto-http`: fix the OTLP HTTP metric exporter
+  self-observability metrics over-counting data points when
+  `max_export_batch_size` splits a batch; each split now reports its own
+  data-point count instead of the whole-batch count.
+  ([#5370](https://github.com/open-telemetry/opentelemetry-python/pull/5370))
+- `opentelemetry-api`: Prevent in-place mutation of `Context` via inherited
+  `dict` methods
+  ([#5399](https://github.com/open-telemetry/opentelemetry-python/pull/5399))
+
 ## Version 1.43.0/0.64b0 (2026-06-24)
 
 ### Added

@@ -252,6 +252,9 @@ class DummyOTLPLogExporter(LogRecordExporter):
     def shutdown(self):
         pass
 
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+        return True
+
 
 class CustomSampler(Sampler):
     def __init__(self) -> None:

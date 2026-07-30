@@ -7,6 +7,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration._resource import create_resource
 from opentelemetry.configuration.models import (
@@ -224,6 +225,39 @@ class TestCreateResourceAttributes(unittest.TestCase):
         resource = create_resource(config)
         self.assertEqual(list(resource.attributes["k"]), [True, False])  # type: ignore[arg-type]
 
+    def test_none_value_attribute_skipped_with_warning(self):
+        """An unset ${VAR} with no default yields a null value; it must be
+        skipped (not inserted as None or coerced) and a warning logged."""
+        with self.assertLogs(
+            "opentelemetry.configuration._resource", level="WARNING"
+        ) as cm:
+            config = ResourceConfig(
+                attributes=[
+                    AttributeNameValue(name="empty", value=None),
+                    AttributeNameValue(name="env", value="production"),
+                ]
+            )
+            resource = create_resource(config)
+        self.assertNotIn("empty", resource.attributes)
+        self.assertEqual(resource.attributes["env"], "production")
+        self.assertTrue(any("empty" in msg for msg in cm.output))
+
+    def test_none_value_typed_attribute_skipped(self):
+        """A null value with a declared type must be skipped, not coerced
+        (int(None)/str(None) would raise or produce garbage)."""
+        with self.assertLogs(
+            "opentelemetry.configuration._resource", level="WARNING"
+        ):
+            config = ResourceConfig(
+                attributes=[
+                    AttributeNameValue(
+                        name="k", value=None, type=AttributeType.int
+                    )
+                ]
+            )
+            resource = create_resource(config)
+        self.assertNotIn("k", resource.attributes)
+
     def test_attribute_type_bool_array_string_values(self):
         """bool_array must use _coerce_bool, not plain bool() — 'false' must be False."""
         config = ResourceConfig(
@@ -342,6 +376,17 @@ class TestServiceResourceDetector(unittest.TestCase):
         with patch.dict(os.environ, {"OTEL_SERVICE_NAME": "env-svc"}):
             resource = create_resource(config)
         self.assertEqual(resource.attributes[SERVICE_NAME], "explicit-svc")
+
+    def test_null_valued_detector_from_parsed_config(self):
+        # Regression test for #5451: a detector written as ``- service:``
+        # (present, null) is parsed to ``{"service": None}``. It must run the
+        # detector just like ``- service: {}`` rather than being skipped.
+        config = _dict_to_dataclass(
+            {"detection_development": {"detectors": [{"service": None}]}},
+            ResourceConfig,
+        )
+        resource = create_resource(config)
+        self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
 
     def test_service_detector_not_run_when_absent(self):
         resource = create_resource(ResourceConfig())

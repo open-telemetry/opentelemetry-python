@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: point the declarative configuration package README at the shared [language support status matrix](https://github.com/open-telemetry/opentelemetry-configuration/blob/main/language-support-status.md#python) in the `opentelemetry-configuration` repo, so Python conformance status lives alongside the other languages instead of being duplicated per language SDK.

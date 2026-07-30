@@ -49,6 +49,8 @@ class TelemetrySdkLanguageValues(Enum):
     """go."""
     JAVA = "java"
     """java."""
+    KOTLIN = "kotlin"
+    """kotlin."""
     NODEJS = "nodejs"
     """nodejs."""
     PHP = "php"
