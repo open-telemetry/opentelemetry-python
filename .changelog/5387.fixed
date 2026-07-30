@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-common`: remove dependency on incubating attributes from OTLP exporters

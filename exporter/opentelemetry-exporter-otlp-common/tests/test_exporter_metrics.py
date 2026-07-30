@@ -5,13 +5,11 @@ import unittest
 from unittest.mock import Mock, patch
 from urllib.parse import urlparse
 
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
     ExporterMetrics,
     NoOpExporterMetrics,
-    create_exporter_metrics,
-)
-from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
+    create_exporter_metrics,
 )
 
 
@@ -20,7 +18,7 @@ class TestExporterMetrics(unittest.TestCase):
         meter_provider = Mock()
 
         with patch(
-            "opentelemetry.exporter.otlp.proto.common."
+            "opentelemetry.exporter.otlp.common."
             "_exporter_metrics.get_meter_provider"
         ) as get_meter_provider:
             metrics = create_exporter_metrics(

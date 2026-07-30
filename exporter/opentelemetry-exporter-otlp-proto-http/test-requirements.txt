@@ -18,6 +18,7 @@ urllib3==2.2.2
 wrapt==1.16.0
 -e opentelemetry-api
 -e tests/opentelemetry-test-utils
+-e exporter/opentelemetry-exporter-otlp-common
 -e exporter/opentelemetry-exporter-otlp-proto-common
 -e opentelemetry-proto
 -e opentelemetry-sdk

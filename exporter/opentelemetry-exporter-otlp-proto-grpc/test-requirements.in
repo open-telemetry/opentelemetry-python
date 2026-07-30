@@ -6,6 +6,7 @@ protobuf>=5.29.5
 pytest>=7.4.4
 -e opentelemetry-api
 -e tests/opentelemetry-test-utils
+-e exporter/opentelemetry-exporter-otlp-common
 -e exporter/opentelemetry-exporter-otlp-proto-common
 -e opentelemetry-proto
 -e opentelemetry-sdk
