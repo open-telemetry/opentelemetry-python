@@ -25,7 +25,7 @@
       // by the release process and are not auto-updated by Renovate.
       "**/pyproject.toml",
     ],
-    // pip-compile manages the oldest|latest requirements files via lockFileMaintenance (re-runs uv pip compile --resolution=lowest-direct|highest).
+    // pip-compile manages the oldest|latest requirements files via lockFileMaintenance (re-runs uv pip compile --resolution=lowest|highest).
     // pip_requirements is disabled for those files to avoid double-processing.
     "pip-compile": {
       managerFilePatterns: [
