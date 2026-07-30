@@ -10,7 +10,13 @@
 import os
 import sys
 
+from opentelemetry import trace
 from opentelemetry.instrumentation.django import DjangoInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
 
 
 def main():
@@ -18,7 +24,17 @@ def main():
         "DJANGO_SETTINGS_MODULE", "instrumentation_example.settings"
     )
 
-    # This call is what makes the Django application be instrumented
+    # Set up a tracer provider with a console exporter so that the spans
+    # generated below are printed to stdout. Comment out this block when
+    # running with auto instrumentation (``opentelemetry-instrument``), which
+    # configures the tracer provider and exporter for you.
+    trace.set_tracer_provider(TracerProvider())
+    trace.get_tracer_provider().add_span_processor(
+        SimpleSpanProcessor(ConsoleSpanExporter())
+    )
+
+    # This call is what makes the Django application be instrumented.
+    # Comment it out when running with auto instrumentation.
     DjangoInstrumentor().instrument()
 
     try:
