@@ -457,6 +457,24 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             LogRecordExportResult.SUCCESS,
         )
 
+    @patch.object(Session, "post")
+    def test_retryable_status_code_429(self, mock_post):
+        # HTTP 429 (Too Many Requests) is retryable per the OTLP spec, so the
+        # exporter should back off and retry instead of dropping the batch.
+        exporter = OTLPLogExporter(timeout=1.5)
+
+        resp = Response()
+        resp.status_code = 429
+        resp.reason = "Too Many Requests"
+        mock_post.return_value = resp
+        with self.assertLogs(level=WARNING):
+            self.assertEqual(
+                exporter.export(self._get_sdk_log_data()),
+                LogRecordExportResult.FAILURE,
+            )
+        # More than one call proves the 429 response was retried.
+        self.assertGreater(mock_post.call_count, 1)
+
     @patch.dict(
         "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
     )
