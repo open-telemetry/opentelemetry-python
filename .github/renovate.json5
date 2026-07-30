@@ -1,7 +1,7 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     extends: [
-      "config:recommended",
+      "config:best-practices",
       "helpers:pinGitHubActionDigestsToSemver",
       ":semanticCommits",
     ],
@@ -17,10 +17,6 @@
       schedule: ["before 8am on Monday"],
     },
     ignorePaths: [
-      ".github/workflows/ci.yml",
-      ".github/workflows/lint.yml",
-      ".github/workflows/misc.yml",
-      ".github/workflows/test.yml",
       "**/*-requirements.txt",
       "gen-requirements.txt",
       "dev-requirements.txt",
