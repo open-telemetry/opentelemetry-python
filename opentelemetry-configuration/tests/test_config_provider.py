@@ -14,11 +14,11 @@ from opentelemetry.configuration._config_provider import (
     get_config_provider,
     set_config_provider,
 )
-from opentelemetry.util._once import Once
 from opentelemetry.configuration.models import (
     ExperimentalGeneralInstrumentation,
     ExperimentalInstrumentation,
 )
+from opentelemetry.util._once import Once
 
 
 class TestConfigPropertiesScalars(unittest.TestCase):
@@ -183,6 +183,7 @@ class TestNodeToMapping(unittest.TestCase):
 class TestGlobalConfigProvider(unittest.TestCase):
     def setUp(self):
         # Reset the module global and its set-once guard before each test.
+        # pylint: disable=protected-access
         config_provider_module._CONFIG_PROVIDER = None
         config_provider_module._CONFIG_PROVIDER_SET_ONCE = Once()
 
