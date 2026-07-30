@@ -25,19 +25,23 @@ to the exporter, which can send on this information as it sees fit.
 
     trace.set_tracer_provider(
         TracerProvider(
-            resource=Resource.create({
-                "service.name": "shoppingcart",
-                "service.instance.id": "instance-12",
-            }),
+            resource=Resource.create(
+                {
+                    "service.name": "shoppingcart",
+                    "service.instance.id": "instance-12",
+                }
+            ),
         ),
     )
     print(trace.get_tracer_provider().resource.attributes)
 
-    {'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '0.13.dev0',
-    'service.name': 'shoppingcart',
-    'service.instance.id': 'instance-12'}
+    {
+        "telemetry.sdk.language": "python",
+        "telemetry.sdk.name": "opentelemetry",
+        "telemetry.sdk.version": "0.13.dev0",
+        "service.name": "shoppingcart",
+        "service.instance.id": "instance-12",
+    }
 
 Note that the OpenTelemetry project documents certain `"standard attributes"
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md>`_
