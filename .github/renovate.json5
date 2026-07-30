@@ -1,7 +1,7 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     extends: [
-      "config:best-practices",
+      "config:recommended",
       "helpers:pinGitHubActionDigestsToSemver",
       ":semanticCommits",
     ],
@@ -60,18 +60,8 @@
       {
         groupName: "ci",
         matchManagers: [
-          "github-actions",
-          "dockerfile",
-          "docker-compose",
+          "github-actions"
         ],
-        matchUpdateTypes: [
-          "patch",
-          "minor",
-          "pin",
-          "pinDigest",
-          "digest",
-        ],
-        semanticCommitScope: "ci",
       },
       {
         matchDepTypes: ["uses-with"],
