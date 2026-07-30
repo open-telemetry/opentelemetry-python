@@ -59,13 +59,15 @@
         semanticCommitScope: "docs",
       },
       {
-        groupName: "ci",
+        matchManagers: ["github-actions"],
+        semanticCommitScope: "ci",
+      },
+      {
+        groupName: "docker deps",
         matchManagers: [
-          "github-actions",
           "dockerfile",
           "docker-compose",
         ],
-        semanticCommitScope: "ci",
       },
       {
         matchDepTypes: ["uses-with"],
