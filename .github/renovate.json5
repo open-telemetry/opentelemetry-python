@@ -1,0 +1,61 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    extends: [
+      "config:recommended",
+      "helpers:pinGitHubActionDigestsToSemver",
+      ":semanticCommits",
+    ],
+    labels: [
+      "dependencies",
+      "Skip Changelog",
+    ],
+    lockFileMaintenance: {
+      enabled: true,
+      schedule: ["before 8am on Monday"],
+    },
+    ignorePaths: [
+      "**/*-requirements.txt",
+      "gen-requirements.txt",
+      "dev-requirements.txt",
+      "docs-requirements.txt",
+      "**/pyproject.toml",
+    ],
+    // Also scan GitHub Actions workflow templates written as Jinja files.
+    "github-actions": {
+      managerFilePatterns: [
+        "/^\\.github/workflows/templates/.*\\.ya?ml\\.j2$/",
+      ],
+    },
+    packageRules: [
+      {
+        groupName: "all patch versions",
+        matchUpdateTypes: ["patch"],
+        schedule: ["before 8am every weekday"],
+      },
+      {
+        matchUpdateTypes: ["minor", "major"],
+        schedule: ["before 8am on Monday"],
+      },
+      {
+        groupName: "docs deps",
+        matchFileNames: ["docs/**"],
+        semanticCommitScope: "docs",
+      },
+      {
+        groupName: "ci",
+        matchManagers: [
+          "github-actions",
+          "dockerfile",
+          "docker-compose",
+        ],
+        matchUpdateTypes: [
+          "patch",
+          "minor",
+          "pin",
+          "pinDigest",
+          "digest",
+        ],
+        semanticCommitScope: "ci",
+      },
+    ],
+}
