@@ -143,12 +143,12 @@ select = [
   "RUF101", "RUF200", "TRY002", "TRY004", "TRY201", "TRY203", "TRY401",
 ]
 # These are also part of the default but don't have fixes available, they need to be manually
-# resolved, except E501 which is intentionally ignored.
+# resolved, except E501 and RUF023 which are intentionally ignored.
 ignore = [
   "B008", "B017", "B018", "B020", "B023", "B039", "BLE001", "C401",
   "C408", "C417", "DTZ007", "E501", "FLY002", "LOG015", "PERF102", "PIE796",
   "PLW0602", "PLW1508", "PT014", "PYI034", "PYI036", "RUF009", "RUF012", "RUF013",
-  "RUF015", "S110", "SIM102", "SIM103", "SIM115", "SIM117", "SIM118", "TRY002",
+  "RUF015", "RUF023", "S110", "SIM102", "SIM103", "SIM115", "SIM117", "SIM118", "TRY002",
   "TRY004", "TRY201", "TRY401",
 ]
 

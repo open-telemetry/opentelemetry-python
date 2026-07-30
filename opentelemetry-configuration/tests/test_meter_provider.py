@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Tests access private members of SDK classes to assert correct configuration.
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-lines
 
 import os
 import sys
