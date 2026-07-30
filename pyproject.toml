@@ -76,6 +76,7 @@ log_cli = true
 # https://docs.astral.sh/ruff/configuration/
 target-version = "py310"
 line-length = 79
+force-exclude = true
 extend-exclude = [
   "*_pb2*.py*",
   "opentelemetry-proto-json/src/*",
