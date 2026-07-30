@@ -57,7 +57,8 @@ class ConfigProperties:
             dict(properties) if properties is not None else {}
         )
 
-    def _log_type_mismatch(self, name: str, value: Any, expected: str) -> None:
+    @staticmethod
+    def _log_type_mismatch(name: str, value: Any, expected: str) -> None:
         _logger.warning(
             "Config property %r has type %s, expected %s; ignoring.",
             name,
