@@ -3,7 +3,7 @@
     extends: [
       "config:best-practices",
       "helpers:pinGitHubActionDigestsToSemver",
-      ":semanticCommits",
+      ":semanticCommits"
     ],
     constraints: {
       python: "==3.10"
@@ -54,10 +54,18 @@
         enabled: false,
       },
       {
+        groupName: "docs deps",
+        matchFileNames: ["docs/**"],
+        semanticCommitScope: "docs",
+      },
+{
         groupName: "ci",
         matchManagers: [
-          "github-actions"
+          "github-actions",
+          "dockerfile",
+          "docker-compose",
         ],
+        semanticCommitScope: "ci",
       },
       {
         matchDepTypes: ["uses-with"],
