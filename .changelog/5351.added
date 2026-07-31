@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: wire the top-level `log_level` field in declarative configuration — when set, maps the OTel `SeverityNumber` value to a Python logging level and applies it to the `opentelemetry` logger so SDK internal diagnostics respect the configured severity.
