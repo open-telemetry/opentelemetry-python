@@ -46,7 +46,7 @@ except ImportError as exc:
 # warning. See
 # https://github.com/open-telemetry/opentelemetry-configuration/blob/main/VERSIONING.md
 _SUPPORTED_SCHEMA_MAJOR = 1
-_SUPPORTED_SCHEMA_MINOR = 0
+_SUPPORTED_SCHEMA_MINOR = 1
 
 _schema_cache: list[dict] = []
 
