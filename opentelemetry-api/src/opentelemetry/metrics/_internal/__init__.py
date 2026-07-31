@@ -332,43 +332,73 @@ class Meter(ABC):
         For example, an observable counter could be used to report system CPU
         time periodically. Here is a basic implementation::
 
-            def cpu_time_callback(options: CallbackOptions) -> Iterable[Observation]:
+            def cpu_time_callback(
+                options: CallbackOptions,
+            ) -> Iterable[Observation]:
                 observations = []
                 with open("/proc/stat") as procstat:
                     procstat.readline()  # skip the first line
                     for line in procstat:
-                        if not line.startswith("cpu"): break
+                        if not line.startswith("cpu"):
+                            break
                         cpu, *states = line.split()
-                        observations.append(Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
-                        observations.append(Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
-                        observations.append(Observation(int(states[2]) // 100, {"cpu": cpu, "state": "system"}))
+                        observations.append(
+                            Observation(
+                                int(states[0]) // 100,
+                                {"cpu": cpu, "state": "user"},
+                            )
+                        )
+                        observations.append(
+                            Observation(
+                                int(states[1]) // 100,
+                                {"cpu": cpu, "state": "nice"},
+                            )
+                        )
+                        observations.append(
+                            Observation(
+                                int(states[2]) // 100,
+                                {"cpu": cpu, "state": "system"},
+                            )
+                        )
                         # ... other states
                 return observations
+
 
             meter.create_observable_counter(
                 "system.cpu.time",
                 callbacks=[cpu_time_callback],
                 unit="s",
-                description="CPU time"
+                description="CPU time",
             )
 
         To reduce memory usage, you can use generator callbacks instead of
         building the full list::
 
-            def cpu_time_callback(options: CallbackOptions) -> Iterable[Observation]:
+            def cpu_time_callback(
+                options: CallbackOptions,
+            ) -> Iterable[Observation]:
                 with open("/proc/stat") as procstat:
                     procstat.readline()  # skip the first line
                     for line in procstat:
-                        if not line.startswith("cpu"): break
+                        if not line.startswith("cpu"):
+                            break
                         cpu, *states = line.split()
-                        yield Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"})
-                        yield Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"})
+                        yield Observation(
+                            int(states[0]) // 100,
+                            {"cpu": cpu, "state": "user"},
+                        )
+                        yield Observation(
+                            int(states[1]) // 100,
+                            {"cpu": cpu, "state": "nice"},
+                        )
                         # ... other states
 
         Alternatively, you can pass a sequence of generators directly instead of a sequence of
         callbacks, which each should return iterables of :class:`~opentelemetry.metrics.Observation`::
 
-            def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Observation]]:
+            def cpu_time_callback(
+                states_to_include: set[str],
+            ) -> Iterable[Iterable[Observation]]:
                 # accept options sent in from OpenTelemetry
                 options = yield
                 while True:
@@ -376,29 +406,46 @@ class Meter(ABC):
                     with open("/proc/stat") as procstat:
                         procstat.readline()  # skip the first line
                         for line in procstat:
-                            if not line.startswith("cpu"): break
+                            if not line.startswith("cpu"):
+                                break
                             cpu, *states = line.split()
                             if "user" in states_to_include:
-                                observations.append(Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
+                                observations.append(
+                                    Observation(
+                                        int(states[0]) // 100,
+                                        {"cpu": cpu, "state": "user"},
+                                    )
+                                )
                             if "nice" in states_to_include:
-                                observations.append(Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
+                                observations.append(
+                                    Observation(
+                                        int(states[1]) // 100,
+                                        {"cpu": cpu, "state": "nice"},
+                                    )
+                                )
                             # ... other states
                     # yield the observations and receive the options for next iteration
                     options = yield observations
+
 
             meter.create_observable_counter(
                 "system.cpu.time",
                 callbacks=[cpu_time_callback({"user", "system"})],
                 unit="s",
-                description="CPU time"
+                description="CPU time",
             )
 
         The :class:`~opentelemetry.metrics.CallbackOptions` contain a timeout which the
         callback should respect. For example if the callback does asynchronous work, like
         making HTTP requests, it should respect the timeout::
 
-            def scrape_http_callback(options: CallbackOptions) -> Iterable[Observation]:
-                r = requests.get('http://scrapethis.com', timeout=options.timeout_millis / 10**3)
+            def scrape_http_callback(
+                options: CallbackOptions,
+            ) -> Iterable[Observation]:
+                r = requests.get(
+                    "http://scrapethis.com",
+                    timeout=options.timeout_millis / 10**3,
+                )
                 for value in r.json():
                     yield Observation(value)
 
