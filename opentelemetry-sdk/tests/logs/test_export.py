@@ -450,6 +450,42 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
         self.assertIsNone(processed_data_point0.attributes.get("error.type"))
 
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    def test_metrics_not_counted_after_shutdown(self):
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+
+        exporter = mock.MagicMock()
+        exporter.export.return_value = LogRecordExportResult.SUCCESS
+        processor = SimpleLogRecordProcessor(
+            exporter, meter_provider=meter_provider
+        )
+        provider = LoggerProvider()
+        provider.add_log_record_processor(processor)
+        logger = provider.get_logger("test_shutdown_metrics")
+
+        logger.emit(LogRecord(body="foo", severity_number=SeverityNumber.WARN))
+
+        # Shut only the processor down; the record emitted afterwards hits the
+        # already-shutdown early return and must not be counted as processed.
+        processor.shutdown()
+        logger.emit(LogRecord(body="bar", severity_number=SeverityNumber.WARN))
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        self.assertEqual(len(metrics), 1)
+        self.assertEqual(metrics[0].name, "otel.sdk.processor.log.processed")
+        processed_data_points = metrics[0].data.data_points
+        self.assertEqual(len(processed_data_points), 1)
+        self.assertEqual(processed_data_points[0].value, 1)
+        self.assertIsNone(
+            processed_data_points[0].attributes.get("error.type")
+        )
+        self.assertEqual(exporter.export.call_count, 1)
+
 
 # Many more test cases for the BatchLogRecordProcessor exist under
 # opentelemetry-sdk/tests/shared_internal/test_batch_processor.py.
