@@ -11,9 +11,6 @@ from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
 from opentelemetry._logs import Logger, SeverityNumber
-from opentelemetry.exporter.otlp.json.file._log_exporter import (
-    FileLogExporter,
-)
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
 )
@@ -22,6 +19,9 @@ from opentelemetry.exporter.http.transport._urllib3 import (
 )
 from opentelemetry.exporter.otlp.common.http import (
     Compression as JSONCompression,
+)
+from opentelemetry.exporter.otlp.json.file._log_exporter import (
+    FileLogExporter,
 )
 from opentelemetry.exporter.otlp.json.http._log_exporter import (
     OTLPLogExporter as JSONLogExporter,

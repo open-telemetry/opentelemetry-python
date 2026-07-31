@@ -10,9 +10,6 @@ import pytest
 from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
-from opentelemetry.exporter.otlp.json.file.trace_exporter import (
-    FileSpanExporter,
-)
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
 )
@@ -21,6 +18,9 @@ from opentelemetry.exporter.http.transport._urllib3 import (
 )
 from opentelemetry.exporter.otlp.common.http import (
     Compression as JSONCompression,
+)
+from opentelemetry.exporter.otlp.json.file.trace_exporter import (
+    FileSpanExporter,
 )
 from opentelemetry.exporter.otlp.json.http.trace_exporter import (
     OTLPSpanExporter as JSONSpanExporter,
