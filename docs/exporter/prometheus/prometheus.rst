@@ -84,7 +84,7 @@ Resource labels
 
 By default, resource attributes are exported on the ``target_info`` metric. To
 also add selected resource attributes as Prometheus labels on every exported
-metric, pass a ``resource_attr_filter`` callback to ``PrometheusMetricReader``.
+metric, pass a ``resource_attribute_filter`` callback to ``PrometheusMetricReader``.
 The callback receives the original resource attribute key and returns ``True``
 for attributes that should be copied to metric labels::
 
@@ -106,7 +106,7 @@ for attributes that should be copied to metric labels::
     start_http_server(port=9464, addr="localhost")
     included_resource_attrs = {SERVICE_NAME, "service.namespace"}
     reader = PrometheusMetricReader(
-        resource_attr_filter=lambda key: key in included_resource_attrs
+        resource_attribute_filter=lambda key: key in included_resource_attrs
     )
     provider = MeterProvider(resource=resource, metric_readers=[reader])
     metrics.set_meter_provider(provider)

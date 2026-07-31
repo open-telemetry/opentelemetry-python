@@ -93,7 +93,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             disable_target_info=True,
             scope_info_enabled=scope_info_enabled,
             prefix=prefix,
-            resource_attr_filter=resource_attr_filter,
+            resource_attribute_filter=resource_attr_filter,
         )
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
@@ -932,7 +932,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         collector = _CustomCollector(
             disable_target_info=True,
             scope_info_enabled=False,
-            resource_attr_filter=lambda key: key == "service.name",
+            resource_attribute_filter=lambda key: key == "service.name",
         )
         collector.add_metrics_data(metrics_data)
 
@@ -970,7 +970,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         collector = _CustomCollector(
             disable_target_info=True,
             scope_info_enabled=False,
-            resource_attr_filter=lambda key: "." in key,
+            resource_attribute_filter=lambda key: "." in key,
         )
         collector.add_metrics_data(metrics_data)
 

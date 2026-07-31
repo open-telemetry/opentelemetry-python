@@ -256,7 +256,7 @@ class PrometheusMetricReader(MetricReader):
         prefix: Prefix added to exported Prometheus metric names.
         scope_info_enabled: Whether to include instrumentation scope labels on
             exported metrics. Scope labels are exported by default.
-        resource_attr_filter: Optional callback to select resource attributes
+        resource_attribute_filter: Optional callback to select resource attributes
             that are copied as labels on exported metrics. The callback receives
             the original resource attribute key. Selected keys are sanitized to
             valid Prometheus label names.
@@ -267,8 +267,8 @@ class PrometheusMetricReader(MetricReader):
         disable_target_info: bool = False,
         prefix: str = "",
         scope_info_enabled: bool = True,
-        resource_attr_filter: Callable[[str], bool] | None = None,
         *,
+        resource_attribute_filter: Callable[[str], bool] | None = None,
         registry: CollectorRegistry = REGISTRY,
     ) -> None:
         super().__init__(
@@ -286,7 +286,7 @@ class PrometheusMetricReader(MetricReader):
             disable_target_info=disable_target_info,
             prefix=prefix,
             scope_info_enabled=scope_info_enabled,
-            resource_attr_filter=resource_attr_filter,
+            resource_attribute_filter=resource_attribute_filter,
         )
         self._registry = registry
         self._registry.register(self._collector)
@@ -319,7 +319,7 @@ class _CustomCollector:
         disable_target_info: bool = False,
         prefix: str = "",
         scope_info_enabled: bool = True,
-        resource_attr_filter: Callable[[str], bool] | None = None,
+        resource_attribute_filter: Callable[[str], bool] | None = None,
     ):
         self._callback = None
         self._metrics_datas: deque[MetricsData] = deque()
@@ -327,7 +327,7 @@ class _CustomCollector:
         self._target_info = None
         self._prefix = prefix
         self._scope_info_enabled = scope_info_enabled
-        self._resource_attr_filter = resource_attr_filter
+        self._resource_attribute_filter = resource_attribute_filter
 
     def add_metrics_data(self, metrics_data: MetricsData) -> None:
         """Add metrics to Prometheus data"""
@@ -453,12 +453,12 @@ class _CustomCollector:
     def _build_resource_attrs(
         self, resource: Resource
     ) -> dict[str, AttributeValue]:
-        if not self._resource_attr_filter:
+        if not self._resource_attribute_filter:
             return {}
         return {
             key: value
             for key, value in resource.attributes.items()
-            if self._resource_attr_filter(key)
+            if self._resource_attribute_filter(key)
         }
 
     def _resolve_metric_name(self, name: str) -> str:
