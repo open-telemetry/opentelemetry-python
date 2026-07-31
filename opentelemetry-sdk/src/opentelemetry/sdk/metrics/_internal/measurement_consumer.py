@@ -5,6 +5,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
+from logging import getLogger
 from threading import Lock
 from time import time_ns
 
@@ -17,7 +18,14 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
-from opentelemetry.sdk.metrics._internal.point import MetricsData
+from opentelemetry.sdk.metrics._internal.point import (
+    MetricsData,
+    ResourceMetrics,
+    ScopeMetrics,
+)
+from opentelemetry.sdk.resources import Resource
+
+_logger = getLogger(__name__)
 
 
 class MeasurementConsumer(ABC):
@@ -133,7 +141,82 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 
             result = self._reader_storages[metric_reader].collect()
 
+            if producer_scope_metrics := self._collect_from_producers(
+                metric_reader, deadline_ns
+            ):
+                result = self._merge_producer_metrics(
+                    result, producer_scope_metrics, self._sdk_config.resource
+                )
+
         return result
+
+    @staticmethod
+    def _collect_from_producers(
+        metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
+        deadline_ns: float,
+    ) -> list[ScopeMetrics]:
+        """Collect ScopeMetrics from the reader's MetricProducers.
+
+        Called while holding ``self._lock`` so ``produce()`` calls are
+        serialized. A producer that fails or times out is isolated so
+        metrics collected by the SDK are not dropped.
+        """
+        producer_scope_metrics: list[ScopeMetrics] = []
+        # pylint: disable-next=protected-access
+        for producer in metric_reader._metric_producers:
+            remaining_millis = (deadline_ns - time_ns()) / 1e6
+            if remaining_millis <= 0:
+                _logger.warning(
+                    "Timed out collecting from metric producers, "
+                    "skipping remaining producers."
+                )
+                break
+
+            try:
+                scopes = list(
+                    producer.produce(timeout_millis=remaining_millis)
+                )
+            # pylint: disable-next=broad-except
+            except Exception:
+                _logger.exception(
+                    "Metric producer %s failed to produce metrics, skipping.",
+                    producer,
+                )
+                continue
+
+            producer_scope_metrics.extend(scopes)
+
+        return producer_scope_metrics
+
+    @staticmethod
+    def _merge_producer_metrics(
+        result: MetricsData | None,
+        producer_scope_metrics: list[ScopeMetrics],
+        resource: Resource,
+    ) -> MetricsData:
+        if result is not None and result.resource_metrics:
+            sdk_resource_metrics = result.resource_metrics[0]
+            merged = ResourceMetrics(
+                resource=sdk_resource_metrics.resource,
+                scope_metrics=[
+                    *sdk_resource_metrics.scope_metrics,
+                    *producer_scope_metrics,
+                ],
+                schema_url=sdk_resource_metrics.schema_url,
+            )
+            return MetricsData(
+                resource_metrics=[merged, *result.resource_metrics[1:]]
+            )
+
+        return MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=resource,
+                    scope_metrics=producer_scope_metrics,
+                    schema_url=resource.schema_url,
+                )
+            ]
+        )
 
     def add_metric_reader(
         self, metric_reader: "opentelemetry.sdk.metrics.MetricReader"
