@@ -32,14 +32,16 @@ Example::
     def get_header_from_flask_request(request, key):
         return request.headers.get_all(key)
 
-    def set_header_into_requests_request(request: requests.Request,
-                                            key: str, value: str):
+
+    def set_header_into_requests_request(
+        request: requests.Request, key: str, value: str
+    ):
         request.headers[key] = value
+
 
     def example_route():
         context = PROPAGATOR.extract(
-            get_header_from_flask_request,
-            flask.request
+            get_header_from_flask_request, flask.request
         )
         request_to_downstream = requests.Request(
             "GET", "http://httpbin.org/get"
@@ -47,7 +49,7 @@ Example::
         PROPAGATOR.inject(
             set_header_into_requests_request,
             request_to_downstream,
-            context=context
+            context=context,
         )
         session = requests.Session()
         session.send(request_to_downstream.prepare())
