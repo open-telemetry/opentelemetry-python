@@ -2,7 +2,6 @@
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     extends: [
       "config:best-practices",
-      "helpers:pinGitHubActionDigestsToSemver",
       ":semanticCommits"
     ],
     constraints: {
@@ -17,6 +16,7 @@
       schedule: ["before 8am on Monday"],
     },
     ignorePaths: [
+      ".github/renovate.json5",
       "**/*-requirements.txt",
       "gen-requirements.txt",
       "dev-requirements.txt",
@@ -57,15 +57,6 @@
         groupName: "docs deps",
         matchFileNames: ["docs/**"],
         semanticCommitScope: "docs",
-      },
-      {
-        groupName: "ci",
-        matchManagers: [
-          "github-actions",
-          "dockerfile",
-          "docker-compose",
-        ],
-        semanticCommitScope: "ci",
       },
       {
         matchDepTypes: ["uses-with"],
