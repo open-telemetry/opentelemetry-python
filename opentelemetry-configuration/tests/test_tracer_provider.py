@@ -3,6 +3,7 @@
 
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access
+# pylint: disable=too-many-lines
 
 import os
 import sys
