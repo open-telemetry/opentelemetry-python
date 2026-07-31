@@ -34,6 +34,7 @@
     },
     // Also scan GitHub Actions workflow templates written as Jinja files.
     "github-actions": {
+      enabled: false,
       managerFilePatterns: [
         "/^\\.github/workflows/templates/.*\\.ya?ml\\.j2$/",
       ],
