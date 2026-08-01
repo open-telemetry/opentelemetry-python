@@ -14,6 +14,10 @@ from opentelemetry.configuration.file import (
     ConfigurationError,
     load_config_file,
 )
+from opentelemetry.configuration.file._loader import (
+    _SUPPORTED_SCHEMA_MAJOR,
+    _SUPPORTED_SCHEMA_MINOR,
+)
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
@@ -282,11 +286,11 @@ tracer_provider:
         trace_id_ratio_based: {ratio: 0.5}
 """
 
-    def _load(self) -> OpenTelemetryConfiguration:
+    def _load(self, yaml: str | None = None) -> OpenTelemetryConfiguration:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".yaml", delete=False
         ) as fh:
-            fh.write(self._YAML)
+            fh.write(self._YAML if yaml is None else yaml)
             path = fh.name
         try:
             return load_config_file(path)
@@ -327,9 +331,40 @@ tracer_provider:
         self.assertIsInstance(processors[0], BatchSpanProcessor)
         self.assertIsInstance(processors[0].span_exporter, ConsoleSpanExporter)
 
+    def test_null_valued_required_field_node_survives_conversion(self):
+        # Regression test for #5451: ``jaeger_remote_development`` is nullable
+        # in the schema (so ``jaeger_remote_development:`` passes validation and
+        # is NOT rejected before conversion), yet its model has required
+        # fields. Coercing the present null into it would raise TypeError, so
+        # it must be left as None instead. The rest of the config still loads.
+        config = self._load(
+            """
+file_format: '1.0'
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          console:
+  sampler:
+    jaeger_remote_development:
+"""
+        )
+
+        # Schema accepted the null, and conversion left the required-field
+        # node unset rather than crashing.
+        self.assertIsNone(
+            config.tracer_provider.sampler.jaeger_remote_development
+        )
+        # A sibling nullable dict-typed node (console:) was still coerced.
+        self.assertEqual(
+            config.tracer_provider.processors[0].batch.exporter.console, {}
+        )
+
 
 class TestFileFormatValidation(unittest.TestCase):
     """Validate the file_format version per the configuration spec."""
+
+    _SUPPORTED = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR}"
 
     @staticmethod
     def _load(file_format: str) -> OpenTelemetryConfiguration:
@@ -344,26 +379,44 @@ class TestFileFormatValidation(unittest.TestCase):
             os.unlink(path)
 
     def test_supported_version_is_accepted(self):
-        config = self._load("1.0")
-        self.assertEqual(config.file_format, "1.0")
+        with self.assertNoLogs(
+            "opentelemetry.configuration.file._loader", level="WARNING"
+        ):
+            config = self._load(self._SUPPORTED)
+        self.assertEqual(config.file_format, self._SUPPORTED)
 
     def test_pre_release_meta_tag_is_accepted(self):
-        # The meta tag is stripped; "1.0-rc.2" is treated as 1.0.
-        config = self._load("1.0-rc.2")
-        self.assertEqual(config.file_format, "1.0-rc.2")
+        # The meta tag is stripped, so the version is read as the supported one.
+        version = f"{self._SUPPORTED}-rc.2"
+        config = self._load(version)
+        self.assertEqual(config.file_format, version)
+
+    @unittest.skipIf(
+        _SUPPORTED_SCHEMA_MINOR == 0,
+        "No older minor version to validate against",
+    )
+    def test_older_minor_is_accepted(self):
+        version = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR - 1}"
+        with self.assertNoLogs(
+            "opentelemetry.configuration.file._loader", level="WARNING"
+        ):
+            config = self._load(version)
+        self.assertEqual(config.file_format, version)
 
     def test_newer_minor_is_accepted_with_warning(self):
+        version = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR + 1}"
         with self.assertLogs(
             "opentelemetry.configuration.file._loader", level="WARNING"
         ) as logs:
-            config = self._load("1.1")
-        self.assertEqual(config.file_format, "1.1")
+            config = self._load(version)
+        self.assertEqual(config.file_format, version)
         self.assertTrue(
             any("newer minor version" in message for message in logs.output)
         )
 
     def test_unsupported_major_is_rejected(self):
-        for version in ("2.0", "0.4"):
+        versions = ["0.4", f"{_SUPPORTED_SCHEMA_MAJOR + 1}.0"]
+        for version in versions:
             with self.subTest(version=version):
                 with self.assertRaises(ConfigurationError) as ctx:
                     self._load(version)

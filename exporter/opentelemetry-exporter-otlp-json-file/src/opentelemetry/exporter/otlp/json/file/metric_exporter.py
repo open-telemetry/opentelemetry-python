@@ -5,7 +5,7 @@ import logging
 import os
 from typing import IO, Any, overload
 
-from opentelemetry.exporter.otlp.json.common._internal import (
+from opentelemetry.exporter.otlp.common._aggregation import (
     _get_aggregation,
     _get_temporality,
 )
