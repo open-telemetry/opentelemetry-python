@@ -3,9 +3,9 @@
 
 import inspect
 import unittest
-from dataclasses import dataclass
+from dataclasses import dataclass, field, fields
 from types import SimpleNamespace
-from typing import Any, ClassVar
+from typing import Any, ClassVar, get_origin, get_type_hints
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.configuration._common import (
@@ -301,7 +301,9 @@ class TestAdditionalPropertiesSupport(unittest.TestCase):
         class _SampleConfig:
             known_field: dict | None = None
             another_field: str | None = None
-            additional_properties: ClassVar[dict[str, Any]]
+            additional_properties: dict[str, dict[str, Any] | None] = field(
+                default_factory=dict
+            )
 
         self.cls = _SampleConfig
 
@@ -359,6 +361,24 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
         )
         self.assertIn("_test_plugin_key", obj.additional_properties)
 
+    def test_additional_properties_is_instance_dataclass_field(self):
+        field_names = {field.name for field in fields(Sampler)}
+        self.assertIn("additional_properties", field_names)
+
+        type_hints = get_type_hints(Sampler)
+        self.assertIsNot(
+            get_origin(type_hints["additional_properties"]),
+            ClassVar,
+        )
+
+    def test_additional_properties_default_is_independent(self):
+        first = Sampler()
+        second = Sampler()
+
+        first.additional_properties["custom"] = {}
+
+        self.assertEqual(second.additional_properties, {})
+
     def test_sampler(self):
         self._assert_supports_additional_properties(Sampler)
 
@@ -387,7 +407,9 @@ class TestResolveComponent(unittest.TestCase):
         class _Config:
             builtin_a: dict | None = None
             builtin_b: str | None = None
-            additional_properties: ClassVar[dict[str, Any]]
+            additional_properties: dict[str, dict[str, Any] | None] = field(
+                default_factory=dict
+            )
 
         self.cls = _Config
         self.registry = {
