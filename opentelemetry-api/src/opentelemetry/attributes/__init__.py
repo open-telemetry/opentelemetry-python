@@ -34,6 +34,10 @@ def _type_name(t):
 
 _logger = logging.getLogger(__name__)
 
+# Sentinel returned by _clean_extended_attribute to signal invalid input,
+# distinguishing it from a valid AnyValue(None).
+_INVALID_ATTRIBUTE = object()
+
 
 # pylint: disable=too-many-return-statements
 # pylint: disable=too-many-branches
@@ -214,7 +218,7 @@ def _clean_extended_attribute(
 ) -> types.AnyValue:
     """Checks if attribute value is valid and cleans it if required.
 
-    The function returns the cleaned value or None if the value is not valid.
+    Returns the cleaned value, or _INVALID_ATTRIBUTE if the input is invalid.
 
     An attribute value is valid if it is an AnyValue.
     An attribute needs cleansing if:
@@ -223,13 +227,13 @@ def _clean_extended_attribute(
 
     if not (key and isinstance(key, str)):
         _logger.warning("invalid key `%s`. must be non-empty string.", key)
-        return None
+        return _INVALID_ATTRIBUTE
 
     try:
         return _clean_extended_attribute_value(value, max_len=max_len)
     except TypeError as exception:
         _logger.warning("Attribute %s: %s", key, exception)
-        return None
+        return _INVALID_ATTRIBUTE
 
 
 class BoundedAttributes(MutableMapping):  # type: ignore
@@ -283,6 +287,10 @@ class BoundedAttributes(MutableMapping):  # type: ignore
             return
         if self._extended_attributes:
             value = _clean_extended_attribute(key, value, self.max_value_len)
+            if value is _INVALID_ATTRIBUTE:
+                with self._lock:
+                    self.dropped += 1
+                return
         else:
             value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
             if value is None:
@@ -298,15 +306,20 @@ class BoundedAttributes(MutableMapping):  # type: ignore
                 self.dropped += len(attributes)
             return
         cleaned = []
+        dropped = 0
         for key, value in attributes.items():
             if self._extended_attributes:
                 cv = _clean_extended_attribute(key, value, self.max_value_len)
+                if cv is _INVALID_ATTRIBUTE:
+                    dropped += 1
+                    continue
             else:
                 cv = _clean_attribute(key, value, self.max_value_len)  # type: ignore
                 if cv is None:
                     continue
             cleaned.append((key, cv))
         with self._lock:
+            self.dropped += dropped
             for key, cv in cleaned:
                 self._setitem_locked(key, cv)
 
