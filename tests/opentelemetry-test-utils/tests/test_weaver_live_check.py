@@ -10,6 +10,7 @@ Requires the `weaver` binary on PATH:
 import os
 import shutil
 import unittest
+from unittest.mock import Mock, patch
 
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -33,12 +34,68 @@ _TESTDATA_DIR = os.path.join(os.path.dirname(__file__), "testdata")
 _REGISTRY_DIR = os.path.join(_TESTDATA_DIR, "registry")
 
 
+class _Process:
+    def __init__(self, poll_results):
+        self._poll_results = iter(poll_results)
+        self.returncode = None
+
+    def poll(self):
+        try:
+            result = next(self._poll_results)
+        except StopIteration:
+            result = self.returncode
+        if result is not None:
+            self.returncode = result
+        return result
+
+
+def _make_weaver_for_wait(process):
+    weaver = object.__new__(WeaverLiveCheck)
+    weaver._admin_port = 12345
+    weaver._process = process
+    weaver._startup_timeout = 5.0
+    return weaver
+
+
 def _make_provider(otlp_endpoint: str) -> TracerProvider:
     resource = Resource.create({SERVICE_NAME: "test-service"})
     exporter = OTLPSpanExporter(endpoint=otlp_endpoint, insecure=True)
     provider = TracerProvider(resource=resource)
     provider.add_span_processor(BatchSpanProcessor(exporter))
     return provider
+
+
+class TestWeaverLiveCheckReadiness(unittest.TestCase):
+    @patch("opentelemetry.test.weaver_live_check.time.sleep")
+    @patch("opentelemetry.test.weaver_live_check.Session")
+    def test_wait_for_ready_tolerates_delayed_health(self, session_cls, _):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        session = session_cls.return_value
+        session.get.side_effect = [
+            ConnectionError("refused"),
+            ConnectionError("refused"),
+            response,
+        ]
+
+        weaver = _make_weaver_for_wait(_Process([None, None, None]))
+
+        weaver._wait_for_ready()
+
+        self.assertEqual(session.get.call_count, 3)
+
+    @patch("opentelemetry.test.weaver_live_check.time.sleep")
+    @patch("opentelemetry.test.weaver_live_check.Session")
+    def test_wait_for_ready_raises_when_process_exits(self, session_cls, _):
+        session = session_cls.return_value
+        session.get.side_effect = ConnectionError("refused")
+        weaver = _make_weaver_for_wait(_Process([None, 2]))
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "WeaverLiveCheck process exited unexpectedly \\(code 2\\)",
+        ):
+            weaver._wait_for_ready()
 
 
 @unittest.skipUnless(

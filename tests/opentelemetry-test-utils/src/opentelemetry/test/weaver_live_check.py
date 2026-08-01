@@ -9,14 +9,13 @@ import shutil
 import socket
 import subprocess
 import tempfile
+import time
 from collections import defaultdict
 from collections.abc import Sequence
 from itertools import chain
 from typing import Any
 
 from requests import Session, post
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 from opentelemetry.semconv.schemas import Schemas
 
@@ -244,6 +243,7 @@ class WeaverLiveCheck:
         schema_version: str | None = None,
         policies_dir: str | None = None,
         inactivity_timeout: int = 30,
+        startup_timeout: float = 30.0,
         otlp_port: int = 0,
         admin_port: int = 0,
         extra_args: Sequence[str] | None = None,
@@ -269,6 +269,7 @@ class WeaverLiveCheck:
         self._process: subprocess.Popen[bytes] | None = None
         self._stdout_path: str | None = None
         self._stderr_path: str | None = None
+        self._startup_timeout = startup_timeout
 
         command = [
             weaver_bin,
@@ -337,29 +338,29 @@ class WeaverLiveCheck:
         return self
 
     def _wait_for_ready(self) -> None:
-        retry = Retry(
-            total=10,
-            backoff_factor=1,
-            backoff_max=1,
-            # Any non-2xx response from /health means weaver isn't ready yet.
-            status_forcelist=list(range(300, 600)),
-            raise_on_status=True,
-            allowed_methods=["GET"],
-        )
+        deadline = time.monotonic() + self._startup_timeout
+        health_url = f"http://localhost:{self._admin_port}/health"
         session = Session()
-        session.mount("http://", HTTPAdapter(max_retries=retry))
-        try:
-            session.get(
-                f"http://localhost:{self._admin_port}/health", timeout=5
-            )
-        except Exception as exc:  # pylint: disable=broad-except
+        last_error: Exception | None = None
+        while time.monotonic() < deadline:
             if self._process is not None and self._process.poll() is not None:
                 raise RuntimeError(
                     f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
-                ) from exc
-            raise TimeoutError(
-                "WeaverLiveCheck did not become ready in time"
-            ) from exc
+                ) from last_error
+            try:
+                response = session.get(health_url, timeout=1)
+                response.raise_for_status()
+                return
+            except Exception as exc:  # pylint: disable=broad-except
+                last_error = exc
+            time.sleep(0.2)
+        if self._process is not None and self._process.poll() is not None:
+            raise RuntimeError(
+                f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
+            ) from last_error
+        raise TimeoutError(
+            "WeaverLiveCheck did not become ready in time"
+        ) from last_error
 
     @property
     def otlp_endpoint(self) -> str:
