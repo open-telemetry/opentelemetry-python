@@ -217,8 +217,8 @@ class TestBatchProcessor:
         assert weak_ref() is None
 
     @unittest.skipUnless(
-        hasattr(os, "fork"),
-        "needs *nix",
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "needs fork and register_at_fork",
     )
     def test_garbage_collected_processor_does_not_crash_on_fork(
         self, batch_processor_class, telemetry
