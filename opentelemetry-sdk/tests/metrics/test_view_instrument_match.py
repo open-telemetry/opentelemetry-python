@@ -10,6 +10,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.context import Context
+from opentelemetry.metrics._internal.instrument import _MetricsAdvisory
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
@@ -24,7 +25,15 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
     ExemplarReservoirBuilder,
     SimpleFixedSizeExemplarReservoir,
 )
-from opentelemetry.sdk.metrics._internal.instrument import _Counter, _Histogram
+from opentelemetry.sdk.metrics._internal.instrument import (
+    _Counter,
+    _Gauge,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
+)
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
@@ -209,6 +218,98 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertIsInstance(
             view_instrument_match._attributes_aggregation[frozenset({})],
             _DropAggregation,
+        )
+
+    def test_attributes_advisory(self):
+        for instrument_class in (
+            _Counter,
+            _UpDownCounter,
+            _Histogram,
+            _Gauge,
+            _ObservableCounter,
+            _ObservableUpDownCounter,
+            _ObservableGauge,
+        ):
+            for view_attribute_keys, advisory_attributes, expected_keys in (
+                (None, {"a"}, {("a", 1)}),
+                (None, None, {("a", 1), ("b", 2)}),
+                (None, (), ()),
+                ({"b"}, {"a"}, {("b", 2)}),
+                (set(), {"a"}, set()),
+            ):
+                with self.subTest(
+                    instrument_class=instrument_class,
+                    view_attribute_keys=view_attribute_keys,
+                    advisory_attributes=advisory_attributes,
+                ):
+                    instrument = instrument_class(
+                        "instrument",
+                        self.mock_instrumentation_scope,
+                        Mock(),
+                        _advisory=_MetricsAdvisory(
+                            attributes=None
+                            if advisory_attributes is None
+                            else frozenset(advisory_attributes)
+                        ),
+                    )
+                    view_instrument_match = _ViewInstrumentMatch(
+                        view=View(
+                            instrument_name="instrument",
+                            name="name",
+                            aggregation=Mock(),
+                            attribute_keys=view_attribute_keys,
+                        ),
+                        instrument=instrument,
+                        instrument_class_aggregation=MagicMock(
+                            **{
+                                "__getitem__.return_value": DefaultAggregation()
+                            }
+                        ),
+                    )
+
+                    view_instrument_match.consume_measurement(
+                        Measurement(
+                            value=0,
+                            time_unix_nano=time_ns(),
+                            instrument=instrument,
+                            context=Context(),
+                            attributes={"a": 1, "b": 2},
+                        )
+                    )
+
+                    self.assertEqual(
+                        list(view_instrument_match._attributes_aggregation),
+                        [frozenset(expected_keys)],
+                    )
+
+    def test_attributes_advisory_missing(self):
+        instrument = Mock(name="instrument")
+        instrument.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument",
+                name="name",
+                aggregation=Mock(),
+            ),
+            instrument=instrument,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                context=Context(),
+                attributes={"a": 1, "b": 2},
+            )
+        )
+
+        self.assertEqual(
+            list(view_instrument_match._attributes_aggregation),
+            [frozenset([("a", 1), ("b", 2)])],
         )
 
     def test_collect(self):

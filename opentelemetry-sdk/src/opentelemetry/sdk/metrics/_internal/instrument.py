@@ -29,7 +29,7 @@ from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import (
     CallbackOptions,
-    _MetricsHistogramAdvisory,
+    _MetricsAdvisory,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 
@@ -68,6 +68,7 @@ class _Synchronous(_Instrument, Synchronous):
         unit: str = "",
         description: str = "",
         *,
+        _advisory: _MetricsAdvisory | None = None,
         _meter_config: _ProxyMeterConfig | None = None,
     ):
         # pylint: disable=no-member
@@ -90,6 +91,7 @@ class _Synchronous(_Instrument, Synchronous):
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
+        self._advisory = _advisory or _MetricsAdvisory()
         self._meter_config = _meter_config
         super().__init__(name, unit=unit, description=description)
 
@@ -107,6 +109,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         unit: str = "",
         description: str = "",
         *,
+        _advisory: _MetricsAdvisory | None = None,
         _meter_config: _ProxyMeterConfig | None = None,
     ):
         # pylint: disable=no-member
@@ -129,6 +132,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
+        self._advisory = _advisory or _MetricsAdvisory()
         self._meter_config = _meter_config
         super().__init__(name, callbacks, unit=unit, description=description)
 
@@ -278,29 +282,6 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 
 class Histogram(_Synchronous, APIHistogram):
-    def __init__(
-        self,
-        name: str,
-        instrumentation_scope: InstrumentationScope,
-        measurement_consumer: MeasurementConsumer,
-        unit: str = "",
-        description: str = "",
-        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
-        *,
-        _meter_config: _ProxyMeterConfig | None = None,
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            instrumentation_scope=instrumentation_scope,
-            measurement_consumer=measurement_consumer,
-            _meter_config=_meter_config,
-        )
-        self._advisory = _MetricsHistogramAdvisory(
-            explicit_bucket_boundaries=explicit_bucket_boundaries_advisory
-        )
-
     def __new__(cls, *args, **kwargs):
         if cls is Histogram:
             raise TypeError("Histogram must be instantiated via a meter.")

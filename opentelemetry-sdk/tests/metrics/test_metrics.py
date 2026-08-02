@@ -774,7 +774,7 @@ class TestMeter(TestCase):
         self.assertEqual(histogram.name, "name")
         self.assertEqual(
             histogram._advisory.explicit_bucket_boundaries,
-            [0.0, 1.0, 2],
+            (0.0, 1.0, 2),
         )
 
     def test_create_histogram_advisory_validation(self):
