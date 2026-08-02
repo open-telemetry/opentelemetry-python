@@ -137,6 +137,14 @@ class Logger(ABC):
         self._schema_url = schema_url
         self._attributes = attributes
 
+    def enabled(
+        self,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return True
+
     @overload
     def emit(
         self,
@@ -219,6 +227,14 @@ class NoOpLogger(Logger):
     ) -> None:
         pass
 
+    def enabled(
+        self,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return False
+
 
 class ProxyLogger(Logger):
     def __init__(  # pylint: disable=super-init-not-called
@@ -299,6 +315,14 @@ class ProxyLogger(Logger):
                 event_name=event_name,
                 exception=exception,
             )
+
+    def enabled(
+        self,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return self._logger.enabled(context, severity_number, event_name)
 
 
 class LoggerProvider(ABC):
