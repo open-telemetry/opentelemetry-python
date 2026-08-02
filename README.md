@@ -47,6 +47,13 @@ The online documentation is available at https://opentelemetry-python.readthedoc
 To access the latest version of the documentation, see
 https://opentelemetry-python.readthedocs.io/en/latest/.
 
+## Troubleshooting
+
+If OTLP trace export fails with `StatusCode.DEADLINE_EXCEEDED`, verify that the
+configured collector endpoint is reachable from the application and that the
+exporter protocol matches the collector receiver. OTLP/gRPC exporters use port
+`4317` by default, while OTLP/HTTP exporters use port `4318` by default.
+
 ## Install
 
 This repository includes multiple installable packages. The `opentelemetry-api`
