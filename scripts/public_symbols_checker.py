@@ -3,18 +3,33 @@
 
 from collections import defaultdict
 from difflib import unified_diff
+from os import environ
 from pathlib import Path
 from re import match
 from sys import exit
 
 from git import Repo
 from git.db import GitDB
+from git.exc import BadName
 
 repo = Repo(__file__, odbt=GitDB, search_parent_directories=True)
 
 
 added_symbols = defaultdict(list)
 removed_symbols = defaultdict(list)
+
+
+def _get_comparison_commit(repo_):
+    base_ref = environ.get("GITHUB_BASE_REF")
+
+    if base_ref:
+        for ref in (f"origin/{base_ref}", base_ref):
+            try:
+                return repo_.commit(ref)
+            except (BadName, ValueError):
+                pass
+
+    return repo_.commit("main")
 
 
 def get_symbols(change_type, diff_lines_getter, prefix):
@@ -24,7 +39,7 @@ def get_symbols(change_type, diff_lines_getter, prefix):
         file_path_symbols = added_symbols
 
     for diff_lines in (
-        repo.commit("main")
+        _get_comparison_commit(repo)
         .diff(repo.head.commit)
         .iter_change_type(change_type)
     ):
@@ -82,12 +97,6 @@ def m_diff_lines_getter(diff_lines):
     )
 
 
-get_symbols("A", a_diff_lines_getter, r"")
-get_symbols("D", d_diff_lines_getter, r"")
-get_symbols("M", m_diff_lines_getter, r"\+")
-get_symbols("M", m_diff_lines_getter, r"\-")
-
-
 def remove_common_symbols():
     # For each file, we remove the symbols that are added and removed in the
     # same commit.
@@ -113,39 +122,49 @@ def remove_common_symbols():
             del removed_symbols[file_path]
 
 
-# If a symbol is added and removed in the same commit, we consider it as not
-# added or removed.
-remove_common_symbols()
+def main():
+    get_symbols("A", a_diff_lines_getter, r"")
+    get_symbols("D", d_diff_lines_getter, r"")
+    get_symbols("M", m_diff_lines_getter, r"\+")
+    get_symbols("M", m_diff_lines_getter, r"\-")
 
-if added_symbols or removed_symbols:
-    print("The code in this branch adds the following public symbols:")
-    print()
-    for file_path_, symbols_ in added_symbols.items():
-        print(f"- {file_path_}")
-        for symbol_ in symbols_:
-            print(f"\t{symbol_}")
+    # If a symbol is added and removed in the same commit, we consider it as not
+    # added or removed.
+    remove_common_symbols()
+
+    if added_symbols or removed_symbols:
+        print("The code in this branch adds the following public symbols:")
         print()
+        for file_path_, symbols_ in added_symbols.items():
+            print(f"- {file_path_}")
+            for symbol_ in symbols_:
+                print(f"\t{symbol_}")
+            print()
 
-    print(
-        "Please make sure that all of them are strictly necessary, if not, "
-        "please consider prefixing them with an underscore to make them "
-        'private. After that, please label this PR with "Approve Public API '
-        'check".'
-    )
-    print()
-    print("The code in this branch removes the following public symbols:")
-    print()
-    for file_path_, symbols_ in removed_symbols.items():
-        print(f"- {file_path_}")
-        for symbol_ in symbols_:
-            print(f"\t{symbol_}")
+        print(
+            "Please make sure that all of them are strictly necessary, if not, "
+            "please consider prefixing them with an underscore to make them "
+            'private. After that, please label this PR with "Approve Public API '
+            'check".'
+        )
         print()
+        print("The code in this branch removes the following public symbols:")
+        print()
+        for file_path_, symbols_ in removed_symbols.items():
+            print(f"- {file_path_}")
+            for symbol_ in symbols_:
+                print(f"\t{symbol_}")
+            print()
 
-    print(
-        "Please make sure no public symbols are removed, if so, please "
-        "consider deprecating them instead. After that, please label this "
-        'PR with "Approve Public API check".'
-    )
-    exit(1)
-else:
-    print("The code in this branch will not add any public symbols")
+        print(
+            "Please make sure no public symbols are removed, if so, please "
+            "consider deprecating them instead. After that, please label this "
+            'PR with "Approve Public API check".'
+        )
+        exit(1)
+    else:
+        print("The code in this branch will not add any public symbols")
+
+
+if __name__ == "__main__":
+    main()
