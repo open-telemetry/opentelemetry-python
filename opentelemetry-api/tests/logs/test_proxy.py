@@ -7,6 +7,7 @@ from unittest.mock import Mock
 
 import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
+from opentelemetry.context import get_current
 from opentelemetry.test.globals_test import LoggingGlobalsTest
 from opentelemetry.util.types import _ExtendedAttributes
 
@@ -74,3 +75,18 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         logger.emit(record)
 
         logger._real_logger.emit.assert_called_once_with(record)
+
+    def test_proxy_logger_forwards_enabled(self):
+        logger = _logs_internal.ProxyLogger("proxy-test")
+        logger._real_logger = Mock(spec=LoggerTest("proxy-test"))
+        context = get_current()
+
+        self.assertIsNotNone(logger._real_logger)
+        logger.enabled(context, _logs.SeverityNumber.WARN, "event_name")
+
+        logger._real_logger.enabled.assert_called_once_with(
+            context, _logs.SeverityNumber.WARN, "event_name"
+        )
+
+    def test_noop_logger_is_not_enabled(self):
+        self.assertFalse(_logs.NoOpLogger("noop-test").enabled())
