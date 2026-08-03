@@ -16,10 +16,10 @@ jobs:
       # NOTE: do NOT add an actions/checkout step here. This workflow uses
       # pull_request_target (which has access to secrets) but must never
       # execute code from the fork branch. See PR #4955 for context.
-      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_PYTHON_APP_ID }}
+          client-id: ${{ vars.OTELBOT_PYTHON_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PYTHON_PRIVATE_KEY }}
 
       - uses: actions/add-to-project@v1.0.2

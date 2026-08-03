@@ -21,7 +21,9 @@ Which fields of the configuration schema the Python SDK actually applies at runt
    tox -e generate-config-from-jsonschema
    ```
 
-3. Update any version string references in tests and source:
+3. Bump `_SUPPORTED_SCHEMA_MAJOR` / `_SUPPORTED_SCHEMA_MINOR` in `file/_loader.py` to the version of the vendored schema.
+
+4. Update any version string references in tests and source:
 
    ```sh
    grep -r "OLD_VERSION" opentelemetry-configuration/

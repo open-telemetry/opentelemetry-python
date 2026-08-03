@@ -74,5 +74,5 @@ class FileLogExporter(LogRecordExporter):
         self._exporter.shutdown()
 
     # pylint: disable-next=no-self-use
-    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
         return True

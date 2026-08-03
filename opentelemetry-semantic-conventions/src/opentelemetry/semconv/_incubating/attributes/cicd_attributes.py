@@ -62,22 +62,22 @@ The type of the task within a pipeline.
 
 CICD_SYSTEM_COMPONENT: Final = "cicd.system.component"
 """
-The name of a component of the CICD system.
+The name of a component of the CI/CD system.
 """
 
 CICD_WORKER_ID: Final = "cicd.worker.id"
 """
-The unique identifier of a worker within a CICD system.
+The unique identifier of a worker within a CI/CD system.
 """
 
 CICD_WORKER_NAME: Final = "cicd.worker.name"
 """
-The name of a worker within a CICD system.
+The name of a worker within a CI/CD system.
 """
 
 CICD_WORKER_STATE: Final = "cicd.worker.state"
 """
-The state of a CICD worker / agent.
+The state of a CI/CD worker / agent.
 """
 
 CICD_WORKER_URL_FULL: Final = "cicd.worker.url.full"
@@ -101,7 +101,7 @@ class CicdPipelineResultValues(Enum):
     FAILURE = "failure"
     """The pipeline run did not finish successfully, eg. due to a compile error or a failing test. Such failures are usually detected by non-zero exit codes of the tools executed in the pipeline run."""
     ERROR = "error"
-    """The pipeline run failed due to an error in the CICD system, eg. due to the worker being killed."""
+    """The pipeline run failed due to an error in the CI/CD system, eg. due to the worker being killed."""
     TIMEOUT = "timeout"
     """A timeout caused the pipeline run to be interrupted."""
     CANCELLATION = "cancellation"
@@ -125,7 +125,7 @@ class CicdPipelineTaskRunResultValues(Enum):
     FAILURE = "failure"
     """The task run did not finish successfully, eg. due to a compile error or a failing test. Such failures are usually detected by non-zero exit codes of the tools executed in the task run."""
     ERROR = "error"
-    """The task run failed due to an error in the CICD system, eg. due to the worker being killed."""
+    """The task run failed due to an error in the CI/CD system, eg. due to the worker being killed."""
     TIMEOUT = "timeout"
     """A timeout caused the task run to be interrupted."""
     CANCELLATION = "cancellation"
@@ -145,8 +145,8 @@ class CicdPipelineTaskTypeValues(Enum):
 
 class CicdWorkerStateValues(Enum):
     AVAILABLE = "available"
-    """The worker is not performing work for the CICD system. It is available to the CICD system to perform work on (online / idle)."""
+    """The worker is not performing work for the CI/CD system. It is available to the CI/CD system to perform work on (online / idle)."""
     BUSY = "busy"
-    """The worker is performing work for the CICD system."""
+    """The worker is performing work for the CI/CD system."""
     OFFLINE = "offline"
-    """The worker is not available to the CICD system (disconnected / down)."""
+    """The worker is not available to the CI/CD system (disconnected / down)."""
