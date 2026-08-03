@@ -27,7 +27,7 @@ from opentelemetry.exporter.otlp._proto.http import (
 from opentelemetry.exporter.otlp._proto.http._common import (
     _build_ssl_context,
     _is_retryable,
-    _post,
+    _resolve_client,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import ReadableLogRecord
@@ -37,6 +37,7 @@ from opentelemetry.sdk._logs.export import (
 )
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_CLIENT_KEY,
@@ -85,11 +86,6 @@ class OTLPLogExporter(LogRecordExporter):
         *,
         meter_provider: MeterProvider | None = None,
     ):
-        if session is not None:
-            _logger.warning(
-                "session is not supported by the pure-Python OTLP HTTP "
-                "exporter and will be ignored"
-            )
         self._shutdown_is_occuring = Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
@@ -132,6 +128,11 @@ class OTLPLogExporter(LogRecordExporter):
         self._ssl_context = _build_ssl_context(
             self._certificate_file, self._client_cert
         )
+        self._client = _resolve_client(
+            session,
+            _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
+            self._ssl_context,
+        )
         self._shutdown = False
 
         self._metrics = create_exporter_metrics(
@@ -157,20 +158,18 @@ class OTLPLogExporter(LogRecordExporter):
         if timeout_sec is None:
             timeout_sec = self._timeout
         try:
-            return _post(
+            return self._client(
                 self._endpoint,
                 data,
                 self._request_headers,
                 timeout_sec,
-                self._ssl_context,
             )
         except URLError:
-            return _post(
+            return self._client(
                 self._endpoint,
                 data,
                 self._request_headers,
                 timeout_sec,
-                self._ssl_context,
             )
 
     def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:

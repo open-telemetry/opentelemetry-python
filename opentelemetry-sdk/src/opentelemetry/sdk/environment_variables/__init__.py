@@ -402,15 +402,25 @@ _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER = (
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
 
-The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER` provides `requests.Session` for the HTTP OTLP Log exporter.
-Entry point providers should implement the following:
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER` provides a `urllib.request.OpenerDirector` for the HTTP OTLP Log exporter.
+Entry point providers should return a :class:`urllib.request.OpenerDirector`
+(for example one built with :func:`urllib.request.build_opener`), which the
+exporter uses to send OTLP/HTTP requests:
 
 .. code-block:: python
 
-    import requests
+    from urllib.request import HTTPSHandler, build_opener
 
     # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
-    def request_session_provder() -> requests.Session:
+    def opener_provider() -> "urllib.request.OpenerDirector":
+        return build_opener(HTTPSHandler())
+
+.. deprecated::
+    Returning a ``requests.Session`` (or passing one via the exporter's
+    ``session`` argument) is still accepted for backwards compatibility but
+    is deprecated and will be removed in a future release; it now emits a
+    ``DeprecationWarning``. ``requests`` is no longer a dependency of the
+    exporter.
 
 Note: This environment variable is experimental and subject to change.
 """
@@ -420,15 +430,25 @@ _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER = (
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
 
-The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER` provides `requests.Session` for all HTTP OTLP exporters.
-Entry point providers should implement the following:
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER` provides a `urllib.request.OpenerDirector` for all HTTP OTLP exporters.
+Entry point providers should return a :class:`urllib.request.OpenerDirector`
+(for example one built with :func:`urllib.request.build_opener`), which the
+exporter uses to send OTLP/HTTP requests:
 
 .. code-block:: python
 
-    import requests
+    from urllib.request import HTTPSHandler, build_opener
 
     # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
-    def request_session_provder() -> requests.Session:
+    def opener_provider() -> "urllib.request.OpenerDirector":
+        return build_opener(HTTPSHandler())
+
+.. deprecated::
+    Returning a ``requests.Session`` (or passing one via the exporter's
+    ``session`` argument) is still accepted for backwards compatibility but
+    is deprecated and will be removed in a future release; it now emits a
+    ``DeprecationWarning``. ``requests`` is no longer a dependency of the
+    exporter.
 
 Note: This environment variable is experimental and subject to change.
 """
@@ -456,15 +476,25 @@ _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER = (
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
 
-The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER` provides `requests.Session` to the HTTP OTLP Span exporter.
-Entry point providers should implement the following:
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER` provides a `urllib.request.OpenerDirector` to the HTTP OTLP Span exporter.
+Entry point providers should return a :class:`urllib.request.OpenerDirector`
+(for example one built with :func:`urllib.request.build_opener`), which the
+exporter uses to send OTLP/HTTP requests:
 
 .. code-block:: python
 
-    import requests
+    from urllib.request import HTTPSHandler, build_opener
 
     # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
-    def request_session_provder() -> requests.Session:
+    def opener_provider() -> "urllib.request.OpenerDirector":
+        return build_opener(HTTPSHandler())
+
+.. deprecated::
+    Returning a ``requests.Session`` (or passing one via the exporter's
+    ``session`` argument) is still accepted for backwards compatibility but
+    is deprecated and will be removed in a future release; it now emits a
+    ``DeprecationWarning``. ``requests`` is no longer a dependency of the
+    exporter.
 
 Note: This environment variable is experimental and subject to change.
 """
@@ -492,15 +522,25 @@ _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER = (
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER
 
-The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER` provides `requests.Session` to the HTTP OTLP Metric exporter.
-Entry point providers should implement the following:
+The :envvar:`OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER` provides a `urllib.request.OpenerDirector` to the HTTP OTLP Metric exporter.
+Entry point providers should return a :class:`urllib.request.OpenerDirector`
+(for example one built with :func:`urllib.request.build_opener`), which the
+exporter uses to send OTLP/HTTP requests:
 
 .. code-block:: python
 
-    import requests
+    from urllib.request import HTTPSHandler, build_opener
 
     # Add a reference to this function under the `opentelemetry_otlp_credential_provider` entry point.
-    def request_session_provder() -> requests.Session:
+    def opener_provider() -> "urllib.request.OpenerDirector":
+        return build_opener(HTTPSHandler())
+
+.. deprecated::
+    Returning a ``requests.Session`` (or passing one via the exporter's
+    ``session`` argument) is still accepted for backwards compatibility but
+    is deprecated and will be removed in a future release; it now emits a
+    ``DeprecationWarning``. ``requests`` is no longer a dependency of the
+    exporter.
 
 Note: This environment variable is experimental and subject to change.
 """
