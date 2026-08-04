@@ -46,7 +46,7 @@ except ImportError as exc:
 # warning. See
 # https://github.com/open-telemetry/opentelemetry-configuration/blob/main/VERSIONING.md
 _SUPPORTED_SCHEMA_MAJOR = 1
-_SUPPORTED_SCHEMA_MINOR = 0
+_SUPPORTED_SCHEMA_MINOR = 1
 
 _schema_cache: list[dict] = []
 
@@ -82,7 +82,6 @@ def load_config_file(
 
     Raises:
         ConfigurationError: If file cannot be read, parsed, or validated.
-        EnvSubstitutionError: If required environment variable is missing.
 
     Examples:
         >>> config = load_config_file("otel-config.yaml")

@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from itertools import chain, count, islice
 from time import time_ns
 from unittest import TestCase
 
@@ -16,6 +17,7 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
     SimpleFixedSizeExemplarReservoir,
 )
 from opentelemetry.sdk.metrics._internal.view import _default_reservoir_factory
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import SpanContext, TraceFlags
 
 
@@ -159,3 +161,52 @@ class TestExemplarReservoirFactory(TestCase):
         self.assertEqual(
             exemplar_reservoir, AlignedHistogramBucketExemplarReservoir
         )
+
+
+class TestExemplarReservoirConcurrency(ConcurrencyTestBase):
+    """Every reservoir method must be safe to call concurrently: measurements
+    are offered from application threads while a metric reader collects from
+    its own thread.
+    """
+
+    NUM_THREADS = 50
+    ITERATIONS = 200
+
+    def _run_concurrently(self, reservoir):
+        threads = count()
+        values = count(1)
+
+        def worker():
+            if next(threads) % 2:
+                return [
+                    exemplar
+                    for _ in range(self.ITERATIONS)
+                    for exemplar in reservoir.collect({})
+                ]
+
+            for value in islice(values, self.ITERATIONS):
+                reservoir.offer(value, value, {"v": value}, Context())
+            return []
+
+        collected = self.run_with_many_threads(worker, self.NUM_THREADS)
+        return list(chain(*collected, reservoir.collect({})))
+
+    def test_offer_and_collect_are_mutually_exclusive(self):
+        for name, build_reservoir in (
+            (
+                "simple_fixed_size",
+                lambda: SimpleFixedSizeExemplarReservoir(size=4),
+            ),
+            (
+                "aligned_histogram_bucket",
+                lambda: AlignedHistogramBucketExemplarReservoir(
+                    [10.0, 20.0, 30.0]
+                ),
+            ),
+        ):
+            with self.subTest(reservoir=name):
+                for exemplar in self._run_concurrently(build_reservoir()):
+                    self.assertEqual(exemplar.value, exemplar.time_unix_nano)
+                    self.assertEqual(
+                        exemplar.filtered_attributes, {"v": exemplar.value}
+                    )
