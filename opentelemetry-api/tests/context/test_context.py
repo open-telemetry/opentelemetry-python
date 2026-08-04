@@ -54,9 +54,23 @@ class TestContext(unittest.TestCase):
         self.assertEqual(None, context.get_value("a"))
 
     def test_context_is_immutable(self):
+        ctx = context.get_current()
         with self.assertRaises(ValueError):
-            # ensure a context
-            context.get_current()["test"] = "cant-change-immutable"
+            ctx["test"] = "cant-change-immutable"
+        with self.assertRaises(ValueError):
+            del ctx["test"]
+        with self.assertRaises(ValueError):
+            ctx.pop("test")
+        with self.assertRaises(ValueError):
+            ctx.popitem()
+        with self.assertRaises(ValueError):
+            ctx.clear()
+        with self.assertRaises(ValueError):
+            ctx.update({"test": "cant-change-immutable"})
+        with self.assertRaises(ValueError):
+            ctx.setdefault("test", "cant-change-immutable")
+        with self.assertRaises(ValueError):
+            ctx |= {"test": "cant-change-immutable"}
 
     def test_set_current(self):
         context.attach(context.set_value("a", "yyy"))

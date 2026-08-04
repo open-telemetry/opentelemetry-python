@@ -21,12 +21,11 @@ configuration schema, and applies it globally.
 Installing
 ----------
 
-File configuration relies on optional dependencies (``pyyaml`` and
-``jsonschema``). Install them with the ``file-configuration`` extra:
+Declarative configuration lives in a separate, experimental package:
 
 .. code-block:: sh
 
-    pip install "opentelemetry-sdk[file-configuration]"
+    pip install opentelemetry-configuration
 
 Enabling with an environment variable
 -------------------------------------
@@ -95,6 +94,31 @@ OTLP/HTTP. The source is available :scm_web:`here
                   - name: api-key
                     value: ${OTLP_API_KEY}
 
+Instrumentation
+---------------
+
+The ``instrumentation/development.python`` section activates Python
+instrumentors by their ``opentelemetry_instrumentor`` entry-point name. Set
+``enabled: false`` to suppress an instrumentor without removing its entry, and
+pass any other keys as keyword arguments to ``instrument()``:
+
+.. code-block:: yaml
+
+    instrumentation/development:
+      python:
+        requests:
+          enabled: true
+        urllib3:
+          enabled: true
+          max_spans_per_request: 10
+
+If the instrumentor class declares a ``configuration`` class attribute pointing
+to a dataclass, the options are validated and type-coerced through the same
+pipeline used for SDK component configuration before being forwarded to
+``instrument()``. Instrumentors that are already active (for example because
+``opentelemetry-instrument`` ran before the file was applied) are silently
+skipped.
+
 Environment variable substitution
 ----------------------------------
 
@@ -119,6 +143,13 @@ Behavior notes
   not consulted. Environment variables can still be read indirectly by
   components the file enables (for example resource detectors) and via
   ``${env:VAR}`` substitution.
+* Python-implementation extensions (``OTEL_PYTHON_*`` variables such as
+  ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
+  ``OTEL_PYTHON_TRACER_CONFIGURATOR``) are **not** applied when
+  ``OTEL_CONFIG_FILE`` is set: the env-var initialisation path is skipped
+  entirely. If your app currently relies on one of these and you are
+  migrating to a config file, plan to capture the equivalent behaviour in
+  the file (or in code) instead.
 * Sections omitted from the file leave the corresponding global provider
   unset (a no-op provider), per the specification.
 * Setting ``disabled: true`` at the top level turns the SDK into a no-op.

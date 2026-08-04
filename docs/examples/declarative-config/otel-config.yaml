@@ -32,3 +32,8 @@ logger_provider:
         exporter:
           otlp_http:
             endpoint: http://localhost:4318/v1/logs
+
+instrumentation/development:
+  python:
+    requests:
+      enabled: true

@@ -18,8 +18,16 @@ declarative configuration file (YAML or JSON). When set, the file is the
 sole source for SDK construction. Spec-defined ``OTEL_*`` variables with
 schema equivalents are ignored. Env vars may still be read indirectly by
 components the file enables (e.g. resource detectors) and via
-``${env:VAR}`` substitution inside the file. See the OpenTelemetry
-declarative configuration specification for details.
+``${env:VAR}`` substitution inside the file.
+
+Python-implementation extensions outside the spec (``OTEL_PYTHON_*``
+variables such as ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
+:envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR`) are also bypassed when
+:envvar:`OTEL_CONFIG_FILE` is set, because the env-var initialisation path
+is skipped entirely in favour of the declarative file. Honouring these
+alongside a config file is tracked separately.
+
+See the OpenTelemetry declarative configuration specification for details.
 """
 
 OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
@@ -189,6 +197,25 @@ OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT = (
 
 The :envvar:`OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed length
 span attribute values can have. This takes precedence over :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`.
+"""
+
+OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT = "OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT"
+"""
+.. envvar:: OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT
+
+The :envvar:`OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed log record
+attribute count. This takes precedence over :envvar:`OTEL_ATTRIBUTE_COUNT_LIMIT`.
+"""
+
+OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT = (
+    "OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT"
+)
+"""
+.. envvar:: OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT
+
+The :envvar:`OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed length
+log record attribute values can have. This takes precedence over
+:envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`.
 """
 
 OTEL_SPAN_EVENT_COUNT_LIMIT = "OTEL_SPAN_EVENT_COUNT_LIMIT"

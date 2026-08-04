@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import weakref
 from atexit import register, unregister
 from collections.abc import Callable, Sequence
@@ -51,7 +52,10 @@ from opentelemetry.sdk.metrics._internal.measurement_consumer import (
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import (
+    Resource,
+    _get_process_dependent_resource,
+)
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
@@ -526,6 +530,21 @@ class MeterProvider(APIMeterProvider):
             )
             metric_reader._set_meter_provider(self)
 
+        if hasattr(os, "register_at_fork"):
+            weak_at_fork = weakref.WeakMethod(self._handle_fork)
+
+            def _after_in_child() -> None:
+                if at_fork := weak_at_fork():
+                    at_fork()
+
+            os.register_at_fork(after_in_child=_after_in_child)
+
+    def _handle_fork(self) -> None:
+        self._lock = Lock()
+        self._meter_lock = Lock()
+        type(self)._all_metric_readers_lock = Lock()
+        self._update_resource(_get_process_dependent_resource())
+
     def _set_meter_configurator(
         self, *, meter_configurator: _MeterConfiguratorT
     ):
@@ -542,6 +561,12 @@ class MeterProvider(APIMeterProvider):
                 meter._set_meter_config(
                     self._apply_meter_configurator(instrumentation_scope)
                 )
+
+    def _update_resource(self, resource: Resource) -> None:
+        with self._meter_lock:
+            self._sdk_config.resource = self._sdk_config.resource.merge(
+                resource
+            )
 
     def _apply_meter_configurator(
         self, instrumentation_scope: InstrumentationScope

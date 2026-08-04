@@ -262,7 +262,7 @@ class BoundedAttributes(MutableMapping):  # type: ignore
             MutableMapping[str, types.AnyValue]
             | OrderedDict[str, types.AnyValue]
         ) = {}
-        self._lock = threading.RLock()
+        self._lock = threading.Lock()
         if attributes:
             for key, value in attributes.items():
                 self[key] = value

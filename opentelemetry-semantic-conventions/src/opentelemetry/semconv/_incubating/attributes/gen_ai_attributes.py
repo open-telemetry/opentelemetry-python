@@ -8,22 +8,22 @@ from typing_extensions import deprecated
 
 GEN_AI_AGENT_DESCRIPTION: Final = "gen_ai.agent.description"
 """
-Free-form description of the GenAI agent provided by the application.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_AGENT_ID: Final = "gen_ai.agent.id"
 """
-The unique identifier of the GenAI agent.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_AGENT_NAME: Final = "gen_ai.agent.name"
 """
-Human-readable name of the GenAI agent provided by the application.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_AGENT_VERSION: Final = "gen_ai.agent.version"
 """
-The version of the GenAI agent.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_COMPLETION: Final = "gen_ai.completion"
@@ -33,129 +33,90 @@ Deprecated: Removed, no replacement at this time.
 
 GEN_AI_CONVERSATION_ID: Final = "gen_ai.conversation.id"
 """
-The unique identifier for a conversation (session, thread), used to store and correlate messages within this conversation.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_DATA_SOURCE_ID: Final = "gen_ai.data_source.id"
 """
-The data source identifier.
-Note: Data sources are used by AI agents and RAG applications to store grounding data. A data source may be an external database, object store, document collection, website, or any other storage system used by the GenAI agent or application. The `gen_ai.data_source.id` SHOULD match the identifier used by the GenAI system rather than a name specific to the external storage, such as a database or object store. Semantic conventions referencing `gen_ai.data_source.id` MAY also leverage additional attributes, such as `db.*`, to further identify and describe the data source.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_EMBEDDINGS_DIMENSION_COUNT: Final = "gen_ai.embeddings.dimension.count"
 """
-The number of dimensions the resulting output embeddings should have.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_EVALUATION_EXPLANATION: Final = "gen_ai.evaluation.explanation"
 """
-A free-form explanation for the assigned score provided by the evaluator.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_EVALUATION_NAME: Final = "gen_ai.evaluation.name"
 """
-The name of the evaluation metric used for the GenAI response.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_EVALUATION_SCORE_LABEL: Final = "gen_ai.evaluation.score.label"
 """
-Human readable label for evaluation.
-Note: This attribute provides a human-readable interpretation of the evaluation score produced by an evaluator. For example, a score value of 1 could mean "relevant" in one evaluation system and "not relevant" in another, depending on the scoring range and evaluator. The label SHOULD have low cardinality. Possible values depend on the evaluation metric and evaluator used; implementations SHOULD document the possible values.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_EVALUATION_SCORE_VALUE: Final = "gen_ai.evaluation.score.value"
 """
-The evaluation score returned by the evaluator.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_INPUT_MESSAGES: Final = "gen_ai.input.messages"
 """
-The chat history provided to the model as an input.
-Note: Instrumentations MUST follow [Input messages JSON schema](/docs/gen-ai/gen-ai-input-messages.json).
-When the attribute is recorded on events, it MUST be recorded in structured
-form. When recorded on spans, it MAY be recorded as a JSON string if structured
-format is not supported and SHOULD be recorded in structured form otherwise.
-
-Messages MUST be provided in the order they were sent to the model.
-Instrumentations MAY provide a way for users to filter or truncate
-input messages.
-
-> [!Warning]
-> This attribute is likely to contain sensitive information including user/PII data.
-
-See [Recording content on attributes](/docs/gen-ai/gen-ai-spans.md#recording-content-on-attributes)
-section for more details.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_OPENAI_REQUEST_RESPONSE_FORMAT: Final = (
     "gen_ai.openai.request.response_format"
 )
 """
-Deprecated: Replaced by `gen_ai.output.type`.
+Deprecated: Replaced by `gen_ai.output.type`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_OPENAI_REQUEST_SEED: Final = "gen_ai.openai.request.seed"
 """
-Deprecated: Replaced by `gen_ai.request.seed`.
+Deprecated: Replaced by `gen_ai.request.seed`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_OPENAI_REQUEST_SERVICE_TIER: Final = (
     "gen_ai.openai.request.service_tier"
 )
 """
-Deprecated: Replaced by `openai.request.service_tier`.
+Deprecated: Replaced by `openai.request.service_tier`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_OPENAI_RESPONSE_SERVICE_TIER: Final = (
     "gen_ai.openai.response.service_tier"
 )
 """
-Deprecated: Replaced by `openai.response.service_tier`.
+Deprecated: Replaced by `openai.response.service_tier`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = (
     "gen_ai.openai.response.system_fingerprint"
 )
 """
-Deprecated: Replaced by `openai.response.system_fingerprint`.
+Deprecated: Replaced by `openai.response.system_fingerprint`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_OPERATION_NAME: Final = "gen_ai.operation.name"
 """
-The name of the operation being performed.
-Note: If one of the predefined values applies, but specific system uses a different name it's RECOMMENDED to document it in the semantic conventions for specific GenAI system and use system-specific name in the instrumentation. If a different name is not documented, instrumentation libraries SHOULD use applicable predefined value.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_OUTPUT_MESSAGES: Final = "gen_ai.output.messages"
 """
-Messages returned by the model where each message represents a specific model response (choice, candidate).
-Note: Instrumentations MUST follow [Output messages JSON schema](/docs/gen-ai/gen-ai-output-messages.json)
-
-Each message represents a single output choice/candidate generated by
-the model. Each message corresponds to exactly one generation
-(choice/candidate) and vice versa - one choice cannot be split across
-multiple messages or one message cannot contain parts from multiple choices.
-
-When the attribute is recorded on events, it MUST be recorded in structured
-form. When recorded on spans, it MAY be recorded as a JSON string if structured
-format is not supported and SHOULD be recorded in structured form otherwise.
-
-Instrumentations MAY provide a way for users to filter or truncate
-output messages.
-
-> [!Warning]
-> This attribute is likely to contain sensitive information including user/PII data.
-
-See [Recording content on attributes](/docs/gen-ai/gen-ai-spans.md#recording-content-on-attributes)
-section for more details.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_OUTPUT_TYPE: Final = "gen_ai.output.type"
 """
-Represents the content type requested by the client.
-Note: This attribute SHOULD be used when the client requests output of a specific type. The model may return zero or more outputs of this type.
-This attribute specifies the output modality and not the actual output format. For example, if an image is requested, the actual output could be a URL pointing to an image file.
-Additional output format details may be recorded in the future in the `gen_ai.output.{type}.*` attributes.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_PROMPT: Final = "gen_ai.prompt"
@@ -165,287 +126,205 @@ Deprecated: Removed, no replacement at this time.
 
 GEN_AI_PROMPT_NAME: Final = "gen_ai.prompt.name"
 """
-The name of the prompt that uniquely identifies it.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_PROVIDER_NAME: Final = "gen_ai.provider.name"
 """
-The Generative AI provider as identified by the client or server instrumentation.
-Note: The attribute SHOULD be set based on the instrumentation's best
-knowledge and may differ from the actual model provider.
-
-Multiple providers, including Azure OpenAI, Gemini, and AI hosting platforms
-are accessible using the OpenAI REST API and corresponding client libraries,
-but may proxy or host models from different providers.
-
-The `gen_ai.request.model`, `gen_ai.response.model`, and `server.address`
-attributes may help identify the actual system in use.
-
-The `gen_ai.provider.name` attribute acts as a discriminator that
-identifies the GenAI telemetry format flavor specific to that provider
-within GenAI semantic conventions.
-It SHOULD be set consistently with provider-specific attributes and signals.
-For example, GenAI spans, metrics, and events related to AWS Bedrock
-should have the `gen_ai.provider.name` set to `aws.bedrock` and include
-applicable `aws.bedrock.*` attributes and are not expected to include
-`openai.*` attributes.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_CHOICE_COUNT: Final = "gen_ai.request.choice.count"
 """
-The target number of candidate completions to return.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_ENCODING_FORMATS: Final = "gen_ai.request.encoding_formats"
 """
-The encoding formats requested in an embeddings operation, if specified.
-Note: In some GenAI systems the encoding formats are called embedding types. Also, some GenAI systems only accept a single format per request.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_FREQUENCY_PENALTY: Final = "gen_ai.request.frequency_penalty"
 """
-The frequency penalty setting for the GenAI request.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_MAX_TOKENS: Final = "gen_ai.request.max_tokens"
 """
-The maximum number of tokens the model generates for a request.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_MODEL: Final = "gen_ai.request.model"
 """
-The name of the GenAI model a request is being made to.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_PRESENCE_PENALTY: Final = "gen_ai.request.presence_penalty"
 """
-The presence penalty setting for the GenAI request.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_SEED: Final = "gen_ai.request.seed"
 """
-Requests with same seed value more likely to return same result.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_STOP_SEQUENCES: Final = "gen_ai.request.stop_sequences"
 """
-List of sequences that the model will use to stop generating further tokens.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_STREAM: Final = "gen_ai.request.stream"
 """
-Indicates whether the GenAI request was made in streaming mode.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_TEMPERATURE: Final = "gen_ai.request.temperature"
 """
-The temperature setting for the GenAI request.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_TOP_K: Final = "gen_ai.request.top_k"
 """
-The top_k sampling setting for the GenAI request.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_REQUEST_TOP_P: Final = "gen_ai.request.top_p"
 """
-The top_p sampling setting for the GenAI request.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_RESPONSE_FINISH_REASONS: Final = "gen_ai.response.finish_reasons"
 """
-Array of reasons the model stopped generating tokens, corresponding to each generation received.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_RESPONSE_ID: Final = "gen_ai.response.id"
 """
-The unique identifier for the completion.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_RESPONSE_MODEL: Final = "gen_ai.response.model"
 """
-The name of the model that generated the response.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_RESPONSE_TIME_TO_FIRST_CHUNK: Final = (
     "gen_ai.response.time_to_first_chunk"
 )
 """
-Time to first chunk in a streaming response, measured from request issuance, in seconds. The value is measured from when the client issues the generation request to when the first chunk is received in the response stream.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_RETRIEVAL_DOCUMENTS: Final = "gen_ai.retrieval.documents"
 """
-The documents retrieved.
-Note: Instrumentations MUST follow [Retrieval documents JSON schema](/docs/gen-ai/gen-ai-retrieval-documents.json).
-When the attribute is recorded on events, it MUST be recorded in structured
-form. When recorded on spans, it MAY be recorded as a JSON string if structured
-format is not supported and SHOULD be recorded in structured form otherwise.
-
-Each document object SHOULD contain at least the following properties:
-`id` (string): A unique identifier for the document, `score` (double): The relevance score of the document.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_RETRIEVAL_QUERY_TEXT: Final = "gen_ai.retrieval.query.text"
 """
-The query text used for retrieval.
-Note: > [!Warning]
-> This attribute may contain sensitive information.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_SYSTEM: Final = "gen_ai.system"
 """
-Deprecated: Replaced by `gen_ai.provider.name`.
+Deprecated: Replaced by `gen_ai.provider.name`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_SYSTEM_INSTRUCTIONS: Final = "gen_ai.system_instructions"
 """
-The system message or instructions provided to the GenAI model separately from the chat history.
-Note: This attribute SHOULD be used when the corresponding provider or API
-allows to provide system instructions or messages separately from the
-chat history.
-
-Instructions that are part of the chat history SHOULD be recorded in
-`gen_ai.input.messages` attribute instead.
-
-Instrumentations MUST follow [System instructions JSON schema](/docs/gen-ai/gen-ai-system-instructions.json).
-
-When recorded on spans, it MAY be recorded as a JSON string if structured
-format is not supported and SHOULD be recorded in structured form otherwise.
-
-Instrumentations MAY provide a way for users to filter or truncate
-system instructions.
-
-> [!Warning]
-> This attribute may contain sensitive information.
-
-See [Recording content on attributes](/docs/gen-ai/gen-ai-spans.md#recording-content-on-attributes)
-section for more details.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_TOKEN_TYPE: Final = "gen_ai.token.type"
 """
-The type of token being counted.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_TOOL_CALL_ARGUMENTS: Final = "gen_ai.tool.call.arguments"
 """
-Parameters passed to the tool call.
-Note: > [!WARNING]
-> This attribute may contain sensitive information.
-
-It's expected to be an object - in case a serialized string is available
-to the instrumentation, the instrumentation SHOULD do the best effort to
-deserialize it to an object. When recorded on spans, it MAY be recorded as a JSON string if structured format is not supported and SHOULD be recorded in structured form otherwise.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_TOOL_CALL_ID: Final = "gen_ai.tool.call.id"
 """
-The tool call identifier.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_TOOL_CALL_RESULT: Final = "gen_ai.tool.call.result"
 """
-The result returned by the tool call (if any and if execution was successful).
-Note: > [!WARNING]
-> This attribute may contain sensitive information.
-
-It's expected to be an object - in case a serialized string is available
-to the instrumentation, the instrumentation SHOULD do the best effort to
-deserialize it to an object. When recorded on spans, it MAY be recorded as a JSON string if structured format is not supported and SHOULD be recorded in structured form otherwise.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_TOOL_DEFINITIONS: Final = "gen_ai.tool.definitions"
 """
-The list of tool definitions available to the GenAI agent or model.
-Note: Instrumentations MUST follow [Tool Definitions JSON Schema](/docs/gen-ai/gen-ai-tool-definitions.json).
-
-When the attribute is recorded on events, it MUST be recorded in structured
-form. When recorded on spans, it MAY be recorded as a JSON string if structured
-format is not supported and SHOULD be recorded in structured form otherwise.
-
-Since this attribute could be large, it's NOT RECOMMENDED to populate
-non-required properties by default. Instrumentations MAY provide a way
-to enable populating optional properties.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_TOOL_DESCRIPTION: Final = "gen_ai.tool.description"
 """
-The tool description.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_TOOL_NAME: Final = "gen_ai.tool.name"
 """
-Name of the tool utilized by the agent.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_TOOL_TYPE: Final = "gen_ai.tool.type"
 """
-Type of the tool utilized by the agent.
-Note: Extension: A tool executed on the agent-side to directly call external APIs, bridging the gap between the agent and real-world systems.
-  Agent-side operations involve actions that are performed by the agent on the server or within the agent's controlled environment.
-Function: A tool executed on the client-side, where the agent generates parameters for a predefined function, and the client executes the logic.
-  Client-side operations are actions taken on the user's end or within the client application.
-Datastore: A tool used by the agent to access and query structured or unstructured external data for retrieval-augmented tasks or knowledge updates.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS: Final = (
     "gen_ai.usage.cache_creation.input_tokens"
 )
 """
-The number of input tokens written to a provider-managed cache.
-Note: The value SHOULD be included in `gen_ai.usage.input_tokens`.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: Final = (
     "gen_ai.usage.cache_read.input_tokens"
 )
 """
-The number of input tokens served from a provider-managed cache.
-Note: The value SHOULD be included in `gen_ai.usage.input_tokens`.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_USAGE_COMPLETION_TOKENS: Final = "gen_ai.usage.completion_tokens"
 """
-Deprecated: Replaced by `gen_ai.usage.output_tokens`.
+Deprecated: Replaced by `gen_ai.usage.output_tokens`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_USAGE_INPUT_TOKENS: Final = "gen_ai.usage.input_tokens"
 """
-The number of tokens used in the GenAI input (prompt).
-Note: This value SHOULD include all types of input tokens, including cached tokens.
-Instrumentations SHOULD make a best effort to populate this value, using a total
-provided by the provider when available or, depending on the provider API,
-by summing different token types parsed from the provider output.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_USAGE_OUTPUT_TOKENS: Final = "gen_ai.usage.output_tokens"
 """
-The number of tokens used in the GenAI response (completion).
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_USAGE_PROMPT_TOKENS: Final = "gen_ai.usage.prompt_tokens"
 """
-Deprecated: Replaced by `gen_ai.usage.input_tokens`.
+Deprecated: Replaced by `gen_ai.usage.input_tokens`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_USAGE_REASONING_OUTPUT_TOKENS: Final = (
     "gen_ai.usage.reasoning.output_tokens"
 )
 """
-The number of output tokens used for reasoning (e.g. chain-of-thought, extended thinking).
-Note: The value SHOULD be included in `gen_ai.usage.output_tokens`.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 GEN_AI_WORKFLOW_NAME: Final = "gen_ai.workflow.name"
 """
-Human-readable name of the GenAI workflow provided by the application.
-Note: This attribute can be populated in different frameworks eg: name of the first chain in LangChain OR name of the crew in CrewAI.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 
 @deprecated(
-    "The attribute gen_ai.openai.request.response_format is deprecated - Replaced by `gen_ai.output.type`"
+    "The attribute gen_ai.openai.request.response_format is deprecated - Replaced by `gen_ai.output.type`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai)"
 )
 class GenAiOpenaiRequestResponseFormatValues(Enum):
     TEXT = "text"
@@ -457,7 +336,7 @@ class GenAiOpenaiRequestResponseFormatValues(Enum):
 
 
 @deprecated(
-    "The attribute gen_ai.openai.request.service_tier is deprecated - Replaced by `openai.request.service_tier`"
+    "The attribute gen_ai.openai.request.service_tier is deprecated - Replaced by `openai.request.service_tier`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai)"
 )
 class GenAiOpenaiRequestServiceTierValues(Enum):
     AUTO = "auto"
@@ -466,6 +345,9 @@ class GenAiOpenaiRequestServiceTierValues(Enum):
     """The system will utilize the default scale tier."""
 
 
+@deprecated(
+    "The attribute gen_ai.operation.name is deprecated - Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai)"
+)
 class GenAiOperationNameValues(Enum):
     CHAT = "chat"
     """Chat completion operation such as [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat)."""
@@ -487,6 +369,9 @@ class GenAiOperationNameValues(Enum):
     """Invoke GenAI workflow."""
 
 
+@deprecated(
+    "The attribute gen_ai.output.type is deprecated - Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai)"
+)
 class GenAiOutputTypeValues(Enum):
     TEXT = "text"
     """Plain text."""
@@ -498,6 +383,9 @@ class GenAiOutputTypeValues(Enum):
     """Speech."""
 
 
+@deprecated(
+    "The attribute gen_ai.provider.name is deprecated - Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai)"
+)
 class GenAiProviderNameValues(Enum):
     OPENAI = "openai"
     """[OpenAI](https://openai.com/)."""
@@ -532,7 +420,7 @@ class GenAiProviderNameValues(Enum):
 
 
 @deprecated(
-    "The attribute gen_ai.system is deprecated - Replaced by `gen_ai.provider.name`"
+    "The attribute gen_ai.system is deprecated - Replaced by `gen_ai.provider.name`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai)"
 )
 class GenAiSystemValues(Enum):
     OPENAI = "openai"
@@ -575,6 +463,9 @@ class GenAiSystemValues(Enum):
     """Mistral AI."""
 
 
+@deprecated(
+    "The attribute gen_ai.token.type is deprecated - Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai)"
+)
 class GenAiTokenTypeValues(Enum):
     INPUT = "input"
     """Input tokens (prompt, input, etc.)."""

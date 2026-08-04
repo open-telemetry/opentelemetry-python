@@ -127,7 +127,7 @@ class OTLPLogExporter(
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)
 
-    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
         return True
 
