@@ -124,9 +124,9 @@ class SimpleSpanProcessor(SpanProcessor):
         if not (span.context and span.context.trace_flags.sampled):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        # Record on submission to the exporter.
+        self._metrics.finish_items(1)
         try:
-            # Record on submission to the exporter.
-            self._metrics.finish_items(1)
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught
         except Exception:
