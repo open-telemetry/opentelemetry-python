@@ -462,20 +462,17 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         processor = SimpleLogRecordProcessor(
             exporter, meter_provider=meter_provider
         )
-        provider = LoggerProvider()
-        provider.add_log_record_processor(processor)
-        logger = provider.get_logger("test_shutdown_metrics")
 
-        logger.emit(LogRecord(body="foo", severity_number=SeverityNumber.WARN))
+        processor.on_emit(EMPTY_LOG)
 
         # Shut only the processor down; the record emitted afterwards hits the
         # already-shutdown early return and must not be counted as processed.
         processor.shutdown()
-        logger.emit(LogRecord(body="bar", severity_number=SeverityNumber.WARN))
+        processor.on_emit(EMPTY_LOG)
 
         metrics_data = metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
-        metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
+        metrics = scope_metrics.metrics
         self.assertEqual(len(metrics), 1)
         self.assertEqual(metrics[0].name, "otel.sdk.processor.log.processed")
         processed_data_points = metrics[0].data.data_points
