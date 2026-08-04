@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: make methods on `FixedSizeExemplarReservoirABC` thread safe
