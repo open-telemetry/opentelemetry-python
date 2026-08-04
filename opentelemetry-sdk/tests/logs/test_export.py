@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-lines
 import logging
 import os
 import sys
