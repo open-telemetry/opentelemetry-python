@@ -91,7 +91,7 @@ class View:
         exclude_attribute_keys: This is a metric stream customizing attribute: this is
             a set of attribute keys. If not `None` then measurement attributes whose
             keys are in ``exclude_attribute_keys`` will be removed before identifying
-            the metric stream. Applied after ``attribute_keys`` if both are provided.
+            the metric stream.
 
 
     This class is not intended to be subclassed by the user.
@@ -142,11 +142,19 @@ class View:
                 f"View {name} declared with wildcard "
                 "characters in instrument_name"
             )
-
+        attribute_keys = (
+            set(attribute_keys) if attribute_keys is not None else None
+        )
+        exclude_attribute_keys = (
+            set(exclude_attribute_keys)
+            if exclude_attribute_keys is not None
+            else None
+        )
         if attribute_keys is not None and exclude_attribute_keys is not None:
-            overlap = set(attribute_keys).intersection(exclude_attribute_keys)
+            overlap = attribute_keys.intersection(exclude_attribute_keys)
 
             if overlap:
+                # pylint: disable=broad-exception-raised
                 raise Exception(
                     "attribute_keys and exclude_attribute_keys "
                     f"must be disjoint. Overlapping keys: "
