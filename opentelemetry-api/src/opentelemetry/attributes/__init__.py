@@ -7,7 +7,7 @@ import copy
 import logging
 import threading
 from collections.abc import Mapping, MutableMapping, Sequence
-from types import MappingProxyType, NoneType
+from types import NoneType
 from typing import Any, overload
 
 from typing_extensions import deprecated
@@ -15,6 +15,16 @@ from typing_extensions import deprecated
 from opentelemetry.util import types
 
 _logger = logging.getLogger(__name__)
+
+
+# Calling str(x) will use an object's `__str__` method if it exists, otherwise it will use it's `__repr__` method.
+# If neither is defined it uses the base class's `object.__repr__` method, which returns a string that is hard to understand.
+# So in that case we drop the key/value pair.
+def _is_non_custom_str(key: Any) -> bool:
+    return (
+        type(key).__str__ is not object.__str__
+        or type(key).__repr__ is not object.__repr__
+    )
 
 
 @overload
@@ -40,8 +50,7 @@ def _clean_attribute_value(
     String values are truncated to max_string_value_length if provided.
     Anything that isn't of `types.AttributeValue`, we attempt to cast to `str`.
     If this fails, the value is replaced with None. Sequence's are converted to tuples and mappings
-    are converted to MappingProxyType, these are immutable data structures, so if the sequence/map
-    is modified outside of this method, it will not affect the value in this container.
+    are copied into new dicts.
 
     Returns:
         The recursively cleaned AttributeValue.
@@ -79,29 +88,20 @@ def _clean_attribute_value(
                     type(key),
                     key,
                 )
-                # Calling str(x) will use an object's `__str__` method if it exists, otherwise it will use it's `__repr__` method.
-                # If neither is defined it uses the base class's `object.__repr__` method, which returns a string that is hard to understand.
-                # So in that case we drop the key/value pair.
-                if (
-                    type(key).__str__ is not object.__str__
-                    or type(key).__repr__ is not object.__repr__
-                ):
+                if _is_non_custom_str(key):
                     key = str(key)
                 else:
                     continue
             cleaned_mapping[key] = _clean_attribute_value(
                 val, max_string_value_length
             )
-        return MappingProxyType(cleaned_mapping)
+        return cleaned_mapping
     _logger.warning(
         "Invalid type `%s` for attribute value. Expected one of bool, str, None, bytes, int, float or a "
         "Mapping or Sequence of those types. Value's __str__ method will be called if it exists, otherwise the value will be replaced with None.",
         type(value),
     )
-    if (
-        type(value).__str__ is not object.__str__
-        or type(value).__repr__ is not object.__repr__
-    ):
+    if _is_non_custom_str(value):
         return str(value)
     return None
 

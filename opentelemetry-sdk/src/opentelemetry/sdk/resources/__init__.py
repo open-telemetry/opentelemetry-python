@@ -90,7 +90,7 @@ except ImportError:
     pass
 
 LabelValue = AttributeValue
-Attributes = Mapping[str, LabelValue] | None
+Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
@@ -169,7 +169,7 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: Attributes = None,
+        attributes: Attributes | None = None,
         schema_url: str | None = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
@@ -209,7 +209,7 @@ class Resource:
         return _EMPTY_RESOURCE
 
     @property
-    def attributes(self) -> Mapping[str, AttributeValue]:
+    def attributes(self) -> Attributes:
         return self._attributes
 
     @property

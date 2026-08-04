@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
-    _hash_attributes,
+    _unknown_type_handler,
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -523,11 +523,97 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             _LastValueAggregation,
         )
 
-    def test_attributes_hash_fallsback_to_hash_attributes_value_function(self):
+    def test_json_dumps_works_as_stable_hash_key(self):
+        attributes = {
+            "a": [1, 2],
+            "b": [2, 1],
+            "c": b"1234asf",
+            "d": 1.2324124,
+            "e": -2.32323124,
+            "f": {1: 2, 2: (1, 2, 3), 3: "a", 4: "bc"},
+        }
+        self.assertEqual(
+            json.dumps(
+                attributes, sort_keys=True, default=_unknown_type_handler
+            ),
+            json.dumps(
+                attributes, sort_keys=True, default=_unknown_type_handler
+            ),
+        )
+
+        self.assertNotEqual(
+            json.dumps(
+                {"1": (1, "2", 3, "4")},
+                sort_keys=True,
+                default=_unknown_type_handler,
+            ),
+            json.dumps(
+                {"1": ("1", 2, "3", 4)},
+                sort_keys=True,
+                default=_unknown_type_handler,
+            ),
+        )
+
+    def test_json_dumps_stable_hash_key_order_independence(self):
+        attrs1 = {"b": 2, "a": 1, "c": 3}
+        attrs2 = {"a": 1, "c": 3, "b": 2}
+        self.assertEqual(
+            json.dumps(attrs1, sort_keys=True, default=_unknown_type_handler),
+            json.dumps(attrs2, sort_keys=True, default=_unknown_type_handler),
+        )
+
+        nested1 = {"root": {"z": (3, 2, 1), "x": "val", "y": b"bytes_data"}}
+        nested2 = {"root": {"y": b"bytes_data", "z": (3, 2, 1), "x": "val"}}
+        self.assertEqual(
+            json.dumps(nested1, sort_keys=True, default=_unknown_type_handler),
+            json.dumps(nested2, sort_keys=True, default=_unknown_type_handler),
+        )
+
+    def test_json_dumps_stable_hash_with_tuples_and_nested_dicts(self):
+        complex_attrs_a = {
+            "service": {"name": "test-svc", "version": "1.0"},
+            "tags": ("prod", "us-east-1"),
+            "endpoints": (
+                {"host": "a.com", "port": 80},
+                {"host": "b.com", "port": 443},
+            ),
+            "payload": b"binary-content",
+        }
+        complex_attrs_b = {
+            "payload": b"binary-content",
+            "endpoints": (
+                {"port": 80, "host": "a.com"},
+                {"port": 443, "host": "b.com"},
+            ),
+            "service": {"version": "1.0", "name": "test-svc"},
+            "tags": ("prod", "us-east-1"),
+        }
+        self.assertEqual(
+            json.dumps(
+                complex_attrs_a, sort_keys=True, default=_unknown_type_handler
+            ),
+            json.dumps(
+                complex_attrs_b, sort_keys=True, default=_unknown_type_handler
+            ),
+        )
+
+    def test_json_dumps_stable_hash_tuple_and_list_equivalence(self):
+        attrs_tuple = {"values": (1, 2, 3), "nested": {"items": ("a", "b")}}
+        attrs_list = {"values": [1, 2, 3], "nested": {"items": ["a", "b"]}}
+        self.assertEqual(
+            json.dumps(
+                attrs_tuple, sort_keys=True, default=_unknown_type_handler
+            ),
+            json.dumps(
+                attrs_list, sort_keys=True, default=_unknown_type_handler
+            ),
+        )
+
+    def test_consume_measurement_stable_hash_key_order(self):
         instrument1 = _Counter(
-            name="instrument1",
-            instrumentation_scope=Mock(),
-            measurement_consumer=Mock(),
+            "instrument1",
+            Mock(),
+            Mock(),
             description="description",
             unit="unit",
         )
@@ -539,43 +625,46 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 aggregation=DefaultAggregation(),
             ),
             instrument=instrument1,
-            instrument_class_aggregation={_Counter: LastValueAggregation()},
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
 
-        # this will fail with json.dumps because dictionary keys are not all strings
-        attributes = {"c": 1, 22: 3, (1,): 2}
-
+        attrs1 = {
+            "service": {"version": "1.0", "name": "app"},
+            "tags": ("prod", "v1"),
+            "region": "us-east-1",
+        }
+        attrs2 = {
+            "region": "us-east-1",
+            "tags": ("prod", "v1"),
+            "service": {"name": "app", "version": "1.0"},
+        }
         view_instrument_match.consume_measurement(
             Measurement(
-                value=0,
+                value=1,
                 time_unix_nano=time_ns(),
-                instrument=Mock(name="instrument1"),
+                instrument=instrument1,
                 context=Context(),
-                attributes=attributes,
+                attributes=attrs1,
             )
         )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=2,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes=attrs2,
+            )
+        )
+
+        self.assertEqual(len(view_instrument_match._attributes_aggregation), 1)
+        expected_key = json.dumps(
+            attrs1, sort_keys=True, default=_unknown_type_handler
+        )
         self.assertIn(
-            _hash_attributes(attributes),
-            view_instrument_match._attributes_aggregation,
-        )
-
-    def test_json_dumps_works_as_stable_hash_key(self):
-        attributes = {
-            "a": [1, 2],
-            "b": [2, 1],
-            "c": b"1234asf",
-            "d": 1.2324124,
-            "e": -2.32323124,
-            "f": {1: 2, 2: (1, 2, 3), 3: "a", 4: "bc"},
-        }
-        self.assertEqual(
-            json.dumps(attributes, sort_keys=True, default=str),
-            json.dumps(attributes, sort_keys=True, default=str),
-        )
-
-        self.assertNotEqual(
-            json.dumps({"1": (1, "2", 3, "4")}, sort_keys=True, default=str),
-            json.dumps({"1": ("1", 2, "3", 4)}, sort_keys=True, default=str),
+            expected_key, view_instrument_match._attributes_aggregation
         )
 
 
