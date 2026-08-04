@@ -11,6 +11,21 @@ from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
 from opentelemetry._logs import Logger, SeverityNumber
+from opentelemetry.exporter.http.transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.http.transport._urllib3 import (
+    Urllib3HTTPTransport,
+)
+from opentelemetry.exporter.otlp.common.http import (
+    Compression as JSONCompression,
+)
+from opentelemetry.exporter.otlp.json.file._log_exporter import (
+    FileLogExporter,
+)
+from opentelemetry.exporter.otlp.json.http._log_exporter import (
+    OTLPLogExporter as JSONLogExporter,
+)
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter as GRPCLogExporter,
 )
@@ -28,7 +43,7 @@ from opentelemetry.sdk._logs.export import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
-from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, make_otlp_file
 
 LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
     ExporterConfig(
@@ -74,6 +89,59 @@ LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
         id="grpc-headers",
         exporter_class=GRPCLogExporter,
         kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
+    ),
+    ExporterConfig(
+        id="file",
+        exporter_class=FileLogExporter,
+        lazy_kwargs={"path": lambda: make_otlp_file("logs")},
+    ),
+    ExporterConfig(
+        id="json-urllib3",
+        exporter_class=JSONLogExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/logs"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-urllib3-deflate",
+        exporter_class=JSONLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": JSONCompression.DEFLATE,
+        },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-urllib3-gzip",
+        exporter_class=JSONLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": JSONCompression.GZIP,
+        },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests",
+        exporter_class=JSONLogExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/logs"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests-deflate",
+        exporter_class=JSONLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": JSONCompression.DEFLATE,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests-gzip",
+        exporter_class=JSONLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": JSONCompression.GZIP,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
     ),
 ]
 
