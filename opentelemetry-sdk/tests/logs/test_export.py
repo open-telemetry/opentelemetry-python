@@ -453,7 +453,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
     @patch.dict(
         "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
     )
-    def test_metrics_not_counted_after_shutdown(self):
+    def test_metrics_already_shutdown(self):
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
 
@@ -466,7 +466,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         processor.on_emit(EMPTY_LOG)
 
         # Shut only the processor down; the record emitted afterwards hits the
-        # already-shutdown early return and must not be counted as processed.
+        # already-shutdown early return and is counted as processed with
+        # error.type=already_shutdown (never handed to the exporter).
         processor.shutdown()
         processor.on_emit(EMPTY_LOG)
 
@@ -475,11 +476,18 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         metrics = scope_metrics.metrics
         self.assertEqual(len(metrics), 1)
         self.assertEqual(metrics[0].name, "otel.sdk.processor.log.processed")
-        processed_data_points = metrics[0].data.data_points
-        self.assertEqual(len(processed_data_points), 1)
-        self.assertEqual(processed_data_points[0].value, 1)
-        self.assertIsNone(
-            processed_data_points[0].attributes.get("error.type")
+        data_points = sorted(
+            metrics[0].data.data_points,
+            key=lambda dp: dp.attributes.get("error.type", ""),
+        )
+        self.assertEqual(len(data_points), 2)
+        # Successful submission (before shutdown), no error.type.
+        self.assertEqual(data_points[0].value, 1)
+        self.assertIsNone(data_points[0].attributes.get("error.type"))
+        # Dropped after shutdown.
+        self.assertEqual(data_points[1].value, 1)
+        self.assertEqual(
+            data_points[1].attributes.get("error.type"), "already_shutdown"
         )
         self.assertEqual(exporter.export.call_count, 1)
 
@@ -707,6 +715,46 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             exporter,
             max_queue_size=100,
             max_export_batch_size=101,
+        )
+
+    @patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
+    def test_metrics_already_shutdown(self):
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+
+        exporter = mock.MagicMock()
+        exporter.export.return_value = LogRecordExportResult.SUCCESS
+        processor = BatchLogRecordProcessor(
+            exporter, meter_provider=meter_provider
+        )
+
+        # Emitted before shutdown: drained on shutdown and counted as a
+        # successful submit to the exporter.
+        processor.on_emit(EMPTY_LOG)
+        processor.shutdown()
+
+        # Emitted after shutdown: dropped and counted as already_shutdown.
+        processor.on_emit(EMPTY_LOG)
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        processed = next(
+            m
+            for m in scope_metrics.metrics
+            if m.name == "otel.sdk.processor.log.processed"
+        )
+        data_points = sorted(
+            processed.data.data_points,
+            key=lambda dp: dp.attributes.get("error.type", ""),
+        )
+        self.assertEqual(len(data_points), 2)
+        self.assertEqual(data_points[0].value, 1)
+        self.assertIsNone(data_points[0].attributes.get("error.type"))
+        self.assertEqual(data_points[1].value, 1)
+        self.assertEqual(
+            data_points[1].attributes.get("error.type"), "already_shutdown"
         )
 
     @patch.dict(

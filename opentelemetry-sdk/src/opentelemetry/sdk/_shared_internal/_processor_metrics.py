@@ -31,7 +31,7 @@ class ProcessorMetricsT(Protocol):
         self, get_queue_size: Callable[[], int]
     ) -> None: ...
 
-    def drop_items(self, count: int) -> None: ...
+    def drop_items(self, count: int, error_type: str = "queue_full") -> None: ...
 
     def finish_items(self, count: int) -> None: ...
 
@@ -40,7 +40,7 @@ class NoOpProcessorMetrics:
     def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
         pass
 
-    def drop_items(self, count: int) -> None:
+    def drop_items(self, count: int, error_type: str = "queue_full") -> None:
         pass
 
     def finish_items(self, count: int) -> None:
@@ -71,6 +71,11 @@ class ProcessorMetrics:
         self._dropped_attrs = {
             **self._standard_attrs,
             ERROR_TYPE: "queue_full",
+        }
+
+        self._already_shutdown_attrs = {
+            **self._standard_attrs,
+            ERROR_TYPE: "already_shutdown",
         }
 
         if signal == "traces":
@@ -112,8 +117,11 @@ class ProcessorMetrics:
             unit=queue_size_unit,
         )
 
-    def drop_items(self, count: int) -> None:
-        self._processed.add(count, self._dropped_attrs)
+    def drop_items(self, count: int, error_type: str = "queue_full") -> None:
+        if error_type == "already_shutdown":
+            self._processed.add(count, self._already_shutdown_attrs)
+        else:
+            self._processed.add(count, self._dropped_attrs)
 
     def finish_items(self, count: int) -> None:
         self._processed.add(count, self._standard_attrs)
