@@ -466,6 +466,27 @@
         "trace_based"
       ]
     },
+    "ExperimentalAlwaysContinueTraceContinuationDecider": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false
+    },
+    "ExperimentalAlwaysRestartWithLinkTraceContinuationDecider": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false
+    },
+    "ExperimentalAlwaysRestartWithoutLinkTraceContinuationDecider": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false
+    },
     "ExperimentalCodeInstrumentation": {
       "type": "object",
       "additionalProperties": false,
@@ -1226,6 +1247,182 @@
         }
       }
     },
+    "ExperimentalRuleBasedTraceContinuationDecider": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "default_ingress_strategy": {
+          "$ref": "#/$defs/ExperimentalTraceContinuationStrategy",
+          "description": "Configure the ingress strategy used when no ingress rule matches.\nValues include:\n* continue: continue, use the candidate span context as the parent according to existing parentage rules.\n* restart_with_link: restart_with_link, start a new trace and add a link to the candidate span context.\n* restart_without_link: restart_without_link, start a new trace without preserving the candidate span context as a link.\nIf omitted, continue is used.\n"
+        },
+        "default_egress_action": {
+          "$ref": "#/$defs/ExperimentalTraceContinuationEgressAction",
+          "description": "Configure the egress action used when no egress rule matches.\nValues include:\n* inject_trace_context: inject_trace_context, preserve existing trace context injection behavior.\n* suppress_trace_context: suppress_trace_context, do not inject the selected trace context for this outgoing boundary.\nIf omitted, inject_trace_context is used.\n"
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ExperimentalRuleBasedTraceContinuationDeciderRule"
+          },
+          "description": "The rules for the trace continuation decider, matched in order.\nEach rule declares a direction and can have multiple match conditions. All conditions must match for the rule to match.\nIf no optional conditions are specified, the rule matches all inputs for its direction.\nIf no rule matches, default_ingress_strategy or default_egress_action is used for the input direction.\nProperty is required and must be non-null.\n"
+        }
+      },
+      "required": [
+        "rules"
+      ]
+    },
+    "ExperimentalRuleBasedTraceContinuationDeciderAttributePatterns": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "The attribute key to match against.\nProperty is required and must be non-null.\n"
+        },
+        "included": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Configure list of value patterns to include.\nMatching is case-sensitive. Values are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, all values are included.\n"
+        },
+        "excluded": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Configure list of value patterns to exclude. Applies after .included (i.e. excluded has higher priority than included).\nMatching is case-sensitive. Values are evaluated to match as follows:\n * If the value exactly matches.\n * If the value matches the wildcard pattern, where '?' matches any single character and '*' matches any number of characters including none.\nIf omitted, .included attributes are included.\n"
+        }
+      },
+      "required": [
+        "key"
+      ]
+    },
+    "ExperimentalRuleBasedTraceContinuationDeciderAttributeValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "The attribute key to match against.\nProperty is required and must be non-null.\n"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "The attribute values to match against. Non-string attributes are matched using their string representation.\nFor array attributes, if any item matches, it is considered a match.\nProperty is required and must be non-null.\n"
+        }
+      },
+      "required": [
+        "key",
+        "values"
+      ]
+    },
+    "ExperimentalRuleBasedTraceContinuationDeciderConditions": {
+      "type": "object",
+      "description": "Match conditions for an ExperimentalRuleBasedTraceContinuationDeciderRule. When multiple conditions are specified, all must match.",
+      "additionalProperties": false,
+      "properties": {
+        "attribute_values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ExperimentalRuleBasedTraceContinuationDeciderAttributeValues"
+          },
+          "description": "Attribute value conditions. All listed conditions must match.\nIf omitted, ignore.\n"
+        },
+        "attribute_patterns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ExperimentalRuleBasedTraceContinuationDeciderAttributePatterns"
+          },
+          "description": "Attribute pattern conditions. All listed conditions must match.\nIf omitted, ignore.\n"
+        }
+      }
+    },
+    "ExperimentalRuleBasedTraceContinuationDeciderRule": {
+      "type": "object",
+      "description": "A rule for ExperimentalRuleBasedTraceContinuationDecider. Rules are matched in order, and the first matching rule determines the trace continuation result.\n",
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "$ref": "#/$defs/ExperimentalTraceContinuationDirection",
+          "description": "The input direction this rule matches.\nValues include:\n* egress: egress, a context selected for propagation across an outgoing boundary.\n* ingress: ingress, a context extracted for an incoming boundary.\nProperty is required and must be non-null.\n"
+        },
+        "span_kind": {
+          "$ref": "#/$defs/SpanKind",
+          "description": "The span kind to match.\nValues include:\n* client: client, a client span.\n* consumer: consumer, a consumer span.\n* internal: internal, an internal span.\n* producer: producer, a producer span.\n* server: server, a server span.\nIf omitted, ignore.\n"
+        },
+        "conditions": {
+          "$ref": "#/$defs/ExperimentalRuleBasedTraceContinuationDeciderConditions",
+          "description": "Additional match conditions for this rule.\nIf omitted, ignore.\n"
+        },
+        "strategy": {
+          "$ref": "#/$defs/ExperimentalTraceContinuationStrategy",
+          "description": "The ingress trace continuation strategy to use when this rule matches.\nValues include:\n* continue: continue, use the candidate span context as the parent according to existing parentage rules.\n* restart_with_link: restart_with_link, start a new trace and add a link to the candidate span context.\n* restart_without_link: restart_without_link, start a new trace without preserving the candidate span context as a link.\nIf omitted, ignore.\n"
+        },
+        "egress_action": {
+          "$ref": "#/$defs/ExperimentalTraceContinuationEgressAction",
+          "description": "The egress propagation action to use when this rule matches.\nValues include:\n* inject_trace_context: inject_trace_context, preserve existing trace context injection behavior.\n* suppress_trace_context: suppress_trace_context, do not inject the selected trace context for this outgoing boundary.\nIf omitted, ignore.\n"
+        },
+        "link_attributes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/AttributeNameValue"
+          },
+          "description": "Link attributes to attach when strategy is restart_with_link.\nIf omitted, no link attributes are added.\n"
+        }
+      },
+      "required": [
+        "direction"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "direction": {
+                "const": "ingress"
+              }
+            },
+            "required": [
+              "direction"
+            ]
+          },
+          "then": {
+            "required": [
+              "strategy"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "direction": {
+                "const": "egress"
+              }
+            },
+            "required": [
+              "direction"
+            ]
+          },
+          "then": {
+            "required": [
+              "egress_action"
+            ]
+          }
+        }
+      ]
+    },
     "ExperimentalSanitization": {
       "type": "object",
       "additionalProperties": false,
@@ -1280,6 +1477,63 @@
         "none",
         "remote",
         "local"
+      ]
+    },
+    "ExperimentalTraceContinuationDecider": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "always_continue/development": {
+          "$ref": "#/$defs/ExperimentalAlwaysContinueTraceContinuationDecider",
+          "description": "Configure the trace continuation decider to always continue the trace.\nIf omitted, ignore.\n"
+        },
+        "always_restart_with_link/development": {
+          "$ref": "#/$defs/ExperimentalAlwaysRestartWithLinkTraceContinuationDecider",
+          "description": "Configure the trace continuation decider to always restart the trace linking previous parent.\nIf omitted, ignore.\n"
+        },
+        "always_restart_without_link/development": {
+          "$ref": "#/$defs/ExperimentalAlwaysRestartWithoutLinkTraceContinuationDecider",
+          "description": "Configure the trace continuation decider to always restart without links.\nIf omitted, ignore.\n"
+        },
+        "rule_based/development": {
+          "$ref": "#/$defs/ExperimentalRuleBasedTraceContinuationDecider",
+          "description": "Configure the trace continuation decider to use ordered rules.\nIf omitted, ignore.\n"
+        }
+      }
+    },
+    "ExperimentalTraceContinuationDirection": {
+      "type": "string",
+      "enum": [
+        "ingress",
+        "egress"
+      ]
+    },
+    "ExperimentalTraceContinuationEgressAction": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "inject_trace_context",
+        "suppress_trace_context"
+      ]
+    },
+    "ExperimentalTraceContinuationStrategy": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "continue",
+        "restart_with_link",
+        "restart_without_link"
       ]
     },
     "ExperimentalTracerConfig": {
@@ -1672,7 +1926,8 @@
       "properties": {
         "opencensus": {
           "$ref": "#/$defs/OpenCensusMetricProducer",
-          "description": "Configure metric producer to be opencensus.\nIf omitted, ignore.\n"
+          "deprecated": true,
+          "description": "Configure metric producer to be opencensus.\n\n**Deprecated** as of v1.2.0, may be removed in v2.0.0. The OpenCensus\ncompatibility specification it relies on was deprecated in\nhttps://github.com/open-telemetry/opentelemetry-specification/pull/5138.\nSDKs MAY continue to support this entry for backwards compatibility;\nnew configurations SHOULD NOT use it.\nIf omitted, ignore.\n"
         }
       }
     },
@@ -1718,7 +1973,9 @@
         "object",
         "null"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "deprecated": true,
+      "description": "**Deprecated** as of v1.2.0, may be removed in v2.0.0. The OpenCensus\ncompatibility specification it relies on was deprecated in\nhttps://github.com/open-telemetry/opentelemetry-specification/pull/5138.\nSee also the\n[OpenCensus sunset announcement](https://opentelemetry.io/blog/2023/sunsetting-opencensus/).\n"
     },
     "OtlpGrpcExporter": {
       "type": [
@@ -2459,6 +2716,10 @@
         "sampler": {
           "$ref": "#/$defs/Sampler",
           "description": "Configure the sampler.\nIf omitted, parent based sampler with a root of always_on is used.\n"
+        },
+        "trace_continuation_decider/development": {
+          "$ref": "#/$defs/ExperimentalTraceContinuationDecider",
+          "description": "Configure the trace continuation decider, which determines whether trace context is continued or restarted across ingress and egress boundaries.\nIf omitted, ingress trace context is continued and egress trace context is injected.\n"
         },
         "id_generator": {
           "$ref": "#/$defs/IdGenerator",

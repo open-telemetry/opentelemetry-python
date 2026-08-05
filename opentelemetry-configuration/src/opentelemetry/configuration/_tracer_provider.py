@@ -4,6 +4,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
+from dataclasses import dataclass
+from fnmatch import fnmatchcase
 
 from opentelemetry import trace
 from opentelemetry.configuration._common import (
@@ -16,6 +19,10 @@ from opentelemetry.configuration._exceptions import (
     ConfigurationError,
     MissingDependencyError,
 )
+from opentelemetry.configuration._resource import _coerce_attribute_value
+from opentelemetry.configuration.models import (
+    AttributeNameValue,
+)
 from opentelemetry.configuration.models import (
     ExperimentalComposableRuleBasedSampler as RuleBasedSamplerConfig,
 )
@@ -27,6 +34,27 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalRuleBasedTraceContinuationDecider as RuleBasedTraceContinuationDeciderConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalRuleBasedTraceContinuationDeciderConditions as TraceContinuationConditionsConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalRuleBasedTraceContinuationDeciderRule as TraceContinuationRuleConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTraceContinuationDecider as TraceContinuationDeciderConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTraceContinuationDirection as TraceContinuationDirectionConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTraceContinuationEgressAction as TraceContinuationEgressActionConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTraceContinuationStrategy as TraceContinuationStrategyConfig,
 )
 from opentelemetry.configuration.models import (
     IdGenerator as IdGeneratorConfig,
@@ -97,6 +125,18 @@ from opentelemetry.sdk.trace.sampling import (
     ParentBased,
     Sampler,
     TraceIdRatioBased,
+)
+from opentelemetry.sdk.trace.trace_continuation import (
+    ALWAYS_CONTINUE,
+    ALWAYS_RESTART_WITH_LINK,
+    ALWAYS_RESTART_WITHOUT_LINK,
+    ContinuationDirection,
+    ContinuationResult,
+    EgressAction,
+    TraceContinuationDecider,
+)
+from opentelemetry.sdk.trace.trace_continuation import (
+    Decision as ContinuationDecision,
 )
 from opentelemetry.trace import SpanKind as TraceSpanKind
 
@@ -400,6 +440,343 @@ def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
     return ParentBased(**kwargs)
 
 
+_STRATEGY_MAP = {
+    TraceContinuationStrategyConfig.continue_: ContinuationDecision.CONTINUE,
+    TraceContinuationStrategyConfig.restart_with_link: (
+        ContinuationDecision.RESTART_WITH_LINK
+    ),
+    TraceContinuationStrategyConfig.restart_without_link: (
+        ContinuationDecision.RESTART_WITHOUT_LINK
+    ),
+}
+
+_EGRESS_ACTION_MAP = {
+    TraceContinuationEgressActionConfig.inject_trace_context: (
+        EgressAction.INJECT_TRACE_CONTEXT
+    ),
+    TraceContinuationEgressActionConfig.suppress_trace_context: (
+        EgressAction.SUPPRESS_TRACE_CONTEXT
+    ),
+}
+
+_DIRECTION_MAP = {
+    TraceContinuationDirectionConfig.ingress: ContinuationDirection.INGRESS,
+    TraceContinuationDirectionConfig.egress: ContinuationDirection.EGRESS,
+}
+
+
+def _map_trace_continuation_strategy(
+    strategy: TraceContinuationStrategyConfig,
+) -> ContinuationDecision:
+    return _STRATEGY_MAP[strategy]
+
+
+def _map_trace_continuation_egress_action(
+    action: TraceContinuationEgressActionConfig,
+) -> EgressAction:
+    return _EGRESS_ACTION_MAP[action]
+
+
+def _map_trace_continuation_direction(
+    direction: TraceContinuationDirectionConfig,
+) -> ContinuationDirection:
+    return _DIRECTION_MAP[direction]
+
+
+def _coerce_link_attributes(
+    link_attributes: list[AttributeNameValue] | None,
+) -> dict[str, object] | None:
+    if link_attributes is None:
+        return None
+    return {
+        attribute.name: _coerce_attribute_value(attribute)
+        for attribute in link_attributes
+    }
+
+
+def _trace_continuation_attribute_values(value):
+    if isinstance(value, Sequence) and not isinstance(
+        value, (str, bytes, bytearray)
+    ):
+        return value
+    return (value,)
+
+
+def _trace_continuation_attribute_values_match(
+    attributes,
+    attribute_values,
+) -> bool:
+    if not attributes or attribute_values.key not in attributes:
+        return False
+    expected = frozenset(attribute_values.values)
+    return any(
+        str(value) in expected
+        for value in _trace_continuation_attribute_values(
+            attributes[attribute_values.key]
+        )
+    )
+
+
+def _trace_continuation_attribute_patterns_match(
+    attributes,
+    attribute_patterns,
+) -> bool:
+    if not attributes or attribute_patterns.key not in attributes:
+        return False
+    return any(
+        _trace_continuation_attribute_pattern_matches_value(
+            str(value),
+            attribute_patterns.included,
+            attribute_patterns.excluded,
+        )
+        for value in _trace_continuation_attribute_values(
+            attributes[attribute_patterns.key]
+        )
+    )
+
+
+def _trace_continuation_attribute_pattern_matches_value(
+    value: str,
+    included: list[str] | None,
+    excluded: list[str] | None,
+) -> bool:
+    included_match = included is None or any(
+        fnmatchcase(value, pattern) for pattern in included
+    )
+    excluded_match = excluded is not None and any(
+        fnmatchcase(value, pattern) for pattern in excluded
+    )
+    return included_match and not excluded_match
+
+
+def _trace_continuation_conditions_match(
+    conditions: TraceContinuationConditionsConfig | None,
+    attributes,
+) -> bool:
+    if conditions is None:
+        return True
+
+    return all(
+        _trace_continuation_attribute_values_match(
+            attributes, attribute_values
+        )
+        for attribute_values in conditions.attribute_values or ()
+    ) and all(
+        _trace_continuation_attribute_patterns_match(
+            attributes, attribute_patterns
+        )
+        for attribute_patterns in conditions.attribute_patterns or ()
+    )
+
+
+@dataclass(frozen=True)
+class _ConfiguredTraceContinuationRule:
+    direction: ContinuationDirection
+    strategy: ContinuationDecision | None = None
+    egress_action: EgressAction | None = None
+    conditions: TraceContinuationConditionsConfig | None = None
+    span_kind: TraceSpanKind | None = None
+    link_attributes: dict[str, object] | None = None
+
+    def matches(
+        self,
+        *,
+        direction: ContinuationDirection,
+        span_kind: TraceSpanKind | None,
+        attributes,
+    ) -> bool:
+        if direction != self.direction:
+            return False
+        if self.span_kind is not None and span_kind != self.span_kind:
+            return False
+        return _trace_continuation_conditions_match(
+            self.conditions, attributes
+        )
+
+
+class _ConfiguredRuleBasedTraceContinuationDecider(TraceContinuationDecider):
+    def __init__(
+        self,
+        *,
+        rules: Sequence[_ConfiguredTraceContinuationRule],
+        default_strategy: ContinuationDecision = ContinuationDecision.CONTINUE,
+        default_egress_action: EgressAction = EgressAction.INJECT_TRACE_CONTEXT,
+    ) -> None:
+        self._rules = tuple(rules)
+        self._default_strategy = default_strategy
+        self._default_egress_action = default_egress_action
+
+    def should_continue(
+        self,
+        *,
+        parent_context,
+        parent_span_context,
+        kind: TraceSpanKind | None = None,
+        attributes=None,
+        links: tuple[trace.Link, ...] | None = None,
+    ) -> ContinuationResult:
+        result_links = links or ()
+        for rule in self._rules:
+            if rule.matches(
+                direction=ContinuationDirection.INGRESS,
+                span_kind=kind,
+                attributes=attributes,
+            ):
+                strategy = _ingress_strategy_from_trace_continuation_rule(rule)
+                return ContinuationResult(
+                    decision=strategy,
+                    links=_maybe_add_trace_continuation_restart_link(
+                        decision=strategy,
+                        parent_span_context=parent_span_context,
+                        links=result_links,
+                        link_attributes=rule.link_attributes,
+                    ),
+                )
+
+        return ContinuationResult(
+            decision=self._default_strategy,
+            links=_maybe_add_trace_continuation_restart_link(
+                decision=self._default_strategy,
+                parent_span_context=parent_span_context,
+                links=result_links,
+            ),
+        )
+
+    def get_description(self) -> str:
+        return "RuleBasedTraceContinuationDecider"
+
+    def should_inject(
+        self,
+        *,
+        context=None,
+        kind: TraceSpanKind | None = None,
+        attributes=None,
+    ) -> EgressAction:
+        for rule in self._rules:
+            if rule.matches(
+                direction=ContinuationDirection.EGRESS,
+                span_kind=kind,
+                attributes=attributes,
+            ):
+                return _egress_action_from_trace_continuation_rule(rule)
+
+        return self._default_egress_action
+
+
+def _maybe_add_trace_continuation_restart_link(
+    *,
+    decision: ContinuationDecision,
+    parent_span_context,
+    links: tuple[trace.Link, ...],
+    link_attributes: dict[str, object] | None = None,
+) -> tuple[trace.Link, ...]:
+    if (
+        decision is ContinuationDecision.RESTART_WITH_LINK
+        and parent_span_context
+    ):
+        return links + (trace.Link(parent_span_context, link_attributes),)
+    return links
+
+
+def _ingress_strategy_from_trace_continuation_rule(
+    rule: _ConfiguredTraceContinuationRule,
+) -> ContinuationDecision:
+    if rule.strategy is None:
+        raise ValueError(
+            "Ingress trace continuation rules must define strategy"
+        )
+    return rule.strategy
+
+
+def _egress_action_from_trace_continuation_rule(
+    rule: _ConfiguredTraceContinuationRule,
+) -> EgressAction:
+    if rule.egress_action is not None:
+        return rule.egress_action
+    if rule.strategy is ContinuationDecision.CONTINUE:
+        return EgressAction.INJECT_TRACE_CONTEXT
+    if rule.strategy is not None:
+        return EgressAction.SUPPRESS_TRACE_CONTEXT
+    raise ValueError(
+        "Egress trace continuation rules must define egress_action or strategy"
+    )
+
+
+def _create_trace_continuation_rules(
+    config: TraceContinuationRuleConfig,
+) -> _ConfiguredTraceContinuationRule:
+    span_kind = (
+        TraceSpanKind[config.span_kind.value.upper()]
+        if config.span_kind is not None
+        else None
+    )
+    strategy = (
+        _map_trace_continuation_strategy(config.strategy)
+        if config.strategy is not None
+        else None
+    )
+    egress_action = (
+        _map_trace_continuation_egress_action(config.egress_action)
+        if config.egress_action is not None
+        else None
+    )
+    link_attributes = _coerce_link_attributes(config.link_attributes)
+    direction = _map_trace_continuation_direction(config.direction)
+
+    return _ConfiguredTraceContinuationRule(
+        direction=direction,
+        strategy=strategy,
+        egress_action=egress_action,
+        conditions=config.conditions,
+        span_kind=span_kind,
+        link_attributes=link_attributes,
+    )
+
+
+def _create_rule_based_trace_continuation_decider(
+    config: RuleBasedTraceContinuationDeciderConfig,
+) -> _ConfiguredRuleBasedTraceContinuationDecider:
+    rules = [
+        _create_trace_continuation_rules(rule_config)
+        for rule_config in config.rules
+    ]
+    kwargs: dict = {}
+    if config.default_ingress_strategy is not None:
+        kwargs["default_strategy"] = _map_trace_continuation_strategy(
+            config.default_ingress_strategy
+        )
+    if config.default_egress_action is not None:
+        kwargs["default_egress_action"] = (
+            _map_trace_continuation_egress_action(config.default_egress_action)
+        )
+    return _ConfiguredRuleBasedTraceContinuationDecider(rules=rules, **kwargs)
+
+
+def _create_trace_continuation_decider(
+    config: TraceContinuationDeciderConfig,
+) -> TraceContinuationDecider:
+    if config.always_continue_development is not None:
+        return ALWAYS_CONTINUE
+    if config.always_restart_with_link_development is not None:
+        return ALWAYS_RESTART_WITH_LINK
+    if config.always_restart_without_link_development is not None:
+        return ALWAYS_RESTART_WITHOUT_LINK
+    if config.rule_based_development is not None:
+        return _create_rule_based_trace_continuation_decider(
+            config.rule_based_development
+        )
+    if config.additional_properties:
+        name = next(iter(config.additional_properties))
+        return load_entry_point(
+            "opentelemetry_trace_continuation_decider", name
+        )()
+    raise ConfigurationError(
+        f"Unknown or unsupported trace continuation decider type in config: {config!r}. "
+        "Supported types: always_continue/development, always_restart_with_link/development, "
+        "always_restart_without_link/development, rule_based/development."
+    )
+
+
 def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
     """Create SpanLimits from config.
 
@@ -475,11 +852,21 @@ def create_tracer_provider(
         )
     )
 
+    continuation_decider = (
+        _create_trace_continuation_decider(
+            config.trace_continuation_decider_development
+        )
+        if config is not None
+        and config.trace_continuation_decider_development is not None
+        else None
+    )
+
     provider = TracerProvider(
         resource=resource,
         sampler=sampler,
         span_limits=span_limits,
         id_generator=id_generator,
+        _continuation_decider=continuation_decider,
     )
 
     if config is not None:

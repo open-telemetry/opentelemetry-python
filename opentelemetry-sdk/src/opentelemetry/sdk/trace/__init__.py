@@ -54,7 +54,7 @@ from opentelemetry.sdk.resources import (
     Resource,
     _get_process_dependent_resource,
 )
-from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace import sampling, trace_continuation
 from opentelemetry.sdk.trace._tracer_metrics import create_tracer_metrics
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
@@ -70,6 +70,7 @@ from opentelemetry.semconv.attributes.exception_attributes import (
     EXCEPTION_TYPE,
 )
 from opentelemetry.trace import NoOpTracer, SpanContext
+from opentelemetry.trace.propagation import tracecontext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
@@ -1123,6 +1124,8 @@ class Tracer(trace_api.Tracer):
         *,
         meter_provider: metrics_api.MeterProvider | None = None,
         _tracer_config: _TracerConfig | None = None,
+        _continuation_decider: trace_continuation.TraceContinuationDecider
+        | None,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
@@ -1132,6 +1135,9 @@ class Tracer(trace_api.Tracer):
         self._span_limits = span_limits
         self._instrumentation_scope = instrumentation_scope
         self._tracer_config = _tracer_config or _TracerConfig.default()
+        self._continuation_decider = (
+            _continuation_decider or trace_continuation.ALWAYS_CONTINUE
+        )
 
         meter_provider = meter_provider or metrics_api.get_meter_provider()
         self._tracer_metrics = create_tracer_metrics(
@@ -1182,6 +1188,32 @@ class Tracer(trace_api.Tracer):
         ) as span:
             yield span
 
+    @_agnosticcontextmanager  # pylint: disable=protected-access
+    def apply_egress_continuation(
+        self,
+        kind: trace_api.SpanKind,
+        context: context_api.Context | None = None,
+        attributes: types.Attributes = None,
+    ) -> Iterator[context_api.Context]:
+        injection_context = context or context_api.get_current()
+        egress_action = self._continuation_decider.should_inject(
+            context=injection_context,
+            kind=kind,
+            attributes=attributes,
+        )
+        if (
+            egress_action
+            is trace_continuation.EgressAction.SUPPRESS_TRACE_CONTEXT
+        ):
+            injection_context = tracecontext.suppress_trace_context_injection(
+                injection_context
+            )
+        else:
+            injection_context = tracecontext.enable_trace_context_injection(
+                injection_context
+            )
+        yield injection_context
+
     def start_span(  # pylint: disable=too-many-locals
         self,
         name: str,
@@ -1193,7 +1225,7 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
-        links = links or ()
+        links = tuple(links) if links else ()
         parent_span_context = trace_api.get_current_span(
             context
         ).get_span_context()
@@ -1208,10 +1240,41 @@ class Tracer(trace_api.Tracer):
         if not self._is_enabled():
             return trace_api.NonRecordingSpan(context=parent_span_context)
 
+        # the continuation result decides if we should restart the trace
+        # or not, consider only remote parent spans
+        if (
+            parent_span_context is not None
+            and parent_span_context.is_valid
+            and parent_span_context.is_remote
+        ):
+            continuation_result = self._continuation_decider.should_continue(
+                parent_context=context,
+                parent_span_context=parent_span_context,
+                kind=kind,
+                attributes=attributes,
+                links=links,
+            )
+        else:
+            continuation_result = trace_continuation.ContinuationResult(
+                decision=trace_continuation.Decision.CONTINUE,
+                links=links,
+            )
+
         # is_valid determines root span
-        if parent_span_context is None or not parent_span_context.is_valid:
+        if (
+            parent_span_context is None
+            or not parent_span_context.is_valid
+            or continuation_result.should_restart
+        ):
             parent_span_context = None
             trace_id = self.id_generator.generate_trace_id()
+
+            # if we need to restart remove the previous span from the context
+            # so that the samplers do not see it
+            if continuation_result.should_restart:
+                context = trace_api.set_span_in_context(
+                    trace_api.INVALID_SPAN, context
+                )
         else:
             trace_id = parent_span_context.trace_id
 
@@ -1222,7 +1285,12 @@ class Tracer(trace_api.Tracer):
         # to include information about the sampling result.
         # The sampler may also modify the parent span context's tracestate
         sampling_result = self.sampler.should_sample(
-            context, trace_id, name, kind, attributes, links
+            context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            continuation_result.links,
         )
 
         trace_flags = (
@@ -1265,7 +1333,7 @@ class Tracer(trace_api.Tracer):
                 attributes=sampling_result.attributes,
                 span_processor=self.span_processor,
                 kind=kind,
-                links=links,
+                links=continuation_result.links,
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
                 set_status_on_exception=set_status_on_exception,
@@ -1322,6 +1390,8 @@ class TracerProvider(trace_api.TracerProvider):
         *,
         meter_provider: metrics_api.MeterProvider | None = None,
         _tracer_configurator: _TracerConfiguratorT | None = None,
+        _continuation_decider: trace_continuation.TraceContinuationDecider
+        | None = None,
     ) -> None:
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
@@ -1342,6 +1412,7 @@ class TracerProvider(trace_api.TracerProvider):
         self._disabled = disabled.lower().strip() == "true"
         self._atexit_handler = None
         self._meter_provider = meter_provider
+        self._continuation_decider = _continuation_decider
 
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
@@ -1457,6 +1528,7 @@ class TracerProvider(trace_api.TracerProvider):
                 instrumentation_scope,
                 meter_provider=self._meter_provider,
                 _tracer_config=tracer_config,
+                _continuation_decider=self._continuation_decider,
             )
             self._tracers[instrumentation_scope] = tracer
 

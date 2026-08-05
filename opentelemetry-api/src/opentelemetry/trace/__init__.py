@@ -73,6 +73,7 @@ from typing_extensions import deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
@@ -402,6 +403,31 @@ class Tracer(ABC):
             The newly-created span.
         """
 
+    @_agnosticcontextmanager
+    @abstractmethod
+    def apply_egress_continuation(
+        self,
+        kind: SpanKind,
+        context: Context | None = None,
+        attributes: types.Attributes = None,
+    ) -> Iterator[Context]:
+        """Context manager for getting a Context informed with continuation hints
+        for egress propagation based on span kind and attributes.
+
+        Example::
+
+            with tracer.apply_egress_continuation(kind=Span.CLIENT, attributes=attributes) as injection_context:
+                propagate.inject(carrier, context=injection_context, setter=setter)
+
+        Args:
+            context: An optional Context. Defaults to the global context.
+            kind: The span's kind.
+            attributes: The span's attributes.
+
+        Yields:
+            A context that contains egress continuation hints for propagators
+        """
+
 
 class ProxyTracer(Tracer):
     # pylint: disable=W0222,signature-differs
@@ -441,6 +467,18 @@ class ProxyTracer(Tracer):
     def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:
         with self._tracer.start_as_current_span(*args, **kwargs) as span:  # type: ignore
             yield span
+
+    @_agnosticcontextmanager
+    def apply_egress_continuation(
+        self,
+        kind: SpanKind,
+        context: Context | None = None,
+        attributes: types.Attributes = None,
+    ) -> Iterator[Context]:
+        with self._tracer.apply_egress_continuation(
+            kind, context, attributes
+        ) as injection_context:
+            yield injection_context
 
 
 class NoOpTracer(Tracer):
@@ -506,6 +544,16 @@ class NoOpTracer(Tracer):
             set_status_on_exception=set_status_on_exception,
         ) as span:
             yield span
+
+    @_agnosticcontextmanager
+    def apply_egress_continuation(
+        self,
+        kind: SpanKind,
+        context: Context | None = None,
+        attributes: types.Attributes = None,
+    ) -> Iterator[Context]:
+        injected_context = context if context else get_current()
+        yield injected_context
 
 
 @deprecated("You should use NoOpTracer. Deprecated since version 1.9.0.")
