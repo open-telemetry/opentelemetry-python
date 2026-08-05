@@ -40,7 +40,7 @@ from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+from opentelemetry.util.types import Attributes, AttributeValue
 
 _logger = getLogger(__name__)
 
@@ -62,8 +62,8 @@ class LogRecord(ABC):
         context: Context | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None: ...
@@ -82,8 +82,8 @@ class LogRecord(ABC):
         trace_flags: TraceFlags | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue = None,
+        attributes: Attributes = None,
     ) -> None: ...
 
     def __init__(
@@ -97,8 +97,8 @@ class LogRecord(ABC):
         trace_flags: TraceFlags | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -129,7 +129,7 @@ class Logger(ABC):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> None:
         super().__init__()
         self._name = name
@@ -146,8 +146,8 @@ class Logger(ABC):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None: ...
@@ -168,8 +168,8 @@ class Logger(ABC):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -191,8 +191,8 @@ class NoOpLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None: ...
@@ -212,8 +212,8 @@ class NoOpLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -226,7 +226,7 @@ class ProxyLogger(Logger):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ):
         self._name = name
         self._version = version
@@ -259,8 +259,8 @@ class ProxyLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None: ...
@@ -280,8 +280,8 @@ class ProxyLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        body: AttributeValue | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -312,7 +312,7 @@ class LoggerProvider(ABC):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -351,7 +351,7 @@ class NoOpLoggerProvider(LoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
         return NoOpLogger(
@@ -365,7 +365,7 @@ class ProxyLoggerProvider(LoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         if _LOGGER_PROVIDER:
             return _LOGGER_PROVIDER.get_logger(
@@ -428,7 +428,7 @@ def get_logger(
     instrumenting_library_version: str = "",
     logger_provider: LoggerProvider | None = None,
     schema_url: str | None = None,
-    attributes: _ExtendedAttributes | None = None,
+    attributes: Attributes = None,
 ) -> Logger:
     """Returns a `Logger` for use within a python process.
 

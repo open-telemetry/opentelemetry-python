@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-
+import json
 from collections.abc import Sequence
 from logging import getLogger
 from threading import Lock
@@ -23,6 +23,17 @@ from opentelemetry.sdk.metrics._internal.view import View
 _logger = getLogger(__name__)
 
 
+def _unknown_type_handler(obj):
+    # We don't know if bytes is valid utf8. But we just want a string for a hash key, so
+    # ignore unknown values.
+    if isinstance(obj, bytes):
+        return obj.decode("utf-8", errors="ignore")
+    # Should not reach here because we have typed Attributes to a union of types
+    # that is serializable by json.dumps. User would have to pass in a bad type to
+    # reach here.
+    return str(obj)
+
+
 class _ViewInstrumentMatch:
     def __init__(
         self,
@@ -32,7 +43,7 @@ class _ViewInstrumentMatch:
     ):
         self._view = view
         self._instrument = instrument
-        self._attributes_aggregation: dict[frozenset, _Aggregation] = {}
+        self._attributes_aggregation: dict[str, _Aggregation] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
@@ -87,18 +98,23 @@ class _ViewInstrumentMatch:
     def consume_measurement(
         self, measurement: Measurement, should_sample_exemplar: bool = True
     ) -> None:
-        if self._view._attribute_keys is not None:
-            attributes = {}
-
-            for key, value in (measurement.attributes or {}).items():
-                if key in self._view._attribute_keys:
-                    attributes[key] = value
-        elif measurement.attributes is not None:
+        attributes = {}
+        if measurement.attributes:
+            # Make a shallow copy since the user can mutate the dict after the fact.
+            # The user can still modify mutable attribute values (lists/dicts)
+            # leading to unexpected behavior, but deep copying is expensive.
             attributes = dict(measurement.attributes)
-        else:
-            attributes = {}
-
-        aggr_key = frozenset(attributes.items())
+        if self._view._attribute_keys is not None:
+            attributes = {
+                k: v
+                for k, v in attributes.items()
+                if k in self._view._attribute_keys
+            }
+        # Use sort keys to get a stable key.
+        # Use default=_unknown_type_handler to serialize bytes and other unexpected values (should not be passed in, but we handle it just in case).
+        aggr_key = json.dumps(
+            attributes, sort_keys=True, default=_unknown_type_handler
+        )
 
         if aggr_key not in self._attributes_aggregation:
             with self._lock:

@@ -25,7 +25,7 @@ from opentelemetry.proto_json.resource.v1.resource import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import _ExtendedAttributes
+from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ def _encode_trace_id(trace_id: int) -> bytes:
 
 
 def _encode_attributes(
-    attributes: _ExtendedAttributes | None,
+    attributes: Attributes,
 ) -> list[JSONKeyValue]:
     if not attributes:
         return []

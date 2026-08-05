@@ -8,173 +8,16 @@ import logging
 import threading
 import unittest
 import unittest.mock
-from collections.abc import MutableSequence
 
 from opentelemetry.attributes import (
     BoundedAttributes,
-    _clean_attribute,
-    _clean_extended_attribute,
-    _clean_extended_attribute_value,
+    _clean_attribute_value,
 )
 
 
-class TestAttributes(unittest.TestCase):
-    # pylint: disable=invalid-name
-    def assertValid(self, value, key="k"):
-        expected = value
-        if isinstance(value, MutableSequence):
-            expected = tuple(value)
-        self.assertEqual(_clean_attribute(key, value, None), expected)
-
-    def assertInvalid(self, value, key="k"):
-        self.assertIsNone(_clean_attribute(key, value, None))
-
-    def test_attribute_key_validation(self):
-        # only non-empty strings are valid keys
-        self.assertInvalid(1, "")
-        self.assertInvalid(1, 1)
-        self.assertInvalid(1, {})
-        self.assertInvalid(1, [])
-        self.assertInvalid(1, b"1")
-        self.assertValid(1, "k")
-        self.assertValid(1, "1")
-
-    def test_clean_attribute(self):
-        self.assertInvalid([1, 2, 3.4, "ss", 4])
-        self.assertInvalid([{}, 1, 2, 3.4, 4])
-        self.assertInvalid(["sw", "lf", 3.4, "ss"])
-        self.assertInvalid([1, 2, 3.4, 5])
-        self.assertInvalid({})
-        self.assertInvalid([1, True])
-        self.assertValid(True)
-        self.assertValid("hi")
-        self.assertValid(3.4)
-        self.assertValid(15)
-        self.assertValid([1, 2, 3, 5])
-        self.assertValid([1.2, 2.3, 3.4, 4.5])
-        self.assertValid([True, False])
-        self.assertValid(["ss", "dw", "fw"])
-        self.assertValid([])
-        # None in sequences are valid
-        self.assertValid(["A", None, None])
-        self.assertValid(["A", None, None, "B"])
-        self.assertValid([None, None])
-        self.assertInvalid(["A", None, 1])
-        self.assertInvalid([None, "A", None, 1])
-
-        # test keys
-        self.assertValid("value", "key")
-        self.assertInvalid("value", "")
-        self.assertInvalid("value", None)
-
-    def test_sequence_attr_decode(self):
-        seq = [
-            None,
-            b"Content-Disposition",
-            b"Content-Type",
-            b"\x81",
-            b"Keep-Alive",
-        ]
-        expected = [
-            None,
-            "Content-Disposition",
-            "Content-Type",
-            None,
-            "Keep-Alive",
-        ]
-        self.assertEqual(
-            _clean_attribute("headers", seq, None), tuple(expected)
-        )
-
-
-class TestExtendedAttributes(unittest.TestCase):
-    # pylint: disable=invalid-name
-    def assertValid(self, value, key="k"):
-        expected = value
-        if isinstance(value, MutableSequence):
-            expected = tuple(value)
-        self.assertEqual(_clean_extended_attribute(key, value, None), expected)
-
-    def assertInvalid(self, value, key="k"):
-        self.assertIsNone(_clean_extended_attribute(key, value, None))
-
-    def test_attribute_key_validation(self):
-        # only non-empty strings are valid keys
-        self.assertInvalid(1, "")
-        self.assertInvalid(1, 1)
-        self.assertInvalid(1, {})
-        self.assertInvalid(1, [])
-        self.assertInvalid(1, b"1")
-        self.assertValid(1, "k")
-        self.assertValid(1, "1")
-
-    def test_clean_extended_attribute(self):
-        self.assertInvalid([1, 2, 3.4, "ss", 4])
-        self.assertInvalid([{}, 1, 2, 3.4, 4])
-        self.assertInvalid(["sw", "lf", 3.4, "ss"])
-        self.assertInvalid([1, 2, 3.4, 5])
-        self.assertInvalid([1, True])
-        self.assertValid(None)
-        self.assertValid(True)
-        self.assertValid("hi")
-        self.assertValid(3.4)
-        self.assertValid(15)
-        self.assertValid([1, 2, 3, 5])
-        self.assertValid([1.2, 2.3, 3.4, 4.5])
-        self.assertValid([True, False])
-        self.assertValid(["ss", "dw", "fw"])
-        self.assertValid([])
-        # None in sequences are valid
-        self.assertValid(["A", None, None])
-        self.assertValid(["A", None, None, "B"])
-        self.assertValid([None, None])
-        self.assertInvalid(["A", None, 1])
-        self.assertInvalid([None, "A", None, 1])
-        # mappings
-        self.assertValid({})
-        self.assertValid({"k": "v"})
-        # mappings in sequences
-        self.assertValid([{"k": "v"}])
-
-        # test keys
-        self.assertValid("value", "key")
-        self.assertInvalid("value", "")
-        self.assertInvalid("value", None)
-
-    def test_sequence_attr_decode(self):
-        seq = [
-            None,
-            b"Content-Disposition",
-            b"Content-Type",
-            b"\x81",
-            b"Keep-Alive",
-        ]
-        self.assertEqual(
-            _clean_extended_attribute("headers", seq, None), tuple(seq)
-        )
-
-    def test_mapping(self):
-        mapping = {
-            "": "invalid",
-            b"bytes": "invalid",
-            "none": {"": "invalid"},
-            "valid_primitive": "str",
-            "valid_sequence": ["str"],
-            "invalid_sequence": ["str", 1],
-            "valid_mapping": {"str": 1},
-            "invalid_mapping": {"": 1},
-        }
-        expected = {
-            "none": {},
-            "valid_primitive": "str",
-            "valid_sequence": ("str",),
-            "invalid_sequence": None,
-            "valid_mapping": {"str": 1},
-            "invalid_mapping": {},
-        }
-        self.assertEqual(
-            _clean_extended_attribute("headers", mapping, None), expected
-        )
+class _NoStrNoReprObject:
+    def __init__(self):
+        pass
 
 
 class TestBoundedAttributes(unittest.TestCase):
@@ -186,11 +29,106 @@ class TestBoundedAttributes(unittest.TestCase):
         "vaccinated": True,
     }
 
-    def test_negative_maxlen(self):
+    def test_clean_attribute_value_with_various_params(self):
+        # A python object that isn't a primitive and has no string/repr method is converted to None.
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            self.assertEqual(
+                _clean_attribute_value(_NoStrNoReprObject(), None),
+                None,
+            )
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn(
+            "Expected one of bool, str, None, bytes, int, float", cm.output[0]
+        )
+
+        valid_primitive_sequence = [1, 2.2, None, "cookie"]
+        self.assertEqual(
+            _clean_attribute_value(valid_primitive_sequence, None),
+            tuple(valid_primitive_sequence),
+        )
+        for valid_primitive in valid_primitive_sequence:
+            self.assertEqual(
+                _clean_attribute_value(valid_primitive, None), valid_primitive
+            )
+
+        self.assertEqual(_clean_attribute_value(b"hello", 4), b"hello")
+
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            # String is truncated.
+            self.assertEqual(_clean_attribute_value("a" * 1000, 5), "aaaaa")
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn(
+            "String attribute value exceeds max length", cm.output[0]
+        )
+
+        # Sequence of different types of values. List converted to tuple.
+        self.assertEqual(
+            _clean_attribute_value(
+                ["a", 2, _NoStrNoReprObject(), None, b"\xff"], None
+            ),
+            ("a", 2, None, None, b"\xff"),
+        )
+
+        # non-str key in map... will be converted to string
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            self.assertEqual(
+                _clean_attribute_value({2.2: 4.4}, None), {"2.2": 4.4}
+            )
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn(
+            "Invalid type",
+            cm.output[0],
+        )
+
+        # Mapping of values..
+        # Non string key without a string conversion method is dropped.
+        self.assertEqual(
+            _clean_attribute_value(
+                {
+                    "a": 1,
+                    _NoStrNoReprObject(): 2,
+                    "c": 3,
+                    "d": [2, 3],
+                    "bytes": b"\xff",
+                },
+                None,
+            ),
+            {"a": 1, "c": 3, "d": (2, 3), "bytes": b"\xff"},
+        )
+
+    def test_same_key_value_overwritten(self):
+        bdict = BoundedAttributes(1, {"name": "Firulais"}, immutable=False)
+        self.assertEqual(bdict["name"], "Firulais")
+        self.assertEqual(bdict.dropped, 0)
+        bdict["name"] = "Bruno"
+        self.assertEqual(bdict["name"], "Bruno")
+        self.assertEqual(bdict.dropped, 0)
+
+    def test_invalid_key_not_used(self):
+        bdict = BoundedAttributes(50, {}, immutable=False)
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            bdict[1] = 2
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("invalid key", cm.output[0])
+        self.assertNotIn(1, bdict)
+        self.assertEqual(bdict.dropped, 1)
+
+    def test_maxlen_reached(self):
+        bdict = BoundedAttributes(1, {"first": "value"}, immutable=False)
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            bdict["second"] = "another"
+        self.assertIn(
+            "Attributes dict is full. Dropping the oldest", cm.output[0]
+        )
+        self.assertNotIn("first", bdict)
+        self.assertEqual(bdict["second"], "another")
+        self.assertEqual(bdict.dropped, 1)
+
+    def test_negative_maxlen_not_allowed(self):
         with self.assertRaises(ValueError):
             BoundedAttributes(-1)
 
-    def test_from_map(self):
+    def test_base_copy_isolated_and_len_works(self):
         dic_len = len(self.base)
         base_copy = self.base.copy()
         bdict = BoundedAttributes(dic_len, base_copy)
@@ -207,13 +145,7 @@ class TestBoundedAttributes(unittest.TestCase):
         # test that iter yields the correct number of elements
         self.assertEqual(len(tuple(bdict)), dic_len)
 
-        # map too big
-        half_len = dic_len // 2
-        bdict = BoundedAttributes(half_len, self.base)
-        self.assertEqual(len(tuple(bdict)), half_len)
-        self.assertEqual(bdict.dropped, dic_len - half_len)
-
-    def test_bounded_dict(self):
+    def test_basic_insertion_update_iteration_and_deletion(self):
         # create empty dict
         dic_len = len(self.base)
         bdict = BoundedAttributes(dic_len, immutable=False)
@@ -237,14 +169,11 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict["name"] = "Bruno"
         self.assertEqual(bdict.dropped, 0)
 
-        # try to append more elements
+        # try to append more elements, old elements should be dropped
         for key in self.base:
             bdict["new-" + key] = self.base[key]
 
         self.assertEqual(len(bdict), dic_len)
-        self.assertEqual(bdict.dropped, dic_len)
-        # Invalid values shouldn't be considered for `dropped`
-        bdict["invalid-seq"] = [None, 1, "2"]
         self.assertEqual(bdict.dropped, dic_len)
 
         # test that elements in the dict are the new ones
@@ -257,14 +186,6 @@ class TestBoundedAttributes(unittest.TestCase):
 
         with self.assertRaises(KeyError):
             _ = bdict["new-name"]
-
-    def test_no_limit_code(self):
-        bdict = BoundedAttributes(maxlen=None, immutable=False)
-        for num in range(100):
-            bdict[str(num)] = num
-
-        for num in range(100):
-            self.assertEqual(bdict[str(num)], num)
 
     def test_immutable(self):
         bdict = BoundedAttributes()
@@ -281,7 +202,7 @@ class TestBoundedAttributes(unittest.TestCase):
         With _clean_attribute called before the lock is acquired, no deadlock
         occurs.
         """
-        bdict = BoundedAttributes(immutable=False)
+        bdict = BoundedAttributes(immutable=False, max_value_len=20)
 
         class ReentrantHandler(logging.Handler):
             def emit(self, _record):
@@ -296,9 +217,8 @@ class TestBoundedAttributes(unittest.TestCase):
             completed = threading.Event()
 
             def run():
-                # None is an invalid attribute value and triggers _logger.warning
-                # in _clean_attribute, which fires the ReentrantHandler above.
-                bdict["trigger.key"] = None
+                # A string value > 20 triggers a warning log in _clean_attribute, which fires the ReentrantHandler above.
+                bdict["trigger.key"] = "a" * 21
                 completed.set()
 
             thread = threading.Thread(target=run, daemon=True)
@@ -313,43 +233,17 @@ class TestBoundedAttributes(unittest.TestCase):
         finally:
             otel_logger.removeHandler(handler)
 
-    # pylint: disable=no-self-use
-    def test_extended_attributes(self):
-        bdict = BoundedAttributes(extended_attributes=True, immutable=False)
-        with unittest.mock.patch(
-            "opentelemetry.attributes._clean_extended_attribute",
-            return_value="mock_value",
-        ) as clean_extended_attribute_mock:
-            bdict["key"] = "value"
-
-        clean_extended_attribute_mock.assert_called_once()
-
     def test_wsgi_request_conversion_to_string(self):
-        """Test that WSGI request objects are converted to strings when _clean_extended_attribute is called."""
+        """Test that WSGI request objects are converted to strings when _clean_attribute_value is called."""
 
         class DummyWSGIRequest:
             def __str__(self):
                 return "<DummyWSGIRequest method=GET path=/example/>"
 
-        wsgi_request = DummyWSGIRequest()
-
-        cleaned_value = _clean_extended_attribute(
-            "request", wsgi_request, None
-        )
-
-        # Verify we get a string back from the cleaner
-        self.assertIsInstance(cleaned_value, str)
         self.assertEqual(
-            "<DummyWSGIRequest method=GET path=/example/>", cleaned_value
+            "<DummyWSGIRequest method=GET path=/example/>",
+            _clean_attribute_value(DummyWSGIRequest(), None),
         )
-
-    def test_invalid_anyvalue_type_raises_typeerror(self):
-        class BadStr:
-            def __str__(self):
-                raise RuntimeError("boom")
-
-        with self.assertRaises(TypeError):
-            _clean_extended_attribute_value(BadStr(), None)
 
     def test_deepcopy(self):
         bdict = BoundedAttributes(4, self.base, immutable=False)

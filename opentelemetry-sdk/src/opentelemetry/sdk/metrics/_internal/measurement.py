@@ -23,7 +23,8 @@ class Measurement:
         time_unix_nano: The time the API call was made to record the Measurement
         instrument: The instrument that produced this `Measurement`.
         context: The active Context of the Measurement at API call time.
-        attributes: Measurement attributes
+        attributes: Measurement attributes. Mutating mutable attribute values (lists or dicts)
+        outside of the Measurement object can lead to undefined and bad behavior.
     """
 
     value: int | float

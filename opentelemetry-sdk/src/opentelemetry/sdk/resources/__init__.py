@@ -92,7 +92,6 @@ except ImportError:
 LabelValue = AttributeValue
 Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
-
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
 CLOUD_REGION = ResourceAttributes.CLOUD_REGION
@@ -160,7 +159,10 @@ class Resource:
     _schema_url: str
 
     def __init__(self, attributes: Attributes, schema_url: str | None = None):
-        self._attributes = BoundedAttributes(attributes=attributes)
+        # Immutable set to true so attributes cannot be added or removed after creation.
+        self._attributes = BoundedAttributes(
+            attributes=attributes, immutable=True
+        )
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
