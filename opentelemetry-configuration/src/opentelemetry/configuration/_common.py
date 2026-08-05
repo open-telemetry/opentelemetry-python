@@ -31,7 +31,7 @@ def _additional_properties(cls):
     """
     original_init = cls.__init__
     original_sig = inspect.signature(original_init)
-    known_fields = frozenset(f.name for f in dataclasses.fields(cls))
+    known_fields = frozenset(f.name for f in dataclasses.fields(cls) if f.init)
 
     def _init(self, **kwargs):
         known = {k: v for k, v in kwargs.items() if k in known_fields}
@@ -82,10 +82,8 @@ class _ComponentConfig(Protocol):
     for ``**kwargs`` splatting to the user-defined component class) or
     ``None`` (when the YAML uses ``my_plugin:`` or ``my_plugin: null``).
 
-    Note: the generated models declare ``additional_properties`` as a
-    ``ClassVar`` even though the decorator assigns it as an instance
-    attribute at runtime. This is tolerated by pyright in ``standard``
-    mode but flagged in ``strict`` mode. See #5268.
+    The generated models declare ``additional_properties`` as an instance
+    field to match the decorator's runtime assignment.
     """
 
     additional_properties: dict[str, dict[str, Any] | None]
