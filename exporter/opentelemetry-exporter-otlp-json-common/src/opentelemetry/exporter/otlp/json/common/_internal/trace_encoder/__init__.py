@@ -49,9 +49,7 @@ _logger = logging.getLogger(__name__)
 def encode_spans(
     sdk_spans: Collection[ReadableSpan],
 ) -> JSONExportTraceServiceRequest:
-    return JSONExportTraceServiceRequest(
-        resource_spans=_encode_resource_spans(sdk_spans)
-    )
+    return JSONExportTraceServiceRequest(resource_spans=_encode_resource_spans(sdk_spans))
 
 
 def _encode_resource_spans(
@@ -62,9 +60,7 @@ def _encode_resource_spans(
     for sdk_span in sdk_spans:
         sdk_resource = sdk_span.resource
         sdk_instrumentation = sdk_span.instrumentation_scope or None
-        sdk_resource_spans[sdk_resource][sdk_instrumentation].append(
-            _encode_span(sdk_span)
-        )
+        sdk_resource_spans[sdk_resource][sdk_instrumentation].append(_encode_span(sdk_span))
 
     json_resource_spans = []
     for sdk_resource, sdk_instrumentations in sdk_resource_spans.items():
@@ -74,9 +70,7 @@ def _encode_resource_spans(
                 JSONScopeSpans(
                     scope=(_encode_instrumentation_scope(sdk_instrumentation)),
                     spans=json_spans,
-                    schema_url=sdk_instrumentation.schema_url
-                    if sdk_instrumentation
-                    else None,
+                    schema_url=sdk_instrumentation.schema_url if sdk_instrumentation else None,
                 )
             )
         json_resource_spans.append(
@@ -100,13 +94,9 @@ def _span_flags(parent_span_context: SpanContext | None) -> int:
 def _encode_span(sdk_span: ReadableSpan) -> JSONSpan:
     span_context = sdk_span.get_span_context()
     return JSONSpan(
-        trace_id=_encode_trace_id(
-            span_context.trace_id if span_context else 0
-        ),
+        trace_id=_encode_trace_id(span_context.trace_id if span_context else 0),
         span_id=_encode_span_id(span_context.span_id if span_context else 0),
-        trace_state=_encode_trace_state(
-            span_context.trace_state if span_context else None
-        ),
+        trace_state=_encode_trace_state(span_context.trace_state if span_context else None),
         parent_span_id=_encode_context_span_id(sdk_span.parent),
         name=sdk_span.name,
         kind=_SPAN_KIND_MAP[sdk_span.kind],
@@ -162,11 +152,7 @@ def _encode_status(status: Status | None) -> JSONStatus | None:
 
 
 def _encode_trace_state(trace_state: TraceState | None) -> str | None:
-    return (
-        ",".join([f"{key}={value}" for key, value in (trace_state.items())])
-        if trace_state is not None
-        else None
-    )
+    return ",".join([f"{key}={value}" for key, value in (trace_state.items())]) if trace_state is not None else None
 
 
 def _encode_context_span_id(context: SpanContext | None) -> bytes | None:

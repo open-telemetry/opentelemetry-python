@@ -66,9 +66,7 @@ def orig_callback(options: CallbackOptions) -> Iterable[Observation]:
 class TestBackwardCompat(TestCase):
     def test_metric_exporter(self):
         exporter = OrigMetricExporter()
-        meter_provider = MeterProvider(
-            metric_readers=[PeriodicExportingMetricReader(exporter)]
-        )
+        meter_provider = MeterProvider(metric_readers=[PeriodicExportingMetricReader(exporter)])
         # produce some data
         meter_provider.get_meter("foo").create_counter("mycounter").add(12)
         with self.assertNotRaises(Exception):
@@ -91,9 +89,5 @@ class TestBackwardCompat(TestCase):
             metrics_data = reader.get_metrics_data()
 
         self.assertEqual(len(metrics_data.resource_metrics), 1)
-        self.assertEqual(
-            len(metrics_data.resource_metrics[0].scope_metrics), 1
-        )
-        self.assertEqual(
-            len(metrics_data.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metrics_data.resource_metrics[0].scope_metrics), 1)
+        self.assertEqual(len(metrics_data.resource_metrics[0].scope_metrics[0].metrics), 1)

@@ -77,7 +77,7 @@ log_cli = true
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
-line-length = 79
+line-length = 120
 force-exclude = true
 extend-exclude = [
   "*_pb2*.py*",

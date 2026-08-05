@@ -37,14 +37,10 @@ class TestExponentMapping(TestCase):
         self.assertIsNot(ExponentMapping(-3), ExponentMapping(-5))
 
     @patch(
-        "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping."
-        "exponent_mapping.ExponentMapping._mappings",
+        "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.exponent_mapping.ExponentMapping._mappings",
         new={},
     )
-    @patch(
-        "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping."
-        "exponent_mapping.ExponentMapping._init"
-    )
+    @patch("opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.exponent_mapping.ExponentMapping._init")
     def test_init_called_once(self, mock_init):  # pylint: disable=no-self-use
         ExponentMapping(-3)
         ExponentMapping(-3)
@@ -69,12 +65,8 @@ class TestExponentMapping(TestCase):
         self.assertEqual(exponent_mapping.map_to_index(MAX_NORMAL_VALUE), 1023)
         self.assertEqual(exponent_mapping.map_to_index(2**1023), 1022)
         self.assertEqual(exponent_mapping.map_to_index(2**1022), 1021)
-        self.assertEqual(
-            exponent_mapping.map_to_index(hex_1_1 * (2**1023)), 1023
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(hex_1_1 * (2**1022)), 1022
-        )
+        self.assertEqual(exponent_mapping.map_to_index(hex_1_1 * (2**1023)), 1023)
+        self.assertEqual(exponent_mapping.map_to_index(hex_1_1 * (2**1022)), 1022)
 
         # Testing with values near 1
         self.assertEqual(exponent_mapping.map_to_index(4), 1)
@@ -91,28 +83,18 @@ class TestExponentMapping(TestCase):
 
         # Testing with values near 0
         self.assertEqual(exponent_mapping.map_to_index(2**-1022), -1023)
-        self.assertEqual(
-            exponent_mapping.map_to_index(hex_1_1 * (2**-1022)), -1022
-        )
+        self.assertEqual(exponent_mapping.map_to_index(hex_1_1 * (2**-1022)), -1022)
         self.assertEqual(exponent_mapping.map_to_index(2**-1021), -1022)
-        self.assertEqual(
-            exponent_mapping.map_to_index(hex_1_1 * (2**-1021)), -1021
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(2**-1022), MIN_NORMAL_EXPONENT - 1
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(2**-1021), MIN_NORMAL_EXPONENT
-        )
+        self.assertEqual(exponent_mapping.map_to_index(hex_1_1 * (2**-1021)), -1021)
+        self.assertEqual(exponent_mapping.map_to_index(2**-1022), MIN_NORMAL_EXPONENT - 1)
+        self.assertEqual(exponent_mapping.map_to_index(2**-1021), MIN_NORMAL_EXPONENT)
         # The smallest subnormal value is 2 **  -1074 = 5e-324.
         # This value is also the result of:
         # s = 1
         # while s / 2:
         #     s = s / 2
         # s == 5e-324
-        self.assertEqual(
-            exponent_mapping.map_to_index(2**-1074), MIN_NORMAL_EXPONENT - 1
-        )
+        self.assertEqual(exponent_mapping.map_to_index(2**-1074), MIN_NORMAL_EXPONENT - 1)
 
     def test_exponent_mapping_min_scale(self):
         exponent_mapping = ExponentMapping(ExponentMapping._min_scale)
@@ -158,102 +140,46 @@ class TestExponentMapping(TestCase):
         self.assertEqual(exponent_mapping.map_to_index(float(0x10)), 0)
         self.assertEqual(exponent_mapping.map_to_index(float(0x100)), 0)
         self.assertEqual(exponent_mapping.map_to_index(float(0x1000)), 0)
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x10000)), 0
-        )  # base == 2 **  16
+        self.assertEqual(exponent_mapping.map_to_index(float(0x10000)), 0)  # base == 2 **  16
         self.assertEqual(exponent_mapping.map_to_index(float(0x100000)), 1)
         self.assertEqual(exponent_mapping.map_to_index(float(0x1000000)), 1)
         self.assertEqual(exponent_mapping.map_to_index(float(0x10000000)), 1)
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x100000000)), 1
-        )  # base == 2 **  32
+        self.assertEqual(exponent_mapping.map_to_index(float(0x100000000)), 1)  # base == 2 **  32
 
         self.assertEqual(exponent_mapping.map_to_index(float(0x1000000000)), 2)
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x10000000000)), 2
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x100000000000)), 2
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x1000000000000)), 2
-        )  # base == 2 **  48
+        self.assertEqual(exponent_mapping.map_to_index(float(0x10000000000)), 2)
+        self.assertEqual(exponent_mapping.map_to_index(float(0x100000000000)), 2)
+        self.assertEqual(exponent_mapping.map_to_index(float(0x1000000000000)), 2)  # base == 2 **  48
 
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x10000000000000)), 3
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x100000000000000)), 3
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x1000000000000000)), 3
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x10000000000000000)), 3
-        )  # base == 2 **  64
+        self.assertEqual(exponent_mapping.map_to_index(float(0x10000000000000)), 3)
+        self.assertEqual(exponent_mapping.map_to_index(float(0x100000000000000)), 3)
+        self.assertEqual(exponent_mapping.map_to_index(float(0x1000000000000000)), 3)
+        self.assertEqual(exponent_mapping.map_to_index(float(0x10000000000000000)), 3)  # base == 2 **  64
 
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x100000000000000000)), 4
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x1000000000000000000)), 4
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x10000000000000000000)), 4
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x100000000000000000000)), 4
-        )  # base == 2 **  80
-        self.assertEqual(
-            exponent_mapping.map_to_index(float(0x1000000000000000000000)), 5
-        )
+        self.assertEqual(exponent_mapping.map_to_index(float(0x100000000000000000)), 4)
+        self.assertEqual(exponent_mapping.map_to_index(float(0x1000000000000000000)), 4)
+        self.assertEqual(exponent_mapping.map_to_index(float(0x10000000000000000000)), 4)
+        self.assertEqual(exponent_mapping.map_to_index(float(0x100000000000000000000)), 4)  # base == 2 **  80
+        self.assertEqual(exponent_mapping.map_to_index(float(0x1000000000000000000000)), 5)
 
         self.assertEqual(exponent_mapping.map_to_index(1 / float(0x1)), -1)
         self.assertEqual(exponent_mapping.map_to_index(1 / float(0x10)), -1)
         self.assertEqual(exponent_mapping.map_to_index(1 / float(0x100)), -1)
         self.assertEqual(exponent_mapping.map_to_index(1 / float(0x1000)), -1)
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x10000)), -2
-        )  # base == 2 **  -16
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x100000)), -2
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x1000000)), -2
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x10000000)), -2
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x100000000)), -3
-        )  # base == 2 **  -32
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x1000000000)), -3
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x10000000000)), -3
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x100000000000)), -3
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x1000000000000)), -4
-        )  # base == 2 **  -32
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x10000000000000)), -4
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x100000000000000)), -4
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x1000000000000000)), -4
-        )
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x10000000000000000)), -5
-        )  # base == 2 **  -64
-        self.assertEqual(
-            exponent_mapping.map_to_index(1 / float(0x100000000000000000)), -5
-        )
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x10000)), -2)  # base == 2 **  -16
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x100000)), -2)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x1000000)), -2)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x10000000)), -2)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x100000000)), -3)  # base == 2 **  -32
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x1000000000)), -3)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x10000000000)), -3)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x100000000000)), -3)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x1000000000000)), -4)  # base == 2 **  -32
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x10000000000000)), -4)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x100000000000000)), -4)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x1000000000000000)), -4)
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x10000000000000000)), -5)  # base == 2 **  -64
+        self.assertEqual(exponent_mapping.map_to_index(1 / float(0x100000000000000000)), -5)
 
         self.assertEqual(exponent_mapping.map_to_index(float_info.max), 63)
         self.assertEqual(exponent_mapping.map_to_index(2**1023), 63)
@@ -288,9 +214,7 @@ class TestExponentMapping(TestCase):
         self.assertEqual(exponent_mapping.map_to_index(2**-975), -61)
 
     def test_exponent_index_max(self):
-        for scale in range(
-            ExponentMapping._min_scale, ExponentMapping._max_scale
-        ):
+        for scale in range(ExponentMapping._min_scale, ExponentMapping._max_scale):
             exponent_mapping = ExponentMapping(scale)
 
             index = exponent_mapping.map_to_index(MAX_NORMAL_VALUE)
@@ -307,9 +231,7 @@ class TestExponentMapping(TestCase):
                 exponent_mapping.get_lower_boundary(index + 1)
 
     def test_exponent_index_min(self):
-        for scale in range(
-            ExponentMapping._min_scale, ExponentMapping._max_scale + 1
-        ):
+        for scale in range(ExponentMapping._min_scale, ExponentMapping._max_scale + 1):
             exponent_mapping = ExponentMapping(scale)
 
             min_index = exponent_mapping.map_to_index(MIN_NORMAL_VALUE)
@@ -328,9 +250,7 @@ class TestExponentMapping(TestCase):
             correct_boundary = right_boundary(scale, correct_min_index)
 
             self.assertEqual(correct_boundary, boundary)
-            self.assertGreater(
-                right_boundary(scale, correct_min_index + 1), boundary
-            )
+            self.assertGreater(right_boundary(scale, correct_min_index + 1), boundary)
 
             self.assertEqual(
                 correct_min_index,
@@ -344,19 +264,13 @@ class TestExponentMapping(TestCase):
                 correct_min_index,
                 exponent_mapping.map_to_index(MIN_NORMAL_VALUE / 100),
             )
-            self.assertEqual(
-                correct_min_index, exponent_mapping.map_to_index(2**-1050)
-            )
-            self.assertEqual(
-                correct_min_index, exponent_mapping.map_to_index(2**-1073)
-            )
+            self.assertEqual(correct_min_index, exponent_mapping.map_to_index(2**-1050))
+            self.assertEqual(correct_min_index, exponent_mapping.map_to_index(2**-1073))
             self.assertEqual(
                 correct_min_index,
                 exponent_mapping.map_to_index(1.1 * (2**-1073)),
             )
-            self.assertEqual(
-                correct_min_index, exponent_mapping.map_to_index(2**-1074)
-            )
+            self.assertEqual(correct_min_index, exponent_mapping.map_to_index(2**-1074))
 
             with self.assertRaises(MappingUnderflowError):
                 exponent_mapping.get_lower_boundary(min_index - 1)

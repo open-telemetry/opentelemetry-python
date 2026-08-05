@@ -79,28 +79,19 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         exporter = Exporter()
         logger_provider = LoggerProvider()
-        logger_provider.add_log_record_processor(
-            SimpleLogRecordProcessor(exporter)
-        )
+        logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
         root_logger = logging.getLogger()
         # Add the OTLP handler to the root logger like is done in auto instrumentation.
         # This causes logs generated from within SimpleLogRecordProcessor.on_emit (such as the above log in export)
         # to be sent back to SimpleLogRecordProcessor.on_emit
-        handler = LoggingHandler(
-            level=logging.DEBUG, logger_provider=logger_provider
-        )
+        handler = LoggingHandler(level=logging.DEBUG, logger_provider=logger_provider)
         root_logger.addHandler(handler)
-        propagate_false_logger = logging.getLogger(
-            "opentelemetry.sdk._logs._internal.export.propagate.false"
-        )
+        propagate_false_logger = logging.getLogger("opentelemetry.sdk._logs._internal.export.propagate.false")
         # This would cause a max recursion depth exceeded error..
         try:
             with self.assertLogs(propagate_false_logger) as cm:
                 root_logger.warning("hello!")
-            assert (
-                "SimpleLogRecordProcessor.on_emit has entered a recursive loop"
-                in cm.output[0]
-            )
+            assert "SimpleLogRecordProcessor.on_emit has entered a recursive loop" in cm.output[0]
         finally:
             root_logger.removeHandler(handler)
 
@@ -108,9 +99,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
-        logger_provider.add_log_record_processor(
-            SimpleLogRecordProcessor(exporter)
-        )
+        logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
 
         logger = logging.getLogger("default_level")
         logger.propagate = False
@@ -120,24 +109,16 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
         warning_log_record = finished_logs[0]
-        self.assertEqual(
-            warning_log_record.log_record.body, "Something is wrong"
-        )
+        self.assertEqual(warning_log_record.log_record.body, "Something is wrong")
         self.assertEqual(warning_log_record.log_record.severity_text, "WARN")
-        self.assertEqual(
-            warning_log_record.log_record.severity_number, SeverityNumber.WARN
-        )
-        self.assertEqual(
-            finished_logs[0].instrumentation_scope.name, "default_level"
-        )
+        self.assertEqual(warning_log_record.log_record.severity_number, SeverityNumber.WARN)
+        self.assertEqual(finished_logs[0].instrumentation_scope.name, "default_level")
 
     def test_simple_log_record_processor_custom_level(self):
         exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
-        logger_provider.add_log_record_processor(
-            SimpleLogRecordProcessor(exporter)
-        )
+        logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
 
         logger = logging.getLogger("custom_level")
         logger.propagate = False
@@ -161,23 +142,15 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
         self.assertEqual(fatal_log_record.log_record.body, "Critical message")
         self.assertEqual(fatal_log_record.log_record.severity_text, "FATAL")
-        self.assertEqual(
-            fatal_log_record.log_record.severity_number, SeverityNumber.FATAL
-        )
-        self.assertEqual(
-            finished_logs[0].instrumentation_scope.name, "custom_level"
-        )
-        self.assertEqual(
-            finished_logs[1].instrumentation_scope.name, "custom_level"
-        )
+        self.assertEqual(fatal_log_record.log_record.severity_number, SeverityNumber.FATAL)
+        self.assertEqual(finished_logs[0].instrumentation_scope.name, "custom_level")
+        self.assertEqual(finished_logs[1].instrumentation_scope.name, "custom_level")
 
     def test_simple_log_record_processor_trace_correlation(self):
         exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
-        logger_provider.add_log_record_processor(
-            SimpleLogRecordProcessor(exporter)
-        )
+        logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
 
         logger = logging.getLogger("trace_correlation")
         logger.propagate = False
@@ -189,21 +162,11 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         sdk_record = finished_logs[0]
         self.assertEqual(sdk_record.log_record.body, "Warning message")
         self.assertEqual(sdk_record.log_record.severity_text, "WARN")
-        self.assertEqual(
-            sdk_record.log_record.severity_number, SeverityNumber.WARN
-        )
-        self.assertEqual(
-            sdk_record.log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id
-        )
-        self.assertEqual(
-            sdk_record.log_record.span_id, INVALID_SPAN_CONTEXT.span_id
-        )
-        self.assertEqual(
-            sdk_record.log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
-        )
-        self.assertEqual(
-            finished_logs[0].instrumentation_scope.name, "trace_correlation"
-        )
+        self.assertEqual(sdk_record.log_record.severity_number, SeverityNumber.WARN)
+        self.assertEqual(sdk_record.log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
+        self.assertEqual(sdk_record.log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
+        self.assertEqual(sdk_record.log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags)
+        self.assertEqual(finished_logs[0].instrumentation_scope.name, "trace_correlation")
         exporter.clear()
 
         tracer = trace.TracerProvider().get_tracer(__name__)
@@ -212,35 +175,23 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
             finished_logs = exporter.get_finished_logs()
             sdk_record = finished_logs[0]
-            self.assertEqual(
-                sdk_record.log_record.body, "Critical message within span"
-            )
+            self.assertEqual(sdk_record.log_record.body, "Critical message within span")
             self.assertEqual(sdk_record.log_record.severity_text, "FATAL")
-            self.assertEqual(
-                sdk_record.log_record.severity_number, SeverityNumber.FATAL
-            )
+            self.assertEqual(sdk_record.log_record.severity_number, SeverityNumber.FATAL)
             self.assertEqual(
                 finished_logs[0].instrumentation_scope.name,
                 "trace_correlation",
             )
             span_context = span.get_span_context()
-            self.assertEqual(
-                sdk_record.log_record.trace_id, span_context.trace_id
-            )
-            self.assertEqual(
-                sdk_record.log_record.span_id, span_context.span_id
-            )
-            self.assertEqual(
-                sdk_record.log_record.trace_flags, span_context.trace_flags
-            )
+            self.assertEqual(sdk_record.log_record.trace_id, span_context.trace_id)
+            self.assertEqual(sdk_record.log_record.span_id, span_context.span_id)
+            self.assertEqual(sdk_record.log_record.trace_flags, span_context.trace_flags)
 
     def test_simple_log_record_processor_shutdown(self):
         exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
-        logger_provider.add_log_record_processor(
-            SimpleLogRecordProcessor(exporter)
-        )
+        logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
 
         logger = logging.getLogger("shutdown")
         logger.propagate = False
@@ -250,16 +201,10 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
         warning_log_record = finished_logs[0]
-        self.assertEqual(
-            warning_log_record.log_record.body, "Something is wrong"
-        )
+        self.assertEqual(warning_log_record.log_record.body, "Something is wrong")
         self.assertEqual(warning_log_record.log_record.severity_text, "WARN")
-        self.assertEqual(
-            warning_log_record.log_record.severity_number, SeverityNumber.WARN
-        )
-        self.assertEqual(
-            finished_logs[0].instrumentation_scope.name, "shutdown"
-        )
+        self.assertEqual(warning_log_record.log_record.severity_number, SeverityNumber.WARN)
+        self.assertEqual(finished_logs[0].instrumentation_scope.name, "shutdown")
         exporter.clear()
         logger_provider.shutdown()
         logger.warning("Log after shutdown")
@@ -294,15 +239,10 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             (["list", "of", "strings"], "WARN"),
             ({"key": "value"}, "ERROR"),
         ]
-        emitted = [
-            (item.log_record.body, item.log_record.severity_text)
-            for item in finished_logs
-        ]
+        emitted = [(item.log_record.body, item.log_record.severity_text) for item in finished_logs]
         self.assertEqual(expected, emitted)
         for item in finished_logs:
-            self.assertEqual(
-                item.instrumentation_scope.name, "different_msg_types"
-            )
+            self.assertEqual(item.instrumentation_scope.name, "different_msg_types")
 
     def test_simple_log_record_processor_custom_single_obj(self):
         """
@@ -361,9 +301,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         logger = logging.getLogger("different_msg_types")
         handler = LoggingHandler(logger_provider=provider)
-        handler.setFormatter(
-            logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-        )
+        handler.setFormatter(logging.Formatter("%(name)s - %(levelname)s - %(message)s"))
         logger.addHandler(handler)
 
         logger.warning("warning message: %s", "possible upcoming heatwave")
@@ -393,15 +331,10 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             ),
             ("different_msg_types - ERROR - {'key': 'value'}", "ERROR"),
         ]
-        emitted = [
-            (item.log_record.body, item.log_record.severity_text)
-            for item in finished_logs
-        ]
+        emitted = [(item.log_record.body, item.log_record.severity_text) for item in finished_logs]
         self.assertEqual(expected, emitted)
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics(self):  # pylint: disable=too-many-locals
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
@@ -416,9 +349,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         exporter = mock.MagicMock()
         exporter.export.side_effect = export_logs
-        processor = SimpleLogRecordProcessor(
-            exporter, meter_provider=meter_provider
-        )
+        processor = SimpleLogRecordProcessor(exporter, meter_provider=meter_provider)
         provider = LoggerProvider()
         provider.add_log_record_processor(processor)
         logger = provider.get_logger("test_simple_metrics")
@@ -444,11 +375,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             processed_data_point0.attributes["otel.component.type"],
             "simple_log_processor",
         )
-        self.assertTrue(
-            processed_data_point0.attributes["otel.component.name"].startswith(
-                "simple_log_processor/"
-            )
-        )
+        self.assertTrue(processed_data_point0.attributes["otel.component.name"].startswith("simple_log_processor/"))
         self.assertIsNone(processed_data_point0.attributes.get("error.type"))
         processed_data_point1 = processed_data_points[1]
         self.assertEqual(processed_data_point1.value, 1)
@@ -456,14 +383,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
             processed_data_point1.attributes["otel.component.type"],
             "simple_log_processor",
         )
-        self.assertTrue(
-            processed_data_point1.attributes["otel.component.name"].startswith(
-                "simple_log_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point1.attributes["error.type"], "RuntimeError"
-        )
+        self.assertTrue(processed_data_point1.attributes["otel.component.name"].startswith("simple_log_processor/"))
+        self.assertEqual(processed_data_point1.attributes["error.type"], "RuntimeError")
 
 
 # Many more test cases for the BatchLogRecordProcessor exist under
@@ -522,21 +443,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=256,
             export_timeout_millis=15000,
         )
-        self.assertEqual(
-            log_record_processor._batch_processor._exporter, exporter
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_queue_size, 1024
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._schedule_delay, 2.5
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_export_batch_size, 256
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._export_timeout_millis, 15000
-        )
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 1024)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 2.5)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 256)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 15000)
         log_record_processor.shutdown()
 
     @patch.dict(
@@ -551,41 +462,21 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
     def test_env_vars(self):
         exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
-        self.assertEqual(
-            log_record_processor._batch_processor._exporter, exporter
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_queue_size, 1024
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._schedule_delay, 2.5
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_export_batch_size, 256
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._export_timeout_millis, 15000
-        )
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 1024)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 2.5)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 256)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 15000)
         log_record_processor.shutdown()
 
     def test_args_defaults(self):
         exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
-        self.assertEqual(
-            log_record_processor._batch_processor._exporter, exporter
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_queue_size, 2048
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._schedule_delay, 1
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_export_batch_size, 512
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._export_timeout_millis, 30000
-        )
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 1)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 30000)
         log_record_processor.shutdown()
 
     @patch.dict(
@@ -602,21 +493,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         _logger.disabled = True
         log_record_processor = BatchLogRecordProcessor(exporter)
         _logger.disabled = False
-        self.assertEqual(
-            log_record_processor._batch_processor._exporter, exporter
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_queue_size, 2048
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._schedule_delay, 1
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_export_batch_size, 512
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._export_timeout_millis, 30000
-        )
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 1)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 30000)
         log_record_processor.shutdown()
 
     def test_args_none_defaults(self):
@@ -628,21 +509,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=None,
             export_timeout_millis=None,
         )
-        self.assertEqual(
-            log_record_processor._batch_processor._exporter, exporter
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_queue_size, 2048
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._schedule_delay, 1
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._max_export_batch_size, 512
-        )
-        self.assertEqual(
-            log_record_processor._batch_processor._export_timeout_millis, 30000
-        )
+        self.assertEqual(log_record_processor._batch_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._batch_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._batch_processor._schedule_delay, 1)
+        self.assertEqual(log_record_processor._batch_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._batch_processor._export_timeout_millis, 30000)
         log_record_processor.shutdown()
 
     def test_validation_negative_max_queue_size(self):
@@ -691,9 +562,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_export_batch_size=101,
         )
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
@@ -753,17 +622,9 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             processed_data_point0.attributes["otel.component.type"],
             "batching_log_processor",
         )
-        self.assertTrue(
-            processed_data_point0.attributes["otel.component.name"].startswith(
-                "batching_log_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point0.attributes.get("error.type"), "queue_full"
-        )
-        self.assertEqual(
-            metrics[1].name, "otel.sdk.processor.log.queue.capacity"
-        )
+        self.assertTrue(processed_data_point0.attributes["otel.component.name"].startswith("batching_log_processor/"))
+        self.assertEqual(processed_data_point0.attributes.get("error.type"), "queue_full")
+        self.assertEqual(metrics[1].name, "otel.sdk.processor.log.queue.capacity")
         queue_capacity_data_point = metrics[1].data.data_points[0]
         self.assertEqual(queue_capacity_data_point.value, 1)
         self.assertEqual(
@@ -771,9 +632,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             "batching_log_processor",
         )
         self.assertTrue(
-            queue_capacity_data_point.attributes[
-                "otel.component.name"
-            ].startswith("batching_log_processor/")
+            queue_capacity_data_point.attributes["otel.component.name"].startswith("batching_log_processor/")
         )
         self.assertEqual(metrics[2].name, "otel.sdk.processor.log.queue.size")
         queue_size_data_point = metrics[2].data.data_points[0]
@@ -782,11 +641,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             queue_size_data_point.attributes["otel.component.type"],
             "batching_log_processor",
         )
-        self.assertTrue(
-            queue_size_data_point.attributes["otel.component.name"].startswith(
-                "batching_log_processor/"
-            )
-        )
+        self.assertTrue(queue_size_data_point.attributes["otel.component.name"].startswith("batching_log_processor/"))
 
         run_exports.set()
         provider.force_flush()
@@ -813,11 +668,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             processed_data_point0.attributes["otel.component.type"],
             "batching_log_processor",
         )
-        self.assertTrue(
-            processed_data_point0.attributes["otel.component.name"].startswith(
-                "batching_log_processor/"
-            )
-        )
+        self.assertTrue(processed_data_point0.attributes["otel.component.name"].startswith("batching_log_processor/"))
         self.assertIsNone(processed_data_point0.attributes.get("error.type"))
         processed_data_point1 = processed_data_points[1]
         self.assertEqual(processed_data_point1.value, 1)
@@ -825,11 +676,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             processed_data_point1.attributes["otel.component.type"],
             "batching_log_processor",
         )
-        self.assertTrue(
-            processed_data_point1.attributes["otel.component.name"].startswith(
-                "batching_log_processor/"
-            )
-        )
+        self.assertTrue(processed_data_point1.attributes["otel.component.name"].startswith("batching_log_processor/"))
         self.assertEqual(
             processed_data_point1.attributes.get("error.type"),
             "BrokenPipeError",
@@ -840,17 +687,9 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             processed_data_point2.attributes["otel.component.type"],
             "batching_log_processor",
         )
-        self.assertTrue(
-            processed_data_point2.attributes["otel.component.name"].startswith(
-                "batching_log_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point2.attributes.get("error.type"), "queue_full"
-        )
-        self.assertEqual(
-            metrics[1].name, "otel.sdk.processor.log.queue.capacity"
-        )
+        self.assertTrue(processed_data_point2.attributes["otel.component.name"].startswith("batching_log_processor/"))
+        self.assertEqual(processed_data_point2.attributes.get("error.type"), "queue_full")
+        self.assertEqual(metrics[1].name, "otel.sdk.processor.log.queue.capacity")
         queue_capacity_data_point = metrics[1].data.data_points[0]
         self.assertEqual(queue_capacity_data_point.value, 1)
         self.assertEqual(
@@ -858,9 +697,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             "batching_log_processor",
         )
         self.assertTrue(
-            queue_capacity_data_point.attributes[
-                "otel.component.name"
-            ].startswith("batching_log_processor/")
+            queue_capacity_data_point.attributes["otel.component.name"].startswith("batching_log_processor/")
         )
         self.assertEqual(metrics[2].name, "otel.sdk.processor.log.queue.size")
         queue_size_data_point = metrics[2].data.data_points[0]
@@ -869,11 +706,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             queue_size_data_point.attributes["otel.component.type"],
             "batching_log_processor",
         )
-        self.assertTrue(
-            queue_size_data_point.attributes["otel.component.name"].startswith(
-                "batching_log_processor/"
-            )
-        )
+        self.assertTrue(queue_size_data_point.attributes["otel.component.name"].startswith("batching_log_processor/"))
 
         provider.shutdown()
 
@@ -901,9 +734,7 @@ class TestConsoleLogExporter(unittest.TestCase):
                 attributes={"a": 1, "b": "c"},
             ),
             resource=SDKResource({"key": "value"}),
-            instrumentation_scope=InstrumentationScope(
-                "first_name", "first_version"
-            ),
+            instrumentation_scope=InstrumentationScope("first_name", "first_version"),
         )
         exporter = ConsoleLogRecordExporter()
         # Mocking stdout interferes with debugging and test reporting, mock on
@@ -911,9 +742,7 @@ class TestConsoleLogExporter(unittest.TestCase):
 
         with patch.object(exporter, "out") as mock_stdout:
             exporter.export([log_record])
-        mock_stdout.write.assert_called_once_with(
-            log_record.to_json() + os.linesep
-        )
+        mock_stdout.write.assert_called_once_with(log_record.to_json() + os.linesep)
 
         self.assertEqual(mock_stdout.write.call_count, 1)
         self.assertEqual(mock_stdout.flush.call_count, 1)
@@ -926,9 +755,7 @@ class TestConsoleLogExporter(unittest.TestCase):
             return mock_record_str
 
         mock_stdout = Mock()
-        exporter = ConsoleLogRecordExporter(
-            out=mock_stdout, formatter=formatter
-        )
+        exporter = ConsoleLogRecordExporter(out=mock_stdout, formatter=formatter)
         exporter.export([EMPTY_LOG])
 
         mock_stdout.write.assert_called_once_with(mock_record_str)

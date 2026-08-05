@@ -54,9 +54,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         ipv6 = "2001:db8::c001"
         port = 414120
         self.assertEqual(
-            ProtobufEncoder()._encode_local_endpoint(
-                NodeEndpoint(ipv4, ipv6, port)
-            ),
+            ProtobufEncoder()._encode_local_endpoint(NodeEndpoint(ipv4, ipv6, port)),
             zipkin_pb2.Endpoint(
                 service_name=TEST_SERVICE_NAME,
                 ipv4=ipaddress.ip_address(ipv4).packed,
@@ -70,25 +68,15 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         span_kind = ProtobufEncoder.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
         otel_spans = self.get_exhaustive_otel_span_list()
-        trace_id = ProtobufEncoder._encode_trace_id(
-            otel_spans[0].context.trace_id
-        )
+        trace_id = ProtobufEncoder._encode_trace_id(otel_spans[0].context.trace_id)
         expected_output = zipkin_pb2.ListOfSpans(
             spans=[
                 zipkin_pb2.Span(
                     trace_id=trace_id,
-                    id=ProtobufEncoder._encode_span_id(
-                        otel_spans[0].context.span_id
-                    ),
+                    id=ProtobufEncoder._encode_span_id(otel_spans[0].context.span_id),
                     name=otel_spans[0].name,
-                    timestamp=ProtobufEncoder._nsec_to_usec_round(
-                        otel_spans[0].start_time
-                    ),
-                    duration=(
-                        ProtobufEncoder._nsec_to_usec_round(
-                            otel_spans[0].end_time - otel_spans[0].start_time
-                        )
-                    ),
+                    timestamp=ProtobufEncoder._nsec_to_usec_round(otel_spans[0].start_time),
+                    duration=(ProtobufEncoder._nsec_to_usec_round(otel_spans[0].end_time - otel_spans[0].start_time)),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -98,14 +86,10 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                         "otel.status_code": "OK",
                     },
                     debug=True,
-                    parent_id=ProtobufEncoder._encode_span_id(
-                        otel_spans[0].parent.span_id
-                    ),
+                    parent_id=ProtobufEncoder._encode_span_id(otel_spans[0].parent.span_id),
                     annotations=[
                         zipkin_pb2.Annotation(
-                            timestamp=ProtobufEncoder._nsec_to_usec_round(
-                                otel_spans[0].events[0].timestamp
-                            ),
+                            timestamp=ProtobufEncoder._nsec_to_usec_round(otel_spans[0].events[0].timestamp),
                             value=json.dumps(
                                 {
                                     "event0": {
@@ -121,18 +105,10 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                 ),
                 zipkin_pb2.Span(
                     trace_id=trace_id,
-                    id=ProtobufEncoder._encode_span_id(
-                        otel_spans[1].context.span_id
-                    ),
+                    id=ProtobufEncoder._encode_span_id(otel_spans[1].context.span_id),
                     name=otel_spans[1].name,
-                    timestamp=ProtobufEncoder._nsec_to_usec_round(
-                        otel_spans[1].start_time
-                    ),
-                    duration=(
-                        ProtobufEncoder._nsec_to_usec_round(
-                            otel_spans[1].end_time - otel_spans[1].start_time
-                        )
-                    ),
+                    timestamp=ProtobufEncoder._nsec_to_usec_round(otel_spans[1].start_time),
+                    duration=(ProtobufEncoder._nsec_to_usec_round(otel_spans[1].end_time - otel_spans[1].start_time)),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -144,18 +120,10 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                 ),
                 zipkin_pb2.Span(
                     trace_id=trace_id,
-                    id=ProtobufEncoder._encode_span_id(
-                        otel_spans[2].context.span_id
-                    ),
+                    id=ProtobufEncoder._encode_span_id(otel_spans[2].context.span_id),
                     name=otel_spans[2].name,
-                    timestamp=ProtobufEncoder._nsec_to_usec_round(
-                        otel_spans[2].start_time
-                    ),
-                    duration=(
-                        ProtobufEncoder._nsec_to_usec_round(
-                            otel_spans[2].end_time - otel_spans[2].start_time
-                        )
-                    ),
+                    timestamp=ProtobufEncoder._nsec_to_usec_round(otel_spans[2].start_time),
+                    duration=(ProtobufEncoder._nsec_to_usec_round(otel_spans[2].end_time - otel_spans[2].start_time)),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -166,18 +134,10 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                 ),
                 zipkin_pb2.Span(
                     trace_id=trace_id,
-                    id=ProtobufEncoder._encode_span_id(
-                        otel_spans[3].context.span_id
-                    ),
+                    id=ProtobufEncoder._encode_span_id(otel_spans[3].context.span_id),
                     name=otel_spans[3].name,
-                    timestamp=ProtobufEncoder._nsec_to_usec_round(
-                        otel_spans[3].start_time
-                    ),
-                    duration=(
-                        ProtobufEncoder._nsec_to_usec_round(
-                            otel_spans[3].end_time - otel_spans[3].start_time
-                        )
-                    ),
+                    timestamp=ProtobufEncoder._nsec_to_usec_round(otel_spans[3].start_time),
+                    duration=(ProtobufEncoder._nsec_to_usec_round(otel_spans[3].end_time - otel_spans[3].start_time)),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
@@ -191,37 +151,23 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
             ],
         )
 
-        actual_output = zipkin_pb2.ListOfSpans.FromString(
-            ProtobufEncoder().serialize(otel_spans, NodeEndpoint())
-        )
+        actual_output = zipkin_pb2.ListOfSpans.FromString(ProtobufEncoder().serialize(otel_spans, NodeEndpoint()))
 
         self.assertEqual(actual_output, expected_output)
 
     def _test_encode_max_tag_length(self, max_tag_value_length: int):
-        otel_span, expected_tag_output = self.get_data_for_max_tag_length_test(
-            max_tag_value_length
-        )
+        otel_span, expected_tag_output = self.get_data_for_max_tag_length_test(max_tag_value_length)
         service_name = otel_span.name
 
         expected_output = zipkin_pb2.ListOfSpans(
             spans=[
                 zipkin_pb2.Span(
-                    trace_id=ProtobufEncoder._encode_trace_id(
-                        otel_span.context.trace_id
-                    ),
-                    id=ProtobufEncoder._encode_span_id(
-                        otel_span.context.span_id
-                    ),
+                    trace_id=ProtobufEncoder._encode_trace_id(otel_span.context.trace_id),
+                    id=ProtobufEncoder._encode_span_id(otel_span.context.span_id),
                     name=service_name,
-                    timestamp=ProtobufEncoder._nsec_to_usec_round(
-                        otel_span.start_time
-                    ),
-                    duration=ProtobufEncoder._nsec_to_usec_round(
-                        otel_span.end_time - otel_span.start_time
-                    ),
-                    local_endpoint=zipkin_pb2.Endpoint(
-                        service_name=service_name
-                    ),
+                    timestamp=ProtobufEncoder._nsec_to_usec_round(otel_span.start_time),
+                    duration=ProtobufEncoder._nsec_to_usec_round(otel_span.end_time - otel_span.start_time),
+                    local_endpoint=zipkin_pb2.Endpoint(service_name=service_name),
                     kind=ProtobufEncoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
                     tags=expected_tag_output,
                     annotations=None,
@@ -231,9 +177,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         )
 
         actual_output = zipkin_pb2.ListOfSpans.FromString(
-            ProtobufEncoder(max_tag_value_length).serialize(
-                [otel_span], NodeEndpoint()
-            )
+            ProtobufEncoder(max_tag_value_length).serialize([otel_span], NodeEndpoint())
         )
 
         self.assertEqual(actual_output, expected_output)
@@ -241,11 +185,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
     def test_dropped_span_attributes(self):
         otel_span = get_span_with_dropped_attributes_events_links()
         # pylint: disable=no-member
-        tags = (
-            ProtobufEncoder()
-            ._encode_span(otel_span, zipkin_pb2.Endpoint())
-            .tags
-        )
+        tags = ProtobufEncoder()._encode_span(otel_span, zipkin_pb2.Endpoint()).tags
 
         self.assertEqual("1", tags["otel.dropped_links_count"])
         self.assertEqual("2", tags["otel.dropped_attributes_count"])

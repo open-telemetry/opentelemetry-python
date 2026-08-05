@@ -44,10 +44,7 @@ class MySpanExporter(export.SpanExporter):
         self.export_event = export_event
 
     def export(self, spans: trace.Span) -> export.SpanExportResult:
-        if (
-            self.max_export_batch_size is not None
-            and len(spans) > self.max_export_batch_size
-        ):
+        if self.max_export_batch_size is not None and len(spans) > self.max_export_batch_size:
             raise ValueError("Batch is too big")
         time.sleep(self.export_timeout)
         self.destination.extend(span.name for span in spans)
@@ -112,14 +109,10 @@ class TestSimpleSpanProcessor(unittest.TestCase):
 
         context = Context()
         span = tracer.start_span("foo", context=context)
-        span_processor.on_start.assert_called_once_with(
-            span, parent_context=context
-        )
+        span_processor.on_start.assert_called_once_with(span, parent_context=context)
 
     def test_simple_span_processor_not_sampled(self):
-        tracer_provider = trace.TracerProvider(
-            sampler=trace.sampling.ALWAYS_OFF
-        )
+        tracer_provider = trace.TracerProvider(sampler=trace.sampling.ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
 
         spans_names_list = []
@@ -135,9 +128,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
 
         self.assertListEqual([], spans_names_list)
 
-    @mock.patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @mock.patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics(self):
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
@@ -152,9 +143,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
 
         exporter = mock.MagicMock()
         exporter.export.side_effect = export_spans
-        span_processor = export.SimpleSpanProcessor(
-            exporter, meter_provider=meter_provider
-        )
+        span_processor = export.SimpleSpanProcessor(exporter, meter_provider=meter_provider)
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
         tracer_provider.add_span_processor(span_processor)
@@ -182,11 +171,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
             processed_data_point0.attributes["otel.component.type"],
             "simple_span_processor",
         )
-        self.assertTrue(
-            processed_data_point0.attributes["otel.component.name"].startswith(
-                "simple_span_processor/"
-            )
-        )
+        self.assertTrue(processed_data_point0.attributes["otel.component.name"].startswith("simple_span_processor/"))
         self.assertIsNone(processed_data_point0.attributes.get("error.type"))
         processed_data_point1 = processed_data_points[1]
         self.assertEqual(processed_data_point1.value, 1)
@@ -194,14 +179,8 @@ class TestSimpleSpanProcessor(unittest.TestCase):
             processed_data_point1.attributes["otel.component.type"],
             "simple_span_processor",
         )
-        self.assertTrue(
-            processed_data_point1.attributes["otel.component.name"].startswith(
-                "simple_span_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point1.attributes["error.type"], "RuntimeError"
-        )
+        self.assertTrue(processed_data_point1.attributes["otel.component.name"].startswith("simple_span_processor/"))
+        self.assertEqual(processed_data_point1.attributes["error.type"], "RuntimeError")
 
 
 # Many more test cases for the BatchSpanProcessor exist under
@@ -225,41 +204,21 @@ class TestBatchSpanProcessor(unittest.TestCase):
         },
     )
     def test_args_env_var(self):
-        batch_span_processor = export.BatchSpanProcessor(
-            MySpanExporter(destination=[])
-        )
+        batch_span_processor = export.BatchSpanProcessor(MySpanExporter(destination=[]))
 
-        self.assertEqual(
-            batch_span_processor._batch_processor._max_queue_size, 10
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._schedule_delay_millis, 2
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._max_export_batch_size, 3
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._export_timeout_millis, 4
-        )
+        self.assertEqual(batch_span_processor._batch_processor._max_queue_size, 10)
+        self.assertEqual(batch_span_processor._batch_processor._schedule_delay_millis, 2)
+        self.assertEqual(batch_span_processor._batch_processor._max_export_batch_size, 3)
+        self.assertEqual(batch_span_processor._batch_processor._export_timeout_millis, 4)
         batch_span_processor.shutdown()
 
     def test_args_env_var_defaults(self):
-        batch_span_processor = export.BatchSpanProcessor(
-            MySpanExporter(destination=[])
-        )
+        batch_span_processor = export.BatchSpanProcessor(MySpanExporter(destination=[]))
 
-        self.assertEqual(
-            batch_span_processor._batch_processor._max_queue_size, 2048
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._schedule_delay_millis, 5000
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._max_export_batch_size, 512
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._export_timeout_millis, 30000
-        )
+        self.assertEqual(batch_span_processor._batch_processor._max_queue_size, 2048)
+        self.assertEqual(batch_span_processor._batch_processor._schedule_delay_millis, 5000)
+        self.assertEqual(batch_span_processor._batch_processor._max_export_batch_size, 512)
+        self.assertEqual(batch_span_processor._batch_processor._export_timeout_millis, 30000)
         batch_span_processor.shutdown()
 
     @mock.patch.dict(
@@ -273,31 +232,19 @@ class TestBatchSpanProcessor(unittest.TestCase):
     )
     def test_args_env_var_value_error(self):
         logger.disabled = True
-        batch_span_processor = export.BatchSpanProcessor(
-            MySpanExporter(destination=[])
-        )
+        batch_span_processor = export.BatchSpanProcessor(MySpanExporter(destination=[]))
         logger.disabled = False
 
-        self.assertEqual(
-            batch_span_processor._batch_processor._max_queue_size, 2048
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._schedule_delay_millis, 5000
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._max_export_batch_size, 512
-        )
-        self.assertEqual(
-            batch_span_processor._batch_processor._export_timeout_millis, 30000
-        )
+        self.assertEqual(batch_span_processor._batch_processor._max_queue_size, 2048)
+        self.assertEqual(batch_span_processor._batch_processor._schedule_delay_millis, 5000)
+        self.assertEqual(batch_span_processor._batch_processor._max_export_batch_size, 512)
+        self.assertEqual(batch_span_processor._batch_processor._export_timeout_millis, 30000)
         batch_span_processor.shutdown()
 
     def test_on_start_accepts_parent_context(self):
         # pylint: disable=no-self-use
         my_exporter = MySpanExporter(destination=[])
-        span_processor = mock.Mock(
-            wraps=export.BatchSpanProcessor(my_exporter)
-        )
+        span_processor = mock.Mock(wraps=export.BatchSpanProcessor(my_exporter))
         tracer_provider = trace.TracerProvider()
         tracer_provider.add_span_processor(span_processor)
         tracer = tracer_provider.get_tracer(__name__)
@@ -305,20 +252,14 @@ class TestBatchSpanProcessor(unittest.TestCase):
         context = Context()
         span = tracer.start_span("foo", context=context)
 
-        span_processor.on_start.assert_called_once_with(
-            span, parent_context=context
-        )
+        span_processor.on_start.assert_called_once_with(span, parent_context=context)
 
     def test_batch_span_processor_not_sampled(self):
-        tracer_provider = trace.TracerProvider(
-            sampler=trace.sampling.ALWAYS_OFF
-        )
+        tracer_provider = trace.TracerProvider(sampler=trace.sampling.ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
         spans_names_list = []
 
-        my_exporter = MySpanExporter(
-            destination=spans_names_list, max_export_batch_size=128
-        )
+        my_exporter = MySpanExporter(destination=spans_names_list, max_export_batch_size=128)
         span_processor = export.BatchSpanProcessor(
             my_exporter,
             max_queue_size=256,
@@ -336,9 +277,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
 
     def test_batch_span_processor_parameters(self):
         # zero max_queue_size
-        self.assertRaises(
-            ValueError, export.BatchSpanProcessor, None, max_queue_size=0
-        )
+        self.assertRaises(ValueError, export.BatchSpanProcessor, None, max_queue_size=0)
 
         # negative max_queue_size
         self.assertRaises(
@@ -389,9 +328,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             max_export_batch_size=512,
         )
 
-    @mock.patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @mock.patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
@@ -453,17 +390,9 @@ class TestBatchSpanProcessor(unittest.TestCase):
             processed_data_point0.attributes["otel.component.type"],
             "batching_span_processor",
         )
-        self.assertTrue(
-            processed_data_point0.attributes["otel.component.name"].startswith(
-                "batching_span_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point0.attributes.get("error.type"), "queue_full"
-        )
-        self.assertEqual(
-            metrics[1].name, "otel.sdk.processor.span.queue.capacity"
-        )
+        self.assertTrue(processed_data_point0.attributes["otel.component.name"].startswith("batching_span_processor/"))
+        self.assertEqual(processed_data_point0.attributes.get("error.type"), "queue_full")
+        self.assertEqual(metrics[1].name, "otel.sdk.processor.span.queue.capacity")
         queue_capacity_data_point = metrics[1].data.data_points[0]
         self.assertEqual(queue_capacity_data_point.value, 1)
         self.assertEqual(
@@ -471,9 +400,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             "batching_span_processor",
         )
         self.assertTrue(
-            queue_capacity_data_point.attributes[
-                "otel.component.name"
-            ].startswith("batching_span_processor/")
+            queue_capacity_data_point.attributes["otel.component.name"].startswith("batching_span_processor/")
         )
         self.assertEqual(metrics[2].name, "otel.sdk.processor.span.queue.size")
         queue_size_data_point = metrics[2].data.data_points[0]
@@ -482,11 +409,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             queue_size_data_point.attributes["otel.component.type"],
             "batching_span_processor",
         )
-        self.assertTrue(
-            queue_size_data_point.attributes["otel.component.name"].startswith(
-                "batching_span_processor/"
-            )
-        )
+        self.assertTrue(queue_size_data_point.attributes["otel.component.name"].startswith("batching_span_processor/"))
 
         run_exports.set()
         provider.force_flush()
@@ -514,11 +437,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             processed_data_point0.attributes["otel.component.type"],
             "batching_span_processor",
         )
-        self.assertTrue(
-            processed_data_point0.attributes["otel.component.name"].startswith(
-                "batching_span_processor/"
-            )
-        )
+        self.assertTrue(processed_data_point0.attributes["otel.component.name"].startswith("batching_span_processor/"))
         self.assertIsNone(processed_data_point0.attributes.get("error.type"))
         processed_data_point1 = processed_data_points[1]
         self.assertEqual(processed_data_point1.value, 1)
@@ -526,31 +445,17 @@ class TestBatchSpanProcessor(unittest.TestCase):
             processed_data_point1.attributes["otel.component.type"],
             "batching_span_processor",
         )
-        self.assertTrue(
-            processed_data_point1.attributes["otel.component.name"].startswith(
-                "batching_span_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point1.attributes.get("error.type"), "ValueError"
-        )
+        self.assertTrue(processed_data_point1.attributes["otel.component.name"].startswith("batching_span_processor/"))
+        self.assertEqual(processed_data_point1.attributes.get("error.type"), "ValueError")
         processed_data_point2 = processed_data_points[2]
         self.assertEqual(processed_data_point2.value, 1)
         self.assertEqual(
             processed_data_point2.attributes["otel.component.type"],
             "batching_span_processor",
         )
-        self.assertTrue(
-            processed_data_point2.attributes["otel.component.name"].startswith(
-                "batching_span_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point2.attributes.get("error.type"), "queue_full"
-        )
-        self.assertEqual(
-            metrics[1].name, "otel.sdk.processor.span.queue.capacity"
-        )
+        self.assertTrue(processed_data_point2.attributes["otel.component.name"].startswith("batching_span_processor/"))
+        self.assertEqual(processed_data_point2.attributes.get("error.type"), "queue_full")
+        self.assertEqual(metrics[1].name, "otel.sdk.processor.span.queue.capacity")
         queue_capacity_data_point = metrics[1].data.data_points[0]
         self.assertEqual(queue_capacity_data_point.value, 1)
         self.assertEqual(
@@ -558,9 +463,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             "batching_span_processor",
         )
         self.assertTrue(
-            queue_capacity_data_point.attributes[
-                "otel.component.name"
-            ].startswith("batching_span_processor/")
+            queue_capacity_data_point.attributes["otel.component.name"].startswith("batching_span_processor/")
         )
         self.assertEqual(metrics[2].name, "otel.sdk.processor.span.queue.size")
         queue_size_data_point = metrics[2].data.data_points[0]
@@ -569,11 +472,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             queue_size_data_point.attributes["otel.component.type"],
             "batching_span_processor",
         )
-        self.assertTrue(
-            queue_size_data_point.attributes["otel.component.name"].startswith(
-                "batching_span_processor/"
-            )
-        )
+        self.assertTrue(queue_size_data_point.attributes["otel.component.name"].startswith("batching_span_processor/"))
 
         provider.shutdown()
 
@@ -601,8 +500,6 @@ class TestConsoleSpanExporter(unittest.TestCase):
             return mock_span_str
 
         mock_stdout = mock.Mock()
-        exporter = export.ConsoleSpanExporter(
-            out=mock_stdout, formatter=formatter
-        )
+        exporter = export.ConsoleSpanExporter(out=mock_stdout, formatter=formatter)
         exporter.export([trace._Span("span name", mock.Mock())])
         mock_stdout.write.assert_called_once_with(mock_span_str)

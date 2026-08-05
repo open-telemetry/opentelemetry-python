@@ -47,18 +47,12 @@ class AbstractB3FormatTestCase:
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()
-        cls.serialized_trace_id = trace_api.format_trace_id(
-            generator.generate_trace_id()
-        )
-        cls.serialized_span_id = trace_api.format_span_id(
-            generator.generate_span_id()
-        )
+        cls.serialized_trace_id = trace_api.format_trace_id(generator.generate_trace_id())
+        cls.serialized_span_id = trace_api.format_span_id(generator.generate_span_id())
 
     def setUp(self) -> None:
         tracer_provider = trace.TracerProvider()
-        patcher = unittest.mock.patch.object(
-            trace_api, "get_tracer_provider", return_value=tracer_provider
-        )
+        patcher = unittest.mock.patch.object(trace_api, "get_tracer_provider", return_value=tracer_provider)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -108,9 +102,7 @@ class AbstractB3FormatTestCase:
         """Test the extraction from a single b3 header."""
         propagator = self.get_propagator()
         child, parent, _ = self.get_child_parent_new_carrier(
-            {
-                propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}"
-            }
+            {propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}"}
         )
 
         self.assertEqual(
@@ -125,9 +117,7 @@ class AbstractB3FormatTestCase:
         self.assertTrue(parent.context.trace_flags.sampled)
 
         child, parent, _ = self.get_child_parent_new_carrier(
-            {
-                propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-1"
-            }
+            {propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-1"}
         )
 
         self.assertEqual(
@@ -158,9 +148,7 @@ class AbstractB3FormatTestCase:
             }
         )
 
-        self.assertEqual(
-            self.get_trace_id(new_carrier), single_header_trace_id
-        )
+        self.assertEqual(self.get_trace_id(new_carrier), single_header_trace_id)
 
     def test_enabled_sampling(self):
         """Test b3 sample key variants that turn on sampling."""
@@ -255,9 +243,7 @@ class AbstractB3FormatTestCase:
             },
         )
 
-        self.assertEqual(
-            self.get_trace_id(new_carrier), "0" * 16 + trace_id_64_bit
-        )
+        self.assertEqual(self.get_trace_id(new_carrier), "0" * 16 + trace_id_64_bit)
 
     def test_extract_invalid_single_header_to_explicit_ctx(self):
         """Given unparsable header, do not modify context"""
@@ -456,11 +442,7 @@ class TestB3SingleFormat(AbstractB3FormatTestCase, unittest.TestCase):
         return carrier[cls.get_propagator().SINGLE_HEADER_KEY].split("-")[0]
 
     def assertSampled(self, carrier):
-        self.assertEqual(
-            carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "1"
-        )
+        self.assertEqual(carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "1")
 
     def assertNotSampled(self, carrier):
-        self.assertEqual(
-            carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "0"
-        )
+        self.assertEqual(carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "0")

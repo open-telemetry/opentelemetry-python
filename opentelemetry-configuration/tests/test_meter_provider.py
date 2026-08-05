@@ -111,27 +111,19 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
 
     def test_none_config_uses_trace_based_exemplar_filter(self):
         provider = create_meter_provider(None)
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter
-        )
+        self.assertIsInstance(provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter)
 
     def test_none_config_does_not_read_exemplar_filter_env_var(self):
-        with patch.dict(
-            os.environ, {"OTEL_METRICS_EXEMPLAR_FILTER": "always_on"}
-        ):
+        with patch.dict(os.environ, {"OTEL_METRICS_EXEMPLAR_FILTER": "always_on"}):
             provider = create_meter_provider(None)
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter
-        )
+        self.assertIsInstance(provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter)
 
     def test_none_config_does_not_read_interval_env_var(self):
         config = MeterProviderConfig(
             readers=[
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter=PushMetricExporterConfig(
-                            console=ConsoleMetricExporterConfig()
-                        )
+                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
                     )
                 )
             ]
@@ -143,20 +135,14 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
         self.assertEqual(reader._export_interval_millis, 60000.0)
 
     def test_configure_none_does_not_set_global(self):
-        original = __import__(
-            "opentelemetry.metrics", fromlist=["get_meter_provider"]
-        ).get_meter_provider()
+        original = __import__("opentelemetry.metrics", fromlist=["get_meter_provider"]).get_meter_provider()
         configure_meter_provider(None)
-        after = __import__(
-            "opentelemetry.metrics", fromlist=["get_meter_provider"]
-        ).get_meter_provider()
+        after = __import__("opentelemetry.metrics", fromlist=["get_meter_provider"]).get_meter_provider()
         self.assertIs(original, after)
 
     def test_configure_with_config_sets_global(self):
         config = MeterProviderConfig(readers=[])
-        with patch(
-            "opentelemetry.configuration._meter_provider.metrics.set_meter_provider"
-        ) as mock_set:
+        with patch("opentelemetry.configuration._meter_provider.metrics.set_meter_provider") as mock_set:
             configure_meter_provider(config)
             mock_set.assert_called_once()
             arg = mock_set.call_args[0][0]
@@ -179,9 +165,7 @@ class TestCreateMetricReaders(unittest.TestCase):
         )
 
     def test_console_exporter(self):
-        config = self._make_periodic_config(
-            PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
-        )
+        config = self._make_periodic_config(PushMetricExporterConfig(console=ConsoleMetricExporterConfig()))
         provider = create_meter_provider(config)
         reader = provider._metric_readers[0]
         self.assertIsInstance(reader, PeriodicExportingMetricReader)
@@ -205,17 +189,13 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertIsInstance(reader._exporter, ConsoleMetricExporter)
 
     def test_periodic_reader_default_interval(self):
-        config = self._make_periodic_config(
-            PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
-        )
+        config = self._make_periodic_config(PushMetricExporterConfig(console=ConsoleMetricExporterConfig()))
         provider = create_meter_provider(config)
         reader = provider._metric_readers[0]
         self.assertEqual(reader._export_interval_millis, 60000.0)
 
     def test_periodic_reader_default_timeout(self):
-        config = self._make_periodic_config(
-            PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
-        )
+        config = self._make_periodic_config(PushMetricExporterConfig(console=ConsoleMetricExporterConfig()))
         provider = create_meter_provider(config)
         reader = provider._metric_readers[0]
         self.assertEqual(reader._export_timeout_millis, 30000.0)
@@ -239,9 +219,7 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertEqual(reader._export_timeout_millis, 10000.0)
 
     def test_otlp_http_missing_package_raises(self):
-        config = self._make_periodic_config(
-            PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig())
-        )
+        config = self._make_periodic_config(PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig()))
         with (
             patch.dict(
                 sys.modules,
@@ -271,11 +249,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             },
         ):
             config = self._make_periodic_config(
-                PushMetricExporterConfig(
-                    otlp_http=OtlpHttpMetricExporterConfig(
-                        endpoint="http://localhost:4318"
-                    )
-                )
+                PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(endpoint="http://localhost:4318"))
             )
             create_meter_provider(config)
 
@@ -302,11 +276,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             },
         ):
             config = self._make_periodic_config(
-                PushMetricExporterConfig(
-                    otlp_http=OtlpHttpMetricExporterConfig(
-                        compression="deflate"
-                    )
-                )
+                PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(compression="deflate"))
             )
             create_meter_provider(config)
 
@@ -314,9 +284,7 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertEqual(kwargs["compression"], "deflate_val")
 
     def test_otlp_grpc_missing_package_raises(self):
-        config = self._make_periodic_config(
-            PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig())
-        )
+        config = self._make_periodic_config(PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig()))
         with (
             patch.dict(
                 sys.modules,
@@ -332,9 +300,7 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_otlp_file_development_missing_package_raises(self):
         config = self._make_periodic_config(
-            PushMetricExporterConfig(
-                otlp_file_development=ExperimentalOtlpFileMetricExporterConfig()
-            )
+            PushMetricExporterConfig(otlp_file_development=ExperimentalOtlpFileMetricExporterConfig())
         )
         with (
             patch.dict(
@@ -346,9 +312,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             self.assertRaises(ConfigurationError) as ctx,
         ):
             create_meter_provider(config)
-        self.assertIn(
-            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
-        )
+        self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
         mock_exporter_cls = MagicMock()
@@ -362,9 +326,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             },
         ):
             config = self._make_periodic_config(
-                PushMetricExporterConfig(
-                    otlp_file_development=ExperimentalOtlpFileMetricExporterConfig()
-                )
+                PushMetricExporterConfig(otlp_file_development=ExperimentalOtlpFileMetricExporterConfig())
             )
             create_meter_provider(config)
 
@@ -424,9 +386,7 @@ class TestCreateMetricReaders(unittest.TestCase):
         ):
             config = self._make_periodic_config(
                 PushMetricExporterConfig(
-                    otlp_file_development=ExperimentalOtlpFileMetricExporterConfig(
-                        output_stream="http://example"
-                    )
+                    otlp_file_development=ExperimentalOtlpFileMetricExporterConfig(output_stream="http://example")
                 )
             )
             with self.assertRaises(ConfigurationError) as ctx:
@@ -483,9 +443,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 readers=[
                     MetricReaderConfig(
                         pull=PullMetricReaderConfig(
-                            exporter=PullMetricExporterConfig(
-                                prometheus_development=PrometheusMetricExporterConfig()
-                            )
+                            exporter=PullMetricExporterConfig(prometheus_development=PrometheusMetricExporterConfig())
                         )
                     )
                 ]
@@ -505,9 +463,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 readers=[
                     MetricReaderConfig(
                         pull=PullMetricReaderConfig(
-                            exporter=PullMetricExporterConfig(
-                                prometheus_development=PrometheusMetricExporterConfig()
-                            )
+                            exporter=PullMetricExporterConfig(prometheus_development=PrometheusMetricExporterConfig())
                         )
                     )
                 ]
@@ -517,13 +473,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
 
     def test_pull_no_exporter_raises(self):
         config = MeterProviderConfig(
-            readers=[
-                MetricReaderConfig(
-                    pull=PullMetricReaderConfig(
-                        exporter=PullMetricExporterConfig()
-                    )
-                )
-            ]
+            readers=[MetricReaderConfig(pull=PullMetricReaderConfig(exporter=PullMetricExporterConfig()))]
         )
         with self.assertRaises(ConfigurationError):
             create_meter_provider(config)
@@ -531,9 +481,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
     def test_pull_plugin_loads_via_entry_point(self):
         mock_reader = MagicMock()
         mock_class = MagicMock(return_value=mock_reader)
-        mock_entry_points = MagicMock(
-            return_value=[MagicMock(**{"load.return_value": mock_class})]
-        )
+        mock_entry_points = MagicMock(return_value=[MagicMock(**{"load.return_value": mock_class})])
         with patch(
             "opentelemetry.configuration._common.entry_points",
             mock_entry_points,
@@ -543,9 +491,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                     MetricReaderConfig(
                         pull=PullMetricReaderConfig(
                             # pylint: disable=unexpected-keyword-arg
-                            exporter=PullMetricExporterConfig(
-                                my_custom_reader={"port": 8080}
-                            )
+                            exporter=PullMetricExporterConfig(my_custom_reader={"port": 8080})
                         )
                     )
                 ]
@@ -568,9 +514,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                     MetricReaderConfig(
                         pull=PullMetricReaderConfig(
                             # pylint: disable=unexpected-keyword-arg
-                            exporter=PullMetricExporterConfig(
-                                no_such_reader={}
-                            )
+                            exporter=PullMetricExporterConfig(no_such_reader={})
                         )
                     )
                 ]
@@ -589,9 +533,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 readers=[
                     MetricReaderConfig(
                         pull=PullMetricReaderConfig(
-                            exporter=PullMetricExporterConfig(
-                                prometheus_development=PrometheusMetricExporterConfig()
-                            ),
+                            exporter=PullMetricExporterConfig(prometheus_development=PrometheusMetricExporterConfig()),
                             producers=[MagicMock()],
                         )
                     )
@@ -615,9 +557,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 readers=[
                     MetricReaderConfig(
                         pull=PullMetricReaderConfig(
-                            exporter=PullMetricExporterConfig(
-                                prometheus_development=PrometheusMetricExporterConfig()
-                            ),
+                            exporter=PullMetricExporterConfig(prometheus_development=PrometheusMetricExporterConfig()),
                             cardinality_limits=MagicMock(),
                         )
                     )
@@ -635,13 +575,7 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
     @staticmethod
     def _make_periodic_config(exporter_config):
         return MeterProviderConfig(
-            readers=[
-                MetricReaderConfig(
-                    periodic=PeriodicMetricReaderConfig(
-                        exporter=exporter_config
-                    )
-                )
-            ]
+            readers=[MetricReaderConfig(periodic=PeriodicMetricReaderConfig(exporter=exporter_config))]
         )
 
     def test_no_reader_type_raises(self):
@@ -662,9 +596,7 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             # pylint: disable=unexpected-keyword-arg
-            config = self._make_periodic_config(
-                PushMetricExporterConfig(my_custom_exporter={})
-            )
+            config = self._make_periodic_config(PushMetricExporterConfig(my_custom_exporter={}))
             provider = create_meter_provider(config)
         self.assertEqual(len(provider._metric_readers), 1)
 
@@ -674,9 +606,7 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
             return_value=[],
         ):
             # pylint: disable=unexpected-keyword-arg
-            config = self._make_periodic_config(
-                PushMetricExporterConfig(no_such_exporter={})
-            )
+            config = self._make_periodic_config(PushMetricExporterConfig(no_such_exporter={}))
             with self.assertRaises(ConfigurationError):
                 create_meter_provider(config)
 
@@ -685,16 +615,12 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
             readers=[
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter=PushMetricExporterConfig(
-                            console=ConsoleMetricExporterConfig()
-                        )
+                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
                     )
                 ),
                 MetricReaderConfig(
                     periodic=PeriodicMetricReaderConfig(
-                        exporter=PushMetricExporterConfig(
-                            console=ConsoleMetricExporterConfig()
-                        )
+                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
                     )
                 ),
             ]
@@ -742,22 +668,14 @@ class TestTemporalityAndAggregation(unittest.TestCase):
             )
 
     def test_cumulative_temporality(self):
-        exporter = self._get_exporter(
-            self._make_console_config(
-                temporality=ExporterTemporalityPreference.cumulative
-            )
-        )
+        exporter = self._get_exporter(self._make_console_config(temporality=ExporterTemporalityPreference.cumulative))
         self.assertEqual(
             exporter._preferred_temporality[Counter],
             AggregationTemporality.CUMULATIVE,
         )
 
     def test_delta_temporality(self):
-        exporter = self._get_exporter(
-            self._make_console_config(
-                temporality=ExporterTemporalityPreference.delta
-            )
-        )
+        exporter = self._get_exporter(self._make_console_config(temporality=ExporterTemporalityPreference.delta))
         self.assertEqual(
             exporter._preferred_temporality[Counter],
             AggregationTemporality.DELTA,
@@ -776,11 +694,7 @@ class TestTemporalityAndAggregation(unittest.TestCase):
         )
 
     def test_low_memory_temporality(self):
-        exporter = self._get_exporter(
-            self._make_console_config(
-                temporality=ExporterTemporalityPreference.low_memory
-            )
-        )
+        exporter = self._get_exporter(self._make_console_config(temporality=ExporterTemporalityPreference.low_memory))
         self.assertEqual(
             exporter._preferred_temporality[Counter],
             AggregationTemporality.DELTA,
@@ -799,9 +713,7 @@ class TestTemporalityAndAggregation(unittest.TestCase):
 
     def test_explicit_histogram_aggregation(self):
         exporter = self._get_exporter(
-            self._make_console_config(
-                histogram_agg=ExporterDefaultHistogramAggregation.explicit_bucket_histogram
-            )
+            self._make_console_config(histogram_agg=ExporterDefaultHistogramAggregation.explicit_bucket_histogram)
         )
         self.assertIsInstance(
             exporter._preferred_aggregation[Histogram],
@@ -835,9 +747,7 @@ class TestTemporalityAndAggregation(unittest.TestCase):
 class TestCreateViews(unittest.TestCase):
     @staticmethod
     def _make_view_config(selector_kwargs=None, stream_kwargs=None):
-        selector = ViewSelector(
-            **(selector_kwargs or {"instrument_name": "*"})
-        )
+        selector = ViewSelector(**(selector_kwargs or {"instrument_name": "*"}))
         stream = ViewStream(**(stream_kwargs or {}))
         return MeterProviderConfig(
             readers=[],
@@ -856,21 +766,15 @@ class TestCreateViews(unittest.TestCase):
         self.assertIsInstance(provider._sdk_config.views[0], View)
 
     def test_selector_instrument_name(self):
-        view = self._get_view(
-            self._make_view_config({"instrument_name": "my.metric"})
-        )
+        view = self._get_view(self._make_view_config({"instrument_name": "my.metric"}))
         self.assertEqual(view._instrument_name, "my.metric")
 
     def test_selector_instrument_type(self):
-        view = self._get_view(
-            self._make_view_config({"instrument_type": InstrumentType.counter})
-        )
+        view = self._get_view(self._make_view_config({"instrument_type": InstrumentType.counter}))
         self.assertIs(view._instrument_type, Counter)
 
     def test_selector_meter_name(self):
-        view = self._get_view(
-            self._make_view_config({"meter_name": "my.meter"})
-        )
+        view = self._get_view(self._make_view_config({"meter_name": "my.meter"}))
         self.assertEqual(view._meter_name, "my.meter")
 
     def test_stream_name(self):
@@ -883,39 +787,23 @@ class TestCreateViews(unittest.TestCase):
         self.assertEqual(view._name, "renamed")
 
     def test_stream_description(self):
-        view = self._get_view(
-            self._make_view_config(
-                stream_kwargs={"description": "a description"}
-            )
-        )
+        view = self._get_view(self._make_view_config(stream_kwargs={"description": "a description"}))
         self.assertEqual(view._description, "a description")
 
     def test_stream_attribute_keys_included(self):
         view = self._get_view(
-            self._make_view_config(
-                stream_kwargs={
-                    "attribute_keys": IncludeExclude(included=["key1", "key2"])
-                }
-            )
+            self._make_view_config(stream_kwargs={"attribute_keys": IncludeExclude(included=["key1", "key2"])})
         )
         self.assertEqual(view._attribute_keys, {"key1", "key2"})
 
     def test_stream_attribute_keys_excluded_logs_warning(self):
-        config = self._make_view_config(
-            stream_kwargs={"attribute_keys": IncludeExclude(excluded=["key1"])}
-        )
-        with self.assertLogs(
-            "opentelemetry.configuration._meter_provider", level="WARNING"
-        ) as log:
+        config = self._make_view_config(stream_kwargs={"attribute_keys": IncludeExclude(excluded=["key1"])})
+        with self.assertLogs("opentelemetry.configuration._meter_provider", level="WARNING") as log:
             create_meter_provider(config)
         self.assertTrue(any("excluded" in msg for msg in log.output))
 
     def test_stream_aggregation_drop(self):
-        view = self._get_view(
-            self._make_view_config(
-                stream_kwargs={"aggregation": AggregationConfig(drop={})}
-            )
-        )
+        view = self._get_view(self._make_view_config(stream_kwargs={"aggregation": AggregationConfig(drop={})}))
         self.assertIsInstance(view._aggregation, DropAggregation)
 
     def test_stream_aggregation_explicit_bucket_histogram_with_boundaries(
@@ -925,16 +813,12 @@ class TestCreateViews(unittest.TestCase):
             self._make_view_config(
                 stream_kwargs={
                     "aggregation": AggregationConfig(
-                        explicit_bucket_histogram=ExplicitBucketConfig(
-                            boundaries=[1.0, 5.0, 10.0]
-                        )
+                        explicit_bucket_histogram=ExplicitBucketConfig(boundaries=[1.0, 5.0, 10.0])
                     )
                 }
             )
         )
-        self.assertIsInstance(
-            view._aggregation, ExplicitBucketHistogramAggregation
-        )
+        self.assertIsInstance(view._aggregation, ExplicitBucketHistogramAggregation)
         self.assertEqual(list(view._aggregation._boundaries), [1.0, 5.0, 10.0])
 
     def test_stream_aggregation_base2_exponential_with_params(self):
@@ -942,16 +826,12 @@ class TestCreateViews(unittest.TestCase):
             self._make_view_config(
                 stream_kwargs={
                     "aggregation": AggregationConfig(
-                        base2_exponential_bucket_histogram=Base2Config(
-                            max_size=64, max_scale=5
-                        )
+                        base2_exponential_bucket_histogram=Base2Config(max_size=64, max_scale=5)
                     )
                 }
             )
         )
-        self.assertIsInstance(
-            view._aggregation, ExponentialBucketHistogramAggregation
-        )
+        self.assertIsInstance(view._aggregation, ExponentialBucketHistogramAggregation)
 
     def test_stream_aggregation_base2_exponential_record_min_max(self):
         for record_min_max, expected in [
@@ -964,38 +844,22 @@ class TestCreateViews(unittest.TestCase):
                     self._make_view_config(
                         stream_kwargs={
                             "aggregation": AggregationConfig(
-                                base2_exponential_bucket_histogram=Base2Config(
-                                    record_min_max=record_min_max
-                                )
+                                base2_exponential_bucket_histogram=Base2Config(record_min_max=record_min_max)
                             )
                         }
                     )
                 )
-                self.assertIsInstance(
-                    view._aggregation, ExponentialBucketHistogramAggregation
-                )
+                self.assertIsInstance(view._aggregation, ExponentialBucketHistogramAggregation)
                 self.assertEqual(view._aggregation._record_min_max, expected)
 
     def test_stream_aggregation_last_value(self):
-        view = self._get_view(
-            self._make_view_config(
-                stream_kwargs={"aggregation": AggregationConfig(last_value={})}
-            )
-        )
+        view = self._get_view(self._make_view_config(stream_kwargs={"aggregation": AggregationConfig(last_value={})}))
         self.assertIsInstance(view._aggregation, LastValueAggregation)
 
     def test_stream_aggregation_sum(self):
-        view = self._get_view(
-            self._make_view_config(
-                stream_kwargs={"aggregation": AggregationConfig(sum={})}
-            )
-        )
+        view = self._get_view(self._make_view_config(stream_kwargs={"aggregation": AggregationConfig(sum={})}))
         self.assertIsInstance(view._aggregation, SumAggregation)
 
     def test_stream_aggregation_default(self):
-        view = self._get_view(
-            self._make_view_config(
-                stream_kwargs={"aggregation": AggregationConfig(default={})}
-            )
-        )
+        view = self._get_view(self._make_view_config(stream_kwargs={"aggregation": AggregationConfig(default={})}))
         self.assertIsInstance(view._aggregation, DefaultAggregation)

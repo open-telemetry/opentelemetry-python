@@ -21,9 +21,7 @@ OPENAI_RESPONSE_SERVICE_TIER: Final = "openai.response.service_tier"
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = (
-    "openai.response.system_fingerprint"
-)
+OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = "openai.response.system_fingerprint"
 """
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
