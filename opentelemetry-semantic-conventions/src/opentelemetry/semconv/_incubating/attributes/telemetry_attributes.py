@@ -46,6 +46,8 @@ class TelemetrySdkLanguageValues(Enum):
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues.GO`."""
     JAVA = "java"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues.JAVA`."""
+    KOTLIN = "kotlin"
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues.KOTLIN`."""
     NODEJS = "nodejs"
     """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.telemetry_attributes.TelemetrySdkLanguageValues.NODEJS`."""
     PHP = "php"

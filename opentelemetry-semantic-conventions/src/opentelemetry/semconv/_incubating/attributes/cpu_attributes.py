@@ -31,4 +31,4 @@ class CpuModeValues(Enum):
     STEAL = "steal"
     """Steal."""
     KERNEL = "kernel"
-    """Kernel."""
+    """Deprecated: Replaced by `system`."""

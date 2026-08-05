@@ -5,11 +5,13 @@ requires-python = ">=3.10"
 dependencies = [
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "opentelemetry-configuration",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
   "opentelemetry-proto-json",
   "opentelemetry-test-utils",
   "opentelemetry-exporter-otlp-json-file",
+  "opentelemetry-exporter-otlp-json-http",
   "opentelemetry-exporter-http-transport",
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
@@ -30,16 +32,19 @@ required-version = ">=0.6.0"
 [tool.uv.sources]
 opentelemetry-api = { workspace = true}
 opentelemetry-sdk = { workspace = true }
+opentelemetry-configuration = { workspace = true }
 opentelemetry-proto = { workspace = true }
 opentelemetry-proto-json = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
 opentelemetry-test-utils = { workspace = true }
-opentelemetry-exporter-otlp-json-file = { workspace = true }
 opentelemetry-exporter-http-transport = { workspace = true }
+opentelemetry-exporter-otlp-json-file = { workspace = true }
+opentelemetry-exporter-otlp-json-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
 opentelemetry-exporter-otlp-proto-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-common = { workspace = true }
 opentelemetry-exporter-otlp-json-common = { workspace = true }
+opentelemetry-exporter-otlp-common = { workspace = true }
 opentelemetry-exporter-zipkin-json = { workspace = true }
 opentelemetry-exporter-prometheus = {workspace = true }
 opentelemetry-propagator-jaeger = { workspace = true }
@@ -50,6 +55,7 @@ opentelemetry-codegen-json = { workspace = true }
 members = [
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "opentelemetry-configuration",
   "opentelemetry-semantic-conventions",
   "opentelemetry-proto",
   "opentelemetry-proto-json",
@@ -78,6 +84,7 @@ extend-exclude = [
   "opentelemetry-proto-json/src/*",
 ]
 output-format = "concise"
+extension = { added = "markdown", changed = "markdown", deprecated = "markdown", removed = "markdown", fixed = "markdown" }
 
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/linter/#rule-selection
@@ -101,7 +108,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**/*.*" = ["PLE"]
-"opentelemetry-sdk/tests/_configuration/test_models.py" = ["E402", "PLC0415"]
+"opentelemetry-configuration/tests/test_models.py" = ["E402", "PLC0415"]
 "shim/opentelemetry-opentracing-shim/tests/*" = ["TID252"]
 
 [tool.ruff.lint.isort]
@@ -114,6 +121,9 @@ known-third-party = [
 ]
 known-first-party = ["opentelemetry", "opentelemetry_example_app"]
 
+[tool.ruff.format]
+docstring-code-format = true
+
 [tool.pyright]
 typeCheckingMode = "standard"
 pythonVersion = "3.10"
@@ -122,8 +132,10 @@ include = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-api",
   "opentelemetry-sdk",
+  "opentelemetry-configuration",
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-json-file",
+  "exporter/opentelemetry-exporter-otlp-json-http",
   "exporter/opentelemetry-exporter-http-transport",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
@@ -134,7 +146,7 @@ include = [
 
 exclude = [
   "opentelemetry-sdk/tests",
-  "opentelemetry-sdk/src/opentelemetry/sdk/_events",
+  "opentelemetry-configuration/tests",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/__init__.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/exemplar/exemplar_reservoir.py",
@@ -148,6 +160,7 @@ exclude = [
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/tests",
+  "exporter/opentelemetry-exporter-otlp-json-http/tests",
   "exporter/opentelemetry-exporter-otlp-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
 ]
@@ -160,9 +173,9 @@ strict = [
 ]
 
 [tool.datamodel-codegen]
-input = "opentelemetry-sdk/src/opentelemetry/sdk/_configuration/schema.json"
+input = "opentelemetry-configuration/src/opentelemetry/configuration/schema.json"
 input-file-type = "jsonschema"
-output = "opentelemetry-sdk/src/opentelemetry/sdk/_configuration/models.py"
+output = "opentelemetry-configuration/src/opentelemetry/configuration/models.py"
 output-model-type = "dataclasses.dataclass"
 field-constraints = true
 formatters = ["ruff-format", "ruff-check"]
@@ -171,8 +184,8 @@ use-schema-description = true
 use-title-as-name = true
 use-union-operator = true
 target-python-version = "3.10"
-custom-template-dir = "opentelemetry-sdk/codegen"
-additional-imports = "typing.ClassVar,opentelemetry.sdk._configuration._common._additional_properties"
+custom-template-dir = "opentelemetry-configuration/codegen"
+additional-imports = "typing.ClassVar,opentelemetry.configuration._common._additional_properties"
 
 [tool.towncrier]
 directory = ".changelog"
@@ -183,7 +196,7 @@ issue_format = "[#{issue}](https://github.com/open-telemetry/opentelemetry-pytho
 wrap = true # wrap fragments to 79 char line length
 issue_pattern = "^(\\d+)" # only PR numbers as fragment prefix (e.g. 1234.fixed)
 
-# NOTE: remember to update the changelog workflow if these types change 
+# NOTE: remember to update the changelog workflow if these types change
 [[tool.towncrier.type]]
 directory = "added"
 name = "Added"

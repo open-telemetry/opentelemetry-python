@@ -23,18 +23,18 @@ CallbackT = (
 
 CONTAINER_CPU_TIME: Final = "container.cpu.time"
 """
-Total CPU time consumed
+CPU time consumed
 Instrument: counter
 Unit: s
-Note: Total CPU time consumed by the specific container on all available CPU cores.
+Note: CPU time consumed by the specific container on all available CPU cores.
 """
 
 
 def create_container_cpu_time(meter: Meter) -> Counter:
-    """Total CPU time consumed"""
+    """CPU time consumed"""
     return meter.create_counter(
         name=CONTAINER_CPU_TIME,
-        description="Total CPU time consumed.",
+        description="CPU time consumed.",
         unit="s",
     )
 

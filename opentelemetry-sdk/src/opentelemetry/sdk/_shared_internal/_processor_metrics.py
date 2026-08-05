@@ -33,7 +33,7 @@ class ProcessorMetricsT(Protocol):
 
     def drop_items(self, count: int) -> None: ...
 
-    def finish_items(self, count: int, error: Exception | None) -> None: ...
+    def finish_items(self, count: int) -> None: ...
 
 
 class NoOpProcessorMetrics:
@@ -43,7 +43,7 @@ class NoOpProcessorMetrics:
     def drop_items(self, count: int) -> None:
         pass
 
-    def finish_items(self, count: int, error: Exception | None) -> None:
+    def finish_items(self, count: int) -> None:
         pass
 
 
@@ -115,15 +115,8 @@ class ProcessorMetrics:
     def drop_items(self, count: int) -> None:
         self._processed.add(count, self._dropped_attrs)
 
-    def finish_items(self, count: int, error: Exception | None) -> None:
-        if not error:
-            self._processed.add(count, self._standard_attrs)
-            return
-        attrs = {
-            **self._standard_attrs,
-            ERROR_TYPE: type(error).__name__,
-        }
-        self._processed.add(count, attrs)
+    def finish_items(self, count: int) -> None:
+        self._processed.add(count, self._standard_attrs)
 
 
 def create_processor_metrics(

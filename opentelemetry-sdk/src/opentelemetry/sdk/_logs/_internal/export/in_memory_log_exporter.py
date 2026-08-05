@@ -46,6 +46,9 @@ class InMemoryLogRecordExporter(LogRecordExporter):
     def shutdown(self) -> None:
         self._stopped = True
 
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+        return True
+
 
 @deprecated(
     "Use InMemoryLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."

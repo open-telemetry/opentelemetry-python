@@ -121,6 +121,21 @@ class LogRecordExporter(abc.ABC):
         Called when the SDK is shut down.
         """
 
+    @abc.abstractmethod
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+        """Hint to ensure that the export of any ``ReadableLogRecord`` objects
+        the exporter has received prior to the call to ``force_flush`` SHOULD be
+        completed as soon as possible, preferably before returning from this method.
+
+        Args:
+            timeout_millis: The maximum amount of time to wait for the flush to
+                complete, in milliseconds.
+
+        Returns:
+            ``True`` if the flush completed successfully within the timeout,
+            ``False`` otherwise.
+        """
+
 
 @deprecated(
     "Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
@@ -155,6 +170,9 @@ class ConsoleLogRecordExporter(LogRecordExporter):
 
     def shutdown(self):
         pass
+
+    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+        return True
 
 
 @deprecated(
@@ -212,7 +230,6 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),  # pyright: ignore[reportOperatorIssue]
             )
         )
-        error: Exception | None = None
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
@@ -230,12 +247,12 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 instrumentation_scope=log_record.instrumentation_scope,
                 limits=log_record.limits,
             )
+            # Record on submission to the exporter.
+            self._metrics.finish_items(1)
             self._exporter.export((readable_log_record,))
-        except Exception as err:  # pylint: disable=broad-exception-caught
-            error = err
+        except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
         finally:
-            self._metrics.finish_items(1, error)
             detach(token)
 
     def shutdown(self):

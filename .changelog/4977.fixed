@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: Optimize `LogRecord` memory in `BatchLogRecordProcessor` by clearing the `Context` object before buffering. This is a potentially breaking change for custom log exporters that access `context` from the exported `ReadableLogRecord`, as the context will now be an empty `Context()` instead of the original.

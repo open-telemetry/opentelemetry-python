@@ -124,16 +124,15 @@ class SimpleSpanProcessor(SpanProcessor):
         if not (span.context and span.context.trace_flags.sampled):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        error: Exception | None = None
+        # Record on submission to the exporter.
+        self._metrics.finish_items(1)
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught
-        except Exception as err:
-            error = err
+        except Exception:
             logger.exception("Exception while exporting Span.")
         finally:
-            self._metrics.finish_items(1, error)
-        detach(token)
+            detach(token)
 
     def shutdown(self) -> None:
         self.span_exporter.shutdown()
@@ -333,7 +332,7 @@ class ConsoleSpanExporter(SpanExporter):
         out: typing.IO = sys.stdout,
         formatter: collections.abc.Callable[
             [ReadableSpan], str
-        ] = lambda span: (span.to_json() + linesep),
+        ] = lambda span: span.to_json() + linesep,
     ):
         self.out = out
         self.formatter = formatter

@@ -4,28 +4,32 @@
 from enum import Enum
 from typing import Final
 
+from typing_extensions import deprecated
+
 MCP_METHOD_NAME: Final = "mcp.method.name"
 """
-The name of the request or notification method.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 MCP_PROTOCOL_VERSION: Final = "mcp.protocol.version"
 """
-The [version](https://modelcontextprotocol.io/specification/versioning) of the Model Context Protocol used.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 MCP_RESOURCE_URI: Final = "mcp.resource.uri"
 """
-The value of the resource uri.
-Note: This is a URI of the resource provided in the following requests or notifications: `resources/read`, `resources/subscribe`, `resources/unsubscribe`, or `notifications/resources/updated`.
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 MCP_SESSION_ID: Final = "mcp.session.id"
 """
-Identifies [MCP session](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#session-management).
+Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
 
+@deprecated(
+    "The attribute mcp.method.name is deprecated - Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai)"
+)
 class McpMethodNameValues(Enum):
     NOTIFICATIONS_CANCELLED = "notifications/cancelled"
     """Notification cancelling a previously-issued request."""
