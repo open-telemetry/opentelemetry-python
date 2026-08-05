@@ -1500,7 +1500,9 @@ class TestConfigurator(TestCase):
         configurator = ConfiguratorWithArgs("TEST_NAME", strict=True)
         self.assertEqual(configurator.name, "TEST_NAME")
         self.assertTrue(configurator.strict)
-        self.assertIs(configurator, ConfiguratorWithArgs("TEST_NAME"))
+        self.assertIs(
+            configurator, ConfiguratorWithArgs("TEST_NAME", strict=True)
+        )
 
 
 # Any test that calls _init_logging with setup_logging_handler=True
