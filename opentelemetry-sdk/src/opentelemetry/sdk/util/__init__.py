@@ -24,7 +24,10 @@ def get_dict_as_key(labels):
         sorted(
             map(
                 lambda kv: (
-                    (kv[0], tuple(kv[1])) if isinstance(kv[1], list) else kv
+                    (kv[0], tuple(kv[1]))
+                    if isinstance(kv[1], Sequence)
+                    and not isinstance(kv[1], (str, bytes))
+                    else kv
                 ),
                 labels.items(),
             )

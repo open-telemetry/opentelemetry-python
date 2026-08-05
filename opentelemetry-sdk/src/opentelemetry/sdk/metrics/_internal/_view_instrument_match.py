@@ -19,6 +19,8 @@ from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
+from opentelemetry.sdk.util import get_dict_as_key
+from opentelemetry.util.types import AttributesAsKey
 
 _logger = getLogger(__name__)
 
@@ -32,7 +34,7 @@ class _ViewInstrumentMatch:
     ):
         self._view = view
         self._instrument = instrument
-        self._attributes_aggregation: dict[frozenset, _Aggregation] = {}
+        self._attributes_aggregation: dict[AttributesAsKey, _Aggregation] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
@@ -98,7 +100,7 @@ class _ViewInstrumentMatch:
         else:
             attributes = {}
 
-        aggr_key = frozenset(attributes.items())
+        aggr_key = get_dict_as_key(attributes)
 
         if aggr_key not in self._attributes_aggregation:
             with self._lock:
