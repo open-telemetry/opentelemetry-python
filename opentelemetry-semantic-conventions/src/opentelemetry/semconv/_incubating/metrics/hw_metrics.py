@@ -140,6 +140,23 @@ def create_hw_energy(meter: Meter) -> Counter:
 
 HW_ERRORS: Final = "hw.errors"
 """
+Total number of errors encountered and corrected by the CPU
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_hw_errors(meter: Meter) -> Counter:
+    """Total number of errors encountered and corrected by the CPU"""
+    return meter.create_counter(
+        name=HW_ERRORS,
+        description="Total number of errors encountered and corrected by the CPU.",
+        unit="{error}",
+    )
+
+
+HW_ERRORS: Final = "hw.errors"
+"""
 Number of errors encountered by the component
 Instrument: counter
 Unit: {error}
@@ -151,6 +168,108 @@ def create_hw_errors(meter: Meter) -> Counter:
     return meter.create_counter(
         name=HW_ERRORS,
         description="Number of errors encountered by the component.",
+        unit="{error}",
+    )
+
+
+HW_ERRORS: Final = "hw.errors"
+"""
+Number of errors encountered by the GPU
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_hw_errors(meter: Meter) -> Counter:
+    """Number of errors encountered by the GPU"""
+    return meter.create_counter(
+        name=HW_ERRORS,
+        description="Number of errors encountered by the GPU.",
+        unit="{error}",
+    )
+
+
+HW_ERRORS: Final = "hw.errors"
+"""
+Number of errors encountered on this logical disk
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_hw_errors(meter: Meter) -> Counter:
+    """Number of errors encountered on this logical disk"""
+    return meter.create_counter(
+        name=HW_ERRORS,
+        description="Number of errors encountered on this logical disk.",
+        unit="{error}",
+    )
+
+
+HW_ERRORS: Final = "hw.errors"
+"""
+Number of errors encountered on this memory module
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_hw_errors(meter: Meter) -> Counter:
+    """Number of errors encountered on this memory module"""
+    return meter.create_counter(
+        name=HW_ERRORS,
+        description="Number of errors encountered on this memory module.",
+        unit="{error}",
+    )
+
+
+HW_ERRORS: Final = "hw.errors"
+"""
+Number of errors encountered by the network adapter
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_hw_errors(meter: Meter) -> Counter:
+    """Number of errors encountered by the network adapter"""
+    return meter.create_counter(
+        name=HW_ERRORS,
+        description="Number of errors encountered by the network adapter.",
+        unit="{error}",
+    )
+
+
+HW_ERRORS: Final = "hw.errors"
+"""
+Number of errors encountered on this disk
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_hw_errors(meter: Meter) -> Counter:
+    """Number of errors encountered on this disk"""
+    return meter.create_counter(
+        name=HW_ERRORS,
+        description="Number of errors encountered on this disk.",
+        unit="{error}",
+    )
+
+
+HW_ERRORS: Final = "hw.errors"
+"""
+Number of errors encountered by the tape drive
+Instrument: counter
+Unit: {error}
+"""
+
+
+def create_hw_errors(meter: Meter) -> Counter:
+    """Number of errors encountered by the tape drive"""
+    return meter.create_counter(
+        name=HW_ERRORS,
+        description="Number of errors encountered by the tape drive.",
         unit="{error}",
     )
 
@@ -674,6 +793,258 @@ def create_hw_power_supply_utilization(
         name=HW_POWER_SUPPLY_UTILIZATION,
         callbacks=callbacks,
         description="Utilization of the power supply as a fraction of its maximum output.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
+        unit="1",
+    )
+
+
+HW_STATUS: Final = "hw.status"
+"""
+Operational status: `1` (true) or `0` (false) for each of the possible states
+Instrument: updowncounter
+Unit: 1
+Note: `hw.status` is currently specified as an *UpDownCounter* but would ideally be represented using a [*StateSet* as defined in OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#stateset). This semantic convention will be updated once *StateSet* is specified in OpenTelemetry. This planned change is not expected to have any consequence on the way users query their timeseries backend to retrieve the values of `hw.status` over time.
+"""
+
+
+def create_hw_status(meter: Meter) -> UpDownCounter:
+    """Operational status: `1` (true) or `0` (false) for each of the possible states"""
+    return meter.create_up_down_counter(
+        name=HW_STATUS,
+        description="Operational status: `1` (true) or `0` (false) for each of the possible states.",
         unit="1",
     )
 
