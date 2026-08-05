@@ -53,6 +53,9 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
 )
+from opentelemetry.exporter.otlp.proto.grpc._semconv import (
+    _RPC_RESPONSE_STATUS_CODE,
+)
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
@@ -100,9 +103,6 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
-)
-from opentelemetry.semconv._incubating.attributes.rpc_attributes import (
-    RPC_RESPONSE_STATUS_CODE,
 )
 from opentelemetry.util._importlib_metadata import entry_points
 from opentelemetry.util.re import parse_env_headers
@@ -520,7 +520,7 @@ class OTLPExporterMixin(
                         )
                         result.error = error
                         result.error_attrs = {
-                            RPC_RESPONSE_STATUS_CODE: error.code().name
+                            _RPC_RESPONSE_STATUS_CODE: error.code().name
                         }
                         return self._result.FAILURE  # type: ignore [reportReturnType]
                     logger.warning(
