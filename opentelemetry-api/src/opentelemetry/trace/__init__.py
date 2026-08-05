@@ -284,6 +284,8 @@ class Tracer(ABC):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        *,
+        span_type: str | None = None,
     ) -> "Span":
         """Starts a span.
 
@@ -322,6 +324,10 @@ class Tracer(ABC):
                 be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
                 this mechanism if it was previously set manually.
+            span_type: Identifies the semantic convention definition this span follows
+                (within schema_url specified for this tracer), for example 
+                ``"http.server.request"``. Low-cardinality and immutable after
+                creation. Not validated by the API.
 
         Returns:
             The newly-created span.
@@ -340,6 +346,8 @@ class Tracer(ABC):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        *,
+        span_type: str | None = None,
     ) -> Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -397,6 +405,9 @@ class Tracer(ABC):
                 this mechanism if it was previously set manually.
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
+            span_type: Identifies the semantic convention definition this span
+                follows, for example ``"http.server.request"``. Low-cardinality
+                and immutable after creation. Not validated by the API.
 
         Yields:
             The newly-created span.
@@ -459,6 +470,8 @@ class NoOpTracer(Tracer):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        *,
+        span_type: str | None = None,
     ) -> "Span":
         current_span = get_current_span(context)
         if isinstance(current_span, NonRecordingSpan):
@@ -488,6 +501,8 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        *,
+        span_type: str | None = None,
     ) -> Iterator["Span"]:
         span = self.start_span(
             name=name,
@@ -498,6 +513,7 @@ class NoOpTracer(Tracer):
             start_time=start_time,
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
+            span_type=span_type,
         )
         with use_span(
             span,

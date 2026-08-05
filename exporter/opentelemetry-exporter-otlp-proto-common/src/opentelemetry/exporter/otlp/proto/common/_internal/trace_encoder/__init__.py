@@ -101,8 +101,20 @@ def _span_flags(parent_span_context: SpanContext | None) -> int:
     return flags
 
 
+# Until OTLP gains a top-level Span.type field, span type travels as an
+# attribute in this prototype. 
+# See OTEP "Span type" - TODO add link
+_SPAN_TYPE_ATTRIBUTE_KEY = "otel.span.type"
+
+
 def _encode_span(sdk_span: ReadableSpan) -> PB2SPan:
     span_context = sdk_span.get_span_context()
+    attributes = sdk_span.attributes
+    if sdk_span.span_type:
+        attributes = {
+            **(attributes or {}),
+            _SPAN_TYPE_ATTRIBUTE_KEY: sdk_span.span_type,
+        }
     return PB2SPan(
         trace_id=_encode_trace_id(span_context.trace_id),
         span_id=_encode_span_id(span_context.span_id),
@@ -112,7 +124,7 @@ def _encode_span(sdk_span: ReadableSpan) -> PB2SPan:
         kind=_SPAN_KIND_MAP[sdk_span.kind],
         start_time_unix_nano=sdk_span.start_time,
         end_time_unix_nano=sdk_span.end_time,
-        attributes=_encode_attributes(sdk_span.attributes),
+        attributes=_encode_attributes(attributes),
         events=_encode_events(sdk_span.events),
         links=_encode_links(sdk_span.links),
         status=_encode_status(sdk_span.status),
