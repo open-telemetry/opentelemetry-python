@@ -1,4 +1,9 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-__version__ = "1.45.0.dev"
+
+from opentelemetry.exporter.otlp._proto.common.version import (
+    __version__,
+)
+
+__all__ = ["__version__"]
