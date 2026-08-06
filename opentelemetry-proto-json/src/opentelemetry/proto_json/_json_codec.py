@@ -10,6 +10,8 @@ import json
 import math
 import typing
 
+from typing_extensions import Self
+
 T = typing.TypeVar("T")
 M = typing.TypeVar("M", bound="JsonMessage")
 
@@ -39,7 +41,7 @@ class JsonMessage(abc.ABC):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls: type[M], data: str | bytes) -> M:
+    def from_json(cls, data: str | bytes) -> Self:
         """
         Deserialize from a JSON string or bytes.
         """
@@ -179,7 +181,7 @@ def decode_int64(value: int | str | None, field_name: str) -> int:
         ) from None
 
 
-def decode_float(value: float | int | str | None, field_name: str) -> float:
+def decode_float(value: float | str | None, field_name: str) -> float:
     """
     Parse float/double from number or string, handling special values.
 

@@ -52,12 +52,12 @@ def entry_points(**params) -> EntryPoints:
 
 
 __all__ = [
-    "entry_points",
-    "version",
+    "Distribution",
     "EntryPoint",
     "EntryPoints",
-    "requires",
-    "Distribution",
-    "distributions",
     "PackageNotFoundError",
+    "distributions",
+    "entry_points",
+    "requires",
+    "version",
 ]

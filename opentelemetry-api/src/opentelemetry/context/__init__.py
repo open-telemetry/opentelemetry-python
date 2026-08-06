@@ -9,7 +9,7 @@ from contextvars import Token
 from uuid import uuid4
 
 # pylint: disable=wrong-import-position
-from opentelemetry.context.context import Context, _RuntimeContext  # noqa
+from opentelemetry.context.context import Context, _RuntimeContext
 from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 
@@ -27,7 +27,7 @@ def _load_runtime_context() -> _RuntimeContext:
         return ContextVarsRuntimeContext()
 
     # pylint: disable=import-outside-toplevel,no-name-in-module
-    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+    from opentelemetry.util._importlib_metadata import (
         entry_points,
     )
 

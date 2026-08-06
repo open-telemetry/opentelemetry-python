@@ -114,12 +114,12 @@ def _load_propagators() -> textmap.TextMapPropagator:
     configured = environ.get(OTEL_PROPAGATORS)
     if not configured:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.baggage.propagation import (  # noqa: PLC0415
+        from opentelemetry.baggage.propagation import (
             W3CBaggagePropagator,
         )
 
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.trace.propagation.tracecontext import (  # noqa: PLC0415
+        from opentelemetry.trace.propagation.tracecontext import (
             TraceContextTextMapPropagator,
         )
 
@@ -128,7 +128,7 @@ def _load_propagators() -> textmap.TextMapPropagator:
         )
 
     # pylint: disable=import-outside-toplevel,no-name-in-module
-    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+    from opentelemetry.util._importlib_metadata import (
         entry_points,
     )
 

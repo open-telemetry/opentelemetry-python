@@ -15,10 +15,9 @@ from opentelemetry.sdk.error_handler import (
 class TestErrorHandler(TestCase):
     @patch("opentelemetry.sdk.error_handler.entry_points")
     def test_default_error_handler(self, mock_entry_points):
-        with self.assertLogs(logger, ERROR):
-            with GlobalErrorHandler():
-                # pylint: disable=broad-exception-raised
-                raise Exception("some exception")
+        with self.assertLogs(logger, ERROR), GlobalErrorHandler():
+            # pylint: disable=broad-exception-raised
+            raise Exception("some exception")
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.sdk.error_handler.entry_points")
@@ -43,12 +42,10 @@ class TestErrorHandler(TestCase):
         )
 
         mock_entry_points.configure_mock(
-            **{
-                "return_value": [
-                    mock_entry_point_zero_division_error_handler,
-                    mock_entry_point_assertion_error_handler,
-                ]
-            }
+            return_value=[
+                mock_entry_point_zero_division_error_handler,
+                mock_entry_point_assertion_error_handler,
+            ]
         )
 
         error = ZeroDivisionError()
@@ -80,14 +77,13 @@ class TestErrorHandler(TestCase):
         )
 
         mock_entry_points.configure_mock(
-            **{"return_value": [mock_entry_point_error_error_handler]}
+            return_value=[mock_entry_point_error_error_handler]
         )
 
         error = ZeroDivisionError()
 
-        with self.assertLogs(logger, ERROR):
-            with GlobalErrorHandler():
-                raise error
+        with self.assertLogs(logger, ERROR), GlobalErrorHandler():
+            raise error
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.sdk.error_handler.entry_points")
@@ -104,7 +100,7 @@ class TestErrorHandler(TestCase):
         )
 
         mock_entry_points.configure_mock(
-            **{"return_value": [mock_entry_point_error_handler]}
+            return_value=[mock_entry_point_error_handler]
         )
 
         error = IndexError()

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 @functools.cache
 def _get_connection_error_types() -> tuple[type[Exception], ...]:
     # pylint: disable-next=import-outside-toplevel
-    import urllib3.exceptions  # noqa: PLC0415
+    import urllib3.exceptions
 
     types: list[type[Exception]] = [
         urllib3.exceptions.ConnectionError,
@@ -75,7 +75,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         **kwargs: Any,
     ) -> None:
         # pylint: disable-next=import-outside-toplevel
-        import urllib3  # noqa: PLC0415
+        import urllib3
 
         pool_kwargs: dict[str, object] = {
             "retries": urllib3.Retry(0, redirect=False),
@@ -104,7 +104,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         data: bytes | None = None,
     ) -> BaseHTTPResult:
         # pylint: disable-next=import-outside-toplevel
-        import urllib3  # noqa: PLC0415
+        import urllib3
 
         try:
             response = self._pool.request(

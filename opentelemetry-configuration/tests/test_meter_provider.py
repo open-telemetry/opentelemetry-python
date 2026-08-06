@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Tests access private members of SDK classes to assert correct configuration.
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-lines
 
 import os
 import sys
@@ -242,15 +242,17 @@ class TestCreateMetricReaders(unittest.TestCase):
         config = self._make_periodic_config(
             PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig())
         )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.http.metric_exporter": None,
-                "opentelemetry.exporter.otlp.proto.http": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.metric_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_meter_provider(config)
+            create_meter_provider(config)
         self.assertIn("otlp-proto-http", str(ctx.exception))
 
     def test_otlp_http_created_with_endpoint(self):
@@ -315,15 +317,17 @@ class TestCreateMetricReaders(unittest.TestCase):
         config = self._make_periodic_config(
             PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig())
         )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": None,
-                "grpc": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": None,
+                    "grpc": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_meter_provider(config)
+            create_meter_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
     def test_otlp_file_development_missing_package_raises(self):
@@ -332,14 +336,16 @@ class TestCreateMetricReaders(unittest.TestCase):
                 otlp_file_development=ExperimentalOtlpFileMetricExporterConfig()
             )
         )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.json.file.metric_exporter": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.json.file.metric_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_meter_provider(config)
+            create_meter_provider(config)
         self.assertIn(
             "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
         )

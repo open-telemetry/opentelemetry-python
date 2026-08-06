@@ -23,7 +23,7 @@ class ExemplarFilter(ABC):
     @abstractmethod
     def should_sample(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -50,7 +50,7 @@ class AlwaysOnExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -77,7 +77,7 @@ class AlwaysOffExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -103,7 +103,7 @@ class TraceBasedExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,

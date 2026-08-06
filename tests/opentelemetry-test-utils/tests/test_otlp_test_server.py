@@ -360,9 +360,11 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_missing_proto_raises_import_error(self):
-        with unittest.mock.patch.dict(
-            "sys.modules", {"opentelemetry.proto": None}
+        with (
+            unittest.mock.patch.dict(
+                "sys.modules", {"opentelemetry.proto": None}
+            ),
+            self.assertRaises(ImportError) as cm,
         ):
-            with self.assertRaises(ImportError) as cm:
-                OtlpProtoTestServer()
+            OtlpProtoTestServer()
         self.assertIn("opentelemetry-proto", str(cm.exception))

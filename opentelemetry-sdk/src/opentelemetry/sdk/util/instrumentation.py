@@ -81,7 +81,12 @@ class InstrumentationScope:
     properties.
     """
 
-    __slots__ = ("_name", "_version", "_schema_url", "_attributes")
+    __slots__ = (
+        "_name",
+        "_version",
+        "_schema_url",
+        "_attributes",
+    )
 
     def __init__(
         self,

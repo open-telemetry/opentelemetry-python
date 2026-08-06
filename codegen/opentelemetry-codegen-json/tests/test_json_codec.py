@@ -140,9 +140,7 @@ def test_encode_float(value: float, expected: float | str) -> None:
         (None, 0.0),
     ],
 )
-def test_decode_float(
-    value: float | int | str | None, expected: float
-) -> None:
+def test_decode_float(value: float | str | None, expected: float) -> None:
     result = decode_float(value, "field")
     if math.isnan(expected):
         assert math.isnan(result)

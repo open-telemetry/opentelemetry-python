@@ -13,7 +13,7 @@ class TestImport(TestCase):
         """
 
         with self.assertNotRaises(Exception):
-            from opentelemetry.sdk.metrics import (  # noqa: F401, PLC0415
+            from opentelemetry.sdk.metrics import (  # noqa: F401
                 Counter,
                 Histogram,
                 Meter,
@@ -31,7 +31,7 @@ class TestImport(TestCase):
         """
 
         with self.assertNotRaises(Exception):
-            from opentelemetry.sdk.metrics.export import (  # noqa: F401, PLC0415
+            from opentelemetry.sdk.metrics.export import (  # noqa: F401
                 AggregationTemporality,
                 ConsoleMetricExporter,
                 DataPointT,
@@ -58,7 +58,7 @@ class TestImport(TestCase):
         """
 
         with self.assertNotRaises(Exception):
-            from opentelemetry.sdk.metrics.view import (  # noqa: F401, PLC0415
+            from opentelemetry.sdk.metrics.view import (  # noqa: F401
                 Aggregation,
                 DefaultAggregation,
                 DropAggregation,

@@ -239,56 +239,64 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         self.assertIs(result, mock_exporter)
 
     def test_unknown_log_exporter_raises_configuration_error(self):
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                # pylint: disable=unexpected-keyword-arg
-                _create_log_record_exporter(
-                    LogRecordExporterConfig(no_such_exporter={})
-                )
+            # pylint: disable=unexpected-keyword-arg
+            _create_log_record_exporter(
+                LogRecordExporterConfig(no_such_exporter={})
+            )
 
     def test_otlp_http_missing_package_raises(self):
         config = LogRecordExporterConfig(
             otlp_http=OtlpHttpExporterConfig(endpoint="http://localhost:4318")
         )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.http": None,
-                "opentelemetry.exporter.otlp.proto.http._log_exporter": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                    "opentelemetry.exporter.otlp.proto.http._log_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                _create_log_record_exporter(config)
+            _create_log_record_exporter(config)
 
     def test_otlp_grpc_missing_package_raises(self):
         config = LogRecordExporterConfig(
             otlp_grpc=OtlpGrpcExporterConfig(endpoint="http://localhost:4317")
         )
-        with patch.dict(
-            sys.modules,
-            {
-                "grpc": None,
-                "opentelemetry.exporter.otlp.proto.grpc._log_exporter": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "grpc": None,
+                    "opentelemetry.exporter.otlp.proto.grpc._log_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                _create_log_record_exporter(config)
+            _create_log_record_exporter(config)
 
     def test_otlp_file_development_missing_package_raises(self):
         config = LogRecordExporterConfig(
             otlp_file_development=ExperimentalOtlpFileExporterConfig()
         )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.json.file._log_exporter": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.json.file._log_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                _create_log_record_exporter(config)
+            _create_log_record_exporter(config)
         self.assertIn(
             "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
         )
