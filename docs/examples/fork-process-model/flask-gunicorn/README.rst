@@ -1,5 +1,8 @@
 Installation
 ------------
+
+The source files of this example are available :scm_web:`here <docs/examples/fork-process-model/flask-gunicorn/>`.
+
 .. code-block:: sh
 
     pip install -rrequirements.txt
