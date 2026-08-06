@@ -57,13 +57,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
-        metric_data = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
+        metric_data = results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
         previous_time_unix_nano = metric_data.time_unix_nano
 
@@ -81,30 +75,16 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         self.assertEqual(metric_data.sum, self.test_values[0])
 
         for index, metrics_data in enumerate(results[1:]):
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                previous_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(previous_time_unix_nano, metric_data.start_time_unix_nano)
             previous_time_unix_nano = metric_data.time_unix_nano
             self.assertEqual(
                 metric_data.bucket_counts,
                 # pylint: disable=consider-using-generator
-                tuple(
-                    [
-                        1 if internal_index == index + 2 else 0
-                        for internal_index in range(16)
-                    ]
-                ),
+                tuple([1 if internal_index == index + 2 else 0 for internal_index in range(16)]),
             )
-            self.assertLess(
-                metric_data.start_time_unix_nano, metric_data.time_unix_nano
-            )
+            self.assertLess(metric_data.start_time_unix_nano, metric_data.time_unix_nano)
             self.assertEqual(metric_data.min, self.test_values[index + 1])
             self.assertEqual(metric_data.max, self.test_values[index + 1])
             self.assertEqual(metric_data.sum, self.test_values[index + 1])
@@ -128,26 +108,12 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         histogram.record(2)
         results.append(reader.get_metrics_data())
 
-        metric_data_0 = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
-        metric_data_2 = (
-            results[2]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
+        metric_data_0 = results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
+        metric_data_2 = results[2].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
         self.assertIsNone(results[1])
 
-        self.assertGreater(
-            metric_data_2.start_time_unix_nano, metric_data_0.time_unix_nano
-        )
+        self.assertGreater(metric_data_2.start_time_unix_nano, metric_data_0.time_unix_nano)
 
         provider.shutdown()
 
@@ -164,9 +130,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         reader = InMemoryMetricReader(
             preferred_aggregation={Histogram: aggregation},
-            preferred_temporality={
-                Histogram: AggregationTemporality.CUMULATIVE
-            },
+            preferred_temporality={Histogram: AggregationTemporality.CUMULATIVE},
         )
 
         provider = MeterProvider(metric_readers=[reader])
@@ -192,44 +156,21 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             results.append(reader.get_metrics_data())
 
         start_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .start_time_unix_nano
+            results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].start_time_unix_nano
         )
 
         for index, metrics_data in enumerate(results):
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(start_time_unix_nano, metric_data.start_time_unix_nano)
             self.assertEqual(
                 metric_data.bucket_counts,
                 # pylint: disable=consider-using-generator
-                tuple(
-                    [
-                        (
-                            0
-                            if internal_index < 1 or internal_index > index + 1
-                            else 1
-                        )
-                        for internal_index in range(16)
-                    ]
-                ),
+                tuple([(0 if internal_index < 1 or internal_index > index + 1 else 1) for internal_index in range(16)]),
             )
             self.assertEqual(metric_data.min, self.test_values[0])
             self.assertEqual(metric_data.max, self.test_values[index])
-            self.assertEqual(
-                metric_data.sum, sum(self.test_values[: index + 1])
-            )
+            self.assertEqual(metric_data.sum, sum(self.test_values[: index + 1]))
 
         results = []
 
@@ -239,25 +180,13 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         provider.shutdown()
 
         start_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .start_time_unix_nano
+            results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].start_time_unix_nano
         )
 
         for metrics_data in results:
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(start_time_unix_nano, metric_data.start_time_unix_nano)
             self.assertEqual(
                 metric_data.bucket_counts,
                 (0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0),

@@ -32,13 +32,7 @@ def _load_runtime_context() -> _RuntimeContext:
     )
 
     try:
-        return next(
-            iter(
-                entry_points(
-                    group="opentelemetry_context", name=configured_context
-                )
-            )
-        ).load()()
+        return next(iter(entry_points(group="opentelemetry_context", name=configured_context))).load()()
     except Exception:  # pylint: disable=broad-exception-caught
         logger.exception(
             "Failed to load context: %s, falling back to contextvars_context",
@@ -77,9 +71,7 @@ def get_value(key: str, context: Context | None = None) -> object:
     return context.get(key) if context is not None else get_current().get(key)
 
 
-def set_value(
-    key: str, value: object, context: Context | None = None
-) -> Context:
+def set_value(key: str, value: object, context: Context | None = None) -> Context:
     """To record the local state of a cross-cutting concern, the
     RuntimeContext API provides a function which takes a context, a
     key, and a value as input, and returns an updated context
@@ -142,9 +134,7 @@ def detach(token: Token[Context]) -> None:
 # spec, this key should be moved accordingly.
 _ON_EMIT_RECURSION_COUNT_KEY = create_key("on_emit_recursion_count")
 _SUPPRESS_INSTRUMENTATION_KEY = create_key("suppress_instrumentation")
-_SUPPRESS_HTTP_INSTRUMENTATION_KEY = create_key(
-    "suppress_http_instrumentation"
-)
+_SUPPRESS_HTTP_INSTRUMENTATION_KEY = create_key("suppress_http_instrumentation")
 
 __all__ = [
     "Context",

@@ -84,9 +84,7 @@ class OTLPSpanExporterForTesting(
             **kwargs,
         )
 
-    def _translate_data(
-        self, data: Sequence[ReadableSpan]
-    ) -> ExportTraceServiceRequest:
+    def _translate_data(self, data: Sequence[ReadableSpan]) -> ExportTraceServiceRequest:
         return encode_spans(data)
 
     def _count_data(self, data: Sequence[ReadableSpan]) -> int:
@@ -127,11 +125,7 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
                 (
                     (
                         "google.rpc.retryinfo-bin",
-                        RetryInfo(
-                            retry_delay=Duration(
-                                nanos=self.optional_retry_nanos
-                            )
-                        ).SerializeToString(),
+                        RetryInfo(retry_delay=Duration(nanos=self.optional_retry_nanos)).SerializeToString(),
                     ),
                 )
             )
@@ -175,12 +169,8 @@ class TestOTLPExporterMixin(TestCase):
         self.server.start()
 
         self.metric_reader = InMemoryMetricReader()
-        self.meter_provider = MeterProvider(
-            metric_readers=[self.metric_reader]
-        )
-        self.exporter = OTLPSpanExporterForTesting(
-            insecure=True, meter_provider=self.meter_provider
-        )
+        self.meter_provider = MeterProvider(metric_readers=[self.metric_reader])
+        self.exporter = OTLPSpanExporterForTesting(insecure=True, meter_provider=self.meter_provider)
         self.span = _Span(
             "a",
             context=Mock(
@@ -269,13 +259,9 @@ class TestOTLPExporterMixin(TestCase):
                 "test_invalid": "some invalid compression",
             },
         ):
+            self.assertEqual(environ_to_compression("test_gzip"), Compression.Gzip)
             self.assertEqual(
-                environ_to_compression("test_gzip"), Compression.Gzip
-            )
-            self.assertEqual(
-                environ_to_compression(
-                    "test_gzip_caseinsensitive_with_whitespace"
-                ),
+                environ_to_compression("test_gzip_caseinsensitive_with_whitespace"),
                 Compression.Gzip,
             )
             self.assertIsNone(
@@ -287,9 +273,7 @@ class TestOTLPExporterMixin(TestCase):
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {})
-    def test_otlp_exporter_otlp_compression_unspecified(
-        self, mock_insecure_channel
-    ):
+    def test_otlp_exporter_otlp_compression_unspecified(self, mock_insecure_channel):
         """No env or kwarg should be NoCompression"""
         OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
@@ -305,9 +289,7 @@ class TestOTLPExporterMixin(TestCase):
 
     @patch.dict(
         "os.environ",
-        {
-            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
-        },
+        {_OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"},
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.entry_points")
     def test_that_credential_gets_passed_to_exporter(self, mock_entry_points):
@@ -316,18 +298,14 @@ class TestOTLPExporterMixin(TestCase):
         def f():
             return credential
 
-        mock_entry_points.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", f)]
-        )
+        mock_entry_points.configure_mock(return_value=[IterEntryPoint("custom_credential", f)])
         exporter = OTLPSpanExporterForTesting(insecure=False)
         # pylint: disable=protected-access
         assert exporter._credentials is credential
 
     @patch.dict(
         "os.environ",
-        {
-            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
-        },
+        {_OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"},
     )
     def test_that_missing_entry_point_raises_exception(self):
         with self.assertRaises(RuntimeError):
@@ -335,41 +313,29 @@ class TestOTLPExporterMixin(TestCase):
 
     @patch.dict(
         "os.environ",
-        {
-            _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"
-        },
+        {_OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER: "credential_provider"},
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.entry_points")
-    def test_that_entry_point_returning_bad_type_raises_exception(
-        self, mock_entry_points
-    ):
+    def test_that_entry_point_returning_bad_type_raises_exception(self, mock_entry_points):
         def f():
             return 1
 
-        mock_entry_points.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", f)]
-        )
+        mock_entry_points.configure_mock(return_value=[IterEntryPoint("custom_credential", f)])
         with self.assertRaises(RuntimeError):
             OTLPSpanExporterForTesting(insecure=False)
 
     # pylint: disable=no-self-use, disable=unused-argument
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     @patch.dict("os.environ", {})
-    def test_no_credentials_ssl_channel_called(
-        self, secure_channel, mock_ssl_channel
-    ):
+    def test_no_credentials_ssl_channel_called(self, secure_channel, mock_ssl_channel):
         OTLPSpanExporterForTesting(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
-    def test_otlp_exporter_otlp_compression_envvar(
-        self, mock_insecure_channel
-    ):
+    def test_otlp_exporter_otlp_compression_envvar(self, mock_insecure_channel):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
         OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
@@ -383,45 +349,29 @@ class TestOTLPExporterMixin(TestCase):
             ),
         )
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "})
     def test_shutdown(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(StatusCode.OK),
             self.server,
         )
-        exporter = OTLPSpanExporterForTesting(
-            insecure=True, meter_provider=self.meter_provider
-        )
-        self.assertEqual(
-            exporter.export([self.span]), SpanExportResult.SUCCESS
-        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, meter_provider=self.meter_provider)
+        self.assertEqual(exporter.export([self.span]), SpanExportResult.SUCCESS)
         metrics_data = self.metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
         self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 3)
-        self.assertEqual(
-            metrics[0].name, "otel.sdk.exporter.operation.duration"
-        )
-        self.assert_standard_metric_attrs(
-            metrics[0].data.data_points[0].attributes
-        )
+        self.assertEqual(metrics[0].name, "otel.sdk.exporter.operation.duration")
+        self.assert_standard_metric_attrs(metrics[0].data.data_points[0].attributes)
         self.assertEqual(metrics[1].name, "otel.sdk.exporter.span.exported")
-        self.assert_standard_metric_attrs(
-            metrics[1].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[1].data.data_points[0].attributes)
         self.assertEqual(metrics[2].name, "otel.sdk.exporter.span.inflight")
-        self.assert_standard_metric_attrs(
-            metrics[2].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[2].data.data_points[0].attributes)
 
         exporter.shutdown()
         with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(
-                exporter.export([self.span]), SpanExportResult.FAILURE
-            )
+            self.assertEqual(exporter.export([self.span]), SpanExportResult.FAILURE)
             self.assertEqual(
                 warning.records[0].message,
                 "Exporter already shutdown, ignoring batch",
@@ -439,9 +389,7 @@ class TestOTLPExporterMixin(TestCase):
             self.server,
         )
 
-        export_thread = ThreadWithReturnValue(
-            target=self.exporter.export, args=([self.span],)
-        )
+        export_thread = ThreadWithReturnValue(target=self.exporter.export, args=([self.span],))
         with self.assertLogs(level=WARNING) as warning:
             begin_wait = time.time()
             export_thread.start()
@@ -474,17 +422,13 @@ class TestOTLPExporterMixin(TestCase):
         data = self.exporter._translate_data([self.span])
         with self.assertRaises(ValueError) as err:
             self.exporter._client.Export(request=data)
-        self.assertEqual(
-            str(err.exception), "Cannot invoke RPC on closed channel!"
-        )
+        self.assertEqual(str(err.exception), "Cannot invoke RPC on closed channel!")
 
     @unittest.skipIf(
         system() == "Windows",
         "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
     )
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_retry_info_is_respected(self):
         mock_trace_service = TraceServiceServicerWithExportParams(
             StatusCode.UNAVAILABLE,
@@ -494,9 +438,7 @@ class TestOTLPExporterMixin(TestCase):
             mock_trace_service,
             self.server,
         )
-        exporter = OTLPSpanExporterForTesting(
-            insecure=True, timeout=10, meter_provider=self.meter_provider
-        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=10, meter_provider=self.meter_provider)
         before = time.time()
         self.assertEqual(
             exporter.export([self.span]),
@@ -512,26 +454,18 @@ class TestOTLPExporterMixin(TestCase):
         self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 3)
-        self.assertEqual(
-            metrics[0].name, "otel.sdk.exporter.operation.duration"
-        )
-        self.assert_standard_metric_attrs(
-            metrics[0].data.data_points[0].attributes
-        )
+        self.assertEqual(metrics[0].name, "otel.sdk.exporter.operation.duration")
+        self.assert_standard_metric_attrs(metrics[0].data.data_points[0].attributes)
         self.assertEqual(
             metrics[0].data.data_points[0].attributes["error.type"],
             "_InactiveRpcError",
         )
         self.assertEqual(
-            metrics[0]
-            .data.data_points[0]
-            .attributes["rpc.response.status_code"],
+            metrics[0].data.data_points[0].attributes["rpc.response.status_code"],
             "UNAVAILABLE",
         )
         self.assertEqual(metrics[1].name, "otel.sdk.exporter.span.exported")
-        self.assert_standard_metric_attrs(
-            metrics[1].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[1].data.data_points[0].attributes)
         self.assertEqual(
             metrics[1].data.data_points[0].attributes["error.type"],
             "_InactiveRpcError",
@@ -541,12 +475,8 @@ class TestOTLPExporterMixin(TestCase):
             metrics[1].data.data_points[0].attributes,
         )
         self.assertEqual(metrics[2].name, "otel.sdk.exporter.span.inflight")
-        self.assert_standard_metric_attrs(
-            metrics[2].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[2].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[2].data.data_points[0].attributes)
+        self.assertNotIn("error.type", metrics[2].data.data_points[0].attributes)
         self.assertNotIn(
             "rpc.response.status_code",
             metrics[2].data.data_points[0].attributes,
@@ -557,9 +487,7 @@ class TestOTLPExporterMixin(TestCase):
         "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
     )
     def test_retry_not_made_if_would_exceed_timeout(self):
-        mock_trace_service = TraceServiceServicerWithExportParams(
-            StatusCode.UNAVAILABLE
-        )
+        mock_trace_service = TraceServiceServicerWithExportParams(StatusCode.UNAVAILABLE)
         add_TraceServiceServicer_to_server(
             mock_trace_service,
             self.server,
@@ -582,9 +510,7 @@ class TestOTLPExporterMixin(TestCase):
         "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
     )
     def test_timeout_set_correctly(self):
-        mock_trace_service = TraceServiceServicerWithExportParams(
-            StatusCode.UNAVAILABLE, optional_export_sleep=0.25
-        )
+        mock_trace_service = TraceServiceServicerWithExportParams(StatusCode.UNAVAILABLE, optional_export_sleep=0.25)
         add_TraceServiceServicer_to_server(
             mock_trace_service,
             self.server,
@@ -613,9 +539,7 @@ class TestOTLPExporterMixin(TestCase):
         """Test that gRPC channel options are set correctly for keepalive and reconnection"""
         # This test verifies that the channel is created with the right options
         # We patch grpc.insecure_channel to ensure it is called without errors
-        with patch(
-            "opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel"
-        ) as mock_channel:
+        with patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel") as mock_channel:
             OTLPSpanExporterForTesting(insecure=True)
             self.assertTrue(mock_channel.called)
 
@@ -627,13 +551,9 @@ class TestOTLPExporterMixin(TestCase):
             (),
         )
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_permanent_failure(self):
-        exporter = OTLPSpanExporterForTesting(
-            insecure=True, meter_provider=self.meter_provider
-        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, meter_provider=self.meter_provider)
         with self.assertLogs(level=WARNING) as warning:
             add_TraceServiceServicer_to_server(
                 TraceServiceServicerWithExportParams(
@@ -642,9 +562,7 @@ class TestOTLPExporterMixin(TestCase):
                 ),
                 self.server,
             )
-            self.assertEqual(
-                exporter.export([self.span]), SpanExportResult.FAILURE
-            )
+            self.assertEqual(exporter.export([self.span]), SpanExportResult.FAILURE)
             self.assertEqual(
                 warning.records[-1].message,
                 "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS, error details: This already exists.",
@@ -655,26 +573,18 @@ class TestOTLPExporterMixin(TestCase):
         self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 3)
-        self.assertEqual(
-            metrics[0].name, "otel.sdk.exporter.operation.duration"
-        )
-        self.assert_standard_metric_attrs(
-            metrics[0].data.data_points[0].attributes
-        )
+        self.assertEqual(metrics[0].name, "otel.sdk.exporter.operation.duration")
+        self.assert_standard_metric_attrs(metrics[0].data.data_points[0].attributes)
         self.assertEqual(
             metrics[0].data.data_points[0].attributes["error.type"],
             "_InactiveRpcError",
         )
         self.assertEqual(
-            metrics[0]
-            .data.data_points[0]
-            .attributes["rpc.response.status_code"],
+            metrics[0].data.data_points[0].attributes["rpc.response.status_code"],
             "ALREADY_EXISTS",
         )
         self.assertEqual(metrics[1].name, "otel.sdk.exporter.span.exported")
-        self.assert_standard_metric_attrs(
-            metrics[1].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[1].data.data_points[0].attributes)
         self.assertEqual(
             metrics[1].data.data_points[0].attributes["error.type"],
             "_InactiveRpcError",
@@ -684,12 +594,8 @@ class TestOTLPExporterMixin(TestCase):
             metrics[1].data.data_points[0].attributes,
         )
         self.assertEqual(metrics[2].name, "otel.sdk.exporter.span.inflight")
-        self.assert_standard_metric_attrs(
-            metrics[2].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[2].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[2].data.data_points[0].attributes)
+        self.assertNotIn("error.type", metrics[2].data.data_points[0].attributes)
         self.assertNotIn(
             "rpc.response.status_code",
             metrics[2].data.data_points[0].attributes,
@@ -720,22 +626,14 @@ class TestOTLPExporterMixin(TestCase):
 
     def test_retryable_error_codes_initialization(self):
         # pylint: disable=protected-access
-        self.assertEqual(
-            self.exporter._retryable_error_codes, _RETRYABLE_ERROR_CODES
-        )
+        self.assertEqual(self.exporter._retryable_error_codes, _RETRYABLE_ERROR_CODES)
         custom_codes = [StatusCode.INTERNAL, StatusCode.UNKNOWN]
-        exporter = OTLPSpanExporterForTesting(
-            insecure=True, retryable_error_codes=custom_codes
-        )
-        self.assertEqual(
-            exporter._retryable_error_codes, frozenset(custom_codes)
-        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, retryable_error_codes=custom_codes)
+        self.assertEqual(exporter._retryable_error_codes, frozenset(custom_codes))
 
     @patch.dict(
         "os.environ",
-        {
-            "OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES": ",INTERNAL, unknown,,,dEAdline_Exceeded "
-        },
+        {"OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES": ",INTERNAL, unknown,,,dEAdline_Exceeded "},
     )
     def test_retryable_error_codes_initialization_from_env(self):
         expected_codes = frozenset(
@@ -764,9 +662,7 @@ class TestOTLPExporterMixin(TestCase):
             mock_trace_service,
             self.server,
         )
-        exporter = OTLPSpanExporterForTesting(
-            insecure=True, retryable_error_codes=custom_codes, timeout=10
-        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, retryable_error_codes=custom_codes, timeout=10)
 
         self.assertEqual(
             exporter.export([self.span]),
@@ -785,13 +681,7 @@ class TestOTLPExporterMixin(TestCase):
         self.assertEqual(mock_trace_service.num_requests, 1)
 
     def assert_standard_metric_attrs(self, attributes):
-        self.assertEqual(
-            attributes["otel.component.type"], "otlp_grpc_span_exporter"
-        )
-        self.assertTrue(
-            attributes["otel.component.name"].startswith(
-                "otlp_grpc_span_exporter/"
-            )
-        )
+        self.assertEqual(attributes["otel.component.type"], "otlp_grpc_span_exporter")
+        self.assertTrue(attributes["otel.component.name"].startswith("otlp_grpc_span_exporter/"))
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4317)

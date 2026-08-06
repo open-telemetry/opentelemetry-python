@@ -19,9 +19,7 @@ class SpanTest(trace.NonRecordingSpan):
         if isinstance(status, Status):
             self.recorded_status = status
         else:
-            self.recorded_status = Status(
-                status_code=status, description=description
-            )
+            self.recorded_status = Status(status_code=status, description=description)
 
     def end(self, end_time=None):
         self.has_ended = True
@@ -29,9 +27,7 @@ class SpanTest(trace.NonRecordingSpan):
     def is_recording(self):
         return not self.has_ended
 
-    def record_exception(
-        self, exception, attributes=None, timestamp=None, escaped=False
-    ):
+    def record_exception(self, exception, attributes=None, timestamp=None, escaped=False):
         self.recorded_exception = exception
 
 
@@ -41,9 +37,7 @@ class TestGlobals(TraceGlobalsTest, unittest.TestCase):
     def test_get_tracer(mock_tracer_provider):  # type: ignore
         """trace.get_tracer should proxy to the global tracer provider."""
         trace.get_tracer("foo", "var")
-        mock_tracer_provider.get_tracer.assert_called_with(
-            "foo", "var", None, None
-        )
+        mock_tracer_provider.get_tracer.assert_called_with("foo", "var", None, None)
         mock_provider = Mock()
         trace.get_tracer("foo", "var", mock_provider)
         mock_provider.get_tracer.assert_called_with("foo", "var", None, None)
@@ -76,16 +70,10 @@ class TestGlobalsConcurrency(TraceGlobalsTest, ConcurrencyTestBase):
         # despite trying to set tracer provider many times, only one of the
         # mock_tracer_providers should have stuck and been called from
         # proxy_tracer.start_span()
-        mock_tps_with_any_call = [
-            mock
-            for mock in mock_tracer_providers
-            if mock.get_tracer.call_count > 0
-        ]
+        mock_tps_with_any_call = [mock for mock in mock_tracer_providers if mock.get_tracer.call_count > 0]
 
         self.assertEqual(len(mock_tps_with_any_call), 1)
-        self.assertEqual(
-            mock_tps_with_any_call[0].get_tracer.call_count, num_threads
-        )
+        self.assertEqual(mock_tps_with_any_call[0].get_tracer.call_count, num_threads)
 
         # should have warned every time except for the successful set
         self.assertEqual(mock_logger.warning.call_count, num_threads - 1)
