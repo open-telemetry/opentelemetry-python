@@ -1,0 +1,114 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+from __future__ import annotations
+
+from logging import getLogger
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, TypeVar
+
+from opentelemetry._proto.common.v1.common_pb2 import (
+    AnyValue,
+    ArrayValue,
+    InstrumentationScope as PB2InstrumentationScope,
+    KeyValue,
+    KeyValueList,
+)
+from opentelemetry._proto.resource.v1.resource_pb2 import Resource as PB2Resource
+from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.util.types import _ExtendedAttributes
+
+_logger = getLogger(__name__)
+
+_TypingResourceT = TypeVar("_TypingResourceT")
+_ResourceDataT = TypeVar("_ResourceDataT")
+
+
+def _encode_instrumentation_scope(
+    instrumentation_scope: InstrumentationScope,
+) -> PB2InstrumentationScope:
+    if instrumentation_scope is None:
+        return PB2InstrumentationScope()
+    return PB2InstrumentationScope(
+        name=instrumentation_scope.name,
+        version=instrumentation_scope.version,
+        attributes=_encode_attributes(instrumentation_scope.attributes),
+    )
+
+
+def _encode_resource(resource: Resource) -> PB2Resource:
+    return PB2Resource(attributes=_encode_attributes(resource.attributes))
+
+
+def _encode_value(value: Any) -> AnyValue:
+    if value is None:
+        return AnyValue()
+    if isinstance(value, bool):
+        return AnyValue(bool_value=value)
+    if isinstance(value, str):
+        return AnyValue(string_value=value)
+    if isinstance(value, int):
+        return AnyValue(int_value=value)
+    if isinstance(value, float):
+        return AnyValue(double_value=value)
+    if isinstance(value, bytes):
+        return AnyValue(bytes_value=value)
+    if isinstance(value, Sequence):
+        return AnyValue(
+            array_value=ArrayValue(values=[_encode_value(v) for v in value])
+        )
+    if isinstance(value, Mapping):
+        return AnyValue(
+            kvlist_value=KeyValueList(
+                values=[_encode_key_value(str(k), v) for k, v in value.items()]
+            )
+        )
+    raise Exception(f"Invalid type {type(value)} of value {value}")
+
+
+def _encode_key_value(key: str, value: Any) -> KeyValue:
+    return KeyValue(key=key, value=_encode_value(value))
+
+
+def _encode_span_id(span_id: int) -> bytes:
+    return span_id.to_bytes(length=8, byteorder="big", signed=False)
+
+
+def _encode_trace_id(trace_id: int) -> bytes:
+    return trace_id.to_bytes(length=16, byteorder="big", signed=False)
+
+
+def _encode_attributes(
+    attributes: _ExtendedAttributes | None,
+) -> list[KeyValue]:
+    if not attributes:
+        return []
+    pb2_attributes = []
+    for key, value in attributes.items():
+        try:
+            pb2_attributes.append(_encode_key_value(key, value))
+        except Exception as error:
+            _logger.exception("Failed to encode key %s: %s", key, error)
+    return pb2_attributes
+
+
+def _get_resource_data(
+    sdk_resource_scope_data: dict[Resource, _ResourceDataT],
+    resource_class: Callable[..., _TypingResourceT],
+    name: str,
+) -> list[_TypingResourceT]:
+    resource_data = []
+    for sdk_resource, scope_data in sdk_resource_scope_data.items():
+        collector_resource = PB2Resource(
+            attributes=_encode_attributes(sdk_resource.attributes)
+        )
+        resource_data.append(
+            resource_class(
+                **{
+                    "resource": collector_resource,
+                    f"scope_{name}": scope_data.values(),
+                }
+            )
+        )
+    return resource_data
