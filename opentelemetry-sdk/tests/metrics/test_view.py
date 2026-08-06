@@ -105,3 +105,20 @@ class TestView(TestCase):
     def test_view_name(self):
         with self.assertRaises(Exception):
             View(name="name", instrument_name="instrument_name*")
+
+    def test_attribute_keys_and_exclude_attribute_keys_overlap(self):
+        with self.assertRaises(Exception):
+            View(
+                instrument_name="instrument_name",
+                attribute_keys=("method", "status_code"),
+                exclude_attribute_keys=("method", "user_id"),
+            )
+
+    def test_attribute_keys_and_exclude_attribute_keys_disjoint(self):
+        view = View(
+            instrument_name="instrument_name",
+            attribute_keys=("method", "status_code"),
+            exclude_attribute_keys=("user_id",),
+        )
+
+        self.assertIsNotNone(view)

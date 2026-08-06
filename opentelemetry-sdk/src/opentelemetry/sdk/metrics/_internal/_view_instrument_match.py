@@ -93,6 +93,12 @@ class _ViewInstrumentMatch:
             for key, value in (measurement.attributes or {}).items():
                 if key in self._view._attribute_keys:
                     attributes[key] = value
+        elif self._view._exclude_attribute_keys:
+            attributes = {
+                key: value
+                for key, value in (measurement.attributes or {}).items()
+                if key not in self._view._exclude_attribute_keys
+            }
         elif measurement.attributes is not None:
             attributes = dict(measurement.attributes)
         else:
