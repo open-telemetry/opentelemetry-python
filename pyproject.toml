@@ -22,6 +22,7 @@ dependencies = [
   "opentelemetry-propagator-jaeger",
   "opentelemetry-propagator-b3",
   "opentelemetry-codegen-json",
+  "opentelemetry-process-context",
 ]
 
 # https://docs.astral.sh/uv/reference/settings/
@@ -50,6 +51,7 @@ opentelemetry-exporter-prometheus = {workspace = true }
 opentelemetry-propagator-jaeger = { workspace = true }
 opentelemetry-propagator-b3 = { workspace = true }
 opentelemetry-codegen-json = { workspace = true }
+opentelemetry-process-context = { workspace = true }
 
 [tool.uv.workspace]
 members = [
@@ -63,6 +65,7 @@ members = [
   "propagator/*",
   "codegen/*",
   "tests/opentelemetry-test-utils",
+  "opentelemetry-process-context",
 ]
 
 exclude = [
@@ -141,7 +144,8 @@ include = [
   "exporter/opentelemetry-exporter-otlp-proto-http",
   "exporter/opentelemetry-exporter-otlp-json-common",
   "exporter/opentelemetry-exporter-otlp-common",
-  "codegen/opentelemetry-codegen-json"
+  "codegen/opentelemetry-codegen-json",
+  "opentelemetry-process-context"
 ]
 
 exclude = [
@@ -163,6 +167,7 @@ exclude = [
   "exporter/opentelemetry-exporter-otlp-json-http/tests",
   "exporter/opentelemetry-exporter-otlp-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
+  "opentelemetry-process-context/tests"
 ]
 
 # When packages are correct typed add them to the strict list
