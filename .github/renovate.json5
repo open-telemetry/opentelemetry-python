@@ -16,6 +16,7 @@
       schedule: ["before 8am on Monday"],
     },
     ignorePaths: [
+      ".github/workflows/test.yml",
       ".github/renovate.json5",
       "**/*-requirements.txt",
       "gen-requirements.txt",
