@@ -42,7 +42,9 @@ class TestDisableDefaultViews(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
+        self.assertEqual(
+            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
+        )
         self.assertEqual(
             metrics.resource_metrics[0].scope_metrics[0].metrics[0].name,
             "testhist",

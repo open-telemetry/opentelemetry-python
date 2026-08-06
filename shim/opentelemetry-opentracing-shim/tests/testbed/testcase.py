@@ -12,7 +12,9 @@ class OpenTelemetryTestCase(unittest.TestCase):
         return self.assertEqual(spanA.context.trace_id, spanB.context.trace_id)
 
     def assertNotSameTrace(self, spanA, spanB):
-        return self.assertNotEqual(spanA.context.trace_id, spanB.context.trace_id)
+        return self.assertNotEqual(
+            spanA.context.trace_id, spanB.context.trace_id
+        )
 
     def assertIsChildOf(self, spanA, spanB):
         # spanA is child of spanB

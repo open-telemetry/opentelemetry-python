@@ -33,12 +33,16 @@ Note: Destination name SHOULD uniquely identify a specific queue, topic or other
 the broker doesn't have such notion, the destination name SHOULD uniquely identify the broker.
 """
 
-MESSAGING_DESTINATION_PARTITION_ID: Final = "messaging.destination.partition.id"
+MESSAGING_DESTINATION_PARTITION_ID: Final = (
+    "messaging.destination.partition.id"
+)
 """
 The identifier of the partition messages are sent to or received from, unique within the `messaging.destination.name`.
 """
 
-MESSAGING_DESTINATION_SUBSCRIPTION_NAME: Final = "messaging.destination.subscription.name"
+MESSAGING_DESTINATION_SUBSCRIPTION_NAME: Final = (
+    "messaging.destination.subscription.name"
+)
 """
 The name of the destination subscription from which a message is consumed.
 Note: Semantic conventions for individual messaging systems SHOULD document whether `messaging.destination.subscription.name` is applicable and what it means in the context of that system.
@@ -55,42 +59,58 @@ MESSAGING_DESTINATION_TEMPORARY: Final = "messaging.destination.temporary"
 A boolean that is true if the message destination is temporary and might not exist anymore after messages are processed.
 """
 
-MESSAGING_DESTINATION_PUBLISH_ANONYMOUS: Final = "messaging.destination_publish.anonymous"
+MESSAGING_DESTINATION_PUBLISH_ANONYMOUS: Final = (
+    "messaging.destination_publish.anonymous"
+)
 """
 Deprecated: Removed. No replacement at this time.
 """
 
-MESSAGING_DESTINATION_PUBLISH_NAME: Final = "messaging.destination_publish.name"
+MESSAGING_DESTINATION_PUBLISH_NAME: Final = (
+    "messaging.destination_publish.name"
+)
 """
 Deprecated: Removed. No replacement at this time.
 """
 
-MESSAGING_EVENTHUBS_CONSUMER_GROUP: Final = "messaging.eventhubs.consumer.group"
+MESSAGING_EVENTHUBS_CONSUMER_GROUP: Final = (
+    "messaging.eventhubs.consumer.group"
+)
 """
 Deprecated: Replaced by `messaging.consumer.group.name`.
 """
 
-MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME: Final = "messaging.eventhubs.message.enqueued_time"
+MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME: Final = (
+    "messaging.eventhubs.message.enqueued_time"
+)
 """
 The UTC epoch seconds at which the message has been accepted and stored in the entity.
 """
 
-MESSAGING_GCP_PUBSUB_MESSAGE_ACK_DEADLINE: Final = "messaging.gcp_pubsub.message.ack_deadline"
+MESSAGING_GCP_PUBSUB_MESSAGE_ACK_DEADLINE: Final = (
+    "messaging.gcp_pubsub.message.ack_deadline"
+)
 """
 The ack deadline in seconds set for the modify ack deadline request.
 """
 
-MESSAGING_GCP_PUBSUB_MESSAGE_ACK_ID: Final = "messaging.gcp_pubsub.message.ack_id"
+MESSAGING_GCP_PUBSUB_MESSAGE_ACK_ID: Final = (
+    "messaging.gcp_pubsub.message.ack_id"
+)
 """
 The ack id for a given message.
 """
 
-MESSAGING_GCP_PUBSUB_MESSAGE_DELIVERY_ATTEMPT: Final = "messaging.gcp_pubsub.message.delivery_attempt"
+MESSAGING_GCP_PUBSUB_MESSAGE_DELIVERY_ATTEMPT: Final = (
+    "messaging.gcp_pubsub.message.delivery_attempt"
+)
 """
 The delivery attempt for a given message.
 """
 
-MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY: Final = "messaging.gcp_pubsub.message.ordering_key"
+MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY: Final = (
+    "messaging.gcp_pubsub.message.ordering_key"
+)
 """
 The ordering key for a given message. If the attribute is not present, the message does not have an ordering key.
 """
@@ -100,7 +120,9 @@ MESSAGING_KAFKA_CONSUMER_GROUP: Final = "messaging.kafka.consumer.group"
 Deprecated: Replaced by `messaging.consumer.group.name`.
 """
 
-MESSAGING_KAFKA_DESTINATION_PARTITION: Final = "messaging.kafka.destination.partition"
+MESSAGING_KAFKA_DESTINATION_PARTITION: Final = (
+    "messaging.kafka.destination.partition"
+)
 """
 Deprecated: Record string representation of the partition id in `messaging.destination.partition.id` attribute.
 """
@@ -166,12 +188,16 @@ A string identifying the type of the messaging operation.
 Note: If a custom value is used, it MUST be of low cardinality.
 """
 
-MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY: Final = "messaging.rabbitmq.destination.routing_key"
+MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY: Final = (
+    "messaging.rabbitmq.destination.routing_key"
+)
 """
 RabbitMQ message routing key.
 """
 
-MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG: Final = "messaging.rabbitmq.message.delivery_tag"
+MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG: Final = (
+    "messaging.rabbitmq.message.delivery_tag"
+)
 """
 RabbitMQ message delivery tag.
 """
@@ -181,17 +207,23 @@ MESSAGING_ROCKETMQ_CLIENT_GROUP: Final = "messaging.rocketmq.client_group"
 Deprecated: Replaced by `messaging.consumer.group.name` on the consumer spans. No replacement for producer spans.
 """
 
-MESSAGING_ROCKETMQ_CONSUMPTION_MODEL: Final = "messaging.rocketmq.consumption_model"
+MESSAGING_ROCKETMQ_CONSUMPTION_MODEL: Final = (
+    "messaging.rocketmq.consumption_model"
+)
 """
 Model of message consumption. This only applies to consumer spans.
 """
 
-MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL: Final = "messaging.rocketmq.message.delay_time_level"
+MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL: Final = (
+    "messaging.rocketmq.message.delay_time_level"
+)
 """
 The delay time level for delay message, which determines the message delay time.
 """
 
-MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP: Final = "messaging.rocketmq.message.delivery_timestamp"
+MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP: Final = (
+    "messaging.rocketmq.message.delivery_timestamp"
+)
 """
 The timestamp in milliseconds that the delay message is expected to be delivered to consumer.
 """
@@ -221,22 +253,30 @@ MESSAGING_ROCKETMQ_NAMESPACE: Final = "messaging.rocketmq.namespace"
 Namespace of RocketMQ resources, resources in different namespaces are individual.
 """
 
-MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME: Final = "messaging.servicebus.destination.subscription_name"
+MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME: Final = (
+    "messaging.servicebus.destination.subscription_name"
+)
 """
 Deprecated: Replaced by `messaging.destination.subscription.name`.
 """
 
-MESSAGING_SERVICEBUS_DISPOSITION_STATUS: Final = "messaging.servicebus.disposition_status"
+MESSAGING_SERVICEBUS_DISPOSITION_STATUS: Final = (
+    "messaging.servicebus.disposition_status"
+)
 """
 Describes the [settlement type](https://learn.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock).
 """
 
-MESSAGING_SERVICEBUS_MESSAGE_DELIVERY_COUNT: Final = "messaging.servicebus.message.delivery_count"
+MESSAGING_SERVICEBUS_MESSAGE_DELIVERY_COUNT: Final = (
+    "messaging.servicebus.message.delivery_count"
+)
 """
 Number of deliveries that have been attempted for this message.
 """
 
-MESSAGING_SERVICEBUS_MESSAGE_ENQUEUED_TIME: Final = "messaging.servicebus.message.enqueued_time"
+MESSAGING_SERVICEBUS_MESSAGE_ENQUEUED_TIME: Final = (
+    "messaging.servicebus.message.enqueued_time"
+)
 """
 The UTC epoch seconds at which the message has been accepted and stored in the entity.
 """

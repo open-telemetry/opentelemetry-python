@@ -88,13 +88,18 @@ class TestJaegerPropagator(TestCase):
     def test_sampled_flag_set(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
         _, new_carrier = get_context_new_carrier(old_carrier)
-        sample_flag_value = int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3]) & 0x01
+        sample_flag_value = (
+            int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3]) & 0x01
+        )
         self.assertEqual(1, sample_flag_value)
 
     def test_debug_flag_set(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
         _, new_carrier = get_context_new_carrier(old_carrier)
-        debug_flag_value = int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3]) & FORMAT.DEBUG_FLAG
+        debug_flag_value = (
+            int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3])
+            & FORMAT.DEBUG_FLAG
+        )
         self.assertEqual(FORMAT.DEBUG_FLAG, debug_flag_value)
 
     def test_sample_debug_flags_unset(self):

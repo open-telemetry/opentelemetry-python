@@ -104,7 +104,9 @@ The version of the runtime of this process, as returned by the runtime without m
 """
 
 
-@deprecated("The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`")
+@deprecated(
+    "The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`"
+)
 class ContainerCpuStateValues(Enum):
     USER = "user"
     """When tasks of the cgroup are in user mode (Linux). When all container processes are in user mode (Windows)."""

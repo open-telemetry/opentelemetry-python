@@ -23,7 +23,9 @@ class InstrumentationInfo:
 
     __slots__ = ("_name", "_version", "_schema_url")
 
-    @deprecated("You should use InstrumentationScope. Deprecated since version 1.11.1.")
+    @deprecated(
+        "You should use InstrumentationScope. Deprecated since version 1.11.1."
+    )
     def __init__(
         self,
         name: str,
@@ -158,7 +160,9 @@ class InstrumentationScope:
                 "name": self._name,
                 "version": self._version,
                 "schema_url": self._schema_url,
-                "attributes": (dict(self._attributes) if bool(self._attributes) else None),
+                "attributes": (
+                    dict(self._attributes) if bool(self._attributes) else None
+                ),
             },
             indent=indent,
         )

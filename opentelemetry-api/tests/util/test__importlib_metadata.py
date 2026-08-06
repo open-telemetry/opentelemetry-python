@@ -63,7 +63,9 @@ class TestEntryPoints(TestCase):
             "opentelemetry.baggage.propagation:W3CBaggagePropagator",
         )
 
-        entry_points = importlib_metadata_entry_points(group="opentelemetry_propagator")
+        entry_points = importlib_metadata_entry_points(
+            group="opentelemetry_propagator"
+        )
         self.assertIsInstance(entry_points, EntryPoints)
 
         entry_points = entry_points.select(name="baggage")
@@ -96,7 +98,9 @@ class TestEntryPoints(TestCase):
         self.assertIsInstance(entry_points, EntryPoints)
         self.assertEqual(len(entry_points), 0)
 
-        entry_points = importlib_metadata_entry_points(group="opentelemetry_propagator", name="abc")
+        entry_points = importlib_metadata_entry_points(
+            group="opentelemetry_propagator", name="abc"
+        )
         self.assertIsInstance(entry_points, EntryPoints)
         self.assertEqual(len(entry_points), 0)
 

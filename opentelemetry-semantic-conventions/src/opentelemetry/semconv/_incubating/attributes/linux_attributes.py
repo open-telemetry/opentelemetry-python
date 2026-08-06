@@ -12,7 +12,9 @@ Deprecated: Replaced by `system.memory.linux.slab.state`.
 """
 
 
-@deprecated("The attribute linux.memory.slab.state is deprecated - Replaced by `system.memory.linux.slab.state`")
+@deprecated(
+    "The attribute linux.memory.slab.state is deprecated - Replaced by `system.memory.linux.slab.state`"
+)
 class LinuxMemorySlabStateValues(Enum):
     RECLAIMABLE = "reclaimable"
     """reclaimable."""

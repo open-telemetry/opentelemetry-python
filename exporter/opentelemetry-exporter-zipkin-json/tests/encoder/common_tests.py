@@ -70,12 +70,16 @@ class CommonEncoderTestCases:
         def test_constructor_default(self):
             encoder = self.get_encoder()
 
-            self.assertEqual(DEFAULT_MAX_TAG_VALUE_LENGTH, encoder.max_tag_value_length)
+            self.assertEqual(
+                DEFAULT_MAX_TAG_VALUE_LENGTH, encoder.max_tag_value_length
+            )
 
         def test_constructor_max_tag_value_length(self):
             max_tag_value_length = 123456
             encoder = self.get_encoder(max_tag_value_length)
-            self.assertEqual(max_tag_value_length, encoder.max_tag_value_length)
+            self.assertEqual(
+                max_tag_value_length, encoder.max_tag_value_length
+            )
 
         def test_nsec_to_usec_round(self):
             base_time_nsec = 683647322 * 10**9
@@ -328,9 +332,13 @@ class CommonEncoderTestCases:
                 start_times[3] + (300 * 10**6),
             )
 
-            parent_span_context = trace_api.SpanContext(trace_id, 0x1111111111111111, is_remote=False)
+            parent_span_context = trace_api.SpanContext(
+                trace_id, 0x1111111111111111, is_remote=False
+            )
 
-            other_context = trace_api.SpanContext(trace_id, 0x2222222222222222, is_remote=False)
+            other_context = trace_api.SpanContext(
+                trace_id, 0x2222222222222222, is_remote=False
+            )
 
             span1 = trace._Span(
                 name="test-span-1",
@@ -352,7 +360,11 @@ class CommonEncoderTestCases:
                         },
                     ),
                 ),
-                links=(trace_api.Link(context=other_context, attributes={"key_bool": True}),),
+                links=(
+                    trace_api.Link(
+                        context=other_context, attributes={"key_bool": True}
+                    ),
+                ),
                 resource=trace.Resource({}),
             )
             span1.start(start_time=start_times[0])
@@ -366,7 +378,9 @@ class CommonEncoderTestCases:
                 name="test-span-2",
                 context=parent_span_context,
                 parent=None,
-                resource=trace.Resource(attributes={"key_resource": "some_resource"}),
+                resource=trace.Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             )
             span2.start(start_time=start_times[1])
             span2.set_status(Status(StatusCode.ERROR, "Example description"))
@@ -376,7 +390,9 @@ class CommonEncoderTestCases:
                 name="test-span-3",
                 context=other_context,
                 parent=None,
-                resource=trace.Resource(attributes={"key_resource": "some_resource"}),
+                resource=trace.Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             )
             span3.start(start_time=start_times[2])
             span3.set_attribute("key_string", "hello_world")
@@ -387,7 +403,9 @@ class CommonEncoderTestCases:
                 context=other_context,
                 parent=None,
                 resource=trace.Resource({}),
-                instrumentation_scope=InstrumentationScope(name="name", version="version"),
+                instrumentation_scope=InstrumentationScope(
+                    name="name", version="version"
+                ),
             )
             span4.start(start_time=start_times[3])
             span4.end(end_time=end_times[3])
@@ -412,7 +430,9 @@ class CommonEncoderTestCases:
 
         def test_encode_local_endpoint_default(self):
             self.assertEqual(
-                self.get_encoder_default()._encode_local_endpoint(NodeEndpoint()),
+                self.get_encoder_default()._encode_local_endpoint(
+                    NodeEndpoint()
+                ),
                 {"serviceName": TEST_SERVICE_NAME},
             )
 
@@ -421,7 +441,9 @@ class CommonEncoderTestCases:
             ipv6 = "2001:db8::c001"
             port = 414120
             self.assertEqual(
-                self.get_encoder_default()._encode_local_endpoint(NodeEndpoint(ipv4, ipv6, port)),
+                self.get_encoder_default()._encode_local_endpoint(
+                    NodeEndpoint(ipv4, ipv6, port)
+                ),
                 {
                     "serviceName": TEST_SERVICE_NAME,
                     "ipv4": ipv4,

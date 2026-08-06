@@ -58,7 +58,8 @@ class OTLPMetricExporter(MetricExporter):
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
-        preferred_temporality: dict[type, AggregationTemporality] | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
     ) -> None: ...
@@ -73,7 +74,8 @@ class OTLPMetricExporter(MetricExporter):
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
-        preferred_temporality: dict[type, AggregationTemporality] | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         *,
@@ -89,7 +91,8 @@ class OTLPMetricExporter(MetricExporter):
         headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
-        preferred_temporality: dict[type, AggregationTemporality] | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         *,
@@ -116,11 +119,15 @@ class OTLPMetricExporter(MetricExporter):
                 _DEFAULT_METRICS_EXPORT_PATH,
             ),
             kind="metrics",
-            timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT),
+            timeout=timeout
+            if timeout is not None
+            else _resolve_timeout(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT),
             compression=compression
             if compression is not None
             else _resolve_compression(OTEL_EXPORTER_OTLP_METRICS_COMPRESSION),
-            headers=_resolve_headers(headers, OTEL_EXPORTER_OTLP_METRICS_HEADERS),
+            headers=_resolve_headers(
+                headers, OTEL_EXPORTER_OTLP_METRICS_HEADERS
+            ),
             logger=_logger,
         )
         self._max_export_batch_size = max_export_batch_size
@@ -141,7 +148,9 @@ class OTLPMetricExporter(MetricExporter):
         except Exception as error:
             _logger.error("Failed to encode metrics: %s", error)
             return MetricExportResult.FAILURE
-        for request in split_metrics_data(export_request, self._max_export_batch_size):
+        for request in split_metrics_data(
+            export_request, self._max_export_batch_size
+        ):
             export_result = self._client.export(request.to_json().encode())
             if not export_result.success:
                 return MetricExportResult.FAILURE

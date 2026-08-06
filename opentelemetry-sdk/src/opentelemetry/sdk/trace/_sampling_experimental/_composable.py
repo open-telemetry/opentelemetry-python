@@ -25,7 +25,9 @@ class SamplingIntent:
     attributes: Attributes = field(default=None)
     """Any attributes to be added to a sampled span."""
 
-    update_trace_state: Callable[[TraceState], TraceState] = field(default=lambda ts: ts)
+    update_trace_state: Callable[[TraceState], TraceState] = field(
+        default=lambda ts: ts
+    )
     """Any updates to be made to trace state."""
 
 

@@ -90,7 +90,11 @@ class TestCommonEncoder(unittest.TestCase):
                 "bytes",
                 b"\x01\x02\x03",
                 JSONAnyValue(bytes_value=b"\x01\x02\x03"),
-                {"bytesValue": base64.b64encode(b"\x01\x02\x03").decode("utf-8")},
+                {
+                    "bytesValue": base64.b64encode(b"\x01\x02\x03").decode(
+                        "utf-8"
+                    )
+                },
             ),
         ]
         for name, value, expected_obj, expected_dict in cases:
@@ -120,7 +124,9 @@ class TestCommonEncoder(unittest.TestCase):
         expected = JSONAnyValue(
             kvlist_value=JSONKeyValueList(
                 values=[
-                    JSONKeyValue(key="key", value=JSONAnyValue(string_value="val")),
+                    JSONKeyValue(
+                        key="key", value=JSONAnyValue(string_value="val")
+                    ),
                     JSONKeyValue(key="num", value=JSONAnyValue(int_value=1)),
                 ]
             )
@@ -149,7 +155,9 @@ class TestCommonEncoder(unittest.TestCase):
 
     def test_encode_key_value(self):
         result = _encode_key_value("mykey", "myval")
-        expected = JSONKeyValue(key="mykey", value=JSONAnyValue(string_value="myval"))
+        expected = JSONKeyValue(
+            key="mykey", value=JSONAnyValue(string_value="myval")
+        )
         self.assertEqual(result, expected)
         self.assertEqual(
             result.to_dict(),
@@ -175,7 +183,9 @@ class TestCommonEncoder(unittest.TestCase):
                 JSONKeyValue(key="a", value=JSONAnyValue(int_value=1)),
                 JSONKeyValue(key="b", value=JSONAnyValue(double_value=3.14)),
                 JSONKeyValue(key="c", value=JSONAnyValue(bool_value=False)),
-                JSONKeyValue(key="hello", value=JSONAnyValue(string_value="world")),
+                JSONKeyValue(
+                    key="hello", value=JSONAnyValue(string_value="world")
+                ),
                 JSONKeyValue(
                     key="greet",
                     value=JSONAnyValue(
@@ -222,7 +232,9 @@ class TestCommonEncoder(unittest.TestCase):
 
     def test_encode_attributes_error_skips_bad_key(self):
         with self.assertLogs(level=ERROR) as error:
-            result = _encode_attributes({"a": 1, "bad_key": CallingStrRaisesException(), "b": 2})
+            result = _encode_attributes(
+                {"a": 1, "bad_key": CallingStrRaisesException(), "b": 2}
+            )
 
         self.assertEqual(len(error.records), 1)
         self.assertEqual(error.records[0].msg, "Failed to encode key %s: %s")
@@ -276,7 +288,11 @@ class TestCommonEncoder(unittest.TestCase):
     def test_encode_resource(self):
         resource = Resource({"key": "val"})
         result = _encode_resource(resource)
-        expected = JSONResource(attributes=[JSONKeyValue(key="key", value=JSONAnyValue(string_value="val"))])
+        expected = JSONResource(
+            attributes=[
+                JSONKeyValue(key="key", value=JSONAnyValue(string_value="val"))
+            ]
+        )
         self.assertEqual(result, expected)
         result_dict = result.to_dict()
         self.assertIn("attributes", result_dict)
@@ -302,7 +318,9 @@ class TestCommonEncoder(unittest.TestCase):
         expected = JSONInstrumentationScope(
             name="my_lib",
             version="1.0.0",
-            attributes=[JSONKeyValue(key="k", value=JSONAnyValue(int_value=1))],
+            attributes=[
+                JSONKeyValue(key="k", value=JSONAnyValue(int_value=1))
+            ],
         )
         self.assertEqual(result, expected)
         result_dict = result.to_dict()

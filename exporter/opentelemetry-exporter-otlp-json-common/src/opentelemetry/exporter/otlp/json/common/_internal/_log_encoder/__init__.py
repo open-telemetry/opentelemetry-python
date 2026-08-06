@@ -34,7 +34,9 @@ from opentelemetry.util.types import Attributes
 def encode_logs(
     batch: Collection[ReadableLogRecord],
 ) -> JSONExportLogsServiceRequest:
-    return JSONExportLogsServiceRequest(resource_logs=_encode_resource_logs(batch))
+    return JSONExportLogsServiceRequest(
+        resource_logs=_encode_resource_logs(batch)
+    )
 
 
 def _encode_log(readable_log_record: ReadableLogRecord) -> JSONLogRecord:
@@ -54,7 +56,9 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> JSONLogRecord:
             cast(Attributes, readable_log_record.log_record.attributes),
         ),
         dropped_attributes_count=readable_log_record.dropped_attributes,
-        severity_number=getattr(readable_log_record.log_record.severity_number, "value", None),
+        severity_number=getattr(
+            readable_log_record.log_record.severity_number, "value", None
+        ),
         event_name=readable_log_record.log_record.event_name,
     )
 
@@ -67,7 +71,9 @@ def _encode_resource_logs(
     for readable_log in batch:
         sdk_resource = readable_log.resource
         sdk_instrumentation = readable_log.instrumentation_scope or None
-        sdk_resource_logs[sdk_resource][sdk_instrumentation].append(_encode_log(readable_log))
+        sdk_resource_logs[sdk_resource][sdk_instrumentation].append(
+            _encode_log(readable_log)
+        )
 
     json_resource_logs = []
     for sdk_resource, sdk_instrumentations in sdk_resource_logs.items():
@@ -77,7 +83,9 @@ def _encode_resource_logs(
                 JSONScopeLogs(
                     scope=(_encode_instrumentation_scope(sdk_instrumentation)),
                     log_records=json_logs,
-                    schema_url=sdk_instrumentation.schema_url if sdk_instrumentation else None,
+                    schema_url=sdk_instrumentation.schema_url
+                    if sdk_instrumentation
+                    else None,
                 )
             )
         json_resource_logs.append(

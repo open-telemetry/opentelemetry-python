@@ -32,7 +32,9 @@ def test_benchmark_encode_histogram(benchmark):
         [
             make_histogram(
                 exemplars=[
-                    Exemplar({"sampled": "true"}, 298.0, TIME, SPAN_ID, TRACE_ID),
+                    Exemplar(
+                        {"sampled": "true"}, 298.0, TIME, SPAN_ID, TRACE_ID
+                    ),
                 ],
             )
         ]
@@ -53,7 +55,9 @@ def test_benchmark_encode_mixed_metrics(benchmark):
             make_histogram(
                 name="histogram",
                 exemplars=[
-                    Exemplar({"sampled": "true"}, 298.0, TIME, SPAN_ID, TRACE_ID),
+                    Exemplar(
+                        {"sampled": "true"}, 298.0, TIME, SPAN_ID, TRACE_ID
+                    ),
                 ],
             ),
             make_exponential_histogram(name="exp_histogram"),

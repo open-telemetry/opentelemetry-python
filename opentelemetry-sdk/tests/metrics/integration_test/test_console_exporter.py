@@ -29,11 +29,15 @@ class TestConsoleExporter(TestCase):
     def test_console_exporter(self):
         output = StringIO()
         exporter = ConsoleMetricExporter(out=output)
-        reader = PeriodicExportingMetricReader(exporter, export_interval_millis=100)
+        reader = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=100
+        )
         provider = MeterProvider(metric_readers=[reader])
         set_meter_provider(provider)
         meter = get_meter(__name__)
-        counter = meter.create_counter("name", description="description", unit="unit")
+        counter = meter.create_counter(
+            "name", description="description", unit="unit"
+        )
         counter.add(1, attributes={"a": "b"})
         provider.shutdown()
 
@@ -65,7 +69,9 @@ class TestConsoleExporter(TestCase):
     def test_console_exporter_no_export(self):
         output = StringIO()
         exporter = ConsoleMetricExporter(out=output)
-        reader = PeriodicExportingMetricReader(exporter, export_interval_millis=100)
+        reader = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=100
+        )
         provider = MeterProvider(metric_readers=[reader])
         provider.shutdown()
 
@@ -84,11 +90,17 @@ class TestConsoleExporter(TestCase):
 
         output = StringIO()
         exporter = ConsoleMetricExporter(out=output)
-        reader = PeriodicExportingMetricReader(exporter, export_interval_millis=100)
-        provider = MeterProvider(metric_readers=[reader], exemplar_filter=AlwaysOnExemplarFilter())
+        reader = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=100
+        )
+        provider = MeterProvider(
+            metric_readers=[reader], exemplar_filter=AlwaysOnExemplarFilter()
+        )
         set_meter_provider(provider)
         meter = get_meter(__name__)
-        counter = meter.create_counter("name", description="description", unit="unit")
+        counter = meter.create_counter(
+            "name", description="description", unit="unit"
+        )
         counter.add(1, attributes={"a": "b"}, context=ctx)
         provider.shutdown()
 

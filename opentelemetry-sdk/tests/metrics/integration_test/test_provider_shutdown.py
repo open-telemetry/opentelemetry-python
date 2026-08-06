@@ -17,7 +17,9 @@ from opentelemetry.sdk.metrics.export import (
 
 
 class FakeMetricsExporter(MetricExporter):
-    def __init__(self, wait=0, preferred_temporality=None, preferred_aggregation=None):
+    def __init__(
+        self, wait=0, preferred_temporality=None, preferred_aggregation=None
+    ):
         self.wait = wait
         self.metrics = []
         self._shutdown = False

@@ -64,7 +64,9 @@ class TestLoggerProvider(unittest.TestCase):
         updating_resource = Resource({"two": "new", "three": "three"})
         logger_provider = LoggerProvider(resource=initial_resource)
         logger = logger_provider.get_logger("name")
-        other_logger = logger_provider.get_logger("other", attributes={"key": "value"})
+        other_logger = logger_provider.get_logger(
+            "other", attributes={"key": "value"}
+        )
         processor_mock = Mock()
         logger_provider.add_log_record_processor(processor_mock)
 
@@ -91,7 +93,11 @@ class TestLoggerProvider(unittest.TestCase):
     def test_logger_provider_updates_process_dependent_resource_after_fork(
         self,
     ):
-        script_path = Path(__file__).parent / "scripts" / "logger_provider_resource_after_fork.py"
+        script_path = (
+            Path(__file__).parent
+            / "scripts"
+            / "logger_provider_resource_after_fork.py"
+        )
 
         result = subprocess.run(
             [sys.executable, str(script_path)],
@@ -112,8 +118,12 @@ class TestLoggerProvider(unittest.TestCase):
         child_payload = json.loads(lines[0])
         parent_payload = json.loads(lines[1])
 
-        self.assertEqual(parent_payload["parent_resource_pid"], parent_payload["parent_pid"])
-        self.assertEqual(parent_payload["parent_logger_pid"], parent_payload["parent_pid"])
+        self.assertEqual(
+            parent_payload["parent_resource_pid"], parent_payload["parent_pid"]
+        )
+        self.assertEqual(
+            parent_payload["parent_logger_pid"], parent_payload["parent_pid"]
+        )
         self.assertEqual(
             parent_payload["parent_resource_pid_after_fork"],
             parent_payload["parent_pid"],
@@ -123,10 +133,18 @@ class TestLoggerProvider(unittest.TestCase):
             parent_payload["parent_pid"],
         )
 
-        self.assertNotEqual(child_payload["child_pid"], parent_payload["parent_pid"])
-        self.assertEqual(child_payload["provider_pid"], child_payload["child_pid"])
-        self.assertEqual(child_payload["cached_logger_pid"], child_payload["child_pid"])
-        self.assertEqual(child_payload["new_logger_pid"], child_payload["child_pid"])
+        self.assertNotEqual(
+            child_payload["child_pid"], parent_payload["parent_pid"]
+        )
+        self.assertEqual(
+            child_payload["provider_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(
+            child_payload["cached_logger_pid"], child_payload["child_pid"]
+        )
+        self.assertEqual(
+            child_payload["new_logger_pid"], child_payload["child_pid"]
+        )
         self.assertEqual(
             child_payload["exported_resource_pids"],
             [child_payload["child_pid"], child_payload["child_pid"]],
@@ -148,8 +166,12 @@ class TestLoggerProvider(unittest.TestCase):
 
         self.assertEqual(logger._instrumentation_scope.name, "name")
         self.assertEqual(logger._instrumentation_scope.version, "version")
-        self.assertEqual(logger._instrumentation_scope.schema_url, "schema_url")
-        self.assertEqual(logger._instrumentation_scope.attributes, {"key": "value"})
+        self.assertEqual(
+            logger._instrumentation_scope.schema_url, "schema_url"
+        )
+        self.assertEqual(
+            logger._instrumentation_scope.attributes, {"key": "value"}
+        )
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_logger_with_sdk_disabled(self):
@@ -173,12 +195,16 @@ class TestLoggerProvider(unittest.TestCase):
     def test_default_logger_configurator(self):
         provider = LoggerProvider()
         logger = provider.get_logger("module_name", "1.0", "schema_url")
-        other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
+        other_logger = provider.get_logger(
+            "other_module_name", "1.0", "schema_url"
+        )
         self.assertTrue(logger._is_enabled())
         self.assertTrue(other_logger._is_enabled())
 
     def test_logger_provider_with_disabled_configurator(self):
-        provider = LoggerProvider(_logger_configurator=_disable_logger_configurator)
+        provider = LoggerProvider(
+            _logger_configurator=_disable_logger_configurator
+        )
         logger = provider.get_logger("test")
         self.assertFalse(logger._is_enabled())
 
@@ -199,23 +225,31 @@ class TestLoggerProvider(unittest.TestCase):
         logger = provider.get_logger("test")
         self.assertTrue(logger._is_enabled())
 
-        provider._set_logger_configurator(logger_configurator=_disable_logger_configurator)
+        provider._set_logger_configurator(
+            logger_configurator=_disable_logger_configurator
+        )
         self.assertFalse(logger._is_enabled())
 
     def test_set_logger_configurator_affects_new_loggers(self):
         provider = LoggerProvider()
-        provider._set_logger_configurator(logger_configurator=_disable_logger_configurator)
+        provider._set_logger_configurator(
+            logger_configurator=_disable_logger_configurator
+        )
         logger = provider.get_logger("new_logger")
         self.assertFalse(logger._is_enabled())
 
     # pylint: disable-next=no-self-use
     def test_disabled_logger_skips_emit(self):
-        provider = LoggerProvider(_logger_configurator=_disable_logger_configurator)
+        provider = LoggerProvider(
+            _logger_configurator=_disable_logger_configurator
+        )
         logger = provider.get_logger("test")
         processor_mock = Mock()
         provider.add_log_record_processor(processor_mock)
 
-        logger.emit(LogRecord(observed_timestamp=0, body="should not be emitted"))
+        logger.emit(
+            LogRecord(observed_timestamp=0, body="should not be emitted")
+        )
         processor_mock.on_emit.assert_not_called()
 
     def test_rule_based_logger_configurator(self):
@@ -229,11 +263,15 @@ class TestLoggerProvider(unittest.TestCase):
                 _LoggerConfig(is_enabled=False),
             ),
         ]
-        configurator = _RuleBasedLoggerConfigurator(rules=rules, default_config=_LoggerConfig(is_enabled=True))
+        configurator = _RuleBasedLoggerConfigurator(
+            rules=rules, default_config=_LoggerConfig(is_enabled=True)
+        )
 
         provider = LoggerProvider()
         logger = provider.get_logger("module_name", "1.0", "schema_url")
-        other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
+        other_logger = provider.get_logger(
+            "other_module_name", "1.0", "schema_url"
+        )
 
         self.assertTrue(logger._is_enabled())
         self.assertTrue(other_logger._is_enabled())
@@ -252,11 +290,15 @@ class TestLoggerProvider(unittest.TestCase):
                 _LoggerConfig(is_enabled=False),
             ),
         ]
-        configurator = _RuleBasedLoggerConfigurator(rules=rules, default_config=_LoggerConfig(is_enabled=True))
+        configurator = _RuleBasedLoggerConfigurator(
+            rules=rules, default_config=_LoggerConfig(is_enabled=True)
+        )
 
         provider = LoggerProvider()
         logger = provider.get_logger("module_name", "1.0", "schema_url")
-        other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
+        other_logger = provider.get_logger(
+            "other_module_name", "1.0", "schema_url"
+        )
 
         self.assertTrue(logger._is_enabled())
         self.assertTrue(other_logger._is_enabled())
@@ -301,13 +343,21 @@ class TestReadableLogRecord(unittest.TestCase):
     def test_readable_log_record_is_frozen(self):
         """Test that ReadableLogRecord is frozen and cannot be modified."""
         with self.assertRaises((AttributeError, TypeError)):
-            self.readable_log_record.log_record = LogRecord(timestamp=999, body="Modified")
+            self.readable_log_record.log_record = LogRecord(
+                timestamp=999, body="Modified"
+            )
 
     def test_readable_log_record_can_read_attributes(self):
         """Test that ReadableLogRecord provides read access to all fields."""
-        self.assertEqual(self.readable_log_record.log_record.timestamp, 1234567890)
-        self.assertEqual(self.readable_log_record.log_record.body, "Test log message")
-        self.assertEqual(self.readable_log_record.log_record.attributes["key"], "value")
+        self.assertEqual(
+            self.readable_log_record.log_record.timestamp, 1234567890
+        )
+        self.assertEqual(
+            self.readable_log_record.log_record.body, "Test log message"
+        )
+        self.assertEqual(
+            self.readable_log_record.log_record.attributes["key"], "value"
+        )
         self.assertEqual(
             self.readable_log_record.resource.attributes["service.name"],
             "test-service",
@@ -387,7 +437,9 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(result_log_record.timestamp, 100)
         self.assertEqual(result_log_record.observed_timestamp, 101)
         self.assertIsNotNone(result_log_record.context)
-        self.assertEqual(result_log_record.severity_number, SeverityNumber.WARN)
+        self.assertEqual(
+            result_log_record.severity_number, SeverityNumber.WARN
+        )
         self.assertEqual(result_log_record.severity_text, "warn")
         self.assertEqual(result_log_record.body, "a body")
         self.assertEqual(result_log_record.attributes, {"some": "attributes"})
@@ -402,8 +454,12 @@ class TestLogger(unittest.TestCase):
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
         attributes = dict(log_data.log_record.attributes)
-        self.assertEqual(attributes[exception_attributes.EXCEPTION_TYPE], "ValueError")
-        self.assertEqual(attributes[exception_attributes.EXCEPTION_MESSAGE], "boom")
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "ValueError"
+        )
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_MESSAGE], "boom"
+        )
         self.assertIn(
             "ValueError: boom",
             attributes[exception_attributes.EXCEPTION_STACKTRACE],
@@ -419,7 +475,9 @@ class TestLogger(unittest.TestCase):
 
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
-        stacktrace = dict(log_data.log_record.attributes)[exception_attributes.EXCEPTION_STACKTRACE]
+        stacktrace = dict(log_data.log_record.attributes)[
+            exception_attributes.EXCEPTION_STACKTRACE
+        ]
         self.assertIn("Traceback (most recent call last)", stacktrace)
         self.assertIn("raise ValueError", stacktrace)
 
@@ -437,8 +495,12 @@ class TestLogger(unittest.TestCase):
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
         attributes = dict(log_data.log_record.attributes)
-        self.assertEqual(attributes[exception_attributes.EXCEPTION_TYPE], "custom")
-        self.assertEqual(attributes[exception_attributes.EXCEPTION_MESSAGE], "boom")
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "custom"
+        )
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_MESSAGE], "boom"
+        )
 
     def test_emit_logrecord_exception_with_immutable_attributes(self):
         logger, log_record_processor_mock = self._get_logger()
@@ -457,12 +519,16 @@ class TestLogger(unittest.TestCase):
 
         logger.emit(log_record)
 
-        self.assertNotIn(exception_attributes.EXCEPTION_TYPE, log_record.attributes)
+        self.assertNotIn(
+            exception_attributes.EXCEPTION_TYPE, log_record.attributes
+        )
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
         attributes = dict(log_data.log_record.attributes)
         self.assertEqual(attributes["custom"], "value")
-        self.assertEqual(attributes[exception_attributes.EXCEPTION_TYPE], "ValueError")
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "ValueError"
+        )
 
     def test_emit_readwrite_logrecord_uses_exception(self):
         logger, log_record_processor_mock = self._get_logger()
@@ -482,4 +548,6 @@ class TestLogger(unittest.TestCase):
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
         attributes = dict(log_data.log_record.attributes)
-        self.assertEqual(attributes[exception_attributes.EXCEPTION_TYPE], "RuntimeError")
+        self.assertEqual(
+            attributes[exception_attributes.EXCEPTION_TYPE], "RuntimeError"
+        )

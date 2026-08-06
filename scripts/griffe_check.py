@@ -48,7 +48,9 @@ def main():
 
     modules = get_modules()
     base = griffe.load(args.module, search_paths=modules)
-    against = griffe.load_git(args.module, ref=args.against, search_paths=modules)
+    against = griffe.load_git(
+        args.module, ref=args.against, search_paths=modules
+    )
 
     breakages = list(griffe.find_breaking_changes(against, base))
     # exclude version bumps from breakages as they are expected

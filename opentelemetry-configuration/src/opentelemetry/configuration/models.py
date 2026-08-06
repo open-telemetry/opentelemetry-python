@@ -115,7 +115,9 @@ class ExperimentalComposableRuleBasedSamplerRuleAttributeValues:
 ExperimentalContainerResourceDetector: TypeAlias = dict[str, Any] | None
 
 
-ExperimentalEventToSpanEventBridgeLogRecordProcessor: TypeAlias = dict[str, Any] | None
+ExperimentalEventToSpanEventBridgeLogRecordProcessor: TypeAlias = (
+    dict[str, Any] | None
+)
 
 
 ExperimentalHostResourceDetector: TypeAlias = dict[str, Any] | None
@@ -135,7 +137,9 @@ class ExperimentalHttpServerInstrumentation:
     known_methods: list[str] | None = None
 
 
-ExperimentalLanguageSpecificInstrumentation: TypeAlias = dict[str, dict[str, Any]]
+ExperimentalLanguageSpecificInstrumentation: TypeAlias = dict[
+    str, dict[str, Any]
+]
 
 
 @dataclass
@@ -164,8 +168,12 @@ ExperimentalProcessResourceDetector: TypeAlias = dict[str, Any] | None
 
 class ExperimentalPrometheusTranslationStrategy(Enum):
     underscore_escaping_with_suffixes = "underscore_escaping_with_suffixes"
-    underscore_escaping_without_suffixes_development = "underscore_escaping_without_suffixes/development"
-    no_utf8_escaping_with_suffixes_development = "no_utf8_escaping_with_suffixes/development"
+    underscore_escaping_without_suffixes_development = (
+        "underscore_escaping_without_suffixes/development"
+    )
+    no_utf8_escaping_with_suffixes_development = (
+        "no_utf8_escaping_with_suffixes/development"
+    )
     no_translation_development = "no_translation/development"
 
 
@@ -286,7 +294,9 @@ class OtlpGrpcMetricExporter:
     compression: str | None = None
     timeout: int | None = None
     temporality_preference: ExporterTemporalityPreference | None = None
-    default_histogram_aggregation: ExporterDefaultHistogramAggregation | None = None
+    default_histogram_aggregation: (
+        ExporterDefaultHistogramAggregation | None
+    ) = None
 
 
 class OtlpHttpEncoding(Enum):
@@ -315,7 +325,9 @@ class OtlpHttpMetricExporter:
     timeout: int | None = None
     encoding: OtlpHttpEncoding | None = None
     temporality_preference: ExporterTemporalityPreference | None = None
-    default_histogram_aggregation: ExporterDefaultHistogramAggregation | None = None
+    default_histogram_aggregation: (
+        ExporterDefaultHistogramAggregation | None
+    ) = None
 
 
 RandomIdGenerator: TypeAlias = dict[str, Any] | None
@@ -402,7 +414,9 @@ class Aggregation:
     default: DefaultAggregation | None = None
     drop: DropAggregation | None = None
     explicit_bucket_histogram: ExplicitBucketHistogramAggregation | None = None
-    base2_exponential_bucket_histogram: Base2ExponentialBucketHistogramAggregation | None = None
+    base2_exponential_bucket_histogram: (
+        Base2ExponentialBucketHistogramAggregation | None
+    ) = None
     last_value: LastValueAggregation | None = None
     sum: SumAggregation | None = None
 
@@ -426,7 +440,9 @@ class BatchSpanProcessor:
 @dataclass
 class ConsoleMetricExporter:
     temporality_preference: ExporterTemporalityPreference | None = None
-    default_histogram_aggregation: ExporterDefaultHistogramAggregation | None = None
+    default_histogram_aggregation: (
+        ExporterDefaultHistogramAggregation | None
+    ) = None
 
 
 @dataclass
@@ -479,7 +495,9 @@ class ExperimentalMeterConfigurator:
 class ExperimentalOtlpFileMetricExporter:
     output_stream: str | None = None
     temporality_preference: ExporterTemporalityPreference | None = None
-    default_histogram_aggregation: ExporterDefaultHistogramAggregation | None = None
+    default_histogram_aggregation: (
+        ExporterDefaultHistogramAggregation | None
+    ) = None
 
 
 @dataclass
@@ -489,7 +507,9 @@ class ExperimentalPrometheusMetricExporter:
     scope_info_enabled: bool | None = None
     target_info_enabled_development: bool | None = None
     resource_constant_labels: IncludeExclude | None = None
-    translation_strategy: ExperimentalPrometheusTranslationStrategy | None = None
+    translation_strategy: ExperimentalPrometheusTranslationStrategy | None = (
+        None
+    )
 
 
 @_additional_properties
@@ -657,7 +677,9 @@ class ExperimentalResourceDetection:
 class LogRecordProcessor:
     batch: BatchLogRecordProcessor | None = None
     simple: SimpleLogRecordProcessor | None = None
-    event_to_span_event_bridge_development: ExperimentalEventToSpanEventBridgeLogRecordProcessor | None = None
+    event_to_span_event_bridge_development: (
+        ExperimentalEventToSpanEventBridgeLogRecordProcessor | None
+    ) = None
     additional_properties: ClassVar[dict[str, Any]]
 
 
@@ -695,7 +717,9 @@ class View:
 class LoggerProvider:
     processors: list[LogRecordProcessor]
     limits: LogRecordLimits | None = None
-    logger_configurator_development: ExperimentalLoggerConfigurator | None = None
+    logger_configurator_development: ExperimentalLoggerConfigurator | None = (
+        None
+    )
 
 
 @dataclass
@@ -748,8 +772,12 @@ class ExperimentalComposableRuleBasedSamplerRule:
     """
 
     sampler: ExperimentalComposableSampler
-    attribute_values: ExperimentalComposableRuleBasedSamplerRuleAttributeValues | None = None
-    attribute_patterns: ExperimentalComposableRuleBasedSamplerRuleAttributePatterns | None = None
+    attribute_values: (
+        ExperimentalComposableRuleBasedSamplerRuleAttributeValues | None
+    ) = None
+    attribute_patterns: (
+        ExperimentalComposableRuleBasedSamplerRuleAttributePatterns | None
+    ) = None
     span_kinds: list[SpanKind] | None = None
     parent: list[ExperimentalSpanParent] | None = None
 
@@ -759,7 +787,9 @@ class ExperimentalComposableRuleBasedSamplerRule:
 class ExperimentalComposableSampler:
     always_off: ExperimentalComposableAlwaysOffSampler | None = None
     always_on: ExperimentalComposableAlwaysOnSampler | None = None
-    parent_threshold: ExperimentalComposableParentThresholdSampler | None = None
+    parent_threshold: ExperimentalComposableParentThresholdSampler | None = (
+        None
+    )
     probability: ExperimentalComposableProbabilitySampler | None = None
     rule_based: ExperimentalComposableRuleBasedSampler | None = None
     additional_properties: ClassVar[dict[str, Any]]
@@ -800,4 +830,6 @@ class TracerProvider:
     limits: SpanLimits | None = None
     sampler: Sampler | None = None
     id_generator: IdGenerator | None = None
-    tracer_configurator_development: ExperimentalTracerConfigurator | None = None
+    tracer_configurator_development: ExperimentalTracerConfigurator | None = (
+        None
+    )

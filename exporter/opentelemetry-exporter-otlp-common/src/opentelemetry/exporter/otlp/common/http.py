@@ -90,7 +90,10 @@ class Compression(enum.Enum):
             case "gzip":
                 return Compression.GZIP
             case _:
-                raise ValueError(f"Invalid compression type: {value!r}. Expected one of: 'none', 'deflate', 'gzip'.")
+                raise ValueError(
+                    f"Invalid compression type: {value!r}. "
+                    "Expected one of: 'none', 'deflate', 'gzip'."
+                )
 
 
 @dataclass(slots=True, frozen=True)
@@ -204,9 +207,16 @@ class _OTLPHTTPClient:
                     return _ExportResult(True, status_code, reason, None)
                 export_error = result.error
                 retryable = (
-                    _is_retryable(status_code) if status_code else self._transport.is_connection_error(result.error)
+                    _is_retryable(status_code)
+                    if status_code
+                    else self._transport.is_connection_error(result.error)
                 )
-                if retryable and status_code is not None and (retry_after := _extract_retry_after(result)) is not None:
+                if (
+                    retryable
+                    and status_code is not None
+                    and (retry_after := _extract_retry_after(result))
+                    is not None
+                ):
                     backoff = retry_after
 
             if not retryable:
@@ -218,9 +228,14 @@ class _OTLPHTTPClient:
                 )
                 return _ExportResult(False, status_code, reason, export_error)
 
-            if retry + 1 == _MAX_RETRIES or backoff > (deadline - time.time()) or self._shutdown_event.is_set():
+            if (
+                retry + 1 == _MAX_RETRIES
+                or backoff > (deadline - time.time())
+                or self._shutdown_event.is_set()
+            ):
                 self._logger.error(
-                    "Failed to export %s batch due to timeout, max retries or shutdown.",
+                    "Failed to export %s batch due to timeout, "
+                    "max retries or shutdown.",
                     self._kind,
                 )
                 return _ExportResult(False, status_code, reason, export_error)

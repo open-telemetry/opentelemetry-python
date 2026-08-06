@@ -21,7 +21,9 @@ def create_gen_ai_client_operation_duration(meter: Meter) -> Histogram:
     )
 
 
-GEN_AI_CLIENT_OPERATION_TIME_PER_OUTPUT_CHUNK: Final = "gen_ai.client.operation.time_per_output_chunk"
+GEN_AI_CLIENT_OPERATION_TIME_PER_OUTPUT_CHUNK: Final = (
+    "gen_ai.client.operation.time_per_output_chunk"
+)
 """
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
@@ -38,7 +40,9 @@ def create_gen_ai_client_operation_time_per_output_chunk(
     )
 
 
-GEN_AI_CLIENT_OPERATION_TIME_TO_FIRST_CHUNK: Final = "gen_ai.client.operation.time_to_first_chunk"
+GEN_AI_CLIENT_OPERATION_TIME_TO_FIRST_CHUNK: Final = (
+    "gen_ai.client.operation.time_to_first_chunk"
+)
 """
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
@@ -85,7 +89,9 @@ def create_gen_ai_server_request_duration(meter: Meter) -> Histogram:
     )
 
 
-GEN_AI_SERVER_TIME_PER_OUTPUT_TOKEN: Final = "gen_ai.server.time_per_output_token"
+GEN_AI_SERVER_TIME_PER_OUTPUT_TOKEN: Final = (
+    "gen_ai.server.time_per_output_token"
+)
 """
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """

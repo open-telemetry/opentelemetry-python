@@ -28,7 +28,9 @@ class JsonV2Encoder(JsonEncoder):
             "id": self._encode_span_id(context.span_id),
             "name": span.name,
             "timestamp": self._nsec_to_usec_round(span.start_time),
-            "duration": self._nsec_to_usec_round(span.end_time - span.start_time),
+            "duration": self._nsec_to_usec_round(
+                span.end_time - span.start_time
+            ),
             "localEndpoint": encoded_local_endpoint,
             "kind": self.SPAN_KIND_MAP[span.kind],
         }

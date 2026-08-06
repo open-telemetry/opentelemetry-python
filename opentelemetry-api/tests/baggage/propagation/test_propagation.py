@@ -20,5 +20,9 @@ class TestBaggageManager(TestCase):
         propagator.inject(carrier, ctx)
         ctx_propagated = propagator.extract(carrier)
 
-        self.assertEqual(get_baggage("Test1", context=ctx_propagated), "value1")
-        self.assertEqual(get_baggage("test2", context=ctx_propagated), "value2")
+        self.assertEqual(
+            get_baggage("Test1", context=ctx_propagated), "value1"
+        )
+        self.assertEqual(
+            get_baggage("test2", context=ctx_propagated), "value2"
+        )

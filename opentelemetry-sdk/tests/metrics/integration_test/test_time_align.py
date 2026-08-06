@@ -38,8 +38,18 @@ class TestTimeAlign(TestCase):
 
         metrics = reader.get_metrics_data()
 
-        data_points_0_0 = list(metrics.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points)
-        data_points_0_1 = list(metrics.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points)
+        data_points_0_0 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )
+        data_points_0_1 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[1]
+            .data.data_points
+        )
         self.assertEqual(len(data_points_0_0), 2)
         self.assertEqual(len(data_points_0_1), 2)
 
@@ -79,8 +89,18 @@ class TestTimeAlign(TestCase):
 
         metrics = reader.get_metrics_data()
 
-        data_points_1_0 = list(metrics.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points)
-        data_points_1_1 = list(metrics.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points)
+        data_points_1_0 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )
+        data_points_1_1 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[1]
+            .data.data_points
+        )
 
         self.assertEqual(len(data_points_1_0), 2)
         self.assertEqual(len(data_points_1_1), 2)
@@ -128,9 +148,13 @@ class TestTimeAlign(TestCase):
             data_points_1_1[1].start_time_unix_nano,
         )
 
-    @mark.skipif(system() != "Linux", reason="test failing in CI when run in Windows")
+    @mark.skipif(
+        system() != "Linux", reason="test failing in CI when run in Windows"
+    )
     def test_time_align_delta(self):
-        reader = InMemoryMetricReader(preferred_temporality={Counter: AggregationTemporality.DELTA})
+        reader = InMemoryMetricReader(
+            preferred_temporality={Counter: AggregationTemporality.DELTA}
+        )
         meter_provider = MeterProvider(metric_readers=[reader])
 
         meter = meter_provider.get_meter("testmeter")
@@ -148,8 +172,18 @@ class TestTimeAlign(TestCase):
 
         metrics = reader.get_metrics_data()
 
-        data_points_0_0 = list(metrics.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points)
-        data_points_0_1 = list(metrics.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points)
+        data_points_0_0 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )
+        data_points_0_1 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[1]
+            .data.data_points
+        )
         self.assertEqual(len(data_points_0_0), 2)
         self.assertEqual(len(data_points_0_1), 2)
 
@@ -189,8 +223,18 @@ class TestTimeAlign(TestCase):
 
         metrics = reader.get_metrics_data()
 
-        data_points_1_0 = list(metrics.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points)
-        data_points_1_1 = list(metrics.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points)
+        data_points_1_0 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )
+        data_points_1_1 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[1]
+            .data.data_points
+        )
         self.assertEqual(len(data_points_1_0), 2)
         self.assertEqual(len(data_points_1_1), 2)
 

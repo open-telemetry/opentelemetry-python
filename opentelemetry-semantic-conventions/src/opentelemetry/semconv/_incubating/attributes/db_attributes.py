@@ -31,7 +31,9 @@ DB_CASSANDRA_PAGE_SIZE: Final = "db.cassandra.page_size"
 Deprecated: Replaced by `cassandra.page.size`.
 """
 
-DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = "db.cassandra.speculative_execution_count"
+DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = (
+    "db.cassandra.speculative_execution_count"
+)
 """
 Deprecated: Replaced by `cassandra.speculative_execution.count`.
 """
@@ -106,7 +108,9 @@ DB_COSMOSDB_REQUEST_CHARGE: Final = "db.cosmosdb.request_charge"
 Deprecated: Replaced by `azure.cosmosdb.operation.request_charge`.
 """
 
-DB_COSMOSDB_REQUEST_CONTENT_LENGTH: Final = "db.cosmosdb.request_content_length"
+DB_COSMOSDB_REQUEST_CONTENT_LENGTH: Final = (
+    "db.cosmosdb.request_content_length"
+)
 """
 Deprecated: Replaced by `azure.cosmosdb.request.body.size`.
 """
@@ -270,7 +274,9 @@ Deprecated: Removed, no replacement at this time.
 """
 
 
-@deprecated("The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`")
+@deprecated(
+    "The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`"
+)
 class DbCassandraConsistencyLevelValues(Enum):
     ALL = "all"
     """all."""
@@ -303,7 +309,9 @@ class DbClientConnectionStateValues(Enum):
     """used."""
 
 
-@deprecated("The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`")
+@deprecated(
+    "The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
+)
 class DbClientConnectionsStateValues(Enum):
     IDLE = "idle"
     """idle."""
@@ -311,7 +319,9 @@ class DbClientConnectionsStateValues(Enum):
     """used."""
 
 
-@deprecated("The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`")
+@deprecated(
+    "The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`"
+)
 class DbCosmosdbConnectionModeValues(Enum):
     GATEWAY = "gateway"
     """Gateway (HTTP) connection."""
@@ -335,7 +345,9 @@ class DbCosmosdbConsistencyLevelValues(Enum):
     """consistent_prefix."""
 
 
-@deprecated("The attribute db.cosmosdb.operation_type is deprecated - Removed, no replacement at this time")
+@deprecated(
+    "The attribute db.cosmosdb.operation_type is deprecated - Removed, no replacement at this time"
+)
 class DbCosmosdbOperationTypeValues(Enum):
     BATCH = "batch"
     """batch."""
@@ -369,7 +381,9 @@ class DbCosmosdbOperationTypeValues(Enum):
     """upsert."""
 
 
-@deprecated("The attribute db.system is deprecated - Replaced by `db.system.name`")
+@deprecated(
+    "The attribute db.system is deprecated - Replaced by `db.system.name`"
+)
 class DbSystemValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only. See notes."""

@@ -46,7 +46,9 @@ if TYPE_CHECKING:
 _logger = getLogger(__name__)
 
 
-_ERROR_MESSAGE = "Expected ASCII string of maximum length 63 characters but got {}"
+_ERROR_MESSAGE = (
+    "Expected ASCII string of maximum length 63 characters but got {}"
+)
 
 
 @runtime_checkable
@@ -154,7 +156,9 @@ class _Asynchronous(_Instrument, Asynchronous):
     def _is_enabled(self) -> bool:
         return self._meter_config is None or self._meter_config.is_enabled
 
-    def callback(self, callback_options: CallbackOptions) -> Iterable[Measurement]:
+    def callback(
+        self, callback_options: CallbackOptions
+    ) -> Iterable[Measurement]:
         if not self._is_enabled():
             return
         for callback in self._callbacks:
@@ -175,7 +179,9 @@ class _Asynchronous(_Instrument, Asynchronous):
                         attributes=api_measurement.attributes,
                     )
             except Exception:  # pylint: disable=broad-exception-caught
-                _logger.exception("Callback failed for instrument %s.", self.name)
+                _logger.exception(
+                    "Callback failed for instrument %s.", self.name
+                )
 
 
 class Counter(_Synchronous, APICounter):
@@ -202,7 +208,9 @@ class Counter(_Synchronous, APICounter):
             )
             return
         if amount < 0:
-            _logger.warning("Add amount must be non-negative on Counter %s.", self.name)
+            _logger.warning(
+                "Add amount must be non-negative on Counter %s.", self.name
+            )
             return
         time_unix_nano = time_ns()
         self._measurement_consumer.consume_measurement(
@@ -254,14 +262,18 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 class ObservableCounter(_Asynchronous, APIObservableCounter):
     def __new__(cls, *args, **kwargs):
         if cls is ObservableCounter:
-            raise TypeError("ObservableCounter must be instantiated via a meter.")
+            raise TypeError(
+                "ObservableCounter must be instantiated via a meter."
+            )
         return super().__new__(cls)
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
     def __new__(cls, *args, **kwargs):
         if cls is ObservableUpDownCounter:
-            raise TypeError("ObservableUpDownCounter must be instantiated via a meter.")
+            raise TypeError(
+                "ObservableUpDownCounter must be instantiated via a meter."
+            )
         return super().__new__(cls)
 
 
@@ -285,7 +297,9 @@ class Histogram(_Synchronous, APIHistogram):
             measurement_consumer=measurement_consumer,
             _meter_config=_meter_config,
         )
-        self._advisory = _MetricsHistogramAdvisory(explicit_bucket_boundaries=explicit_bucket_boundaries_advisory)
+        self._advisory = _MetricsHistogramAdvisory(
+            explicit_bucket_boundaries=explicit_bucket_boundaries_advisory
+        )
 
     def __new__(cls, *args, **kwargs):
         if cls is Histogram:
@@ -365,7 +379,9 @@ class Gauge(_Synchronous, APIGauge):
 class ObservableGauge(_Asynchronous, APIObservableGauge):
     def __new__(cls, *args, **kwargs):
         if cls is ObservableGauge:
-            raise TypeError("ObservableGauge must be instantiated via a meter.")
+            raise TypeError(
+                "ObservableGauge must be instantiated via a meter."
+            )
         return super().__new__(cls)
 
 

@@ -32,7 +32,9 @@ class TestStatus(unittest.TestCase):
 
     def test_description_and_non_error_status(self):
         with self.assertLogs(level=WARNING) as warning:
-            status = Status(status_code=StatusCode.OK, description="status description")
+            status = Status(
+                status_code=StatusCode.OK, description="status description"
+            )
             self.assertIs(status.status_code, StatusCode.OK)
             self.assertEqual(status.description, None)
             self.assertIn(
@@ -41,7 +43,9 @@ class TestStatus(unittest.TestCase):
             )
 
         with self.assertLogs(level=WARNING) as warning:
-            status = Status(status_code=StatusCode.UNSET, description="status description")
+            status = Status(
+                status_code=StatusCode.UNSET, description="status description"
+            )
             self.assertIs(status.status_code, StatusCode.UNSET)
             self.assertEqual(status.description, None)
             self.assertIn(
@@ -49,6 +53,8 @@ class TestStatus(unittest.TestCase):
                 warning.output[0],  # type: ignore
             )
 
-        status = Status(status_code=StatusCode.ERROR, description="status description")
+        status = Status(
+            status_code=StatusCode.ERROR, description="status description"
+        )
         self.assertIs(status.status_code, StatusCode.ERROR)
         self.assertEqual(status.description, "status description")

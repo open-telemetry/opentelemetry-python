@@ -37,7 +37,8 @@ class FileMetricExporter(MetricExporter):
         self,
         path: str | os.PathLike[str],
         *,
-        preferred_temporality: dict[type, AggregationTemporality] | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ) -> None: ...
 
@@ -46,7 +47,8 @@ class FileMetricExporter(MetricExporter):
         self,
         *,
         stream: IO[str],
-        preferred_temporality: dict[type, AggregationTemporality] | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ) -> None: ...
 
@@ -54,7 +56,8 @@ class FileMetricExporter(MetricExporter):
     def __init__(
         self,
         *,
-        preferred_temporality: dict[type, AggregationTemporality] | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ) -> None: ...
 
@@ -63,7 +66,8 @@ class FileMetricExporter(MetricExporter):
         path: str | os.PathLike[str] | None = None,
         *,
         stream: IO[str] | None = None,
-        preferred_temporality: dict[type, AggregationTemporality] | None = None,
+        preferred_temporality: dict[type, AggregationTemporality]
+        | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ) -> None:
         MetricExporter.__init__(
@@ -85,7 +89,11 @@ class FileMetricExporter(MetricExporter):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        return MetricExportResult.SUCCESS if self._exporter.export(metrics_data) else MetricExportResult.FAILURE
+        return (
+            MetricExportResult.SUCCESS
+            if self._exporter.export(metrics_data)
+            else MetricExportResult.FAILURE
+        )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._exporter.shutdown()

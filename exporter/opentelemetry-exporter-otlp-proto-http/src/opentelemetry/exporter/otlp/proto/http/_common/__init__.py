@@ -31,7 +31,9 @@ def _is_retryable(resp: requests.Response) -> bool:
     return False
 
 
-def _is_request_too_large(serialized_data: bytes, max_request_size: int) -> bool:
+def _is_request_too_large(
+    serialized_data: bytes, max_request_size: int
+) -> bool:
     """Return True if the serialized request exceeds a positive size limit.
 
     The size is measured on the uncompressed serialized request, matching the
@@ -49,7 +51,9 @@ def _load_session_from_envvar(
         "OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER",
     ],
 ) -> requests.Session | None:
-    _credential_env = environ.get(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER) or environ.get(cred_envvar)
+    _credential_env = environ.get(
+        _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
+    ) or environ.get(cred_envvar)
     if _credential_env:
         try:
             maybe_session = next(

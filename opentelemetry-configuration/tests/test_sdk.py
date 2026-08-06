@@ -141,7 +141,9 @@ class TestConfigureSdkLogLevel(unittest.TestCase):
     @patch("opentelemetry.configuration._sdk.create_resource")
     def test_sets_opentelemetry_logger_level(self, *_mocks):
         configure_sdk(_config(log_level=SeverityNumber.warn))
-        self.assertEqual(logging.getLogger("opentelemetry").level, logging.WARNING)
+        self.assertEqual(
+            logging.getLogger("opentelemetry").level, logging.WARNING
+        )
 
     @patch("opentelemetry.configuration._sdk.configure_propagator")
     @patch("opentelemetry.configuration._sdk.configure_logger_provider")
@@ -151,7 +153,9 @@ class TestConfigureSdkLogLevel(unittest.TestCase):
     def test_absent_log_level_leaves_logger_unchanged(self, *_mocks):
         logging.getLogger("opentelemetry").setLevel(logging.ERROR)
         configure_sdk(_config())
-        self.assertEqual(logging.getLogger("opentelemetry").level, logging.ERROR)
+        self.assertEqual(
+            logging.getLogger("opentelemetry").level, logging.ERROR
+        )
 
     @patch("opentelemetry.configuration._sdk.configure_propagator")
     @patch("opentelemetry.configuration._sdk.configure_logger_provider")
@@ -196,18 +200,26 @@ class TestConfigureSdkLogLevel(unittest.TestCase):
     def test_log_level_not_applied_when_disabled(self):
         logging.getLogger("opentelemetry").setLevel(logging.WARNING)
         configure_sdk(_config(disabled=True, log_level=SeverityNumber.error))
-        self.assertEqual(logging.getLogger("opentelemetry").level, logging.WARNING)
+        self.assertEqual(
+            logging.getLogger("opentelemetry").level, logging.WARNING
+        )
 
 
 class TestConfigureSdkIntegration(unittest.TestCase):
     """End-to-end: build a real OpenTelemetryConfiguration and apply it."""
 
-    @patch("opentelemetry.configuration._tracer_provider.trace.set_tracer_provider")
+    @patch(
+        "opentelemetry.configuration._tracer_provider.trace.set_tracer_provider"
+    )
     def test_applies_tracer_provider_globally(self, mock_set_tracer):
         config = _config(
             tracer_provider=TracerProviderConfig(
                 processors=[
-                    SpanProcessorConfig(simple=SimpleSpanProcessorConfig(exporter=SpanExporterConfig(console={})))
+                    SpanProcessorConfig(
+                        simple=SimpleSpanProcessorConfig(
+                            exporter=SpanExporterConfig(console={})
+                        )
+                    )
                 ]
             )
         )
@@ -215,4 +227,6 @@ class TestConfigureSdkIntegration(unittest.TestCase):
         configure_sdk(config)
 
         mock_set_tracer.assert_called_once()
-        self.assertIsInstance(mock_set_tracer.call_args[0][0], SdkTracerProvider)
+        self.assertIsInstance(
+            mock_set_tracer.call_args[0][0], SdkTracerProvider
+        )

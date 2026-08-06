@@ -56,7 +56,9 @@ class BoundedList(Sequence[_T]):
     def append(self, item: _T) -> None: ...
     def extend(self, seq: Sequence[_T]) -> None: ...
     @classmethod
-    def from_seq(cls, maxlen: int | None, seq: Iterable[_T]) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
+    def from_seq(
+        cls, maxlen: int | None, seq: Iterable[_T]
+    ) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
 
 class BoundedDict(MutableMapping[_KT, _VT]):
     """An ordered dict with a fixed max capacity.
@@ -73,4 +75,6 @@ class BoundedDict(MutableMapping[_KT, _VT]):
     def __iter__(self) -> Iterator[_KT]: ...
     def __len__(self) -> int: ...
     @classmethod
-    def from_map(cls, maxlen: int, mapping: Mapping[_KT, _VT]) -> BoundedDict[_KT, _VT]: ...  # pylint: disable=undefined-variable
+    def from_map(
+        cls, maxlen: int, mapping: Mapping[_KT, _VT]
+    ) -> BoundedDict[_KT, _VT]: ...  # pylint: disable=undefined-variable

@@ -187,11 +187,15 @@ def parse_args(args=None):
         ),
     )
 
-    instparser = subparsers.add_parser("install", help="Install all distributions.")
+    instparser = subparsers.add_parser(
+        "install", help="Install all distributions."
+    )
 
     def setup_instparser(instparser):
         instparser.set_defaults(func=install_args)
-        instparser.add_argument("pipargs", nargs=argparse.REMAINDER, help=extraargs_help("pip"))
+        instparser.add_argument(
+            "pipargs", nargs=argparse.REMAINDER, help=extraargs_help("pip")
+        )
 
     setup_instparser(instparser)
     instparser.add_argument("--editable", "-e", action="store_true")
@@ -209,7 +213,9 @@ def parse_args(args=None):
         eager_upgrades=True,
     )
 
-    lintparser = subparsers.add_parser("lint", help="Lint everything, autofixing if possible.")
+    lintparser = subparsers.add_parser(
+        "lint", help="Lint everything, autofixing if possible."
+    )
     lintparser.add_argument("--check-only", action="store_true")
     lintparser.set_defaults(func=lint_args)
 
@@ -218,7 +224,9 @@ def parse_args(args=None):
         help="Test everything (run pytest yourself for more complex operations).",
     )
     testparser.set_defaults(func=test_args)
-    testparser.add_argument("pytestargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest"))
+    testparser.add_argument(
+        "pytestargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest")
+    )
 
     releaseparser = subparsers.add_parser(
         "update_versions",
@@ -226,7 +234,9 @@ def parse_args(args=None):
     )
     releaseparser.set_defaults(func=release_args)
     releaseparser.add_argument("--versions", required=True)
-    releaseparser.add_argument("releaseargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest"))
+    releaseparser.add_argument(
+        "releaseargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest")
+    )
 
     patchreleaseparser = subparsers.add_parser(
         "update_patch_versions",
@@ -281,14 +291,22 @@ def find_targets_unordered(rootpath):
             continue
         if subdir.name.startswith(".") or subdir.name.startswith("venv"):
             continue
-        if any((subdir / marker).exists() for marker in ("setup.py", "pyproject.toml")):
+        if any(
+            (subdir / marker).exists()
+            for marker in ("setup.py", "pyproject.toml")
+        ):
             yield subdir
         else:
             yield from find_targets_unordered(subdir)
 
 
 def getlistcfg(strval):
-    return [val.strip() for line in strval.split("\n") for val in line.split(",") if val.strip()]
+    return [
+        val.strip()
+        for line in strval.split("\n")
+        for val in line.split(",")
+        if val.strip()
+    ]
 
 
 def find_targets(mode, rootpath):
@@ -301,7 +319,11 @@ def find_targets(mode, rootpath):
 
     targets = list(find_targets_unordered(rootpath))
     if "extraroots" in mcfg:
-        targets += [path for extraglob in getlistcfg(mcfg["extraroots"]) for path in rootpath.glob(extraglob)]
+        targets += [
+            path
+            for extraglob in getlistcfg(mcfg["extraroots"])
+            for path in rootpath.glob(extraglob)
+        ]
     if "sortfirst" in mcfg:
         sortfirst = getlistcfg(mcfg["sortfirst"])
 
@@ -335,7 +357,9 @@ def find_targets(mode, rootpath):
                 for target in targets
                 for subglob in subglobs
                 # We need to special-case the dot, because glob fails to parse that with an IndexError.
-                for subdir in ((target,) if subglob == "." else target.glob(subglob))
+                for subdir in (
+                    (target,) if subglob == "." else target.glob(subglob)
+                )
             )
             if ".egg-info" not in str(newentry) and newentry.exists()
         ]
@@ -375,7 +399,9 @@ def runsubprocess(dry_run, params, *args, **kwargs):
     try:
         return subprocess_run(params, *args, check=check, **kwargs)
     except OSError as exc:
-        raise ValueError("Failed executing " + repr(params) + ": " + str(exc)) from exc
+        raise ValueError(
+            "Failed executing " + repr(params) + ": " + str(exc)
+        ) from exc
 
 
 def execute_args(args):
@@ -399,7 +425,9 @@ def execute_args(args):
         )
 
     def _runcmd(cmd):
-        result = runsubprocess(args.dry_run, shlex.split(cmd), cwd=rootpath, check=False)
+        result = runsubprocess(
+            args.dry_run, shlex.split(cmd), cwd=rootpath, check=False
+        )
         if result is not None and result.returncode not in args.allowexitcode:
             print(
                 f"'{cmd}' failed with code {result.returncode}",
@@ -408,7 +436,9 @@ def execute_args(args):
             sys.exit(result.returncode)
 
     if args.all:
-        allstr = args.allsep.join(fmt_for_path(args.all, path) for path in targets)
+        allstr = args.allsep.join(
+            fmt_for_path(args.all, path) for path in targets
+        )
         cmd = args.format.format(allstr)
         _runcmd(cmd)
     else:
@@ -491,18 +521,26 @@ def lint_args(args):
 
     runsubprocess(
         args.dry_run,
-        ("black", "--config", "pyproject.toml", ".") + (("--diff", "--check") if args.check_only else ()),
+        ("black", "--config", "pyproject.toml", ".")
+        + (("--diff", "--check") if args.check_only else ()),
         cwd=rootdir,
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--settings-path", ".isort.cfg", ".") + (("--diff", "--check-only") if args.check_only else ()),
+        ("isort", "--settings-path", ".isort.cfg", ".")
+        + (("--diff", "--check-only") if args.check_only else ()),
         cwd=rootdir,
         check=True,
     )
-    runsubprocess(args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True)
-    execute_args(parse_subargs(args, ("exec", "pylint {}", "--all", "--mode", "lintroots")))
+    runsubprocess(
+        args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True
+    )
+    execute_args(
+        parse_subargs(
+            args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
+        )
+    )
     execute_args(
         parse_subargs(
             args,
@@ -542,7 +580,11 @@ def update_version_files(targets, version, packages):
     replace = f'__version__ = "{version}"'
 
     for target in filter_packages(targets, packages):
-        version_file_path = target.joinpath(load(target.joinpath("pyproject.toml"))["tool"]["hatch"]["version"]["path"])
+        version_file_path = target.joinpath(
+            load(target.joinpath("pyproject.toml"))["tool"]["hatch"][
+                "version"
+            ]["path"]
+        )
 
         with open(version_file_path) as file:
             text = file.read()
@@ -645,14 +687,18 @@ def patch_release_args(args):
     mcfg = cfg["stable"]
     packages = mcfg["packages"].split()
     print(f"update stable packages to {args.stable_version}")
-    update_patch_dependencies(targets, args.stable_version, args.stable_version_prev, packages)
+    update_patch_dependencies(
+        targets, args.stable_version, args.stable_version_prev, packages
+    )
     update_version_files(targets, args.stable_version, packages)
 
     # prerelease
     mcfg = cfg["prerelease"]
     packages = mcfg["packages"].split()
     print(f"update prerelease packages to {args.unstable_version}")
-    update_patch_dependencies(targets, args.unstable_version, args.unstable_version_prev, packages)
+    update_patch_dependencies(
+        targets, args.unstable_version, args.unstable_version_prev, packages
+    )
     update_version_files(targets, args.unstable_version, packages)
 
 

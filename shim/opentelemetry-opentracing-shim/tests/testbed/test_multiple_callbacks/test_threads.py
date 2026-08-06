@@ -23,7 +23,9 @@ class TestThreads(OpenTelemetryTestCase):
 
     def test_main(self):
         try:
-            scope = self.tracer.start_active_span("parent", finish_on_close=False)
+            scope = self.tracer.start_active_span(
+                "parent", finish_on_close=False
+            )
             scope.span.ref_count = RefCount(1)
             self.submit_callbacks(scope.span)
         finally:
@@ -57,4 +59,6 @@ class TestThreads(OpenTelemetryTestCase):
     def submit_callbacks(self, parent_span):
         for _ in range(3):
             parent_span.ref_count.incr()
-            self.executor.submit(self.task, 0.1 + random.randint(200, 500) * 0.001, parent_span)
+            self.executor.submit(
+                self.task, 0.1 + random.randint(200, 500) * 0.001, parent_span
+            )

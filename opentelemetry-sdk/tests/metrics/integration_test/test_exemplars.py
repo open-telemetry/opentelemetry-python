@@ -62,7 +62,9 @@ class TestExemplars(TestCase):
             ],
         )
 
-    @mock.patch.dict(os.environ, {"OTEL_METRICS_EXEMPLAR_FILTER": "trace_based"})
+    @mock.patch.dict(
+        os.environ, {"OTEL_METRICS_EXEMPLAR_FILTER": "trace_based"}
+    )
     def test_trace_based_exemplars(self):
         span_context = SpanContext(
             trace_id=self.TRACE_ID,
@@ -256,7 +258,9 @@ class TestExemplars(TestCase):
             ],
         )
 
-    @mock.patch.dict(os.environ, {"OTEL_METRICS_EXEMPLAR_FILTER": "always_off"})
+    @mock.patch.dict(
+        os.environ, {"OTEL_METRICS_EXEMPLAR_FILTER": "always_off"}
+    )
     def test_always_off_exemplars(self):
         span_context = SpanContext(
             trace_id=self.TRACE_ID,

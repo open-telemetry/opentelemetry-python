@@ -36,7 +36,9 @@ class ExemplarFilter(ABC):
             attributes: The complete set of measurement attributes
             context: The Context of the measurement
         """
-        raise NotImplementedError("ExemplarFilter.should_sample is not implemented")
+        raise NotImplementedError(
+            "ExemplarFilter.should_sample is not implemented"
+        )
 
 
 class AlwaysOnExemplarFilter(ExemplarFilter):

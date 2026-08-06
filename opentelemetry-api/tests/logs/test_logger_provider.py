@@ -32,7 +32,9 @@ class TestGlobals(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertIsNone(logs_internal._LOGGER_PROVIDER)
 
-        self.assertIsInstance(get_logger_provider(), logs_internal.ProxyLoggerProvider)
+        self.assertIsInstance(
+            get_logger_provider(), logs_internal.ProxyLoggerProvider
+        )
 
         logs_internal._LOGGER_PROVIDER = None
 

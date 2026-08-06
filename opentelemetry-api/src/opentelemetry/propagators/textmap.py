@@ -61,7 +61,9 @@ class Setter(abc.ABC, typing.Generic[CarrierT]):
 
 
 class DefaultGetter(Getter[Mapping[str, CarrierValT]]):
-    def get(self, carrier: Mapping[str, CarrierValT], key: str) -> list[str] | None:
+    def get(
+        self, carrier: Mapping[str, CarrierValT], key: str
+    ) -> list[str] | None:
         """Getter implementation to retrieve a value from a dictionary.
 
         Args:

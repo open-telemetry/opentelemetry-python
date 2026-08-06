@@ -134,7 +134,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
 
         for status_code, reason in cases:
             with self.subTest(status_code=status_code):
-                transport = _TestHTTPTransport(_TestHTTPResult(status_code=status_code, reason=reason))
+                transport = _TestHTTPTransport(
+                    _TestHTTPResult(status_code=status_code, reason=reason)
+                )
                 client = self._client(transport)
 
                 result = client.export(b"payload")
@@ -149,7 +151,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
         side_effect=(100.0, 100.0, 100.0),
     )
     def test_export_request_arguments(self, mock_time):
-        transport = _TestHTTPTransport(_TestHTTPResult(status_code=200, reason="OK"))
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(status_code=200, reason="OK")
+        )
         client = self._client(transport, timeout=3.0)
 
         client.export(b"payload")
@@ -176,18 +180,24 @@ class TestOTLPHTTPClient(unittest.TestCase):
 
         for compression, decompress, expected_encoding in cases:
             with self.subTest(compression=compression):
-                transport = _TestHTTPTransport(_TestHTTPResult(status_code=200, reason="OK"))
+                transport = _TestHTTPTransport(
+                    _TestHTTPResult(status_code=200, reason="OK")
+                )
                 client = self._client(transport, compression=compression)
 
                 result = client.export(b"payload")
 
                 self.assertTrue(result.success)
-                self.assertEqual(decompress(transport.requests[0]["data"]), b"payload")
+                self.assertEqual(
+                    decompress(transport.requests[0]["data"]), b"payload"
+                )
                 headers = transport.requests[0]["headers"]
                 if expected_encoding is None:
                     self.assertNotIn("Content-Encoding", headers)
                 else:
-                    self.assertEqual(headers["Content-Encoding"], expected_encoding)
+                    self.assertEqual(
+                        headers["Content-Encoding"], expected_encoding
+                    )
 
     def test_export_retryable_status_codes(self):
         cases = (
@@ -255,7 +265,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 None,
             ),
             (
-                _TestHTTPResult(status_code=500, reason="Internal Server Error"),
+                _TestHTTPResult(
+                    status_code=500, reason="Internal Server Error"
+                ),
                 500,
                 "Internal Server Error",
                 None,
@@ -294,7 +306,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
     def test_export_with_shutdown(self):
         shutdown_event = Mock(spec=threading.Event)
         shutdown_event.is_set.return_value = True
-        transport = _TestHTTPTransport(_TestHTTPResult(status_code=503, reason="Service Unavailable"))
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(status_code=503, reason="Service Unavailable")
+        )
         client = self._client(transport)
         # pylint: disable-next=protected-access
         client._shutdown_event = shutdown_event
@@ -359,7 +373,10 @@ class TestOTLPHTTPClient(unittest.TestCase):
     def test_export_exhausts_max_retries(self):
         shutdown_event = Mock(spec=threading.Event)
         shutdown_event.is_set.return_value = False
-        transport = _TestHTTPTransport(*[_TestHTTPResult(status_code=503, reason="Service Unavailable")] * 6)
+        transport = _TestHTTPTransport(
+            *[_TestHTTPResult(status_code=503, reason="Service Unavailable")]
+            * 6
+        )
         client = self._client(transport, timeout=1000.0, jitter=0.0)
         # pylint: disable-next=protected-access
         client._shutdown_event = shutdown_event
@@ -446,7 +463,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
         shutdown_event = Mock(spec=threading.Event)
         shutdown_event.is_set.return_value = False
         shutdown_event.wait.return_value = False
-        retry_at = format_datetime(datetime.fromtimestamp(base + 30, timezone.utc), usegmt=True)
+        retry_at = format_datetime(
+            datetime.fromtimestamp(base + 30, timezone.utc), usegmt=True
+        )
         transport = _TestHTTPTransport(
             _TestHTTPResult(
                 status_code=503,
@@ -474,7 +493,9 @@ class TestOTLPHTTPClient(unittest.TestCase):
         shutdown_event = Mock(spec=threading.Event)
         shutdown_event.is_set.return_value = False
         shutdown_event.wait.return_value = False
-        retry_at = format_datetime(datetime.fromtimestamp(base - 30, timezone.utc), usegmt=True)
+        retry_at = format_datetime(
+            datetime.fromtimestamp(base - 30, timezone.utc), usegmt=True
+        )
         transport = _TestHTTPTransport(
             _TestHTTPResult(
                 status_code=429,
@@ -532,7 +553,11 @@ class TestOTLPHTTPClient(unittest.TestCase):
         for value, expected in cases:
             with self.subTest(value=value):
                 self.assertEqual(
-                    _extract_retry_after(_TestHTTPResult(response_headers={"retry-after": value})),
+                    _extract_retry_after(
+                        _TestHTTPResult(
+                            response_headers={"retry-after": value}
+                        )
+                    ),
                     expected,
                 )
 

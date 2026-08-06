@@ -11,12 +11,16 @@ RPC_CONNECT_RPC_ERROR_CODE: Final = "rpc.connect_rpc.error_code"
 Deprecated: Replaced by `rpc.response.status_code`.
 """
 
-RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE: Final = "rpc.connect_rpc.request.metadata"
+RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE: Final = (
+    "rpc.connect_rpc.request.metadata"
+)
 """
 Deprecated: Replaced by `rpc.request.metadata`.
 """
 
-RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE: Final = "rpc.connect_rpc.response.metadata"
+RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE: Final = (
+    "rpc.connect_rpc.response.metadata"
+)
 """
 Deprecated: Replaced by `rpc.response.metadata`.
 """
@@ -153,7 +157,9 @@ Note: The client and server RPC systems may differ for the same RPC interaction.
 """
 
 
-@deprecated("The attribute rpc.connect_rpc.error_code is deprecated - Replaced by `rpc.response.status_code`")
+@deprecated(
+    "The attribute rpc.connect_rpc.error_code is deprecated - Replaced by `rpc.response.status_code`"
+)
 class RpcConnectRpcErrorCodeValues(Enum):
     CANCELLED = "cancelled"
     """cancelled."""
@@ -229,7 +235,9 @@ class RpcGrpcStatusCodeValues(Enum):
     """UNAUTHENTICATED."""
 
 
-@deprecated("The attribute rpc.message.type is deprecated - Deprecated, no replacement at this time")
+@deprecated(
+    "The attribute rpc.message.type is deprecated - Deprecated, no replacement at this time"
+)
 class RpcMessageTypeValues(Enum):
     SENT = "SENT"
     """sent."""
@@ -237,7 +245,9 @@ class RpcMessageTypeValues(Enum):
     """received."""
 
 
-@deprecated("The attribute rpc.system is deprecated - Replaced by `rpc.system.name`")
+@deprecated(
+    "The attribute rpc.system is deprecated - Replaced by `rpc.system.name`"
+)
 class RpcSystemValues(Enum):
     GRPC = "grpc"
     """gRPC."""

@@ -92,10 +92,14 @@ def _clean_attribute(
             # Reject attribute value if sequence contains a value with an incompatible type.
             if element_type not in _VALID_ATTR_VALUE_TYPES:
                 _logger.warning(
-                    "Invalid type %s in attribute '%s' value sequence. Expected one of %s or None",
+                    "Invalid type %s in attribute '%s' value sequence. Expected one of "
+                    "%s or None",
                     element_type.__name__,
                     key,
-                    [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
+                    [
+                        valid_type.__name__
+                        for valid_type in _VALID_ATTR_VALUE_TYPES
+                    ],
                 )
                 return None
 
@@ -119,7 +123,8 @@ def _clean_attribute(
         return tuple(cleaned_seq)
 
     _logger.warning(
-        "Invalid type %s for attribute '%s' value. Expected one of %s or a sequence of those types",
+        "Invalid type %s for attribute '%s' value. Expected one of %s or a "
+        "sequence of those types",
         type(value).__name__,
         key,
         [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
@@ -141,10 +146,14 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
         for key, element in value.items():
             # skip invalid keys
             if not (key and isinstance(key, str)):
-                _logger.warning("invalid key `%s`. must be non-empty string.", key)
+                _logger.warning(
+                    "invalid key `%s`. must be non-empty string.", key
+                )
                 continue
 
-            cleaned_dict[key] = _clean_extended_attribute(key=key, value=element, max_len=max_len)
+            cleaned_dict[key] = _clean_extended_attribute(
+                key=key, value=element, max_len=max_len
+            )
 
         return cleaned_dict
 
@@ -162,7 +171,9 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
 
             element_type = type(element)
             if element_type not in _VALID_ATTR_VALUE_TYPES:
-                element = _clean_extended_attribute_value(element, max_len=max_len)
+                element = _clean_extended_attribute_value(
+                    element, max_len=max_len
+                )
                 element_type = type(element)  # type: ignore
 
             # The type of the sequence must be homogeneous. The first non-None
@@ -198,7 +209,9 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
         )
 
 
-def _clean_extended_attribute(key: str, value: types.AnyValue, max_len: int | None) -> types.AnyValue:
+def _clean_extended_attribute(
+    key: str, value: types.AnyValue, max_len: int | None
+) -> types.AnyValue:
     """Checks if attribute value is valid and cleans it if required.
 
     The function returns the cleaned value or None if the value is not valid.
@@ -236,14 +249,19 @@ class BoundedAttributes(MutableMapping):  # type: ignore
     ):
         if maxlen is not None:
             if not isinstance(maxlen, int) or maxlen < 0:
-                raise ValueError("maxlen must be valid int greater or equal to 0")
+                raise ValueError(
+                    "maxlen must be valid int greater or equal to 0"
+                )
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
         self._extended_attributes = extended_attributes
         # OrderedDict is not used until the maxlen is reached for efficiency.
 
-        self._dict: MutableMapping[str, types.AnyValue] | OrderedDict[str, types.AnyValue] = {}
+        self._dict: (
+            MutableMapping[str, types.AnyValue]
+            | OrderedDict[str, types.AnyValue]
+        ) = {}
         self._lock = threading.Lock()
         if attributes:
             for key, value in attributes.items():

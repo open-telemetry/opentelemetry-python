@@ -16,7 +16,9 @@ _logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def code_generation() -> Iterator[tuple[plugin.CodeGeneratorRequest, plugin.CodeGeneratorResponse],]:
+def code_generation() -> Iterator[
+    tuple[plugin.CodeGeneratorRequest, plugin.CodeGeneratorResponse],
+]:
     """
     Context manager for handling the code generation process.
     """

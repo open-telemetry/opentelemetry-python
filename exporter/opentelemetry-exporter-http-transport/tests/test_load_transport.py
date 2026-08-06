@@ -19,10 +19,14 @@ _ENTRY_POINTS_TARGET = "opentelemetry.util._importlib_metadata.entry_points"
 # pylint: disable=no-self-use
 class TestLoadHTTPTransportFactory(unittest.TestCase):
     def test_returns_requests_transport(self):
-        self.assertIs(_load_http_transport_factory("requests"), RequestsHTTPTransport)
+        self.assertIs(
+            _load_http_transport_factory("requests"), RequestsHTTPTransport
+        )
 
     def test_returns_urllib3_transport(self):
-        self.assertIs(_load_http_transport_factory("urllib3"), Urllib3HTTPTransport)
+        self.assertIs(
+            _load_http_transport_factory("urllib3"), Urllib3HTTPTransport
+        )
 
     def test_known_transport_does_not_call_entry_points(self):
         with patch(_ENTRY_POINTS_TARGET) as mock_ep:
@@ -52,4 +56,6 @@ class TestLoadHTTPTransportFactory(unittest.TestCase):
 
     def test_unknown_transport_raises_value_error(self):
         with patch(_ENTRY_POINTS_TARGET, return_value=[]):
-            self.assertRaises(ValueError, _load_http_transport_factory, "nonexistent")
+            self.assertRaises(
+                ValueError, _load_http_transport_factory, "nonexistent"
+            )

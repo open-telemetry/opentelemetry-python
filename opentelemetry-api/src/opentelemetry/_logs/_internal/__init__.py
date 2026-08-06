@@ -354,7 +354,9 @@ class NoOpLoggerProvider(LoggerProvider):
         attributes: _ExtendedAttributes | None = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
-        return NoOpLogger(name, version=version, schema_url=schema_url, attributes=attributes)
+        return NoOpLogger(
+            name, version=version, schema_url=schema_url, attributes=attributes
+        )
 
 
 class ProxyLoggerProvider(LoggerProvider):

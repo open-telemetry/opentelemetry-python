@@ -37,7 +37,9 @@ class TestConfigureInstrumentation(TestCase):
             "opentelemetry.configuration.instrumentation",
             level=WARNING,
         ) as cm:
-            configure_instrumentation(ExperimentalInstrumentation(python={"unknown_lib": {}}))
+            configure_instrumentation(
+                ExperimentalInstrumentation(python={"unknown_lib": {}})
+            )
         self.assertTrue(
             any("unknown_lib" in msg for msg in cm.output),
             f"Expected warning mentioning 'unknown_lib', got: {cm.output}",
@@ -48,28 +50,42 @@ class TestConfigureInstrumentation(TestCase):
         instrumentor = MagicMock()
         mock_load.return_value = _make_instrumentor_class(instrumentor)
 
-        configure_instrumentation(ExperimentalInstrumentation(python={"requests": {}}))
+        configure_instrumentation(
+            ExperimentalInstrumentation(python={"requests": {}})
+        )
 
-        mock_load.assert_called_once_with("opentelemetry_instrumentor", "requests")
+        mock_load.assert_called_once_with(
+            "opentelemetry_instrumentor", "requests"
+        )
         instrumentor.instrument.assert_called_once_with()
 
     @patch(_LOAD_EP)
-    def test_forwards_kwargs_to_instrumentor_without_configuration(self, mock_load):
+    def test_forwards_kwargs_to_instrumentor_without_configuration(
+        self, mock_load
+    ):
         instrumentor = MagicMock()
         mock_load.return_value = _make_instrumentor_class(instrumentor)
 
         configure_instrumentation(
-            ExperimentalInstrumentation(python={"flask": {"excluded_urls": "/healthz", "foo": "bar"}})
+            ExperimentalInstrumentation(
+                python={"flask": {"excluded_urls": "/healthz", "foo": "bar"}}
+            )
         )
 
-        instrumentor.instrument.assert_called_once_with(excluded_urls="/healthz", foo="bar")
+        instrumentor.instrument.assert_called_once_with(
+            excluded_urls="/healthz", foo="bar"
+        )
 
     @patch(_LOAD_EP)
     def test_enabled_false_skips_instrumentation(self, mock_load):
         instrumentor = MagicMock()
         mock_load.return_value = _make_instrumentor_class(instrumentor)
 
-        configure_instrumentation(ExperimentalInstrumentation(python={"requests": {"enabled": False}}))
+        configure_instrumentation(
+            ExperimentalInstrumentation(
+                python={"requests": {"enabled": False}}
+            )
+        )
 
         mock_load.assert_not_called()
         instrumentor.instrument.assert_not_called()
@@ -80,7 +96,9 @@ class TestConfigureInstrumentation(TestCase):
         mock_load.return_value = _make_instrumentor_class(instrumentor)
 
         configure_instrumentation(
-            ExperimentalInstrumentation(python={"flask": {"enabled": True, "excluded_urls": "/ok"}})
+            ExperimentalInstrumentation(
+                python={"flask": {"enabled": True, "excluded_urls": "/ok"}}
+            )
         )
 
         instrumentor.instrument.assert_called_once_with(excluded_urls="/ok")
@@ -91,11 +109,17 @@ class TestConfigureInstrumentation(TestCase):
         requests_inst = MagicMock()
 
         def _side_effect(_group, name):
-            return _make_instrumentor_class(flask_inst if name == "flask" else requests_inst)
+            return _make_instrumentor_class(
+                flask_inst if name == "flask" else requests_inst
+            )
 
         mock_load.side_effect = _side_effect
 
-        configure_instrumentation(ExperimentalInstrumentation(python={"flask": {}, "requests": {"foo": "bar"}}))
+        configure_instrumentation(
+            ExperimentalInstrumentation(
+                python={"flask": {}, "requests": {"foo": "bar"}}
+            )
+        )
 
         flask_inst.instrument.assert_called_once_with()
         requests_inst.instrument.assert_called_once_with(foo="bar")
@@ -111,7 +135,9 @@ class TestConfigureInstrumentation(TestCase):
         def _side_effect(_group, _name):
             nonlocal call_count
             call_count += 1
-            return _make_instrumentor_class(broken_inst if call_count == 1 else ok_inst)
+            return _make_instrumentor_class(
+                broken_inst if call_count == 1 else ok_inst
+            )
 
         mock_load.side_effect = _side_effect
 
@@ -119,7 +145,9 @@ class TestConfigureInstrumentation(TestCase):
             "opentelemetry.configuration.instrumentation",
             level=ERROR,
         ):
-            configure_instrumentation(ExperimentalInstrumentation(python={"broken": {}, "ok": {}}))
+            configure_instrumentation(
+                ExperimentalInstrumentation(python={"broken": {}, "ok": {}})
+            )
 
         ok_inst.instrument.assert_called_once_with()
 
@@ -129,16 +157,22 @@ class TestConfigureInstrumentation(TestCase):
         mock_load.return_value = _make_instrumentor_class(instrumentor)
         instrumentor.is_instrumented_by_opentelemetry = True
 
-        configure_instrumentation(ExperimentalInstrumentation(python={"requests": {}}))
+        configure_instrumentation(
+            ExperimentalInstrumentation(python={"requests": {}})
+        )
 
         instrumentor.instrument.assert_not_called()
 
     @patch(_LOAD_EP)
     def test_non_dataclass_configuration_attribute_ignored(self, mock_load):
         instrumentor = MagicMock()
-        mock_load.return_value = _make_instrumentor_class(instrumentor, configuration="not-a-dataclass")
+        mock_load.return_value = _make_instrumentor_class(
+            instrumentor, configuration="not-a-dataclass"
+        )
 
-        configure_instrumentation(ExperimentalInstrumentation(python={"requests": {"foo": "bar"}}))
+        configure_instrumentation(
+            ExperimentalInstrumentation(python={"requests": {"foo": "bar"}})
+        )
 
         instrumentor.instrument.assert_called_once_with(foo="bar")
 
@@ -150,7 +184,9 @@ class TestConfigureInstrumentation(TestCase):
             capture_headers: bool | None = None
 
         instrumentor = MagicMock()
-        mock_load.return_value = _make_instrumentor_class(instrumentor, configuration=RequestsConfig)
+        mock_load.return_value = _make_instrumentor_class(
+            instrumentor, configuration=RequestsConfig
+        )
 
         configure_instrumentation(
             ExperimentalInstrumentation(
@@ -163,7 +199,9 @@ class TestConfigureInstrumentation(TestCase):
             )
         )
 
-        instrumentor.instrument.assert_called_once_with(excluded_urls="/health", capture_headers=True)
+        instrumentor.instrument.assert_called_once_with(
+            excluded_urls="/health", capture_headers=True
+        )
 
     @patch(_LOAD_EP)
     def test_configuration_none_fields_not_forwarded(self, mock_load):
@@ -173,9 +211,15 @@ class TestConfigureInstrumentation(TestCase):
             propagate_headers: bool | None = None
 
         instrumentor = MagicMock()
-        mock_load.return_value = _make_instrumentor_class(instrumentor, configuration=FlaskConfig)
+        mock_load.return_value = _make_instrumentor_class(
+            instrumentor, configuration=FlaskConfig
+        )
 
-        configure_instrumentation(ExperimentalInstrumentation(python={"flask": {"excluded_urls": "/ok"}}))
+        configure_instrumentation(
+            ExperimentalInstrumentation(
+                python={"flask": {"excluded_urls": "/ok"}}
+            )
+        )
 
         # propagate_headers was not set, so it must not appear in the call.
         instrumentor.instrument.assert_called_once_with(excluded_urls="/ok")
@@ -187,14 +231,20 @@ class TestConfigureInstrumentation(TestCase):
             excluded_urls: str | None = None
 
         instrumentor = MagicMock()
-        mock_load.return_value = _make_instrumentor_class(instrumentor, configuration=StrictConfig)
+        mock_load.return_value = _make_instrumentor_class(
+            instrumentor, configuration=StrictConfig
+        )
 
         with self.assertLogs(
             "opentelemetry.configuration.instrumentation",
             level=ERROR,
         ):
             configure_instrumentation(
-                ExperimentalInstrumentation(python={"mylib": {"excluded_urls": "/ok", "typo_field": "bad"}})
+                ExperimentalInstrumentation(
+                    python={
+                        "mylib": {"excluded_urls": "/ok", "typo_field": "bad"}
+                    }
+                )
             )
 
         instrumentor.instrument.assert_not_called()

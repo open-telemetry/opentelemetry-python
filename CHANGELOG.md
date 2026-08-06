@@ -554,7 +554,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     from opentelemetry.sdk._logs import ReadableLogRecord
 
 
-    def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult: ...
+    def export(
+        self, batch: Sequence[ReadableLogRecord]
+    ) -> LogRecordExportResult: ...
     ```
 
   - **For Log Processors:** Use `ReadWriteLogRecord` for processing, `ReadableLogRecord` for exporting
