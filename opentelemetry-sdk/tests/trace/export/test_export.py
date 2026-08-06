@@ -171,13 +171,12 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 1)
         self.assertEqual(metrics[0].name, "otel.sdk.processor.span.processed")
-        processed_data_points = sorted(
-            metrics[0].data.data_points,
-            key=lambda dp: dp.attributes.get("error.type", ""),
-        )
-        self.assertEqual(len(processed_data_points), 2)
+        processed_data_points = metrics[0].data.data_points
+        self.assertEqual(len(processed_data_points), 1)
         processed_data_point0 = processed_data_points[0]
-        self.assertEqual(processed_data_point0.value, 2)
+        # All 3 spans are counted as processed when submitted to the exporter,
+        # independent of the export outcome (the 3rd export fails).
+        self.assertEqual(processed_data_point0.value, 3)
         self.assertEqual(
             processed_data_point0.attributes["otel.component.type"],
             "simple_span_processor",
@@ -188,20 +187,6 @@ class TestSimpleSpanProcessor(unittest.TestCase):
             )
         )
         self.assertIsNone(processed_data_point0.attributes.get("error.type"))
-        processed_data_point1 = processed_data_points[1]
-        self.assertEqual(processed_data_point1.value, 1)
-        self.assertEqual(
-            processed_data_point1.attributes["otel.component.type"],
-            "simple_span_processor",
-        )
-        self.assertTrue(
-            processed_data_point1.attributes["otel.component.name"].startswith(
-                "simple_span_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point1.attributes["error.type"], "RuntimeError"
-        )
 
 
 # Many more test cases for the BatchSpanProcessor exist under
@@ -392,6 +377,51 @@ class TestBatchSpanProcessor(unittest.TestCase):
     @mock.patch.dict(
         "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
     )
+    def test_metrics_already_shutdown(self):
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+
+        exporter = mock.MagicMock()
+        exporter.export.return_value = export.SpanExportResult.SUCCESS
+        span_processor = export.BatchSpanProcessor(
+            exporter, meter_provider=meter_provider
+        )
+        provider = trace.TracerProvider()
+        tracer = provider.get_tracer(__name__)
+        provider.add_span_processor(span_processor)
+
+        # Ended before shutdown: drained on shutdown and counted as a
+        # successful submit to the exporter.
+        with tracer.start_as_current_span("foo"):
+            pass
+        span_processor.shutdown()
+
+        # Ended after shutdown: dropped and counted as already_shutdown.
+        with tracer.start_as_current_span("bar"):
+            pass
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        processed = next(
+            m
+            for m in scope_metrics.metrics
+            if m.name == "otel.sdk.processor.span.processed"
+        )
+        data_points = sorted(
+            processed.data.data_points,
+            key=lambda dp: dp.attributes.get("error.type", ""),
+        )
+        self.assertEqual(len(data_points), 2)
+        self.assertEqual(data_points[0].value, 1)
+        self.assertIsNone(data_points[0].attributes.get("error.type"))
+        self.assertEqual(data_points[1].value, 1)
+        self.assertEqual(
+            data_points[1].attributes.get("error.type"), "already_shutdown"
+        )
+
+    @mock.patch.dict(
+        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
+    )
     def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
@@ -446,7 +476,9 @@ class TestBatchSpanProcessor(unittest.TestCase):
             metrics[0].data.data_points,
             key=lambda dp: dp.attributes.get("error.type", ""),
         )
-        self.assertEqual(len(processed_data_points), 1)
+        # "foo" is counted as processed when submitted to the exporter (before
+        # its export call blocks); "baz" is dropped due to a full queue.
+        self.assertEqual(len(processed_data_points), 2)
         processed_data_point0 = processed_data_points[0]
         self.assertEqual(processed_data_point0.value, 1)
         self.assertEqual(
@@ -458,8 +490,12 @@ class TestBatchSpanProcessor(unittest.TestCase):
                 "batching_span_processor/"
             )
         )
+        self.assertIsNone(processed_data_point0.attributes.get("error.type"))
+        processed_data_point_queue_full = processed_data_points[1]
+        self.assertEqual(processed_data_point_queue_full.value, 1)
         self.assertEqual(
-            processed_data_point0.attributes.get("error.type"), "queue_full"
+            processed_data_point_queue_full.attributes.get("error.type"),
+            "queue_full",
         )
         self.assertEqual(
             metrics[1].name, "otel.sdk.processor.span.queue.capacity"
@@ -507,9 +543,12 @@ class TestBatchSpanProcessor(unittest.TestCase):
             metrics[0].data.data_points,
             key=lambda dp: dp.attributes.get("error.type", ""),
         )
-        self.assertEqual(len(processed_data_points), 3)
+        # "foo", "bar" and "failed" are all counted as processed when submitted
+        # to the exporter, independent of the export outcome ("failed" raises).
+        # "baz" remains a queue_full drop.
+        self.assertEqual(len(processed_data_points), 2)
         processed_data_point0 = processed_data_points[0]
-        self.assertEqual(processed_data_point0.value, 2)
+        self.assertEqual(processed_data_point0.value, 3)
         self.assertEqual(
             processed_data_point0.attributes["otel.component.type"],
             "batching_span_processor",
@@ -532,21 +571,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             )
         )
         self.assertEqual(
-            processed_data_point1.attributes.get("error.type"), "ValueError"
-        )
-        processed_data_point2 = processed_data_points[2]
-        self.assertEqual(processed_data_point2.value, 1)
-        self.assertEqual(
-            processed_data_point2.attributes["otel.component.type"],
-            "batching_span_processor",
-        )
-        self.assertTrue(
-            processed_data_point2.attributes["otel.component.name"].startswith(
-                "batching_span_processor/"
-            )
-        )
-        self.assertEqual(
-            processed_data_point2.attributes.get("error.type"), "queue_full"
+            processed_data_point1.attributes.get("error.type"), "queue_full"
         )
         self.assertEqual(
             metrics[1].name, "otel.sdk.processor.span.queue.capacity"
