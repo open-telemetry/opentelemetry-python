@@ -42,11 +42,11 @@ jobs:
 
       {%- endif %}
       - name: Checkout repo @ SHA - ${% raw %}{{ github.sha }}{% endraw %}
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       {%- if "getting-started" in job_data.tox_env %}
 
       - name: Checkout contrib repo @ ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: open-telemetry/opentelemetry-python-contrib
           ref: ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
@@ -62,7 +62,7 @@ jobs:
       {%- endif %}
 
       - name: Set up Python {{ job_data.python_version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "{{ job_data.python_version }}"
 
