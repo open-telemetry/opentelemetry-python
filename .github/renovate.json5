@@ -33,6 +33,7 @@
     },
     // Also scan GitHub Actions workflow templates written as Jinja files.
     "github-actions": {
+      enabled: false,
       managerFilePatterns: [
         "/^\\.github/workflows/templates/.*\\.ya?ml\\.j2$/",
       ],
@@ -56,15 +57,6 @@
         groupName: "docs deps",
         matchFileNames: ["docs/**"],
         semanticCommitScope: "docs",
-      },
-      {
-        groupName: "ci",
-        matchManagers: [
-          "github-actions",
-          "dockerfile",
-          "docker-compose",
-        ],
-        semanticCommitScope: "ci",
       },
       {
         matchDepTypes: ["uses-with"],
