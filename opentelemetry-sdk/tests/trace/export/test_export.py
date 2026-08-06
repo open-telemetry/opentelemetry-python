@@ -321,6 +321,41 @@ class TestBatchSpanProcessor(unittest.TestCase):
         )
 
     @mock.patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    def test_metrics_already_shutdown(self):
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+
+        exporter = mock.MagicMock()
+        exporter.export.return_value = export.SpanExportResult.SUCCESS
+        span_processor = export.BatchSpanProcessor(exporter, meter_provider=meter_provider)
+        provider = trace.TracerProvider()
+        tracer = provider.get_tracer(__name__)
+        provider.add_span_processor(span_processor)
+
+        # Ended before shutdown: drained on shutdown and counted as a
+        # successful submit to the exporter.
+        with tracer.start_as_current_span("foo"):
+            pass
+        span_processor.shutdown()
+
+        # Ended after shutdown: dropped and counted as already_shutdown.
+        with tracer.start_as_current_span("bar"):
+            pass
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        processed = next(m for m in scope_metrics.metrics if m.name == "otel.sdk.processor.span.processed")
+        data_points = sorted(
+            processed.data.data_points,
+            key=lambda dp: dp.attributes.get("error.type", ""),
+        )
+        self.assertEqual(len(data_points), 2)
+        self.assertEqual(data_points[0].value, 1)
+        self.assertIsNone(data_points[0].attributes.get("error.type"))
+        self.assertEqual(data_points[1].value, 1)
+        self.assertEqual(data_points[1].attributes.get("error.type"), "already_shutdown")
+
+    @mock.patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics(self):  # pylint: disable=too-many-locals,too-many-statements
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
