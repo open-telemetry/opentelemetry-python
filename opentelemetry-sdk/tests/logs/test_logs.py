@@ -492,9 +492,12 @@ class TestLogger(unittest.TestCase):
 
     def test_enabled_with_processor_returns_true(self):
         provider = LoggerProvider()
-        provider.add_log_record_processor(Mock())
+        processor = Mock()
+        processor.enabled.return_value = True
+        provider.add_log_record_processor(processor)
         logger = provider.get_logger("test")
         self.assertTrue(logger.enabled())
+        processor.enabled.assert_called_once()
 
     def test_enabled_disabled_logger_returns_false(self):
         provider = LoggerProvider(
