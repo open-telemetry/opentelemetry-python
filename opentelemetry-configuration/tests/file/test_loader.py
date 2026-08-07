@@ -265,12 +265,8 @@ tracer_provider:
         trace_id_ratio_based: {ratio: 0.5}
 """
 
-    def _load(
-        self, yaml_content: str | None = None
-    ) -> OpenTelemetryConfiguration:
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as fh:
+    def _load(self, yaml_content: str | None = None) -> OpenTelemetryConfiguration:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as fh:
             fh.write(self._YAML if yaml_content is None else yaml_content)
             path = fh.name
         try:
@@ -443,9 +439,7 @@ class TestEnvVarSubstitutionScope(unittest.TestCase):
         with patch.dict(os.environ, {"VAL": "legit\nmalicious_key: injected"}):
             result = self._substitute_yaml("service_name: ${VAL}")
         self.assertEqual(list(result), ["service_name"])
-        self.assertEqual(
-            result["service_name"], "legit\nmalicious_key: injected"
-        )
+        self.assertEqual(result["service_name"], "legit\nmalicious_key: injected")
 
 
 class TestJsonEnvVarSubstitution(unittest.TestCase):
@@ -453,9 +447,7 @@ class TestJsonEnvVarSubstitution(unittest.TestCase):
 
     def test_string_values_substituted_keys_untouched(self):
         with patch.dict(os.environ, {"V": "resolved"}):
-            result = _substitute_env_in_json_value(
-                {"${KEY}": "${V}", "nested": ["${V}", 1, True, None]}
-            )
+            result = _substitute_env_in_json_value({"${KEY}": "${V}", "nested": ["${V}", 1, True, None]})
         self.assertEqual(
             result,
             {"${KEY}": "resolved", "nested": ["resolved", 1, True, None]},
@@ -467,9 +459,7 @@ class TestEnvVarSubstitutionEndToEnd(unittest.TestCase):
 
     @staticmethod
     def _load_yaml(text: str) -> OpenTelemetryConfiguration:
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as fh:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as fh:
             fh.write(text)
             path = fh.name
         try:
@@ -480,11 +470,7 @@ class TestEnvVarSubstitutionEndToEnd(unittest.TestCase):
     def test_undefined_variable_in_comment_does_not_crash(self):
         # The reported bug: a ${VAR} inside a comment must be ignored, so an
         # undefined variable there no longer aborts loading.
-        text = (
-            "file_format: '1.0'\n"
-            "# documented default uses ${UNDEFINED_VAR} - not substituted\n"
-            "disabled: false\n"
-        )
+        text = "file_format: '1.0'\n# documented default uses ${UNDEFINED_VAR} - not substituted\ndisabled: false\n"
         with patch.dict(os.environ, {}, clear=True):
             config = self._load_yaml(text)
         self.assertEqual(config.file_format, "1.0")
@@ -493,22 +479,14 @@ class TestEnvVarSubstitutionEndToEnd(unittest.TestCase):
     def test_standalone_reference_coerces_type_for_schema(self):
         # An integer field populated from ${VAR} must be an int so it passes
         # JSON-schema validation.
-        text = (
-            "file_format: '1.0'\n"
-            "attribute_limits:\n"
-            "  attribute_count_limit: ${LIMIT}\n"
-        )
+        text = "file_format: '1.0'\nattribute_limits:\n  attribute_count_limit: ${LIMIT}\n"
         with patch.dict(os.environ, {"LIMIT": "100"}):
             config = self._load_yaml(text)
         self.assertEqual(config.attribute_limits.attribute_count_limit, 100)
 
     def test_quoted_reference_for_int_field_fails_schema(self):
         # Quoting forces a string, which is invalid for an integer field.
-        text = (
-            "file_format: '1.0'\n"
-            "attribute_limits:\n"
-            '  attribute_count_limit: "${LIMIT}"\n'
-        )
+        text = "file_format: '1.0'\nattribute_limits:\n  attribute_count_limit: \"${LIMIT}\"\n"
         with patch.dict(os.environ, {"LIMIT": "100"}):
             with self.assertRaises(ConfigurationError) as ctx:
                 self._load_yaml(text)
