@@ -100,7 +100,7 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
         level = _SEVERITY_TO_LOGGING_LEVEL.get(config.log_level, INFO)
         getLogger("opentelemetry").setLevel(level)
 
-    global_attribute_limits: AttributeLimits | None = config.attribute_limits
+    global_attribute_limits = config.attribute_limits
     resource = create_resource(config.resource)
     configure_tracer_provider(
         config.tracer_provider, resource, global_attribute_limits
