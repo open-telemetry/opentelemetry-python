@@ -482,9 +482,7 @@ class TestLogger(unittest.TestCase):
         log_record_processor_mock.on_emit.assert_called_once()
         log_data = log_record_processor_mock.on_emit.call_args.args[0]
         attributes = dict(log_data.log_record.attributes)
-        self.assertEqual(
-            attributes[exception_attributes.EXCEPTION_TYPE], "RuntimeError"
-        )
+        self.assertEqual(attributes[exception_attributes.EXCEPTION_TYPE], "RuntimeError")
 
     def test_enabled_with_no_processors_returns_false(self):
         provider = LoggerProvider()
@@ -501,9 +499,7 @@ class TestLogger(unittest.TestCase):
         processor.enabled.assert_called_once()
 
     def test_enabled_disabled_logger_returns_false(self):
-        provider = LoggerProvider(
-            _logger_configurator=_disable_logger_configurator
-        )
+        provider = LoggerProvider(_logger_configurator=_disable_logger_configurator)
         provider.add_log_record_processor(Mock())
         logger = provider.get_logger("test")
         self.assertFalse(logger.enabled())
@@ -515,9 +511,7 @@ class TestLogger(unittest.TestCase):
         provider.add_log_record_processor(processor_mock)
         logger = provider.get_logger("test")
 
-        logger.enabled(
-            severity_number=SeverityNumber.INFO, event_name="my.event"
-        )
+        logger.enabled(severity_number=SeverityNumber.INFO, event_name="my.event")
 
         processor_mock.enabled.assert_called_once_with(
             context=None,
