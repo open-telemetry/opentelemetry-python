@@ -3,6 +3,7 @@
 
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access
+# pylint: disable=too-many-lines
 
 import os
 import sys
@@ -23,6 +24,15 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     ConsoleMetricExporter as ConsoleMetricExporterConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalMeterConfig as MeterConfigConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalMeterConfigurator as MeterConfiguratorConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalMeterMatcherAndConfig as MeterMatcherAndConfig,
 )
 from opentelemetry.configuration.models import (
     ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
@@ -93,6 +103,7 @@ from opentelemetry.sdk.metrics.view import (
     View,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class TestCreateMeterProviderBasic(unittest.TestCase):
@@ -857,3 +868,78 @@ class TestCreateViews(unittest.TestCase):
     def test_stream_aggregation_default(self):
         view = self._get_view(self._make_view_config(stream_kwargs={"aggregation": AggregationConfig(default={})}))
         self.assertIsInstance(view._aggregation, DefaultAggregation)
+
+
+class TestMeterConfigurator(unittest.TestCase):
+    @staticmethod
+    def _enabled(provider, name):
+        return provider._apply_meter_configurator(
+            InstrumentationScope(name)
+        ).is_enabled
+
+    def test_no_configurator_leaves_meters_enabled(self):
+        provider = create_meter_provider(MeterProviderConfig(readers=[]))
+        self.assertTrue(self._enabled(provider, "any.scope"))
+
+    def test_matching_glob_disables_meter(self):
+        config = MeterProviderConfig(
+            readers=[],
+            meter_configurator_development=MeterConfiguratorConfig(
+                default_config=MeterConfigConfig(enabled=True),
+                meters=[
+                    MeterMatcherAndConfig(
+                        name="noisy.*",
+                        config=MeterConfigConfig(enabled=False),
+                    )
+                ],
+            ),
+        )
+        provider = create_meter_provider(config)
+        self.assertFalse(self._enabled(provider, "noisy.http"))
+        self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_default_config_applies_to_unmatched_scopes(self):
+        config = MeterProviderConfig(
+            readers=[],
+            meter_configurator_development=MeterConfiguratorConfig(
+                default_config=MeterConfigConfig(enabled=False),
+                meters=[
+                    MeterMatcherAndConfig(
+                        name="keep.*",
+                        config=MeterConfigConfig(enabled=True),
+                    )
+                ],
+            ),
+        )
+        provider = create_meter_provider(config)
+        self.assertTrue(self._enabled(provider, "keep.me"))
+        self.assertFalse(self._enabled(provider, "other"))
+
+    def test_first_matching_rule_wins(self):
+        config = MeterProviderConfig(
+            readers=[],
+            meter_configurator_development=MeterConfiguratorConfig(
+                meters=[
+                    MeterMatcherAndConfig(
+                        name="a.*",
+                        config=MeterConfigConfig(enabled=False),
+                    ),
+                    MeterMatcherAndConfig(
+                        name="a.b",
+                        config=MeterConfigConfig(enabled=True),
+                    ),
+                ],
+            ),
+        )
+        provider = create_meter_provider(config)
+        self.assertFalse(self._enabled(provider, "a.b"))
+
+    def test_absent_enabled_defaults_to_enabled(self):
+        config = MeterProviderConfig(
+            readers=[],
+            meter_configurator_development=MeterConfiguratorConfig(
+                default_config=MeterConfigConfig(),
+            ),
+        )
+        provider = create_meter_provider(config)
+        self.assertTrue(self._enabled(provider, "any.scope"))
