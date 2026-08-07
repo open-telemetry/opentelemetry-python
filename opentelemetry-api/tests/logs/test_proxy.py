@@ -79,9 +79,7 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         real_logger.enabled.return_value = True
         logger._real_logger = real_logger
 
-        result = logger.enabled(
-            severity_number=_logs.SeverityNumber.INFO, event_name="test"
-        )
+        result = logger.enabled(severity_number=_logs.SeverityNumber.INFO, event_name="test")
 
         self.assertTrue(result)
         real_logger.enabled.assert_called_once_with(
@@ -97,8 +95,4 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
     def test_noop_logger_enabled_returns_false(self):
         logger = _logs.NoOpLogger("noop-test")
         self.assertFalse(logger.enabled())
-        self.assertFalse(
-            logger.enabled(
-                severity_number=_logs.SeverityNumber.ERROR, event_name="e"
-            )
-        )
+        self.assertFalse(logger.enabled(severity_number=_logs.SeverityNumber.ERROR, event_name="e"))
