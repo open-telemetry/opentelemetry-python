@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix flaky `test_force_flush_late_by_timeout` test by waiting for processor shutdown before asserting span processor call counts
