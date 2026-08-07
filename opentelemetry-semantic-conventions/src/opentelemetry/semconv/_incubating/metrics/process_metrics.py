@@ -92,6 +92,23 @@ def create_process_disk_io(meter: Meter) -> Counter:
     )
 
 
+PROCESS_DISK_OPERATIONS: Final = "process.disk.operations"
+"""
+Number of disk operations performed by the process
+Instrument: counter
+Unit: {operation}
+"""
+
+
+def create_process_disk_operations(meter: Meter) -> Counter:
+    """Number of disk operations performed by the process"""
+    return meter.create_counter(
+        name=PROCESS_DISK_OPERATIONS,
+        description="Number of disk operations performed by the process.",
+        unit="{operation}",
+    )
+
+
 PROCESS_MEMORY_USAGE: Final = "process.memory.usage"
 """
 The amount of physical memory in use
@@ -106,6 +123,26 @@ def create_process_memory_usage(meter: Meter) -> UpDownCounter:
         name=PROCESS_MEMORY_USAGE,
         description="The amount of physical memory in use.",
         unit="By",
+    )
+
+
+PROCESS_MEMORY_UTILIZATION: Final = "process.memory.utilization"
+"""
+Percentage of total physical memory that is used by the process
+Instrument: gauge
+Unit: 1
+"""
+
+
+def create_process_memory_utilization(
+    meter: Meter, callbacks: Sequence[CallbackT] | None
+) -> ObservableGauge:
+    """Percentage of total physical memory that is used by the process"""
+    return meter.create_observable_gauge(
+        name=PROCESS_MEMORY_UTILIZATION,
+        callbacks=callbacks,
+        description="Percentage of total physical memory that is used by the process.",
+        unit="1",
     )
 
 
@@ -177,6 +214,23 @@ def create_process_paging_faults(meter: Meter) -> Counter:
     )
 
 
+PROCESS_SIGNALS_PENDING: Final = "process.signals_pending"
+"""
+Number of pending signals for the process
+Instrument: updowncounter
+Unit: {signal}
+"""
+
+
+def create_process_signals_pending(meter: Meter) -> UpDownCounter:
+    """Number of pending signals for the process"""
+    return meter.create_up_down_counter(
+        name=PROCESS_SIGNALS_PENDING,
+        description="Number of pending signals for the process.",
+        unit="{signal}",
+    )
+
+
 PROCESS_THREAD_COUNT: Final = "process.thread.count"
 """
 Process threads count
@@ -198,17 +252,17 @@ PROCESS_UNIX_FILE_DESCRIPTOR_COUNT: Final = (
     "process.unix.file_descriptor.count"
 )
 """
-Number of unix file descriptors in use by the process
+Number of UNIX file descriptors in use by the process
 Instrument: updowncounter
 Unit: {file_descriptor}
 """
 
 
 def create_process_unix_file_descriptor_count(meter: Meter) -> UpDownCounter:
-    """Number of unix file descriptors in use by the process"""
+    """Number of UNIX file descriptors in use by the process"""
     return meter.create_up_down_counter(
         name=PROCESS_UNIX_FILE_DESCRIPTOR_COUNT,
-        description="Number of unix file descriptors in use by the process.",
+        description="Number of UNIX file descriptors in use by the process.",
         unit="{file_descriptor}",
     )
 

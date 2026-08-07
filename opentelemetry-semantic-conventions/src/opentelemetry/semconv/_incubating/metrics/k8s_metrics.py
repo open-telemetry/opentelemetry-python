@@ -1231,17 +1231,17 @@ def create_k8s_node_condition_status(meter: Meter) -> UpDownCounter:
 
 K8S_NODE_CPU_ALLOCATABLE: Final = "k8s.node.cpu.allocatable"
 """
-Amount of cpu allocatable on the node
+Amount of CPU allocatable on the node
 Instrument: updowncounter
 Unit: {cpu}
 """
 
 
 def create_k8s_node_cpu_allocatable(meter: Meter) -> UpDownCounter:
-    """Amount of cpu allocatable on the node"""
+    """Amount of CPU allocatable on the node"""
     return meter.create_up_down_counter(
         name=K8S_NODE_CPU_ALLOCATABLE,
-        description="Amount of cpu allocatable on the node.",
+        description="Amount of CPU allocatable on the node.",
         unit="{cpu}",
     )
 
@@ -1266,21 +1266,21 @@ def create_k8s_node_cpu_time(meter: Meter) -> Counter:
 
 K8S_NODE_CPU_USAGE: Final = "k8s.node.cpu.usage"
 """
-Node's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs
+Node's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs
 Instrument: gauge
 Unit: {cpu}
-Note: CPU usage of the specific Node on all available CPU cores, averaged over the sample window.
+Note: CPU usage of the specific Node on all available CPU cores. It is calculated as the change in cumulative CPU time (k8s.node.cpu.time) over a measurement interval, divided by the elapsed time: usageCores = (cpuTimeEnd - cpuTimeStart) / elapsedSeconds.
 """
 
 
 def create_k8s_node_cpu_usage(
     meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
-    """Node's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
+    """Node's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
         name=K8S_NODE_CPU_USAGE,
         callbacks=callbacks,
-        description="Node's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs.",
+        description="Node's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs.",
         unit="{cpu}",
     )
 
@@ -1348,6 +1348,48 @@ def create_k8s_node_filesystem_capacity(meter: Meter) -> UpDownCounter:
     )
 
 
+K8S_NODE_FILESYSTEM_INODE_COUNT: Final = "k8s.node.filesystem.inode.count"
+"""
+The total inodes in the node's root filesystem
+Instrument: updowncounter
+Unit: {inode}
+Note: This metric is derived from the
+[FsStats.Inodes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_filesystem_inode_count(meter: Meter) -> UpDownCounter:
+    """The total inodes in the node's root filesystem"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_FILESYSTEM_INODE_COUNT,
+        description="The total inodes in the node's root filesystem.",
+        unit="{inode}",
+    )
+
+
+K8S_NODE_FILESYSTEM_INODE_FREE: Final = "k8s.node.filesystem.inode.free"
+"""
+The free inodes in the node's root filesystem
+Instrument: updowncounter
+Unit: {inode}
+Note: This metric is derived from the
+[FsStats.InodesFree](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_filesystem_inode_free(meter: Meter) -> UpDownCounter:
+    """The free inodes in the node's root filesystem"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_FILESYSTEM_INODE_FREE,
+        description="The free inodes in the node's root filesystem.",
+        unit="{inode}",
+    )
+
+
 K8S_NODE_FILESYSTEM_USAGE: Final = "k8s.node.filesystem.usage"
 """
 Node filesystem usage
@@ -1409,19 +1451,15 @@ def create_k8s_node_memory_available(meter: Meter) -> UpDownCounter:
 
 K8S_NODE_MEMORY_PAGING_FAULTS: Final = "k8s.node.memory.paging.faults"
 """
-Node memory paging faults
-Instrument: counter
-Unit: {fault}
-Note: Cumulative number of major/minor page faults.
-This metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) fields of the [NodeStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats) of the Kubelet's stats API.
+Deprecated: Replaced by `k8s.node.paging.faults`.
 """
 
 
 def create_k8s_node_memory_paging_faults(meter: Meter) -> Counter:
-    """Node memory paging faults"""
+    """Deprecated, use `k8s.node.paging.faults` instead"""
     return meter.create_counter(
         name=K8S_NODE_MEMORY_PAGING_FAULTS,
-        description="Node memory paging faults.",
+        description="Deprecated, use `k8s.node.paging.faults` instead.",
         unit="{fault}",
     )
 
@@ -1448,19 +1486,17 @@ def create_k8s_node_memory_rss(meter: Meter) -> UpDownCounter:
 K8S_NODE_MEMORY_USAGE: Final = "k8s.node.memory.usage"
 """
 Memory usage of the Node
-Instrument: gauge
+Instrument: updowncounter
 Unit: By
-Note: Total memory usage of the Node.
+Note: Total memory in use. This includes all memory regardless of when it was accessed.
+This metric is derived from the [MemoryStats.UsageBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [NodeStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats) of the Kubelet's stats API.
 """
 
 
-def create_k8s_node_memory_usage(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_node_memory_usage(meter: Meter) -> UpDownCounter:
     """Memory usage of the Node"""
-    return meter.create_observable_gauge(
+    return meter.create_up_down_counter(
         name=K8S_NODE_MEMORY_USAGE,
-        callbacks=callbacks,
         description="Memory usage of the Node.",
         unit="By",
     )
@@ -1519,6 +1555,25 @@ def create_k8s_node_network_io(meter: Meter) -> Counter:
     )
 
 
+K8S_NODE_PAGING_FAULTS: Final = "k8s.node.paging.faults"
+"""
+Node memory paging faults
+Instrument: counter
+Unit: {fault}
+Note: Cumulative number of major/minor page faults.
+This metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) fields of the [NodeStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats) of the Kubelet's stats API.
+"""
+
+
+def create_k8s_node_paging_faults(meter: Meter) -> Counter:
+    """Node memory paging faults"""
+    return meter.create_counter(
+        name=K8S_NODE_PAGING_FAULTS,
+        description="Node memory paging faults.",
+        unit="{fault}",
+    )
+
+
 K8S_NODE_POD_ALLOCATABLE: Final = "k8s.node.pod.allocatable"
 """
 Amount of pods allocatable on the node
@@ -1560,21 +1615,21 @@ K8S_NODE_SYSTEM_CONTAINER_CPU_USAGE: Final = (
     "k8s.node.system_container.cpu.usage"
 )
 """
-Node's system container CPU usage, measured in cpus
+Node's system container CPU usage, measured in CPUs
 Instrument: gauge
 Unit: {cpu}
-Note: This metric is derived from the [CPUStats.UsageNanoCores](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L233) field of the [ContainerStats](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L157C6-L157C20) of [Node.SystemContainers](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L40) of the Kubelet's stats API.
+Note: CPU usage of the specific System Container on all available CPU cores. It is calculated as the change in cumulative CPU time (k8s.node.system_container.cpu.time) over a measurement interval, divided by the elapsed time: usageCores = (cpuTimeEnd - cpuTimeStart) / elapsedSeconds.
 """
 
 
 def create_k8s_node_system_container_cpu_usage(
     meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
-    """Node's system container CPU usage, measured in cpus"""
+    """Node's system container CPU usage, measured in CPUs"""
     return meter.create_observable_gauge(
         name=K8S_NODE_SYSTEM_CONTAINER_CPU_USAGE,
         callbacks=callbacks,
-        description="Node's system container CPU usage, measured in cpus.",
+        description="Node's system container CPU usage, measured in CPUs.",
         unit="{cpu}",
     )
 
@@ -1777,21 +1832,21 @@ def create_k8s_pod_cpu_time(meter: Meter) -> Counter:
 
 K8S_POD_CPU_USAGE: Final = "k8s.pod.cpu.usage"
 """
-Pod's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs
+Pod's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs
 Instrument: gauge
 Unit: {cpu}
-Note: CPU usage of the specific Pod on all available CPU cores, averaged over the sample window.
+Note: CPU usage of the specific Pod on all available CPU cores. It is calculated as the change in cumulative CPU time (k8s.pod.cpu.time) over a measurement interval, divided by the elapsed time: usageCores = (cpuTimeEnd - cpuTimeStart) / elapsedSeconds.
 """
 
 
 def create_k8s_pod_cpu_usage(
     meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
-    """Pod's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
+    """Pod's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
         name=K8S_POD_CPU_USAGE,
         callbacks=callbacks,
-        description="Pod's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs.",
+        description="Pod's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs.",
         unit="{cpu}",
     )
 
@@ -1882,19 +1937,15 @@ def create_k8s_pod_memory_available(meter: Meter) -> UpDownCounter:
 
 K8S_POD_MEMORY_PAGING_FAULTS: Final = "k8s.pod.memory.paging.faults"
 """
-Pod memory paging faults
-Instrument: counter
-Unit: {fault}
-Note: Cumulative number of major/minor page faults.
-This metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+Deprecated: Replaced by `k8s.pod.paging.faults`.
 """
 
 
 def create_k8s_pod_memory_paging_faults(meter: Meter) -> Counter:
-    """Pod memory paging faults"""
+    """Deprecated, use `k8s.pod.paging.faults` instead"""
     return meter.create_counter(
         name=K8S_POD_MEMORY_PAGING_FAULTS,
-        description="Pod memory paging faults.",
+        description="Deprecated, use `k8s.pod.paging.faults` instead.",
         unit="{fault}",
     )
 
@@ -1921,19 +1972,17 @@ def create_k8s_pod_memory_rss(meter: Meter) -> UpDownCounter:
 K8S_POD_MEMORY_USAGE: Final = "k8s.pod.memory.usage"
 """
 Memory usage of the Pod
-Instrument: gauge
+Instrument: updowncounter
 Unit: By
-Note: Total memory usage of the Pod.
+Note: Total memory in use. This includes all memory regardless of when it was accessed.
+This metric is derived from the [MemoryStats.UsageBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
 """
 
 
-def create_k8s_pod_memory_usage(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_pod_memory_usage(meter: Meter) -> UpDownCounter:
     """Memory usage of the Pod"""
-    return meter.create_observable_gauge(
+    return meter.create_up_down_counter(
         name=K8S_POD_MEMORY_USAGE,
-        callbacks=callbacks,
         description="Memory usage of the Pod.",
         unit="By",
     )
@@ -1989,6 +2038,25 @@ def create_k8s_pod_network_io(meter: Meter) -> Counter:
         name=K8S_POD_NETWORK_IO,
         description="Network bytes for the Pod.",
         unit="By",
+    )
+
+
+K8S_POD_PAGING_FAULTS: Final = "k8s.pod.paging.faults"
+"""
+Pod memory paging faults
+Instrument: counter
+Unit: {fault}
+Note: Cumulative number of major/minor page faults.
+This metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+"""
+
+
+def create_k8s_pod_paging_faults(meter: Meter) -> Counter:
+    """Pod memory paging faults"""
+    return meter.create_counter(
+        name=K8S_POD_PAGING_FAULTS,
+        description="Pod memory paging faults.",
+        unit="{fault}",
     )
 
 

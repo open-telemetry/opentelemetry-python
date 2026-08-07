@@ -205,7 +205,12 @@ then `<key>` SHOULD be the 0-based index.
 up with the parameterized placeholders present in `db.query.text`.
 
 It is RECOMMENDED to capture the value as provided by the application
-without attempting to do any case normalization.
+without attempting to do any case normalization or sanitization.
+
+Instrumentations SHOULD NOT capture `db.query.parameter.<key>` by default
+since values may contain PII or sensitive details.
+Application operators are expected to enable specific keys depending
+on their privacy and security considerations.
 
 `db.query.parameter.<key>` SHOULD NOT be captured on batch operations.
 
@@ -230,7 +235,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_att
 
 DB_REDIS_DATABASE_INDEX: Final = "db.redis.database_index"
 """
-Deprecated: Uncategorized.
+Deprecated: Replaced by `db.namespace` (string).
 """
 
 DB_RESPONSE_RETURNED_ROWS: Final = "db.response.returned_rows"

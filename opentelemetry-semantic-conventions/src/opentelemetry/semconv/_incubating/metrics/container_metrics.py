@@ -23,7 +23,7 @@ CallbackT = (
 
 CONTAINER_CPU_TIME: Final = "container.cpu.time"
 """
-CPU time consumed
+Total CPU time consumed
 Instrument: counter
 Unit: s
 Note: CPU time consumed by the specific container on all available CPU cores.
@@ -31,31 +31,31 @@ Note: CPU time consumed by the specific container on all available CPU cores.
 
 
 def create_container_cpu_time(meter: Meter) -> Counter:
-    """CPU time consumed"""
+    """Total CPU time consumed"""
     return meter.create_counter(
         name=CONTAINER_CPU_TIME,
-        description="CPU time consumed.",
+        description="Total CPU time consumed.",
         unit="s",
     )
 
 
 CONTAINER_CPU_USAGE: Final = "container.cpu.usage"
 """
-Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs
+Container's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs
 Instrument: gauge
 Unit: {cpu}
-Note: CPU usage of the specific container on all available CPU cores, averaged over the sample window.
+Note: CPU usage of the specific container on all available CPU cores. It is calculated as the change in cumulative CPU time (container.cpu.time) over a measurement interval, divided by the elapsed time: usageCores = (cpuTimeEnd - cpuTimeStart) / elapsedSeconds.
 """
 
 
 def create_container_cpu_usage(
     meter: Meter, callbacks: Sequence[CallbackT] | None
 ) -> ObservableGauge:
-    """Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
+    """Container's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
         name=CONTAINER_CPU_USAGE,
         callbacks=callbacks,
-        description="Container's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs.",
+        description="Container's CPU usage, measured in CPUs. Range from 0 to the number of allocatable CPUs.",
         unit="{cpu}",
     )
 
@@ -150,7 +150,7 @@ Instrument: updowncounter
 Unit: By
 Note: Available memory for use.  This is defined as the memory limit - workingSetBytes. If memory limit is undefined, the available bytes is omitted.
 In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and by subtracting the `container_memory_working_set_bytes` metric from the `container_spec_memory_limit_bytes` metric.
-In K8s, this metric is derived from the [MemoryStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+In K8s, this metric is derived from the [MemoryStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [ContainerStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
 """
 
 
@@ -165,19 +165,15 @@ def create_container_memory_available(meter: Meter) -> UpDownCounter:
 
 CONTAINER_MEMORY_PAGING_FAULTS: Final = "container.memory.paging.faults"
 """
-Container memory paging faults
-Instrument: counter
-Unit: {fault}
-Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_failures_total{failure_type=pgfault, scope=container}` and `container_memory_failures_total{failure_type=pgmajfault, scope=container}`metric.
-In K8s, this metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+Deprecated: Replaced by `container.paging.faults`.
 """
 
 
 def create_container_memory_paging_faults(meter: Meter) -> Counter:
-    """Container memory paging faults"""
+    """Deprecated, use `container.paging.faults` instead"""
     return meter.create_counter(
         name=CONTAINER_MEMORY_PAGING_FAULTS,
-        description="Container memory paging faults.",
+        description="Deprecated, use `container.paging.faults` instead.",
         unit="{fault}",
     )
 
@@ -188,7 +184,7 @@ Container memory RSS
 Instrument: updowncounter
 Unit: By
 Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_rss` metric.
-In K8s, this metric is derived from the [MemoryStats.RSSBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+In K8s, this metric is derived from the [MemoryStats.RSSBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [ContainerStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
 """
 
 
@@ -204,15 +200,17 @@ def create_container_memory_rss(meter: Meter) -> UpDownCounter:
 CONTAINER_MEMORY_USAGE: Final = "container.memory.usage"
 """
 Memory usage of the container
-Instrument: counter
+Instrument: updowncounter
 Unit: By
-Note: Memory usage of the container.
+Note: Current memory usage, including all memory regardless of when it was accessed.
+In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_usage_bytes` metric.
+In K8s, this metric is derived from the [MemoryStats.UsageBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [ContainerStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
 """
 
 
-def create_container_memory_usage(meter: Meter) -> Counter:
+def create_container_memory_usage(meter: Meter) -> UpDownCounter:
     """Memory usage of the container"""
-    return meter.create_counter(
+    return meter.create_up_down_counter(
         name=CONTAINER_MEMORY_USAGE,
         description="Memory usage of the container.",
         unit="By",
@@ -225,7 +223,7 @@ Container memory working set
 Instrument: updowncounter
 Unit: By
 Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_working_set_bytes` metric.
-In K8s, this metric is derived from the [MemoryStats.WorkingSetBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+In K8s, this metric is derived from the [MemoryStats.WorkingSetBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [ContainerStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
 """
 
 
@@ -253,6 +251,25 @@ def create_container_network_io(meter: Meter) -> Counter:
         name=CONTAINER_NETWORK_IO,
         description="Network bytes for the container.",
         unit="By",
+    )
+
+
+CONTAINER_PAGING_FAULTS: Final = "container.paging.faults"
+"""
+Container memory paging faults
+Instrument: counter
+Unit: {fault}
+Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_failures_total{failure_type=pgfault, scope=container}` and `container_memory_failures_total{failure_type=pgmajfault, scope=container}`metric.
+In K8s, this metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [ContainerStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
+"""
+
+
+def create_container_paging_faults(meter: Meter) -> Counter:
+    """Container memory paging faults"""
+    return meter.create_counter(
+        name=CONTAINER_PAGING_FAULTS,
+        description="Container memory paging faults.",
+        unit="{fault}",
     )
 
 

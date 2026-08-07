@@ -105,8 +105,8 @@ OTEL_SDK_EXPORTER_OPERATION_DURATION: Final = (
 The duration of exporting a batch of telemetry records
 Instrument: histogram
 Unit: s
-Note: This metric defines successful operations using the full success definitions for [http](https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success-1)
-and [grpc](https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success). Anything else is defined as an unsuccessful operation. For successful
+Note: This metric defines successful operations using the full success definitions for [HTTP](https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success-1)
+and [gRPC](https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/docs/specification.md#full-success). Anything else is defined as an unsuccessful operation. For successful
 operations, `error.type` MUST NOT be set. For unsuccessful export operations, `error.type` MUST contain a relevant failure cause.
 If the exporter retries failed export attempts, exactly one observation MUST be recorded per export operation,
 covering the wall-clock duration from the start of the first attempt through the conclusion of the final attempt (including any backoff between attempts).
@@ -250,9 +250,14 @@ Instrument: counter
 Unit: {log_record}
 Note: For successful processing, `error.type` MUST NOT be set. For failed processing, `error.type` MUST contain the failure cause.
 SDK Batching Log Record Processors MUST use `queue_full` as the value of `error.type` for log records dropped due to a full queue.
-SDK Log Record Processors MUST use `already_shutdown` as the value of `error.type` for log records dropped because the processor has already been shut down.
-For the SDK Simple and Batching Log Record Processor a log record is considered to be processed already when it has been submitted to the exporter,
-not when the corresponding export call has finished.
+If a processor reports a log record dropped because it has already been shut down, `error.type` MUST be `already_shutdown`.
+Whether and when a processor drops such log records is governed by the SDK specification, not by this metric.
+For the SDK Simple and Batching Log Record Processors, a log record MUST be counted as successfully processed at the point the
+processor invokes the export operation. For batching processors, all log records in the batch passed to the exporter are counted
+at that point; log records accepted into the processor's queue but not yet passed to the exporter have not been processed.
+Implementations MUST NOT delay this count until the export operation concludes, and the outcome of the export operation,
+including an immediate failure of the invocation itself, MUST NOT affect this metric.
+Export outcomes are reported by `otel.sdk.exporter.log.exported`.
 """
 
 
@@ -312,8 +317,14 @@ Instrument: counter
 Unit: {span}
 Note: For successful processing, `error.type` MUST NOT be set. For failed processing, `error.type` MUST contain the failure cause.
 SDK Batching Span Processors MUST use `queue_full` as the value of `error.type` for spans dropped due to a full queue.
-SDK Span Processors MUST use `already_shutdown` as the value of `error.type` for spans dropped because the processor has already been shut down.
-For the SDK Simple and Batching Span Processor a span is considered to be processed already when it has been submitted to the exporter, not when the corresponding export call has finished.
+If a processor reports a span dropped because it has already been shut down, `error.type` MUST be `already_shutdown`.
+Whether and when a processor drops such spans is governed by the SDK specification, not by this metric.
+For the SDK Simple and Batching Span Processors, a span MUST be counted as successfully processed at the point the processor
+invokes the export operation. For batching processors, all spans in the batch passed to the exporter are counted at that point;
+spans accepted into the processor's queue but not yet passed to the exporter have not been processed.
+Implementations MUST NOT delay this count until the export operation concludes, and the outcome of the export operation,
+including an immediate failure of the invocation itself, MUST NOT affect this metric.
+Export outcomes are reported by `otel.sdk.exporter.span.exported`.
 """
 
 

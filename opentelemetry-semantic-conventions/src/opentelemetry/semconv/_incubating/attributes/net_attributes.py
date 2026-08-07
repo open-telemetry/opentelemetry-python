@@ -91,7 +91,7 @@ class NetSockFamilyValues(Enum):
     INET6 = "inet6"
     """IPv6 address."""
     UNIX = "unix"
-    """Unix domain socket path."""
+    """UNIX domain socket path."""
 
 
 @deprecated(
