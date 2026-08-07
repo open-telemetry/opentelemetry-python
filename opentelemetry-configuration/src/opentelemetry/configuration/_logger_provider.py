@@ -341,9 +341,16 @@ def create_logger_provider(
     )
 
     if config is not None and config.limits is not None:
-        log_record_limits = _create_log_record_limits(config.limits, global_attribute_limits)
+
+        limits = config.limits
+
     else:
-        log_record_limits = _create_log_record_limits(LogRecordLimitsConfig(), global_attribute_limits)
+
+        limits = LogRecordLimitsConfig()
+
+    log_record_limits = _create_log_record_limits(
+        limits, global_attribute_limits
+    )
 
     provider = LoggerProvider(
         resource=resource,
