@@ -174,18 +174,14 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         self.assertTrue(processed_data_point0.attributes["otel.component.name"].startswith("simple_span_processor/"))
         self.assertIsNone(processed_data_point0.attributes.get("error.type"))
 
-    @mock.patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @mock.patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics_already_shutdown(self):
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
 
         exporter = mock.MagicMock()
         exporter.export.return_value = export.SpanExportResult.SUCCESS
-        span_processor = export.SimpleSpanProcessor(
-            exporter, meter_provider=meter_provider
-        )
+        span_processor = export.SimpleSpanProcessor(exporter, meter_provider=meter_provider)
         provider = trace.TracerProvider()
         tracer = provider.get_tracer(__name__)
         provider.add_span_processor(span_processor)
@@ -202,11 +198,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
 
         metrics_data = metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
-        processed = next(
-            m
-            for m in scope_metrics.metrics
-            if m.name == "otel.sdk.processor.span.processed"
-        )
+        processed = next(m for m in scope_metrics.metrics if m.name == "otel.sdk.processor.span.processed")
         data_points = sorted(
             processed.data.data_points,
             key=lambda dp: dp.attributes.get("error.type", ""),
@@ -215,9 +207,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         self.assertEqual(data_points[0].value, 1)
         self.assertIsNone(data_points[0].attributes.get("error.type"))
         self.assertEqual(data_points[1].value, 1)
-        self.assertEqual(
-            data_points[1].attributes.get("error.type"), "already_shutdown"
-        )
+        self.assertEqual(data_points[1].attributes.get("error.type"), "already_shutdown")
         # Only the pre-shutdown span is submitted to the exporter; the
         # post-shutdown span is dropped, not exported.
         self.assertEqual(exporter.export.call_count, 1)
