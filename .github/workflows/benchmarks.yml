@@ -13,7 +13,7 @@ jobs:
       contents: write # required for pushing to gh-pages
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
     container:
-      image: python:3.13-slim
+      image: python:3.14-slim@sha256:a7fb1e634c4a578f9e0bd6327f11a3cde11b7a9395f48e24360c0988bcc5c2bc
     steps:
     - name: Install Git # since Git isn't available in the container image used above
       run: |
@@ -28,7 +28,7 @@ jobs:
     - name: Run tox
       run: uvx --with tox-uv tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
     - name: Report on SDK benchmark results
-      uses: benchmark-action/github-action-benchmark@v1
+      uses: benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba # v1.22.1
       with:
         name: OpenTelemetry Python SDK Benchmarks
         tool: pytest
