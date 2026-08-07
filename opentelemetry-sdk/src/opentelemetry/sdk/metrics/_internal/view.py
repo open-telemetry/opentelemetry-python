@@ -81,6 +81,11 @@ class View:
             aggregation instance to use when data is aggregated for the
             corresponding metrics stream. If `None` an instance of
             `DefaultAggregation` will be used.
+            When a view matches an instrument, a non-`DefaultAggregation`
+            aggregation configured on the view takes precedence over the
+            `MetricReader` preferred aggregation for that instrument class. If
+            the view leaves aggregation as `DefaultAggregation`, the
+            `MetricReader` preferred aggregation is used.
 
         exemplar_reservoir_factory: This is a metric stream customizing attribute:
             the exemplar reservoir factory
