@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: remove duplicate session header update in the span, metric and log exporters

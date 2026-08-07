@@ -154,7 +154,6 @@ class OTLPLogExporter(LogRecordExporter):
             or _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER)
             or requests.Session()
         )
-        self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
         # let users override our defaults
         self._session.headers.update(self._headers)
