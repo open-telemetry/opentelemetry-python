@@ -69,9 +69,7 @@ _YAML_STR_TAG = "tag:yaml.org,2002:str"
 # multiple references resolve to a string per the configuration spec. A
 # leading ``$$`` escape does not match, so ``$${VAR}`` is treated as an
 # embedded (string) value.
-_STANDALONE_ENV_REF = re.compile(
-    r"\A\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}\Z"
-)
+_STANDALONE_ENV_REF = re.compile(r"\A\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}\Z")
 
 
 def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
@@ -125,9 +123,7 @@ def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
                 # str) YAML would assign to ``node.value``; the ``(True, False)``
                 # implicit-flag pair marks it as a plain scalar so that
                 # type-guessing applies, exactly as during normal parsing.
-                node.tag = loader.resolve(
-                    yaml.ScalarNode, node.value, (True, False)
-                )
+                node.tag = loader.resolve(yaml.ScalarNode, node.value, (True, False))
     elif isinstance(node, yaml.SequenceNode):
         # A sequence (list): each item is itself a value node -- recurse.
         for item in node.value:
@@ -150,16 +146,11 @@ def _substitute_env_in_json_value(value: Any) -> Any:
     if isinstance(value, list):
         return [_substitute_env_in_json_value(item) for item in value]
     if isinstance(value, dict):
-        return {
-            key: _substitute_env_in_json_value(val)
-            for key, val in value.items()
-        }
+        return {key: _substitute_env_in_json_value(val) for key, val in value.items()}
     return value
 
 
-def _parse_config_content(
-    content: str, suffix: str, file_path: str | os.PathLike[str]
-) -> Any:
+def _parse_config_content(content: str, suffix: str, file_path: str | os.PathLike[str]) -> Any:
     """Parse configuration text and substitute environment variables.
 
     Parsing happens first, so ``${VAR}`` references in comments and mapping
@@ -236,9 +227,7 @@ def load_config_file(
     suffix = path.suffix.lower()
     if suffix not in (".yaml", ".yml", ".json"):
         _logger.error("Unsupported file format: %s", suffix)
-        raise ConfigurationError(
-            f"Unsupported file format: {suffix}. Use .yaml, .yml, or .json"
-        )
+        raise ConfigurationError(f"Unsupported file format: {suffix}. Use .yaml, .yml, or .json")
 
     data = _parse_config_content(content, suffix, file_path)
 
