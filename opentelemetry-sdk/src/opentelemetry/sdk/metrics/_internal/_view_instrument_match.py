@@ -36,9 +36,7 @@ class _ViewInstrumentMatch:
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
-        self._description = (
-            self._view._description or self._instrument.description
-        )
+        self._description = self._view._description or self._instrument.description
         if not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation = self._view._aggregation._create_aggregation(
                 self._instrument,
@@ -47,9 +45,7 @@ class _ViewInstrumentMatch:
                 0,
             )
         else:
-            self._aggregation = self._instrument_class_aggregation[
-                self._instrument.__class__
-            ]._create_aggregation(
+            self._aggregation = self._instrument_class_aggregation[self._instrument.__class__]._create_aggregation(
                 self._instrument,
                 None,
                 self._view._exemplar_reservoir_factory,
@@ -75,8 +71,7 @@ class _ViewInstrumentMatch:
             other._aggregation = cast(_SumAggregation, other._aggregation)
 
             result = (
-                self._aggregation._instrument_is_monotonic
-                == other._aggregation._instrument_is_monotonic
+                self._aggregation._instrument_is_monotonic == other._aggregation._instrument_is_monotonic
                 and self._aggregation._instrument_aggregation_temporality
                 == other._aggregation._instrument_aggregation_temporality
             )
@@ -84,9 +79,7 @@ class _ViewInstrumentMatch:
         return result
 
     # pylint: disable=protected-access
-    def consume_measurement(
-        self, measurement: Measurement, should_sample_exemplar: bool = True
-    ) -> None:
+    def consume_measurement(self, measurement: Measurement, should_sample_exemplar: bool = True) -> None:
         if self._view._attribute_keys is not None:
             attributes = {}
 
@@ -103,16 +96,12 @@ class _ViewInstrumentMatch:
         if aggr_key not in self._attributes_aggregation:
             with self._lock:
                 if aggr_key not in self._attributes_aggregation:
-                    if not isinstance(
-                        self._view._aggregation, DefaultAggregation
-                    ):
-                        aggregation = (
-                            self._view._aggregation._create_aggregation(
-                                self._instrument,
-                                attributes,
-                                self._view._exemplar_reservoir_factory,
-                                time_ns(),
-                            )
+                    if not isinstance(self._view._aggregation, DefaultAggregation):
+                        aggregation = self._view._aggregation._create_aggregation(
+                            self._instrument,
+                            attributes,
+                            self._view._exemplar_reservoir_factory,
+                            time_ns(),
                         )
                     else:
                         aggregation = self._instrument_class_aggregation[
@@ -125,9 +114,7 @@ class _ViewInstrumentMatch:
                         )
                     self._attributes_aggregation[aggr_key] = aggregation
 
-        self._attributes_aggregation[aggr_key].aggregate(
-            measurement, should_sample_exemplar
-        )
+        self._attributes_aggregation[aggr_key].aggregate(measurement, should_sample_exemplar)
 
     def collect(
         self,
@@ -137,9 +124,7 @@ class _ViewInstrumentMatch:
         data_points: list[DataPointT] = []
         with self._lock:
             for aggregation in self._attributes_aggregation.values():
-                data_point = aggregation.collect(
-                    collection_aggregation_temporality, collection_start_nanos
-                )
+                data_point = aggregation.collect(collection_aggregation_temporality, collection_start_nanos)
                 if data_point is not None:
                     data_points.append(data_point)
 

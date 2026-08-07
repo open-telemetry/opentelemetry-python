@@ -91,14 +91,9 @@ class OTLPLogExporter(LogRecordExporter):
         )
         self._client = _OTLPHTTPClient(
             transport=transport,
-            endpoint=endpoint
-            or _resolve_endpoint(
-                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, _DEFAULT_LOGS_EXPORT_PATH
-            ),
+            endpoint=endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, _DEFAULT_LOGS_EXPORT_PATH),
             kind="logs",
-            timeout=timeout
-            if timeout is not None
-            else _resolve_timeout(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT),
+            timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT),
             compression=compression
             if compression is not None
             else _resolve_compression(OTEL_EXPORTER_OTLP_LOGS_COMPRESSION),
@@ -107,9 +102,7 @@ class OTLPLogExporter(LogRecordExporter):
         )
         self._shutdown = False
 
-    def export(
-        self, batch: Sequence[ReadableLogRecord]
-    ) -> LogRecordExportResult:
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogRecordExportResult.FAILURE
@@ -120,11 +113,7 @@ class OTLPLogExporter(LogRecordExporter):
             _logger.error("Failed to encode logs: %s", error)
             return LogRecordExportResult.FAILURE
         export_result = self._client.export(body)
-        return (
-            LogRecordExportResult.SUCCESS
-            if export_result.success
-            else LogRecordExportResult.FAILURE
-        )
+        return LogRecordExportResult.SUCCESS if export_result.success else LogRecordExportResult.FAILURE
 
     def shutdown(self) -> None:
         if self._shutdown:
