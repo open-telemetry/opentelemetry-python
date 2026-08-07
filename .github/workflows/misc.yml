@@ -42,11 +42,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e test-scripts
+        run: uvx --with tox-uv tox -e test-scripts
 
   spellcheck:
     name: spellcheck
@@ -61,11 +61,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e spellcheck
+        run: uvx --with tox-uv tox -e spellcheck
 
   tracecontext:
     name: tracecontext
@@ -87,11 +87,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e tracecontext
+        run: uvx --with tox-uv tox -e tracecontext
 
   typecheck:
     name: typecheck
@@ -106,11 +106,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e typecheck
+        run: uvx --with tox-uv tox -e typecheck
 
   docs:
     name: docs
@@ -129,11 +129,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e docs
+        run: uvx --with tox-uv tox -e docs
 
   docker-tests-otlpexporter:
     name: docker-tests-otlpexporter
@@ -148,11 +148,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e docker-tests-otlpexporter
+        run: uvx --with tox-uv tox -e docker-tests-otlpexporter
 
   docker-tests-opencensus:
     name: docker-tests-opencensus
@@ -167,11 +167,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e docker-tests-opencensus
+        run: uvx --with tox-uv tox -e docker-tests-opencensus
 
   public-symbols-check:
     name: public-symbols-check
@@ -200,11 +200,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e public-symbols-check
+        run: uvx --with tox-uv tox -e public-symbols-check
 
   shellcheck:
     name: shellcheck
@@ -219,11 +219,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e shellcheck
+        run: uvx --with tox-uv tox -e shellcheck
 
   generate-workflows:
     name: generate-workflows
@@ -241,11 +241,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e generate-workflows
+        run: uvx --with tox-uv tox -e generate-workflows
 
       - name: Check github workflows are up to date
         run: git diff --exit-code || (echo 'Generated workflows are out of date, run "tox -e generate-workflows" and commit the changes in this PR.' && exit 1)
@@ -263,8 +263,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e precommit
+        run: uvx --with tox-uv tox -e precommit

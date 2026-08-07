@@ -37,11 +37,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-api
+        run: uvx --with tox-uv tox -e lint-opentelemetry-api
 
   lint-opentelemetry-proto-gen-latest:
     name: opentelemetry-proto-gen-latest
@@ -56,11 +56,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-proto-gen-latest
+        run: uvx --with tox-uv tox -e lint-opentelemetry-proto-gen-latest
 
   lint-opentelemetry-protojson-gen-latest:
     name: opentelemetry-protojson-gen-latest
@@ -75,11 +75,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-protojson-gen-latest
+        run: uvx --with tox-uv tox -e lint-opentelemetry-protojson-gen-latest
 
   lint-opentelemetry-codegen-json:
     name: opentelemetry-codegen-json
@@ -94,11 +94,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-codegen-json
+        run: uvx --with tox-uv tox -e lint-opentelemetry-codegen-json
 
   lint-opentelemetry-sdk:
     name: opentelemetry-sdk
@@ -113,11 +113,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-sdk
+        run: uvx --with tox-uv tox -e lint-opentelemetry-sdk
 
   lint-opentelemetry-configuration:
     name: opentelemetry-configuration
@@ -132,11 +132,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-configuration
+        run: uvx --with tox-uv tox -e lint-opentelemetry-configuration
 
   lint-opentelemetry-semantic-conventions:
     name: opentelemetry-semantic-conventions
@@ -151,11 +151,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-semantic-conventions
+        run: uvx --with tox-uv tox -e lint-opentelemetry-semantic-conventions
 
   lint-opentelemetry-getting-started:
     name: opentelemetry-getting-started
@@ -170,11 +170,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-getting-started
+        run: uvx --with tox-uv tox -e lint-opentelemetry-getting-started
 
   lint-opentelemetry-opentracing-shim:
     name: opentelemetry-opentracing-shim
@@ -189,11 +189,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-opentracing-shim
+        run: uvx --with tox-uv tox -e lint-opentelemetry-opentracing-shim
 
   lint-opentelemetry-opencensus-shim:
     name: opentelemetry-opencensus-shim
@@ -208,11 +208,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-opencensus-shim
+        run: uvx --with tox-uv tox -e lint-opentelemetry-opencensus-shim
 
   lint-opentelemetry-exporter-http-transport:
     name: opentelemetry-exporter-http-transport
@@ -227,11 +227,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-http-transport
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-http-transport
 
   lint-opentelemetry-exporter-otlpcommon-latest:
     name: opentelemetry-exporter-otlpcommon-latest
@@ -246,11 +246,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-otlpcommon-latest
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-otlpcommon-latest
 
   lint-opentelemetry-exporter-opencensus:
     name: opentelemetry-exporter-opencensus
@@ -265,11 +265,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-opencensus
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-opencensus
 
   lint-opentelemetry-exporter-otlp-proto-common:
     name: opentelemetry-exporter-otlp-proto-common
@@ -284,11 +284,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-otlp-proto-common
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-otlp-proto-common
 
   lint-opentelemetry-exporter-otlp-json-common:
     name: opentelemetry-exporter-otlp-json-common
@@ -303,11 +303,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-otlp-json-common
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-otlp-json-common
 
   lint-opentelemetry-exporter-otlp-combined:
     name: opentelemetry-exporter-otlp-combined
@@ -322,11 +322,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-otlp-combined
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-otlp-combined
 
   lint-opentelemetry-exporter-otlp-json-file:
     name: opentelemetry-exporter-otlp-json-file
@@ -341,11 +341,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-otlp-json-file
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-otlp-json-file
 
   lint-opentelemetry-exporter-otlp-json-http:
     name: opentelemetry-exporter-otlp-json-http
@@ -360,11 +360,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-otlp-json-http
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-otlp-json-http
 
   lint-opentelemetry-exporter-otlp-proto-grpc-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest
@@ -379,11 +379,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-otlp-proto-grpc-latest
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-otlp-proto-grpc-latest
 
   lint-opentelemetry-exporter-otlp-proto-http:
     name: opentelemetry-exporter-otlp-proto-http
@@ -398,11 +398,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-otlp-proto-http
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-otlp-proto-http
 
   lint-opentelemetry-exporter-prometheus:
     name: opentelemetry-exporter-prometheus
@@ -417,11 +417,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-prometheus
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-prometheus
 
   lint-opentelemetry-exporter-zipkin-combined:
     name: opentelemetry-exporter-zipkin-combined
@@ -436,11 +436,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-zipkin-combined
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-zipkin-combined
 
   lint-opentelemetry-exporter-zipkin-proto-http:
     name: opentelemetry-exporter-zipkin-proto-http
@@ -455,11 +455,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-zipkin-proto-http
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-zipkin-proto-http
 
   lint-opentelemetry-exporter-zipkin-json:
     name: opentelemetry-exporter-zipkin-json
@@ -474,11 +474,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-exporter-zipkin-json
+        run: uvx --with tox-uv tox -e lint-opentelemetry-exporter-zipkin-json
 
   lint-opentelemetry-propagator-b3:
     name: opentelemetry-propagator-b3
@@ -493,11 +493,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-propagator-b3
+        run: uvx --with tox-uv tox -e lint-opentelemetry-propagator-b3
 
   lint-opentelemetry-propagator-jaeger:
     name: opentelemetry-propagator-jaeger
@@ -512,11 +512,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-propagator-jaeger
+        run: uvx --with tox-uv tox -e lint-opentelemetry-propagator-jaeger
 
   lint-opentelemetry-test-utils:
     name: opentelemetry-test-utils
@@ -531,11 +531,11 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-opentelemetry-test-utils
+        run: uvx --with tox-uv tox -e lint-opentelemetry-test-utils
 
   lint-license-header-check:
     name: license-header-check
@@ -550,8 +550,8 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install tox
-        run: pip install tox-uv
+      - name: Set up uv
+        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
 
       - name: Run tests
-        run: tox -e lint-license-header-check
+        run: uvx --with tox-uv tox -e lint-license-header-check
