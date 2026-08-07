@@ -383,9 +383,7 @@ class WeaverLiveCheck:
             )
         assert self._process is not None
         try:
-            post(
-                f"http://localhost:{self._admin_port}/stop", timeout=5
-            )
+            post(f"http://localhost:{self._admin_port}/stop", timeout=5)
         except Exception:  # pylint: disable=broad-except
             # Weaver may have already exited (e.g. inactivity timeout fired
             # before we could call /stop).  This is not an error — we will
