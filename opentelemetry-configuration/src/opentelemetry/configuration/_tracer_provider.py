@@ -440,13 +440,16 @@ def create_tracer_provider(
         _create_id_generator(config.id_generator) if config is not None and config.id_generator is not None else None
     )
     if config is not None and config.limits is not None:
-        span_limits = _create_span_limits(
-            config.limits, global_attribute_limits
-        )
+
+        limits = config.limits
+
     else:
-        span_limits = _create_span_limits(
-            SpanLimitsConfig(), global_attribute_limits
-        )
+
+        limits = SpanLimitsConfig()
+
+    span_limits = _create_span_limits(
+        limits, global_attribute_limits
+    )
 
     provider = TracerProvider(
         resource=resource,
