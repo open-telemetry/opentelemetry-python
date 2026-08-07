@@ -37,9 +37,7 @@ def _as_entry_points(eps: Any) -> EntryPoints:
     if isinstance(eps, dict):
         return EntryPoints(itertools.chain.from_iterable(dict.values(eps)))
     # This case should be unreachable, but is included as a fallback.
-    return EntryPoints(
-        ep for group in eps.groups for ep in eps.select(group=group)
-    )
+    return EntryPoints(ep for group in eps.groups for ep in eps.select(group=group))
 
 
 @cache
