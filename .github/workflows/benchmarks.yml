@@ -24,7 +24,7 @@ jobs:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Set up uv
-      uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
     - name: Run tox
       run: uvx --with tox-uv tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
     - name: Report on SDK benchmark results

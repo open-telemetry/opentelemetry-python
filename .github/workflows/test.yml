@@ -44,7 +44,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-api -- -ra
@@ -63,7 +63,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-api -- -ra
@@ -82,7 +82,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-api -- -ra
@@ -101,7 +101,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-api -- -ra
@@ -120,7 +120,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-api -- -ra
@@ -139,7 +139,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-api -- -ra
@@ -158,7 +158,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-api -- -ra
@@ -177,7 +177,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-proto-gen-oldest -- -ra
@@ -196,7 +196,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-proto-gen-latest -- -ra
@@ -215,7 +215,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-proto-gen-oldest -- -ra
@@ -234,7 +234,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-proto-gen-latest -- -ra
@@ -253,7 +253,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-proto-gen-oldest -- -ra
@@ -272,7 +272,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-proto-gen-latest -- -ra
@@ -291,7 +291,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-proto-gen-oldest -- -ra
@@ -310,7 +310,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-proto-gen-latest -- -ra
@@ -329,7 +329,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-proto-gen-oldest -- -ra
@@ -348,7 +348,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-proto-gen-latest -- -ra
@@ -367,7 +367,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-proto-gen-oldest -- -ra
@@ -386,7 +386,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-proto-gen-latest -- -ra
@@ -405,7 +405,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-proto-gen-oldest -- -ra
@@ -424,7 +424,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-proto-gen-latest -- -ra
@@ -443,7 +443,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -462,7 +462,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-protojson-gen-latest -- -ra
@@ -481,7 +481,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -500,7 +500,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-protojson-gen-latest -- -ra
@@ -519,7 +519,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -538,7 +538,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-protojson-gen-latest -- -ra
@@ -557,7 +557,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -576,7 +576,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-protojson-gen-latest -- -ra
@@ -595,7 +595,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -614,7 +614,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-protojson-gen-latest -- -ra
@@ -633,7 +633,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -652,7 +652,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-protojson-gen-latest -- -ra
@@ -671,7 +671,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -690,7 +690,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-protojson-gen-latest -- -ra
@@ -709,7 +709,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-codegen-json -- -ra
@@ -728,7 +728,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-codegen-json -- -ra
@@ -747,7 +747,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-codegen-json -- -ra
@@ -766,7 +766,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-codegen-json -- -ra
@@ -785,7 +785,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-codegen-json -- -ra
@@ -804,7 +804,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-sdk -- -ra
@@ -823,7 +823,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-sdk -- -ra
@@ -842,7 +842,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-sdk -- -ra
@@ -861,7 +861,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-sdk -- -ra
@@ -880,7 +880,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-sdk -- -ra
@@ -899,7 +899,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-sdk -- -ra
@@ -918,7 +918,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-sdk -- -ra
@@ -937,7 +937,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-configuration -- -ra
@@ -956,7 +956,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-configuration -- -ra
@@ -975,7 +975,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-configuration -- -ra
@@ -994,7 +994,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-configuration -- -ra
@@ -1013,7 +1013,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-configuration -- -ra
@@ -1032,7 +1032,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-configuration -- -ra
@@ -1051,7 +1051,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-configuration -- -ra
@@ -1070,7 +1070,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-semantic-conventions -- -ra
@@ -1089,7 +1089,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-semantic-conventions -- -ra
@@ -1108,7 +1108,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-semantic-conventions -- -ra
@@ -1127,7 +1127,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-semantic-conventions -- -ra
@@ -1146,7 +1146,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-semantic-conventions -- -ra
@@ -1165,7 +1165,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-semantic-conventions -- -ra
@@ -1184,7 +1184,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-semantic-conventions -- -ra
@@ -1210,7 +1210,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-getting-started -- -ra
@@ -1236,7 +1236,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-getting-started -- -ra
@@ -1262,7 +1262,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-getting-started -- -ra
@@ -1288,7 +1288,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-getting-started -- -ra
@@ -1314,7 +1314,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-getting-started -- -ra
@@ -1333,7 +1333,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-opentracing-shim -- -ra
@@ -1352,7 +1352,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-opentracing-shim -- -ra
@@ -1371,7 +1371,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-opentracing-shim -- -ra
@@ -1390,7 +1390,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-opentracing-shim -- -ra
@@ -1409,7 +1409,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-opentracing-shim -- -ra
@@ -1428,7 +1428,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-opentracing-shim -- -ra
@@ -1447,7 +1447,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-opentracing-shim -- -ra
@@ -1466,7 +1466,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-opencensus-shim -- -ra
@@ -1485,7 +1485,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-opencensus-shim -- -ra
@@ -1504,7 +1504,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-opencensus-shim -- -ra
@@ -1523,7 +1523,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-opencensus-shim -- -ra
@@ -1542,7 +1542,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-opencensus-shim -- -ra
@@ -1561,7 +1561,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -1580,7 +1580,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -1599,7 +1599,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -1618,7 +1618,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -1637,7 +1637,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -1656,7 +1656,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -1675,7 +1675,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -1694,7 +1694,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -1713,7 +1713,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -1732,7 +1732,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -1751,7 +1751,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -1770,7 +1770,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -1789,7 +1789,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -1808,7 +1808,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -1827,7 +1827,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -1846,7 +1846,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -1865,7 +1865,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -1884,7 +1884,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -1903,7 +1903,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -1922,7 +1922,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -1941,7 +1941,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -1960,7 +1960,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -1979,7 +1979,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -1998,7 +1998,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -2017,7 +2017,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-opencensus -- -ra
@@ -2036,7 +2036,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-opencensus -- -ra
@@ -2055,7 +2055,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-opencensus -- -ra
@@ -2074,7 +2074,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-opencensus -- -ra
@@ -2093,7 +2093,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-opencensus -- -ra
@@ -2112,7 +2112,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -2131,7 +2131,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -2150,7 +2150,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -2169,7 +2169,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -2188,7 +2188,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -2207,7 +2207,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -2226,7 +2226,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -2245,7 +2245,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -2264,7 +2264,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -2283,7 +2283,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -2302,7 +2302,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -2321,7 +2321,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -2340,7 +2340,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -2359,7 +2359,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -2378,7 +2378,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -2397,7 +2397,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -2416,7 +2416,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -2435,7 +2435,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -2454,7 +2454,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -2473,7 +2473,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -2492,7 +2492,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -2511,7 +2511,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -2530,7 +2530,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -2549,7 +2549,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -2568,7 +2568,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -2587,7 +2587,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -2606,7 +2606,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -2625,7 +2625,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -2644,7 +2644,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -2663,7 +2663,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -2682,7 +2682,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -2701,7 +2701,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -2720,7 +2720,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -2739,7 +2739,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -2758,7 +2758,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -2777,7 +2777,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -2796,7 +2796,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -2815,7 +2815,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -2834,7 +2834,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -2853,7 +2853,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -2872,7 +2872,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -2891,7 +2891,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -2910,7 +2910,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -2929,7 +2929,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -2948,7 +2948,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -2967,7 +2967,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -2986,7 +2986,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -3005,7 +3005,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -3024,7 +3024,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -3043,7 +3043,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -3062,7 +3062,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-prometheus -- -ra
@@ -3081,7 +3081,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-prometheus -- -ra
@@ -3100,7 +3100,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-prometheus -- -ra
@@ -3119,7 +3119,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-prometheus -- -ra
@@ -3138,7 +3138,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-prometheus -- -ra
@@ -3157,7 +3157,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-prometheus -- -ra
@@ -3176,7 +3176,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-prometheus -- -ra
@@ -3195,7 +3195,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -3214,7 +3214,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -3233,7 +3233,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -3252,7 +3252,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -3271,7 +3271,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -3290,7 +3290,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -3309,7 +3309,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -3328,7 +3328,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -3347,7 +3347,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -3366,7 +3366,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -3385,7 +3385,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -3404,7 +3404,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -3423,7 +3423,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -3442,7 +3442,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -3461,7 +3461,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -3480,7 +3480,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -3499,7 +3499,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -3518,7 +3518,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -3537,7 +3537,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -3556,7 +3556,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -3575,7 +3575,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -3594,7 +3594,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-propagator-b3 -- -ra
@@ -3613,7 +3613,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-propagator-b3 -- -ra
@@ -3632,7 +3632,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-propagator-b3 -- -ra
@@ -3651,7 +3651,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-propagator-b3 -- -ra
@@ -3670,7 +3670,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-propagator-b3 -- -ra
@@ -3689,7 +3689,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-propagator-b3 -- -ra
@@ -3708,7 +3708,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-propagator-b3 -- -ra
@@ -3727,7 +3727,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-propagator-jaeger -- -ra
@@ -3746,7 +3746,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-propagator-jaeger -- -ra
@@ -3765,7 +3765,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-propagator-jaeger -- -ra
@@ -3784,7 +3784,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-propagator-jaeger -- -ra
@@ -3803,7 +3803,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-propagator-jaeger -- -ra
@@ -3822,7 +3822,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-propagator-jaeger -- -ra
@@ -3841,7 +3841,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-propagator-jaeger -- -ra
@@ -3866,7 +3866,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-test-utils -- -ra
@@ -3891,7 +3891,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-test-utils -- -ra
@@ -3916,7 +3916,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-test-utils -- -ra
@@ -3941,7 +3941,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-test-utils -- -ra
@@ -3966,7 +3966,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-test-utils -- -ra
@@ -3991,7 +3991,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-test-utils -- -ra
@@ -4012,7 +4012,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-api -- -ra
@@ -4033,7 +4033,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-api -- -ra
@@ -4054,7 +4054,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-api -- -ra
@@ -4075,7 +4075,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-api -- -ra
@@ -4096,7 +4096,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-api -- -ra
@@ -4117,7 +4117,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-api -- -ra
@@ -4138,7 +4138,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-api -- -ra
@@ -4159,7 +4159,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-proto-gen-oldest -- -ra
@@ -4180,7 +4180,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-proto-gen-latest -- -ra
@@ -4201,7 +4201,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-proto-gen-oldest -- -ra
@@ -4222,7 +4222,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-proto-gen-latest -- -ra
@@ -4243,7 +4243,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-proto-gen-oldest -- -ra
@@ -4264,7 +4264,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-proto-gen-latest -- -ra
@@ -4285,7 +4285,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-proto-gen-oldest -- -ra
@@ -4306,7 +4306,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-proto-gen-latest -- -ra
@@ -4327,7 +4327,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-proto-gen-oldest -- -ra
@@ -4348,7 +4348,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-proto-gen-latest -- -ra
@@ -4369,7 +4369,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-proto-gen-oldest -- -ra
@@ -4390,7 +4390,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-proto-gen-latest -- -ra
@@ -4411,7 +4411,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-proto-gen-oldest -- -ra
@@ -4432,7 +4432,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-proto-gen-latest -- -ra
@@ -4453,7 +4453,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -4474,7 +4474,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-protojson-gen-latest -- -ra
@@ -4495,7 +4495,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -4516,7 +4516,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-protojson-gen-latest -- -ra
@@ -4537,7 +4537,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -4558,7 +4558,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-protojson-gen-latest -- -ra
@@ -4579,7 +4579,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -4600,7 +4600,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-protojson-gen-latest -- -ra
@@ -4621,7 +4621,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -4642,7 +4642,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-protojson-gen-latest -- -ra
@@ -4663,7 +4663,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -4684,7 +4684,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-protojson-gen-latest -- -ra
@@ -4705,7 +4705,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-protojson-gen-oldest -- -ra
@@ -4726,7 +4726,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-protojson-gen-latest -- -ra
@@ -4747,7 +4747,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-codegen-json -- -ra
@@ -4768,7 +4768,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-codegen-json -- -ra
@@ -4789,7 +4789,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-codegen-json -- -ra
@@ -4810,7 +4810,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-codegen-json -- -ra
@@ -4831,7 +4831,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-codegen-json -- -ra
@@ -4852,7 +4852,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-sdk -- -ra
@@ -4873,7 +4873,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-sdk -- -ra
@@ -4894,7 +4894,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-sdk -- -ra
@@ -4915,7 +4915,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-sdk -- -ra
@@ -4936,7 +4936,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-sdk -- -ra
@@ -4957,7 +4957,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-sdk -- -ra
@@ -4978,7 +4978,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-sdk -- -ra
@@ -4999,7 +4999,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-configuration -- -ra
@@ -5020,7 +5020,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-configuration -- -ra
@@ -5041,7 +5041,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-configuration -- -ra
@@ -5062,7 +5062,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-configuration -- -ra
@@ -5083,7 +5083,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-configuration -- -ra
@@ -5104,7 +5104,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-configuration -- -ra
@@ -5125,7 +5125,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-configuration -- -ra
@@ -5146,7 +5146,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-semantic-conventions -- -ra
@@ -5167,7 +5167,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-semantic-conventions -- -ra
@@ -5188,7 +5188,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-semantic-conventions -- -ra
@@ -5209,7 +5209,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-semantic-conventions -- -ra
@@ -5230,7 +5230,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-semantic-conventions -- -ra
@@ -5251,7 +5251,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-semantic-conventions -- -ra
@@ -5272,7 +5272,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-semantic-conventions -- -ra
@@ -5300,7 +5300,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-getting-started -- -ra
@@ -5328,7 +5328,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-getting-started -- -ra
@@ -5356,7 +5356,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-getting-started -- -ra
@@ -5384,7 +5384,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-getting-started -- -ra
@@ -5412,7 +5412,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-getting-started -- -ra
@@ -5433,7 +5433,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-opentracing-shim -- -ra
@@ -5454,7 +5454,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-opentracing-shim -- -ra
@@ -5475,7 +5475,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-opentracing-shim -- -ra
@@ -5496,7 +5496,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-opentracing-shim -- -ra
@@ -5517,7 +5517,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-opentracing-shim -- -ra
@@ -5538,7 +5538,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-opentracing-shim -- -ra
@@ -5559,7 +5559,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-opentracing-shim -- -ra
@@ -5580,7 +5580,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-opencensus-shim -- -ra
@@ -5601,7 +5601,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-opencensus-shim -- -ra
@@ -5622,7 +5622,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-opencensus-shim -- -ra
@@ -5643,7 +5643,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-opencensus-shim -- -ra
@@ -5664,7 +5664,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-opencensus-shim -- -ra
@@ -5685,7 +5685,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -5706,7 +5706,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -5727,7 +5727,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -5748,7 +5748,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -5769,7 +5769,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -5790,7 +5790,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -5811,7 +5811,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -5832,7 +5832,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -5853,7 +5853,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -5874,7 +5874,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -5895,7 +5895,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-http-transport-oldest -- -ra
@@ -5916,7 +5916,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-http-transport-latest -- -ra
@@ -5937,7 +5937,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -5958,7 +5958,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -5979,7 +5979,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -6000,7 +6000,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -6021,7 +6021,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -6042,7 +6042,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -6063,7 +6063,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -6084,7 +6084,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -6105,7 +6105,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -6126,7 +6126,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -6147,7 +6147,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
@@ -6168,7 +6168,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlpcommon-latest -- -ra
@@ -6189,7 +6189,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-opencensus -- -ra
@@ -6210,7 +6210,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-opencensus -- -ra
@@ -6231,7 +6231,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-opencensus -- -ra
@@ -6252,7 +6252,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-opencensus -- -ra
@@ -6273,7 +6273,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-opencensus -- -ra
@@ -6294,7 +6294,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -6315,7 +6315,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -6336,7 +6336,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -6357,7 +6357,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -6378,7 +6378,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -6399,7 +6399,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -6420,7 +6420,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-proto-common -- -ra
@@ -6441,7 +6441,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -6462,7 +6462,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -6483,7 +6483,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -6504,7 +6504,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -6525,7 +6525,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -6546,7 +6546,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -6567,7 +6567,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-json-common -- -ra
@@ -6588,7 +6588,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -6609,7 +6609,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -6630,7 +6630,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -6651,7 +6651,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -6672,7 +6672,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-combined -- -ra
@@ -6693,7 +6693,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -6714,7 +6714,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -6735,7 +6735,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -6756,7 +6756,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -6777,7 +6777,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -6798,7 +6798,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -6819,7 +6819,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-json-file -- -ra
@@ -6840,7 +6840,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -6861,7 +6861,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -6882,7 +6882,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -6903,7 +6903,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -6924,7 +6924,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -6945,7 +6945,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -6966,7 +6966,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-json-http -- -ra
@@ -6987,7 +6987,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -7008,7 +7008,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -7029,7 +7029,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -7050,7 +7050,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -7071,7 +7071,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -7092,7 +7092,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -7113,7 +7113,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -7134,7 +7134,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -7155,7 +7155,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
@@ -7176,7 +7176,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
@@ -7197,7 +7197,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -7218,7 +7218,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -7239,7 +7239,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -7260,7 +7260,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -7281,7 +7281,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -7302,7 +7302,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -7323,7 +7323,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-otlp-proto-http -- -ra
@@ -7344,7 +7344,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-prometheus -- -ra
@@ -7365,7 +7365,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-prometheus -- -ra
@@ -7386,7 +7386,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-prometheus -- -ra
@@ -7407,7 +7407,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-prometheus -- -ra
@@ -7428,7 +7428,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-prometheus -- -ra
@@ -7449,7 +7449,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-prometheus -- -ra
@@ -7470,7 +7470,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-prometheus -- -ra
@@ -7491,7 +7491,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -7512,7 +7512,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -7533,7 +7533,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -7554,7 +7554,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -7575,7 +7575,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -7596,7 +7596,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -7617,7 +7617,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-zipkin-combined -- -ra
@@ -7638,7 +7638,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -7659,7 +7659,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -7680,7 +7680,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -7701,7 +7701,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -7722,7 +7722,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -7743,7 +7743,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -7764,7 +7764,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-zipkin-proto-http -- -ra
@@ -7785,7 +7785,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -7806,7 +7806,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -7827,7 +7827,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -7848,7 +7848,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -7869,7 +7869,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -7890,7 +7890,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -7911,7 +7911,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-exporter-zipkin-json -- -ra
@@ -7932,7 +7932,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-propagator-b3 -- -ra
@@ -7953,7 +7953,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-propagator-b3 -- -ra
@@ -7974,7 +7974,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-propagator-b3 -- -ra
@@ -7995,7 +7995,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-propagator-b3 -- -ra
@@ -8016,7 +8016,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-propagator-b3 -- -ra
@@ -8037,7 +8037,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-propagator-b3 -- -ra
@@ -8058,7 +8058,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-propagator-b3 -- -ra
@@ -8079,7 +8079,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-propagator-jaeger -- -ra
@@ -8100,7 +8100,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-propagator-jaeger -- -ra
@@ -8121,7 +8121,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-propagator-jaeger -- -ra
@@ -8142,7 +8142,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-propagator-jaeger -- -ra
@@ -8163,7 +8163,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-propagator-jaeger -- -ra
@@ -8184,7 +8184,7 @@ jobs:
           python-version: "3.14t"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314t-test-opentelemetry-propagator-jaeger -- -ra
@@ -8205,7 +8205,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-propagator-jaeger -- -ra
@@ -8226,7 +8226,7 @@ jobs:
           python-version: "3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py310-test-opentelemetry-test-utils -- -ra
@@ -8247,7 +8247,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py311-test-opentelemetry-test-utils -- -ra
@@ -8268,7 +8268,7 @@ jobs:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py312-test-opentelemetry-test-utils -- -ra
@@ -8289,7 +8289,7 @@ jobs:
           python-version: "3.13"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py313-test-opentelemetry-test-utils -- -ra
@@ -8310,7 +8310,7 @@ jobs:
           python-version: "3.14"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-test-utils -- -ra
@@ -8331,7 +8331,7 @@ jobs:
           python-version: "pypy-3.10"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@507230998c9541d67814b57463ac00e454ff6991 # v0.12.3
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
         run: uvx --with tox-uv tox -e pypy3-test-opentelemetry-test-utils -- -ra
