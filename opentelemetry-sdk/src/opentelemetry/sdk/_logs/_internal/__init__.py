@@ -362,7 +362,7 @@ class LogRecordProcessor(abc.ABC):
         on error handling expectations.
         """
 
-    def enabled(  # pylint: disable=no-self-use
+    def enabled(  # pylint: disable=no-self-use,unused-argument
         self,
         *,
         context: Context | None = None,
@@ -375,7 +375,7 @@ class LogRecordProcessor(abc.ABC):
         Processors that support filtering MAY override this method. The default
         implementation returns ``True``.
         """
-        return True  # pylint: disable=unused-argument
+        return True
 
     @abc.abstractmethod
     def shutdown(self) -> None:
