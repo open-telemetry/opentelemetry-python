@@ -27,7 +27,6 @@ from opentelemetry.configuration.instrumentation import (
     configure_instrumentation,
 )
 from opentelemetry.configuration.models import (
-    AttributeLimits,
     OpenTelemetryConfiguration,
     SeverityNumber,
 )
@@ -102,12 +101,8 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
 
     global_attribute_limits = config.attribute_limits
     resource = create_resource(config.resource)
-    configure_tracer_provider(
-        config.tracer_provider, resource, global_attribute_limits
-    )
+    configure_tracer_provider(config.tracer_provider, resource, global_attribute_limits)
     configure_meter_provider(config.meter_provider, resource)
-    configure_logger_provider(
-        config.logger_provider, resource, global_attribute_limits
-    )
+    configure_logger_provider(config.logger_provider, resource, global_attribute_limits)
     configure_propagator(config.propagator)
     configure_instrumentation(config.instrumentation_development)

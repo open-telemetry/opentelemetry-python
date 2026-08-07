@@ -376,15 +376,11 @@ def _create_span_limits(
 
     attribute_value_length_limit = config.attribute_value_length_limit
     if attribute_value_length_limit is None and global_limits is not None:
-        attribute_value_length_limit = (
-            global_limits.attribute_value_length_limit
-        )
+        attribute_value_length_limit = global_limits.attribute_value_length_limit
 
     return SpanLimits(
         max_span_attributes=(
-            attribute_count_limit
-            if attribute_count_limit is not None
-            else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
+            attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
         ),
         max_events=(
             config.event_count_limit if config.event_count_limit is not None else _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT
@@ -403,14 +399,10 @@ def _create_span_limits(
             else _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
         ),
         max_attribute_length=(
-            attribute_value_length_limit
-            if attribute_value_length_limit is not None
-            else SpanLimits.UNSET
+            attribute_value_length_limit if attribute_value_length_limit is not None else SpanLimits.UNSET
         ),
         max_span_attribute_length=(
-            attribute_value_length_limit
-            if attribute_value_length_limit is not None
-            else SpanLimits.UNSET
+            attribute_value_length_limit if attribute_value_length_limit is not None else SpanLimits.UNSET
         ),
     )
 
@@ -440,16 +432,12 @@ def create_tracer_provider(
         _create_id_generator(config.id_generator) if config is not None and config.id_generator is not None else None
     )
     if config is not None and config.limits is not None:
-
         limits = config.limits
 
     else:
-
         limits = SpanLimitsConfig()
 
-    span_limits = _create_span_limits(
-        limits, global_attribute_limits
-    )
+    span_limits = _create_span_limits(limits, global_attribute_limits)
 
     provider = TracerProvider(
         resource=resource,
@@ -484,6 +472,4 @@ def configure_tracer_provider(
     """
     if config is None:
         return
-    trace.set_tracer_provider(
-        create_tracer_provider(config, resource, global_attribute_limits)
-    )
+    trace.set_tracer_provider(create_tracer_provider(config, resource, global_attribute_limits))
