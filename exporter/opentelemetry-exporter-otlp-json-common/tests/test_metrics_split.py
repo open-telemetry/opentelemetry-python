@@ -93,9 +93,7 @@ def _exponential_histogram_dp(count: int) -> ExponentialHistogramDataPoint:
     )
 
 
-def _metric_of_type(
-    field_name: str, values: list[int], name: str | None = None
-) -> Metric:
+def _metric_of_type(field_name: str, values: list[int], name: str | None = None) -> Metric:
     match field_name:
         case "gauge":
             data = Gauge(data_points=[_number_dp(v) for v in values])
@@ -115,39 +113,27 @@ def _metric_of_type(
                 data_points=[_exponential_histogram_dp(v) for v in values],
                 aggregation_temporality=AggregationTemporality.CUMULATIVE,
             )
-    return Metric(
-        name=name or field_name, description="desc", unit="u", data=data
-    )
+    return Metric(name=name or field_name, description="desc", unit="u", data=data)
 
 
 def _scope_metrics(name: str, metrics: list[Metric]) -> ScopeMetrics:
     return ScopeMetrics(
-        scope=InstrumentationScope(
-            name=name, version="1.0", schema_url="scope_url"
-        ),
+        scope=InstrumentationScope(name=name, version="1.0", schema_url="scope_url"),
         metrics=metrics,
         schema_url="scope_url",
     )
 
 
-def _resource_metrics(
-    index: int, scope_metrics_list: list[ScopeMetrics]
-) -> ResourceMetrics:
+def _resource_metrics(index: int, scope_metrics_list: list[ScopeMetrics]) -> ResourceMetrics:
     return ResourceMetrics(
-        resource=Resource(
-            attributes={"r": index}, schema_url=f"res_url_{index}"
-        ),
+        resource=Resource(attributes={"r": index}, schema_url=f"res_url_{index}"),
         scope_metrics=scope_metrics_list,
         schema_url=f"res_url_{index}",
     )
 
 
 def _data_point_value(data_point: JSONNumberDataPoint) -> int | float:
-    return (
-        data_point.as_int
-        if data_point.as_int is not None
-        else data_point.as_double
-    )
+    return data_point.as_int if data_point.as_int is not None else data_point.as_double
 
 
 def _data_point_values(
@@ -205,9 +191,7 @@ def _assert_no_empty_metrics(
             for metric in scope_metrics.metrics:
                 field_name = _get_metric_data_field_name(metric)
                 data_points = getattr(metric, field_name).data_points
-                assert data_points, (
-                    f"metric {metric.name!r} has no data points"
-                )
+                assert data_points, f"metric {metric.name!r} has no data points"
 
 
 class TestSplitMetricsData(unittest.TestCase):
@@ -226,9 +210,7 @@ class TestSplitMetricsData(unittest.TestCase):
         ]
         for label, values, batch_size, expected_batches in cases:
             with self.subTest(case=label):
-                request = encode_metrics(
-                    make_metrics_data([_metric_of_type("sum", values, "s")])
-                )
+                request = encode_metrics(make_metrics_data([_metric_of_type("sum", values, "s")]))
                 batches = list(split_metrics_data(request, batch_size))
                 self.assertEqual(len(batches), len(expected_batches))
                 self.assertEqual(
@@ -237,9 +219,7 @@ class TestSplitMetricsData(unittest.TestCase):
                 )
 
     def test_split_preserves_metadata(self):
-        request = encode_metrics(
-            make_metrics_data([_metric_of_type("sum", [0, 1, 2, 3, 4], "s")])
-        )
+        request = encode_metrics(make_metrics_data([_metric_of_type("sum", [0, 1, 2, 3, 4], "s")]))
         for batch in split_metrics_data(request, 2):
             metric = _get_first_metric(batch)
             self.assertEqual(metric.name, "s")
@@ -275,12 +255,7 @@ class TestSplitMetricsData(unittest.TestCase):
         batches = list(split_metrics_data(request, 100))
         self.assertEqual(len(batches), 1)
         _assert_no_empty_metrics(batches[0])
-        names = [
-            m.name
-            for rm in batches[0].resource_metrics
-            for sm in rm.scope_metrics
-            for m in sm.metrics
-        ]
+        names = [m.name for rm in batches[0].resource_metrics for sm in rm.scope_metrics for m in sm.metrics]
         self.assertEqual(names, ["a", "b"])
         self.assertEqual(_data_point_values(batches[0]), [0, 1, 2, 3])
 
@@ -300,9 +275,7 @@ class TestSplitMetricsData(unittest.TestCase):
         self.assertEqual([m.name for m in first_metrics], ["a", "b"])
         self.assertEqual(_data_point_values(batches[0]), [0, 1, 2])
 
-        second_metrics = (
-            batches[1].resource_metrics[0].scope_metrics[0].metrics
-        )
+        second_metrics = batches[1].resource_metrics[0].scope_metrics[0].metrics
         self.assertEqual([m.name for m in second_metrics], ["b"])
         self.assertEqual(_data_point_values(batches[1]), [3])
 
@@ -333,9 +306,7 @@ class TestSplitMetricsData(unittest.TestCase):
         self.assertEqual(_data_point_values(batches[0]), [0, 1, 2])
 
         self.assertEqual(len(batches[1].resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            batches[1].resource_metrics[0].scope_metrics[0].scope.name, "s1"
-        )
+        self.assertEqual(batches[1].resource_metrics[0].scope_metrics[0].scope.name, "s1")
         self.assertEqual(_data_point_values(batches[1]), [3])
 
     def test_split_across_resources(self):
@@ -376,18 +347,14 @@ class TestSplitMetricsData(unittest.TestCase):
             if field_name == "summary":
                 continue
             with self.subTest(field_name=field_name):
-                request = encode_metrics(
-                    make_metrics_data([_metric_of_type(field_name, [1, 2, 3])])
-                )
+                request = encode_metrics(make_metrics_data([_metric_of_type(field_name, [1, 2, 3])]))
                 batches = list(split_metrics_data(request, 2))
                 self.assertEqual(len(batches), 2)
                 self.assertEqual(_count_data_points(batches[0]), 2)
                 self.assertEqual(_count_data_points(batches[1]), 1)
                 for batch in batches:
                     metric = _get_first_metric(batch)
-                    self.assertEqual(
-                        _get_metric_data_field_name(metric), field_name
-                    )
+                    self.assertEqual(_get_metric_data_field_name(metric), field_name)
 
     def test_split_preserves_data_points(self):
         request = encode_metrics(
@@ -428,9 +395,7 @@ class TestSplitMetricsData(unittest.TestCase):
                 batches = list(split_metrics_data(request, batch_size))
                 flattened = [v for b in batches for v in _data_point_values(b)]
                 self.assertEqual(flattened, expected)
-                self.assertEqual(
-                    sum(_count_data_points(b) for b in batches), len(expected)
-                )
+                self.assertEqual(sum(_count_data_points(b) for b in batches), len(expected))
                 for batch in batches:
                     self.assertLessEqual(_count_data_points(batch), batch_size)
                     _assert_no_empty_metrics(batch)
@@ -439,11 +404,7 @@ class TestSplitMetricsData(unittest.TestCase):
         cases = [
             (
                 "single_metric",
-                encode_metrics(
-                    make_metrics_data(
-                        [_metric_of_type("sum", [0, 1, 2, 3, 4], "only")]
-                    )
-                ),
+                encode_metrics(make_metrics_data([_metric_of_type("sum", [0, 1, 2, 3, 4], "only")])),
                 5,
             ),
             (
@@ -480,12 +441,8 @@ class TestSplitMetricsData(unittest.TestCase):
                                     _scope_metrics(
                                         "s0",
                                         [
-                                            _metric_of_type(
-                                                "sum", [0, 1, 2], "a"
-                                            ),
-                                            _metric_of_type(
-                                                "histogram", [1, 2]
-                                            ),
+                                            _metric_of_type("sum", [0, 1, 2], "a"),
+                                            _metric_of_type("histogram", [1, 2]),
                                         ],
                                     ),
                                     _scope_metrics(
@@ -525,9 +482,7 @@ class TestSplitMetricsData(unittest.TestCase):
                                 unit="u",
                                 data=Sum(
                                     data_points=[],
-                                    aggregation_temporality=(
-                                        AggregationTemporality.CUMULATIVE
-                                    ),
+                                    aggregation_temporality=(AggregationTemporality.CUMULATIVE),
                                     is_monotonic=True,
                                 ),
                             ),
@@ -561,36 +516,24 @@ class TestSplitMetricsData(unittest.TestCase):
                         self.assertEqual(set(seen), set(ground_truth))
                         for dp_id, ctx in seen.items():
                             expected = ground_truth[dp_id]
-                            self.assertIs(
-                                ctx["data_point"], expected["data_point"]
-                            )
-                            assert_proto_json_equal(
-                                self, ctx["resource"], expected["resource"]
-                            )
+                            self.assertIs(ctx["data_point"], expected["data_point"])
+                            assert_proto_json_equal(self, ctx["resource"], expected["resource"])
                             self.assertEqual(
                                 ctx["resource_schema_url"],
                                 expected["resource_schema_url"],
                             )
-                            assert_proto_json_equal(
-                                self, ctx["scope"], expected["scope"]
-                            )
+                            assert_proto_json_equal(self, ctx["scope"], expected["scope"])
                             self.assertEqual(
                                 ctx["scope_schema_url"],
                                 expected["scope_schema_url"],
                             )
-                            self.assertEqual(
-                                ctx["metric_name"], expected["metric_name"]
-                            )
-                            self.assertEqual(
-                                ctx["metric_unit"], expected["metric_unit"]
-                            )
+                            self.assertEqual(ctx["metric_name"], expected["metric_name"])
+                            self.assertEqual(ctx["metric_unit"], expected["metric_unit"])
                             self.assertEqual(
                                 ctx["metric_description"],
                                 expected["metric_description"],
                             )
-                            self.assertEqual(
-                                ctx["field_name"], expected["field_name"]
-                            )
+                            self.assertEqual(ctx["field_name"], expected["field_name"])
 
     def test_split_skips_unsupported_metric(self):
         request = encode_metrics(
@@ -603,18 +546,10 @@ class TestSplitMetricsData(unittest.TestCase):
         )
         with self.assertLogs(level=WARNING) as log_ctx:
             batches = list(split_metrics_data(request, 5))
-        self.assertTrue(
-            any("unsupported metric type" in m for m in log_ctx.output)
-        )
+        self.assertTrue(any("unsupported metric type" in m for m in log_ctx.output))
         self.assertEqual(len(batches), 1)
         self.assertEqual(_data_point_values(batches[0]), [0, 1])
-        names = [
-            m.name
-            for b in batches
-            for rm in b.resource_metrics
-            for sm in rm.scope_metrics
-            for m in sm.metrics
-        ]
+        names = [m.name for b in batches for rm in b.resource_metrics for sm in rm.scope_metrics for m in sm.metrics]
         self.assertEqual(names, ["good"])
 
     def test_split_empty_request(self):

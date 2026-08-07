@@ -66,15 +66,11 @@ def test_set_meter_provider(reset_meter_provider):
 
 
 def test_set_meter_provider_calls_proxy_provider(reset_meter_provider):
-    with patch(
-        "opentelemetry.metrics._internal._PROXY_METER_PROVIDER"
-    ) as mock_proxy_mp:
+    with patch("opentelemetry.metrics._internal._PROXY_METER_PROVIDER") as mock_proxy_mp:
         assert metrics_internal._PROXY_METER_PROVIDER is mock_proxy_mp
         mock_real_mp = Mock()
         set_meter_provider(mock_real_mp)
-        mock_proxy_mp.on_set_meter_provider.assert_called_once_with(
-            mock_real_mp
-        )
+        mock_proxy_mp.on_set_meter_provider.assert_called_once_with(mock_real_mp)
 
 
 def test_get_meter_provider(reset_meter_provider):
@@ -88,9 +84,7 @@ def test_get_meter_provider(reset_meter_provider):
 
     metrics._METER_PROVIDER = None
 
-    with patch.dict(
-        "os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}
-    ):
+    with patch.dict("os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}):
         with patch("opentelemetry.metrics._internal._load_provider", Mock()):
             with patch(
                 "opentelemetry.metrics._internal.cast",
@@ -105,9 +99,7 @@ class TestGetMeter(TestCase):
         Test that get_meter accepts name, version and schema_url
         """
         try:
-            NoOpMeterProvider().get_meter(
-                "name", version="version", schema_url="schema_url"
-            )
+            NoOpMeterProvider().get_meter("name", version="version", schema_url="schema_url")
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.fail(f"Unexpected exception raised: {error}")
 
@@ -170,18 +162,14 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         name = "foo"
         version = "1.2"
         schema_url = "schema_url"
-        proxy_meter: _ProxyMeter = proxy_meter_provider.get_meter(
-            name, version=version, schema_url=schema_url
-        )
+        proxy_meter: _ProxyMeter = proxy_meter_provider.get_meter(name, version=version, schema_url=schema_url)
         self.assertIsInstance(proxy_meter, _ProxyMeter)
 
         # After setting a real meter provider on the proxy, it should notify
         # it's _ProxyMeters which should create their own real Meters
         mock_real_mp = Mock()
         proxy_meter_provider.on_set_meter_provider(mock_real_mp)
-        mock_real_mp.get_meter.assert_called_once_with(
-            name, version, schema_url
-        )
+        mock_real_mp.get_meter.assert_called_once_with(name, version, schema_url)
 
         # After setting a real meter provider on the proxy, it should now return
         # new meters directly from the set real meter
@@ -201,27 +189,17 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         unit = "s"
         description = "Foobar"
         callback = Mock()
-        proxy_counter = proxy_meter.create_counter(
-            name, unit=unit, description=description
-        )
-        proxy_updowncounter = proxy_meter.create_up_down_counter(
-            name, unit=unit, description=description
-        )
-        proxy_histogram = proxy_meter.create_histogram(
-            name, unit=unit, description=description
-        )
+        proxy_counter = proxy_meter.create_counter(name, unit=unit, description=description)
+        proxy_updowncounter = proxy_meter.create_up_down_counter(name, unit=unit, description=description)
+        proxy_histogram = proxy_meter.create_histogram(name, unit=unit, description=description)
 
-        proxy_gauge = proxy_meter.create_gauge(
-            name, unit=unit, description=description
-        )
+        proxy_gauge = proxy_meter.create_gauge(name, unit=unit, description=description)
 
         proxy_observable_counter = proxy_meter.create_observable_counter(
             name, callbacks=[callback], unit=unit, description=description
         )
-        proxy_observable_updowncounter = (
-            proxy_meter.create_observable_up_down_counter(
-                name, callbacks=[callback], unit=unit, description=description
-            )
+        proxy_observable_updowncounter = proxy_meter.create_observable_up_down_counter(
+            name, callbacks=[callback], unit=unit, description=description
         )
         proxy_overvable_gauge = proxy_meter.create_observable_gauge(
             name, callbacks=[callback], unit=unit, description=description
@@ -230,12 +208,8 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         self.assertIsInstance(proxy_updowncounter, _ProxyUpDownCounter)
         self.assertIsInstance(proxy_histogram, _ProxyHistogram)
         self.assertIsInstance(proxy_gauge, _ProxyGauge)
-        self.assertIsInstance(
-            proxy_observable_counter, _ProxyObservableCounter
-        )
-        self.assertIsInstance(
-            proxy_observable_updowncounter, _ProxyObservableUpDownCounter
-        )
+        self.assertIsInstance(proxy_observable_counter, _ProxyObservableCounter)
+        self.assertIsInstance(proxy_observable_updowncounter, _ProxyObservableUpDownCounter)
         self.assertIsInstance(proxy_overvable_gauge, _ProxyObservableGauge)
 
         # Synchronous proxy instruments should be usable
@@ -251,32 +225,18 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         # from the real Meter to back their calls
         real_meter_provider = Mock()
         proxy_meter.on_set_meter_provider(real_meter_provider)
-        real_meter_provider.get_meter.assert_called_once_with(
-            meter_name, None, None
-        )
+        real_meter_provider.get_meter.assert_called_once_with(meter_name, None, None)
 
         real_meter: Mock = real_meter_provider.get_meter()
-        real_meter.create_counter.assert_called_once_with(
-            name, unit, description
-        )
-        real_meter.create_up_down_counter.assert_called_once_with(
-            name, unit, description
-        )
+        real_meter.create_counter.assert_called_once_with(name, unit, description)
+        real_meter.create_up_down_counter.assert_called_once_with(name, unit, description)
         real_meter.create_histogram.assert_called_once_with(
             name, unit, description, explicit_bucket_boundaries_advisory=None
         )
-        real_meter.create_gauge.assert_called_once_with(
-            name, unit, description
-        )
-        real_meter.create_observable_counter.assert_called_once_with(
-            name, [callback], unit, description
-        )
-        real_meter.create_observable_up_down_counter.assert_called_once_with(
-            name, [callback], unit, description
-        )
-        real_meter.create_observable_gauge.assert_called_once_with(
-            name, [callback], unit, description
-        )
+        real_meter.create_gauge.assert_called_once_with(name, unit, description)
+        real_meter.create_observable_counter.assert_called_once_with(name, [callback], unit, description)
+        real_meter.create_observable_up_down_counter.assert_called_once_with(name, [callback], unit, description)
+        real_meter.create_observable_gauge.assert_called_once_with(name, [callback], unit, description)
 
         # The synchronous instrument measurement methods should call through to
         # the real instruments
@@ -292,9 +252,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         proxy_counter.add(amount, attributes=attributes)
         real_counter.add.assert_called_once_with(amount, attributes, None)
         proxy_updowncounter.add(amount, attributes=attributes)
-        real_updowncounter.add.assert_called_once_with(
-            amount, attributes, None
-        )
+        real_updowncounter.add.assert_called_once_with(amount, attributes, None)
         proxy_histogram.record(amount, attributes=attributes)
         real_histogram.record.assert_called_once_with(amount, attributes, None)
         proxy_gauge.set(amount, attributes=attributes)
@@ -314,25 +272,15 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         unit = "s"
         description = "Foobar"
         callback = Mock()
-        counter = proxy_meter.create_counter(
-            name, unit=unit, description=description
-        )
-        updowncounter = proxy_meter.create_up_down_counter(
-            name, unit=unit, description=description
-        )
-        histogram = proxy_meter.create_histogram(
-            name, unit=unit, description=description
-        )
-        gauge = proxy_meter.create_gauge(
-            name, unit=unit, description=description
-        )
+        counter = proxy_meter.create_counter(name, unit=unit, description=description)
+        updowncounter = proxy_meter.create_up_down_counter(name, unit=unit, description=description)
+        histogram = proxy_meter.create_histogram(name, unit=unit, description=description)
+        gauge = proxy_meter.create_gauge(name, unit=unit, description=description)
         observable_counter = proxy_meter.create_observable_counter(
             name, callbacks=[callback], unit=unit, description=description
         )
-        observable_updowncounter = (
-            proxy_meter.create_observable_up_down_counter(
-                name, callbacks=[callback], unit=unit, description=description
-            )
+        observable_updowncounter = proxy_meter.create_observable_up_down_counter(
+            name, callbacks=[callback], unit=unit, description=description
         )
         observable_gauge = proxy_meter.create_observable_gauge(
             name, callbacks=[callback], unit=unit, description=description
@@ -343,9 +291,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         self.assertIs(updowncounter, real_meter.create_up_down_counter())
         self.assertIs(histogram, real_meter.create_histogram())
         self.assertIs(gauge, real_meter.create_gauge())
-        self.assertIs(
-            observable_counter, real_meter.create_observable_counter()
-        )
+        self.assertIs(observable_counter, real_meter.create_observable_counter())
         self.assertIs(
             observable_updowncounter,
             real_meter.create_observable_up_down_counter(),

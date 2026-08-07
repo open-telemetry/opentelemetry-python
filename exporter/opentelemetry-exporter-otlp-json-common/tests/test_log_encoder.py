@@ -65,9 +65,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 {"first_resource": "value"},
                 "resource_schema_url",
             ),
-            instrumentation_scope=InstrumentationScope(
-                "first_name", "first_version"
-            ),
+            instrumentation_scope=InstrumentationScope("first_name", "first_version"),
         )
         pb2_service_request = ExportLogsServiceRequest(
             resource_logs=[
@@ -82,28 +80,20 @@ class TestOTLPLogEncoder(unittest.TestCase):
                     ),
                     scope_logs=[
                         PB2ScopeLogs(
-                            scope=PB2InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=PB2InstrumentationScope(name="first_name", version="first_version"),
                             log_records=[
                                 PB2LogRecord(
                                     time_unix_nano=1644650195189786880,
                                     observed_time_unix_nano=1644650195189786881,
-                                    trace_id=_encode_trace_id(
-                                        89564621134313219400156819398935297684
-                                    ),
-                                    span_id=_encode_span_id(
-                                        1312458408527513268
-                                    ),
+                                    trace_id=_encode_trace_id(89564621134313219400156819398935297684),
+                                    span_id=_encode_span_id(1312458408527513268),
                                     flags=int(TraceFlags(0x01)),
                                     severity_text="WARN",
                                     severity_number=SeverityNumber.WARN.value,
                                     body=_encode_value(
                                         "Do not go gentle into that good night. Rage, rage against the dying of the light"
                                     ),
-                                    attributes=_encode_attributes(
-                                        {"a": 1, "b": "c"}
-                                    ),
+                                    attributes=_encode_attributes({"a": 1, "b": "c"}),
                                 )
                             ],
                         ),
@@ -117,20 +107,18 @@ class TestOTLPLogEncoder(unittest.TestCase):
     def test_encode_log_record_with_no_instrumentation_scope_and_dict_body(
         self,
     ):
-        log_record_with_no_instrumentation_scope_and_dict_body = (
-            ReadWriteLogRecord(
-                LogRecord(
-                    timestamp=1644650427658989056,
-                    observed_timestamp=1644650427658989057,
-                    context=_CONTEXT_LOG,
-                    severity_text="DEBUG",
-                    severity_number=SeverityNumber.DEBUG,
-                    body={"error": None, "array_with_nones": [1, None, 2]},
-                    attributes={"a": 1, "b": "c"},
-                ),
-                resource=SDKResource({"second_resource": "CASE"}),
-                instrumentation_scope=None,
-            )
+        log_record_with_no_instrumentation_scope_and_dict_body = ReadWriteLogRecord(
+            LogRecord(
+                timestamp=1644650427658989056,
+                observed_timestamp=1644650427658989057,
+                context=_CONTEXT_LOG,
+                severity_text="DEBUG",
+                severity_number=SeverityNumber.DEBUG,
+                body={"error": None, "array_with_nones": [1, None, 2]},
+                attributes={"a": 1, "b": "c"},
+            ),
+            resource=SDKResource({"second_resource": "CASE"}),
+            instrumentation_scope=None,
         )
         pb2_resource_logs = PB2ResourceLogs(
             resource=PB2Resource(
@@ -148,9 +136,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                         PB2LogRecord(
                             time_unix_nano=1644650427658989056,
                             observed_time_unix_nano=1644650427658989057,
-                            trace_id=_encode_trace_id(
-                                89564621134313219400156819398935297684
-                            ),
+                            trace_id=_encode_trace_id(89564621134313219400156819398935297684),
                             span_id=_encode_span_id(1312458408527513268),
                             flags=int(TraceFlags(0x01)),
                             severity_text="DEBUG",
@@ -168,9 +154,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            encode_logs(
-                [log_record_with_no_instrumentation_scope_and_dict_body]
-            ),
+            encode_logs([log_record_with_no_instrumentation_scope_and_dict_body]),
             ExportLogsServiceRequest(resource_logs=[pb2_resource_logs]),
         )
 
@@ -185,11 +169,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 severity_text="FATAL",
                 severity_number=SeverityNumber.FATAL,
                 body="This instrumentation scope has a schema url and attributes",
-                attributes={
-                    "extended": {
-                        "sequence": [{"inner": "mapping", "none": None}]
-                    }
-                },
+                attributes={"extended": {"sequence": [{"inner": "mapping", "none": None}]}},
             ),
             resource=SDKResource({}),
             instrumentation_scope=InstrumentationScope(
@@ -212,24 +192,14 @@ class TestOTLPLogEncoder(unittest.TestCase):
                         PB2LogRecord(
                             time_unix_nano=1644650584292683033,
                             observed_time_unix_nano=1644650584292683033,
-                            trace_id=_encode_trace_id(
-                                89564621134313219400156819398935297684
-                            ),
+                            trace_id=_encode_trace_id(89564621134313219400156819398935297684),
                             span_id=_encode_span_id(1312458408527513268),
                             flags=int(TraceFlags(0x01)),
                             severity_text="FATAL",
                             severity_number=SeverityNumber.FATAL.value,
-                            body=_encode_value(
-                                "This instrumentation scope has a schema url and attributes"
-                            ),
+                            body=_encode_value("This instrumentation scope has a schema url and attributes"),
                             attributes=_encode_attributes(
-                                {
-                                    "extended": {
-                                        "sequence": [
-                                            {"inner": "mapping", "none": None}
-                                        ]
-                                    }
-                                }
+                                {"extended": {"sequence": [{"inner": "mapping", "none": None}]}}
                             ),
                         )
                     ],
@@ -238,9 +208,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            encode_logs(
-                [log_record_with_empty_resource_and_dict_attribute_value]
-            ),
+            encode_logs([log_record_with_empty_resource_and_dict_attribute_value]),
             ExportLogsServiceRequest(resource_logs=[pb2_resource_logs]),
         )
 
@@ -250,10 +218,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         self.assertTrue(hasattr(sdk_logs[0], "dropped_attributes"))
         self.assertEqual(
             # pylint:disable=no-member
-            encoded_logs.resource_logs[0]
-            .scope_logs[0]
-            .log_records[0]
-            .dropped_attributes_count,
+            encoded_logs.resource_logs[0].scope_logs[0].log_records[0].dropped_attributes_count,
             2,
         )
 
@@ -280,13 +245,9 @@ class TestOTLPLogEncoder(unittest.TestCase):
             ),
             resource=SDKResource({"first_resource": "value"}),
             limits=LogRecordLimits(max_attributes=1),
-            instrumentation_scope=InstrumentationScope(
-                "first_name", "first_version"
-            ),
+            instrumentation_scope=InstrumentationScope("first_name", "first_version"),
         )
-        ctx_log2 = set_span_in_context(
-            NonRecordingSpan(SpanContext(0, 0, False))
-        )
+        ctx_log2 = set_span_in_context(NonRecordingSpan(SpanContext(0, 0, False)))
         log2 = ReadWriteLogRecord(
             LogRecord(
                 timestamp=1644650249738562048,
@@ -297,9 +258,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
                 attributes={},
             ),
             resource=SDKResource({"second_resource": "CASE"}),
-            instrumentation_scope=InstrumentationScope(
-                "second_name", "second_version"
-            ),
+            instrumentation_scope=InstrumentationScope("second_name", "second_version"),
         )
 
         return [log1, log2]

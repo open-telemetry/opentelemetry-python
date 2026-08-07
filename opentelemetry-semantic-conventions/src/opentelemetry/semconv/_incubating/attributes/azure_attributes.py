@@ -19,17 +19,13 @@ AZURE_COSMOSDB_CONSISTENCY_LEVEL: Final = "azure.cosmosdb.consistency.level"
 Account or request [consistency level](https://learn.microsoft.com/azure/cosmos-db/consistency-levels).
 """
 
-AZURE_COSMOSDB_OPERATION_CONTACTED_REGIONS: Final = (
-    "azure.cosmosdb.operation.contacted_regions"
-)
+AZURE_COSMOSDB_OPERATION_CONTACTED_REGIONS: Final = "azure.cosmosdb.operation.contacted_regions"
 """
 List of regions contacted during operation in the order that they were contacted. If there is more than one region listed, it indicates that the operation was performed on multiple regions i.e. cross-regional call.
 Note: Region name matches the format of `displayName` in [Azure Location API](https://learn.microsoft.com/rest/api/resources/subscriptions/list-locations).
 """
 
-AZURE_COSMOSDB_OPERATION_REQUEST_CHARGE: Final = (
-    "azure.cosmosdb.operation.request_charge"
-)
+AZURE_COSMOSDB_OPERATION_REQUEST_CHARGE: Final = "azure.cosmosdb.operation.request_charge"
 """
 The number of request units consumed by the operation.
 """
@@ -39,9 +35,7 @@ AZURE_COSMOSDB_REQUEST_BODY_SIZE: Final = "azure.cosmosdb.request.body.size"
 Request payload size in bytes.
 """
 
-AZURE_COSMOSDB_RESPONSE_SUB_STATUS_CODE: Final = (
-    "azure.cosmosdb.response.sub_status_code"
-)
+AZURE_COSMOSDB_RESPONSE_SUB_STATUS_CODE: Final = "azure.cosmosdb.response.sub_status_code"
 """
 Cosmos DB sub status code.
 """
