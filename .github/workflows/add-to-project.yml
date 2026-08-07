@@ -22,7 +22,7 @@ jobs:
           client-id: ${{ vars.OTELBOT_PYTHON_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PYTHON_PRIVATE_KEY }}
 
-      - uses: actions/add-to-project@v1.0.2
+      - uses: actions/add-to-project@v2.0.0
         with:
           project-url: https://github.com/orgs/open-telemetry/projects/88
           github-token: ${{ steps.otelbot-token.outputs.token }}
