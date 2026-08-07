@@ -22,7 +22,7 @@ jobs:
     - name: Make repo safe for Git inside container
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Install tox
       run: pip install tox-uv
     - name: Run tox
