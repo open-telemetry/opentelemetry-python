@@ -429,8 +429,6 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         event_name: str | None = None,
     ) -> bool:
         processors = self._log_record_processors
-        if not processors:
-            return False
         return any(
             lp.enabled(
                 context=context,
