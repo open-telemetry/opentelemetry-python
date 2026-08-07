@@ -57,9 +57,7 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         )
         span = trace.NonRecordingSpan(span_context)
         ctx = trace.set_span_in_context(span)
-        reservoir.offer(
-            1, time_ns(), {"key1": "value1", "key2": "value2"}, ctx
-        )
+        reservoir.offer(1, time_ns(), {"key1": "value1", "key2": "value2"}, ctx)
         exemplars = reservoir.collect({"key2": "value2"})
         self.assertEqual(len(exemplars), 1)
         self.assertIn("key1", exemplars[0].filtered_attributes)
@@ -91,9 +89,7 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
     SPAN_ID = int("6e0c63257de34c92", 16)
 
     def test_measurement_in_buckets(self):
-        reservoir = AlignedHistogramBucketExemplarReservoir(
-            [0, 5, 10, 25, 50, 75]
-        )
+        reservoir = AlignedHistogramBucketExemplarReservoir([0, 5, 10, 25, 50, 75])
         span_context = SpanContext(
             trace_id=self.TRACE_ID,
             span_id=self.SPAN_ID,
@@ -131,9 +127,7 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         # Offer values to the reservoir
         reservoir.offer(2, time_ns(), {"bucket": "1"}, ctx)  # Bucket 1
         reservoir.offer(7, time_ns(), {"bucket": "2"}, ctx)  # Bucket 2
-        reservoir.offer(
-            8, time_ns(), {"bucket": "2"}, ctx
-        )  # Bucket 2 - should replace the 7
+        reservoir.offer(8, time_ns(), {"bucket": "2"}, ctx)  # Bucket 2 - should replace the 7
         reservoir.offer(15, time_ns(), {"bucket": "3"}, ctx)  # Bucket 3
 
         exemplars = reservoir.collect({})
@@ -155,12 +149,8 @@ class TestExemplarReservoirFactory(TestCase):
         self.assertEqual(exemplar_reservoir, SimpleFixedSizeExemplarReservoir)
 
     def test_explicit_histogram_aggregation(self):
-        exemplar_reservoir = _default_reservoir_factory(
-            _ExplicitBucketHistogramAggregation
-        )
-        self.assertEqual(
-            exemplar_reservoir, AlignedHistogramBucketExemplarReservoir
-        )
+        exemplar_reservoir = _default_reservoir_factory(_ExplicitBucketHistogramAggregation)
+        self.assertEqual(exemplar_reservoir, AlignedHistogramBucketExemplarReservoir)
 
 
 class TestExemplarReservoirConcurrency(ConcurrencyTestBase):
@@ -178,11 +168,7 @@ class TestExemplarReservoirConcurrency(ConcurrencyTestBase):
 
         def worker():
             if next(threads) % 2:
-                return [
-                    exemplar
-                    for _ in range(self.ITERATIONS)
-                    for exemplar in reservoir.collect({})
-                ]
+                return [exemplar for _ in range(self.ITERATIONS) for exemplar in reservoir.collect({})]
 
             for value in islice(values, self.ITERATIONS):
                 reservoir.offer(value, value, {"v": value}, Context())
@@ -199,14 +185,10 @@ class TestExemplarReservoirConcurrency(ConcurrencyTestBase):
             ),
             (
                 "aligned_histogram_bucket",
-                lambda: AlignedHistogramBucketExemplarReservoir(
-                    [10.0, 20.0, 30.0]
-                ),
+                lambda: AlignedHistogramBucketExemplarReservoir([10.0, 20.0, 30.0]),
             ),
         ):
             with self.subTest(reservoir=name):
                 for exemplar in self._run_concurrently(build_reservoir()):
                     self.assertEqual(exemplar.value, exemplar.time_unix_nano)
-                    self.assertEqual(
-                        exemplar.filtered_attributes, {"v": exemplar.value}
-                    )
+                    self.assertEqual(exemplar.filtered_attributes, {"v": exemplar.value})

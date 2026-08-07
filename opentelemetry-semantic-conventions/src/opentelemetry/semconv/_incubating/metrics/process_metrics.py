@@ -15,10 +15,7 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = (
-    Callable[[CallbackOptions], Iterable[Observation]]
-    | Generator[Iterable[Observation], CallbackOptions, None]
-)
+CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
 
 
 PROCESS_CONTEXT_SWITCHES: Final = "process.context_switches"
@@ -63,9 +60,7 @@ Unit: 1
 """
 
 
-def create_process_cpu_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_process_cpu_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Difference in process.cpu.time since the last measurement, divided by the elapsed time and number of CPUs available to the process"""
     return meter.create_observable_gauge(
         name=PROCESS_CPU_UTILIZATION,
@@ -143,9 +138,7 @@ def create_process_network_io(meter: Meter) -> Counter:
     )
 
 
-PROCESS_OPEN_FILE_DESCRIPTOR_COUNT: Final = (
-    "process.open_file_descriptor.count"
-)
+PROCESS_OPEN_FILE_DESCRIPTOR_COUNT: Final = "process.open_file_descriptor.count"
 """
 Deprecated: Replaced by `process.unix.file_descriptor.count`.
 """
@@ -194,9 +187,7 @@ def create_process_thread_count(meter: Meter) -> UpDownCounter:
     )
 
 
-PROCESS_UNIX_FILE_DESCRIPTOR_COUNT: Final = (
-    "process.unix.file_descriptor.count"
-)
+PROCESS_UNIX_FILE_DESCRIPTOR_COUNT: Final = "process.unix.file_descriptor.count"
 """
 Number of unix file descriptors in use by the process
 Instrument: updowncounter
@@ -223,9 +214,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 """
 
 
-def create_process_uptime(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_process_uptime(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The time the process has been running"""
     return meter.create_observable_gauge(
         name=PROCESS_UPTIME,

@@ -18,9 +18,7 @@ resource = Resource.create(
     }
 )
 trace.set_tracer_provider(TracerProvider(resource=resource))
-span_processor = BatchSpanProcessor(
-    OTLPSpanExporter(endpoint="http://localhost:4317")
-)
+span_processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="http://localhost:4317"))
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 cnx = connect(

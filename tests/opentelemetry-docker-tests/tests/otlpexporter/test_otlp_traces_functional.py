@@ -143,9 +143,7 @@ TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
 
 
 class TestTracesExporter:
-    @pytest.fixture(
-        scope="class", params=TRACE_EXPORTER_CONFIGS, ids=lambda c: c.id
-    )
+    @pytest.fixture(scope="class", params=TRACE_EXPORTER_CONFIGS, ids=lambda c: c.id)
     def config(self, request) -> ExporterConfig[SpanExporter]:
         return request.param
 
@@ -166,18 +164,14 @@ class TestTracesExporter:
     def clear_server(self, server: OtlpProtoTestServer) -> None:
         server.clear()
 
-    def test_simple_span_name(
-        self, tracer: Tracer, server: OtlpProtoTestServer
-    ):
+    def test_simple_span_name(self, tracer: Tracer, server: OtlpProtoTestServer):
         with tracer.start_as_current_span("my-span"):
             pass
 
         recorded = server.get_span(timeout=5.0)
         assert recorded.span.name == "my-span"
 
-    def test_span_attributes(
-        self, tracer: Tracer, server: OtlpProtoTestServer
-    ):
+    def test_span_attributes(self, tracer: Tracer, server: OtlpProtoTestServer):
         with tracer.start_as_current_span(
             "attrs-span",
             attributes={
@@ -192,30 +186,21 @@ class TestTracesExporter:
         recorded = server.get_span(timeout=5.0)
         attrs = _attrs_to_dict(recorded.span.attributes)
         assert math.isclose(attrs.pop("float_key"), 3.14, abs_tol=1e-5)
-        assert attrs == snapshot(
-            {"str_key": "hello", "int_key": 42, "bool_key": True}
-        )
+        assert attrs == snapshot({"str_key": "hello", "int_key": 42, "bool_key": True})
 
-    def test_nested_spans_parent_child(
-        self, tracer: Tracer, server: OtlpProtoTestServer
-    ):
+    def test_nested_spans_parent_child(self, tracer: Tracer, server: OtlpProtoTestServer):
         with tracer.start_as_current_span("foo"):
             with tracer.start_as_current_span("bar"):
                 with tracer.start_as_current_span("baz"):
                     pass
 
-        spans = {
-            r.span.name: r.span
-            for r in server.get_spans(count=3, timeout=10.0)
-        }
+        spans = {r.span.name: r.span for r in server.get_spans(count=3, timeout=10.0)}
         assert set(spans.keys()) == snapshot({"bar", "baz", "foo"})
         assert spans["baz"].parent_span_id == spans["bar"].span_id
         assert spans["bar"].parent_span_id == spans["foo"].span_id
         assert spans["foo"].parent_span_id == b""
 
-    def test_span_with_event(
-        self, tracer: Tracer, server: OtlpProtoTestServer
-    ):
+    def test_span_with_event(self, tracer: Tracer, server: OtlpProtoTestServer):
         with tracer.start_as_current_span("event-span") as span:
             span.add_event("my-event", {"event_key": "event_val"})
 
@@ -223,9 +208,7 @@ class TestTracesExporter:
         assert len(recorded.span.events) == 1
         event = recorded.span.events[0]
         assert event.name == "my-event"
-        assert _attrs_to_dict(event.attributes) == snapshot(
-            {"event_key": "event_val"}
-        )
+        assert _attrs_to_dict(event.attributes) == snapshot({"event_key": "event_val"})
 
     def test_span_with_link(self, tracer: Tracer, server: OtlpProtoTestServer):
         link_trace_id = 0x000000000000000000000000DEADBEEF
@@ -236,9 +219,7 @@ class TestTracesExporter:
             is_remote=True,
             trace_flags=TraceFlags(0x01),
         )
-        with tracer.start_as_current_span(
-            "linked-span", links=[Link(link_context)]
-        ):
+        with tracer.start_as_current_span("linked-span", links=[Link(link_context)]):
             pass
 
         recorded = server.get_span(timeout=5.0)
@@ -254,9 +235,7 @@ class TestTracesExporter:
         recorded = server.get_span(timeout=5.0)
         assert recorded.span.status.code == snapshot(1)
 
-    def test_span_status_error(
-        self, tracer: Tracer, server: OtlpProtoTestServer
-    ):
+    def test_span_status_error(self, tracer: Tracer, server: OtlpProtoTestServer):
         with tracer.start_as_current_span("error-span") as span:
             span.set_status(StatusCode.ERROR, "something went wrong")
 

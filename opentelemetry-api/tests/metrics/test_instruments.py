@@ -27,9 +27,7 @@ from opentelemetry.metrics import (
 class ChildInstrument(Instrument):
     # pylint: disable=useless-parent-delegation
     def __init__(self, name, *args, unit="", description="", **kwargs):
-        super().__init__(
-            name, *args, unit=unit, description=description, **kwargs
-        )
+        super().__init__(name, *args, unit=unit, description=description, **kwargs)
 
 
 class TestCounter(TestCase):
@@ -38,9 +36,7 @@ class TestCounter(TestCase):
         Test that the Counter can be created with create_counter.
         """
 
-        self.assertTrue(
-            isinstance(NoOpMeter("name").create_counter("name"), Counter)
-        )
+        self.assertTrue(isinstance(NoOpMeter("name").create_counter("name"), Counter))
 
     def test_api_counter_abstract(self):
         """
@@ -68,12 +64,8 @@ class TestCounter(TestCase):
         self.assertIs(create_counter_signature.parameters["unit"].default, "")
 
         create_counter_signature = signature(Meter.create_counter)
-        self.assertIn(
-            "description", create_counter_signature.parameters.keys()
-        )
-        self.assertIs(
-            create_counter_signature.parameters["description"].default, ""
-        )
+        self.assertIn("description", create_counter_signature.parameters.keys())
+        self.assertIs(create_counter_signature.parameters["description"].default, "")
 
     def test_counter_add_method(self):
         """
@@ -93,9 +85,7 @@ class TestCounter(TestCase):
         self.assertIs(add_signature.parameters["attributes"].default, None)
 
         self.assertIn("amount", add_signature.parameters.keys())
-        self.assertIs(
-            add_signature.parameters["amount"].default, Signature.empty
-        )
+        self.assertIs(add_signature.parameters["amount"].default, Signature.empty)
 
 
 class TestObservableCounter(TestCase):
@@ -109,9 +99,7 @@ class TestObservableCounter(TestCase):
 
         self.assertTrue(
             isinstance(
-                NoOpMeter("name").create_observable_counter(
-                    "name", callbacks=[callback()]
-                ),
+                NoOpMeter("name").create_observable_counter("name", callbacks=[callback()]),
                 ObservableCounter,
             )
         )
@@ -131,49 +119,29 @@ class TestObservableCounter(TestCase):
         Test that the API for creating a observable_counter accepts the description of the instrument
         """
 
-        create_observable_counter_signature = signature(
-            Meter.create_observable_counter
-        )
-        self.assertIn(
-            "name", create_observable_counter_signature.parameters.keys()
-        )
+        create_observable_counter_signature = signature(Meter.create_observable_counter)
+        self.assertIn("name", create_observable_counter_signature.parameters.keys())
         self.assertIs(
             create_observable_counter_signature.parameters["name"].default,
             Signature.empty,
         )
-        create_observable_counter_signature = signature(
-            Meter.create_observable_counter
-        )
-        self.assertIn(
-            "callbacks", create_observable_counter_signature.parameters.keys()
-        )
+        create_observable_counter_signature = signature(Meter.create_observable_counter)
+        self.assertIn("callbacks", create_observable_counter_signature.parameters.keys())
         self.assertIs(
-            create_observable_counter_signature.parameters[
-                "callbacks"
-            ].default,
+            create_observable_counter_signature.parameters["callbacks"].default,
             None,
         )
-        create_observable_counter_signature = signature(
-            Meter.create_observable_counter
-        )
-        self.assertIn(
-            "unit", create_observable_counter_signature.parameters.keys()
-        )
-        self.assertIs(
-            create_observable_counter_signature.parameters["unit"].default, ""
-        )
+        create_observable_counter_signature = signature(Meter.create_observable_counter)
+        self.assertIn("unit", create_observable_counter_signature.parameters.keys())
+        self.assertIs(create_observable_counter_signature.parameters["unit"].default, "")
 
-        create_observable_counter_signature = signature(
-            Meter.create_observable_counter
-        )
+        create_observable_counter_signature = signature(Meter.create_observable_counter)
         self.assertIn(
             "description",
             create_observable_counter_signature.parameters.keys(),
         )
         self.assertIs(
-            create_observable_counter_signature.parameters[
-                "description"
-            ].default,
+            create_observable_counter_signature.parameters["description"].default,
             "",
         )
 
@@ -186,12 +154,8 @@ class TestObservableCounter(TestCase):
         Test that the instrument does not accept negative measurements.
         """
 
-        create_observable_counter_signature = signature(
-            Meter.create_observable_counter
-        )
-        self.assertIn(
-            "callbacks", create_observable_counter_signature.parameters.keys()
-        )
+        create_observable_counter_signature = signature(Meter.create_observable_counter)
+        self.assertIn("callbacks", create_observable_counter_signature.parameters.keys())
         self.assertIs(
             create_observable_counter_signature.parameters["name"].default,
             Signature.empty,
@@ -204,9 +168,7 @@ class TestHistogram(TestCase):
         Test that the Histogram can be created with create_histogram.
         """
 
-        self.assertTrue(
-            isinstance(NoOpMeter("name").create_histogram("name"), Histogram)
-        )
+        self.assertTrue(isinstance(NoOpMeter("name").create_histogram("name"), Histogram))
 
     def test_api_histogram_abstract(self):
         """
@@ -231,17 +193,11 @@ class TestHistogram(TestCase):
 
         create_histogram_signature = signature(Meter.create_histogram)
         self.assertIn("unit", create_histogram_signature.parameters.keys())
-        self.assertIs(
-            create_histogram_signature.parameters["unit"].default, ""
-        )
+        self.assertIs(create_histogram_signature.parameters["unit"].default, "")
 
         create_histogram_signature = signature(Meter.create_histogram)
-        self.assertIn(
-            "description", create_histogram_signature.parameters.keys()
-        )
-        self.assertIs(
-            create_histogram_signature.parameters["description"].default, ""
-        )
+        self.assertIn("description", create_histogram_signature.parameters.keys())
+        self.assertIs(create_histogram_signature.parameters["description"].default, "")
 
     def test_histogram_record_method(self):
         """
@@ -261,9 +217,7 @@ class TestHistogram(TestCase):
         self.assertIs(record_signature.parameters["attributes"].default, None)
 
         self.assertIn("amount", record_signature.parameters.keys())
-        self.assertIs(
-            record_signature.parameters["amount"].default, Signature.empty
-        )
+        self.assertIs(record_signature.parameters["amount"].default, Signature.empty)
 
         self.assertIsNone(NoOpHistogram("name").record(1))
 
@@ -274,9 +228,7 @@ class TestGauge(TestCase):
         Test that the Gauge can be created with create_gauge.
         """
 
-        self.assertTrue(
-            isinstance(NoOpMeter("name").create_gauge("name"), _Gauge)
-        )
+        self.assertTrue(isinstance(NoOpMeter("name").create_gauge("name"), _Gauge))
 
     def test_api_gauge_abstract(self):
         """
@@ -323,9 +275,7 @@ class TestObservableGauge(TestCase):
 
         self.assertTrue(
             isinstance(
-                NoOpMeter("name").create_observable_gauge(
-                    "name", [callback()]
-                ),
+                NoOpMeter("name").create_observable_gauge("name", [callback()]),
                 ObservableGauge,
             )
         )
@@ -345,46 +295,26 @@ class TestObservableGauge(TestCase):
         Test that the API for creating a observable_gauge accepts the description of the instrument
         """
 
-        create_observable_gauge_signature = signature(
-            Meter.create_observable_gauge
-        )
-        self.assertIn(
-            "name", create_observable_gauge_signature.parameters.keys()
-        )
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn("name", create_observable_gauge_signature.parameters.keys())
         self.assertIs(
             create_observable_gauge_signature.parameters["name"].default,
             Signature.empty,
         )
-        create_observable_gauge_signature = signature(
-            Meter.create_observable_gauge
-        )
-        self.assertIn(
-            "callbacks", create_observable_gauge_signature.parameters.keys()
-        )
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn("callbacks", create_observable_gauge_signature.parameters.keys())
         self.assertIs(
             create_observable_gauge_signature.parameters["callbacks"].default,
             None,
         )
-        create_observable_gauge_signature = signature(
-            Meter.create_observable_gauge
-        )
-        self.assertIn(
-            "unit", create_observable_gauge_signature.parameters.keys()
-        )
-        self.assertIs(
-            create_observable_gauge_signature.parameters["unit"].default, ""
-        )
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn("unit", create_observable_gauge_signature.parameters.keys())
+        self.assertIs(create_observable_gauge_signature.parameters["unit"].default, "")
 
-        create_observable_gauge_signature = signature(
-            Meter.create_observable_gauge
-        )
-        self.assertIn(
-            "description", create_observable_gauge_signature.parameters.keys()
-        )
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn("description", create_observable_gauge_signature.parameters.keys())
         self.assertIs(
-            create_observable_gauge_signature.parameters[
-                "description"
-            ].default,
+            create_observable_gauge_signature.parameters["description"].default,
             "",
         )
 
@@ -395,12 +325,8 @@ class TestObservableGauge(TestCase):
         Test that there is a way to pass state to the callback.
         """
 
-        create_observable_gauge_signature = signature(
-            Meter.create_observable_gauge
-        )
-        self.assertIn(
-            "callbacks", create_observable_gauge_signature.parameters.keys()
-        )
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn("callbacks", create_observable_gauge_signature.parameters.keys())
         self.assertIs(
             create_observable_gauge_signature.parameters["name"].default,
             Signature.empty,
@@ -434,33 +360,19 @@ class TestUpDownCounter(TestCase):
         Test that the API for creating a up_down_counter accepts the description of the
         """
 
-        create_up_down_counter_signature = signature(
-            Meter.create_up_down_counter
-        )
-        self.assertIn(
-            "name", create_up_down_counter_signature.parameters.keys()
-        )
+        create_up_down_counter_signature = signature(Meter.create_up_down_counter)
+        self.assertIn("name", create_up_down_counter_signature.parameters.keys())
         self.assertIs(
             create_up_down_counter_signature.parameters["name"].default,
             Signature.empty,
         )
 
-        create_up_down_counter_signature = signature(
-            Meter.create_up_down_counter
-        )
-        self.assertIn(
-            "unit", create_up_down_counter_signature.parameters.keys()
-        )
-        self.assertIs(
-            create_up_down_counter_signature.parameters["unit"].default, ""
-        )
+        create_up_down_counter_signature = signature(Meter.create_up_down_counter)
+        self.assertIn("unit", create_up_down_counter_signature.parameters.keys())
+        self.assertIs(create_up_down_counter_signature.parameters["unit"].default, "")
 
-        create_up_down_counter_signature = signature(
-            Meter.create_up_down_counter
-        )
-        self.assertIn(
-            "description", create_up_down_counter_signature.parameters.keys()
-        )
+        create_up_down_counter_signature = signature(Meter.create_up_down_counter)
+        self.assertIn("description", create_up_down_counter_signature.parameters.keys())
         self.assertIs(
             create_up_down_counter_signature.parameters["description"].default,
             "",
@@ -484,9 +396,7 @@ class TestUpDownCounter(TestCase):
         self.assertIs(add_signature.parameters["attributes"].default, None)
 
         self.assertIn("amount", add_signature.parameters.keys())
-        self.assertIs(
-            add_signature.parameters["amount"].default, Signature.empty
-        )
+        self.assertIs(add_signature.parameters["amount"].default, Signature.empty)
 
 
 class TestObservableUpDownCounter(TestCase):
@@ -501,9 +411,7 @@ class TestObservableUpDownCounter(TestCase):
 
         self.assertTrue(
             isinstance(
-                NoOpMeter("name").create_observable_up_down_counter(
-                    "name", [callback()]
-                ),
+                NoOpMeter("name").create_observable_up_down_counter("name", [callback()]),
                 ObservableUpDownCounter,
             )
         )
@@ -523,57 +431,41 @@ class TestObservableUpDownCounter(TestCase):
         Test that the API for creating a observable_up_down_counter accepts the description of the instrument
         """
 
-        create_observable_up_down_counter_signature = signature(
-            Meter.create_observable_up_down_counter
-        )
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
         self.assertIn(
             "name",
             create_observable_up_down_counter_signature.parameters.keys(),
         )
         self.assertIs(
-            create_observable_up_down_counter_signature.parameters[
-                "name"
-            ].default,
+            create_observable_up_down_counter_signature.parameters["name"].default,
             Signature.empty,
         )
-        create_observable_up_down_counter_signature = signature(
-            Meter.create_observable_up_down_counter
-        )
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
         self.assertIn(
             "callbacks",
             create_observable_up_down_counter_signature.parameters.keys(),
         )
         self.assertIs(
-            create_observable_up_down_counter_signature.parameters[
-                "callbacks"
-            ].default,
+            create_observable_up_down_counter_signature.parameters["callbacks"].default,
             None,
         )
-        create_observable_up_down_counter_signature = signature(
-            Meter.create_observable_up_down_counter
-        )
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
         self.assertIn(
             "unit",
             create_observable_up_down_counter_signature.parameters.keys(),
         )
         self.assertIs(
-            create_observable_up_down_counter_signature.parameters[
-                "unit"
-            ].default,
+            create_observable_up_down_counter_signature.parameters["unit"].default,
             "",
         )
 
-        create_observable_up_down_counter_signature = signature(
-            Meter.create_observable_up_down_counter
-        )
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
         self.assertIn(
             "description",
             create_observable_up_down_counter_signature.parameters.keys(),
         )
         self.assertIs(
-            create_observable_up_down_counter_signature.parameters[
-                "description"
-            ].default,
+            create_observable_up_down_counter_signature.parameters["description"].default,
             "",
         )
 
@@ -585,17 +477,13 @@ class TestObservableUpDownCounter(TestCase):
         Test that the instrument accepts positive and negative values.
         """
 
-        create_observable_up_down_counter_signature = signature(
-            Meter.create_observable_up_down_counter
-        )
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
         self.assertIn(
             "callbacks",
             create_observable_up_down_counter_signature.parameters.keys(),
         )
         self.assertIs(
-            create_observable_up_down_counter_signature.parameters[
-                "name"
-            ].default,
+            create_observable_up_down_counter_signature.parameters["name"].default,
             Signature.empty,
         )
 
@@ -603,98 +491,50 @@ class TestObservableUpDownCounter(TestCase):
         instrument = ChildInstrument("name")
 
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "a" * 255, "unit", "description"
-            )["name"],
+            instrument._check_name_unit_description("a" * 255, "unit", "description")["name"],
             "a" * 255,
         )
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "a.", "unit", "description"
-            )["name"],
+            instrument._check_name_unit_description("a.", "unit", "description")["name"],
             "a.",
         )
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "a-", "unit", "description"
-            )["name"],
+            instrument._check_name_unit_description("a-", "unit", "description")["name"],
             "a-",
         )
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "a_", "unit", "description"
-            )["name"],
+            instrument._check_name_unit_description("a_", "unit", "description")["name"],
             "a_",
         )
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "a/", "unit", "description"
-            )["name"],
+            instrument._check_name_unit_description("a/", "unit", "description")["name"],
             "a/",
         )
 
         # the old max length
-        self.assertIsNotNone(
-            instrument._check_name_unit_description(
-                "a" * 64, "unit", "description"
-            )["name"]
-        )
-        self.assertIsNone(
-            instrument._check_name_unit_description(
-                "a" * 256, "unit", "description"
-            )["name"]
-        )
-        self.assertIsNone(
-            instrument._check_name_unit_description(
-                "Ñ", "unit", "description"
-            )["name"]
-        )
-        self.assertIsNone(
-            instrument._check_name_unit_description(
-                "_a", "unit", "description"
-            )["name"]
-        )
-        self.assertIsNone(
-            instrument._check_name_unit_description(
-                "1a", "unit", "description"
-            )["name"]
-        )
-        self.assertIsNone(
-            instrument._check_name_unit_description("", "unit", "description")[
-                "name"
-            ]
-        )
+        self.assertIsNotNone(instrument._check_name_unit_description("a" * 64, "unit", "description")["name"])
+        self.assertIsNone(instrument._check_name_unit_description("a" * 256, "unit", "description")["name"])
+        self.assertIsNone(instrument._check_name_unit_description("Ñ", "unit", "description")["name"])
+        self.assertIsNone(instrument._check_name_unit_description("_a", "unit", "description")["name"])
+        self.assertIsNone(instrument._check_name_unit_description("1a", "unit", "description")["name"])
+        self.assertIsNone(instrument._check_name_unit_description("", "unit", "description")["name"])
 
     def test_unit_check(self):
         instrument = ChildInstrument("name")
 
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "name", "a" * 63, "description"
-            )["unit"],
+            instrument._check_name_unit_description("name", "a" * 63, "description")["unit"],
             "a" * 63,
         )
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "name", "{a}", "description"
-            )["unit"],
+            instrument._check_name_unit_description("name", "{a}", "description")["unit"],
             "{a}",
         )
 
-        self.assertIsNone(
-            instrument._check_name_unit_description(
-                "name", "a" * 64, "description"
-            )["unit"]
-        )
-        self.assertIsNone(
-            instrument._check_name_unit_description(
-                "name", "Ñ", "description"
-            )["unit"]
-        )
+        self.assertIsNone(instrument._check_name_unit_description("name", "a" * 64, "description")["unit"])
+        self.assertIsNone(instrument._check_name_unit_description("name", "Ñ", "description")["unit"])
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "name", None, "description"
-            )["unit"],
+            instrument._check_name_unit_description("name", None, "description")["unit"],
             "",
         )
 
@@ -702,14 +542,10 @@ class TestObservableUpDownCounter(TestCase):
         instrument = ChildInstrument("name")
 
         self.assertEqual(
-            instrument._check_name_unit_description(
-                "name", "unit", "description"
-            )["description"],
+            instrument._check_name_unit_description("name", "unit", "description")["description"],
             "description",
         )
         self.assertEqual(
-            instrument._check_name_unit_description("name", "unit", None)[
-                "description"
-            ],
+            instrument._check_name_unit_description("name", "unit", None)["description"],
             "",
         )

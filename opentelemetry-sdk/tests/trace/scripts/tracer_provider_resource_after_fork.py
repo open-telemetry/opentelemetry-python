@@ -24,15 +24,9 @@ def main() -> None:
             json.dumps(
                 {
                     "child_pid": child_pid,
-                    "provider_pid": tracer_provider.resource.attributes[
-                        PROCESS_PID
-                    ],
-                    "cached_tracer_pid": tracer.resource.attributes[
-                        PROCESS_PID
-                    ],
-                    "new_tracer_pid": new_tracer.resource.attributes[
-                        PROCESS_PID
-                    ],
+                    "provider_pid": tracer_provider.resource.attributes[PROCESS_PID],
+                    "cached_tracer_pid": tracer.resource.attributes[PROCESS_PID],
+                    "new_tracer_pid": new_tracer.resource.attributes[PROCESS_PID],
                     "span_pid": span.resource.attributes[PROCESS_PID],
                 }
             ),
@@ -48,12 +42,8 @@ def main() -> None:
                 "parent_pid": parent_pid,
                 "parent_resource_pid": parent_resource_pid,
                 "parent_tracer_pid": parent_tracer_pid,
-                "parent_resource_pid_after_fork": tracer_provider.resource.attributes[
-                    PROCESS_PID
-                ],
-                "parent_tracer_pid_after_fork": tracer.resource.attributes[
-                    PROCESS_PID
-                ],
+                "parent_resource_pid_after_fork": tracer_provider.resource.attributes[PROCESS_PID],
+                "parent_tracer_pid_after_fork": tracer.resource.attributes[PROCESS_PID],
             }
         ),
         flush=True,
