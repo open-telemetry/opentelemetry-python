@@ -22,9 +22,11 @@ protobuf==5.29.6
     # via
     #   -r opentelemetry-proto/test-requirements.in
     #   opentelemetry-proto
+pygments==2.7.2
+    # via pytest
 pytest==9.0.3
     # via
-    #   --constraints=dev-requirements.txt
+    #   -c dev-requirements.txt
     #   -r opentelemetry-proto/test-requirements.in
 tomli==1.0.0 ; python_full_version < '3.11'
     # via pytest

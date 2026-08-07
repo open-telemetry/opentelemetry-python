@@ -31,7 +31,7 @@
     # via -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
 asgiref==3.7.2
     # via
-    #   --constraints=dev-requirements.txt
+    #   -c dev-requirements.txt
     #   opentelemetry-test-utils
 certifi==2026.5.20
     # via requests
@@ -66,13 +66,15 @@ protobuf==7.35.0
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   googleapis-common-protos
     #   opentelemetry-proto
+pygments==2.20.0
+    # via pytest
 pytest==9.0.3
     # via
-    #   --constraints=dev-requirements.txt
+    #   -c dev-requirements.txt
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
 requests==2.32.3
     # via
-    #   --constraints=dev-requirements.txt
+    #   -c dev-requirements.txt
     #   opentelemetry-test-utils
 tomli==2.4.1 ; python_full_version < '3.11'
     # via pytest
