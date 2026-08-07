@@ -19,7 +19,7 @@ from opentelemetry.trace.status import Status, StatusCode
 TEST_SERVICE_NAME = "test_service"
 
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 class CommonEncoderTestCases:
     class CommonEncoderTest(unittest.TestCase):
         @classmethod
