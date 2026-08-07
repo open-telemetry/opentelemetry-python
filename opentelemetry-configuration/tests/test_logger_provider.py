@@ -26,6 +26,7 @@ from opentelemetry.configuration.file._loader import ConfigurationError
 from opentelemetry.configuration.models import (
     AttributeLimits,
     NameStringValuePair,
+    SeverityNumber,
 )
 from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
@@ -53,10 +54,6 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
-)
-from opentelemetry.configuration.models import (
-    NameStringValuePair,
-    SeverityNumber,
 )
 from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -471,24 +468,18 @@ class TestLogRecordLimits(unittest.TestCase):
 
     def test_global_attribute_count_limit_used_when_no_per_signal_limits(self):
         global_limits = AttributeLimits(attribute_count_limit=42)
-        provider = create_logger_provider(
-            None, global_attribute_limits=global_limits
-        )
+        provider = create_logger_provider(None, global_attribute_limits=global_limits)
         self.assertEqual(provider._log_record_limits.max_attributes, 42)
 
     def test_global_attribute_value_length_limit_used_when_no_per_signal_limits(
         self,
     ):
         global_limits = AttributeLimits(attribute_value_length_limit=64)
-        provider = create_logger_provider(
-            None, global_attribute_limits=global_limits
-        )
+        provider = create_logger_provider(None, global_attribute_limits=global_limits)
         self.assertEqual(provider._log_record_limits.max_attribute_length, 64)
 
     def test_per_signal_limits_override_global(self):
-        global_limits = AttributeLimits(
-            attribute_count_limit=100, attribute_value_length_limit=200
-        )
+        global_limits = AttributeLimits(attribute_count_limit=100, attribute_value_length_limit=200)
         config = LoggerProviderConfig(
             processors=[],
             limits=LogRecordLimitsConfig(
@@ -496,9 +487,7 @@ class TestLogRecordLimits(unittest.TestCase):
                 attribute_value_length_limit=16,
             ),
         )
-        provider = create_logger_provider(
-            config, global_attribute_limits=global_limits
-        )
+        provider = create_logger_provider(config, global_attribute_limits=global_limits)
         self.assertEqual(provider._log_record_limits.max_attributes, 7)
         self.assertEqual(provider._log_record_limits.max_attribute_length, 16)
 

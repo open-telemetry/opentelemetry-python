@@ -297,20 +297,14 @@ def _create_log_record_limits(
 
     attribute_value_length_limit = config.attribute_value_length_limit
     if attribute_value_length_limit is None and global_limits is not None:
-        attribute_value_length_limit = (
-            global_limits.attribute_value_length_limit
-        )
+        attribute_value_length_limit = global_limits.attribute_value_length_limit
 
     return LogRecordLimits(
         max_attributes=(
-            attribute_count_limit
-            if attribute_count_limit is not None
-            else _DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT
+            attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT
         ),
         max_attribute_length=(
-            attribute_value_length_limit
-            if attribute_value_length_limit is not None
-            else LogRecordLimits.UNSET
+            attribute_value_length_limit if attribute_value_length_limit is not None else LogRecordLimits.UNSET
         ),
     )
 
@@ -341,16 +335,12 @@ def create_logger_provider(
     )
 
     if config is not None and config.limits is not None:
-
         limits = config.limits
 
     else:
-
         limits = LogRecordLimitsConfig()
 
-    log_record_limits = _create_log_record_limits(
-        limits, global_attribute_limits
-    )
+    log_record_limits = _create_log_record_limits(limits, global_attribute_limits)
 
     provider = LoggerProvider(
         resource=resource,
@@ -385,6 +375,4 @@ def configure_logger_provider(
     """
     if config is None:
         return
-    set_logger_provider(
-        create_logger_provider(config, resource, global_attribute_limits)
-    )
+    set_logger_provider(create_logger_provider(config, resource, global_attribute_limits))
