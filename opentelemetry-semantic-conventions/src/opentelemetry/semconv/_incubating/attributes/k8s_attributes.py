@@ -14,9 +14,7 @@ K8S_CLUSTER_UID: Final = "k8s.cluster.uid"
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.k8s_attributes.K8S_CLUSTER_UID`.
 """
 
-K8S_CONTAINER_EPHEMERAL_STORAGE_FS_TYPE: Final = (
-    "k8s.container.ephemeral_storage.fs_type"
-)
+K8S_CONTAINER_EPHEMERAL_STORAGE_FS_TYPE: Final = "k8s.container.ephemeral_storage.fs_type"
 """
 The type of file system component for ephemeral storage.
 Note: Eviction decisions based on ephemeral-storage resource limits are made based on the total container usage.
@@ -32,9 +30,7 @@ K8S_CONTAINER_RESTART_COUNT: Final = "k8s.container.restart_count"
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.k8s_attributes.K8S_CONTAINER_RESTART_COUNT`.
 """
 
-K8S_CONTAINER_STATUS_LAST_TERMINATED_REASON: Final = (
-    "k8s.container.status.last_terminated_reason"
-)
+K8S_CONTAINER_STATUS_LAST_TERMINATED_REASON: Final = "k8s.container.status.last_terminated_reason"
 """
 Last terminated reason of the Container.
 """
@@ -120,9 +116,7 @@ K8S_HPA_NAME: Final = "k8s.hpa.name"
 The name of the horizontal pod autoscaler.
 """
 
-K8S_HPA_SCALETARGETREF_API_VERSION: Final = (
-    "k8s.hpa.scaletargetref.api_version"
-)
+K8S_HPA_SCALETARGETREF_API_VERSION: Final = "k8s.hpa.scaletargetref.api_version"
 """
 The API version of the target resource to scale for the HorizontalPodAutoscaler.
 Note: This maps to the `apiVersion` field in the `scaleTargetRef` of the HPA spec.
@@ -238,9 +232,7 @@ K8S_NODE_UID: Final = "k8s.node.uid"
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.k8s_attributes.K8S_NODE_UID`.
 """
 
-K8S_PERSISTENTVOLUME_ANNOTATION_TEMPLATE: Final = (
-    "k8s.persistentvolume.annotation"
-)
+K8S_PERSISTENTVOLUME_ANNOTATION_TEMPLATE: Final = "k8s.persistentvolume.annotation"
 """
 The annotation placed on the PersistentVolume, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
 Note: Examples:
@@ -267,9 +259,7 @@ K8S_PERSISTENTVOLUME_NAME: Final = "k8s.persistentvolume.name"
 The name of the PersistentVolume.
 """
 
-K8S_PERSISTENTVOLUME_RECLAIM_POLICY: Final = (
-    "k8s.persistentvolume.reclaim_policy"
-)
+K8S_PERSISTENTVOLUME_RECLAIM_POLICY: Final = "k8s.persistentvolume.reclaim_policy"
 """
 The reclaim policy of the PersistentVolume.
 Note: This attribute aligns with the `persistentVolumeReclaimPolicy` field of the
@@ -288,9 +278,7 @@ K8S_PERSISTENTVOLUME_UID: Final = "k8s.persistentvolume.uid"
 The UID of the PersistentVolume.
 """
 
-K8S_PERSISTENTVOLUMECLAIM_ANNOTATION_TEMPLATE: Final = (
-    "k8s.persistentvolumeclaim.annotation"
-)
+K8S_PERSISTENTVOLUMECLAIM_ANNOTATION_TEMPLATE: Final = "k8s.persistentvolumeclaim.annotation"
 """
 The annotation placed on the PersistentVolumeClaim, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
 Note: Examples:
@@ -301,9 +289,7 @@ Note: Examples:
   the `k8s.persistentvolumeclaim.annotation.data` attribute with value `""`.
 """
 
-K8S_PERSISTENTVOLUMECLAIM_LABEL_TEMPLATE: Final = (
-    "k8s.persistentvolumeclaim.label"
-)
+K8S_PERSISTENTVOLUMECLAIM_LABEL_TEMPLATE: Final = "k8s.persistentvolumeclaim.label"
 """
 The label placed on the PersistentVolumeClaim, the `<key>` being the label name, the value being the label value, even if the value is empty.
 Note: Examples:
@@ -319,9 +305,7 @@ K8S_PERSISTENTVOLUMECLAIM_NAME: Final = "k8s.persistentvolumeclaim.name"
 The name of the PersistentVolumeClaim.
 """
 
-K8S_PERSISTENTVOLUMECLAIM_STATUS_PHASE: Final = (
-    "k8s.persistentvolumeclaim.status.phase"
-)
+K8S_PERSISTENTVOLUMECLAIM_STATUS_PHASE: Final = "k8s.persistentvolumeclaim.status.phase"
 """
 The phase of the PersistentVolumeClaim.
 Note: This attribute aligns with the `phase` field of the
@@ -487,9 +471,7 @@ K8S_SERVICE_NAME: Final = "k8s.service.name"
 The name of the Service.
 """
 
-K8S_SERVICE_PUBLISH_NOT_READY_ADDRESSES: Final = (
-    "k8s.service.publish_not_ready_addresses"
-)
+K8S_SERVICE_PUBLISH_NOT_READY_ADDRESSES: Final = "k8s.service.publish_not_ready_addresses"
 """
 Whether the Service publishes not-ready endpoints.
 Note: Whether the Service is configured to publish endpoints before the pods are ready.

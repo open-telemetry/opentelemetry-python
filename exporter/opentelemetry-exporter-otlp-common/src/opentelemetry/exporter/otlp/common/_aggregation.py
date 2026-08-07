@@ -63,10 +63,7 @@ def _get_temporality(
         case _:
             if temporality_preference != "CUMULATIVE":
                 _logger.warning(
-                    (
-                        "Invalid value for %s: %s, using cumulative "
-                        "temporality aggregation"
-                    ),
+                    ("Invalid value for %s: %s, using cumulative temporality aggregation"),
                     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
                     temporality_preference,
                 )
@@ -103,10 +100,7 @@ def _get_aggregation(
         case _:
             if default_histogram_aggregation != "EXPLICIT_BUCKET_HISTOGRAM":
                 _logger.warning(
-                    (
-                        "Invalid value for %s: %s, using explicit bucket "
-                        "histogram aggregation"
-                    ),
+                    ("Invalid value for %s: %s, using explicit bucket histogram aggregation"),
                     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
                     default_histogram_aggregation,
                 )

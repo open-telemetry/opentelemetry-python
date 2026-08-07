@@ -27,13 +27,9 @@ _component_counter = Counter()
 
 
 class ProcessorMetricsT(Protocol):
-    def register_queue_size(
-        self, get_queue_size: Callable[[], int]
-    ) -> None: ...
+    def register_queue_size(self, get_queue_size: Callable[[], int]) -> None: ...
 
-    def drop_items(
-        self, count: int, error_type: str = "queue_full"
-    ) -> None: ...
+    def drop_items(self, count: int, error_type: str = "queue_full") -> None: ...
 
     def finish_items(self, count: int) -> None: ...
 
@@ -82,14 +78,10 @@ class ProcessorMetrics:
 
         if signal == "traces":
             create_processed = create_otel_sdk_processor_span_processed
-            create_queue_capacity = (
-                create_otel_sdk_processor_span_queue_capacity
-            )
+            create_queue_capacity = create_otel_sdk_processor_span_queue_capacity
         else:
             create_processed = create_otel_sdk_processor_log_processed
-            create_queue_capacity = (
-                create_otel_sdk_processor_log_queue_capacity
-            )
+            create_queue_capacity = create_otel_sdk_processor_log_queue_capacity
 
         self._processed = create_processed(meter)
 
