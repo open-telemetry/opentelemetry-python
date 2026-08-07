@@ -265,9 +265,13 @@ tracer_provider:
         trace_id_ratio_based: {ratio: 0.5}
 """
 
-    def _load(self, yaml: str | None = None) -> OpenTelemetryConfiguration:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as fh:
-            fh.write(self._YAML if yaml is None else yaml)
+    def _load(
+        self, yaml_content: str | None = None
+    ) -> OpenTelemetryConfiguration:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yaml", delete=False
+        ) as fh:
+            fh.write(self._YAML if yaml_content is None else yaml_content)
             path = fh.name
         try:
             return load_config_file(path)
