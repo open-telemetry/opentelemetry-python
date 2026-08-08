@@ -82,9 +82,7 @@ class TestAttributes(unittest.TestCase):
             None,
             "Keep-Alive",
         ]
-        self.assertEqual(
-            _clean_attribute("headers", seq, None), tuple(expected)
-        )
+        self.assertEqual(_clean_attribute("headers", seq, None), tuple(expected))
 
 
 class TestExtendedAttributes(unittest.TestCase):
@@ -149,9 +147,7 @@ class TestExtendedAttributes(unittest.TestCase):
             b"\x81",
             b"Keep-Alive",
         ]
-        self.assertEqual(
-            _clean_extended_attribute("headers", seq, None), tuple(seq)
-        )
+        self.assertEqual(_clean_extended_attribute("headers", seq, None), tuple(seq))
 
     def test_mapping(self):
         mapping = {
@@ -172,9 +168,7 @@ class TestExtendedAttributes(unittest.TestCase):
             "valid_mapping": {"str": 1},
             "invalid_mapping": {},
         }
-        self.assertEqual(
-            _clean_extended_attribute("headers", mapping, None), expected
-        )
+        self.assertEqual(_clean_extended_attribute("headers", mapping, None), expected)
 
 
 class TestBoundedAttributes(unittest.TestCase):
@@ -333,15 +327,11 @@ class TestBoundedAttributes(unittest.TestCase):
 
         wsgi_request = DummyWSGIRequest()
 
-        cleaned_value = _clean_extended_attribute(
-            "request", wsgi_request, None
-        )
+        cleaned_value = _clean_extended_attribute("request", wsgi_request, None)
 
         # Verify we get a string back from the cleaner
         self.assertIsInstance(cleaned_value, str)
-        self.assertEqual(
-            "<DummyWSGIRequest method=GET path=/example/>", cleaned_value
-        )
+        self.assertEqual("<DummyWSGIRequest method=GET path=/example/>", cleaned_value)
 
     def test_invalid_anyvalue_type_raises_typeerror(self):
         class BadStr:
@@ -370,9 +360,7 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertNotEqual(bdict["age"], bdict_copy["age"])
 
     def test_deepcopy_preserves_immutability(self):
-        bdict = BoundedAttributes(
-            maxlen=4, attributes=self.base, immutable=True
-        )
+        bdict = BoundedAttributes(maxlen=4, attributes=self.base, immutable=True)
         bdict_copy = copy.deepcopy(bdict)
 
         with self.assertRaises(TypeError):

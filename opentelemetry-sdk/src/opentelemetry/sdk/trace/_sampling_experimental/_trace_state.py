@@ -57,32 +57,21 @@ class OtelTraceState:
                 threshold = _parse_th(member[len("th:") :], INVALID_THRESHOLD)
                 continue
             if member.startswith("rv:"):
-                random_value = _parse_rv(
-                    member[len("rv:") :], INVALID_RANDOM_VALUE
-                )
+                random_value = _parse_rv(member[len("rv:") :], INVALID_RANDOM_VALUE)
                 continue
             if rest is None:
                 rest = [member]
             else:
                 rest.append(member)
 
-        return OtelTraceState(
-            random_value=random_value, threshold=threshold, rest=rest or ()
-        )
+        return OtelTraceState(random_value=random_value, threshold=threshold, rest=rest or ())
 
     def serialize(self) -> str:
-        if (
-            not is_valid_threshold(self.threshold)
-            and not is_valid_random_value(self.random_value)
-            and not self.rest
-        ):
+        if not is_valid_threshold(self.threshold) and not is_valid_random_value(self.random_value) and not self.rest:
             return ""
 
         parts: list[str] = []
-        if (
-            is_valid_threshold(self.threshold)
-            and self.threshold != MAX_THRESHOLD
-        ):
+        if is_valid_threshold(self.threshold) and self.threshold != MAX_THRESHOLD:
             parts.append(f"th:{serialize_th(self.threshold)}")
         if is_valid_random_value(self.random_value):
             parts.append(f"rv:{_serialize_rv(self.random_value)}")

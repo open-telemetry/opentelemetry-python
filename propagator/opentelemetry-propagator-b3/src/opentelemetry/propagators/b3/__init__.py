@@ -48,9 +48,7 @@ class B3MultiFormat(TextMapPropagator):
         sampled = "0"
         flags = None
 
-        single_header = _extract_first_element(
-            getter.get(carrier, self.SINGLE_HEADER_KEY)
-        )
+        single_header = _extract_first_element(getter.get(carrier, self.SINGLE_HEADER_KEY))
         if single_header:
             # The b3 spec calls for the sampling state to be
             # "deferred", which is unspecified. This concept does not
@@ -67,22 +65,10 @@ class B3MultiFormat(TextMapPropagator):
             elif len(fields) == 4:
                 trace_id, span_id, sampled, _ = fields
         else:
-            trace_id = (
-                _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY))
-                or trace_id
-            )
-            span_id = (
-                _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY))
-                or span_id
-            )
-            sampled = (
-                _extract_first_element(getter.get(carrier, self.SAMPLED_KEY))
-                or sampled
-            )
-            flags = (
-                _extract_first_element(getter.get(carrier, self.FLAGS_KEY))
-                or flags
-            )
+            trace_id = _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY)) or trace_id
+            span_id = _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY)) or span_id
+            sampled = _extract_first_element(getter.get(carrier, self.SAMPLED_KEY)) or sampled
+            flags = _extract_first_element(getter.get(carrier, self.FLAGS_KEY)) or flags
 
         if (
             trace_id == trace.INVALID_TRACE_ID
@@ -134,9 +120,7 @@ class B3MultiFormat(TextMapPropagator):
             self.TRACE_ID_KEY,
             format_trace_id(span_context.trace_id),
         )
-        setter.set(
-            carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
-        )
+        setter.set(carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id))
         setter.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
     @property

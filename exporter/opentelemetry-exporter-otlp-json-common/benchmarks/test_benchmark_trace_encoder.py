@@ -25,10 +25,7 @@ def test_benchmark_encode_span_with_events_and_links(benchmark):
             )
             for i in range(5)
         ),
-        links=tuple(
-            Link(context=link_ctx, attributes={"link_key": True})
-            for _ in range(3)
-        ),
+        links=tuple(Link(context=link_ctx, attributes={"link_key": True}) for _ in range(3)),
         resource=Resource({"service.name": "bench-svc"}),
         instrumentation_scope=InstrumentationScope("bench_lib", "1.0"),
     )
@@ -39,9 +36,6 @@ def test_benchmark_encode_span_with_events_and_links(benchmark):
 
 @pytest.mark.parametrize("batch_size", [1, 10, 100])
 def test_benchmark_encode_spans(benchmark, batch_size):
-    spans = [
-        make_span(name=f"span-{i}", span_id=0x1000 + i)
-        for i in range(batch_size)
-    ]
+    spans = [make_span(name=f"span-{i}", span_id=0x1000 + i) for i in range(batch_size)]
 
     benchmark(encode_spans, spans)

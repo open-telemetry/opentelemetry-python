@@ -54,9 +54,7 @@ _DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
-_ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
-    "Unable to parse value for %s as integer. Defaulting to %s."
-)
+_ENV_VAR_INT_VALUE_ERROR_MESSAGE = "Unable to parse value for %s as integer. Defaulting to %s."
 _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())
 
@@ -69,9 +67,7 @@ class LogRecordExportResult(enum.Enum):
     FAILURE = 1
 
 
-@deprecated(
-    "Use LogRecordExportResult. Since logs are not stable yet this WILL be removed in future releases."
-)
+@deprecated("Use LogRecordExportResult. Since logs are not stable yet this WILL be removed in future releases.")
 class LogExportResult(enum.Enum):
     SUCCESS = 0
     FAILURE = 1
@@ -96,9 +92,7 @@ class LogRecordExporter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def export(
-        self, batch: Sequence[ReadableLogRecord]
-    ) -> LogRecordExportResult:
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:
         """Exports a batch of logs.
 
         Args:
@@ -137,9 +131,7 @@ class LogRecordExporter(abc.ABC):
         """
 
 
-@deprecated(
-    "Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
-)
+@deprecated("Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases.")
 class LogExporter(LogRecordExporter):
     pass
 
@@ -155,9 +147,7 @@ class ConsoleLogRecordExporter(LogRecordExporter):
     def __init__(
         self,
         out: IO = sys.stdout,
-        formatter: Callable[[ReadableLogRecord], str] = lambda record: (
-            record.to_json() + linesep
-        ),
+        formatter: Callable[[ReadableLogRecord], str] = lambda record: record.to_json() + linesep,
     ):
         self.out = out
         self.formatter = formatter
@@ -175,9 +165,7 @@ class ConsoleLogRecordExporter(LogRecordExporter):
         return True
 
 
-@deprecated(
-    "Use ConsoleLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
-)
+@deprecated("Use ConsoleLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases.")
 class ConsoleLogExporter(ConsoleLogRecordExporter):
     pass
 
@@ -206,9 +194,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             "logs",
             OtelComponentTypeValues.SIMPLE_LOG_PROCESSOR,
             meter_provider or get_meter_provider(),
-            enabled=parse_boolean_environment_variable(
-                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-            ),
+            enabled=parse_boolean_environment_variable(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED),
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord):
@@ -230,30 +216,26 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
                 set_value(_ON_EMIT_RECURSION_COUNT_KEY, cnt + 1),  # pyright: ignore[reportOperatorIssue]
             )
         )
-        error: Exception | None = None
         try:
             if self._shutdown:
                 _logger.warning("Processor is already shutdown, ignoring call")
+                self._metrics.drop_items(1, "already_shutdown")
                 return
             # Convert ReadWriteLogRecord to ReadableLogRecord before exporting
             # Note: resource should not be None at this point as it's set during Logger.emit()
-            resource = (
-                log_record.resource
-                if log_record.resource is not None
-                else Resource.create({})
-            )
+            resource = log_record.resource if log_record.resource is not None else Resource.create({})
             readable_log_record = ReadableLogRecord(
                 log_record=log_record.log_record,
                 resource=resource,
                 instrumentation_scope=log_record.instrumentation_scope,
                 limits=log_record.limits,
             )
+            # Record on submission to the exporter.
+            self._metrics.finish_items(1)
             self._exporter.export((readable_log_record,))
-        except Exception as err:  # pylint: disable=broad-exception-caught
-            error = err
+        except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while exporting logs.")
         finally:
-            self._metrics.finish_items(1, error)
             detach(token)
 
     def shutdown(self):
@@ -293,23 +275,15 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             max_queue_size = BatchLogRecordProcessor._default_max_queue_size()
 
         if schedule_delay_millis is None:
-            schedule_delay_millis = (
-                BatchLogRecordProcessor._default_schedule_delay_millis()
-            )
+            schedule_delay_millis = BatchLogRecordProcessor._default_schedule_delay_millis()
 
         if max_export_batch_size is None:
-            max_export_batch_size = (
-                BatchLogRecordProcessor._default_max_export_batch_size()
-            )
+            max_export_batch_size = BatchLogRecordProcessor._default_max_export_batch_size()
         # Not used. No way currently to pass timeout to export.
         if export_timeout_millis is None:
-            export_timeout_millis = (
-                BatchLogRecordProcessor._default_export_timeout_millis()
-            )
+            export_timeout_millis = BatchLogRecordProcessor._default_export_timeout_millis()
 
-        BatchLogRecordProcessor._validate_arguments(
-            max_queue_size, schedule_delay_millis, max_export_batch_size
-        )
+        BatchLogRecordProcessor._validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size)
         # Initializes BatchProcessor
         self._batch_processor = BatchProcessor(
             exporter,
@@ -323,20 +297,14 @@ class BatchLogRecordProcessor(LogRecordProcessor):
                 OtelComponentTypeValues.BATCHING_LOG_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
-                enabled=parse_boolean_environment_variable(
-                    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-                ),
+                enabled=parse_boolean_environment_variable(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED),
             ),
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         # Convert ReadWriteLogRecord to ReadableLogRecord before passing to BatchProcessor
         # Note: resource should not be None at this point as it's set during Logger.emit()
-        resource = (
-            log_record.resource
-            if log_record.resource is not None
-            else Resource.create({})
-        )
+        resource = log_record.resource if log_record.resource is not None else Resource.create({})
         # Shallow copy the API log record to break the reference to the potentially large context
         # while keeping the original context intact for other processors.
         api_log_record = copy.copy(log_record.log_record)
@@ -359,9 +327,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     @staticmethod
     def _default_max_queue_size():
         try:
-            return int(
-                environ.get(OTEL_BLRP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE)
-            )
+            return int(environ.get(OTEL_BLRP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE))
         except ValueError:
             _logger.exception(
                 _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
@@ -373,11 +339,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     @staticmethod
     def _default_schedule_delay_millis():
         try:
-            return int(
-                environ.get(
-                    OTEL_BLRP_SCHEDULE_DELAY, _DEFAULT_SCHEDULE_DELAY_MILLIS
-                )
-            )
+            return int(environ.get(OTEL_BLRP_SCHEDULE_DELAY, _DEFAULT_SCHEDULE_DELAY_MILLIS))
         except ValueError:
             _logger.exception(
                 _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
@@ -406,11 +368,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     @staticmethod
     def _default_export_timeout_millis():
         try:
-            return int(
-                environ.get(
-                    OTEL_BLRP_EXPORT_TIMEOUT, _DEFAULT_EXPORT_TIMEOUT_MILLIS
-                )
-            )
+            return int(environ.get(OTEL_BLRP_EXPORT_TIMEOUT, _DEFAULT_EXPORT_TIMEOUT_MILLIS))
         except ValueError:
             _logger.exception(
                 _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
@@ -420,9 +378,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             return _DEFAULT_EXPORT_TIMEOUT_MILLIS
 
     @staticmethod
-    def _validate_arguments(
-        max_queue_size, schedule_delay_millis, max_export_batch_size
-    ):
+    def _validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size):
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
 
@@ -430,11 +386,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             raise ValueError("schedule_delay_millis must be positive.")
 
         if max_export_batch_size <= 0:
-            raise ValueError(
-                "max_export_batch_size must be a positive integer."
-            )
+            raise ValueError("max_export_batch_size must be a positive integer.")
 
         if max_export_batch_size > max_queue_size:
-            raise ValueError(
-                "max_export_batch_size must be less than or equal to max_queue_size."
-            )
+            raise ValueError("max_export_batch_size must be less than or equal to max_queue_size.")
