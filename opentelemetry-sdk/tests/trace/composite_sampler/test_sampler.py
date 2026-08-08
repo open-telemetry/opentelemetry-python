@@ -61,9 +61,7 @@ class Output:
                 threshold=None,
                 random_value=None,
             ),
-            Output(
-                sampled=True, threshold=0, random_value=INVALID_RANDOM_VALUE
-            ),
+            Output(sampled=True, threshold=0, random_value=INVALID_RANDOM_VALUE),
             id="min threshold no parent random value",
         ),
         p(
@@ -165,17 +163,9 @@ def test_sample(input: Input, output: Output):
     if input.random_value is not None:
         parent_state.random_value = input.random_value
     parent_state_str = parent_state.serialize()
-    parent_trace_state = (
-        TraceState((("ot", parent_state_str),)) if parent_state_str else None
-    )
-    flags = (
-        TraceFlags(TraceFlags.SAMPLED)
-        if input.sampled
-        else TraceFlags.get_default()
-    )
-    parent_span_context = SpanContext(
-        TRACE_ID, SPAN_ID, False, flags, parent_trace_state
-    )
+    parent_trace_state = TraceState((("ot", parent_state_str),)) if parent_state_str else None
+    flags = TraceFlags(TraceFlags.SAMPLED) if input.sampled else TraceFlags.get_default()
+    parent_span_context = SpanContext(TRACE_ID, SPAN_ID, False, flags, parent_trace_state)
     parent_span = NonRecordingSpan(parent_span_context)
     parent_context = set_span_in_context(parent_span)
 

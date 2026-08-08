@@ -15,10 +15,7 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = (
-    Callable[[CallbackOptions], Iterable[Observation]]
-    | Generator[Iterable[Observation], CallbackOptions, None]
-)
+CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
 
 
 SYSTEM_CPU_FREQUENCY: Final = "system.cpu.frequency"
@@ -29,9 +26,7 @@ Unit: Hz
 """
 
 
-def create_system_cpu_frequency(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_system_cpu_frequency(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Operating frequency of the logical CPU in Hertz"""
     return meter.create_observable_gauge(
         name=SYSTEM_CPU_FREQUENCY,
@@ -102,9 +97,7 @@ Unit: 1
 """
 
 
-def create_system_cpu_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_system_cpu_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """For each logical CPU, the utilization is calculated as the change in cumulative CPU time (cpu.time) over a measurement interval, divided by the elapsed time"""
     return meter.create_observable_gauge(
         name=SYSTEM_CPU_UTILIZATION,
@@ -287,9 +280,7 @@ Unit: 1
 """
 
 
-def create_system_filesystem_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_system_filesystem_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Fraction of filesystem bytes used"""
     return meter.create_observable_gauge(
         name=SYSTEM_FILESYSTEM_UTILIZATION,
@@ -368,9 +359,7 @@ def create_system_memory_linux_available(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_MEMORY_LINUX_HUGEPAGES_LIMIT: Final = (
-    "system.memory.linux.hugepages.limit"
-)
+SYSTEM_MEMORY_LINUX_HUGEPAGES_LIMIT: Final = "system.memory.linux.hugepages.limit"
 """
 Total number of hugepages available
 Instrument: updowncounter
@@ -387,9 +376,7 @@ def create_system_memory_linux_hugepages_limit(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_MEMORY_LINUX_HUGEPAGES_PAGE_SIZE: Final = (
-    "system.memory.linux.hugepages.page_size"
-)
+SYSTEM_MEMORY_LINUX_HUGEPAGES_PAGE_SIZE: Final = "system.memory.linux.hugepages.page_size"
 """
 System hugepage size in bytes
 Instrument: updowncounter
@@ -408,9 +395,7 @@ def create_system_memory_linux_hugepages_page_size(
     )
 
 
-SYSTEM_MEMORY_LINUX_HUGEPAGES_RESERVED: Final = (
-    "system.memory.linux.hugepages.reserved"
-)
+SYSTEM_MEMORY_LINUX_HUGEPAGES_RESERVED: Final = "system.memory.linux.hugepages.reserved"
 """
 Number of reserved hugepages
 Instrument: updowncounter
@@ -432,9 +417,7 @@ def create_system_memory_linux_hugepages_reserved(
     )
 
 
-SYSTEM_MEMORY_LINUX_HUGEPAGES_SURPLUS: Final = (
-    "system.memory.linux.hugepages.surplus"
-)
+SYSTEM_MEMORY_LINUX_HUGEPAGES_SURPLUS: Final = "system.memory.linux.hugepages.surplus"
 """
 Number of surplus hugepages
 Instrument: updowncounter
@@ -456,9 +439,7 @@ def create_system_memory_linux_hugepages_surplus(
     )
 
 
-SYSTEM_MEMORY_LINUX_HUGEPAGES_USAGE: Final = (
-    "system.memory.linux.hugepages.usage"
-)
+SYSTEM_MEMORY_LINUX_HUGEPAGES_USAGE: Final = "system.memory.linux.hugepages.usage"
 """
 Number of hugepages in use by state
 Instrument: updowncounter
@@ -475,9 +456,7 @@ def create_system_memory_linux_hugepages_usage(meter: Meter) -> UpDownCounter:
     )
 
 
-SYSTEM_MEMORY_LINUX_HUGEPAGES_UTILIZATION: Final = (
-    "system.memory.linux.hugepages.utilization"
-)
+SYSTEM_MEMORY_LINUX_HUGEPAGES_UTILIZATION: Final = "system.memory.linux.hugepages.utilization"
 """
 Percentage of hugepages in use by state
 Instrument: gauge
@@ -576,9 +555,7 @@ Unit: 1
 """
 
 
-def create_system_memory_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_system_memory_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Percentage of memory bytes in use"""
     return meter.create_observable_gauge(
         name=SYSTEM_MEMORY_UTILIZATION,
@@ -787,9 +764,7 @@ Unit: 1
 """
 
 
-def create_system_paging_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_system_paging_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Swap (unix) or pagefile (windows) utilization"""
     return meter.create_observable_gauge(
         name=SYSTEM_PAGING_UTILIZATION,
@@ -843,9 +818,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 """
 
 
-def create_system_uptime(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_system_uptime(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The time the system has been running"""
     return meter.create_observable_gauge(
         name=SYSTEM_UPTIME,

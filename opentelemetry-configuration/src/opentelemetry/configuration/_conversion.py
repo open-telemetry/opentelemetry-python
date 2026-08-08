@@ -43,11 +43,7 @@ def _is_empty_constructible_dataclass(unwrapped: Any) -> bool:
     return (
         isinstance(unwrapped, type)
         and is_dataclass(unwrapped)
-        and all(
-            field.default is not MISSING
-            or field.default_factory is not MISSING
-            for field in fields(unwrapped)
-        )
+        and all(field.default is not MISSING or field.default_factory is not MISSING for field in fields(unwrapped))
     )
 
 
@@ -86,19 +82,11 @@ def _convert_value(value: Any, type_hint: Any) -> Any:
         return value
 
     # Direct dataclass type — recurse
-    if (
-        isinstance(unwrapped, type)
-        and is_dataclass(unwrapped)
-        and isinstance(value, dict)
-    ):
+    if isinstance(unwrapped, type) and is_dataclass(unwrapped) and isinstance(value, dict):
         return _dict_to_dataclass(value, unwrapped)
 
     # Enum type — coerce string/value to the Enum member
-    if (
-        isinstance(unwrapped, type)
-        and issubclass(unwrapped, Enum)
-        and not isinstance(value, unwrapped)
-    ):
+    if isinstance(unwrapped, type) and issubclass(unwrapped, Enum) and not isinstance(value, unwrapped):
         return unwrapped(value)
 
     return value

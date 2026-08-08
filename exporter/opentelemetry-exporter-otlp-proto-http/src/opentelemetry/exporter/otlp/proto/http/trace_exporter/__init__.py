@@ -115,9 +115,7 @@ class OTLPSpanExporter(SpanExporter):
         self._shutdown_in_progress = threading.Event()
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
-            _append_trace_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
+            _append_trace_path(environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)),
         )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
@@ -140,9 +138,7 @@ class OTLPSpanExporter(SpanExporter):
             OTEL_EXPORTER_OTLP_TRACES_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_env_headers(
-            headers_string, liberal=True
-        )
+        self._headers = headers or parse_env_headers(headers_string, liberal=True)
         self._timeout = (
             timeout
             if timeout is not None
@@ -152,17 +148,11 @@ class OTLPSpanExporter(SpanExporter):
                 default=DEFAULT_TIMEOUT,
             )
         )
-        self._max_request_size = (
-            _DEFAULT_MAX_REQUEST_SIZE
-            if max_request_size is None
-            else max_request_size
-        )
+        self._max_request_size = _DEFAULT_MAX_REQUEST_SIZE if max_request_size is None else max_request_size
         self._compression = compression or _compression_from_env()
         self._session = (
             session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
-            )
+            or _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER)
             or requests.Session()
         )
         self._session.headers.update(self._headers)
@@ -170,9 +160,7 @@ class OTLPSpanExporter(SpanExporter):
         # let users override our defaults
         self._session.headers.update(self._headers)
         if self._compression is not Compression.NoCompression:
-            self._session.headers.update(
-                {"Content-Encoding": self._compression.value}
-            )
+            self._session.headers.update({"Content-Encoding": self._compression.value})
         self._shutdown = False
 
         self._metrics = create_exporter_metrics(
@@ -180,15 +168,10 @@ class OTLPSpanExporter(SpanExporter):
             "traces",
             urlparse(self._endpoint),
             meter_provider,
-            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
-            .strip()
-            .lower()
-            == "true",
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
 
-    def _export(
-        self, serialized_data: bytes, timeout_sec: float | None = None
-    ):
+    def _export(self, serialized_data: bytes, timeout_sec: float | None = None):
         data = serialized_data
         if self._compression == Compression.Gzip:
             gzip_data = BytesIO()
@@ -232,8 +215,7 @@ class OTLPSpanExporter(SpanExporter):
             serialized_data = encode_spans(spans).SerializePartialToString()
             if _is_request_too_large(serialized_data, self._max_request_size):
                 _logger.warning(
-                    "Dropping span batch: serialized size %d bytes exceeds "
-                    "max_request_size %d bytes.",
+                    "Dropping span batch: serialized size %d bytes exceeds max_request_size %d bytes.",
                     len(serialized_data),
                     self._max_request_size,
                 )
@@ -268,29 +250,14 @@ class OTLPSpanExporter(SpanExporter):
                         status_code,
                         reason,
                     )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
+                    error_attrs = {HTTP_RESPONSE_STATUS_CODE: status_code} if status_code is not None else None
                     result.error = export_error
                     result.error_attrs = error_attrs
                     return SpanExportResult.FAILURE
 
-                if (
-                    retry_num + 1 == _MAX_RETRYS
-                    or backoff_seconds > (deadline_sec - time())
-                    or self._shutdown
-                ):
-                    _logger.error(
-                        "Failed to export span batch due to timeout, "
-                        "max retries or shutdown."
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
+                if retry_num + 1 == _MAX_RETRYS or backoff_seconds > (deadline_sec - time()) or self._shutdown:
+                    _logger.error("Failed to export span batch due to timeout, max retries or shutdown.")
+                    error_attrs = {HTTP_RESPONSE_STATUS_CODE: status_code} if status_code is not None else None
                     result.error = export_error
                     result.error_attrs = error_attrs
                     return SpanExportResult.FAILURE

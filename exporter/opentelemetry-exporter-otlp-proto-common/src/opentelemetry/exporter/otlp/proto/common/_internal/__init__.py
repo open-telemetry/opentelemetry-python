@@ -42,14 +42,10 @@ def _timeout_from_env(*environ_keys: str, default: float) -> float: ...
 
 
 @overload
-def _timeout_from_env(
-    *environ_keys: str, default: None = None
-) -> float | None: ...
+def _timeout_from_env(*environ_keys: str, default: None = None) -> float | None: ...
 
 
-def _timeout_from_env(
-    *environ_keys: str, default: float | None = None
-) -> float | None:
+def _timeout_from_env(*environ_keys: str, default: float | None = None) -> float | None:
     """Return the first environment variable in ``environ_keys`` holding a
     valid float, or ``default`` if none does.
 
@@ -101,14 +97,10 @@ def _encode_value(value: Any) -> PB2AnyValue:
     if isinstance(value, bytes):
         return PB2AnyValue(bytes_value=value)
     if isinstance(value, Sequence):
-        return PB2AnyValue(
-            array_value=PB2ArrayValue(values=[_encode_value(v) for v in value])
-        )
+        return PB2AnyValue(array_value=PB2ArrayValue(values=[_encode_value(v) for v in value]))
     if isinstance(value, Mapping):
         return PB2AnyValue(
-            kvlist_value=PB2KeyValueList(
-                values=[_encode_key_value(str(k), v) for k, v in value.items()]
-            )
+            kvlist_value=PB2KeyValueList(values=[_encode_key_value(str(k), v) for k, v in value.items()])
         )
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
@@ -151,9 +143,7 @@ def _get_resource_data(
         sdk_resource,
         scope_data,
     ) in sdk_resource_scope_data.items():
-        collector_resource = PB2Resource(
-            attributes=_encode_attributes(sdk_resource.attributes)
-        )
+        collector_resource = PB2Resource(attributes=_encode_attributes(sdk_resource.attributes))
         resource_data.append(
             resource_class(
                 **{

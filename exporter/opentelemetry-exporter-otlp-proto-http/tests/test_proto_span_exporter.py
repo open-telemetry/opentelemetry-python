@@ -92,16 +92,12 @@ def _start_recording_server():
 class TestOTLPSpanExporter(unittest.TestCase):
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()
-        self.meter_provider = MeterProvider(
-            metric_readers=[self.metric_reader]
-        )
+        self.meter_provider = MeterProvider(metric_readers=[self.metric_reader])
 
     def test_constructor_default(self):
         exporter = OTLPSpanExporter()
 
-        self.assertEqual(
-            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH
-        )
+        self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH)
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._client_certificate_file, None)
         self.assertEqual(exporter._client_key_file, None)
@@ -146,16 +142,12 @@ class TestOTLPSpanExporter(unittest.TestCase):
         def f():
             return credential
 
-        mock_entry_point.configure_mock(
-            return_value=[IterEntryPoint("custom_credential", f)]
-        )
+        mock_entry_point.configure_mock(return_value=[IterEntryPoint("custom_credential", f)])
         exporter = OTLPSpanExporter()
 
         self.assertEqual(exporter._endpoint, "https://traces.endpoint.env")
         self.assertEqual(exporter._certificate_file, "traces/certificate.env")
-        self.assertEqual(
-            exporter._client_certificate_file, "traces/client-cert.pem"
-        )
+        self.assertEqual(exporter._client_certificate_file, "traces/client-cert.pem")
         self.assertEqual(exporter._client_key_file, "traces/client-key.pem")
         self.assertEqual(exporter._timeout, 40)
         self.assertIs(exporter._compression, Compression.Deflate)
@@ -206,9 +198,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
         self.assertEqual(exporter._endpoint, "example.com/1234")
         self.assertEqual(exporter._certificate_file, "path/to/service.crt")
-        self.assertEqual(
-            exporter._client_certificate_file, "path/to/client-cert.pem"
-        )
+        self.assertEqual(exporter._client_certificate_file, "path/to/client-cert.pem")
         self.assertEqual(exporter._client_key_file, "path/to/client-key.pem")
         self.assertEqual(exporter._timeout, 20)
         self.assertIs(exporter._compression, Compression.NoCompression)
@@ -233,9 +223,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter()
 
         self.assertEqual(exporter._certificate_file, OS_ENV_CERTIFICATE)
-        self.assertEqual(
-            exporter._client_certificate_file, OS_ENV_CLIENT_CERTIFICATE
-        )
+        self.assertEqual(exporter._client_certificate_file, OS_ENV_CLIENT_CERTIFICATE)
         self.assertEqual(exporter._client_key_file, OS_ENV_CLIENT_KEY)
         self.assertEqual(exporter._timeout, int(OS_ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
@@ -305,9 +293,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     @patch.dict(
         "os.environ",
-        {
-            OTEL_EXPORTER_OTLP_HEADERS: "envHeader1=val1,envHeader2=val2,missingValue"
-        },
+        {OTEL_EXPORTER_OTLP_HEADERS: "envHeader1=val1,envHeader2=val2,missingValue"},
     )
     def test_headers_parse_from_env(self):
         with self.assertLogs(level="WARNING") as cm:
@@ -329,29 +315,21 @@ class TestOTLPSpanExporter(unittest.TestCase):
         Test that any HTTP 2XX code returns a successful result
         """
 
-        self.assertEqual(
-            OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS
-        )
+        self.assertEqual(OTLPSpanExporter().export(MagicMock()), SpanExportResult.SUCCESS)
 
     @patch.dict("os.environ", {}, clear=True)
     @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
     def test_exporter_metrics_disabled_by_default(self, _mock_export):
         exporter = OTLPSpanExporter(meter_provider=self.meter_provider)
 
-        self.assertEqual(
-            exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS
-        )
+        self.assertEqual(exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS)
 
         self.assertIsNone(self.metric_reader.get_metrics_data())
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "})
     @patch.object(Session, "post")
     def test_retry_timeout(self, mock_post):
-        exporter = OTLPSpanExporter(
-            timeout=1.5, meter_provider=self.meter_provider
-        )
+        exporter = OTLPSpanExporter(timeout=1.5, meter_provider=self.meter_provider)
 
         resp = Response()
         resp.status_code = 503
@@ -379,39 +357,23 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 3)
+        self.assertEqual(metrics[0].name, "otel.sdk.exporter.operation.duration")
+        self.assert_standard_metric_attrs(metrics[0].data.data_points[0].attributes)
+        self.assertNotIn("error.type", metrics[0].data.data_points[0].attributes)
         self.assertEqual(
-            metrics[0].name, "otel.sdk.exporter.operation.duration"
-        )
-        self.assert_standard_metric_attrs(
-            metrics[0].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[0].data.data_points[0].attributes
-        )
-        self.assertEqual(
-            metrics[0]
-            .data.data_points[0]
-            .attributes["http.response.status_code"],
+            metrics[0].data.data_points[0].attributes["http.response.status_code"],
             503,
         )
         self.assertEqual(metrics[1].name, "otel.sdk.exporter.span.exported")
-        self.assert_standard_metric_attrs(
-            metrics[1].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[1].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[1].data.data_points[0].attributes)
+        self.assertNotIn("error.type", metrics[1].data.data_points[0].attributes)
         self.assertNotIn(
             "http.response.status_code",
             metrics[1].data.data_points[0].attributes,
         )
         self.assertEqual(metrics[2].name, "otel.sdk.exporter.span.inflight")
-        self.assert_standard_metric_attrs(
-            metrics[2].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[2].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[2].data.data_points[0].attributes)
+        self.assertNotIn("error.type", metrics[2].data.data_points[0].attributes)
         self.assertNotIn(
             "http.response.status_code",
             metrics[2].data.data_points[0].attributes,
@@ -435,14 +397,10 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 warning.records[0].message,
             )
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     @patch.object(Session, "post")
     def test_export_no_collector_available(self, mock_post):
-        exporter = OTLPSpanExporter(
-            timeout=1.5, meter_provider=self.meter_provider
-        )
+        exporter = OTLPSpanExporter(timeout=1.5, meter_provider=self.meter_provider)
 
         mock_post.side_effect = requests.exceptions.RequestException()
         with self.assertLogs(level=WARNING) as warning:
@@ -461,12 +419,8 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(scope_metrics.scope.name, "opentelemetry-sdk")
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 3)
-        self.assertEqual(
-            metrics[0].name, "otel.sdk.exporter.operation.duration"
-        )
-        self.assert_standard_metric_attrs(
-            metrics[0].data.data_points[0].attributes
-        )
+        self.assertEqual(metrics[0].name, "otel.sdk.exporter.operation.duration")
+        self.assert_standard_metric_attrs(metrics[0].data.data_points[0].attributes)
         self.assertEqual(
             metrics[0].data.data_points[0].attributes["error.type"],
             "RequestException",
@@ -476,9 +430,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             metrics[0].data.data_points[0].attributes,
         )
         self.assertEqual(metrics[1].name, "otel.sdk.exporter.span.exported")
-        self.assert_standard_metric_attrs(
-            metrics[1].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[1].data.data_points[0].attributes)
         self.assertEqual(
             metrics[1].data.data_points[0].attributes["error.type"],
             "RequestException",
@@ -488,12 +440,8 @@ class TestOTLPSpanExporter(unittest.TestCase):
             metrics[1].data.data_points[0].attributes,
         )
         self.assertEqual(metrics[2].name, "otel.sdk.exporter.span.inflight")
-        self.assert_standard_metric_attrs(
-            metrics[2].data.data_points[0].attributes
-        )
-        self.assertNotIn(
-            "error.type", metrics[2].data.data_points[0].attributes
-        )
+        self.assert_standard_metric_attrs(metrics[2].data.data_points[0].attributes)
+        self.assertNotIn("error.type", metrics[2].data.data_points[0].attributes)
         self.assertNotIn(
             "http.response.status_code",
             metrics[2].data.data_points[0].attributes,
@@ -549,17 +497,13 @@ class TestOTLPSpanExporter(unittest.TestCase):
     @patch.object(Session, "post")
     def test_oversized_payload_dropped_before_send(self, mock_post):
         exporter = OTLPSpanExporter(max_request_size=1)
-        self.assertEqual(
-            exporter.export([BASIC_SPAN]), SpanExportResult.FAILURE
-        )
+        self.assertEqual(exporter.export([BASIC_SPAN]), SpanExportResult.FAILURE)
         mock_post.assert_not_called()
 
     @patch.object(OTLPSpanExporter, "_export", return_value=Mock(ok=True))
     def test_max_request_size_zero_disables(self, _mock_export):
         exporter = OTLPSpanExporter(max_request_size=0)
-        self.assertEqual(
-            exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS
-        )
+        self.assertEqual(exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS)
 
     @patch.object(Session, "post")
     def test_negative_max_request_size_disables_limit(self, mock_post):
@@ -567,9 +511,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         resp.status_code = 200
         mock_post.return_value = resp
         exporter = OTLPSpanExporter(max_request_size=-1)
-        self.assertEqual(
-            exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS
-        )
+        self.assertEqual(exporter.export([BASIC_SPAN]), SpanExportResult.SUCCESS)
         mock_post.assert_called()
 
     @patch.object(Session, "post")
@@ -585,31 +527,19 @@ class TestOTLPSpanExporter(unittest.TestCase):
         # Guard the discriminating condition: compressed < limit < uncompressed.
         self.assertLess(len(compressed), limit)
         self.assertLess(limit, len(uncompressed))
-        exporter = OTLPSpanExporter(
-            max_request_size=limit, compression=Compression.Gzip
-        )
+        exporter = OTLPSpanExporter(max_request_size=limit, compression=Compression.Gzip)
         self.assertEqual(exporter.export(spans), SpanExportResult.FAILURE)
         mock_post.assert_not_called()
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     @patch.object(Session, "post")
     def test_oversized_payload_records_failure_metric(self, mock_post):
-        exporter = OTLPSpanExporter(
-            max_request_size=1, meter_provider=self.meter_provider
-        )
-        self.assertEqual(
-            exporter.export([BASIC_SPAN]), SpanExportResult.FAILURE
-        )
+        exporter = OTLPSpanExporter(max_request_size=1, meter_provider=self.meter_provider)
+        self.assertEqual(exporter.export([BASIC_SPAN]), SpanExportResult.FAILURE)
         mock_post.assert_not_called()
         metrics_data = self.metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
-        exported = next(
-            metric
-            for metric in scope_metrics.metrics
-            if metric.name == "otel.sdk.exporter.span.exported"
-        )
+        exported = next(metric for metric in scope_metrics.metrics if metric.name == "otel.sdk.exporter.span.exported")
         self.assertEqual(
             exported.data.data_points[0].attributes["error.type"],
             "RequestPayloadTooLargeError",
@@ -619,9 +549,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         server, thread = _start_recording_server()
         port = server.server_address[1]
         try:
-            exporter = OTLPSpanExporter(
-                endpoint=f"http://127.0.0.1:{port}/v1/traces"
-            )
+            exporter = OTLPSpanExporter(endpoint=f"http://127.0.0.1:{port}/v1/traces")
             result = exporter.export([BASIC_SPAN])
         finally:
             server.shutdown()
@@ -648,13 +576,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(server.received_bodies, [])
 
     def assert_standard_metric_attrs(self, attributes):
-        self.assertEqual(
-            attributes["otel.component.type"], "otlp_http_span_exporter"
-        )
-        self.assertTrue(
-            attributes["otel.component.name"].startswith(
-                "otlp_http_span_exporter/"
-            )
-        )
+        self.assertEqual(attributes["otel.component.type"], "otlp_http_span_exporter")
+        self.assertTrue(attributes["otel.component.name"].startswith("otlp_http_span_exporter/"))
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
