@@ -1,0 +1,1 @@
+Fix misleading instrument name validation error message (name max length is 255, not 63).
