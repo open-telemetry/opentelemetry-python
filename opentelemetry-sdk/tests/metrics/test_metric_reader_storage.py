@@ -339,23 +339,15 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     ),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertLogs(level=WARNING):
-            metric_reader_storage.consume_measurement(
-                Measurement(1, time_ns(), observable_counter, Context())
-            )
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
 
         self.assertIs(
-            metric_reader_storage._instrument_view_instrument_matches[
-                observable_counter
-            ][0]._view,
+            metric_reader_storage._instrument_view_instrument_matches[observable_counter][0]._view,
             _DEFAULT_VIEW,
         )
 
