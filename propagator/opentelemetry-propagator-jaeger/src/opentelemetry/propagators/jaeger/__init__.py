@@ -42,10 +42,7 @@ class JaegerPropagator(TextMapPropagator):
         context = self._extract_baggage(getter, carrier, context)
 
         trace_id, span_id, flags = _parse_trace_id_header(header)
-        if (
-            trace_id == trace.INVALID_TRACE_ID
-            or span_id == trace.INVALID_SPAN_ID
-        ):
+        if trace_id == trace.INVALID_TRACE_ID or span_id == trace.INVALID_SPAN_ID:
             return context
 
         span = trace.NonRecordingSpan(
@@ -107,11 +104,7 @@ class JaegerPropagator(TextMapPropagator):
         carrier: CarrierT,
         context: Context,
     ) -> Context:
-        baggage_keys = [
-            key
-            for key in getter.keys(carrier)
-            if key.startswith(self.BAGGAGE_PREFIX)
-        ]
+        baggage_keys = [key for key in getter.keys(carrier) if key.startswith(self.BAGGAGE_PREFIX)]
         for key in baggage_keys:
             value = _extract_first_element(getter.get(carrier, key))
             if value is None:

@@ -39,9 +39,7 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
                 PB2KeyValue(key="a", value=PB2AnyValue(int_value=1)),
                 PB2KeyValue(key="b", value=PB2AnyValue(double_value=3.14)),
                 PB2KeyValue(key="c", value=PB2AnyValue(bool_value=False)),
-                PB2KeyValue(
-                    key="hello", value=PB2AnyValue(string_value="world")
-                ),
+                PB2KeyValue(key="hello", value=PB2AnyValue(string_value="world")),
                 PB2KeyValue(
                     key="greet",
                     value=PB2AnyValue(
@@ -84,9 +82,7 @@ class TestOTLPAttributeEncoder(unittest.TestCase):
 
     def test_encode_attributes_error_logs_key(self):
         with self.assertLogs(level=ERROR) as error:
-            result = _encode_attributes(
-                {"a": 1, "bad_key": CallingStrRaisesException(), "b": 2}
-            )
+            result = _encode_attributes({"a": 1, "bad_key": CallingStrRaisesException(), "b": 2})
 
         self.assertEqual(len(error.records), 1)
         self.assertEqual(error.records[0].msg, "Failed to encode key %s: %s")

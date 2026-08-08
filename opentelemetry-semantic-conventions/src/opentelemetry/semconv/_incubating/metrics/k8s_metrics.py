@@ -15,10 +15,7 @@ from opentelemetry.metrics import (
 )
 
 # pylint: disable=invalid-name
-CallbackT = (
-    Callable[[CallbackOptions], Iterable[Observation]]
-    | Generator[Iterable[Observation], CallbackOptions, None]
-)
+CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
 
 
 K8S_CONTAINER_CPU_LIMIT: Final = "k8s.container.cpu.limit"
@@ -80,9 +77,7 @@ def create_k8s_container_cpu_limit_desired(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_CONTAINER_CPU_LIMIT_UTILIZATION: Final = (
-    "k8s.container.cpu.limit.utilization"
-)
+K8S_CONTAINER_CPU_LIMIT_UTILIZATION: Final = "k8s.container.cpu.limit.utilization"
 """
 The ratio of container CPU usage to its current CPU limit
 Instrument: gauge
@@ -94,9 +89,7 @@ If the CPU limit is not set, this metric SHOULD NOT be emitted for that containe
 """
 
 
-def create_k8s_container_cpu_limit_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_container_cpu_limit_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The ratio of container CPU usage to its current CPU limit"""
     return meter.create_observable_gauge(
         name=K8S_CONTAINER_CPU_LIMIT_UTILIZATION,
@@ -165,9 +158,7 @@ def create_k8s_container_cpu_request_desired(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_CONTAINER_CPU_REQUEST_UTILIZATION: Final = (
-    "k8s.container.cpu.request.utilization"
-)
+K8S_CONTAINER_CPU_REQUEST_UTILIZATION: Final = "k8s.container.cpu.request.utilization"
 """
 The ratio of container CPU usage to its current CPU request
 Instrument: gauge
@@ -191,9 +182,7 @@ def create_k8s_container_cpu_request_utilization(
     )
 
 
-K8S_CONTAINER_EPHEMERAL_STORAGE_LIMIT: Final = (
-    "k8s.container.ephemeral_storage.limit"
-)
+K8S_CONTAINER_EPHEMERAL_STORAGE_LIMIT: Final = "k8s.container.ephemeral_storage.limit"
 """
 Maximum ephemeral storage resource limit set for the container
 Instrument: updowncounter
@@ -213,9 +202,7 @@ def create_k8s_container_ephemeral_storage_limit(
     )
 
 
-K8S_CONTAINER_EPHEMERAL_STORAGE_REQUEST: Final = (
-    "k8s.container.ephemeral_storage.request"
-)
+K8S_CONTAINER_EPHEMERAL_STORAGE_REQUEST: Final = "k8s.container.ephemeral_storage.request"
 """
 Ephemeral storage resource requested for the container
 Instrument: updowncounter
@@ -235,9 +222,7 @@ def create_k8s_container_ephemeral_storage_request(
     )
 
 
-K8S_CONTAINER_EPHEMERAL_STORAGE_USAGE: Final = (
-    "k8s.container.ephemeral_storage.usage"
-)
+K8S_CONTAINER_EPHEMERAL_STORAGE_USAGE: Final = "k8s.container.ephemeral_storage.usage"
 """
 The ephemeral storage used by a container
 Instrument: updowncounter
@@ -272,9 +257,7 @@ def create_k8s_container_memory_limit(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_CONTAINER_MEMORY_LIMIT_CURRENT: Final = (
-    "k8s.container.memory.limit.current"
-)
+K8S_CONTAINER_MEMORY_LIMIT_CURRENT: Final = "k8s.container.memory.limit.current"
 """
 Maximum memory resource limit currently configured for a running container
 Instrument: updowncounter
@@ -296,9 +279,7 @@ def create_k8s_container_memory_limit_current(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_CONTAINER_MEMORY_LIMIT_DESIRED: Final = (
-    "k8s.container.memory.limit.desired"
-)
+K8S_CONTAINER_MEMORY_LIMIT_DESIRED: Final = "k8s.container.memory.limit.desired"
 """
 Maximum memory resource limit as defined by the container spec
 Instrument: updowncounter
@@ -335,9 +316,7 @@ def create_k8s_container_memory_request(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_CONTAINER_MEMORY_REQUEST_CURRENT: Final = (
-    "k8s.container.memory.request.current"
-)
+K8S_CONTAINER_MEMORY_REQUEST_CURRENT: Final = "k8s.container.memory.request.current"
 """
 Memory resource request currently configured for a running container
 Instrument: updowncounter
@@ -359,9 +338,7 @@ def create_k8s_container_memory_request_current(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_CONTAINER_MEMORY_REQUEST_DESIRED: Final = (
-    "k8s.container.memory.request.desired"
-)
+K8S_CONTAINER_MEMORY_REQUEST_DESIRED: Final = "k8s.container.memory.request.desired"
 """
 Memory resource requested as defined by the container spec
 Instrument: updowncounter
@@ -532,9 +509,7 @@ def create_k8s_cronjob_job_active(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_DAEMONSET_CURRENT_SCHEDULED_NODES: Final = (
-    "k8s.daemonset.current_scheduled_nodes"
-)
+K8S_DAEMONSET_CURRENT_SCHEDULED_NODES: Final = "k8s.daemonset.current_scheduled_nodes"
 """
 Deprecated: Replaced by `k8s.daemonset.node.current_scheduled`.
 """
@@ -551,9 +526,7 @@ def create_k8s_daemonset_current_scheduled_nodes(
     )
 
 
-K8S_DAEMONSET_DESIRED_SCHEDULED_NODES: Final = (
-    "k8s.daemonset.desired_scheduled_nodes"
-)
+K8S_DAEMONSET_DESIRED_SCHEDULED_NODES: Final = "k8s.daemonset.desired_scheduled_nodes"
 """
 Deprecated: Replaced by `k8s.daemonset.node.desired_scheduled`.
 """
@@ -585,9 +558,7 @@ def create_k8s_daemonset_misscheduled_nodes(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_DAEMONSET_NODE_CURRENT_SCHEDULED: Final = (
-    "k8s.daemonset.node.current_scheduled"
-)
+K8S_DAEMONSET_NODE_CURRENT_SCHEDULED: Final = "k8s.daemonset.node.current_scheduled"
 """
 Number of nodes that are running at least 1 daemon pod and are supposed to run the daemon pod
 Instrument: updowncounter
@@ -606,9 +577,7 @@ def create_k8s_daemonset_node_current_scheduled(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_DAEMONSET_NODE_DESIRED_SCHEDULED: Final = (
-    "k8s.daemonset.node.desired_scheduled"
-)
+K8S_DAEMONSET_NODE_DESIRED_SCHEDULED: Final = "k8s.daemonset.node.desired_scheduled"
 """
 Number of nodes that should be running the daemon pod (including nodes currently running the daemon pod)
 Instrument: updowncounter
@@ -793,9 +762,7 @@ def create_k8s_hpa_max_pods(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_HPA_METRIC_TARGET_CPU_AVERAGE_UTILIZATION: Final = (
-    "k8s.hpa.metric.target.cpu.average_utilization"
-)
+K8S_HPA_METRIC_TARGET_CPU_AVERAGE_UTILIZATION: Final = "k8s.hpa.metric.target.cpu.average_utilization"
 """
 Target average utilization, in percentage, for CPU resource in HPA config
 Instrument: gauge
@@ -819,9 +786,7 @@ def create_k8s_hpa_metric_target_cpu_average_utilization(
     )
 
 
-K8S_HPA_METRIC_TARGET_CPU_AVERAGE_VALUE: Final = (
-    "k8s.hpa.metric.target.cpu.average_value"
-)
+K8S_HPA_METRIC_TARGET_CPU_AVERAGE_VALUE: Final = "k8s.hpa.metric.target.cpu.average_value"
 """
 Target average value for CPU resource in HPA config
 Instrument: gauge
@@ -857,9 +822,7 @@ the `k8s.container.name` attribute MUST be set to identify the specific containe
 """
 
 
-def create_k8s_hpa_metric_target_cpu_value(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_hpa_metric_target_cpu_value(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Target value for CPU resource in HPA config"""
     return meter.create_observable_gauge(
         name=K8S_HPA_METRIC_TARGET_CPU_VALUE,
@@ -1162,9 +1125,7 @@ def create_k8s_node_allocatable_cpu(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_NODE_ALLOCATABLE_EPHEMERAL_STORAGE: Final = (
-    "k8s.node.allocatable.ephemeral_storage"
-)
+K8S_NODE_ALLOCATABLE_EPHEMERAL_STORAGE: Final = "k8s.node.allocatable.ephemeral_storage"
 """
 Deprecated: Replaced by `k8s.node.ephemeral_storage.allocatable`.
 """
@@ -1273,9 +1234,7 @@ Note: CPU usage of the specific Node on all available CPU cores, averaged over t
 """
 
 
-def create_k8s_node_cpu_usage(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_node_cpu_usage(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Node's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
         name=K8S_NODE_CPU_USAGE,
@@ -1285,9 +1244,7 @@ def create_k8s_node_cpu_usage(
     )
 
 
-K8S_NODE_EPHEMERAL_STORAGE_ALLOCATABLE: Final = (
-    "k8s.node.ephemeral_storage.allocatable"
-)
+K8S_NODE_EPHEMERAL_STORAGE_ALLOCATABLE: Final = "k8s.node.ephemeral_storage.allocatable"
 """
 Amount of ephemeral-storage allocatable on the node
 Instrument: updowncounter
@@ -1454,9 +1411,7 @@ Note: Total memory usage of the Node.
 """
 
 
-def create_k8s_node_memory_usage(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_node_memory_usage(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Memory usage of the Node"""
     return meter.create_observable_gauge(
         name=K8S_NODE_MEMORY_USAGE,
@@ -1536,9 +1491,7 @@ def create_k8s_node_pod_allocatable(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_NODE_SYSTEM_CONTAINER_CPU_TIME: Final = (
-    "k8s.node.system_container.cpu.time"
-)
+K8S_NODE_SYSTEM_CONTAINER_CPU_TIME: Final = "k8s.node.system_container.cpu.time"
 """
 Node's system container CPU time
 Instrument: counter
@@ -1556,9 +1509,7 @@ def create_k8s_node_system_container_cpu_time(meter: Meter) -> Counter:
     )
 
 
-K8S_NODE_SYSTEM_CONTAINER_CPU_USAGE: Final = (
-    "k8s.node.system_container.cpu.usage"
-)
+K8S_NODE_SYSTEM_CONTAINER_CPU_USAGE: Final = "k8s.node.system_container.cpu.usage"
 """
 Node's system container CPU usage, measured in cpus
 Instrument: gauge
@@ -1567,9 +1518,7 @@ Note: This metric is derived from the [CPUStats.UsageNanoCores](https://github.c
 """
 
 
-def create_k8s_node_system_container_cpu_usage(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_node_system_container_cpu_usage(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Node's system container CPU usage, measured in cpus"""
     return meter.create_observable_gauge(
         name=K8S_NODE_SYSTEM_CONTAINER_CPU_USAGE,
@@ -1579,9 +1528,7 @@ def create_k8s_node_system_container_cpu_usage(
     )
 
 
-K8S_NODE_SYSTEM_CONTAINER_MEMORY_USAGE: Final = (
-    "k8s.node.system_container.memory.usage"
-)
+K8S_NODE_SYSTEM_CONTAINER_MEMORY_USAGE: Final = "k8s.node.system_container.memory.usage"
 """
 Node's system container memory usage
 Instrument: updowncounter
@@ -1601,9 +1548,7 @@ def create_k8s_node_system_container_memory_usage(
     )
 
 
-K8S_NODE_SYSTEM_CONTAINER_MEMORY_WORKING_SET: Final = (
-    "k8s.node.system_container.memory.working_set"
-)
+K8S_NODE_SYSTEM_CONTAINER_MEMORY_WORKING_SET: Final = "k8s.node.system_container.memory.working_set"
 """
 The amount of working set memory
 Instrument: updowncounter
@@ -1633,9 +1578,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 """
 
 
-def create_k8s_node_uptime(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_node_uptime(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The time the Node has been running"""
     return meter.create_observable_gauge(
         name=K8S_NODE_UPTIME,
@@ -1665,9 +1608,7 @@ def create_k8s_persistentvolume_status_phase(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_PERSISTENTVOLUME_STORAGE_CAPACITY: Final = (
-    "k8s.persistentvolume.storage.capacity"
-)
+K8S_PERSISTENTVOLUME_STORAGE_CAPACITY: Final = "k8s.persistentvolume.storage.capacity"
 """
 The storage capacity of the PersistentVolume
 Instrument: updowncounter
@@ -1687,9 +1628,7 @@ def create_k8s_persistentvolume_storage_capacity(
     )
 
 
-K8S_PERSISTENTVOLUMECLAIM_STATUS_PHASE: Final = (
-    "k8s.persistentvolumeclaim.status.phase"
-)
+K8S_PERSISTENTVOLUMECLAIM_STATUS_PHASE: Final = "k8s.persistentvolumeclaim.status.phase"
 """
 Number of PersistentVolumeClaims in a given phase
 Instrument: updowncounter
@@ -1711,9 +1650,7 @@ def create_k8s_persistentvolumeclaim_status_phase(
     )
 
 
-K8S_PERSISTENTVOLUMECLAIM_STORAGE_CAPACITY: Final = (
-    "k8s.persistentvolumeclaim.storage.capacity"
-)
+K8S_PERSISTENTVOLUMECLAIM_STORAGE_CAPACITY: Final = "k8s.persistentvolumeclaim.storage.capacity"
 """
 The actual storage capacity provisioned for the PersistentVolumeClaim
 Instrument: updowncounter
@@ -1735,9 +1672,7 @@ def create_k8s_persistentvolumeclaim_storage_capacity(
     )
 
 
-K8S_PERSISTENTVOLUMECLAIM_STORAGE_REQUEST: Final = (
-    "k8s.persistentvolumeclaim.storage.request"
-)
+K8S_PERSISTENTVOLUMECLAIM_STORAGE_REQUEST: Final = "k8s.persistentvolumeclaim.storage.request"
 """
 The storage requested by the PersistentVolumeClaim
 Instrument: updowncounter
@@ -1784,9 +1719,7 @@ Note: CPU usage of the specific Pod on all available CPU cores, averaged over th
 """
 
 
-def create_k8s_pod_cpu_usage(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_pod_cpu_usage(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Pod's CPU usage, measured in cpus. Range from 0 to the number of allocatable CPUs"""
     return meter.create_observable_gauge(
         name=K8S_POD_CPU_USAGE,
@@ -1927,9 +1860,7 @@ Note: Total memory usage of the Pod.
 """
 
 
-def create_k8s_pod_memory_usage(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_pod_memory_usage(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Memory usage of the Pod"""
     return meter.create_observable_gauge(
         name=K8S_POD_MEMORY_USAGE,
@@ -2040,9 +1971,7 @@ The actual accuracy would depend on the instrumentation and operating system.
 """
 
 
-def create_k8s_pod_uptime(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_pod_uptime(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The time the Pod has been running"""
     return meter.create_observable_gauge(
         name=K8S_POD_UPTIME,
@@ -2250,9 +2179,7 @@ def create_k8s_replicaset_pod_desired(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_REPLICATION_CONTROLLER_AVAILABLE_PODS: Final = (
-    "k8s.replication_controller.available_pods"
-)
+K8S_REPLICATION_CONTROLLER_AVAILABLE_PODS: Final = "k8s.replication_controller.available_pods"
 """
 Deprecated: Replaced by `k8s.replicationcontroller.pod.available`.
 """
@@ -2269,9 +2196,7 @@ def create_k8s_replication_controller_available_pods(
     )
 
 
-K8S_REPLICATION_CONTROLLER_DESIRED_PODS: Final = (
-    "k8s.replication_controller.desired_pods"
-)
+K8S_REPLICATION_CONTROLLER_DESIRED_PODS: Final = "k8s.replication_controller.desired_pods"
 """
 Deprecated: Replaced by `k8s.replicationcontroller.pod.desired`.
 """
@@ -2288,9 +2213,7 @@ def create_k8s_replication_controller_desired_pods(
     )
 
 
-K8S_REPLICATIONCONTROLLER_AVAILABLE_PODS: Final = (
-    "k8s.replicationcontroller.available_pods"
-)
+K8S_REPLICATIONCONTROLLER_AVAILABLE_PODS: Final = "k8s.replicationcontroller.available_pods"
 """
 Deprecated: Replaced by `k8s.replicationcontroller.pod.available`.
 """
@@ -2307,9 +2230,7 @@ def create_k8s_replicationcontroller_available_pods(
     )
 
 
-K8S_REPLICATIONCONTROLLER_DESIRED_PODS: Final = (
-    "k8s.replicationcontroller.desired_pods"
-)
+K8S_REPLICATIONCONTROLLER_DESIRED_PODS: Final = "k8s.replicationcontroller.desired_pods"
 """
 Deprecated: Replaced by `k8s.replicationcontroller.pod.desired`.
 """
@@ -2326,9 +2247,7 @@ def create_k8s_replicationcontroller_desired_pods(
     )
 
 
-K8S_REPLICATIONCONTROLLER_POD_AVAILABLE: Final = (
-    "k8s.replicationcontroller.pod.available"
-)
+K8S_REPLICATIONCONTROLLER_POD_AVAILABLE: Final = "k8s.replicationcontroller.pod.available"
 """
 Total number of available replica pods (ready for at least minReadySeconds) targeted by this replication controller
 Instrument: updowncounter
@@ -2349,9 +2268,7 @@ def create_k8s_replicationcontroller_pod_available(
     )
 
 
-K8S_REPLICATIONCONTROLLER_POD_DESIRED: Final = (
-    "k8s.replicationcontroller.pod.desired"
-)
+K8S_REPLICATIONCONTROLLER_POD_DESIRED: Final = "k8s.replicationcontroller.pod.desired"
 """
 Number of desired replica pods in this replication controller
 Instrument: updowncounter
@@ -2414,9 +2331,7 @@ def create_k8s_resourcequota_cpu_limit_used(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_RESOURCEQUOTA_CPU_REQUEST_HARD: Final = (
-    "k8s.resourcequota.cpu.request.hard"
-)
+K8S_RESOURCEQUOTA_CPU_REQUEST_HARD: Final = "k8s.resourcequota.cpu.request.hard"
 """
 The CPU requests in a specific namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2437,9 +2352,7 @@ def create_k8s_resourcequota_cpu_request_hard(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_RESOURCEQUOTA_CPU_REQUEST_USED: Final = (
-    "k8s.resourcequota.cpu.request.used"
-)
+K8S_RESOURCEQUOTA_CPU_REQUEST_USED: Final = "k8s.resourcequota.cpu.request.used"
 """
 The CPU requests in a specific namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2460,9 +2373,7 @@ def create_k8s_resourcequota_cpu_request_used(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_RESOURCEQUOTA_EPHEMERAL_STORAGE_LIMIT_HARD: Final = (
-    "k8s.resourcequota.ephemeral_storage.limit.hard"
-)
+K8S_RESOURCEQUOTA_EPHEMERAL_STORAGE_LIMIT_HARD: Final = "k8s.resourcequota.ephemeral_storage.limit.hard"
 """
 The sum of local ephemeral storage limits in the namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2485,9 +2396,7 @@ def create_k8s_resourcequota_ephemeral_storage_limit_hard(
     )
 
 
-K8S_RESOURCEQUOTA_EPHEMERAL_STORAGE_LIMIT_USED: Final = (
-    "k8s.resourcequota.ephemeral_storage.limit.used"
-)
+K8S_RESOURCEQUOTA_EPHEMERAL_STORAGE_LIMIT_USED: Final = "k8s.resourcequota.ephemeral_storage.limit.used"
 """
 The sum of local ephemeral storage limits in the namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2510,9 +2419,7 @@ def create_k8s_resourcequota_ephemeral_storage_limit_used(
     )
 
 
-K8S_RESOURCEQUOTA_EPHEMERAL_STORAGE_REQUEST_HARD: Final = (
-    "k8s.resourcequota.ephemeral_storage.request.hard"
-)
+K8S_RESOURCEQUOTA_EPHEMERAL_STORAGE_REQUEST_HARD: Final = "k8s.resourcequota.ephemeral_storage.request.hard"
 """
 The sum of local ephemeral storage requests in the namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2535,9 +2442,7 @@ def create_k8s_resourcequota_ephemeral_storage_request_hard(
     )
 
 
-K8S_RESOURCEQUOTA_EPHEMERAL_STORAGE_REQUEST_USED: Final = (
-    "k8s.resourcequota.ephemeral_storage.request.used"
-)
+K8S_RESOURCEQUOTA_EPHEMERAL_STORAGE_REQUEST_USED: Final = "k8s.resourcequota.ephemeral_storage.request.used"
 """
 The sum of local ephemeral storage requests in the namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2560,9 +2465,7 @@ def create_k8s_resourcequota_ephemeral_storage_request_used(
     )
 
 
-K8S_RESOURCEQUOTA_HUGEPAGE_COUNT_REQUEST_HARD: Final = (
-    "k8s.resourcequota.hugepage_count.request.hard"
-)
+K8S_RESOURCEQUOTA_HUGEPAGE_COUNT_REQUEST_HARD: Final = "k8s.resourcequota.hugepage_count.request.hard"
 """
 The huge page requests in a specific namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2585,9 +2488,7 @@ def create_k8s_resourcequota_hugepage_count_request_hard(
     )
 
 
-K8S_RESOURCEQUOTA_HUGEPAGE_COUNT_REQUEST_USED: Final = (
-    "k8s.resourcequota.hugepage_count.request.used"
-)
+K8S_RESOURCEQUOTA_HUGEPAGE_COUNT_REQUEST_USED: Final = "k8s.resourcequota.hugepage_count.request.used"
 """
 The huge page requests in a specific namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2610,9 +2511,7 @@ def create_k8s_resourcequota_hugepage_count_request_used(
     )
 
 
-K8S_RESOURCEQUOTA_MEMORY_LIMIT_HARD: Final = (
-    "k8s.resourcequota.memory.limit.hard"
-)
+K8S_RESOURCEQUOTA_MEMORY_LIMIT_HARD: Final = "k8s.resourcequota.memory.limit.hard"
 """
 The memory limits in a specific namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2633,9 +2532,7 @@ def create_k8s_resourcequota_memory_limit_hard(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_RESOURCEQUOTA_MEMORY_LIMIT_USED: Final = (
-    "k8s.resourcequota.memory.limit.used"
-)
+K8S_RESOURCEQUOTA_MEMORY_LIMIT_USED: Final = "k8s.resourcequota.memory.limit.used"
 """
 The memory limits in a specific namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2656,9 +2553,7 @@ def create_k8s_resourcequota_memory_limit_used(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_RESOURCEQUOTA_MEMORY_REQUEST_HARD: Final = (
-    "k8s.resourcequota.memory.request.hard"
-)
+K8S_RESOURCEQUOTA_MEMORY_REQUEST_HARD: Final = "k8s.resourcequota.memory.request.hard"
 """
 The memory requests in a specific namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2681,9 +2576,7 @@ def create_k8s_resourcequota_memory_request_hard(
     )
 
 
-K8S_RESOURCEQUOTA_MEMORY_REQUEST_USED: Final = (
-    "k8s.resourcequota.memory.request.used"
-)
+K8S_RESOURCEQUOTA_MEMORY_REQUEST_USED: Final = "k8s.resourcequota.memory.request.used"
 """
 The memory requests in a specific namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2706,9 +2599,7 @@ def create_k8s_resourcequota_memory_request_used(
     )
 
 
-K8S_RESOURCEQUOTA_OBJECT_COUNT_HARD: Final = (
-    "k8s.resourcequota.object_count.hard"
-)
+K8S_RESOURCEQUOTA_OBJECT_COUNT_HARD: Final = "k8s.resourcequota.object_count.hard"
 """
 The object count limits in a specific namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2729,9 +2620,7 @@ def create_k8s_resourcequota_object_count_hard(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_RESOURCEQUOTA_OBJECT_COUNT_USED: Final = (
-    "k8s.resourcequota.object_count.used"
-)
+K8S_RESOURCEQUOTA_OBJECT_COUNT_USED: Final = "k8s.resourcequota.object_count.used"
 """
 The object count limits in a specific namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2752,9 +2641,7 @@ def create_k8s_resourcequota_object_count_used(meter: Meter) -> UpDownCounter:
     )
 
 
-K8S_RESOURCEQUOTA_PERSISTENTVOLUMECLAIM_COUNT_HARD: Final = (
-    "k8s.resourcequota.persistentvolumeclaim_count.hard"
-)
+K8S_RESOURCEQUOTA_PERSISTENTVOLUMECLAIM_COUNT_HARD: Final = "k8s.resourcequota.persistentvolumeclaim_count.hard"
 """
 The total number of PersistentVolumeClaims that can exist in the namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2780,9 +2667,7 @@ def create_k8s_resourcequota_persistentvolumeclaim_count_hard(
     )
 
 
-K8S_RESOURCEQUOTA_PERSISTENTVOLUMECLAIM_COUNT_USED: Final = (
-    "k8s.resourcequota.persistentvolumeclaim_count.used"
-)
+K8S_RESOURCEQUOTA_PERSISTENTVOLUMECLAIM_COUNT_USED: Final = "k8s.resourcequota.persistentvolumeclaim_count.used"
 """
 The total number of PersistentVolumeClaims that can exist in the namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2808,9 +2693,7 @@ def create_k8s_resourcequota_persistentvolumeclaim_count_used(
     )
 
 
-K8S_RESOURCEQUOTA_STORAGE_REQUEST_HARD: Final = (
-    "k8s.resourcequota.storage.request.hard"
-)
+K8S_RESOURCEQUOTA_STORAGE_REQUEST_HARD: Final = "k8s.resourcequota.storage.request.hard"
 """
 The storage requests in a specific namespace.
 The value represents the configured quota limit of the resource in the namespace
@@ -2836,9 +2719,7 @@ def create_k8s_resourcequota_storage_request_hard(
     )
 
 
-K8S_RESOURCEQUOTA_STORAGE_REQUEST_USED: Final = (
-    "k8s.resourcequota.storage.request.used"
-)
+K8S_RESOURCEQUOTA_STORAGE_REQUEST_USED: Final = "k8s.resourcequota.storage.request.used"
 """
 The storage requests in a specific namespace.
 The value represents the current observed total usage of the resource in the namespace
@@ -2890,9 +2771,7 @@ The `k8s.service.publish_not_ready_addresses` resource attribute indicates this 
 """
 
 
-def create_k8s_service_endpoint_count(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_k8s_service_endpoint_count(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Number of endpoints for a service by condition and address type"""
     return meter.create_observable_gauge(
         name=K8S_SERVICE_ENDPOINT_COUNT,
@@ -2902,9 +2781,7 @@ def create_k8s_service_endpoint_count(
     )
 
 
-K8S_SERVICE_LOAD_BALANCER_INGRESS_COUNT: Final = (
-    "k8s.service.load_balancer.ingress.count"
-)
+K8S_SERVICE_LOAD_BALANCER_INGRESS_COUNT: Final = "k8s.service.load_balancer.ingress.count"
 """
 Number of load balancer ingress points (external IPs/hostnames) assigned to the service
 Instrument: gauge
