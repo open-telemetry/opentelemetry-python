@@ -1,0 +1,1 @@
+`opentelemetry-propagator-jaeger`: fix typing issues and enable pyright typechecking for the package
