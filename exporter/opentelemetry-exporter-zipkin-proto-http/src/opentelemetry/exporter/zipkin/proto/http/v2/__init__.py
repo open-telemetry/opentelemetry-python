@@ -33,21 +33,15 @@ class ProtobufEncoder(Encoder):
     def content_type():
         return "application/x-protobuf"
 
-    def serialize(
-        self, spans: Sequence[Span], local_endpoint: NodeEndpoint
-    ) -> bytes:
+    def serialize(self, spans: Sequence[Span], local_endpoint: NodeEndpoint) -> bytes:
         encoded_local_endpoint = self._encode_local_endpoint(local_endpoint)
         # pylint: disable=no-member
         encoded_spans = zipkin_pb2.ListOfSpans()
         for span in spans:
-            encoded_spans.spans.append(
-                self._encode_span(span, encoded_local_endpoint)
-            )
+            encoded_spans.spans.append(self._encode_span(span, encoded_local_endpoint))
         return encoded_spans.SerializeToString()
 
-    def _encode_span(
-        self, span: Span, encoded_local_endpoint: zipkin_pb2.Endpoint
-    ) -> zipkin_pb2.Span:
+    def _encode_span(self, span: Span, encoded_local_endpoint: zipkin_pb2.Endpoint) -> zipkin_pb2.Span:
         context = span.get_span_context()
         # pylint: disable=no-member
         encoded_span = zipkin_pb2.Span(
@@ -78,9 +72,7 @@ class ProtobufEncoder(Encoder):
 
         return encoded_span
 
-    def _encode_annotations(
-        self, span_events: list[Event] | None
-    ) -> list | None:
+    def _encode_annotations(self, span_events: list[Event] | None) -> list | None:
         annotations = self._extract_annotations_from_events(span_events)
         if annotations is None:
             encoded_annotations = None

@@ -27,9 +27,7 @@ keepalive = 2
 errorlog = "-"
 loglevel = "info"
 accesslog = "-"
-access_log_format = (
-    '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-)
+access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 
 def post_fork(server, worker):
@@ -52,14 +50,10 @@ def post_fork(server, worker):
     trace.set_tracer_provider(TracerProvider(resource=resource))
     # This uses insecure connection for the purpose of example. Please see the
     # OTLP Exporter documentation for other options.
-    span_processor = BatchSpanProcessor(
-        OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
-    )
+    span_processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True))
     trace.get_tracer_provider().add_span_processor(span_processor)
 
-    reader = PeriodicExportingMetricReader(
-        OTLPMetricExporter(endpoint="http://localhost:4317")
-    )
+    reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint="http://localhost:4317"))
     metrics.set_meter_provider(
         MeterProvider(
             resource=resource,

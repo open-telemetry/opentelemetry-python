@@ -18,11 +18,6 @@ class TestGlobals(unittest.TestCase):
             trace.set_tracer_provider(TracerProvider())
             self.assertEqual(
                 test.output,
-                [
-                    (
-                        "WARNING:opentelemetry.trace:Overriding of current "
-                        "TracerProvider is not allowed"
-                    )
-                ],
+                [("WARNING:opentelemetry.trace:Overriding of current TracerProvider is not allowed")],
             )
         self.assertIs(tracer_provider, trace.get_tracer_provider())

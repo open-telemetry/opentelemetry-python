@@ -13,16 +13,10 @@ from opentelemetry.util.types import AnyValue, _ExtendedAttributes
 def _get_exception_attributes(
     exception: BaseException,
 ) -> dict[str, AnyValue]:
-    stacktrace = "".join(
-        traceback.format_exception(
-            type(exception), value=exception, tb=exception.__traceback__
-        )
-    )
+    stacktrace = "".join(traceback.format_exception(type(exception), value=exception, tb=exception.__traceback__))
     module = type(exception).__module__
     qualname = type(exception).__qualname__
-    exception_type = (
-        f"{module}.{qualname}" if module and module != "builtins" else qualname
-    )
+    exception_type = f"{module}.{qualname}" if module and module != "builtins" else qualname
     return {
         exception_attributes.EXCEPTION_TYPE: exception_type,
         exception_attributes.EXCEPTION_MESSAGE: str(exception),

@@ -35,9 +35,7 @@ class TestThreads(OpenTelemetryTestCase):
         self.assertEqual(spans[0].name, "one")
 
         for idx in range(1, 4):
-            self.assertEqual(
-                spans[0].attributes.get(f"key{idx}", None), str(idx)
-            )
+            self.assertEqual(spans[0].attributes.get(f"key{idx}", None), str(idx))
 
     def submit(self):
         span = self.tracer.scope_manager.active.span
@@ -51,9 +49,7 @@ class TestThreads(OpenTelemetryTestCase):
                         span.set_tag("key2", "2")
 
                         def task3():
-                            with self.tracer.scope_manager.activate(
-                                span, True
-                            ):
+                            with self.tracer.scope_manager.activate(span, True):
                                 span.set_tag("key3", "3")
 
                         self.executor.submit(task3)

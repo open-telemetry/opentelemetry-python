@@ -71,9 +71,7 @@ class ExponentMapping(Mapping):
         # This bucket is incomplete, since the upper boundary cannot be
         # represented. One greater than this index corresponds with the bucket
         # containing values > 2 ** 1024.
-        self._max_normal_lower_boundary_index = (
-            MAX_NORMAL_EXPONENT >> -self._scale
-        )
+        self._max_normal_lower_boundary_index = MAX_NORMAL_EXPONENT >> -self._scale
 
     def map_to_index(self, value: float) -> int:
         if value < MIN_NORMAL_VALUE:

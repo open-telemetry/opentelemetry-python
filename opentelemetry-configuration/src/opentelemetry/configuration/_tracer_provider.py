@@ -124,9 +124,7 @@ def _create_otlp_http_span_exporter(
             feature="otlp_http span exporter",
         ) from exc
 
-    compression = _map_compression(
-        config.compression, Compression, allow_deflate=True
-    )
+    compression = _map_compression(config.compression, Compression, allow_deflate=True)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
@@ -208,9 +206,7 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
             return factory(value)
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_traces_exporter", name)(
-            **(plugin_config or {})
-        )
+        return load_entry_point("opentelemetry_traces_exporter", name)(**(plugin_config or {}))
     raise ConfigurationError(
         "No exporter type specified in span exporter config. "
         "Supported types: otlp_http, otlp_grpc, console, otlp_file_development."
@@ -231,13 +227,8 @@ def _create_span_processor(
             export_timeout_millis=config.batch.export_timeout,
         )
     if config.simple is not None:
-        return SimpleSpanProcessor(
-            _create_span_exporter(config.simple.exporter)
-        )
-    raise ConfigurationError(
-        "No processor type specified in span processor config. "
-        "Supported types: batch, simple."
-    )
+        return SimpleSpanProcessor(_create_span_exporter(config.simple.exporter))
+    raise ConfigurationError("No processor type specified in span processor config. Supported types: batch, simple.")
 
 
 def _create_experimental_composable_sampler(
@@ -249,20 +240,12 @@ def _create_experimental_composable_sampler(
     if config.always_off is not None:
         return composable_always_off()
     if config.parent_threshold is not None:
-        return composable_parent_threshold(
-            _create_experimental_composable_sampler(
-                config.parent_threshold.root
-            )
-        )
+        return composable_parent_threshold(_create_experimental_composable_sampler(config.parent_threshold.root))
     if config.probability is not None:
         ratio = config.probability.ratio
-        return composable_traceid_ratio_based(
-            ratio if ratio is not None else 1.0
-        )
+        return composable_traceid_ratio_based(ratio if ratio is not None else 1.0)
     if config.rule_based is not None:
-        return composable_rule_based(
-            _create_rule_based_sampler_rules(config.rule_based)
-        )
+        return composable_rule_based(_create_rule_based_sampler_rules(config.rule_based))
     raise ConfigurationError(
         f"Unknown or unsupported experimental composable sampler type in config: {config!r}. "
         "Supported types: always_on, always_off, parent_threshold, probability, rule_based."
@@ -304,17 +287,10 @@ def _create_rule_based_sampler_rule_predicate(
         )
     if config.span_kinds is not None:
         predicates.append(
-            SpanKindPredicate(
-                [
-                    TraceSpanKind[span_kind.value.upper()]
-                    for span_kind in config.span_kinds
-                ]
-            )
+            SpanKindPredicate([TraceSpanKind[span_kind.value.upper()] for span_kind in config.span_kinds])
         )
     if config.parent is not None:
-        predicates.append(
-            ParentPredicate([parent.value for parent in config.parent])
-        )
+        predicates.append(ParentPredicate([parent.value for parent in config.parent]))
     if not predicates:
         return AlwaysMatchPredicate()
     if len(predicates) == 1:
@@ -338,11 +314,7 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
         ratio = config.trace_id_ratio_based.ratio
         return TraceIdRatioBased(ratio if ratio is not None else 1.0)
     if config.composite_development is not None:
-        return composite_sampler(
-            _create_experimental_composable_sampler(
-                config.composite_development
-            )
-        )
+        return composite_sampler(_create_experimental_composable_sampler(config.composite_development))
     if config.parent_based is not None:
         return _create_parent_based_sampler(config.parent_based)
     if config.additional_properties:
@@ -366,37 +338,22 @@ def _create_id_generator(config: IdGeneratorConfig) -> IdGenerator:
         return RandomIdGenerator()
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_id_generator", name)(
-            **(plugin_config or {})
-        )
-    raise ConfigurationError(
-        "No id_generator type specified in config. "
-        "Supported built-in types: random."
-    )
+        return load_entry_point("opentelemetry_id_generator", name)(**(plugin_config or {}))
+    raise ConfigurationError("No id_generator type specified in config. Supported built-in types: random.")
 
 
 def _create_parent_based_sampler(config: ParentBasedSamplerConfig) -> Sampler:
     """Create a ParentBased sampler from config, applying SDK defaults for absent delegates."""
-    root = (
-        _create_sampler(config.root) if config.root is not None else ALWAYS_ON
-    )
+    root = _create_sampler(config.root) if config.root is not None else ALWAYS_ON
     kwargs: dict = {"root": root}
     if config.remote_parent_sampled is not None:
-        kwargs["remote_parent_sampled"] = _create_sampler(
-            config.remote_parent_sampled
-        )
+        kwargs["remote_parent_sampled"] = _create_sampler(config.remote_parent_sampled)
     if config.remote_parent_not_sampled is not None:
-        kwargs["remote_parent_not_sampled"] = _create_sampler(
-            config.remote_parent_not_sampled
-        )
+        kwargs["remote_parent_not_sampled"] = _create_sampler(config.remote_parent_not_sampled)
     if config.local_parent_sampled is not None:
-        kwargs["local_parent_sampled"] = _create_sampler(
-            config.local_parent_sampled
-        )
+        kwargs["local_parent_sampled"] = _create_sampler(config.local_parent_sampled)
     if config.local_parent_not_sampled is not None:
-        kwargs["local_parent_not_sampled"] = _create_sampler(
-            config.local_parent_not_sampled
-        )
+        kwargs["local_parent_not_sampled"] = _create_sampler(config.local_parent_not_sampled)
     return ParentBased(**kwargs)
 
 
@@ -413,14 +370,10 @@ def _create_span_limits(config: SpanLimitsConfig) -> SpanLimits:
             else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
         ),
         max_events=(
-            config.event_count_limit
-            if config.event_count_limit is not None
-            else _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT
+            config.event_count_limit if config.event_count_limit is not None else _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT
         ),
         max_links=(
-            config.link_count_limit
-            if config.link_count_limit is not None
-            else _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT
+            config.link_count_limit if config.link_count_limit is not None else _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT
         ),
         max_event_attributes=(
             config.event_attribute_count_limit
@@ -453,15 +406,9 @@ def create_tracer_provider(
     Returns:
         A configured TracerProvider.
     """
-    sampler = (
-        _create_sampler(config.sampler)
-        if config is not None and config.sampler is not None
-        else _DEFAULT_SAMPLER
-    )
+    sampler = _create_sampler(config.sampler) if config is not None and config.sampler is not None else _DEFAULT_SAMPLER
     id_generator = (
-        _create_id_generator(config.id_generator)
-        if config is not None and config.id_generator is not None
-        else None
+        _create_id_generator(config.id_generator) if config is not None and config.id_generator is not None else None
     )
     span_limits = (
         _create_span_limits(config.limits)
