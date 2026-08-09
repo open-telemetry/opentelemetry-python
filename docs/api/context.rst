@@ -2,8 +2,8 @@ opentelemetry.context package
 =============================
 
 OpenTelemetry context values are immutable snapshots. Functions such as
-``set_value`` and the baggage helpers return a new ``Context`` object
-rather than mutating the current one.
+``set_value`` return a new ``Context`` object rather than mutating the
+current one.
 
 There are two common ways to use a context:
 
@@ -29,8 +29,6 @@ For example:
        # value
    finally:
        context.detach(token)
-
-This is the same model used by :mod:`opentelemetry.baggage`.
 
 Module contents
 ---------------
