@@ -22,16 +22,12 @@ resource = Resource(
 
 simple_exporter = InMemoryLogRecordExporter()
 simple_provider = LoggerProvider(resource=resource)
-simple_provider.add_log_record_processor(
-    SimpleLogRecordProcessor(simple_exporter)
-)
+simple_provider.add_log_record_processor(SimpleLogRecordProcessor(simple_exporter))
 simple_logger = simple_provider.get_logger("simple_logger")
 
 batch_exporter = InMemoryLogRecordExporter()
 batch_provider = LoggerProvider(resource=resource)
-batch_provider.add_log_record_processor(
-    BatchLogRecordProcessor(batch_exporter)
-)
+batch_provider.add_log_record_processor(BatchLogRecordProcessor(batch_exporter))
 batch_logger = batch_provider.get_logger("batch_logger")
 
 

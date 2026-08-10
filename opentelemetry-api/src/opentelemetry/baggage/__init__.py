@@ -51,9 +51,7 @@ def get_baggage(name: str, context: Context | None = None) -> object | None:
     return _get_baggage_value(context=context).get(name)
 
 
-def set_baggage(
-    name: str, value: object, context: Context | None = None
-) -> Context:
+def set_baggage(name: str, value: object, context: Context | None = None) -> Context:
     """Sets a value in the Baggage
 
     Args:

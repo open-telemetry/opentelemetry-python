@@ -51,9 +51,7 @@ class TestSumAggregation(TestCase):
 
         reader = InMemoryMetricReader(
             preferred_aggregation={ObservableCounter: aggregation},
-            preferred_temporality={
-                ObservableCounter: AggregationTemporality.DELTA
-            },
+            preferred_temporality={ObservableCounter: AggregationTemporality.DELTA},
         )
 
         provider = MeterProvider(metric_readers=[reader])
@@ -62,9 +60,7 @@ class TestSumAggregation(TestCase):
         reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
-        meter.create_observable_counter(
-            "observable_counter", [observable_counter_callback]
-        )
+        meter.create_observable_counter("observable_counter", [observable_counter_callback])
 
         results = []
 
@@ -85,54 +81,26 @@ class TestSumAggregation(TestCase):
         self.assertEqual(counter, 20)
 
         previous_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .time_unix_nano
+            results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].time_unix_nano
         )
 
         self.assertEqual(
-            (
-                results[0]
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .value
-            ),
+            (results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].value),
             8,
         )
 
         self.assertLess(
-            (
-                results[0]
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .start_time_unix_nano
-            ),
+            (results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].start_time_unix_nano),
             previous_time_unix_nano,
         )
 
         for metrics_data in results[1:]:
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                previous_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(previous_time_unix_nano, metric_data.start_time_unix_nano)
             previous_time_unix_nano = metric_data.time_unix_nano
             self.assertEqual(metric_data.value, 8)
-            self.assertLess(
-                metric_data.start_time_unix_nano, metric_data.time_unix_nano
-            )
+            self.assertLess(metric_data.start_time_unix_nano, metric_data.time_unix_nano)
 
         results = []
 
@@ -177,9 +145,7 @@ class TestSumAggregation(TestCase):
 
         reader = InMemoryMetricReader(
             preferred_aggregation={ObservableCounter: aggregation},
-            preferred_temporality={
-                ObservableCounter: AggregationTemporality.CUMULATIVE
-            },
+            preferred_temporality={ObservableCounter: AggregationTemporality.CUMULATIVE},
         )
 
         provider = MeterProvider(metric_readers=[reader])
@@ -188,9 +154,7 @@ class TestSumAggregation(TestCase):
         reader._set_meter_provider(NoOpMeterProvider())
         meter = provider.get_meter("name", "version")
 
-        meter.create_observable_counter(
-            "observable_counter", [observable_counter_callback]
-        )
+        meter.create_observable_counter("observable_counter", [observable_counter_callback])
 
         results = []
 
@@ -211,25 +175,13 @@ class TestSumAggregation(TestCase):
         self.assertEqual(counter, 20)
 
         start_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .start_time_unix_nano
+            results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].start_time_unix_nano
         )
 
         for index, metrics_data in enumerate(results):
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(start_time_unix_nano, metric_data.start_time_unix_nano)
             self.assertEqual(metric_data.value, 8 * (index + 1))
 
         results = []
@@ -284,54 +236,26 @@ class TestSumAggregation(TestCase):
             results.append(reader.get_metrics_data())
 
         previous_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .time_unix_nano
+            results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].time_unix_nano
         )
 
         self.assertEqual(
-            (
-                results[0]
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .value
-            ),
+            (results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].value),
             8,
         )
 
         self.assertLess(
-            (
-                results[0]
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .start_time_unix_nano
-            ),
+            (results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].start_time_unix_nano),
             previous_time_unix_nano,
         )
 
         for metrics_data in results[1:]:
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                previous_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(previous_time_unix_nano, metric_data.start_time_unix_nano)
             previous_time_unix_nano = metric_data.time_unix_nano
             self.assertEqual(metric_data.value, 8)
-            self.assertLess(
-                metric_data.start_time_unix_nano, metric_data.time_unix_nano
-            )
+            self.assertLess(metric_data.start_time_unix_nano, metric_data.time_unix_nano)
 
         results = []
 
@@ -352,26 +276,12 @@ class TestSumAggregation(TestCase):
         counter.add(2)
         results.append(reader.get_metrics_data())
 
-        metric_data_0 = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
-        metric_data_2 = (
-            results[2]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
+        metric_data_0 = results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
+        metric_data_2 = results[2].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
         self.assertIsNone(results[1])
 
-        self.assertGreater(
-            metric_data_2.start_time_unix_nano, metric_data_0.time_unix_nano
-        )
+        self.assertGreater(metric_data_2.start_time_unix_nano, metric_data_0.time_unix_nano)
 
         provider.shutdown()
 
@@ -414,25 +324,13 @@ class TestSumAggregation(TestCase):
             results.append(reader.get_metrics_data())
 
         start_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .start_time_unix_nano
+            results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].start_time_unix_nano
         )
 
         for index, metrics_data in enumerate(results):
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(start_time_unix_nano, metric_data.start_time_unix_nano)
             self.assertEqual(metric_data.value, 8 * (index + 1))
 
         results = []
@@ -443,25 +341,13 @@ class TestSumAggregation(TestCase):
         provider.shutdown()
 
         start_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .start_time_unix_nano
+            results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].start_time_unix_nano
         )
 
         for metrics_data in results:
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(start_time_unix_nano, metric_data.start_time_unix_nano)
             self.assertEqual(metric_data.value, 80)
 
     def test_sum_aggregation_with_exemplars(self):
@@ -481,13 +367,9 @@ class TestSumAggregation(TestCase):
 
         metric_data = in_memory_metric_reader.get_metrics_data()
 
-        self.assertEqual(
-            len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 1)
 
-        sum_metric = (
-            metric_data.resource_metrics[0].scope_metrics[0].metrics[0]
-        )
+        sum_metric = metric_data.resource_metrics[0].scope_metrics[0].metrics[0]
 
         data_points = sum_metric.data.data_points
         self.assertEqual(len(data_points), 3)
