@@ -26,11 +26,7 @@ class CommonEncoderTestCases:
         def setUpClass(cls):
             # Do not rely on test collection order to set the global
             # tracer provider's resource used by NodeEndpoint's defaults.
-            trace_api.set_tracer_provider(
-                TracerProvider(
-                    resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
-                )
-            )
+            trace_api.set_tracer_provider(TracerProvider(resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})))
 
         @staticmethod
         @abc.abstractmethod
