@@ -854,9 +854,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 )
             ]
         )
-        collector = _CustomCollector(
-            disable_target_info=True, scope_info_enabled=False
-        )
+        collector = _CustomCollector(disable_target_info=True, scope_info_enabled=False)
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -875,9 +873,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         metrics_data = MetricsData(
             resource_metrics=[
                 ResourceMetrics(
-                    resource=Resource(
-                        {"service.name": "my-service", "host.name": "myhost"}
-                    ),
+                    resource=Resource({"service.name": "my-service", "host.name": "myhost"}),
                     scope_metrics=[
                         ScopeMetrics(
                             scope=Mock(),
@@ -913,9 +909,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         metrics_data = MetricsData(
             resource_metrics=[
                 ResourceMetrics(
-                    resource=Resource(
-                        {"service.name": "my-service", "hostname": "myhost"}
-                    ),
+                    resource=Resource({"service.name": "my-service", "hostname": "myhost"}),
                     scope_metrics=[
                         ScopeMetrics(
                             scope=Mock(),

@@ -432,16 +432,10 @@ class _CustomCollector:
         attrs[_OTEL_SCOPE_SCHEMA_URL_LABEL] = scope.schema_url or ""
         return attrs
 
-    def _build_resource_attrs(
-        self, resource: Resource
-    ) -> dict[str, AttributeValue]:
+    def _build_resource_attrs(self, resource: Resource) -> dict[str, AttributeValue]:
         if not self._resource_attribute_filter:
             return {}
-        return {
-            key: value
-            for key, value in resource.attributes.items()
-            if self._resource_attribute_filter(key)
-        }
+        return {key: value for key, value in resource.attributes.items() if self._resource_attribute_filter(key)}
 
     def _resolve_metric_name(self, name: str) -> str:
         if self._prefix:
