@@ -112,9 +112,7 @@ class TestResolveCommon(unittest.TestCase):
         for label, env, default_path, expected in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
                 self.assertEqual(
-                    _resolve_endpoint(
-                        OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, default_path
-                    ),
+                    _resolve_endpoint(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, default_path),
                     expected,
                 )
 
@@ -181,9 +179,7 @@ class TestResolveCommon(unittest.TestCase):
         for label, env, headers_arg, expected in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
                 self.assertEqual(
-                    _resolve_headers(
-                        headers_arg, OTEL_EXPORTER_OTLP_TRACES_HEADERS
-                    ),
+                    _resolve_headers(headers_arg, OTEL_EXPORTER_OTLP_TRACES_HEADERS),
                     expected,
                 )
 
@@ -237,13 +233,9 @@ class TestResolveCommon(unittest.TestCase):
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
                 if errors:
                     with self.assertLogs(level=WARNING):
-                        result = _resolve_timeout(
-                            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
-                        )
+                        result = _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
                 else:
-                    result = _resolve_timeout(
-                        OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
-                    )
+                    result = _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
                 self.assertEqual(result, expected)
                 self.assertIsInstance(result, float)
 
@@ -309,13 +301,9 @@ class TestResolveCommon(unittest.TestCase):
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
                 if warns:
                     with self.assertLogs(level=WARNING):
-                        result = _resolve_compression(
-                            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
-                        )
+                        result = _resolve_compression(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION)
                 else:
-                    result = _resolve_compression(
-                        OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
-                    )
+                    result = _resolve_compression(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION)
                 self.assertEqual(result, expected)
 
     def test_normalize_compression(self):
@@ -466,9 +454,7 @@ class TestBuildTransport(unittest.TestCase):
             expected_cert,
         ) in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
-                with patch(
-                    "opentelemetry.exporter.otlp.proto.http._common.Urllib3HTTPTransport"
-                ) as mock_transport:
+                with patch("opentelemetry.exporter.otlp.proto.http._common.Urllib3HTTPTransport") as mock_transport:
                     result = _build_transport(
                         certificate_file,
                         client_key_file,
@@ -478,9 +464,7 @@ class TestBuildTransport(unittest.TestCase):
                         OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
                         session=None,
                     )
-                mock_transport.assert_called_once_with(
-                    verify=expected_verify, cert=expected_cert
-                )
+                mock_transport.assert_called_once_with(verify=expected_verify, cert=expected_cert)
                 self.assertIs(result, mock_transport.return_value)
 
     def test_build_transport_passes_verify_and_cert_to_requests(self):
@@ -491,9 +475,7 @@ class TestBuildTransport(unittest.TestCase):
                 {OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "cert.pem"},
                 clear=True,
             ),
-            patch(
-                "opentelemetry.exporter.otlp.proto.http._common.RequestsHTTPTransport"
-            ) as mock_transport,
+            patch("opentelemetry.exporter.otlp.proto.http._common.RequestsHTTPTransport") as mock_transport,
         ):
             result = _build_transport(
                 None,
@@ -504,9 +486,7 @@ class TestBuildTransport(unittest.TestCase):
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
                 session=session,
             )
-        mock_transport.assert_called_once_with(
-            verify="cert.pem", cert=None, session=session
-        )
+        mock_transport.assert_called_once_with(verify="cert.pem", cert=None, session=session)
         self.assertIs(result, mock_transport.return_value)
 
 
@@ -518,9 +498,7 @@ class TestLoadSessionFromEnvvar(unittest.TestCase):
     @patch.dict(sys.modules, {"requests": None})
     def test_missing_requests_raises_helpful_error(self):
         with self.assertRaises(ImportError) as cm:
-            _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER
-            )
+            _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER)
         self.assertIn(
             "opentelemetry-exporter-otlp-proto-http[requests]",
             str(cm.exception),

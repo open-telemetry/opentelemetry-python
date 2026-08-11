@@ -139,12 +139,10 @@ class OTLPLogExporter(LogRecordExporter):
                 batches may approach it.
             meter_provider: MeterProvider used for the exporter's own metrics.
         """
-        self._endpoint = endpoint or _resolve_endpoint(
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, DEFAULT_LOGS_EXPORT_PATH
+        self._endpoint = endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, DEFAULT_LOGS_EXPORT_PATH)
+        self._compression = _normalize_compression(compression) or _resolve_compression(
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
         )
-        self._compression = _normalize_compression(
-            compression
-        ) or _resolve_compression(OTEL_EXPORTER_OTLP_LOGS_COMPRESSION)
         transport = _transport or _build_transport(
             certificate_file,
             client_key_file,
@@ -152,23 +150,14 @@ class OTLPLogExporter(LogRecordExporter):
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
-            session=session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
-            ),
+            session=session or _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER),
         )
-        self._max_request_size = (
-            _DEFAULT_MAX_REQUEST_SIZE
-            if max_request_size is None
-            else max_request_size
-        )
+        self._max_request_size = _DEFAULT_MAX_REQUEST_SIZE if max_request_size is None else max_request_size
         self._client = _http.OTLPHTTPClient(
             transport=transport,
             endpoint=self._endpoint,
             kind="logs",
-            timeout=timeout
-            if timeout is not None
-            else _resolve_timeout(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT),
+            timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT),
             compression=self._compression,
             headers=_resolve_headers(headers, OTEL_EXPORTER_OTLP_LOGS_HEADERS),
             logger=_logger,
@@ -180,15 +169,10 @@ class OTLPLogExporter(LogRecordExporter):
             "logs",
             urlparse(self._endpoint),
             meter_provider,
-            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
-            .strip()
-            .lower()
-            == "true",
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
 
-    def export(
-        self, batch: Sequence[ReadableLogRecord]
-    ) -> LogRecordExportResult:
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogRecordExportResult.FAILURE
@@ -204,8 +188,7 @@ class OTLPLogExporter(LogRecordExporter):
 
             if _is_request_too_large(serialized_data, self._max_request_size):
                 _logger.warning(
-                    "Dropping logs batch: serialized size %d bytes exceeds "
-                    "max_request_size %d bytes.",
+                    "Dropping logs batch: serialized size %d bytes exceeds max_request_size %d bytes.",
                     len(serialized_data),
                     self._max_request_size,
                 )

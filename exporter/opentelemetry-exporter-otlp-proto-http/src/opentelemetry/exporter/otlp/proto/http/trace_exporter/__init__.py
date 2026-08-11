@@ -135,12 +135,10 @@ class OTLPSpanExporter(SpanExporter):
                 batches may approach it.
             meter_provider: MeterProvider used for the exporter's own metrics.
         """
-        self._endpoint = endpoint or _resolve_endpoint(
-            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, DEFAULT_TRACES_EXPORT_PATH
+        self._endpoint = endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, DEFAULT_TRACES_EXPORT_PATH)
+        self._compression = _normalize_compression(compression) or _resolve_compression(
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
         )
-        self._compression = _normalize_compression(
-            compression
-        ) or _resolve_compression(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION)
         transport = _transport or _build_transport(
             certificate_file,
             client_key_file,
@@ -148,27 +146,16 @@ class OTLPSpanExporter(SpanExporter):
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
-            session=session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
-            ),
+            session=session or _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER),
         )
-        self._max_request_size = (
-            _DEFAULT_MAX_REQUEST_SIZE
-            if max_request_size is None
-            else max_request_size
-        )
+        self._max_request_size = _DEFAULT_MAX_REQUEST_SIZE if max_request_size is None else max_request_size
         self._client = _http.OTLPHTTPClient(
             transport=transport,
             endpoint=self._endpoint,
             kind="spans",
-            timeout=timeout
-            if timeout is not None
-            else _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT),
+            timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT),
             compression=self._compression,
-            headers=_resolve_headers(
-                headers, OTEL_EXPORTER_OTLP_TRACES_HEADERS
-            ),
+            headers=_resolve_headers(headers, OTEL_EXPORTER_OTLP_TRACES_HEADERS),
             logger=_logger,
         )
         self._shutdown = False
@@ -178,10 +165,7 @@ class OTLPSpanExporter(SpanExporter):
             "traces",
             urlparse(self._endpoint),
             meter_provider,
-            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
-            .strip()
-            .lower()
-            == "true",
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
@@ -191,9 +175,7 @@ class OTLPSpanExporter(SpanExporter):
 
         with self._metrics.export_operation(len(spans)) as result:
             try:
-                serialized_data = encode_spans(
-                    spans
-                ).SerializePartialToString()
+                serialized_data = encode_spans(spans).SerializePartialToString()
             # pylint: disable-next=broad-exception-caught
             except Exception as error:
                 _logger.error("Failed to encode span batch: %s", error)
@@ -202,8 +184,7 @@ class OTLPSpanExporter(SpanExporter):
 
             if _is_request_too_large(serialized_data, self._max_request_size):
                 _logger.warning(
-                    "Dropping span batch: serialized size %d bytes exceeds "
-                    "max_request_size %d bytes.",
+                    "Dropping span batch: serialized size %d bytes exceeds max_request_size %d bytes.",
                     len(serialized_data),
                     self._max_request_size,
                 )

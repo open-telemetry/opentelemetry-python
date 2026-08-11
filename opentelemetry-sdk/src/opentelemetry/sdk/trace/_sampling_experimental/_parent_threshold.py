@@ -36,9 +36,7 @@ class _ComposableParentThreshold(ComposableSampler):
         parent_span_ctx = parent_span.get_span_context()
         is_root = not parent_span_ctx.is_valid
         if is_root:
-            return self._root_sampler.sampling_intent(
-                parent_ctx, name, span_kind, attributes, links, trace_state
-            )
+            return self._root_sampler.sampling_intent(parent_ctx, name, span_kind, attributes, links, trace_state)
 
         ot_trace_state = OtelTraceState.parse(trace_state)
 
@@ -48,11 +46,7 @@ class _ComposableParentThreshold(ComposableSampler):
                 threshold_reliable=True,
             )
 
-        threshold = (
-            MIN_THRESHOLD
-            if parent_span_ctx.trace_flags.sampled
-            else INVALID_THRESHOLD
-        )
+        threshold = MIN_THRESHOLD if parent_span_ctx.trace_flags.sampled else INVALID_THRESHOLD
         return SamplingIntent(threshold=threshold, threshold_reliable=False)
 
     def get_description(self) -> str:

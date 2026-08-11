@@ -233,9 +233,7 @@ class NoOpTracerProvider(TracerProvider):
         return NoOpTracer()
 
 
-@deprecated(
-    "You should use NoOpTracerProvider. Deprecated since version 1.9.0."
-)
+@deprecated("You should use NoOpTracerProvider. Deprecated since version 1.9.0.")
 class _DefaultTracerProvider(NoOpTracerProvider):
     """The default TracerProvider, used when no implementation is available.
 
@@ -355,8 +353,8 @@ class Tracer(ABC):
                 with tracer.start_as_current_span("two") as child:
                     child.add_event("child's event")
                     trace.get_current_span()  # returns child
-                trace.get_current_span()      # returns parent
-            trace.get_current_span()          # returns previously active span
+                trace.get_current_span()  # returns parent
+            trace.get_current_span()  # returns previously active span
 
         This is a convenience method for creating spans attached to the
         tracer's context. Applications that need more control over the span
@@ -374,8 +372,8 @@ class Tracer(ABC):
         This can also be used as a decorator::
 
             @tracer.start_as_current_span("name")
-            def function():
-                ...
+            def function(): ...
+
 
             function()
 
@@ -464,9 +462,7 @@ class NoOpTracer(Tracer):
         if isinstance(current_span, NonRecordingSpan):
             return current_span
         parent_span_context = current_span.get_span_context()
-        if parent_span_context is not None and not isinstance(
-            parent_span_context, SpanContext
-        ):
+        if parent_span_context is not None and not isinstance(parent_span_context, SpanContext):
             logger.warning(
                 "Invalid span context for %s: %s",
                 current_span,
@@ -573,9 +569,7 @@ def get_tracer_provider() -> TracerProvider:
         if OTEL_PYTHON_TRACER_PROVIDER not in os.environ:
             return _PROXY_TRACER_PROVIDER
 
-        tracer_provider: TracerProvider = _load_provider(
-            OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"
-        )
+        tracer_provider: TracerProvider = _load_provider(OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider")
         _set_tracer_provider(tracer_provider, log=False)
     # _TRACER_PROVIDER will have been set by one thread
     return cast("TracerProvider", _TRACER_PROVIDER)

@@ -122,9 +122,7 @@ LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
 
 
 class TestLogsExporter:
-    @pytest.fixture(
-        scope="class", params=LOG_EXPORTER_CONFIGS, ids=lambda c: c.id
-    )
+    @pytest.fixture(scope="class", params=LOG_EXPORTER_CONFIGS, ids=lambda c: c.id)
     def config(self, request) -> ExporterConfig[LogRecordExporter]:
         return request.param
 
@@ -137,9 +135,7 @@ class TestLogsExporter:
         provider = LoggerProvider(
             resource=Resource.create({"service.name": "test-service"}),
         )
-        provider.add_log_record_processor(
-            SimpleLogRecordProcessor(config.build())
-        )
+        provider.add_log_record_processor(SimpleLogRecordProcessor(config.build()))
         try:
             yield provider
         finally:
@@ -159,21 +155,13 @@ class TestLogsExporter:
         recorded = server.get_log_record(timeout=5.0)
         assert recorded.log_record.body.string_value == snapshot("hello world")
 
-    def test_log_severity_number(
-        self, logger: Logger, server: OtlpProtoTestServer
-    ):
-        logger.emit(
-            severity_number=SeverityNumber.ERROR, body="error occurred"
-        )
+    def test_log_severity_number(self, logger: Logger, server: OtlpProtoTestServer):
+        logger.emit(severity_number=SeverityNumber.ERROR, body="error occurred")
 
         recorded = server.get_log_record(timeout=5.0)
-        assert (
-            recorded.log_record.severity_number == SeverityNumber.ERROR.value
-        )
+        assert recorded.log_record.severity_number == SeverityNumber.ERROR.value
 
-    def test_log_severity_text(
-        self, logger: Logger, server: OtlpProtoTestServer
-    ):
+    def test_log_severity_text(self, logger: Logger, server: OtlpProtoTestServer):
         logger.emit(
             severity_number=SeverityNumber.WARN,
             severity_text="WARN",
@@ -198,13 +186,9 @@ class TestLogsExporter:
         recorded = server.get_log_record(timeout=5.0)
         attrs = _attrs_to_dict(recorded.log_record.attributes)
         assert math.isclose(attrs.pop("float_key"), 3.14, abs_tol=1e-5)
-        assert attrs == snapshot(
-            {"str_key": "hello", "int_key": 42, "bool_key": True}
-        )
+        assert attrs == snapshot({"str_key": "hello", "int_key": 42, "bool_key": True})
 
-    def test_scope_attributes(
-        self, logger_provider: LoggerProvider, server: OtlpProtoTestServer
-    ):
+    def test_scope_attributes(self, logger_provider: LoggerProvider, server: OtlpProtoTestServer):
         logger = logger_provider.get_logger(
             "test.scope",
             version="1.0.0",
@@ -215,13 +199,9 @@ class TestLogsExporter:
         recorded = server.get_log_record(timeout=5.0)
         assert recorded.scope.name == snapshot("test.scope")
         assert recorded.scope.version == snapshot("1.0.0")
-        assert _attrs_to_dict(recorded.scope.attributes) == snapshot(
-            {"scope.key": "scope.val"}
-        )
+        assert _attrs_to_dict(recorded.scope.attributes) == snapshot({"scope.key": "scope.val"})
 
-    def test_resource_attributes(
-        self, logger: Logger, server: OtlpProtoTestServer
-    ):
+    def test_resource_attributes(self, logger: Logger, server: OtlpProtoTestServer):
         logger.emit(body="resource test", severity_number=SeverityNumber.INFO)
 
         recorded = server.get_log_record(timeout=5.0)

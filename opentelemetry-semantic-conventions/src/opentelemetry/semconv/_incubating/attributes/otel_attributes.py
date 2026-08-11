@@ -113,9 +113,7 @@ class OtelComponentTypeValues(Enum):
     """OTLP metric exporter over HTTP with protobuf serialization."""
     OTLP_HTTP_JSON_METRIC_EXPORTER = "otlp_http_json_metric_exporter"
     """OTLP metric exporter over HTTP with JSON serialization."""
-    PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER = (
-        "prometheus_http_text_metric_exporter"
-    )
+    PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER = "prometheus_http_text_metric_exporter"
     """Prometheus metric exporter over HTTP with the default text-based format."""
 
 

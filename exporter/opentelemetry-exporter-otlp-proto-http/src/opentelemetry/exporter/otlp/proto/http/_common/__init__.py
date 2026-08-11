@@ -61,9 +61,7 @@ class RequestPayloadTooLargeError(Exception):
     """
 
 
-def _is_request_too_large(
-    serialized_data: bytes, max_request_size: int
-) -> bool:
+def _is_request_too_large(serialized_data: bytes, max_request_size: int) -> bool:
     """Return True if the serialized request exceeds a positive size limit.
 
     The size is measured on the uncompressed serialized request, matching the
@@ -77,9 +75,7 @@ def _is_request_too_large(
 def _load_session_from_envvar(
     cred_envvar: _CredentialEnvVar,
 ) -> requests.Session | None:
-    _credential_env = environ.get(
-        _OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
-    ) or environ.get(cred_envvar)
+    _credential_env = environ.get(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER) or environ.get(cred_envvar)
     if _credential_env:
         try:
             # pylint: disable-next=import-outside-toplevel
@@ -137,9 +133,7 @@ def _resolve_endpoint(
     if endpoint := os.environ.get(endpoint_env_var):
         return endpoint
 
-    base_endpoint = (
-        os.environ.get(OTEL_EXPORTER_OTLP_ENDPOINT) or _DEFAULT_ENDPOINT
-    )
+    base_endpoint = os.environ.get(OTEL_EXPORTER_OTLP_ENDPOINT) or _DEFAULT_ENDPOINT
 
     return f"{base_endpoint.removesuffix('/')}/{default_path}"
 
@@ -150,8 +144,7 @@ def _resolve_headers(
 ) -> dict[str, str]:
     headers_ = {k.lower(): v for k, v in _OTLP_HTTP_HEADERS.items()}
     env_headers = parse_env_headers(
-        os.environ.get(headers_env_var)
-        or os.environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
+        os.environ.get(headers_env_var) or os.environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         liberal=True,
     )
     headers_.update(env_headers)
@@ -163,11 +156,7 @@ def _resolve_headers(
 def _resolve_timeout(
     timeout_env_var: str,
 ) -> float:
-    raw = (
-        os.environ.get(timeout_env_var)
-        or os.environ.get(OTEL_EXPORTER_OTLP_TIMEOUT)
-        or _DEFAULT_TIMEOUT
-    )
+    raw = os.environ.get(timeout_env_var) or os.environ.get(OTEL_EXPORTER_OTLP_TIMEOUT) or _DEFAULT_TIMEOUT
 
     try:
         return float(raw)
@@ -182,11 +171,7 @@ def _resolve_timeout(
 
 def _resolve_compression(compression_env_var: str) -> _http.Compression:
     value = (
-        (
-            os.environ.get(compression_env_var)
-            or os.environ.get(OTEL_EXPORTER_OTLP_COMPRESSION)
-            or "none"
-        )
+        (os.environ.get(compression_env_var) or os.environ.get(OTEL_EXPORTER_OTLP_COMPRESSION) or "none")
         .lower()
         .strip()
     )
@@ -214,9 +199,7 @@ def _build_transport(
         or True
     )
     client_key_file = (
-        client_key_file
-        or os.environ.get(client_key_env_var)
-        or os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY)
+        client_key_file or os.environ.get(client_key_env_var) or os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY)
     )
     client_certificate_file = (
         client_certificate_file

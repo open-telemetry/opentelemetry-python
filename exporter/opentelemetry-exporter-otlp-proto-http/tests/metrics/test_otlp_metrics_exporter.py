@@ -116,9 +116,7 @@ class TestOTLPMetricExporter(TestCase):
         self.addCleanup(env_patcher.stop)
 
         self.metric_reader = InMemoryMetricReader()
-        self.meter_provider = MeterProvider(
-            metric_readers=[self.metric_reader]
-        )
+        self.meter_provider = MeterProvider(metric_readers=[self.metric_reader])
         self.metrics = {
             "sum_int": MetricsData(
                 resource_metrics=[
@@ -145,14 +143,8 @@ class TestOTLPMetricExporter(TestCase):
         }
 
     def assert_standard_metric_attrs(self, attributes):
-        self.assertEqual(
-            attributes["otel.component.type"], "otlp_http_metric_exporter"
-        )
-        self.assertTrue(
-            attributes["otel.component.name"].startswith(
-                "otlp_http_metric_exporter/"
-            )
-        )
+        self.assertEqual(attributes["otel.component.type"], "otlp_http_metric_exporter")
+        self.assertTrue(attributes["otel.component.name"].startswith("otlp_http_metric_exporter/"))
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
 
@@ -189,15 +181,11 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     def test_max_request_size_default(self):
-        self.assertEqual(
-            OTLPMetricExporter()._max_request_size, 64 * 1024 * 1024
-        )
+        self.assertEqual(OTLPMetricExporter()._max_request_size, 64 * 1024 * 1024)
 
     @mocketize
     def test_oversized_payload_dropped_before_send(self):
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, max_request_size=1
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, max_request_size=1)
         result = exporter.export(self.metrics["sum_int"])
         self.assertEqual(result, MetricExportResult.FAILURE)
         self.assertEqual(len(Mocket.request_list()), 0)
@@ -205,18 +193,14 @@ class TestOTLPMetricExporter(TestCase):
     @mocketize
     def test_max_request_size_zero_disables(self):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, max_request_size=0
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, max_request_size=0)
         result = exporter.export(self.metrics["sum_int"])
         self.assertEqual(result, MetricExportResult.SUCCESS)
 
     @mocketize
     def test_negative_max_request_size_disables_limit(self):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, max_request_size=-1
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, max_request_size=-1)
         result = exporter.export(self.metrics["sum_int"])
         self.assertEqual(result, MetricExportResult.SUCCESS)
         self.assertEqual(len(Mocket.request_list()), 1)
@@ -232,9 +216,7 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(result, MetricExportResult.FAILURE)
         self.assertEqual(len(Mocket.request_list()), 0)
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     @mocketize
     def test_oversized_payload_records_failure_metric(self):
         exporter = OTLPMetricExporter(
@@ -248,18 +230,14 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = self.metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
         exported = next(
-            metric
-            for metric in scope_metrics.metrics
-            if metric.name == "otel.sdk.exporter.metric_data_point.exported"
+            metric for metric in scope_metrics.metrics if metric.name == "otel.sdk.exporter.metric_data_point.exported"
         )
         self.assertEqual(
             exported.data.data_points[0].attributes["error.type"],
             "RequestPayloadTooLargeError",
         )
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     @mocketize
     def test_split_export_records_per_split_data_point_count(self):
         Entry.register(
@@ -272,14 +250,10 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = MetricsData(
             resource_metrics=[
                 ResourceMetrics(
-                    resource=Resource(
-                        attributes={"a": 1}, schema_url="resource_schema_url"
-                    ),
+                    resource=Resource(attributes={"a": 1}, schema_url="resource_schema_url"),
                     scope_metrics=[
                         ScopeMetrics(
-                            scope=SDKInstrumentationScope(
-                                name="name", version="version"
-                            ),
+                            scope=SDKInstrumentationScope(name="name", version="version"),
                             metrics=[
                                 _generate_sum("s1", 1),
                                 _generate_sum("s2", 2),
@@ -303,9 +277,7 @@ class TestOTLPMetricExporter(TestCase):
         internal = self.metric_reader.get_metrics_data()
         scope_metrics = internal.resource_metrics[0].scope_metrics[0]
         exported = next(
-            metric
-            for metric in scope_metrics.metrics
-            if metric.name == "otel.sdk.exporter.metric_data_point.exported"
+            metric for metric in scope_metrics.metrics if metric.name == "otel.sdk.exporter.metric_data_point.exported"
         )
         total = sum(dp.value for dp in exported.data.data_points)
         self.assertEqual(total, 3)
@@ -313,21 +285,15 @@ class TestOTLPMetricExporter(TestCase):
     def test_default_transport_is_urllib3(self):
         exporter = OTLPMetricExporter()
 
-        self.assertEqual(
-            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_METRICS_EXPORT_PATH
-        )
+        self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_METRICS_EXPORT_PATH)
         self.assertIs(exporter._compression, _http.Compression.NONE)
-        self.assertIsInstance(
-            exporter._client._transport, Urllib3HTTPTransport
-        )
+        self.assertIsInstance(exporter._client._transport, Urllib3HTTPTransport)
 
     def test_session_uses_requests_transport(self):
         session = requests.Session()
         exporter = OTLPMetricExporter(session=session)
 
-        self.assertIsInstance(
-            exporter._client._transport, RequestsHTTPTransport
-        )
+        self.assertIsInstance(exporter._client._transport, RequestsHTTPTransport)
         self.assertIs(exporter._client._transport._session, session)
 
     @patch.dict(
@@ -339,16 +305,10 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
     def test_credential_provider_uses_requests(self, mock_entry_point):
         credential = requests.Session()
-        mock_entry_point.configure_mock(
-            return_value=[
-                IterEntryPoint("custom_credential", lambda: credential)
-            ]
-        )
+        mock_entry_point.configure_mock(return_value=[IterEntryPoint("custom_credential", lambda: credential)])
         exporter = OTLPMetricExporter()
 
-        self.assertIsInstance(
-            exporter._client._transport, RequestsHTTPTransport
-        )
+        self.assertIsInstance(exporter._client._transport, RequestsHTTPTransport)
         self.assertIs(exporter._client._transport._session, credential)
 
     @patch.dict(
@@ -359,9 +319,7 @@ class TestOTLPMetricExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.http._common.entry_points")
     def test_entrypoint_wrong_type_raises(self, mock_entry_point):
-        mock_entry_point.configure_mock(
-            return_value=[IterEntryPoint("bad_credential", lambda: 1)]
-        )
+        mock_entry_point.configure_mock(return_value=[IterEntryPoint("bad_credential", lambda: 1)])
         with self.assertRaises(RuntimeError):
             OTLPMetricExporter()
 
@@ -467,12 +425,8 @@ class TestOTLPMetricExporter(TestCase):
                 exporter = OTLPMetricExporter(**kwargs)
                 self.assertEqual(exporter._endpoint, expected["endpoint"])
                 self.assertIs(exporter._compression, expected["compression"])
-                self.assertEqual(
-                    exporter._client._headers, expected["headers"]
-                )
-                self.assertEqual(
-                    exporter._client._timeout, expected["timeout"]
-                )
+                self.assertEqual(exporter._client._headers, expected["headers"])
+                self.assertEqual(exporter._client._timeout, expected["timeout"])
 
     @mocketize
     @patch(
@@ -503,16 +457,12 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(result, MetricExportResult.SUCCESS)
 
     @mocketize
-    @patch(
-        "opentelemetry.exporter.otlp.proto.http.metric_exporter._build_transport"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter._build_transport")
     def test_custom_transport(self, mock_build_transport):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
         custom_transport = Urllib3HTTPTransport()
 
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, _transport=custom_transport
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, _transport=custom_transport)
 
         mock_build_transport.assert_not_called()
         self.assertIs(exporter._client._transport, custom_transport)
@@ -526,9 +476,7 @@ class TestOTLPMetricExporter(TestCase):
         exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT)
         transport = exporter._client._transport
 
-        with patch.object(
-            transport, "request", wraps=transport.request
-        ) as mock_request:
+        with patch.object(transport, "request", wraps=transport.request) as mock_request:
             self.assertEqual(
                 exporter.export(self.metrics["sum_int"]),
                 MetricExportResult.SUCCESS,
@@ -538,15 +486,11 @@ class TestOTLPMetricExporter(TestCase):
         sent_data = mock_request.call_args.kwargs["data"]
         self.assertEqual(_decode_body(sent_data), serialized_data)
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "})
     @mocketize
     def test_success_records_metrics(self):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, meter_provider=self.meter_provider
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, meter_provider=self.meter_provider)
 
         self.assertEqual(
             exporter.export(self.metrics["sum_int"]),
@@ -562,19 +506,13 @@ class TestOTLPMetricExporter(TestCase):
         self.assertIn("otel.sdk.exporter.metric_data_point.inflight", names)
         self.assertIn("otel.sdk.exporter.operation.duration", names)
         for metric in metrics:
-            self.assert_standard_metric_attrs(
-                metric.data.data_points[0].attributes
-            )
+            self.assert_standard_metric_attrs(metric.data.data_points[0].attributes)
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     @mocketize
     def test_failure_records_metrics(self):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=401)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, meter_provider=self.meter_provider
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, meter_provider=self.meter_provider)
 
         self.assertEqual(
             exporter.export(self.metrics["sum_int"]),
@@ -584,15 +522,9 @@ class TestOTLPMetricExporter(TestCase):
         metrics_data = self.metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
-        duration_metric = next(
-            m
-            for m in metrics
-            if m.name == "otel.sdk.exporter.operation.duration"
-        )
+        duration_metric = next(m for m in metrics if m.name == "otel.sdk.exporter.operation.duration")
         self.assertEqual(
-            duration_metric.data.data_points[0].attributes[
-                "http.response.status_code"
-            ],
+            duration_metric.data.data_points[0].attributes["http.response.status_code"],
             401,
         )
 
@@ -602,14 +534,10 @@ class TestOTLPMetricExporter(TestCase):
 
         # 2 data points, batch size of 3: fits in one batch
         metrics_data = self._create_metrics_data_multiple_data_points(2)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, max_export_batch_size=3
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, max_export_batch_size=3)
         transport = exporter._client._transport
 
-        with patch.object(
-            transport, "request", wraps=transport.request
-        ) as mock_request:
+        with patch.object(transport, "request", wraps=transport.request) as mock_request:
             result = exporter.export(metrics_data)
 
         self.assertEqual(result, MetricExportResult.SUCCESS)
@@ -632,35 +560,21 @@ class TestOTLPMetricExporter(TestCase):
 
         # 3 data points, batch size of 2: requires 2 batches
         metrics_data = self._create_metrics_data_multiple_data_points(3)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, max_export_batch_size=2
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, max_export_batch_size=2)
         transport = exporter._client._transport
 
-        with patch.object(
-            transport, "request", wraps=transport.request
-        ) as mock_request:
+        with patch.object(transport, "request", wraps=transport.request) as mock_request:
             result = exporter.export(metrics_data)
 
         self.assertEqual(result, MetricExportResult.SUCCESS)
         self.assertEqual(mock_request.call_count, 2)
 
-        first_request = _decode_body(
-            mock_request.call_args_list[0].kwargs["data"]
-        )
-        first_metrics = (
-            first_request.resource_metrics[0].scope_metrics[0].metrics
-        )
-        self.assertEqual(
-            {m.name for m in first_metrics}, {"sum_int_0", "sum_int_1"}
-        )
+        first_request = _decode_body(mock_request.call_args_list[0].kwargs["data"])
+        first_metrics = first_request.resource_metrics[0].scope_metrics[0].metrics
+        self.assertEqual({m.name for m in first_metrics}, {"sum_int_0", "sum_int_1"})
 
-        second_request = _decode_body(
-            mock_request.call_args_list[1].kwargs["data"]
-        )
-        second_metrics = (
-            second_request.resource_metrics[0].scope_metrics[0].metrics
-        )
+        second_request = _decode_body(mock_request.call_args_list[1].kwargs["data"])
+        second_metrics = second_request.resource_metrics[0].scope_metrics[0].metrics
         self.assertEqual(len(second_metrics), 1)
         self.assertEqual(second_metrics[0].name, "sum_int_2")
 
@@ -675,9 +589,7 @@ class TestOTLPMetricExporter(TestCase):
 
         # 3 data points, batch size of 2: requires 2 batches
         metrics_data = self._create_metrics_data_multiple_data_points(3)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, max_export_batch_size=2
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, max_export_batch_size=2)
 
         result = exporter.export(metrics_data)
         self.assertEqual(result, MetricExportResult.FAILURE)
@@ -695,9 +607,7 @@ class TestOTLPMetricExporter(TestCase):
 
         # 3 data points, batch size of 2: requires 2 batches
         metrics_data = self._create_metrics_data_multiple_data_points(3)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, max_export_batch_size=2, timeout=2.0
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, max_export_batch_size=2, timeout=2.0)
 
         result = exporter.export(metrics_data)
         self.assertEqual(result, MetricExportResult.SUCCESS)
@@ -705,9 +615,7 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(len(Mocket.request_list()), 3)
 
     def test_count_data_points(self):
-        request = encode_metrics(
-            self._create_metrics_data_multiple_data_points(5)
-        )
+        request = encode_metrics(self._create_metrics_data_multiple_data_points(5))
         self.assertEqual(_count_data_points(request), 5)
         self.assertEqual(_count_data_points(ExportMetricsServiceRequest()), 0)
 
@@ -722,9 +630,7 @@ class TestOTLPMetricExporter(TestCase):
 
         # 3 data points, batch size of 2: requires 2 batches
         metrics_data = self._create_metrics_data_multiple_data_points(3)
-        exporter = OTLPMetricExporter(
-            endpoint=_TEST_ENDPOINT, max_export_batch_size=2
-        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, max_export_batch_size=2)
 
         with patch.object(
             exporter._metrics,
@@ -798,13 +704,7 @@ class TestOTLPMetricExporter(TestCase):
             ),
         )
         for label, env_value, expect_warning, expected in cases:
-            env = (
-                {}
-                if env_value is None
-                else {
-                    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: env_value
-                }
-            )
+            env = {} if env_value is None else {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: env_value}
             with self.subTest(label), patch.dict(environ, env):
                 if expect_warning:
                     with self.assertLogs(level=WARNING):
@@ -817,9 +717,7 @@ class TestOTLPMetricExporter(TestCase):
                     expected_temporality,
                 ) in expected.items():
                     self.assertEqual(
-                        otlp_metric_exporter._preferred_temporality[
-                            instrument_type
-                        ],
+                        otlp_metric_exporter._preferred_temporality[instrument_type],
                         expected_temporality,
                     )
 
@@ -850,20 +748,12 @@ class TestOTLPMetricExporter(TestCase):
             ),
         )
         for label, env_value, expected_type, expected_warning in cases:
-            env = (
-                {}
-                if env_value is None
-                else {
-                    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: env_value
-                }
-            )
+            env = {} if env_value is None else {OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: env_value}
             with self.subTest(label), patch.dict(environ, env):
                 if expected_warning:
                     with self.assertLogs(level=WARNING) as log:
                         self.assertIsInstance(
-                            OTLPMetricExporter()._preferred_aggregation[
-                                Histogram
-                            ],
+                            OTLPMetricExporter()._preferred_aggregation[Histogram],
                             expected_type,
                         )
                     self.assertIn(expected_warning, log.output[0])
@@ -884,17 +774,13 @@ class TestOTLPMetricExporter(TestCase):
             },
         )
 
-        self.assertEqual(
-            exporter._preferred_aggregation[Histogram], histogram_aggregation
-        )
+        self.assertEqual(exporter._preferred_aggregation[Histogram], histogram_aggregation)
 
     @mocketize
     def test_2xx_status_code(self):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
         self.assertEqual(
-            OTLPMetricExporter(endpoint=_TEST_ENDPOINT).export(
-                self.metrics["sum_int"]
-            ),
+            OTLPMetricExporter(endpoint=_TEST_ENDPOINT).export(self.metrics["sum_int"]),
             MetricExportResult.SUCCESS,
         )
 
@@ -920,9 +806,7 @@ class TestOTLPMetricExporter(TestCase):
                     Response(status=status_code),
                     Response(status=200),
                 )
-                exporter = OTLPMetricExporter(
-                    endpoint=_TEST_ENDPOINT, timeout=30.0
-                )
+                exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, timeout=30.0)
                 shutdown_event = Mock(spec=threading.Event)
                 shutdown_event.is_set.return_value = False
                 exporter._client._shutdown_event = shutdown_event
@@ -936,9 +820,7 @@ class TestOTLPMetricExporter(TestCase):
     def test_export_non_retryable_status_codes(self):
         for status_code in (400, 401, 403, 404, 408, 500, 501):
             with self.subTest(status_code=status_code), Mocketizer():
-                Entry.single_register(
-                    Entry.POST, _TEST_ENDPOINT, status=status_code
-                )
+                Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=status_code)
                 exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT)
 
                 result = exporter.export(self.metrics["sum_int"])
@@ -954,9 +836,7 @@ class TestOTLPMetricExporter(TestCase):
             *[Response(status=503)] * 6,
         )
         exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT, timeout=1.5)
-        thread = threading.Thread(
-            target=exporter.export, args=(self.metrics["sum_int"],)
-        )
+        thread = threading.Thread(target=exporter.export, args=(self.metrics["sum_int"],))
         before = time.time()
         thread.start()
         time.sleep(0.05)
@@ -1236,16 +1116,12 @@ class TestOTLPMetricExporter(TestCase):
         split_resource_metrics = [
             {
                 "resource": Pb2Resource(
-                    attributes=[
-                        KeyValue(key="foo", value={"string_value": "bar"})
-                    ],
+                    attributes=[KeyValue(key="foo", value={"string_value": "bar"})],
                 ),
                 "schema_url": "http://foo-bar",
                 "scope_metrics": [
                     {
-                        "scope": InstrumentationScope(
-                            name="foo-scope", version="1.0.0"
-                        ),
+                        "scope": InstrumentationScope(name="foo-scope", version="1.0.0"),
                         "schema_url": "http://foo-baz",
                         "metrics": [
                             {
@@ -1260,9 +1136,7 @@ class TestOTLPMetricExporter(TestCase):
                                             attributes=[
                                                 KeyValue(
                                                     key="dp_key",
-                                                    value={
-                                                        "string_value": "dp_value"
-                                                    },
+                                                    value={"string_value": "dp_value"},
                                                 )
                                             ],
                                             start_time_unix_nano=12345,
@@ -1285,27 +1159,19 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(len(result[0].scope_metrics), 1)
         self.assertEqual(result[0].scope_metrics[0].scope.name, "foo-scope")
         self.assertEqual(len(result[0].scope_metrics[0].metrics), 1)
-        self.assertEqual(
-            result[0].scope_metrics[0].metrics[0].name, "foo-metric"
-        )
-        self.assertEqual(
-            result[0].scope_metrics[0].metrics[0].sum.is_monotonic, True
-        )
+        self.assertEqual(result[0].scope_metrics[0].metrics[0].name, "foo-metric")
+        self.assertEqual(result[0].scope_metrics[0].metrics[0].sum.is_monotonic, True)
 
     def test_get_split_resource_metrics_pb2_multiples(self):
         split_resource_metrics = [
             {
                 "resource": Pb2Resource(
-                    attributes=[
-                        KeyValue(key="foo1", value={"string_value": "bar2"})
-                    ],
+                    attributes=[KeyValue(key="foo1", value={"string_value": "bar2"})],
                 ),
                 "schema_url": "http://foo-bar-1",
                 "scope_metrics": [
                     {
-                        "scope": InstrumentationScope(
-                            name="foo-scope-1", version="1.0.0"
-                        ),
+                        "scope": InstrumentationScope(name="foo-scope-1", version="1.0.0"),
                         "schema_url": "http://foo-baz-1",
                         "metrics": [
                             {
@@ -1318,9 +1184,7 @@ class TestOTLPMetricExporter(TestCase):
                                             attributes=[
                                                 KeyValue(
                                                     key="dp_key",
-                                                    value={
-                                                        "string_value": "dp_value"
-                                                    },
+                                                    value={"string_value": "dp_value"},
                                                 )
                                             ],
                                             start_time_unix_nano=12345,
@@ -1336,16 +1200,12 @@ class TestOTLPMetricExporter(TestCase):
             },
             {
                 "resource": Pb2Resource(
-                    attributes=[
-                        KeyValue(key="foo2", value={"string_value": "bar2"})
-                    ],
+                    attributes=[KeyValue(key="foo2", value={"string_value": "bar2"})],
                 ),
                 "schema_url": "http://foo-bar-2",
                 "scope_metrics": [
                     {
-                        "scope": InstrumentationScope(
-                            name="foo-scope-2", version="2.0.0"
-                        ),
+                        "scope": InstrumentationScope(name="foo-scope-2", version="2.0.0"),
                         "schema_url": "http://foo-baz-2",
                         "metrics": [
                             {
@@ -1359,9 +1219,7 @@ class TestOTLPMetricExporter(TestCase):
                                             attributes=[
                                                 KeyValue(
                                                     key="dp_key",
-                                                    value={
-                                                        "string_value": "dp_value"
-                                                    },
+                                                    value={"string_value": "dp_value"},
                                                 )
                                             ],
                                             start_time_unix_nano=12345,
@@ -1384,27 +1242,19 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(len(result[1].scope_metrics), 1)
         self.assertEqual(result[0].scope_metrics[0].scope.name, "foo-scope-1")
         self.assertEqual(result[1].scope_metrics[0].scope.name, "foo-scope-2")
-        self.assertEqual(
-            result[0].scope_metrics[0].metrics[0].name, "foo-metric-1"
-        )
-        self.assertEqual(
-            result[1].scope_metrics[0].metrics[0].name, "foo-metric-2"
-        )
+        self.assertEqual(result[0].scope_metrics[0].metrics[0].name, "foo-metric-1")
+        self.assertEqual(result[1].scope_metrics[0].metrics[0].name, "foo-metric-2")
 
     def test_get_split_resource_metrics_pb2_unsupported_metric_type(self):
         split_resource_metrics = [
             {
                 "resource": Pb2Resource(
-                    attributes=[
-                        KeyValue(key="foo", value={"string_value": "bar"})
-                    ],
+                    attributes=[KeyValue(key="foo", value={"string_value": "bar"})],
                 ),
                 "schema_url": "http://foo-bar",
                 "scope_metrics": [
                     {
-                        "scope": InstrumentationScope(
-                            name="foo", version="1.0.0"
-                        ),
+                        "scope": InstrumentationScope(name="foo", version="1.0.0"),
                         "schema_url": "http://foo-baz",
                         "metrics": [
                             {
@@ -1428,9 +1278,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
 
-def _resource_metrics(
-    index: int, scope_metrics: list[pb2.ScopeMetrics]
-) -> pb2.ResourceMetrics:
+def _resource_metrics(index: int, scope_metrics: list[pb2.ScopeMetrics]) -> pb2.ResourceMetrics:
     return pb2.ResourceMetrics(
         resource={
             "attributes": [KeyValue(key="a", value={"int_value": index})],

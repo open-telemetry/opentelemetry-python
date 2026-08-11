@@ -42,9 +42,7 @@ _DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
 _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
-_ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
-    "Unable to parse value for %s as integer. Defaulting to %s."
-)
+_ENV_VAR_INT_VALUE_ERROR_MESSAGE = "Unable to parse value for %s as integer. Defaulting to %s."
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +62,7 @@ class SpanExporter:
     `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
-    def export(
-        self, spans: collections.abc.Sequence[ReadableSpan]
-    ) -> SpanExportResult:  # pyright: ignore[reportReturnType]
+    def export(self, spans: collections.abc.Sequence[ReadableSpan]) -> SpanExportResult:  # pyright: ignore[reportReturnType]
         """Exports a batch of telemetry data.
 
         Args:
@@ -103,18 +99,15 @@ class SimpleSpanProcessor(SpanProcessor):
         meter_provider: MeterProvider | None = None,
     ):
         self.span_exporter = span_exporter
+        self._shutdown = False
         self._metrics = create_processor_metrics(
             "traces",
             OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
             meter_provider or get_meter_provider(),
-            enabled=parse_boolean_environment_variable(
-                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-            ),
+            enabled=parse_boolean_environment_variable(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED),
         )
 
-    def on_start(
-        self, span: Span, parent_context: Context | None = None
-    ) -> None:
+    def on_start(self, span: Span, parent_context: Context | None = None) -> None:
         pass
 
     def _on_ending(self, span: Span) -> None:
@@ -123,19 +116,23 @@ class SimpleSpanProcessor(SpanProcessor):
     def on_end(self, span: ReadableSpan) -> None:
         if not (span.context and span.context.trace_flags.sampled):
             return
+        if self._shutdown:
+            logger.warning("Processor is already shutdown, ignoring call")
+            self._metrics.drop_items(1, "already_shutdown")
+            return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        error: Exception | None = None
+        # Record on submission to the exporter.
+        self._metrics.finish_items(1)
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-exception-caught
-        except Exception as err:
-            error = err
+        except Exception:
             logger.exception("Exception while exporting Span.")
         finally:
-            self._metrics.finish_items(1, error)
-        detach(token)
+            detach(token)
 
     def shutdown(self) -> None:
+        self._shutdown = True
         self.span_exporter.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
@@ -174,24 +171,16 @@ class BatchSpanProcessor(SpanProcessor):
             max_queue_size = BatchSpanProcessor._default_max_queue_size()
 
         if schedule_delay_millis is None:
-            schedule_delay_millis = (
-                BatchSpanProcessor._default_schedule_delay_millis()
-            )
+            schedule_delay_millis = BatchSpanProcessor._default_schedule_delay_millis()
 
         if max_export_batch_size is None:
-            max_export_batch_size = (
-                BatchSpanProcessor._default_max_export_batch_size()
-            )
+            max_export_batch_size = BatchSpanProcessor._default_max_export_batch_size()
 
         # Not used. No way currently to pass timeout to export.
         if export_timeout_millis is None:
-            export_timeout_millis = (
-                BatchSpanProcessor._default_export_timeout_millis()
-            )
+            export_timeout_millis = BatchSpanProcessor._default_export_timeout_millis()
 
-        BatchSpanProcessor._validate_arguments(
-            max_queue_size, schedule_delay_millis, max_export_batch_size
-        )
+        BatchSpanProcessor._validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size)
 
         self._batch_processor = BatchProcessor(
             span_exporter,
@@ -205,9 +194,7 @@ class BatchSpanProcessor(SpanProcessor):
                 OtelComponentTypeValues.BATCHING_SPAN_PROCESSOR,
                 meter_provider or get_meter_provider(),
                 capacity=max_queue_size,
-                enabled=parse_boolean_environment_variable(
-                    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-                ),
+                enabled=parse_boolean_environment_variable(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED),
             ),
         )
 
@@ -216,9 +203,7 @@ class BatchSpanProcessor(SpanProcessor):
     def span_exporter(self):
         return self._batch_processor._exporter  # pylint: disable=protected-access
 
-    def on_start(
-        self, span: Span, parent_context: Context | None = None
-    ) -> None:
+    def on_start(self, span: Span, parent_context: Context | None = None) -> None:
         pass
 
     def _on_ending(self, span: Span) -> None:
@@ -238,9 +223,7 @@ class BatchSpanProcessor(SpanProcessor):
     @staticmethod
     def _default_max_queue_size():
         try:
-            return int(
-                environ.get(OTEL_BSP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE)
-            )
+            return int(environ.get(OTEL_BSP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE))
         except ValueError:
             logger.exception(
                 _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
@@ -252,11 +235,7 @@ class BatchSpanProcessor(SpanProcessor):
     @staticmethod
     def _default_schedule_delay_millis():
         try:
-            return int(
-                environ.get(
-                    OTEL_BSP_SCHEDULE_DELAY, _DEFAULT_SCHEDULE_DELAY_MILLIS
-                )
-            )
+            return int(environ.get(OTEL_BSP_SCHEDULE_DELAY, _DEFAULT_SCHEDULE_DELAY_MILLIS))
         except ValueError:
             logger.exception(
                 _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
@@ -285,11 +264,7 @@ class BatchSpanProcessor(SpanProcessor):
     @staticmethod
     def _default_export_timeout_millis():
         try:
-            return int(
-                environ.get(
-                    OTEL_BSP_EXPORT_TIMEOUT, _DEFAULT_EXPORT_TIMEOUT_MILLIS
-                )
-            )
+            return int(environ.get(OTEL_BSP_EXPORT_TIMEOUT, _DEFAULT_EXPORT_TIMEOUT_MILLIS))
         except ValueError:
             logger.exception(
                 _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
@@ -299,9 +274,7 @@ class BatchSpanProcessor(SpanProcessor):
             return _DEFAULT_EXPORT_TIMEOUT_MILLIS
 
     @staticmethod
-    def _validate_arguments(
-        max_queue_size, schedule_delay_millis, max_export_batch_size
-    ):
+    def _validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size):
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
 
@@ -309,14 +282,10 @@ class BatchSpanProcessor(SpanProcessor):
             raise ValueError("schedule_delay_millis must be positive.")
 
         if max_export_batch_size <= 0:
-            raise ValueError(
-                "max_export_batch_size must be a positive integer."
-            )
+            raise ValueError("max_export_batch_size must be a positive integer.")
 
         if max_export_batch_size > max_queue_size:
-            raise ValueError(
-                "max_export_batch_size must be less than or equal to max_queue_size."
-            )
+            raise ValueError("max_export_batch_size must be less than or equal to max_queue_size.")
 
 
 class ConsoleSpanExporter(SpanExporter):
@@ -331,17 +300,13 @@ class ConsoleSpanExporter(SpanExporter):
         self,
         service_name: str | None = None,
         out: typing.IO = sys.stdout,
-        formatter: collections.abc.Callable[
-            [ReadableSpan], str
-        ] = lambda span: span.to_json() + linesep,
+        formatter: collections.abc.Callable[[ReadableSpan], str] = lambda span: span.to_json() + linesep,
     ):
         self.out = out
         self.formatter = formatter
         self.service_name = service_name
 
-    def export(
-        self, spans: collections.abc.Sequence[ReadableSpan]
-    ) -> SpanExportResult:
+    def export(self, spans: collections.abc.Sequence[ReadableSpan]) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
         self.out.flush()

@@ -80,12 +80,8 @@ class MockTextMapPropagator(TextMapPropagator):
         setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context)
-        setter.set(
-            carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id)
-        )
-        setter.set(
-            carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
-        )
+        setter.set(carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id))
+        setter.set(carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id))
 
     @property
     def fields(self):
