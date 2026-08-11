@@ -18,10 +18,7 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
     SPAN_ID = int("1234567890123456", 16)  # type:int
 
     def test_propagation(self):
-        traceparent_value = (
-            f"00-{format_trace_id(self.TRACE_ID)}-"
-            f"{format_span_id(self.SPAN_ID)}-00"
-        )
+        traceparent_value = f"00-{format_trace_id(self.TRACE_ID)}-{format_span_id(self.SPAN_ID)}-00"
         tracestate_value = "foo=1,bar=2,baz=3"
         headers = {
             "baggage": ["key1=val1,key2=val2"],

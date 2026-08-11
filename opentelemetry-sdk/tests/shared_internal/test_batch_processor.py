@@ -79,9 +79,7 @@ class MockExporterForTesting:
 )
 class TestBatchProcessor:
     # pylint: disable=no-self-use
-    def test_telemetry_exported_once_batch_size_reached(
-        self, batch_processor_class, telemetry
-    ):
+    def test_telemetry_exported_once_batch_size_reached(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -103,9 +101,7 @@ class TestBatchProcessor:
         batch_processor.shutdown()
 
     # pylint: disable=no-self-use
-    def test_telemetry_exported_once_schedule_delay_reached(
-        self, batch_processor_class, telemetry
-    ):
+    def test_telemetry_exported_once_schedule_delay_reached(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -119,9 +115,7 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry])
         batch_processor.shutdown()
 
-    def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(
-        self, batch_processor_class, telemetry
-    ):
+    def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -142,9 +136,7 @@ class TestBatchProcessor:
         exporter.export.assert_called_once()
 
     # pylint: disable=no-self-use
-    def test_force_flush_flushes_telemetry(
-        self, batch_processor_class, telemetry
-    ):
+    def test_force_flush_flushes_telemetry(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -164,9 +156,7 @@ class TestBatchProcessor:
         hasattr(os, "fork"),
         "needs *nix",
     )
-    def test_batch_telemetry_record_processor_fork(
-        self, batch_processor_class, telemetry
-    ):
+    def test_batch_telemetry_record_processor_fork(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -200,9 +190,7 @@ class TestBatchProcessor:
         assert exporter.export.call_count == 1
         batch_processor.shutdown()
 
-    def test_record_processor_is_garbage_collected(
-        self, batch_processor_class, telemetry
-    ):
+    def test_record_processor_is_garbage_collected(self, batch_processor_class, telemetry):
         exporter = Mock()
         processor = batch_processor_class(exporter)
         weak_ref = weakref.ref(processor)
@@ -215,9 +203,7 @@ class TestBatchProcessor:
         # Then the reference to the processor should no longer exist
         assert weak_ref() is None
 
-    def test_shutdown_allows_1_export_to_finish(
-        self, batch_processor_class, telemetry
-    ):
+    def test_shutdown_allows_1_export_to_finish(self, batch_processor_class, telemetry):
         # This exporter throws an exception if it's export sleep cannot finish.
         exporter = MockExporterForTesting(export_sleep=2)
         processor = batch_processor_class(
