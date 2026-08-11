@@ -46,12 +46,8 @@ if TYPE_CHECKING:
 _logger = getLogger(__name__)
 
 
-_NAME_ERROR_MESSAGE = (
-    "Expected ASCII string of maximum length 255 characters but got {}"
-)
-_UNIT_ERROR_MESSAGE = (
-    "Expected ASCII string of maximum length 63 characters but got {}"
-)
+_NAME_ERROR_MESSAGE = "Expected ASCII string of maximum length 255 characters but got {}"
+_UNIT_ERROR_MESSAGE = "Expected ASCII string of maximum length 63 characters but got {}"
 
 
 @runtime_checkable
