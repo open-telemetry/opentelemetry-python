@@ -5,7 +5,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
+from pathlib import Path
+from typing import Any, Generic, Literal, TypeVar
+from uuid import uuid4
 
 ExporterT = TypeVar("ExporterT")
 
@@ -13,6 +15,9 @@ CUSTOM_HEADERS: dict[str, str] = {
     "x-custom-header": "custom-value",
     "x-another-header": "another-value",
 }
+
+# Directory bind mounted into the collector container (see docker-compose.yml).
+OTLP_FILE_DATA_DIR = Path(__file__).parent / "otlp-file-data"
 
 
 @dataclass
@@ -23,10 +28,18 @@ class ExporterConfig(Generic[ExporterT]):
     lazy_kwargs: dict[str, Callable[[], Any]] = field(default_factory=dict)
 
     def build(self) -> ExporterT:
-        kwargs = {**self.kwargs}
-        for key, factory in self.lazy_kwargs.items():
-            kwargs[key] = factory()
+        kwargs = {
+            **self.kwargs,
+            **{key: factory() for key, factory in self.lazy_kwargs.items()},
+        }
         return self.exporter_class(**kwargs)
+
+
+def make_otlp_file(signal: Literal["traces", "metrics", "logs"]) -> str:
+    """Return a unique .jsonl path under the collector mounted directory."""
+    directory = OTLP_FILE_DATA_DIR / signal
+    directory.mkdir(parents=True, exist_ok=True)
+    return str(directory / f"{uuid4().hex}.jsonl")
 
 
 def _attrs_to_dict(attributes) -> dict:

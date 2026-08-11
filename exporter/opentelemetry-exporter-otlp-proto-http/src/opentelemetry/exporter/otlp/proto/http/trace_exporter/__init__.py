@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, overload
 from urllib.parse import urlparse
 
-from opentelemetry.exporter.otlp.common import _http
+from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
     create_exporter_metrics,
 )
@@ -149,7 +149,7 @@ class OTLPSpanExporter(SpanExporter):
             session=session or _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER),
         )
         self._max_request_size = _DEFAULT_MAX_REQUEST_SIZE if max_request_size is None else max_request_size
-        self._client = _http.OTLPHTTPClient(
+        self._client = _http._OTLPHTTPClient(
             transport=transport,
             endpoint=self._endpoint,
             kind="spans",

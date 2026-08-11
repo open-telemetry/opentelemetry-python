@@ -24,7 +24,7 @@ from opentelemetry.exporter.http.transport._requests import (
 from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
-from opentelemetry.exporter.otlp.common import _http
+from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -605,7 +605,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter._client._shutdown_event = shutdown_event
 
         with patch(
-            "opentelemetry.exporter.otlp.common._http.time.time",
+            "opentelemetry.exporter.otlp.common.http.time.time",
             return_value=base,
         ):
             result = exporter.export(self._make_span())

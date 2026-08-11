@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 
 from typing_extensions import deprecated
 
-from opentelemetry.exporter.otlp.common import _http
+from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.common._aggregation import (
     _get_aggregation,
     _get_temporality,
@@ -208,7 +208,7 @@ class OTLPMetricExporter(MetricExporter):
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
             session=session or _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER),
         )
-        self._client = _http.OTLPHTTPClient(
+        self._client = _http._OTLPHTTPClient(
             transport=transport,
             endpoint=self._endpoint,
             kind="metrics",

@@ -15,7 +15,7 @@ from opentelemetry.exporter.http.transport._requests import (
 from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
-from opentelemetry.exporter.otlp.common import _http
+from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,

@@ -188,7 +188,11 @@ nitpick_ignore = [
     # file exporter type hints, which sphinx cannot resolve to os.PathLike.
     ("py:class", "PathLike"),
     ("py:class", "BaseHTTPTransport"),
-    ("py:class", "opentelemetry.exporter.otlp.common._http.Compression"),
+    ("py:class", "opentelemetry.exporter.otlp.common.http.Compression"),
+    (
+        "py:class",
+        "opentelemetry.exporter.http.transport._base.BaseHTTPTransport",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
