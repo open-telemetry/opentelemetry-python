@@ -5,14 +5,7 @@
 from collections.abc import Callable, Generator, Iterable, Sequence
 from typing import Final
 
-from opentelemetry.metrics import (
-    CallbackOptions,
-    Counter,
-    Meter,
-    ObservableGauge,
-    Observation,
-    UpDownCounter,
-)
+from opentelemetry.metrics import CallbackOptions, Counter, Meter, ObservableGauge, Observation, UpDownCounter
 
 # pylint: disable=invalid-name
 CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
@@ -384,9 +377,7 @@ Unit: By
 """
 
 
-def create_system_memory_linux_hugepages_page_size(
-    meter: Meter,
-) -> UpDownCounter:
+def create_system_memory_linux_hugepages_page_size(meter: Meter) -> UpDownCounter:
     """System hugepage size in bytes"""
     return meter.create_up_down_counter(
         name=SYSTEM_MEMORY_LINUX_HUGEPAGES_PAGE_SIZE,
@@ -406,9 +397,7 @@ They represent a subset of free pages that cannot be used for non-reserved alloc
 """
 
 
-def create_system_memory_linux_hugepages_reserved(
-    meter: Meter,
-) -> UpDownCounter:
+def create_system_memory_linux_hugepages_reserved(meter: Meter) -> UpDownCounter:
     """Number of reserved hugepages"""
     return meter.create_up_down_counter(
         name=SYSTEM_MEMORY_LINUX_HUGEPAGES_RESERVED,
@@ -428,9 +417,7 @@ Including them in `usage` would break the convention that `usage` states sum to 
 """
 
 
-def create_system_memory_linux_hugepages_surplus(
-    meter: Meter,
-) -> UpDownCounter:
+def create_system_memory_linux_hugepages_surplus(meter: Meter) -> UpDownCounter:
     """Number of surplus hugepages"""
     return meter.create_up_down_counter(
         name=SYSTEM_MEMORY_LINUX_HUGEPAGES_SURPLUS,
@@ -741,35 +728,35 @@ def create_system_paging_operations(meter: Meter) -> Counter:
 
 SYSTEM_PAGING_USAGE: Final = "system.paging.usage"
 """
-Unix swap or windows pagefile usage
+UNIX swap or windows pagefile usage
 Instrument: updowncounter
 Unit: By
 """
 
 
 def create_system_paging_usage(meter: Meter) -> UpDownCounter:
-    """Unix swap or windows pagefile usage"""
+    """UNIX swap or windows pagefile usage"""
     return meter.create_up_down_counter(
         name=SYSTEM_PAGING_USAGE,
-        description="Unix swap or windows pagefile usage.",
+        description="UNIX swap or windows pagefile usage.",
         unit="By",
     )
 
 
 SYSTEM_PAGING_UTILIZATION: Final = "system.paging.utilization"
 """
-Swap (unix) or pagefile (windows) utilization
+Swap (UNIX) or pagefile (windows) utilization
 Instrument: gauge
 Unit: 1
 """
 
 
 def create_system_paging_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
-    """Swap (unix) or pagefile (windows) utilization"""
+    """Swap (UNIX) or pagefile (windows) utilization"""
     return meter.create_observable_gauge(
         name=SYSTEM_PAGING_UTILIZATION,
         callbacks=callbacks,
-        description="Swap (unix) or pagefile (windows) utilization.",
+        description="Swap (UNIX) or pagefile (windows) utilization.",
         unit="1",
     )
 
@@ -805,6 +792,26 @@ def create_system_process_created(meter: Meter) -> Counter:
         name=SYSTEM_PROCESS_CREATED,
         description="Total number of processes created over uptime of the host.",
         unit="{process}",
+    )
+
+
+SYSTEM_PROCESS_LIMIT: Final = "system.process.limit"
+"""
+The maximum number of concurrent processes/tasks allowed by the operating system
+Instrument: updowncounter
+Unit: {thread}
+Note: On Linux, this corresponds to `/proc/sys/kernel/pid_max` or `/proc/sys/kernel/threads-max`.
+A per-user process limit may also be retrieved via `getrlimit(RLIMIT_NPROC)`.
+On BSD-like systems, this corresponds to `sysctl kern.maxproc`. This metric is unsupported on Windows systems.
+"""
+
+
+def create_system_process_limit(meter: Meter) -> UpDownCounter:
+    """The maximum number of concurrent processes/tasks allowed by the operating system"""
+    return meter.create_up_down_counter(
+        name=SYSTEM_PROCESS_LIMIT,
+        description="The maximum number of concurrent processes/tasks allowed by the operating system.",
+        unit="{thread}",
     )
 
 
