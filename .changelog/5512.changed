@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: `SimpleSpanProcessor` now drops spans ended after `shutdown()` instead of passing them to the exporter, and counts them on `otel.sdk.processor.span.processed` with `error.type=already_shutdown`.
