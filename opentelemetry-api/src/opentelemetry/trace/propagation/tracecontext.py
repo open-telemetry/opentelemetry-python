@@ -15,10 +15,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     _TRACEPARENT_HEADER_NAME = "traceparent"
     _TRACESTATE_HEADER_NAME = "tracestate"
-    _TRACEPARENT_HEADER_FORMAT = (
-        "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
-        + "(-.*)?[ \t]*$"
-    )
+    _TRACEPARENT_HEADER_FORMAT = "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})" + "(-.*)?[ \t]*$"
     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
 
     def extract(
@@ -70,9 +67,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_flags=trace.TraceFlags(int(trace_flags, 16)),
             trace_state=tracestate,
         )
-        return trace.set_span_in_context(
-            trace.NonRecordingSpan(span_context), context
-        )
+        return trace.set_span_in_context(trace.NonRecordingSpan(span_context), context)
 
     def inject(
         self,
@@ -92,9 +87,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
         if span_context.trace_state:
             tracestate_string = span_context.trace_state.to_header()
-            setter.set(
-                carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
-            )
+            setter.set(carrier, self._TRACESTATE_HEADER_NAME, tracestate_string)
 
     @property
     def fields(self) -> set[str]:

@@ -34,9 +34,7 @@ class InMemoryLogRecordExporter(LogRecordExporter):
         with self._lock:
             return tuple(self._logs)
 
-    def export(
-        self, batch: collections.abc.Sequence[ReadableLogRecord]
-    ) -> LogRecordExportResult:
+    def export(self, batch: collections.abc.Sequence[ReadableLogRecord]) -> LogRecordExportResult:
         if self._stopped:
             return LogRecordExportResult.FAILURE
         with self._lock:
@@ -50,8 +48,6 @@ class InMemoryLogRecordExporter(LogRecordExporter):
         return True
 
 
-@deprecated(
-    "Use InMemoryLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases."
-)
+@deprecated("Use InMemoryLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases.")
 class InMemoryLogExporter(InMemoryLogRecordExporter):
     pass

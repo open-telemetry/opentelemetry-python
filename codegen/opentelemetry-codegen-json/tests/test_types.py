@@ -138,7 +138,5 @@ def test_is_numeric_type(proto_type: int, expected: bool) -> None:
         (descriptor.FieldDescriptorProto.TYPE_INT32, "id", "builtins.int"),
     ],
 )
-def test_get_json_allowed_types(
-    proto_type: int, field_name: str, expected: str
-) -> None:
+def test_get_json_allowed_types(proto_type: int, field_name: str, expected: str) -> None:
     assert get_json_allowed_types(proto_type, field_name) == expected

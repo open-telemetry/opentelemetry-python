@@ -56,9 +56,7 @@ class TestAsyncio(unittest.TestCase):
         context.detach(self.token)
         self.loop.close()
 
-    @patch(
-        "opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext()
-    )
+    @patch("opentelemetry.context._RUNTIME_CONTEXT", ContextVarsRuntimeContext())
     def test_with_asyncio(self):
         with self.tracer.start_as_current_span("asyncio_test"):
             for name in _SPAN_NAMES:
@@ -84,9 +82,7 @@ class TestAsyncio(unittest.TestCase):
         span_names_list.sort()
         expected.sort()
         self.assertListEqual(span_names_list, expected)
-        expected_parent = next(
-            span for span in span_list if span.name == "asyncio_test"
-        )
+        expected_parent = next(span for span in span_list if span.name == "asyncio_test")
         for span in span_list:
             if span is expected_parent:
                 continue

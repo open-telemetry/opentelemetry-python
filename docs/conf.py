@@ -41,18 +41,10 @@ source_dirs = [
 ]
 
 exp = "../exporter"
-exp_dirs = [
-    os.path.abspath("/".join(["../exporter", f, "src"]))
-    for f in listdir(exp)
-    if isdir(join(exp, f))
-]
+exp_dirs = [os.path.abspath("/".join(["../exporter", f, "src"])) for f in listdir(exp) if isdir(join(exp, f))]
 
 shim = "../shim"
-shim_dirs = [
-    os.path.abspath("/".join(["../shim", f, "src"]))
-    for f in listdir(shim)
-    if isdir(join(shim, f))
-]
+shim_dirs = [os.path.abspath("/".join(["../shim", f, "src"])) for f in listdir(shim) if isdir(join(shim, f))]
 
 sys.path[:0] = source_dirs + exp_dirs + shim_dirs
 

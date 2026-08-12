@@ -142,9 +142,7 @@ class TestShim(unittest.TestCase):
             trace.format_trace_id(span_ctx.trace_id),
             "ace0216bab2b7ba249761dbb19c871b7",
         )
-        self.assertEqual(
-            trace.format_span_id(span_ctx.span_id), "1fead89ecf242225"
-        )
+        self.assertEqual(trace.format_span_id(span_ctx.span_id), "1fead89ecf242225")
 
     def test_set_oc_span_in_context_remote(self):
         for is_from_remote in True, False:
@@ -193,6 +191,4 @@ class TestShim(unittest.TestCase):
             context.get_current(),
         )
         span_ctx = trace.get_current_span(ctx).get_span_context()
-        self.assertEqual(
-            span_ctx.trace_state, trace.TraceState([("hello", "tracestate")])
-        )
+        self.assertEqual(span_ctx.trace_state, trace.TraceState([("hello", "tracestate")]))

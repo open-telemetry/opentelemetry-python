@@ -63,9 +63,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
     @classmethod
     def setUpClass(cls):
         cls.mock_aggregation_factory = Mock()
-        cls.mock_created_aggregation = (
-            cls.mock_aggregation_factory._create_aggregation()
-        )
+        cls.mock_created_aggregation = cls.mock_aggregation_factory._create_aggregation()
         cls.mock_resource = Mock()
         cls.mock_instrumentation_scope = Mock()
         cls.sdk_configuration = SdkConfiguration(
@@ -151,9 +149,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         view_instrument_match.consume_measurement(
@@ -196,9 +192,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 aggregation=self.mock_aggregation_factory,
             ),
             instrument=instrument1,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         view_instrument_match.consume_measurement(
@@ -212,11 +206,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {
-                frozenset(
-                    [("c", "d"), ("f", "g")]
-                ): self.mock_created_aggregation
-            },
+            {frozenset([("c", "d"), ("f", "g")]): self.mock_created_aggregation},
         )
 
         # empty set attribute_keys will drop all labels and aggregate
@@ -229,9 +219,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 attribute_keys={},
             ),
             instrument=instrument1,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
         view_instrument_match.consume_measurement(
             Measurement(
@@ -259,9 +247,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 attribute_keys={},
             ),
             instrument=instrument1,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
         view_instrument_match.consume_measurement(
             Measurement(
@@ -294,9 +280,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         view_instrument_match.consume_measurement(
@@ -309,9 +293,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
 
-        number_data_points = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, 0
-        )
+        number_data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
         number_data_points = list(number_data_points)
         self.assertEqual(len(number_data_points), 1)
 
@@ -337,9 +319,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 aggregation=DefaultAggregation(),
             ),
             instrument=instrument1,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         attributes = {"key": "original"}
@@ -356,9 +336,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         # Mutate the original dict after recording
         attributes["key"] = "mutated"
 
-        number_data_points = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, 0
-        )
+        number_data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
         number_data_points = list(number_data_points)
         self.assertEqual(len(number_data_points), 1)
         self.assertEqual(number_data_points[0].attributes, {"key": "original"})
@@ -377,9 +355,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 aggregation=self.mock_aggregation_factory,
             ),
             instrument=instrument,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
         start_time_unix_nano = 0
         self.assertEqual(mock_time_ns.call_count, 0)
@@ -543,9 +519,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
 
-        result = view_instrument_match.collect(
-            AggregationTemporality.CUMULATIVE, 0
-        )
+        result = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
 
         self.assertEqual(len(list(result)), 3)
 
@@ -580,9 +554,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
 
         self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[
-                frozenset({("c", "d")})
-            ],
+            view_instrument_match._attributes_aggregation[frozenset({("c", "d")})],
             _LastValueAggregation,
         )
 
@@ -642,9 +614,7 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
             )
         )
 
-        data_points = list(
-            view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
-        )
+        data_points = list(view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0))
 
         # Ensure only one data point is collected
         self.assertEqual(len(data_points), 2)
@@ -699,9 +669,7 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         )
 
         # Collect the data points
-        data_points = list(
-            view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
-        )
+        data_points = list(view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0))
 
         # Ensure only one data point is collected
         self.assertEqual(len(data_points), 1)
@@ -745,9 +713,7 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         )
 
         # Collect the data points
-        data_points = list(
-            view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
-        )
+        data_points = list(view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0))
 
         # Ensure only one data point is collected
         self.assertEqual(len(data_points), 1)
@@ -764,9 +730,7 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
 class TestAlignedHistogramBucketExemplarReservoir(TestCase):
     def test_consume_measurement_with_custom_reservoir_factory(self):
         # Custom factory for AlignedHistogramBucketExemplarReservoir with specific boundaries
-        histogram_reservoir_factory = generalized_reservoir_factory(
-            boundaries=[0, 5, 10, 25]
-        )
+        histogram_reservoir_factory = generalized_reservoir_factory(boundaries=[0, 5, 10, 25])
 
         # Create an instance of _Histogram
         instrument1 = _Histogram(
@@ -830,9 +794,7 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         )
 
         # Collect the data points
-        data_points = list(
-            view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
-        )
+        data_points = list(view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0))
 
         # Ensure three data points are collected, one for each bucket
         self.assertEqual(len(data_points), 3)
@@ -842,12 +804,6 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         self.assertEqual(len(data_points[1].exemplars), 1)
         self.assertEqual(len(data_points[2].exemplars), 1)
 
-        self.assertEqual(
-            data_points[0].exemplars[0].value, 2.0
-        )  # First bucket
-        self.assertEqual(
-            data_points[1].exemplars[0].value, 8.0
-        )  # Second bucket
-        self.assertEqual(
-            data_points[2].exemplars[0].value, 15.0
-        )  # Third bucket
+        self.assertEqual(data_points[0].exemplars[0].value, 2.0)  # First bucket
+        self.assertEqual(data_points[1].exemplars[0].value, 8.0)  # Second bucket
+        self.assertEqual(data_points[2].exemplars[0].value, 15.0)  # Third bucket

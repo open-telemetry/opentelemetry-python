@@ -132,9 +132,7 @@ def decode_hex(value: str | None, field_name: str) -> bytes:
     try:
         return bytes.fromhex(value)
     except ValueError as error:
-        raise ValueError(
-            f"Invalid hex string for field '{field_name}': {error}"
-        ) from None
+        raise ValueError(f"Invalid hex string for field '{field_name}': {error}") from None
 
 
 def decode_base64(value: str | None, field_name: str) -> bytes:
@@ -153,9 +151,7 @@ def decode_base64(value: str | None, field_name: str) -> bytes:
     try:
         return base64.b64decode(value)
     except Exception as error:
-        raise ValueError(
-            f"Invalid base64 string for field '{field_name}': {error}"
-        ) from None
+        raise ValueError(f"Invalid base64 string for field '{field_name}': {error}") from None
 
 
 def decode_int64(value: int | str | None, field_name: str) -> int:
@@ -174,9 +170,7 @@ def decode_int64(value: int | str | None, field_name: str) -> int:
     try:
         return int(value)
     except (ValueError, TypeError):
-        raise ValueError(
-            f"Invalid int64 value for field '{field_name}': {value}"
-        ) from None
+        raise ValueError(f"Invalid int64 value for field '{field_name}': {value}") from None
 
 
 def decode_float(value: float | int | str | None, field_name: str) -> float:
@@ -201,9 +195,7 @@ def decode_float(value: float | int | str | None, field_name: str) -> float:
     try:
         return float(value)
     except (ValueError, TypeError):
-        raise ValueError(
-            f"Invalid float value for field '{field_name}': {value}"
-        ) from None
+        raise ValueError(f"Invalid float value for field '{field_name}': {value}") from None
 
 
 def decode_repeated(
@@ -242,7 +234,4 @@ def validate_type(
         field_name: The name of the field being validated (for error messages).
     """
     if not isinstance(value, expected_types):
-        raise TypeError(
-            f"Field '{field_name}' expected {expected_types}, "
-            f"got {type(value).__name__}"
-        )
+        raise TypeError(f"Field '{field_name}' expected {expected_types}, got {type(value).__name__}")

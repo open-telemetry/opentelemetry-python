@@ -91,9 +91,7 @@ def create_db_client_connection_max(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTION_PENDING_REQUESTS: Final = (
-    "db.client.connection.pending_requests"
-)
+DB_CLIENT_CONNECTION_PENDING_REQUESTS: Final = "db.client.connection.pending_requests"
 """
 The number of current pending requests for an open connection
 Instrument: updowncounter
@@ -101,9 +99,7 @@ Unit: {request}
 """
 
 
-def create_db_client_connection_pending_requests(
-    meter: Meter,
-) -> UpDownCounter:
+def create_db_client_connection_pending_requests(meter: Meter) -> UpDownCounter:
     """The number of current pending requests for an open connection"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTION_PENDING_REQUESTS,
@@ -223,17 +219,13 @@ def create_db_client_connections_max(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTIONS_PENDING_REQUESTS: Final = (
-    "db.client.connections.pending_requests"
-)
+DB_CLIENT_CONNECTIONS_PENDING_REQUESTS: Final = "db.client.connections.pending_requests"
 """
 Deprecated: Replaced by `db.client.connection.pending_requests`.
 """
 
 
-def create_db_client_connections_pending_requests(
-    meter: Meter,
-) -> UpDownCounter:
+def create_db_client_connections_pending_requests(meter: Meter) -> UpDownCounter:
     """Deprecated, use `db.client.connection.pending_requests` instead"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTIONS_PENDING_REQUESTS,
@@ -302,17 +294,13 @@ def create_db_client_connections_wait_time(meter: Meter) -> Histogram:
     )
 
 
-DB_CLIENT_COSMOSDB_ACTIVE_INSTANCE_COUNT: Final = (
-    "db.client.cosmosdb.active_instance.count"
-)
+DB_CLIENT_COSMOSDB_ACTIVE_INSTANCE_COUNT: Final = "db.client.cosmosdb.active_instance.count"
 """
 Deprecated: Replaced by `azure.cosmosdb.client.active_instance.count`.
 """
 
 
-def create_db_client_cosmosdb_active_instance_count(
-    meter: Meter,
-) -> UpDownCounter:
+def create_db_client_cosmosdb_active_instance_count(meter: Meter) -> UpDownCounter:
     """Deprecated, use `azure.cosmosdb.client.active_instance.count` instead"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_COSMOSDB_ACTIVE_INSTANCE_COUNT,
@@ -321,17 +309,13 @@ def create_db_client_cosmosdb_active_instance_count(
     )
 
 
-DB_CLIENT_COSMOSDB_OPERATION_REQUEST_CHARGE: Final = (
-    "db.client.cosmosdb.operation.request_charge"
-)
+DB_CLIENT_COSMOSDB_OPERATION_REQUEST_CHARGE: Final = "db.client.cosmosdb.operation.request_charge"
 """
 Deprecated: Replaced by `azure.cosmosdb.client.operation.request_charge`.
 """
 
 
-def create_db_client_cosmosdb_operation_request_charge(
-    meter: Meter,
-) -> Histogram:
+def create_db_client_cosmosdb_operation_request_charge(meter: Meter) -> Histogram:
     """Deprecated, use `azure.cosmosdb.client.operation.request_charge` instead"""
     return meter.create_histogram(
         name=DB_CLIENT_COSMOSDB_OPERATION_REQUEST_CHARGE,

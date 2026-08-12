@@ -32,11 +32,7 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
             "opentelemetry.exporter.opencensus.util.get_node",
             side_effect=mock_get_node,
         )
-        trace_api.set_tracer_provider(
-            TracerProvider(
-                resource=Resource.create({SERVICE_NAME: "testServiceName"})
-            )
-        )
+        trace_api.set_tracer_provider(TracerProvider(resource=Resource.create({SERVICE_NAME: "testServiceName"})))
 
         host_name = "testHostName"
         client = grpc.insecure_channel("")
@@ -94,12 +90,8 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
             trace_state=trace_api.TraceState([("testkey", "testvalue")]),
         )
-        parent_span_context = trace_api.SpanContext(
-            trace_id, parent_id, is_remote=False
-        )
-        other_context = trace_api.SpanContext(
-            trace_id, span_id, is_remote=False
-        )
+        parent_span_context = trace_api.SpanContext(trace_id, parent_id, is_remote=False)
+        other_context = trace_api.SpanContext(trace_id, span_id, is_remote=False)
         event_attributes = {
             "annotation_bool": True,
             "annotation_string": "annotation_test",
@@ -112,12 +104,8 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
             attributes=event_attributes,
         )
         link_attributes = {"key_bool": True}
-        link_1 = trace_api.Link(
-            context=other_context, attributes=link_attributes
-        )
-        link_2 = trace_api.Link(
-            context=parent_span_context, attributes=link_attributes
-        )
+        link_1 = trace_api.Link(context=other_context, attributes=link_attributes)
+        link_2 = trace_api.Link(context=parent_span_context, attributes=link_attributes)
         span_1 = trace._Span(
             name="test1",
             context=span_context,
@@ -159,79 +147,50 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
         output_spans = translate_to_collector(otel_spans)
 
         self.assertEqual(len(output_spans), 3)
-        self.assertEqual(
-            output_spans[0].trace_id, b"n\x0cc%}\xe3L\x92o\x9e\xfc\xd09''."
-        )
-        self.assertEqual(
-            output_spans[0].span_id, b"4\xbf\x92\xde\xef\xc5\x8c\x92"
-        )
-        self.assertEqual(
-            output_spans[0].name, trace_pb2.TruncatableString(value="test1")
-        )
-        self.assertEqual(
-            output_spans[1].name, trace_pb2.TruncatableString(value="test2")
-        )
-        self.assertEqual(
-            output_spans[2].name, trace_pb2.TruncatableString(value="test3")
-        )
+        self.assertEqual(output_spans[0].trace_id, b"n\x0cc%}\xe3L\x92o\x9e\xfc\xd09''.")
+        self.assertEqual(output_spans[0].span_id, b"4\xbf\x92\xde\xef\xc5\x8c\x92")
+        self.assertEqual(output_spans[0].name, trace_pb2.TruncatableString(value="test1"))
+        self.assertEqual(output_spans[1].name, trace_pb2.TruncatableString(value="test2"))
+        self.assertEqual(output_spans[2].name, trace_pb2.TruncatableString(value="test3"))
         self.assertEqual(
             output_spans[0].start_time.seconds,
             int(start_times[0] / 1000000000),
         )
-        self.assertEqual(
-            output_spans[0].end_time.seconds, int(end_times[0] / 1000000000)
-        )
+        self.assertEqual(output_spans[0].end_time.seconds, int(end_times[0] / 1000000000))
         self.assertEqual(output_spans[0].kind, trace_api.SpanKind.CLIENT.value)
         self.assertEqual(output_spans[1].kind, trace_api.SpanKind.SERVER.value)
 
-        self.assertEqual(
-            output_spans[0].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11"
-        )
-        self.assertEqual(
-            output_spans[2].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11"
-        )
+        self.assertEqual(output_spans[0].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11")
+        self.assertEqual(output_spans[2].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11")
         self.assertEqual(
             output_spans[0].status.code,
             trace_api.StatusCode.OK.value,
         )
         self.assertEqual(len(output_spans[0].tracestate.entries), 1)
         self.assertEqual(output_spans[0].tracestate.entries[0].key, "testkey")
-        self.assertEqual(
-            output_spans[0].tracestate.entries[0].value, "testvalue"
-        )
+        self.assertEqual(output_spans[0].tracestate.entries[0].value, "testvalue")
 
         self.assertEqual(
             output_spans[0].attributes.attribute_map["key_bool"].bool_value,
             False,
         )
         self.assertEqual(
-            output_spans[0]
-            .attributes.attribute_map["key_string"]
-            .string_value.value,
+            output_spans[0].attributes.attribute_map["key_string"].string_value.value,
             "hello_world",
         )
         self.assertEqual(
             output_spans[0].attributes.attribute_map["key_float"].double_value,
             111.22,
         )
-        self.assertEqual(
-            output_spans[0].attributes.attribute_map["key_int"].int_value, 333
-        )
+        self.assertEqual(output_spans[0].attributes.attribute_map["key_int"].int_value, 333)
 
+        self.assertEqual(output_spans[0].time_events.time_event[0].time.seconds, 683647322)
         self.assertEqual(
-            output_spans[0].time_events.time_event[0].time.seconds, 683647322
-        )
-        self.assertEqual(
-            output_spans[0]
-            .time_events.time_event[0]
-            .annotation.description.value,
+            output_spans[0].time_events.time_event[0].annotation.description.value,
             "event0",
         )
         self.assertEqual(
-            output_spans[0]
-            .time_events.time_event[0]
-            .annotation.attributes.attribute_map["annotation_bool"]
-            .bool_value,
+            output_spans[0].time_events.time_event[0].annotation.attributes.attribute_map["annotation_bool"].bool_value,
             True,
         )
         self.assertEqual(
@@ -242,10 +201,7 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
             "annotation_test",
         )
         self.assertEqual(
-            output_spans[0]
-            .time_events.time_event[0]
-            .annotation.attributes.attribute_map["key_float"]
-            .double_value,
+            output_spans[0].time_events.time_event[0].annotation.attributes.attribute_map["key_float"].double_value,
             0.3,
         )
 
@@ -270,10 +226,7 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
             trace_pb2.Span.Link.Type.PARENT_LINKED_SPAN,
         )
         self.assertEqual(
-            output_spans[0]
-            .links.link[0]
-            .attributes.attribute_map["key_bool"]
-            .bool_value,
+            output_spans[0].links.link[0].attributes.attribute_map["key_bool"].bool_value,
             True,
         )
 
@@ -282,9 +235,7 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
         mock_export = mock.MagicMock()
         mock_client.Export = mock_export
         host_name = "testHostName"
-        collector_exporter = OpenCensusSpanExporter(
-            client=mock_client, host_name=host_name
-        )
+        collector_exporter = OpenCensusSpanExporter(client=mock_client, host_name=host_name)
 
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
@@ -313,26 +264,16 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
         self.assertIsNotNone(getattr(output_node, "library_info"))
         self.assertIsNotNone(getattr(output_node, "service_info"))
         output_identifier = getattr(output_node, "identifier")
-        self.assertEqual(
-            getattr(output_identifier, "host_name"), "testHostName"
-        )
+        self.assertEqual(getattr(output_identifier, "host_name"), "testHostName")
 
     def test_export_service_name(self):
-        trace_api.set_tracer_provider(
-            TracerProvider(
-                resource=Resource.create({SERVICE_NAME: "testServiceName"})
-            )
-        )
+        trace_api.set_tracer_provider(TracerProvider(resource=Resource.create({SERVICE_NAME: "testServiceName"})))
         mock_client = mock.MagicMock()
         mock_export = mock.MagicMock()
         mock_client.Export = mock_export
         host_name = "testHostName"
-        collector_exporter = OpenCensusSpanExporter(
-            client=mock_client, host_name=host_name
-        )
-        self.assertEqual(
-            collector_exporter.node.service_info.name, "testServiceName"
-        )
+        collector_exporter = OpenCensusSpanExporter(client=mock_client, host_name=host_name)
+        self.assertEqual(collector_exporter.node.service_info.name, "testServiceName")
 
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92

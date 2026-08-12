@@ -29,9 +29,7 @@ def _is_normalized_key(key: str) -> bool:
         return False
     if "0" <= key[0] <= "9":
         return False
-    return all(
-        "A" <= char <= "Z" or "0" <= char <= "9" or char == "_" for char in key
-    )
+    return all("A" <= char <= "Z" or "0" <= char <= "9" or char == "_" for char in key)
 
 
 class EnvironmentGetter(Getter[Mapping[str, str]]):
@@ -85,9 +83,7 @@ class EnvironmentSetter(Setter[MutableMapping[str, str]]):
         subprocess.run(myCommand, env=env_vars)
     """
 
-    def set(
-        self, carrier: MutableMapping[str, str], key: str, value: str
-    ) -> None:
+    def set(self, carrier: MutableMapping[str, str], key: str, value: str) -> None:
         """Set a value in the carrier dictionary for the given key.
 
         Args:

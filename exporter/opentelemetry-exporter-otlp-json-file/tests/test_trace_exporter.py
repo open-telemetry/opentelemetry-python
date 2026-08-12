@@ -169,10 +169,7 @@ class TestFileSpanExporterRoundTrip(unittest.TestCase):
         self._tracer = provider.get_tracer(__name__)
 
     def _expected(self) -> str:
-        return "".join(
-            _format_line(encode_spans([span]).to_dict())
-            for span in self._in_memory.get_finished_spans()
-        )
+        return "".join(_format_line(encode_spans([span]).to_dict()) for span in self._in_memory.get_finished_spans())
 
     def test_single_span_matches_in_memory(self):
         link_ctx = SpanContext(
@@ -197,9 +194,7 @@ class TestFileSpanExporterRoundTrip(unittest.TestCase):
         self.assertEqual(self._stream.getvalue(), self._expected())
 
     def test_multiple_spans_match_in_memory(self):
-        with self._tracer.start_as_current_span(
-            "parent-op", attributes={"phase": "request"}
-        ) as parent:
+        with self._tracer.start_as_current_span("parent-op", attributes={"phase": "request"}) as parent:
             parent.add_event("processing-started")
             with self._tracer.start_as_current_span("child-op") as child:
                 child.set_attribute("attempt", 1)
