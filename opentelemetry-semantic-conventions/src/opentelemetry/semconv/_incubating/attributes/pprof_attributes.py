@@ -41,12 +41,12 @@ Note: The URL must be absolute and may be missing if the profile was generated b
 
 PPROF_PROFILE_DROP_FRAMES: Final = "pprof.profile.drop_frames"
 """
-Frames with Function.function_name fully matching the regexp will be dropped from the samples, along with their successors.
+Frames with Function.function_name fully matching the regular expression will be dropped from the samples, along with their successors.
 """
 
 PPROF_PROFILE_KEEP_FRAMES: Final = "pprof.profile.keep_frames"
 """
-Frames with Function.function_name fully matching the regexp will be kept, even if it matches drop_frames.
+Frames with Function.function_name fully matching the regular expression will be kept, even if it matches drop_frames.
 """
 
 PPROF_SCOPE_DEFAULT_SAMPLE_TYPE: Final = "pprof.scope.default_sample_type"

@@ -35,7 +35,7 @@ templates:
       })
       | map({
         root_namespace: .root_namespace,
-        metrics: .metrics,
+        metrics: [.metrics[] | select(.id == ("metric." + .metric_name))],
         output: $output + "metrics/",
         stable_package_name: $stable_package_name + ".metrics",
         filter: $filter,
