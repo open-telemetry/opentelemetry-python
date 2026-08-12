@@ -30,15 +30,9 @@ class TestView(TestCase):
         mock_instrument = Mock()
         mock_instrument.configure_mock(**{"name": "instrument_name"})
 
-        self.assertTrue(
-            View(instrument_name="Instrument_Name")._match(mock_instrument)
-        )
-        self.assertTrue(
-            View(instrument_name="INSTRUMENT_*")._match(mock_instrument)
-        )
-        self.assertFalse(
-            View(instrument_name="other_name")._match(mock_instrument)
-        )
+        self.assertTrue(View(instrument_name="Instrument_Name")._match(mock_instrument))
+        self.assertTrue(View(instrument_name="INSTRUMENT_*")._match(mock_instrument))
+        self.assertFalse(View(instrument_name="other_name")._match(mock_instrument))
 
     def test_instrument_unit(self):
         mock_instrument = Mock()
