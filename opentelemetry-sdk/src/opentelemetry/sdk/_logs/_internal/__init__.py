@@ -359,6 +359,15 @@ class LogRecordProcessor(abc.ABC):
         on error handling expectations.
         """
 
+    def enabled(
+        self,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return True
+
     @abc.abstractmethod
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
@@ -401,6 +410,23 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         for lp in self._log_record_processors:
             lp.on_emit(log_record)
+
+    def enabled(
+        self,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return any(
+            lp.enabled(
+                context,
+                instrumentation_scope,
+                severity_number,
+                event_name,
+            )
+            for lp in self._log_record_processors
+        )
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -471,6 +497,26 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
+
+    def enabled(
+        self,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        futures = []
+        for lp in self._log_record_processors:
+            future = self._executor.submit(
+                lp.enabled,
+                context,
+                instrumentation_scope,
+                severity_number,
+                event_name,
+            )
+            futures.append(future)
+
+        return any(future.result() for future in futures)
 
     def shutdown(self) -> None:
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -682,6 +728,19 @@ class Logger(APILogger):
     def _is_enabled(self) -> bool:
         return self._logger_config.is_enabled
 
+    def enabled(
+        self,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return self._is_enabled() and self._multi_log_record_processor.enabled(
+            context,
+            self._instrumentation_scope,
+            severity_number,
+            event_name,
+        )
+
     def _set_logger_config(self, logger_config: _LoggerConfig) -> None:
         self._logger_config = logger_config
 
@@ -714,10 +773,19 @@ class Logger(APILogger):
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
-        if not self._is_enabled():
-            return
         # If a record is provided, use it directly
         if record is not None:
+            api_record = (
+                record.log_record
+                if isinstance(record, ReadWriteLogRecord)
+                else record
+            )
+            if not self.enabled(
+                api_record.context,
+                api_record.severity_number,
+                api_record.event_name,
+            ):
+                return
             if not isinstance(record, ReadWriteLogRecord):
                 if record.exception is not None:
                     record = _copy_log_record_with_exception(record)
@@ -731,6 +799,8 @@ class Logger(APILogger):
                 _set_log_record_exception_attributes(record.log_record)
                 writable_record = record
         else:
+            if not self.enabled(context, severity_number, event_name):
+                return
             # Create a record from individual parameters
             log_record = _create_log_record_with_exception(
                 timestamp=timestamp,

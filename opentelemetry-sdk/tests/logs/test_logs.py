@@ -318,6 +318,7 @@ class TestLogger(unittest.TestCase):
     @staticmethod
     def _get_logger():
         log_record_processor_mock = Mock()
+        log_record_processor_mock.enabled.return_value = True
         logger = Logger(
             resource=Resource.create({}),
             multi_log_record_processor=log_record_processor_mock,
@@ -331,6 +332,48 @@ class TestLogger(unittest.TestCase):
             _logger_config=_LoggerConfig.default(),
         )
         return logger, log_record_processor_mock
+
+    def test_enabled_is_false_with_no_processors(self):
+        logger = LoggerProvider().get_logger("test")
+
+        self.assertFalse(logger.enabled())
+
+    def test_enabled_uses_processor_predicate(self):
+        logger, log_record_processor_mock = self._get_logger()
+        context = get_current()
+
+        self.assertTrue(
+            logger.enabled(context, SeverityNumber.WARN, "event_name")
+        )
+        log_record_processor_mock.enabled.assert_called_once_with(
+            context,
+            logger.instrumentation_scope,
+            SeverityNumber.WARN,
+            "event_name",
+        )
+
+        log_record_processor_mock.enabled.return_value = False
+        self.assertFalse(
+            logger.enabled(context, SeverityNumber.WARN, "event_name")
+        )
+
+    def test_emit_skips_record_creation_when_not_enabled(self):
+        logger = LoggerProvider().get_logger("test")
+
+        with patch(
+            "opentelemetry.sdk._logs._internal._create_log_record_with_exception"
+        ) as create_record:
+            logger.emit(body="should not be emitted")
+
+        create_record.assert_not_called()
+
+    def test_emit_skips_processor_when_not_enabled(self):
+        logger, log_record_processor_mock = self._get_logger()
+        log_record_processor_mock.enabled.return_value = False
+
+        logger.emit(LogRecord(observed_timestamp=0, body="not emitted"))
+
+        log_record_processor_mock.on_emit.assert_not_called()
 
     def test_can_emit_logrecord(self):
         logger, log_record_processor_mock = self._get_logger()

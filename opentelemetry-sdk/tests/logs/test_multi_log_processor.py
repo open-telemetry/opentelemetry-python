@@ -137,6 +137,43 @@ class MultiLogRecordProcessorTestBase(ABC):
         for mock_processor in mocks:
             self.assertEqual(1, mock_processor.force_flush.call_count)
 
+    def test_enabled_with_no_processors(self):
+        multi_log_record_processor = self._get_multi_log_record_processor()
+
+        self.assertFalse(multi_log_record_processor.enabled())
+
+    def test_enabled_returns_false_when_all_processors_disabled(self):
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        mocks = [Mock(spec=LogRecordProcessor) for _ in range(2)]
+        for mock_processor in mocks:
+            mock_processor.enabled.return_value = False
+            multi_log_record_processor.add_log_record_processor(
+                mock_processor
+            )
+
+        self.assertFalse(
+            multi_log_record_processor.enabled(
+                None, None, SeverityNumber.WARN, "event_name"
+            )
+        )
+
+    def test_enabled_returns_true_when_any_processor_enabled(self):
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        disabled_processor = Mock(spec=LogRecordProcessor)
+        disabled_processor.enabled.return_value = False
+        enabled_processor = Mock(spec=LogRecordProcessor)
+        enabled_processor.enabled.return_value = True
+        multi_log_record_processor.add_log_record_processor(
+            disabled_processor
+        )
+        multi_log_record_processor.add_log_record_processor(enabled_processor)
+
+        self.assertTrue(
+            multi_log_record_processor.enabled(
+                None, None, SeverityNumber.WARN, "event_name"
+            )
+        )
+
 
 class TestSynchronousMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, unittest.TestCase):
     def _get_multi_log_record_processor(self):
