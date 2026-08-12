@@ -16,7 +16,7 @@ pluggy==1.6.0
 protobuf==3.20.3
 py-cpuinfo==9.0.0
 pyasn1==0.6.3
-pyasn1-modules==0.3.0
+pyasn1-modules==0.4.2
 pytest==7.4.4
 requests==2.32.3
 rsa==4.9
