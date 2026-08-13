@@ -1,0 +1,1 @@
+`opentelemetry-api`: fix `TraceState.update` to only update already existing keys

@@ -51,6 +51,29 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertNotEqual(new_state.get("a"), ",,2,,f")
         self.assertEqual(new_state.get("a"), "1")
 
+    def test_tracestate_update_missing_key_returns_unchanged(self):
+        # update() only updates an existing key; for a key that is not present it
+        # returns the same tracestate unchanged (and never adds the key). This also
+        # guards the previous bug where updating a new key at the 32-entry limit
+        # wiped all existing entries.
+        pairs = [(f"key{i}", f"value{i}") for i in range(32)]
+        state = TraceState(pairs)
+        new_state = state.update("newkey", "newvalue")
+        self.assertEqual(len(new_state), 32)
+        self.assertIsNone(new_state.get("newkey"))
+        self.assertEqual(new_state.get("key0"), "value0")
+
+        small_state = TraceState([("a", "1")])
+        self.assertIsNone(small_state.update("b", "2").get("b"))
+
+    def test_tracestate_update_existing_key_at_capacity(self):
+        # Updating an existing key while at the limit stays within the limit.
+        pairs = [(f"key{i}", f"value{i}") for i in range(32)]
+        state = TraceState(pairs)
+        new_state = state.update("key0", "changed")
+        self.assertEqual(len(new_state), 32)
+        self.assertEqual(new_state.get("key0"), "changed")
+
     def test_tracestate_delete_preserved(self):
         state = TraceState([("a", "1"), ("b", "2"), ("c", "3")])
         new_state = state.delete("b")

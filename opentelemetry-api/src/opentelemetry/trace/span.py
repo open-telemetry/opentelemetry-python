@@ -311,8 +311,8 @@ class TraceState(Mapping[str, str]):
         return TraceState(new_state)
 
     def update(self, key: str, value: str) -> TraceState:
-        """Updates a key-value pair in tracestate. The provided pair should
-        adhere to w3c tracestate identifiers format.
+        """Updates an existing key's value in tracestate. The provided pair
+        should adhere to w3c tracestate identifiers format.
 
         Args:
             key: A valid tracestate key to update
@@ -321,12 +321,16 @@ class TraceState(Mapping[str, str]):
         Returns:
             A new TraceState with the modifications applied.
 
-            If the provided key-value pair is invalid or results in tracestate
-            that violates tracecontext specification, they are discarded and
-            same tracestate will be returned.
+            If the key is not already present, or the provided pair is invalid,
+            the same tracestate is returned unchanged. Adding a new key is done
+            with ``add()``.
         """
         if not _is_valid_pair(key, value):
             _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
+            return self
+        if key not in self._dict:
+            # update() only updates an existing key (see the TraceState API spec);
+            # adding a new key is the job of add(). Return unchanged otherwise.
             return self
         prev_state = self._dict.copy()
         prev_state.pop(key, None)
