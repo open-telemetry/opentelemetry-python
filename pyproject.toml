@@ -16,6 +16,7 @@ dependencies = [
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
   "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-otlp-common",
   "opentelemetry-exporter-otlp-json-common",
   "opentelemetry-exporter-zipkin-json",
   "opentelemetry-exporter-prometheus",
