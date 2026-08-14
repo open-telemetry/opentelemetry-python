@@ -367,21 +367,20 @@ class ProcessResourceDetector(ResourceDetector):
             )
         )
         _process_pid = os.getpid()
-        _process_executable_name = sys.executable
-        _process_executable_path = os.path.dirname(_process_executable_name)
         # Use sys.orig_argv, which preserves the original arguments received
         # by the interpreter. This correctly captures ``python -m <module>``
         # invocations where sys.argv is rewritten to the resolved module path
         # and the ``-m <module>`` information is lost. Only read argv[0] by
         # default because full command arguments are opt-in.
         _process_command = sys.orig_argv[0] if sys.orig_argv else ""
+        executable = sys.executable or ""
         resource_info: dict[str, AttributeValue] = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
             PROCESS_RUNTIME_VERSION: _runtime_version,
             PROCESS_PID: _process_pid,
-            PROCESS_EXECUTABLE_NAME: _process_executable_name,
-            PROCESS_EXECUTABLE_PATH: _process_executable_path,
+            PROCESS_EXECUTABLE_NAME: os.path.basename(executable),
+            PROCESS_EXECUTABLE_PATH: executable,
             PROCESS_COMMAND: _process_command,
         }
         if self._include_command_args:

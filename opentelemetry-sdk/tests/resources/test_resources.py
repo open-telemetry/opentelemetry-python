@@ -630,6 +630,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         "sys.orig_argv",
         ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
     )
+    @patch("sys.executable", "/usr/bin/uvicorn")
     def test_process_detector(self):
         initial_resource = Resource({"foo": "bar"})
         aggregated_resource = get_aggregated_resources([ProcessResourceDetector()], initial_resource)
@@ -662,13 +663,13 @@ class TestOTELResourceDetector(unittest.TestCase):
 
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME],
-            sys.executable,
+            "uvicorn",
         )
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_EXECUTABLE_PATH],
-            os.path.dirname(sys.executable),
+            "/usr/bin/uvicorn",
         )
-        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND], sys.orig_argv[0])
+        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND], "uvicorn")
         self.assertNotIn(
             PROCESS_COMMAND_LINE,
             aggregated_resource.attributes,
@@ -767,6 +768,20 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
             ("/usr/bin/python", "-m", "myapp"),
+        )
+
+    @patch("sys.executable", None)
+    def test_process_detector_handles_missing_executable(self):
+        initial_resource = Resource({"foo": "bar"})
+        aggregated_resource = get_aggregated_resources([ProcessResourceDetector()], initial_resource)
+
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME],
+            "",
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_EXECUTABLE_PATH],
+            "",
         )
 
     def test_resource_detector_entry_points_default(self):
