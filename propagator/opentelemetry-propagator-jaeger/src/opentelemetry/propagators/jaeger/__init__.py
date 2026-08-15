@@ -14,7 +14,7 @@ from opentelemetry.propagators.textmap import (
     default_getter,
     default_setter,
 )
-from opentelemetry.trace import format_span_id, format_trace_id
+from opentelemetry.trace import SpanContext, format_span_id, format_trace_id
 
 
 class JaegerPropagator(TextMapPropagator):
@@ -68,7 +68,7 @@ class JaegerPropagator(TextMapPropagator):
 
         # Non-recording spans do not have a parent; the API Span type does not
         # declare a parent attribute, so it has to be accessed via getattr
-        parent = getattr(span, "parent", None) if span.is_recording() else None
+        parent: SpanContext | None = getattr(span, "parent", None) if span.is_recording() else None
         span_parent_id = parent.span_id if parent else 0
         trace_flags = span_context.trace_flags
         if trace_flags.sampled:
