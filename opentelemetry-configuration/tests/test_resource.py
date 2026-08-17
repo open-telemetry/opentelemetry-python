@@ -34,14 +34,16 @@ from opentelemetry.sdk.resources import (
 
 
 class TestCreateResourceDefaults(unittest.TestCase):
+    @patch("sys.executable", "/usr/bin/python3")
     def test_none_config_returns_sdk_defaults(self):
         resource = create_resource(None)
         self.assertIsInstance(resource, Resource)
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
         self.assertEqual(resource.attributes[TELEMETRY_SDK_NAME], "opentelemetry")
         self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_none_config_does_not_read_env_vars(self):
         with patch.dict(
             os.environ,
@@ -52,22 +54,29 @@ class TestCreateResourceDefaults(unittest.TestCase):
         ):
             resource = create_resource(None)
         self.assertNotIn("foo", resource.attributes)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_empty_resource_config(self):
         resource = create_resource(ResourceConfig())
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_service_name_default_added_when_missing(self):
         config = ResourceConfig(attributes=[AttributeNameValue(name="env", value="staging")])
         resource = create_resource(config)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
     def test_service_name_not_overridden_when_set(self):
         config = ResourceConfig(attributes=[AttributeNameValue(name="service.name", value="my-app")])
         resource = create_resource(config)
         self.assertEqual(resource.attributes[SERVICE_NAME], "my-app")
+
+    @patch("sys.executable", None)
+    def test_default_service_name_without_sys_executable_returns_plain_unkwnon_service(self):
+        resource = create_resource(None)
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
 
     def test_env_vars_not_read(self):
         """OTEL_RESOURCE_ATTRIBUTES must not affect declarative config resource."""
@@ -294,10 +303,11 @@ class TestServiceResourceDetector(unittest.TestCase):
             resource = create_resource(self._config_with_service())
         self.assertEqual(resource.attributes[SERVICE_NAME], "my-service")
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_service_detector_no_env_var_leaves_default_service_name(self):
         with patch.dict(os.environ, {}, clear=True):
             resource = create_resource(self._config_with_service())
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
     def test_explicit_service_name_overrides_env_var(self):
         """Config attributes win over the service detector's env-var value."""
@@ -333,6 +343,7 @@ class TestServiceResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
         self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_included_filter_limits_service_attributes(self):
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
@@ -345,7 +356,7 @@ class TestServiceResourceDetector(unittest.TestCase):
         self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
         # service.name comes from the filter-excluded detector output, but the
         # default "unknown_service" is still added by create_resource directly
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
 
 class TestHostResourceDetector(unittest.TestCase):

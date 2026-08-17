@@ -99,7 +99,7 @@ CLOUDFOUNDRY_SYSTEM_INSTANCE_ID: Final = "cloudfoundry.system.instance.id"
 A guid describing the concrete instance of the event source.
 Note: CloudFoundry defines the `instance_id` in the [Loggregator v2 envelope](https://github.com/cloudfoundry/loggregator-api#v2-envelope).
 It is used for logs and metrics emitted by CloudFoundry. It is
-supposed to contain the vm id for CloudFoundry components.
+supposed to contain the vm ID for CloudFoundry components.
 
 When system components are instrumented, values from the
 [Bosh spec](https://bosh.io/docs/jobs/#properties-spec)

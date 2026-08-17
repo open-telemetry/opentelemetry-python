@@ -7,6 +7,7 @@ import dataclasses
 import fnmatch
 import logging
 import os
+import sys
 from collections.abc import Callable
 from typing import Any
 from urllib import parse
@@ -101,7 +102,9 @@ def create_resource(config: ResourceConfig | None) -> Resource:
     """
     # Spec requires service.name to always be present; detectors and explicit
     # config attributes can override this default.
-    base = _DEFAULT_RESOURCE.merge(Resource({SERVICE_NAME: "unknown_service"}))
+    executable_name = os.path.basename(sys.executable) if sys.executable else None
+    default_service_name = f"unknown_service:{executable_name}" if executable_name else "unknown_service"
+    base = _DEFAULT_RESOURCE.merge(Resource({SERVICE_NAME: default_service_name}))
 
     if config is None:
         return base

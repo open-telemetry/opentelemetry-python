@@ -1,7 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 import abc
-import unittest
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (
@@ -10,16 +9,22 @@ from opentelemetry.exporter.zipkin.encoder import (
 )
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.test.test_base import TestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.status import Status, StatusCode
 
 TEST_SERVICE_NAME = "test_service"
 
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 class CommonEncoderTestCases:
-    class CommonEncoderTest(unittest.TestCase):
+    class CommonEncoderTest(TestBase):
+        @staticmethod
+        def create_tracer_provider(**kwargs):
+            return TestBase.create_tracer_provider(resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME}), **kwargs)
+
         @staticmethod
         @abc.abstractmethod
         def get_encoder(*args, **kwargs) -> Encoder:
