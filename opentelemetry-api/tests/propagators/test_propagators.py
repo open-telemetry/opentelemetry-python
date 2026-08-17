@@ -29,9 +29,7 @@ class TestPropagators(TestCase):
                 {TraceContextTextMapPropagator, W3CBaggagePropagator},
             )
 
-        mock_compositehttppropagator.configure_mock(
-            side_effect=test_propagators
-        )
+        mock_compositehttppropagator.configure_mock(side_effect=test_propagators)
 
         # pylint: disable=import-outside-toplevel
         import opentelemetry.propagate
@@ -50,9 +48,7 @@ class TestPropagators(TestCase):
                 set(),
             )
 
-        mock_compositehttppropagator.configure_mock(
-            side_effect=test_propagators
-        )
+        mock_compositehttppropagator.configure_mock(side_effect=test_propagators)
 
         # pylint: disable=import-outside-toplevel
         import opentelemetry.propagate
@@ -71,9 +67,7 @@ class TestPropagators(TestCase):
                 set(),
             )
 
-        mock_compositehttppropagator.configure_mock(
-            side_effect=test_propagators
-        )
+        mock_compositehttppropagator.configure_mock(side_effect=test_propagators)
 
         # pylint: disable=import-outside-toplevel
         import opentelemetry.propagate
@@ -97,9 +91,7 @@ class TestPropagators(TestCase):
         def test_propagators(propagators):
             self.assertEqual(propagators, ["a", "b", "c"])
 
-        mock_compositehttppropagator.configure_mock(
-            side_effect=test_propagators
-        )
+        mock_compositehttppropagator.configure_mock(side_effect=test_propagators)
 
         # pylint: disable=import-outside-toplevel
         import opentelemetry.propagate

@@ -299,9 +299,7 @@ class TestOtlpProtoTestServer(unittest.TestCase):
 
     def test_missing_proto_raises_import_error(self):
         with (
-            unittest.mock.patch.dict(
-                "sys.modules", {"opentelemetry.proto": None}
-            ),
+            unittest.mock.patch.dict("sys.modules", {"opentelemetry.proto": None}),
             self.assertRaises(ImportError) as cm,
         ):
             OtlpProtoTestServer()

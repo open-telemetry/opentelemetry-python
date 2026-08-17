@@ -213,14 +213,10 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             self.assertRaises(ConfigurationError),
         ):
             # pylint: disable=unexpected-keyword-arg
-            _create_log_record_exporter(
-                LogRecordExporterConfig(no_such_exporter={})
-            )
+            _create_log_record_exporter(LogRecordExporterConfig(no_such_exporter={}))
 
     def test_otlp_http_missing_package_raises(self):
-        config = LogRecordExporterConfig(
-            otlp_http=OtlpHttpExporterConfig(endpoint="http://localhost:4318")
-        )
+        config = LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(endpoint="http://localhost:4318"))
         with (
             patch.dict(
                 sys.modules,
@@ -234,9 +230,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             _create_log_record_exporter(config)
 
     def test_otlp_grpc_missing_package_raises(self):
-        config = LogRecordExporterConfig(
-            otlp_grpc=OtlpGrpcExporterConfig(endpoint="http://localhost:4317")
-        )
+        config = LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(endpoint="http://localhost:4317"))
         with (
             patch.dict(
                 sys.modules,
@@ -250,9 +244,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             _create_log_record_exporter(config)
 
     def test_otlp_file_development_missing_package_raises(self):
-        config = LogRecordExporterConfig(
-            otlp_file_development=ExperimentalOtlpFileExporterConfig()
-        )
+        config = LogRecordExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig())
         with (
             patch.dict(
                 sys.modules,
@@ -263,9 +255,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             self.assertRaises(ConfigurationError) as ctx,
         ):
             _create_log_record_exporter(config)
-        self.assertIn(
-            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
-        )
+        self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
         mock_exporter_cls = MagicMock()

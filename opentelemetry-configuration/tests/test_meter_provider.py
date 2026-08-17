@@ -219,9 +219,7 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertEqual(reader._export_timeout_millis, 10000.0)
 
     def test_otlp_http_missing_package_raises(self):
-        config = self._make_periodic_config(
-            PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig())
-        )
+        config = self._make_periodic_config(PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig()))
         with (
             patch.dict(
                 sys.modules,
@@ -286,9 +284,7 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertEqual(kwargs["compression"], "deflate_val")
 
     def test_otlp_grpc_missing_package_raises(self):
-        config = self._make_periodic_config(
-            PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig())
-        )
+        config = self._make_periodic_config(PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig()))
         with (
             patch.dict(
                 sys.modules,
@@ -316,9 +312,7 @@ class TestCreateMetricReaders(unittest.TestCase):
             self.assertRaises(ConfigurationError) as ctx,
         ):
             create_meter_provider(config)
-        self.assertIn(
-            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
-        )
+        self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
         mock_exporter_cls = MagicMock()

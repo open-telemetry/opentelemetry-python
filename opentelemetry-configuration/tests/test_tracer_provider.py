@@ -541,9 +541,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
 
     def test_otlp_http_missing_package_raises(self):
-        config = self._make_batch_config(
-            SpanExporterConfig(otlp_http=OtlpHttpExporterConfig())
-        )
+        config = self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig()))
         with (
             patch.dict(
                 sys.modules,
@@ -631,11 +629,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertEqual(kwargs["headers"], {"x-api-key": "secret", "env": "prod"})
 
     def test_otlp_file_development_missing_package_raises(self):
-        config = self._make_batch_config(
-            SpanExporterConfig(
-                otlp_file_development=ExperimentalOtlpFileExporterConfig()
-            )
-        )
+        config = self._make_batch_config(SpanExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig()))
         with (
             patch.dict(
                 sys.modules,
@@ -646,9 +640,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             self.assertRaises(ConfigurationError) as ctx,
         ):
             create_tracer_provider(config)
-        self.assertIn(
-            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
-        )
+        self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
         mock_exporter_cls = MagicMock()
@@ -710,9 +702,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         mock_exporter_cls.assert_not_called()
 
     def test_otlp_grpc_missing_package_raises(self):
-        config = self._make_batch_config(
-            SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig())
-        )
+        config = self._make_batch_config(SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig()))
         with (
             patch.dict(
                 sys.modules,

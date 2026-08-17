@@ -113,9 +113,7 @@ class TestOTLPSpanExporter(TestCase):
             ),
             resource=SDKResource({"a": 2, "b": False}),
             parent=Mock(span_id=12345),
-            instrumentation_scope=InstrumentationScope(
-                name="name", version="version"
-            ),
+            instrumentation_scope=InstrumentationScope(name="name", version="version"),
         )
 
         self.span3 = _Span(
@@ -127,9 +125,7 @@ class TestOTLPSpanExporter(TestCase):
             ),
             resource=SDKResource({"a": 1, "b": False}),
             parent=Mock(span_id=12345),
-            instrumentation_scope=InstrumentationScope(
-                name="name2", version="version2"
-            ),
+            instrumentation_scope=InstrumentationScope(name="name2", version="version2"),
         )
 
         self.span.start()
@@ -670,9 +666,7 @@ def _create_span_with_status(status: SDKStatus):
             trace_id=67545097771067222548457157018666467027,
         ),
         parent=Mock(span_id=12345),
-        instrumentation_scope=InstrumentationScope(
-            name="name", version="version"
-        ),
+        instrumentation_scope=InstrumentationScope(name="name", version="version"),
     )
     span.set_status(status)
     return span

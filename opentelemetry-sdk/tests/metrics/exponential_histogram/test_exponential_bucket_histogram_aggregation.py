@@ -513,9 +513,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         )
 
         for index in range(256):
-            self.assertLessEqual(
-                exponential_histogram_aggregation_1._value_positive[index], 6
-            )
+            self.assertLessEqual(exponential_histogram_aggregation_1._value_positive[index], 6)
 
     def test_very_large_numbers(self):
         now = time_ns()

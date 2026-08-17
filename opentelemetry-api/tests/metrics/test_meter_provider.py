@@ -85,9 +85,7 @@ def test_get_meter_provider(reset_meter_provider):
     metrics._METER_PROVIDER = None
 
     with (
-        patch.dict(
-            "os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}
-        ),
+        patch.dict("os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}),
         patch("opentelemetry.metrics._internal._load_provider", Mock()),
         patch(
             "opentelemetry.metrics._internal.cast",
