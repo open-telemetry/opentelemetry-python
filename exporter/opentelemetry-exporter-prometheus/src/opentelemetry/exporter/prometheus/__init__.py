@@ -100,6 +100,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
@@ -117,9 +118,7 @@ _OTEL_SCOPE_SCHEMA_URL_LABEL = "otel_scope_schema_url"
 _OTEL_SCOPE_ATTR_PREFIX = "otel_scope_"
 
 
-def _convert_buckets(
-    bucket_counts: Sequence[int], explicit_bounds: Sequence[float]
-) -> Sequence[tuple[str, int]]:
+def _convert_buckets(bucket_counts: Sequence[int], explicit_bounds: Sequence[float]) -> Sequence[tuple[str, int]]:
     buckets = []
     total_count = 0
     for upper_bound, count in zip(
@@ -137,11 +136,7 @@ def _should_convert_sum_to_gauge(metric: Metric) -> bool:
     # to be exported as Gauges.
     if not isinstance(metric.data, Sum):
         return False
-    return (
-        not metric.data.is_monotonic
-        and metric.data.aggregation_temporality
-        == AggregationTemporality.CUMULATIVE
-    )
+    return not metric.data.is_monotonic and metric.data.aggregation_temporality == AggregationTemporality.CUMULATIVE
 
 
 _FamilyT = TypeVar("_FamilyT", bound=PrometheusMetric)
@@ -225,9 +220,7 @@ def _populate_histogram_family(
     label_rows: Sequence[Sequence[str]],
     values: Sequence[dict[str, Any]],
 ) -> None:
-    family_id = "|".join(
-        [per_metric_family_id, HistogramMetricFamily.__name__]
-    )
+    family_id = "|".join([per_metric_family_id, HistogramMetricFamily.__name__])
     family = _get_or_create_family(
         registry,
         family_id,
@@ -240,9 +233,7 @@ def _populate_histogram_family(
     for label_values, value in zip(label_rows, values):
         family.add_metric(
             labels=label_values,
-            buckets=_convert_buckets(
-                value["bucket_counts"], value["explicit_bounds"]
-            ),
+            buckets=_convert_buckets(value["bucket_counts"], value["explicit_bounds"]),
             sum_value=value["sum"],
         )
 
@@ -252,9 +243,13 @@ class PrometheusMetricReader(MetricReader):
 
     Args:
         disable_target_info: Whether to disable the ``target_info`` metric.
+        prefix: Prefix added to exported Prometheus metric names.
         scope_info_enabled: Whether to include instrumentation scope labels on
             exported metrics. Scope labels are exported by default.
-        prefix: Prefix added to exported Prometheus metric names.
+        resource_attribute_filter: Optional callback to select resource attributes
+            that are copied as labels on exported metrics. The callback receives
+            the original resource attribute key. Selected keys are sanitized to
+            valid Prometheus label names.
     """
 
     def __init__(
@@ -263,6 +258,7 @@ class PrometheusMetricReader(MetricReader):
         prefix: str = "",
         scope_info_enabled: bool = True,
         *,
+        resource_attribute_filter: Callable[[str], bool] | None = None,
         registry: CollectorRegistry = REGISTRY,
     ) -> None:
         super().__init__(
@@ -280,6 +276,7 @@ class PrometheusMetricReader(MetricReader):
             disable_target_info=disable_target_info,
             prefix=prefix,
             scope_info_enabled=scope_info_enabled,
+            resource_attribute_filter=resource_attribute_filter,
         )
         self._registry = registry
         self._registry.register(self._collector)
@@ -312,13 +309,15 @@ class _CustomCollector:
         disable_target_info: bool = False,
         prefix: str = "",
         scope_info_enabled: bool = True,
+        resource_attribute_filter: Callable[[str], bool] | None = None,
     ):
         self._callback = None
         self._metrics_datas: deque[MetricsData] = deque()
         self._disable_target_info = disable_target_info
-        self._scope_info_enabled = scope_info_enabled
         self._target_info = None
         self._prefix = prefix
+        self._scope_info_enabled = scope_info_enabled
+        self._resource_attribute_filter = resource_attribute_filter
 
     def add_metrics_data(self, metrics_data: MetricsData) -> None:
         """Add metrics to Prometheus data"""
@@ -345,14 +344,10 @@ class _CustomCollector:
                     self._target_info = self._create_info_metric(
                         _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                     )
-                metric_family_id_metric_family[_TARGET_INFO_NAME] = (
-                    self._target_info
-                )
+                metric_family_id_metric_family[_TARGET_INFO_NAME] = self._target_info
 
         while self._metrics_datas:
-            self._translate_to_prometheus(
-                self._metrics_datas.popleft(), metric_family_id_metric_family
-            )
+            self._translate_to_prometheus(self._metrics_datas.popleft(), metric_family_id_metric_family)
 
             if metric_family_id_metric_family:
                 yield from metric_family_id_metric_family.values()
@@ -363,27 +358,28 @@ class _CustomCollector:
         metric_family_id_metric_family: dict[str, PrometheusMetric],
     ):
         for rm in metrics_data.resource_metrics:
+            resource_attrs = self._build_resource_attrs(rm.resource)
             for sm in rm.scope_metrics:
                 scope_attrs = self._build_scope_attrs(sm.scope)
                 for metric in sm.metrics:
                     self._translate_metric(
-                        metric,
-                        scope_attrs,
-                        metric_family_id_metric_family,
+                        metric=metric,
+                        scope_attrs=scope_attrs,
+                        resource_attrs=resource_attrs,
+                        metric_family_id_metric_family=metric_family_id_metric_family,
                     )
 
     def _translate_metric(
         self,
         metric: Metric,
-        scope_attrs: dict[str, Any],
+        scope_attrs: dict[str, AttributeValue],
+        resource_attrs: dict[str, AttributeValue],
         metric_family_id_metric_family: dict[str, PrometheusMetric],
     ) -> None:
         metric_name = self._resolve_metric_name(metric.name)
         description = metric.description or ""
         unit = map_unit(metric.unit or "")
-        label_keys, label_rows, values = self._collect_data_points(
-            metric.data, scope_attrs
-        )
+        label_keys, label_rows, values = self._collect_data_points(metric.data, scope_attrs, resource_attrs)
         per_metric_family_id = "|".join((metric_name, description, unit))
 
         convert_sum_to_gauge = _should_convert_sum_to_gauge(metric)
@@ -424,9 +420,7 @@ class _CustomCollector:
         else:
             _logger.warning("Unsupported metric data. %s", type(metric.data))
 
-    def _build_scope_attrs(
-        self, scope: InstrumentationScope
-    ) -> dict[str, AttributeValue]:
+    def _build_scope_attrs(self, scope: InstrumentationScope) -> dict[str, AttributeValue]:
         if not self._scope_info_enabled:
             return {}
         attrs: dict[str, AttributeValue] = {}
@@ -438,6 +432,11 @@ class _CustomCollector:
         attrs[_OTEL_SCOPE_SCHEMA_URL_LABEL] = scope.schema_url or ""
         return attrs
 
+    def _build_resource_attrs(self, resource: Resource) -> dict[str, AttributeValue]:
+        if not self._resource_attribute_filter:
+            return {}
+        return {key: value for key, value in resource.attributes.items() if self._resource_attribute_filter(key)}
+
     def _resolve_metric_name(self, name: str) -> str:
         if self._prefix:
             name = self._prefix + "_" + name
@@ -447,6 +446,7 @@ class _CustomCollector:
         self,
         metric_data: DataT,
         scope_attrs: dict[str, AttributeValue],
+        resource_attrs: dict[str, AttributeValue],
     ) -> tuple[list[str], list[list[str]], list[float | dict[str, Any]]]:
         keys: set[str] = set()
         rows: list[dict[str, str]] = []
@@ -455,6 +455,7 @@ class _CustomCollector:
         for point in metric_data.data_points:
             labels: dict[str, str] = {}
             for key, value in chain(
+                resource_attrs.items(),
                 scope_attrs.items(),
                 point.attributes.items(),
             ):
@@ -477,9 +478,7 @@ class _CustomCollector:
         label_keys = sorted(keys)
         # Backfill missing labels with "" so every data point exposes the
         # full label set expected by the Prometheus family.
-        label_rows = [
-            [labels.get(k, "") for k in label_keys] for labels in rows
-        ]
+        label_rows = [[labels.get(k, "") for k in label_keys] for labels in rows]
         return label_keys, label_rows, values
 
     # pylint: disable=no-self-use
@@ -489,15 +488,10 @@ class _CustomCollector:
             return dumps(value, default=str)
         return str(value)
 
-    def _create_info_metric(
-        self, name: str, description: str, attributes: dict[str, str]
-    ) -> InfoMetricFamily:
+    def _create_info_metric(self, name: str, description: str, attributes: dict[str, str]) -> InfoMetricFamily:
         """Create an Info Metric Family with list of attributes"""
         # sanitize the attribute names according to Prometheus rule
-        attributes = {
-            sanitize_attribute(key): self._check_value(value)
-            for key, value in attributes.items()
-        }
+        attributes = {sanitize_attribute(key): self._check_value(value) for key, value in attributes.items()}
         info = InfoMetricFamily(name, description, labels=attributes)
         info.add_metric(labels=list(attributes.keys()), value=attributes)
         return info

@@ -63,18 +63,14 @@ class TestDictToDataclass(unittest.TestCase):
         self.assertEqual(result.value, 42)
 
     def test_converts_nested_dataclass(self):
-        result = _dict_to_dataclass(
-            {"middle": {"inner": {"value": 7}}}, _Outer
-        )
+        result = _dict_to_dataclass({"middle": {"inner": {"value": 7}}}, _Outer)
         self.assertIsInstance(result, _Outer)
         self.assertIsInstance(result.middle, _Middle)
         self.assertIsInstance(result.middle.inner, _Inner)
         self.assertEqual(result.middle.inner.value, 7)
 
     def test_converts_list_of_dataclasses(self):
-        result = _dict_to_dataclass(
-            {"middle": {"items": [{"value": 1}, {"value": 2}]}}, _Outer
-        )
+        result = _dict_to_dataclass({"middle": {"items": [{"value": 1}, {"value": 2}]}}, _Outer)
         self.assertEqual(len(result.middle.items), 2)
         self.assertIsInstance(result.middle.items[0], _Inner)
         self.assertEqual(result.middle.items[0].value, 1)
@@ -94,9 +90,7 @@ class TestDictToDataclass(unittest.TestCase):
         # (ExperimentalJaegerRemoteSampler) has required fields, so it cannot
         # be defaulted. A present null must stay None rather than raising a
         # TypeError trying to instantiate it. Regression test for #5451.
-        result = _dict_to_dataclass(
-            {"jaeger_remote_development": None}, SamplerConfig
-        )
+        result = _dict_to_dataclass({"jaeger_remote_development": None}, SamplerConfig)
         self.assertIsNone(result.jaeger_remote_development)
 
     def test_missing_optional_fields_default_to_none(self):
@@ -105,13 +99,9 @@ class TestDictToDataclass(unittest.TestCase):
         self.assertIsNone(result.name)
 
     def test_unknown_keys_routed_to_additional_properties(self):
-        result = _dict_to_dataclass(
-            {"known": "yes", "my_plugin": {"opt": True}}, _WithExtras
-        )
+        result = _dict_to_dataclass({"known": "yes", "my_plugin": {"opt": True}}, _WithExtras)
         self.assertEqual(result.known, "yes")
-        self.assertEqual(
-            result.additional_properties, {"my_plugin": {"opt": True}}
-        )
+        self.assertEqual(result.additional_properties, {"my_plugin": {"opt": True}})
 
     def test_primitive_values_pass_through(self):
         result = _dict_to_dataclass({"name": "hello"}, _Outer)
@@ -126,9 +116,7 @@ class TestDictToDataclass(unittest.TestCase):
         self.assertIs(result.filter, ExemplarFilter.always_on)
 
     def test_enum_value_already_enum_passes_through(self):
-        result = _dict_to_dataclass(
-            {"filter": ExemplarFilter.trace_based}, _WithEnum
-        )
+        result = _dict_to_dataclass({"filter": ExemplarFilter.trace_based}, _WithEnum)
         self.assertIs(result.filter, ExemplarFilter.trace_based)
 
     def test_present_null_mapping_coerced_to_empty_dict(self):

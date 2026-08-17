@@ -100,9 +100,7 @@ class TestEnvironmentGetter(unittest.TestCase):
     def test_get_with_special_characters(self):
         """Test environment variables with special characters."""
         getter = EnvironmentGetter()
-        result = getter.get(
-            {"TEST_KEY": "value with spaces and !@#$%"}, "test_key"
-        )
+        result = getter.get({"TEST_KEY": "value with spaces and !@#$%"}, "test_key")
         self.assertEqual(result, ["value with spaces and !@#$%"])
 
     def test_get_ignores_non_normalized_env_var_name(self):
@@ -216,9 +214,7 @@ class TestEnvironmentSetter(unittest.TestCase):
         setter = EnvironmentSetter()
         carrier = {}
         setter.set(carrier, "test_key", "value with spaces and !@#$%^&*()")
-        self.assertEqual(
-            carrier, {"TEST_KEY": "value with spaces and !@#$%^&*()"}
-        )
+        self.assertEqual(carrier, {"TEST_KEY": "value with spaces and !@#$%^&*()"})
 
     def test_set_empty_value(self):
         """Test setting an empty value."""
@@ -290,9 +286,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
         traceparent = f"00-{self.TRACE_ID:032x}-{self.SPAN_ID:016x}-01"
         tracestate = "vendor1=value1,vendor2=value2"
 
-        ctx = self._extract_with_env(
-            {"TRACEPARENT": traceparent, "TRACESTATE": tracestate}
-        )
+        ctx = self._extract_with_env({"TRACEPARENT": traceparent, "TRACESTATE": tracestate})
 
         span_context = trace.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_state.get("vendor1"), "value1")
@@ -306,9 +300,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
         """Test extraction ignores non-normalized trace context env names."""
         traceparent = f"00-{self.TRACE_ID:032x}-{self.SPAN_ID:016x}-01"
 
-        ctx = self._extract_with_env(
-            {"traceparent": traceparent, "tracestate": "vendor=value"}
-        )
+        ctx = self._extract_with_env({"traceparent": traceparent, "tracestate": "vendor=value"})
 
         span_context = trace.get_current_span(ctx).get_span_context()
         self.assertFalse(span_context.is_valid)
@@ -329,9 +321,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
             with self.subTest(traceparent=invalid_tp):
                 ctx = self._extract_with_env({"TRACEPARENT": invalid_tp})
                 span = trace.get_current_span(ctx)
-                self.assertEqual(
-                    span.get_span_context(), trace.INVALID_SPAN_CONTEXT
-                )
+                self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
 
     def test_extract_missing_traceparent(self):
         """Test extraction with missing TRACEPARENT."""
@@ -345,9 +335,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
 
         with patch.dict(os.environ, {"TRACEPARENT": "invalid"}, clear=True):
             getter = EnvironmentGetter()
-            ctx = self.propagator.extract(
-                os.environ, context=orig_ctx, getter=getter
-            )
+            ctx = self.propagator.extract(os.environ, context=orig_ctx, getter=getter)
 
         self.assertDictEqual(ctx, orig_ctx)
 
@@ -363,9 +351,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
 
         env_dict = self._inject_to_env(ctx)
 
-        expected_traceparent = (
-            f"00-{self.TRACE_ID:032x}-{self.SPAN_ID:016x}-01"
-        )
+        expected_traceparent = f"00-{self.TRACE_ID:032x}-{self.SPAN_ID:016x}-01"
         self.assertEqual(env_dict["TRACEPARENT"], expected_traceparent)
 
     def test_inject_does_not_include_empty_tracestate(self):
@@ -393,9 +379,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
 
     def test_roundtrip_preserves_traceparent(self):
         """Test that traceparent survives extract->inject->extract cycle."""
-        original_traceparent = (
-            f"00-{self.TRACE_ID:032x}-{self.SPAN_ID:016x}-01"
-        )
+        original_traceparent = f"00-{self.TRACE_ID:032x}-{self.SPAN_ID:016x}-01"
 
         # Extract from environment
         ctx1 = self._extract_with_env({"TRACEPARENT": original_traceparent})
@@ -494,14 +478,10 @@ class TestEnvironmentCarrierWithBaggage(unittest.TestCase):
 
     def test_extract_baggage(self):
         """Test extracting baggage from BAGGAGE environment variable."""
-        ctx = self._extract_with_env(
-            {"BAGGAGE": "key1=value1,key2=value2,key3=value3"}
-        )
+        ctx = self._extract_with_env({"BAGGAGE": "key1=value1,key2=value2,key3=value3"})
 
         baggage = get_all(ctx)
-        self.assertEqual(
-            baggage, {"key1": "value1", "key2": "value2", "key3": "value3"}
-        )
+        self.assertEqual(baggage, {"key1": "value1", "key2": "value2", "key3": "value3"})
 
     def test_extract_empty_baggage(self):
         """Test extracting empty baggage."""
@@ -573,9 +553,7 @@ class TestEnvironmentCarrierWithCompositePropagator(unittest.TestCase):
             CompositePropagator,
         )
 
-        self.propagator = CompositePropagator(
-            [TraceContextTextMapPropagator(), W3CBaggagePropagator()]
-        )
+        self.propagator = CompositePropagator([TraceContextTextMapPropagator(), W3CBaggagePropagator()])
 
     def test_extract_all_w3c_headers(self):
         """Test extracting both traceparent and baggage."""

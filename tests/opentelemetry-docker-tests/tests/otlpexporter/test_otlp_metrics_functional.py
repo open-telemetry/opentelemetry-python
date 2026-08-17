@@ -51,33 +51,70 @@ from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, make_otlp_file
 
 METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
     ExporterConfig(
-        id="http",
+        id="http-urllib3",
         exporter_class=HTTPMetricExporter,
         kwargs={"endpoint": "http://localhost:4318/v1/metrics"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-deflate",
+        id="http-requests",
+        exporter_class=HTTPMetricExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/metrics"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-deflate",
         exporter_class=HTTPMetricExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/metrics",
             "compression": HTTPCompression.Deflate,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-gzip",
+        id="http-requests-deflate",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": HTTPCompression.Deflate,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-gzip",
         exporter_class=HTTPMetricExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/metrics",
             "compression": HTTPCompression.Gzip,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-headers",
+        id="http-requests-gzip",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "compression": HTTPCompression.Gzip,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-headers",
         exporter_class=HTTPMetricExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/metrics",
             "headers": CUSTOM_HEADERS,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-requests-headers",
+        exporter_class=HTTPMetricExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/metrics",
+            "headers": CUSTOM_HEADERS,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
     ),
     ExporterConfig(
         id="grpc",
@@ -151,9 +188,7 @@ METRIC_EXPORTER_CONFIGS: list[ExporterConfig[MetricExporter]] = [
 
 
 class TestMetricsExporter:
-    @pytest.fixture(
-        scope="class", params=METRIC_EXPORTER_CONFIGS, ids=lambda c: c.id
-    )
+    @pytest.fixture(scope="class", params=METRIC_EXPORTER_CONFIGS, ids=lambda c: c.id)
     def config(self, request) -> ExporterConfig[MetricExporter]:
         return request.param
 
@@ -163,14 +198,10 @@ class TestMetricsExporter:
         config: ExporterConfig[MetricExporter],
         server: OtlpProtoTestServer,
     ) -> PeriodicExportingMetricReader:
-        return PeriodicExportingMetricReader(
-            config.build(), export_interval_millis=math.inf
-        )
+        return PeriodicExportingMetricReader(config.build(), export_interval_millis=math.inf)
 
     @pytest.fixture(scope="class")
-    def meter_provider(
-        self, reader: PeriodicExportingMetricReader
-    ) -> Iterator[MeterProvider]:
+    def meter_provider(self, reader: PeriodicExportingMetricReader) -> Iterator[MeterProvider]:
         provider = MeterProvider(
             metric_readers=[reader],
             resource=Resource.create({"service.name": "test-service"}),
@@ -205,10 +236,7 @@ class TestMetricsExporter:
         assert recorded.metric.unit == snapshot("requests")
         assert recorded.metric.HasField("sum")
         assert recorded.metric.sum.is_monotonic
-        dps = {
-            _attrs_to_dict(dp.attributes)["status"]: dp.as_int
-            for dp in recorded.metric.sum.data_points
-        }
+        dps = {_attrs_to_dict(dp.attributes)["status"]: dp.as_int for dp in recorded.metric.sum.data_points}
         assert dps == snapshot({"ok": 10, "error": 5})
 
     def test_sum_up_down_counter(
@@ -222,9 +250,7 @@ class TestMetricsExporter:
         counter.add(-3)
         reader.force_flush(timeout_millis=5000)
 
-        recorded = server.wait_for_metric(
-            name="test.up_down_counter", timeout=5.0
-        )
+        recorded = server.wait_for_metric(name="test.up_down_counter", timeout=5.0)
         assert recorded.metric.HasField("sum")
         assert not recorded.metric.sum.is_monotonic
         assert recorded.metric.sum.data_points[0].as_int == 7
@@ -268,9 +294,7 @@ class TestMetricsExporter:
         config: ExporterConfig[MetricExporter],
         server: OtlpProtoTestServer,
     ):
-        reader = PeriodicExportingMetricReader(
-            config.build(), export_interval_millis=math.inf
-        )
+        reader = PeriodicExportingMetricReader(config.build(), export_interval_millis=math.inf)
         meter_provider = MeterProvider(
             metric_readers=[reader],
             resource=Resource.create({"service.name": "test-service"}),
@@ -287,9 +311,7 @@ class TestMetricsExporter:
             histogram.record(v)
         reader.force_flush(timeout_millis=5000)
 
-        recorded = server.wait_for_metric(
-            name="test.exp.histogram", timeout=5.0
-        )
+        recorded = server.wait_for_metric(name="test.exp.histogram", timeout=5.0)
         assert recorded.metric.HasField("exponential_histogram")
         dp = recorded.metric.exponential_histogram.data_points[0]
         assert dp.count == 3
@@ -308,9 +330,7 @@ class TestMetricsExporter:
         counter.add(1, {"str_key": "hello", "int_key": 42})
         reader.force_flush(timeout_millis=5000)
 
-        recorded = server.wait_for_metric(
-            name="test.attrs.counter", timeout=5.0
-        )
+        recorded = server.wait_for_metric(name="test.attrs.counter", timeout=5.0)
         attrs = _attrs_to_dict(recorded.metric.sum.data_points[0].attributes)
         assert attrs == snapshot({"str_key": "hello", "int_key": 42})
 
@@ -332,9 +352,7 @@ class TestMetricsExporter:
         recorded = server.wait_for_metric(name="scope.counter", timeout=5.0)
         assert recorded.scope.name == snapshot("test.scope")
         assert recorded.scope.version == snapshot("1.0.0")
-        assert _attrs_to_dict(recorded.scope.attributes) == snapshot(
-            {"scope.key": "scope.val"}
-        )
+        assert _attrs_to_dict(recorded.scope.attributes) == snapshot({"scope.key": "scope.val"})
 
     def test_resource_attributes(
         self,
