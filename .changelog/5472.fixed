@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: for both the simple and batch span/log processors, count `otel.sdk.processor.{span,log}.processed` when the processor submits records to the exporter instead of after export completes, and stop stamping exporter failures onto this metric as `error.type`

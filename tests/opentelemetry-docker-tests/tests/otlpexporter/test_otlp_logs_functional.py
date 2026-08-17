@@ -11,6 +11,21 @@ from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
 from opentelemetry._logs import Logger, SeverityNumber
+from opentelemetry.exporter.http.transport._requests import (
+    RequestsHTTPTransport,
+)
+from opentelemetry.exporter.http.transport._urllib3 import (
+    Urllib3HTTPTransport,
+)
+from opentelemetry.exporter.otlp.common.http import (
+    Compression as JSONCompression,
+)
+from opentelemetry.exporter.otlp.json.file._log_exporter import (
+    FileLogExporter,
+)
+from opentelemetry.exporter.otlp.json.http._log_exporter import (
+    OTLPLogExporter as JSONLogExporter,
+)
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter as GRPCLogExporter,
 )
@@ -28,37 +43,74 @@ from opentelemetry.sdk._logs.export import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
-from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict
+from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, make_otlp_file
 
 LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
     ExporterConfig(
-        id="http",
+        id="http-urllib3",
         exporter_class=HTTPLogExporter,
         kwargs={"endpoint": "http://localhost:4318/v1/logs"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-deflate",
+        id="http-requests",
+        exporter_class=HTTPLogExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/logs"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-deflate",
         exporter_class=HTTPLogExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/logs",
             "compression": HTTPCompression.Deflate,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-gzip",
+        id="http-requests-deflate",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": HTTPCompression.Deflate,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-gzip",
         exporter_class=HTTPLogExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/logs",
             "compression": HTTPCompression.Gzip,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-headers",
+        id="http-requests-gzip",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": HTTPCompression.Gzip,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-headers",
         exporter_class=HTTPLogExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/logs",
             "headers": CUSTOM_HEADERS,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-requests-headers",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "headers": CUSTOM_HEADERS,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
     ),
     ExporterConfig(
         id="grpc",
@@ -75,13 +127,64 @@ LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
         exporter_class=GRPCLogExporter,
         kwargs={"insecure": True, "headers": CUSTOM_HEADERS},
     ),
+    ExporterConfig(
+        id="file",
+        exporter_class=FileLogExporter,
+        lazy_kwargs={"path": lambda: make_otlp_file("logs")},
+    ),
+    ExporterConfig(
+        id="json-urllib3",
+        exporter_class=JSONLogExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/logs"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-urllib3-deflate",
+        exporter_class=JSONLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": JSONCompression.DEFLATE,
+        },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-urllib3-gzip",
+        exporter_class=JSONLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": JSONCompression.GZIP,
+        },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests",
+        exporter_class=JSONLogExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/logs"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests-deflate",
+        exporter_class=JSONLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": JSONCompression.DEFLATE,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="json-requests-gzip",
+        exporter_class=JSONLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": JSONCompression.GZIP,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
 ]
 
 
 class TestLogsExporter:
-    @pytest.fixture(
-        scope="class", params=LOG_EXPORTER_CONFIGS, ids=lambda c: c.id
-    )
+    @pytest.fixture(scope="class", params=LOG_EXPORTER_CONFIGS, ids=lambda c: c.id)
     def config(self, request) -> ExporterConfig[LogRecordExporter]:
         return request.param
 
@@ -94,9 +197,7 @@ class TestLogsExporter:
         provider = LoggerProvider(
             resource=Resource.create({"service.name": "test-service"}),
         )
-        provider.add_log_record_processor(
-            SimpleLogRecordProcessor(config.build())
-        )
+        provider.add_log_record_processor(SimpleLogRecordProcessor(config.build()))
         try:
             yield provider
         finally:
@@ -113,24 +214,16 @@ class TestLogsExporter:
     def test_log_body(self, logger: Logger, server: OtlpProtoTestServer):
         logger.emit(body="hello world", severity_number=SeverityNumber.INFO)
 
-        recorded = server.get_log_record(timeout=5.0)
+        recorded = server.get_log_record(timeout=5000.0)
         assert recorded.log_record.body.string_value == snapshot("hello world")
 
-    def test_log_severity_number(
-        self, logger: Logger, server: OtlpProtoTestServer
-    ):
-        logger.emit(
-            severity_number=SeverityNumber.ERROR, body="error occurred"
-        )
+    def test_log_severity_number(self, logger: Logger, server: OtlpProtoTestServer):
+        logger.emit(severity_number=SeverityNumber.ERROR, body="error occurred")
 
         recorded = server.get_log_record(timeout=5.0)
-        assert (
-            recorded.log_record.severity_number == SeverityNumber.ERROR.value
-        )
+        assert recorded.log_record.severity_number == SeverityNumber.ERROR.value
 
-    def test_log_severity_text(
-        self, logger: Logger, server: OtlpProtoTestServer
-    ):
+    def test_log_severity_text(self, logger: Logger, server: OtlpProtoTestServer):
         logger.emit(
             severity_number=SeverityNumber.WARN,
             severity_text="WARN",
@@ -155,13 +248,9 @@ class TestLogsExporter:
         recorded = server.get_log_record(timeout=5.0)
         attrs = _attrs_to_dict(recorded.log_record.attributes)
         assert math.isclose(attrs.pop("float_key"), 3.14, abs_tol=1e-5)
-        assert attrs == snapshot(
-            {"str_key": "hello", "int_key": 42, "bool_key": True}
-        )
+        assert attrs == snapshot({"str_key": "hello", "int_key": 42, "bool_key": True})
 
-    def test_scope_attributes(
-        self, logger_provider: LoggerProvider, server: OtlpProtoTestServer
-    ):
+    def test_scope_attributes(self, logger_provider: LoggerProvider, server: OtlpProtoTestServer):
         logger = logger_provider.get_logger(
             "test.scope",
             version="1.0.0",
@@ -172,13 +261,9 @@ class TestLogsExporter:
         recorded = server.get_log_record(timeout=5.0)
         assert recorded.scope.name == snapshot("test.scope")
         assert recorded.scope.version == snapshot("1.0.0")
-        assert _attrs_to_dict(recorded.scope.attributes) == snapshot(
-            {"scope.key": "scope.val"}
-        )
+        assert _attrs_to_dict(recorded.scope.attributes) == snapshot({"scope.key": "scope.val"})
 
-    def test_resource_attributes(
-        self, logger: Logger, server: OtlpProtoTestServer
-    ):
+    def test_resource_attributes(self, logger: Logger, server: OtlpProtoTestServer):
         logger.emit(body="resource test", severity_number=SeverityNumber.INFO)
 
         recorded = server.get_log_record(timeout=5.0)

@@ -48,9 +48,7 @@ from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 
 
 class FakeMetricsExporter(MetricExporter):
-    def __init__(
-        self, wait=0, preferred_temporality=None, preferred_aggregation=None
-    ):
+    def __init__(self, wait=0, preferred_temporality=None, preferred_aggregation=None):
         self.wait = wait
         self.metrics: list[MetricsData] = []
         self._shutdown = False
@@ -76,9 +74,7 @@ class FakeMetricsExporter(MetricExporter):
         return True
 
 
-class ExceptionAtCollectionPeriodicExportingMetricReader(
-    PeriodicExportingMetricReader
-):
+class ExceptionAtCollectionPeriodicExportingMetricReader(PeriodicExportingMetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
@@ -86,9 +82,7 @@ class ExceptionAtCollectionPeriodicExportingMetricReader(
         export_interval_millis: float | None = None,
         export_timeout_millis: float | None = None,
     ) -> None:
-        super().__init__(
-            exporter, export_interval_millis, export_timeout_millis
-        )
+        super().__init__(exporter, export_interval_millis, export_timeout_millis)
         self._collect_exception = exception
 
     # pylint: disable=overridden-final-method
@@ -190,9 +184,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         collect_mock = Mock()
         exporter = FakeMetricsExporter()
         exporter.export = Mock()
-        pmr = PeriodicExportingMetricReader(
-            exporter, export_interval_millis=math.inf
-        )
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=math.inf)
         pmr._set_collect_callback(collect_mock)
         sleep(0.1)
         self.assertTrue(collect_mock.assert_not_called)
@@ -230,18 +222,14 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_shutdown(self):
         exporter = FakeMetricsExporter()
 
-        pmr = self._create_periodic_reader(
-            MetricsData(resource_metrics=[]), exporter
-        )
+        pmr = self._create_periodic_reader(MetricsData(resource_metrics=[]), exporter)
         pmr.shutdown()
         self.assertEqual(exporter.metrics[0], MetricsData(resource_metrics=[]))
         self.assertTrue(pmr._shutdown)
         self.assertTrue(exporter._shutdown)
 
     def test_shutdown_multiple_times(self):
-        pmr = self._create_periodic_reader(
-            MetricsData(resource_metrics=[]), FakeMetricsExporter()
-        )
+        pmr = self._create_periodic_reader(MetricsData(resource_metrics=[]), FakeMetricsExporter())
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
         self.assertTrue("Can't shutdown multiple times" in w.output[0])
@@ -307,14 +295,10 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             "The PeriodicExportingMetricReader object created by this test wasn't garbage collected",
         )
 
-    @patch.dict(
-        "os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"}
-    )
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metric_reader_metrics(self):
         exporter = FakeMetricsExporter()
-        pmr = PeriodicExportingMetricReader(
-            exporter, export_interval_millis=100000
-        )
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=100000)
         mp = MeterProvider(metric_readers=[pmr])
 
         counter = mp.get_meter("test").create_counter("test_counter")
@@ -329,16 +313,10 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         metric_data = exporter.metrics[0]
 
         scope_metrics = [
-            sm
-            for sm in metric_data.resource_metrics[0].scope_metrics
-            if sm.scope.name == "opentelemetry-sdk"
+            sm for sm in metric_data.resource_metrics[0].scope_metrics if sm.scope.name == "opentelemetry-sdk"
         ]
         self.assertEqual(len(scope_metrics), 1)
-        reader_metrics = [
-            m
-            for m in scope_metrics[0].metrics
-            if m.name == "otel.sdk.metric_reader.collection.duration"
-        ]
+        reader_metrics = [m for m in scope_metrics[0].metrics if m.name == "otel.sdk.metric_reader.collection.duration"]
         self.assertEqual(len(reader_metrics), 1)
         metric = reader_metrics[0]
 
@@ -347,9 +325,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertEqual(histogram.count, 1)
         attrs = histogram.attributes
         assert attrs is not None
-        self.assertEqual(
-            attrs["otel.component.type"], "periodic_metric_reader"
-        )
+        self.assertEqual(attrs["otel.component.type"], "periodic_metric_reader")
         name = attrs["otel.component.name"]
         assert isinstance(name, str)
         self.assertTrue(name.startswith("periodic_metric_reader/"))

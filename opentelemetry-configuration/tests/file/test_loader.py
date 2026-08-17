@@ -14,6 +14,10 @@ from opentelemetry.configuration.file import (
     ConfigurationError,
     load_config_file,
 )
+from opentelemetry.configuration.file._loader import (
+    _SUPPORTED_SCHEMA_MAJOR,
+    _SUPPORTED_SCHEMA_MINOR,
+)
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
@@ -92,9 +96,7 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_invalid_file_extension(self):
         """Test error on unsupported file extension."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".txt", delete=False
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as temp_file:
             temp_file.write(b"file_format: 1.0")
             temp_path = temp_file.name
 
@@ -108,9 +110,7 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_empty_file(self):
         """Test error on empty file."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".yaml", delete=False, mode="w"
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as temp_file:
             temp_path = temp_file.name
 
         try:
@@ -123,9 +123,7 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_non_dict_root(self):
         """Test error when root is not a mapping."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".yaml", delete=False, mode="w"
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as temp_file:
             temp_file.write("- item1\n- item2")
             temp_path = temp_file.name
 
@@ -137,25 +135,26 @@ class TestConfigLoader(unittest.TestCase):
         finally:
             os.unlink(temp_path)
 
-    def test_missing_required_env_var(self):
-        """Test error when required env var is missing."""
+    def test_unset_env_var_without_default_substitutes_empty(self):
+        """An unset env var without a default resolves to an empty value.
+
+        Per the declarative configuration spec, an unset ``${VAR}`` reference
+        with no default is replaced with an empty value rather than raising,
+        so the file still loads. A default (``${ENV:-production}``) is still
+        applied when its variable is unset.
+        """
         config_path = self.test_data_dir / "config_with_env_vars.yaml"
 
         with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(str(config_path))
+            config = load_config_file(str(config_path))
 
-            # Should mention substitution or env var error
-            self.assertTrue(
-                "substitution" in str(ctx.exception).lower()
-                or "environment" in str(ctx.exception).lower()
-            )
+        attributes = {attribute.name: attribute.value for attribute in config.resource.attributes}
+        self.assertIsNone(attributes["service.name"])
+        self.assertEqual(attributes["deployment.environment"], "production")
 
     def test_yml_extension(self):
         """Test .yml extension is supported."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".yml", delete=False, mode="w"
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".yml", delete=False, mode="w") as temp_file:
             temp_file.write('file_format: "1.0"')
             temp_path = temp_file.name
 
@@ -167,9 +166,7 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_json_syntax_error(self):
         """Test error on invalid JSON syntax."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".json", delete=False, mode="w"
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False, mode="w") as temp_file:
             temp_file.write('{"file_format": invalid}')
             temp_path = temp_file.name
 
@@ -183,9 +180,7 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_schema_validation_wrong_type(self):
         """Test error when field has wrong type."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".yaml", delete=False, mode="w"
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as temp_file:
             # disabled must be a boolean, not a string
             temp_file.write('file_format: "1.0"\ndisabled: "yes"')
             temp_path = temp_file.name
@@ -200,9 +195,7 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_schema_validation_missing_file_format(self):
         """Test error when required file_format field is missing."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".yaml", delete=False, mode="w"
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as temp_file:
             temp_file.write("disabled: false")
             temp_path = temp_file.name
 
@@ -216,14 +209,8 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_schema_validation_nested_path_in_error(self):
         """Test that error message includes field path for nested violations."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".yaml", delete=False, mode="w"
-        ) as temp_file:
-            temp_file.write(
-                'file_format: "1.0"\n'
-                "attribute_limits:\n"
-                '  attribute_count_limit: "not-a-number"\n'
-            )
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as temp_file:
+            temp_file.write('file_format: "1.0"\nattribute_limits:\n  attribute_count_limit: "not-a-number"\n')
             temp_path = temp_file.name
 
         try:
@@ -239,9 +226,7 @@ class TestConfigLoader(unittest.TestCase):
 
     def test_schema_validation_invalid_enum(self):
         """Test error when field value is not a valid enum value."""
-        with tempfile.NamedTemporaryFile(
-            suffix=".yaml", delete=False, mode="w"
-        ) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as temp_file:
             temp_file.write('file_format: "1.0"\nlog_level: INVALID_LEVEL')
             temp_path = temp_file.name
 
@@ -276,11 +261,9 @@ tracer_provider:
         trace_id_ratio_based: {ratio: 0.5}
 """
 
-    def _load(self) -> OpenTelemetryConfiguration:
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as fh:
-            fh.write(self._YAML)
+    def _load(self, yaml: str | None = None) -> OpenTelemetryConfiguration:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as fh:
+            fh.write(self._YAML if yaml is None else yaml)
             path = fh.name
         try:
             return load_config_file(path)
@@ -296,9 +279,7 @@ tracer_provider:
             ParentBasedSamplerConfig,
         )
         # Lists of dataclasses are converted element-wise.
-        self.assertIsInstance(
-            config.tracer_provider.processors[0], SpanProcessorConfig
-        )
+        self.assertIsInstance(config.tracer_provider.processors[0], SpanProcessorConfig)
         self.assertIsInstance(
             config.tracer_provider.processors[0].batch,
             BatchSpanProcessorConfig,
@@ -321,15 +302,40 @@ tracer_provider:
         self.assertIsInstance(processors[0], BatchSpanProcessor)
         self.assertIsInstance(processors[0].span_exporter, ConsoleSpanExporter)
 
+    def test_null_valued_required_field_node_survives_conversion(self):
+        # Regression test for #5451: ``jaeger_remote_development`` is nullable
+        # in the schema (so ``jaeger_remote_development:`` passes validation and
+        # is NOT rejected before conversion), yet its model has required
+        # fields. Coercing the present null into it would raise TypeError, so
+        # it must be left as None instead. The rest of the config still loads.
+        config = self._load(
+            """
+file_format: '1.0'
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          console:
+  sampler:
+    jaeger_remote_development:
+"""
+        )
+
+        # Schema accepted the null, and conversion left the required-field
+        # node unset rather than crashing.
+        self.assertIsNone(config.tracer_provider.sampler.jaeger_remote_development)
+        # A sibling nullable dict-typed node (console:) was still coerced.
+        self.assertEqual(config.tracer_provider.processors[0].batch.exporter.console, {})
+
 
 class TestFileFormatValidation(unittest.TestCase):
     """Validate the file_format version per the configuration spec."""
 
+    _SUPPORTED = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR}"
+
     @staticmethod
     def _load(file_format: str) -> OpenTelemetryConfiguration:
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as fh:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as fh:
             fh.write(f'file_format: "{file_format}"')
             path = fh.name
         try:
@@ -338,26 +344,36 @@ class TestFileFormatValidation(unittest.TestCase):
             os.unlink(path)
 
     def test_supported_version_is_accepted(self):
-        config = self._load("1.0")
-        self.assertEqual(config.file_format, "1.0")
+        with self.assertNoLogs("opentelemetry.configuration.file._loader", level="WARNING"):
+            config = self._load(self._SUPPORTED)
+        self.assertEqual(config.file_format, self._SUPPORTED)
 
     def test_pre_release_meta_tag_is_accepted(self):
-        # The meta tag is stripped; "1.0-rc.2" is treated as 1.0.
-        config = self._load("1.0-rc.2")
-        self.assertEqual(config.file_format, "1.0-rc.2")
+        # The meta tag is stripped, so the version is read as the supported one.
+        version = f"{self._SUPPORTED}-rc.2"
+        config = self._load(version)
+        self.assertEqual(config.file_format, version)
+
+    @unittest.skipIf(
+        _SUPPORTED_SCHEMA_MINOR == 0,
+        "No older minor version to validate against",
+    )
+    def test_older_minor_is_accepted(self):
+        version = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR - 1}"
+        with self.assertNoLogs("opentelemetry.configuration.file._loader", level="WARNING"):
+            config = self._load(version)
+        self.assertEqual(config.file_format, version)
 
     def test_newer_minor_is_accepted_with_warning(self):
-        with self.assertLogs(
-            "opentelemetry.configuration.file._loader", level="WARNING"
-        ) as logs:
-            config = self._load("1.1")
-        self.assertEqual(config.file_format, "1.1")
-        self.assertTrue(
-            any("newer minor version" in message for message in logs.output)
-        )
+        version = f"{_SUPPORTED_SCHEMA_MAJOR}.{_SUPPORTED_SCHEMA_MINOR + 1}"
+        with self.assertLogs("opentelemetry.configuration.file._loader", level="WARNING") as logs:
+            config = self._load(version)
+        self.assertEqual(config.file_format, version)
+        self.assertTrue(any("newer minor version" in message for message in logs.output))
 
     def test_unsupported_major_is_rejected(self):
-        for version in ("2.0", "0.4"):
+        versions = ["0.4", f"{_SUPPORTED_SCHEMA_MAJOR + 1}.0"]
+        for version in versions:
             with self.subTest(version=version):
                 with self.assertRaises(ConfigurationError) as ctx:
                     self._load(version)

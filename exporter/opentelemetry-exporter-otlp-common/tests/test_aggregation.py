@@ -115,9 +115,7 @@ class TestGetAggregation(unittest.TestCase):
     def test_aggregation_exponential_env(self):
         with patch.dict(
             "os.environ",
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "base2_exponential_bucket_histogram"
-            },
+            {OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "base2_exponential_bucket_histogram"},
         ):
             result = _get_aggregation(None)
         self.assertIsInstance(
@@ -128,9 +126,7 @@ class TestGetAggregation(unittest.TestCase):
     def test_aggregation_invalid_env_logs_warning(self):
         with patch.dict(
             "os.environ",
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "unknown_aggregation"
-            },
+            {OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "unknown_aggregation"},
         ):
             with self.assertLogs(_AGGREGATION_LOGGER_NAME, level="WARNING"):
                 result = _get_aggregation(None)
@@ -143,9 +139,7 @@ class TestGetAggregation(unittest.TestCase):
         custom_aggregation = ExponentialBucketHistogramAggregation()
         with patch.dict(
             "os.environ",
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "explicit_bucket_histogram"
-            },
+            {OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "explicit_bucket_histogram"},
         ):
             result = _get_aggregation({Histogram: custom_aggregation})
         self.assertIs(result[Histogram], custom_aggregation)

@@ -142,9 +142,7 @@ ExportResultT = TypeVar(
     MetricExportResult,
     SpanExportResult,
 )
-ExportStubT = TypeVar(
-    "ExportStubT", TraceServiceStub, MetricsServiceStub, LogsServiceStub
-)
+ExportStubT = TypeVar("ExportStubT", TraceServiceStub, MetricsServiceStub, LogsServiceStub)
 
 _ENVIRON_TO_COMPRESSION = {
     None: None,
@@ -154,21 +152,12 @@ _ENVIRON_TO_COMPRESSION = {
 
 class InvalidCompressionValueException(Exception):
     def __init__(self, environ_key: str, environ_value: str):
-        super().__init__(
-            f'Invalid value "{environ_value}" for compression envvar {environ_key}'
-        )
+        super().__init__(f'Invalid value "{environ_value}" for compression envvar {environ_key}')
 
 
 def environ_to_compression(environ_key: str) -> Compression | None:
-    environ_value = (
-        environ[environ_key].lower().strip()
-        if environ_key in environ
-        else None
-    )
-    if (
-        environ_value not in _ENVIRON_TO_COMPRESSION
-        and environ_value is not None
-    ):
+    environ_value = environ[environ_key].lower().strip() if environ_key in environ else None
+    if environ_value not in _ENVIRON_TO_COMPRESSION and environ_value is not None:
         raise InvalidCompressionValueException(environ_key, environ_value)
     return _ENVIRON_TO_COMPRESSION[environ_value]
 
@@ -201,15 +190,9 @@ def _load_credentials(
     client_key_file: str | None,
     client_certificate_file: str | None,
 ) -> ChannelCredentials:
-    root_certificates = (
-        _read_file(certificate_file) if certificate_file else None
-    )
+    root_certificates = _read_file(certificate_file) if certificate_file else None
     private_key = _read_file(client_key_file) if client_key_file else None
-    certificate_chain = (
-        _read_file(client_certificate_file)
-        if client_certificate_file
-        else None
-    )
+    certificate_chain = _read_file(client_certificate_file) if client_certificate_file else None
 
     return ssl_channel_credentials(
         root_certificates=root_certificates,
@@ -255,18 +238,14 @@ def _get_credentials(
     if certificate_file:
         client_key_file = environ.get(client_key_file_env_key)
         client_certificate_file = environ.get(client_certificate_file_env_key)
-        credentials = _load_credentials(
-            certificate_file, client_key_file, client_certificate_file
-        )
+        credentials = _load_credentials(certificate_file, client_key_file, client_certificate_file)
         if credentials is not None:
             return credentials
     return ssl_channel_credentials()
 
 
 # pylint: disable=no-member
-class OTLPExporterMixin(
-    ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT, ExportStubT]
-):
+class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT, ExportStubT]):
     """OTLP gRPC exporter mixin.
 
     This class provides the base functionality for OTLP exporters that send
@@ -291,10 +270,7 @@ class OTLPExporterMixin(
         endpoint: str | None = None,
         insecure: bool | None = None,
         credentials: ChannelCredentials | None = None,
-        headers: TypingSequence[tuple[str, str]]
-        | dict[str, str]
-        | str
-        | None = None,
+        headers: TypingSequence[tuple[str, str]] | dict[str, str] | str | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
         channel_options: tuple[tuple[str, str]] | None = None,
@@ -307,9 +283,7 @@ class OTLPExporterMixin(
         super().__init__()
         self._result = result
         self._stub = stub
-        self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
-        )
+        self._endpoint = endpoint or environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317")
 
         parsed_url = urlparse(self._endpoint)
 
@@ -338,9 +312,7 @@ class OTLPExporterMixin(
 
         if channel_options:
             # merge the default channel options with the one passed as parameter
-            overridden_options = {
-                opt_name for (opt_name, _) in channel_options
-            }
+            overridden_options = {opt_name for (opt_name, _) in channel_options}
             default_options = tuple(
                 (opt_name, opt_value)
                 for opt_name, opt_value in _OTLP_GRPC_CHANNEL_OPTIONS
@@ -350,15 +322,11 @@ class OTLPExporterMixin(
         else:
             self._channel_options = tuple(_OTLP_GRPC_CHANNEL_OPTIONS)
 
-        self._timeout = timeout or float(
-            environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
-        )
+        self._timeout = timeout or float(environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10))
         self._collector_kwargs = None
 
         self._compression = (
-            environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
-            if compression is None
-            else compression
+            environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION) if compression is None else compression
         ) or Compression.NoCompression
 
         self._retryable_error_codes = retryable_error_codes or os.environ.get(
@@ -366,14 +334,10 @@ class OTLPExporterMixin(
         )
         if isinstance(self._retryable_error_codes, str):
             self._retryable_error_codes = frozenset(
-                StatusCode[code.strip().upper()]
-                for code in self._retryable_error_codes.split(",")
-                if code.strip()
+                StatusCode[code.strip().upper()] for code in self._retryable_error_codes.split(",") if code.strip()
             )
         elif self._retryable_error_codes is not None:
-            self._retryable_error_codes = frozenset(
-                self._retryable_error_codes
-            )
+            self._retryable_error_codes = frozenset(self._retryable_error_codes)
         else:
             self._retryable_error_codes = _RETRYABLE_ERROR_CODES
 
@@ -400,10 +364,7 @@ class OTLPExporterMixin(
             signal,
             parsed_url,
             meter_provider,
-            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
-            .strip()
-            .lower()
-            == "true",
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
 
         self._initialize_channel_and_stub()
@@ -477,16 +438,10 @@ class OTLPExporterMixin(
                     if retry_info_bin is not None:
                         retry_info = RetryInfo()
                         retry_info.ParseFromString(retry_info_bin)
-                        backoff_seconds = (
-                            retry_info.retry_delay.seconds
-                            + retry_info.retry_delay.nanos / 1.0e9
-                        )
+                        backoff_seconds = retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
 
                     # For UNAVAILABLE errors, reinitialize the channel to force reconnection
-                    if (
-                        error.code() == StatusCode.UNAVAILABLE
-                        and retry_num == 0
-                    ):  # type: ignore
+                    if error.code() == StatusCode.UNAVAILABLE and retry_num == 0:  # type: ignore
                         logger.debug(
                             "Reinitializing gRPC channel for %s exporter due to UNAVAILABLE error",
                             self._exporting,
@@ -519,9 +474,7 @@ class OTLPExporterMixin(
                             exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
                         )
                         result.error = error
-                        result.error_attrs = {
-                            RPC_RESPONSE_STATUS_CODE: error.code().name
-                        }
+                        result.error_attrs = {RPC_RESPONSE_STATUS_CODE: error.code().name}
                         return self._result.FAILURE  # type: ignore [reportReturnType]
                     logger.warning(
                         "Transient error %s encountered while exporting %s to %s, retrying in %.2fs. Error details: %s",
@@ -568,8 +521,5 @@ class OTLPExporterMixin(
             self._signal,
             self._parsed_url,
             meter_provider,
-            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
-            .strip()
-            .lower()
-            == "true",
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
