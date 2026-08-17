@@ -98,10 +98,7 @@ def test_histogram_record_10_complex_attrs(benchmark, num_labels):
     def test_histogram_record_10_attrs():
         hist10.record(
             random.random() * MAX_BOUND_VALUE,
-            attributes={
-                f"Key{i}": {"k1": "v1", "k2": {"k3": "v3", "k4": [1, 2, 3]}}
-                for i in range(num_labels)
-            },
+            attributes={f"Key{i}": {"k1": "v1", "k2": {"k3": "v3", "k4": [1, 2, 3]}} for i in range(num_labels)},
         )
 
     benchmark(test_histogram_record_10_attrs)
@@ -112,10 +109,7 @@ def test_histogram_record_10_array_attrs(benchmark, num_labels):
     def test_histogram_record_10_attrs():
         hist10.record(
             random.random() * MAX_BOUND_VALUE,
-            attributes={
-                f"Key{i}": ["k1", "v1", "k2", "k3", "v3", "k4", "1", "2", "3"]
-                for i in range(num_labels)
-            },
+            attributes={f"Key{i}": ["k1", "v1", "k2", "k3", "v3", "k4", "1", "2", "3"] for i in range(num_labels)},
         )
 
     benchmark(test_histogram_record_10_attrs)
@@ -127,10 +121,7 @@ def test_histogram_record_10_json_string_attrs(benchmark, num_labels):
         hist10.record(
             random.random() * MAX_BOUND_VALUE,
             attributes={
-                f"Key{i}": json.dumps(
-                    {"k1": "v1", "k2": {"k3": "v3", "k4": [1, 2, 3]}}
-                )
-                for i in range(num_labels)
+                f"Key{i}": json.dumps({"k1": "v1", "k2": {"k3": "v3", "k4": [1, 2, 3]}}) for i in range(num_labels)
             },
         )
 

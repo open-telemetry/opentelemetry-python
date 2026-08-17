@@ -37,9 +37,7 @@ class TestBoundedAttributes(unittest.TestCase):
                 None,
             )
         self.assertEqual(len(cm.output), 1)
-        self.assertIn(
-            "Expected one of bool, str, None, bytes, int, float", cm.output[0]
-        )
+        self.assertIn("Expected one of bool, str, None, bytes, int, float", cm.output[0])
 
         valid_primitive_sequence = [1, 2.2, None, "cookie"]
         self.assertEqual(
@@ -47,9 +45,7 @@ class TestBoundedAttributes(unittest.TestCase):
             tuple(valid_primitive_sequence),
         )
         for valid_primitive in valid_primitive_sequence:
-            self.assertEqual(
-                _clean_attribute_value(valid_primitive, None), valid_primitive
-            )
+            self.assertEqual(_clean_attribute_value(valid_primitive, None), valid_primitive)
 
         self.assertEqual(_clean_attribute_value(b"hello", 4), b"hello")
 
@@ -57,23 +53,17 @@ class TestBoundedAttributes(unittest.TestCase):
             # String is truncated.
             self.assertEqual(_clean_attribute_value("a" * 1000, 5), "aaaaa")
         self.assertEqual(len(cm.output), 1)
-        self.assertIn(
-            "String attribute value exceeds max length", cm.output[0]
-        )
+        self.assertIn("String attribute value exceeds max length", cm.output[0])
 
         # Sequence of different types of values. List converted to tuple.
         self.assertEqual(
-            _clean_attribute_value(
-                ["a", 2, _NoStrNoReprObject(), None, b"\xff"], None
-            ),
+            _clean_attribute_value(["a", 2, _NoStrNoReprObject(), None, b"\xff"], None),
             ("a", 2, None, None, b"\xff"),
         )
 
         # non-str key in map... will be converted to string
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
-            self.assertEqual(
-                _clean_attribute_value({2.2: 4.4}, None), {"2.2": 4.4}
-            )
+            self.assertEqual(_clean_attribute_value({2.2: 4.4}, None), {"2.2": 4.4})
         self.assertEqual(len(cm.output), 1)
         self.assertIn(
             "Invalid type",
@@ -117,9 +107,7 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict = BoundedAttributes(1, {"first": "value"}, immutable=False)
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             bdict["second"] = "another"
-        self.assertIn(
-            "Attributes dict is full. Dropping the oldest", cm.output[0]
-        )
+        self.assertIn("Attributes dict is full. Dropping the oldest", cm.output[0])
         self.assertNotIn("first", bdict)
         self.assertEqual(bdict["second"], "another")
         self.assertEqual(bdict.dropped, 1)
@@ -264,9 +252,7 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertNotEqual(bdict["age"], bdict_copy["age"])
 
     def test_deepcopy_preserves_immutability(self):
-        bdict = BoundedAttributes(
-            maxlen=4, attributes=self.base, immutable=True
-        )
+        bdict = BoundedAttributes(maxlen=4, attributes=self.base, immutable=True)
         bdict_copy = copy.deepcopy(bdict)
 
         with self.assertRaises(TypeError):

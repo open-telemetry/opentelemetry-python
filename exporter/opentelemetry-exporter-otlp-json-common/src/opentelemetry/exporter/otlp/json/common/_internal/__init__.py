@@ -63,16 +63,10 @@ def _encode_value(value: Any) -> JSONAnyValue:
     if isinstance(value, bytes):
         return JSONAnyValue(bytes_value=value)
     if isinstance(value, Sequence):
-        return JSONAnyValue(
-            array_value=JSONArrayValue(
-                values=[_encode_value(v) for v in value]
-            )
-        )
+        return JSONAnyValue(array_value=JSONArrayValue(values=[_encode_value(v) for v in value]))
     if isinstance(value, Mapping):
         return JSONAnyValue(
-            kvlist_value=JSONKeyValueList(
-                values=[_encode_key_value(str(k), v) for k, v in value.items()]
-            )
+            kvlist_value=JSONKeyValueList(values=[_encode_key_value(str(k), v) for k, v in value.items()])
         )
     raise TypeError(f"Invalid type {type(value)} of value {value}")
 

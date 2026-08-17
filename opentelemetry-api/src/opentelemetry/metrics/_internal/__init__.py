@@ -156,9 +156,7 @@ class _ProxyMeterProvider(MeterProvider):
     ) -> "Meter":
         with self._lock:
             if self._real_meter_provider is not None:
-                return self._real_meter_provider.get_meter(
-                    name, version, schema_url
-                )
+                return self._real_meter_provider.get_meter(name, version, schema_url)
 
             meter = _ProxyMeter(name, version=version, schema_url=schema_url)
             self._meters.append(meter)
@@ -240,9 +238,7 @@ class Meter(ABC):
         the registered instrument advisory.
         """
 
-        instrument_id = ",".join(
-            [name.strip().lower(), type_.__name__, unit, description]
-        )
+        instrument_id = ",".join([name.strip().lower(), type_.__name__, unit, description])
 
         already_registered = False
         conflict = False
@@ -552,9 +548,7 @@ class _ProxyMeter(Meter):
         Creates a real backing meter for this instance and notifies all created
         instruments so they can create real backing instruments.
         """
-        real_meter = meter_provider.get_meter(
-            self._name, self._version, self._schema_url
-        )
+        real_meter = meter_provider.get_meter(self._name, self._version, self._schema_url)
 
         with self._lock:
             self._real_meter = real_meter
@@ -584,9 +578,7 @@ class _ProxyMeter(Meter):
     ) -> UpDownCounter:
         with self._lock:
             if self._real_meter:
-                return self._real_meter.create_up_down_counter(
-                    name, unit, description
-                )
+                return self._real_meter.create_up_down_counter(name, unit, description)
             proxy = _ProxyUpDownCounter(name, unit, description)
             self._instruments.append(proxy)
             return proxy
@@ -600,12 +592,8 @@ class _ProxyMeter(Meter):
     ) -> ObservableCounter:
         with self._lock:
             if self._real_meter:
-                return self._real_meter.create_observable_counter(
-                    name, callbacks, unit, description
-                )
-            proxy = _ProxyObservableCounter(
-                name, callbacks, unit=unit, description=description
-            )
+                return self._real_meter.create_observable_counter(name, callbacks, unit, description)
+            proxy = _ProxyObservableCounter(name, callbacks, unit=unit, description=description)
             self._instruments.append(proxy)
             return proxy
 
@@ -625,9 +613,7 @@ class _ProxyMeter(Meter):
                     description,
                     explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
                 )
-            proxy = _ProxyHistogram(
-                name, unit, description, explicit_bucket_boundaries_advisory
-            )
+            proxy = _ProxyHistogram(name, unit, description, explicit_bucket_boundaries_advisory)
             self._instruments.append(proxy)
             return proxy
 
@@ -653,12 +639,8 @@ class _ProxyMeter(Meter):
     ) -> ObservableGauge:
         with self._lock:
             if self._real_meter:
-                return self._real_meter.create_observable_gauge(
-                    name, callbacks, unit, description
-                )
-            proxy = _ProxyObservableGauge(
-                name, callbacks, unit=unit, description=description
-            )
+                return self._real_meter.create_observable_gauge(name, callbacks, unit, description)
+            proxy = _ProxyObservableGauge(name, callbacks, unit=unit, description=description)
             self._instruments.append(proxy)
             return proxy
 
@@ -677,9 +659,7 @@ class _ProxyMeter(Meter):
                     unit,
                     description,
                 )
-            proxy = _ProxyObservableUpDownCounter(
-                name, callbacks, unit=unit, description=description
-            )
+            proxy = _ProxyObservableUpDownCounter(name, callbacks, unit=unit, description=description)
             self._instruments.append(proxy)
             return proxy
 
@@ -697,9 +677,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> Counter:
         """Returns a no-op Counter."""
-        status = self._register_instrument(
-            name, NoOpCounter, unit, description
-        )
+        status = self._register_instrument(name, NoOpCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -736,9 +714,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
-        status = self._register_instrument(
-            name, NoOpUpDownCounter, unit, description
-        )
+        status = self._register_instrument(name, NoOpUpDownCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -757,9 +733,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
-        status = self._register_instrument(
-            name, NoOpObservableCounter, unit, description
-        )
+        status = self._register_instrument(name, NoOpObservableCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -789,9 +763,7 @@ class NoOpMeter(Meter):
             NoOpHistogram,
             unit,
             description,
-            _MetricsHistogramAdvisory(
-                explicit_bucket_boundaries=explicit_bucket_boundaries_advisory
-            ),
+            _MetricsHistogramAdvisory(explicit_bucket_boundaries=explicit_bucket_boundaries_advisory),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -816,9 +788,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
-        status = self._register_instrument(
-            name, NoOpObservableGauge, unit, description
-        )
+        status = self._register_instrument(name, NoOpObservableGauge, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -842,9 +812,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
-        status = self._register_instrument(
-            name, NoOpObservableUpDownCounter, unit, description
-        )
+        status = self._register_instrument(name, NoOpObservableUpDownCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,

@@ -155,9 +155,7 @@ class TestShim(TestCase):
         # Verify no span is currently active.
         self.assertIsNone(self.shim.active_span)
 
-        with self.shim.scope_manager.activate(
-            span, finish_on_close=True
-        ) as scope:
+        with self.shim.scope_manager.activate(span, finish_on_close=True) as scope:
             # Verify span is active.
             self.assertEqual(
                 self.shim.active_span.context.unwrap(),
@@ -170,18 +168,14 @@ class TestShim(TestCase):
     def test_start_active_span_finish_on_close(self):
         """Test `finish_on_close` argument of `start_active_span()`."""
 
-        with self.shim.start_active_span(
-            "TestSpan7", finish_on_close=True
-        ) as scope:
+        with self.shim.start_active_span("TestSpan7", finish_on_close=True) as scope:
             # Verify span hasn't ended.
             self.assertIsNone(scope.span.unwrap().end_time)
 
         # Verify span has ended.
         self.assertIsNotNone(scope.span.unwrap().end_time)
 
-        with self.shim.start_active_span(
-            "TestSpan8", finish_on_close=False
-        ) as scope:
+        with self.shim.start_active_span("TestSpan8", finish_on_close=False) as scope:
             # Verify span hasn't ended.
             self.assertIsNone(scope.span.unwrap().end_time)
 
@@ -195,9 +189,7 @@ class TestShim(TestCase):
 
         span = self.shim.start_span("TestSpan9")
 
-        with self.shim.scope_manager.activate(
-            span, finish_on_close=True
-        ) as scope:
+        with self.shim.scope_manager.activate(span, finish_on_close=True) as scope:
             # Verify span is active.
             self.assertEqual(
                 self.shim.active_span.context.unwrap(),
@@ -209,9 +201,7 @@ class TestShim(TestCase):
 
         span = self.shim.start_span("TestSpan10")
 
-        with self.shim.scope_manager.activate(
-            span, finish_on_close=False
-        ) as scope:
+        with self.shim.scope_manager.activate(span, finish_on_close=False) as scope:
             # Verify span is active.
             self.assertEqual(
                 self.shim.active_span.context.unwrap(),
@@ -275,12 +265,8 @@ class TestShim(TestCase):
                 )
 
                 # Verify parent-child relationship.
-                parent_trace_id = (
-                    parent.span.unwrap().get_span_context().trace_id
-                )
-                child_trace_id = (
-                    child.span.unwrap().get_span_context().trace_id
-                )
+                parent_trace_id = parent.span.unwrap().get_span_context().trace_id
+                child_trace_id = child.span.unwrap().get_span_context().trace_id
 
                 self.assertEqual(parent_trace_id, child_trace_id)
                 self.assertEqual(
@@ -306,13 +292,9 @@ class TestShim(TestCase):
         """
 
         with self.shim.start_span("ParentSpan") as parent:
-            with self.shim.start_active_span(
-                "ChildSpan", child_of=parent
-            ) as child:
+            with self.shim.start_active_span("ChildSpan", child_of=parent) as child:
                 parent_trace_id = parent.unwrap().get_span_context().trace_id
-                child_trace_id = (
-                    child.span.unwrap().get_span_context().trace_id
-                )
+                child_trace_id = child.span.unwrap().get_span_context().trace_id
 
                 self.assertEqual(child_trace_id, parent_trace_id)
                 self.assertEqual(
@@ -327,9 +309,7 @@ class TestShim(TestCase):
             child_trace_id = child.unwrap().get_span_context().trace_id
 
             self.assertEqual(child_trace_id, parent_trace_id)
-            self.assertEqual(
-                child.unwrap().parent, parent.unwrap().get_span_context()
-            )
+            self.assertEqual(child.unwrap().parent, parent.unwrap().get_span_context())
 
             child.finish()
 
@@ -339,30 +319,20 @@ class TestShim(TestCase):
         """
 
         with self.shim.start_span("ParentSpan") as parent:
-            with self.shim.start_active_span(
-                "ChildSpan", child_of=parent.context
-            ) as child:
+            with self.shim.start_active_span("ChildSpan", child_of=parent.context) as child:
                 parent_trace_id = parent.unwrap().get_span_context().trace_id
-                child_trace_id = (
-                    child.span.unwrap().get_span_context().trace_id
-                )
+                child_trace_id = child.span.unwrap().get_span_context().trace_id
 
                 self.assertEqual(child_trace_id, parent_trace_id)
-                self.assertEqual(
-                    child.span.unwrap().parent, parent.context.unwrap()
-                )
+                self.assertEqual(child.span.unwrap().parent, parent.context.unwrap())
 
         with self.shim.start_span("ParentSpan") as parent:
-            with self.shim.start_span(
-                "SpanWithContextParent", child_of=parent.context
-            ) as child:
+            with self.shim.start_span("SpanWithContextParent", child_of=parent.context) as child:
                 parent_trace_id = parent.unwrap().get_span_context().trace_id
                 child_trace_id = child.unwrap().get_span_context().trace_id
 
                 self.assertEqual(child_trace_id, parent_trace_id)
-                self.assertEqual(
-                    child.unwrap().parent, parent.context.unwrap()
-                )
+                self.assertEqual(child.unwrap().parent, parent.context.unwrap())
 
     def test_references(self):
         """Test span creation using the `references` argument."""
@@ -370,9 +340,7 @@ class TestShim(TestCase):
         with self.shim.start_span("ParentSpan") as parent:
             ref = opentracing.child_of(parent.context)
 
-            with self.shim.start_active_span(
-                "ChildSpan", references=[ref]
-            ) as child:
+            with self.shim.start_active_span("ChildSpan", references=[ref]) as child:
                 self.assertEqual(
                     child.span.unwrap().links[0].context,
                     parent.context.unwrap(),
@@ -384,9 +352,7 @@ class TestShim(TestCase):
         with self.shim.start_span("ParentSpan") as parent:
             ref = opentracing.follows_from(parent.context)
 
-        with self.shim.start_active_span(
-            "FollowingSpan", references=[ref]
-        ) as child:
+        with self.shim.start_active_span("FollowingSpan", references=[ref]) as child:
             self.assertEqual(
                 child.span.unwrap().links[0].context,
                 parent.context.unwrap(),
@@ -435,9 +401,7 @@ class TestShim(TestCase):
             # Test explicit timestamp.
             now = time.time()
             span.log_kv({"foo": "bar"}, now)
-            result = util.time_seconds_from_ns(
-                span.unwrap().events[1].timestamp
-            )
+            result = util.time_seconds_from_ns(span.unwrap().events[1].timestamp)
             self.assertEqual(span.unwrap().events[1].attributes["foo"], "bar")
             # Tolerate inaccuracies of less than a microsecond. See Note:
             # https://open-telemetry.github.io/opentelemetry-python/shim/opentracing_shim/opentracing_shim.html
@@ -489,63 +453,43 @@ class TestShim(TestCase):
                 raise Exception("bad thing")
 
         ex = exc_ctx.exception
-        expected_stack = "".join(
-            traceback.format_exception(type(ex), value=ex, tb=ex.__traceback__)
-        )
+        expected_stack = "".join(traceback.format_exception(type(ex), value=ex, tb=ex.__traceback__))
         # Verify exception details have been added to span.
         exc_event = scope.span.unwrap().events[0]
 
         self.assertEqual(exc_event.name, "exception")
-        self.assertEqual(
-            exc_event.attributes["exception.message"], "bad thing"
-        )
-        self.assertEqual(
-            exc_event.attributes["exception.type"], Exception.__name__
-        )
+        self.assertEqual(exc_event.attributes["exception.message"], "bad thing")
+        self.assertEqual(exc_event.attributes["exception.type"], Exception.__name__)
         # cannot get the whole stacktrace so just assert exception part is contained
-        self.assertIn(
-            expected_stack, exc_event.attributes["exception.stacktrace"]
-        )
+        self.assertIn(expected_stack, exc_event.attributes["exception.stacktrace"])
 
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""
 
-        otel_context = trace.SpanContext(
-            trace_id=1220, span_id=7478, is_remote=False
-        )
+        otel_context = trace.SpanContext(trace_id=1220, span_id=7478, is_remote=False)
         context = SpanContextShim(otel_context)
 
         headers = {}
         self.shim.inject(context, opentracing.Format.HTTP_HEADERS, headers)
-        self.assertEqual(
-            headers[MockTextMapPropagator.TRACE_ID_KEY], str(1220)
-        )
+        self.assertEqual(headers[MockTextMapPropagator.TRACE_ID_KEY], str(1220))
         self.assertEqual(headers[MockTextMapPropagator.SPAN_ID_KEY], str(7478))
 
     def test_inject_text_map(self):
         """Test `inject()` method for Format.TEXT_MAP."""
 
-        otel_context = trace.SpanContext(
-            trace_id=1220, span_id=7478, is_remote=False
-        )
+        otel_context = trace.SpanContext(trace_id=1220, span_id=7478, is_remote=False)
         context = SpanContextShim(otel_context)
 
         # Verify Format.TEXT_MAP
         text_map = {}
         self.shim.inject(context, opentracing.Format.TEXT_MAP, text_map)
-        self.assertEqual(
-            text_map[MockTextMapPropagator.TRACE_ID_KEY], str(1220)
-        )
-        self.assertEqual(
-            text_map[MockTextMapPropagator.SPAN_ID_KEY], str(7478)
-        )
+        self.assertEqual(text_map[MockTextMapPropagator.TRACE_ID_KEY], str(1220))
+        self.assertEqual(text_map[MockTextMapPropagator.SPAN_ID_KEY], str(7478))
 
     def test_inject_binary(self):
         """Test `inject()` method for Format.BINARY."""
 
-        otel_context = trace.SpanContext(
-            trace_id=1220, span_id=7478, is_remote=False
-        )
+        otel_context = trace.SpanContext(trace_id=1220, span_id=7478, is_remote=False)
         context = SpanContextShim(otel_context)
 
         # Verify exception for non supported binary format.
@@ -598,9 +542,7 @@ class TestShim(TestCase):
             self.shim.extract(opentracing.Format.BINARY, bytearray())
 
     def test_baggage(self):
-        span_context_shim = SpanContextShim(
-            trace.SpanContext(1234, 5678, is_remote=False)
-        )
+        span_context_shim = SpanContextShim(trace.SpanContext(1234, 5678, is_remote=False))
 
         baggage = span_context_shim.baggage
 
@@ -639,19 +581,13 @@ class TestShim(TestCase):
         span_shim = self.shim.start_span("TestSpan16")
 
         with self.shim.scope_manager.activate(span_shim, finish_on_close=True):
-            with (
-                TracerProvider()
-                .get_tracer(__name__)
-                .start_as_current_span("abc")
-            ) as opentelemetry_span:
+            with TracerProvider().get_tracer(__name__).start_as_current_span("abc") as opentelemetry_span:
                 self.assertIs(
                     span_shim.unwrap().context,
                     opentelemetry_span.parent,
                 )
 
-        with (
-            TracerProvider().get_tracer(__name__).start_as_current_span("abc")
-        ) as opentelemetry_span:
+        with TracerProvider().get_tracer(__name__).start_as_current_span("abc") as opentelemetry_span:
             with self.shim.start_active_span("TestSpan17") as scope:
                 self.assertIs(
                     scope.span.unwrap().parent,

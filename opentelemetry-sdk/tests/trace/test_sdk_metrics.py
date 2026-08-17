@@ -24,42 +24,30 @@ from opentelemetry.trace.span import SpanContext
 class TestTracerProviderMetrics(TestCase):
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()
-        self.meter_provider = MeterProvider(
-            metric_readers=[self.metric_reader]
-        )
+        self.meter_provider = MeterProvider(metric_readers=[self.metric_reader])
 
     def tearDown(self):
         self.meter_provider.shutdown()
 
     def assert_started_spans(self, metric_data, value, attrs):
         metrics = metric_data.resource_metrics[0].scope_metrics[0].metrics
-        started_spans_metric = next(
-            (m for m in metrics if m.name == "otel.sdk.span.started"), None
-        )
+        started_spans_metric = next((m for m in metrics if m.name == "otel.sdk.span.started"), None)
         self.assertIsNotNone(started_spans_metric)
         self.assertEqual(started_spans_metric.data.data_points[0].value, value)
-        self.assertDictEqual(
-            started_spans_metric.data.data_points[0].attributes, attrs
-        )
+        self.assertDictEqual(started_spans_metric.data.data_points[0].attributes, attrs)
 
     def assert_live_spans(self, metric_data, value, attrs):
         metrics = metric_data.resource_metrics[0].scope_metrics[0].metrics
-        live_spans_metric = next(
-            (m for m in metrics if m.name == "otel.sdk.span.live"), None
-        )
+        live_spans_metric = next((m for m in metrics if m.name == "otel.sdk.span.live"), None)
         if value is None:
             self.assertIsNone(live_spans_metric)
             return
         self.assertIsNotNone(live_spans_metric)
         self.assertEqual(live_spans_metric.data.data_points[0].value, value)
-        self.assertDictEqual(
-            live_spans_metric.data.data_points[0].attributes, attrs
-        )
+        self.assertDictEqual(live_spans_metric.data.data_points[0].attributes, attrs)
 
     def test_sampled(self):
-        tracer_provider = TracerProvider(
-            sampler=ALWAYS_ON, meter_provider=self.meter_provider
-        )
+        tracer_provider = TracerProvider(sampler=ALWAYS_ON, meter_provider=self.meter_provider)
         tracer = tracer_provider.get_tracer("test")
         span = tracer.start_span("span")
         metric_data = self.metric_reader.get_metrics_data()
@@ -138,9 +126,7 @@ class TestTracerProviderMetrics(TestCase):
         )
 
     def test_dropped(self):
-        tracer_provider = TracerProvider(
-            sampler=ALWAYS_OFF, meter_provider=self.meter_provider
-        )
+        tracer_provider = TracerProvider(sampler=ALWAYS_OFF, meter_provider=self.meter_provider)
         tracer = tracer_provider.get_tracer("test")
         span = tracer.start_span("span")
         metric_data = self.metric_reader.get_metrics_data()
@@ -167,18 +153,14 @@ class TestTracerProviderMetrics(TestCase):
         self.assert_live_spans(metric_data, None, {})
 
     def test_dropped_remote_parent(self):
-        tracer_provider = TracerProvider(
-            sampler=ALWAYS_OFF, meter_provider=self.meter_provider
-        )
+        tracer_provider = TracerProvider(sampler=ALWAYS_OFF, meter_provider=self.meter_provider)
         tracer = tracer_provider.get_tracer("test")
         parent_span_context = SpanContext(
             trace_id=1,
             span_id=2,
             is_remote=True,
         )
-        parent_context = trace_api.set_span_in_context(
-            trace_api.NonRecordingSpan(parent_span_context)
-        )
+        parent_context = trace_api.set_span_in_context(trace_api.NonRecordingSpan(parent_span_context))
         span = tracer.start_span("span", context=parent_context)
         metric_data = self.metric_reader.get_metrics_data()
         self.assert_started_spans(
@@ -203,18 +185,14 @@ class TestTracerProviderMetrics(TestCase):
         self.assert_live_spans(metric_data, None, {})
 
     def test_dropped_local_parent(self):
-        tracer_provider = TracerProvider(
-            sampler=ALWAYS_OFF, meter_provider=self.meter_provider
-        )
+        tracer_provider = TracerProvider(sampler=ALWAYS_OFF, meter_provider=self.meter_provider)
         tracer = tracer_provider.get_tracer("test")
         parent_span_context = SpanContext(
             trace_id=1,
             span_id=2,
             is_remote=False,
         )
-        parent_context = trace_api.set_span_in_context(
-            trace_api.NonRecordingSpan(parent_span_context)
-        )
+        parent_context = trace_api.set_span_in_context(trace_api.NonRecordingSpan(parent_span_context))
         span = tracer.start_span("span", context=parent_context)
         metric_data = self.metric_reader.get_metrics_data()
         self.assert_started_spans(
@@ -243,9 +221,7 @@ class TestTracerProviderMetricsDisabled(TestCase):
     def test_disabled_by_default(self):
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
-        tracer_provider = TracerProvider(
-            sampler=ALWAYS_ON, meter_provider=meter_provider
-        )
+        tracer_provider = TracerProvider(sampler=ALWAYS_ON, meter_provider=meter_provider)
         tracer = tracer_provider.get_tracer("test")
 
         with tracer.start_as_current_span("span"):

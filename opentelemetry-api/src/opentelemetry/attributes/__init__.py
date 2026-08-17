@@ -21,10 +21,7 @@ _logger = logging.getLogger(__name__)
 # If neither is defined it uses the base class's `object.__repr__` method, which returns a string that is hard to understand.
 # So in that case we drop the key/value pair.
 def _is_non_custom_str(key: Any) -> bool:
-    return (
-        type(key).__str__ is not object.__str__
-        or type(key).__repr__ is not object.__repr__
-    )
+    return type(key).__str__ is not object.__str__ or type(key).__repr__ is not object.__repr__
 
 
 def _assert_never(arg: Never) -> Never:
@@ -63,10 +60,7 @@ def _clean_attribute_value(
     if isinstance(value, (NoneType, bool, int, float, bytes)):
         return value
     if isinstance(value, str):
-        if (
-            max_string_value_length is not None
-            and len(value) > max_string_value_length
-        ):
+        if max_string_value_length is not None and len(value) > max_string_value_length:
             _logger.warning(
                 "String attribute value exceeds max length of %d, truncating.",
                 max_string_value_length,
@@ -74,9 +68,7 @@ def _clean_attribute_value(
             value = value[:max_string_value_length]
         return value
     if isinstance(value, Sequence):
-        return tuple(
-            _clean_attribute_value(v, max_string_value_length) for v in value
-        )
+        return tuple(_clean_attribute_value(v, max_string_value_length) for v in value)
     if isinstance(value, Mapping):
         cleaned_mapping: dict[str, types.AttributeValue] = {}
         for key, val in value.items():
@@ -97,9 +89,7 @@ def _clean_attribute_value(
                     key = str(key)
                 else:
                     continue
-            cleaned_mapping[key] = _clean_attribute_value(
-                val, max_string_value_length
-            )
+            cleaned_mapping[key] = _clean_attribute_value(val, max_string_value_length)
         return cleaned_mapping
     if TYPE_CHECKING:
         _assert_never(value)
@@ -199,17 +189,13 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
         with self._lock:
             self._setitem_locked(key, cleaned)
 
-    def _set_items(
-        self, attributes: Mapping[str, types.AttributeValue]
-    ) -> None:
+    def _set_items(self, attributes: Mapping[str, types.AttributeValue]) -> None:
         self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
                 self.dropped += len(attributes)
             return
-        cleaned_attributes: Mapping[str, types.AttributeValue] = (
-            _clean_attribute_value(attributes, self.max_value_len)
-        )
+        cleaned_attributes: Mapping[str, types.AttributeValue] = _clean_attribute_value(attributes, self.max_value_len)
         with self._lock:
             self.dropped += len(attributes) - len(cleaned_attributes)
             for key, value in cleaned_attributes.items():

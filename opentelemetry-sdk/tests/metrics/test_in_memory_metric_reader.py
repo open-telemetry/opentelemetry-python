@@ -27,14 +27,10 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 class TestInMemoryMetricReader(TestCase):
     def test_no_metrics(self):
-        mock_collect_callback = Mock(
-            return_value=MetricsData(resource_metrics=[])
-        )
+        mock_collect_callback = Mock(return_value=MetricsData(resource_metrics=[]))
         reader = InMemoryMetricReader()
         reader._set_collect_callback(mock_collect_callback)
-        self.assertEqual(
-            reader.get_metrics_data(), MetricsData(resource_metrics=[])
-        )
+        self.assertEqual(reader.get_metrics_data(), MetricsData(resource_metrics=[]))
         mock_collect_callback.assert_called_once()
 
     def test_converts_metrics_to_list(self):
@@ -101,36 +97,18 @@ class TestInMemoryMetricReader(TestCase):
         # should be 3 number data points, one from the observable gauge and one
         # for each labelset from the counter
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 2)
         self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 2
-        )
-        self.assertEqual(
-            len(
-                list(
-                    metrics.resource_metrics[0]
-                    .scope_metrics[0]
-                    .metrics[0]
-                    .data.data_points
-                )
-            ),
+            len(list(metrics.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points)),
             2,
         )
         self.assertEqual(
-            len(
-                list(
-                    metrics.resource_metrics[0]
-                    .scope_metrics[0]
-                    .metrics[1]
-                    .data.data_points
-                )
-            ),
+            len(list(metrics.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points)),
             1,
         )
 
     def test_cumulative_multiple_collect(self):
-        reader = InMemoryMetricReader(
-            preferred_temporality={Counter: AggregationTemporality.CUMULATIVE}
-        )
+        reader = InMemoryMetricReader(preferred_temporality={Counter: AggregationTemporality.CUMULATIVE})
         meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")
         counter = meter.create_counter("counter1")
         counter.add(1, attributes={"key": "value"})
@@ -138,10 +116,7 @@ class TestInMemoryMetricReader(TestCase):
         reader.collect()
 
         number_data_point_0 = list(
-            reader._metrics_data.resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points
+            reader._metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points
         )[0]
 
         # Windows tests fail without this sleep because both time_unix_nano
@@ -150,15 +125,10 @@ class TestInMemoryMetricReader(TestCase):
         reader.collect()
 
         number_data_point_1 = list(
-            reader._metrics_data.resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points
+            reader._metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points
         )[0]
 
-        self.assertEqual(
-            number_data_point_0.attributes, number_data_point_1.attributes
-        )
+        self.assertEqual(number_data_point_0.attributes, number_data_point_1.attributes)
         self.assertEqual(
             number_data_point_0.start_time_unix_nano,
             number_data_point_1.start_time_unix_nano,
