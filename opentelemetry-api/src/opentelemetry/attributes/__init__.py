@@ -10,7 +10,7 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from types import NoneType
 from typing import TYPE_CHECKING, Any, overload
 
-from typing_extensions import Never, deprecated
+from typing_extensions import assert_never, deprecated
 
 from opentelemetry.util import types
 
@@ -22,11 +22,6 @@ _logger = logging.getLogger(__name__)
 # So in that case we drop the key/value pair.
 def _is_non_custom_str(key: Any) -> bool:
     return type(key).__str__ is not object.__str__ or type(key).__repr__ is not object.__repr__
-
-
-def _assert_never(arg: Never) -> Never:
-    """Used to signal that a branch should be unreachable at type checking time."""
-    raise AssertionError(f"{arg!r} is not a valid AttributeValue type.")
 
 
 @overload
@@ -92,7 +87,7 @@ def _clean_attribute_value(
             cleaned_mapping[key] = _clean_attribute_value(val, max_string_value_length)
         return cleaned_mapping
     if TYPE_CHECKING:
-        _assert_never(value)
+        assert_never(value)
     _logger.warning(
         "Invalid type `%s` for attribute value. Expected one of bool, str, None, bytes, int, float or a "
         "Mapping or Sequence of those types. Value's __str__ method will be called if it exists, otherwise the value will be replaced with None.",
