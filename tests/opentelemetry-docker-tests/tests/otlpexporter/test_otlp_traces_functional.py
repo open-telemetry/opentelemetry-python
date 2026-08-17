@@ -43,33 +43,70 @@ from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, make_otlp_file
 
 TRACE_EXPORTER_CONFIGS: list[ExporterConfig[SpanExporter]] = [
     ExporterConfig(
-        id="http",
+        id="http-urllib3",
         exporter_class=HTTPSpanExporter,
         kwargs={"endpoint": "http://localhost:4318/v1/traces"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-deflate",
+        id="http-requests",
+        exporter_class=HTTPSpanExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/traces"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-deflate",
         exporter_class=HTTPSpanExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/traces",
             "compression": HTTPCompression.Deflate,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-gzip",
+        id="http-requests-deflate",
+        exporter_class=HTTPSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "compression": HTTPCompression.Deflate,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-gzip",
         exporter_class=HTTPSpanExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/traces",
             "compression": HTTPCompression.Gzip,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-headers",
+        id="http-requests-gzip",
+        exporter_class=HTTPSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "compression": HTTPCompression.Gzip,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-headers",
         exporter_class=HTTPSpanExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/traces",
             "headers": CUSTOM_HEADERS,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-requests-headers",
+        exporter_class=HTTPSpanExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/traces",
+            "headers": CUSTOM_HEADERS,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
     ),
     ExporterConfig(
         id="grpc",
