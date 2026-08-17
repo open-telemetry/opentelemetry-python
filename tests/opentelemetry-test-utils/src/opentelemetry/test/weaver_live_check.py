@@ -49,9 +49,7 @@ def _extract_violations(report: dict) -> list:
             if isinstance(lcr, dict):
                 advices = lcr.get("all_advice")
                 if isinstance(advices, list):
-                    result.extend(
-                        a for a in advices if a.get("level") == "violation"
-                    )
+                    result.extend(a for a in advices if a.get("level") == "violation")
             for value in obj.values():
                 result.extend(_collect(value))
             return result
@@ -67,9 +65,7 @@ def _extract_violations(report: dict) -> list:
         key = (
             violation.get("id"),
             violation.get("message"),
-            json.dumps(ctx, sort_keys=True)
-            if isinstance(ctx, (dict, list))
-            else ctx,
+            json.dumps(ctx, sort_keys=True) if isinstance(ctx, (dict, list)) else ctx,
             violation.get("signal_name"),
             violation.get("signal_type"),
         )
@@ -79,9 +75,7 @@ def _extract_violations(report: dict) -> list:
         {
             "id": k[0],
             "message": k[1],
-            "context": vs[0].get(
-                "context"
-            ),  # preserve original dict, not JSON string
+            "context": vs[0].get("context"),  # preserve original dict, not JSON string
             "signal_name": k[3],
             "signal_type": k[4],
             "count": len(vs),
@@ -122,8 +116,7 @@ class LiveCheckError(AssertionError):
 
         err = exc_info.value
         assert any(
-            v["id"] == "my_policy_check"
-            and v["context"]["attribute_name"] == "my.attribute"
+            v["id"] == "my_policy_check" and v["context"]["attribute_name"] == "my.attribute"
             for v in err.report.violations
         )
     """
@@ -151,9 +144,7 @@ class LiveCheckReport:
 
         report = weaver.end()
         assert any(
-            v["id"] == "my_policy_check"
-            and v["context"]["attribute_name"] == "my.attribute"
-            for v in report.violations
+            v["id"] == "my_policy_check" and v["context"]["attribute_name"] == "my.attribute" for v in report.violations
         )
     """
 
@@ -200,9 +191,7 @@ class WeaverLiveCheck:
 
         def test_my_telemetry(self):
             with WeaverLiveCheck() as weaver:
-                exporter = OTLPSpanExporter(
-                    endpoint=weaver.otlp_endpoint, insecure=True
-                )
+                exporter = OTLPSpanExporter(endpoint=weaver.otlp_endpoint, insecure=True)
                 # ... configure provider, emit telemetry ...
                 provider.force_flush()
 
@@ -258,8 +247,7 @@ class WeaverLiveCheck:
         weaver_bin = shutil.which("weaver")
         if not weaver_bin:
             raise RuntimeError(
-                "weaver binary not found on PATH. "
-                "Install it from https://github.com/open-telemetry/weaver/releases"
+                "weaver binary not found on PATH. Install it from https://github.com/open-telemetry/weaver/releases"
             )
 
         self._otlp_port = otlp_port or _find_free_port()
@@ -310,12 +298,8 @@ class WeaverLiveCheck:
     def start(self) -> "WeaverLiveCheck":
         logger.debug("Starting WeaverLiveCheck process...")
         # Redirect weaver's stdout/stderr to tempfiles
-        stdout_fd, self._stdout_path = tempfile.mkstemp(
-            prefix="weaver-stdout-", suffix=".log"
-        )
-        stderr_fd, self._stderr_path = tempfile.mkstemp(
-            prefix="weaver-stderr-", suffix=".log"
-        )
+        stdout_fd, self._stdout_path = tempfile.mkstemp(prefix="weaver-stdout-", suffix=".log")
+        stderr_fd, self._stderr_path = tempfile.mkstemp(prefix="weaver-stderr-", suffix=".log")
         try:
             self._process = subprocess.Popen(  # pylint: disable=consider-using-with
                 self._command,
@@ -330,9 +314,7 @@ class WeaverLiveCheck:
             self._ready = True
         except Exception as exc:  # pylint: disable=broad-except
             logs = self._read_weaver_logs()
-            logger.error(
-                "WeaverLiveCheck did not start: %s, logs: %s", exc, logs
-            )
+            logger.error("WeaverLiveCheck did not start: %s, logs: %s", exc, logs)
             raise
         return self
 
@@ -349,17 +331,13 @@ class WeaverLiveCheck:
         session = Session()
         session.mount("http://", HTTPAdapter(max_retries=retry))
         try:
-            session.get(
-                f"http://localhost:{self._admin_port}/health", timeout=5
-            )
+            session.get(f"http://localhost:{self._admin_port}/health", timeout=5)
         except Exception as exc:  # pylint: disable=broad-except
             if self._process is not None and self._process.poll() is not None:
                 raise RuntimeError(
                     f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
                 ) from exc
-            raise TimeoutError(
-                "WeaverLiveCheck did not become ready in time"
-            ) from exc
+            raise TimeoutError("WeaverLiveCheck did not become ready in time") from exc
 
     @property
     def otlp_endpoint(self) -> str:
@@ -372,22 +350,16 @@ class WeaverLiveCheck:
         Never raises for semconv violations.
         """
         if not self._ready:
-            raise RuntimeError(
-                "WeaverLiveCheck process did not start successfully"
-            )
+            raise RuntimeError("WeaverLiveCheck process did not start successfully")
         try:
-            response = post(
-                f"http://localhost:{self._admin_port}/stop", timeout=5
-            )
+            response = post(f"http://localhost:{self._admin_port}/stop", timeout=5)
             response.raise_for_status()
             report = LiveCheckReport(response.json())
             assert self._process is not None
             exit_code = self._process.wait(timeout=timeout)
         except Exception as exc:  # pylint: disable=broad-except
             logs = self._read_weaver_logs()
-            logger.error(
-                "Error communicating with weaver: %s, logs: %s", exc, logs
-            )
+            logger.error("Error communicating with weaver: %s, logs: %s", exc, logs)
             raise
         return report, exit_code
 
@@ -405,9 +377,7 @@ class WeaverLiveCheck:
         for the report structure.
         """
         if self._stopped:
-            logger.warning(
-                "end() called after weaver already stopped; returning empty report"
-            )
+            logger.warning("end() called after weaver already stopped; returning empty report")
             return LiveCheckReport({})
         self._stopped = True
         report, _ = self._do_stop(timeout)
@@ -429,9 +399,7 @@ class WeaverLiveCheck:
         to start, HTTP communication error, etc.).
         """
         if self._stopped:
-            logger.warning(
-                "end_and_check() called after weaver already stopped; returning empty report"
-            )
+            logger.warning("end_and_check() called after weaver already stopped; returning empty report")
             return LiveCheckReport({})
         self._stopped = True
         report, exit_code = self._do_stop(timeout)

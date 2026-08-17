@@ -33,13 +33,9 @@ class TestErrorHandler(TestCase):
             _handle = Mock()
 
         mock_entry_point_zero_division_error_handler = Mock()
-        mock_entry_point_zero_division_error_handler.configure_mock(
-            **{"load.return_value": ZeroDivisionErrorHandler}
-        )
+        mock_entry_point_zero_division_error_handler.configure_mock(**{"load.return_value": ZeroDivisionErrorHandler})
         mock_entry_point_assertion_error_handler = Mock()
-        mock_entry_point_assertion_error_handler.configure_mock(
-            **{"load.return_value": AssertionErrorHandler}
-        )
+        mock_entry_point_assertion_error_handler.configure_mock(**{"load.return_value": AssertionErrorHandler})
 
         mock_entry_points.configure_mock(
             return_value=[
@@ -72,9 +68,7 @@ class TestErrorHandler(TestCase):
                 assert False
 
         mock_entry_point_error_error_handler = Mock()
-        mock_entry_point_error_error_handler.configure_mock(
-            **{"load.return_value": ErrorErrorHandler}
-        )
+        mock_entry_point_error_error_handler.configure_mock(**{"load.return_value": ErrorErrorHandler})
 
         mock_entry_points.configure_mock(
             return_value=[mock_entry_point_error_error_handler]
@@ -95,9 +89,7 @@ class TestErrorHandler(TestCase):
                 return mock_error_handler_instance
 
         mock_entry_point_error_handler = Mock()
-        mock_entry_point_error_handler.configure_mock(
-            **{"load.return_value": MockErrorHandlerClass}
-        )
+        mock_entry_point_error_handler.configure_mock(**{"load.return_value": MockErrorHandlerClass})
 
         mock_entry_points.configure_mock(
             return_value=[mock_entry_point_error_handler]

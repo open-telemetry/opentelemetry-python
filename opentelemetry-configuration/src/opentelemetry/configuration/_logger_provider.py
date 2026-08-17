@@ -81,9 +81,7 @@ def _create_otlp_http_log_exporter(
             feature="otlp_http log exporter",
         ) from exc
 
-    compression = _map_compression(
-        config.compression, Compression, allow_deflate=True
-    )
+    compression = _map_compression(config.compression, Compression, allow_deflate=True)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
@@ -167,9 +165,7 @@ def _create_log_record_exporter(
             return factory(value)
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_logs_exporter", name)(
-            **(plugin_config or {})
-        )
+        return load_entry_point("opentelemetry_logs_exporter", name)(**(plugin_config or {}))
     raise ConfigurationError(
         "No exporter type specified in log record exporter config. "
         "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
@@ -184,25 +180,11 @@ def _create_batch_log_record_processor(
     Passes explicit defaults to suppress OTEL_BLRP_* env var reading.
     """
     exporter = _create_log_record_exporter(config.exporter)
-    schedule_delay = (
-        config.schedule_delay
-        if config.schedule_delay is not None
-        else _DEFAULT_SCHEDULE_DELAY_MILLIS
-    )
-    export_timeout = (
-        config.export_timeout
-        if config.export_timeout is not None
-        else _DEFAULT_EXPORT_TIMEOUT_MILLIS
-    )
-    max_queue_size = (
-        config.max_queue_size
-        if config.max_queue_size is not None
-        else _DEFAULT_MAX_QUEUE_SIZE
-    )
+    schedule_delay = config.schedule_delay if config.schedule_delay is not None else _DEFAULT_SCHEDULE_DELAY_MILLIS
+    export_timeout = config.export_timeout if config.export_timeout is not None else _DEFAULT_EXPORT_TIMEOUT_MILLIS
+    max_queue_size = config.max_queue_size if config.max_queue_size is not None else _DEFAULT_MAX_QUEUE_SIZE
     max_export_batch_size = (
-        config.max_export_batch_size
-        if config.max_export_batch_size is not None
-        else _DEFAULT_MAX_EXPORT_BATCH_SIZE
+        config.max_export_batch_size if config.max_export_batch_size is not None else _DEFAULT_MAX_EXPORT_BATCH_SIZE
     )
     return BatchLogRecordProcessor(
         exporter=exporter,
@@ -230,8 +212,7 @@ def _create_log_record_processor(
     if config.simple is not None:
         return _create_simple_log_record_processor(config.simple)
     raise ConfigurationError(
-        "No processor type specified in log record processor config. "
-        "Supported types: batch, simple."
+        "No processor type specified in log record processor config. Supported types: batch, simple."
     )
 
 
@@ -263,9 +244,7 @@ def create_logger_provider(
         )
 
     for processor_config in config.processors:
-        provider.add_log_record_processor(
-            _create_log_record_processor(processor_config)
-        )
+        provider.add_log_record_processor(_create_log_record_processor(processor_config))
 
     return provider
 

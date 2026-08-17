@@ -39,9 +39,7 @@ class AttributePredicate:
     """An exact match of an attribute value"""
 
     def __init__(self, key: str, value: AnyValue):
-        logging.warning(
-            "This is deprecated, use AttributeValuesPredicate instead"
-        )
+        logging.warning("This is deprecated, use AttributeValuesPredicate instead")
         self.key = key
         self.value = value
 
@@ -123,10 +121,7 @@ class AttributeValuesPredicate:
     ) -> bool:
         if not attributes or self._key not in attributes:
             return False
-        return any(
-            str(value) in self._values
-            for value in _attribute_values(attributes[self._key])
-        )
+        return any(str(value) in self._values for value in _attribute_values(attributes[self._key]))
 
     def __str__(self) -> str:
         values = ",".join(sorted(self._values))
@@ -155,18 +150,11 @@ class AttributePatternsPredicate:
     ) -> bool:
         if not attributes or self._key not in attributes:
             return False
-        return any(
-            self._matches_value(str(value))
-            for value in _attribute_values(attributes[self._key])
-        )
+        return any(self._matches_value(str(value)) for value in _attribute_values(attributes[self._key]))
 
     def _matches_value(self, value: str) -> bool:
-        included = not self._included or any(
-            fnmatchcase(value, pattern) for pattern in self._included
-        )
-        excluded = any(
-            fnmatchcase(value, pattern) for pattern in self._excluded
-        )
+        included = not self._included or any(fnmatchcase(value, pattern) for pattern in self._included)
+        excluded = any(fnmatchcase(value, pattern) for pattern in self._excluded)
         return included and not excluded
 
     def __str__(self) -> str:
@@ -221,18 +209,14 @@ class ParentPredicate:
 
 
 def _attribute_values(value):
-    if isinstance(value, Sequence) and not isinstance(
-        value, (str, bytes, bytearray)
-    ):
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         return value
     return (value,)
 
 
 RulesT = Sequence[tuple[PredicateT, ComposableSampler]]
 
-_non_sampling_intent = SamplingIntent(
-    threshold=INVALID_THRESHOLD, threshold_reliable=False
-)
+_non_sampling_intent = SamplingIntent(threshold=INVALID_THRESHOLD, threshold_reliable=False)
 
 
 class _ComposableRuleBased(ComposableSampler):
@@ -269,10 +253,7 @@ class _ComposableRuleBased(ComposableSampler):
         return _non_sampling_intent
 
     def get_description(self) -> str:
-        rules_str = ",".join(
-            f"({predicate}:{sampler.get_description()})"
-            for predicate, sampler in self._rules
-        )
+        rules_str = ",".join(f"({predicate}:{sampler.get_description()})" for predicate, sampler in self._rules)
         return f"ComposableRuleBased{{[{rules_str}]}}"
 
 

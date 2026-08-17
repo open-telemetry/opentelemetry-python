@@ -35,10 +35,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """When there is a traceparent and tracestate header, data from
         both should be added to the SpanContext.
         """
-        traceparent_value = (
-            f"00-{format(self.TRACE_ID, '032x')}-"
-            f"{format(self.SPAN_ID, '016x')}-00"
-        )
+        traceparent_value = f"00-{format(self.TRACE_ID, '032x')}-{format(self.SPAN_ID, '016x')}-00"
         tracestate_value = "foo=1,bar=2,baz=3"
         span_context = trace.get_current_span(
             FORMAT.extract(
@@ -50,9 +47,7 @@ class TestTraceContextFormat(unittest.TestCase):
         ).get_span_context()
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)
-        self.assertEqual(
-            span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"}
-        )
+        self.assertEqual(span_context.trace_state, {"foo": "1", "bar": "2", "baz": "3"})
         self.assertTrue(span_context.is_remote)
         output: dict[str, str] = {}
         span = trace.NonRecordingSpan(span_context)
@@ -86,9 +81,7 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.get_current_span(
             FORMAT.extract(
                 {
-                    "traceparent": [
-                        "00-00000000000000000000000000000000-1234567890123456-00"
-                    ],
+                    "traceparent": ["00-00000000000000000000000000000000-1234567890123456-00"],
                     "tracestate": ["foo=1,bar=2,foo=3"],
                 },
             )
@@ -116,9 +109,7 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.get_current_span(
             FORMAT.extract(
                 {
-                    "traceparent": [
-                        "00-00000000000000000000000000000000-0000000000000000-00"
-                    ],
+                    "traceparent": ["00-00000000000000000000000000000000-0000000000000000-00"],
                     "tracestate": ["foo=1,bar=2,foo=3"],
                 },
             )
@@ -134,9 +125,7 @@ class TestTraceContextFormat(unittest.TestCase):
         empty tracestate headers but SHOULD avoid sending them.
         """
         output: dict[str, str] = {}
-        span = trace.NonRecordingSpan(
-            trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
-        )
+        span = trace.NonRecordingSpan(trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False))
         ctx = trace.set_span_in_context(span)
         FORMAT.inject(output, context=ctx)
         self.assertTrue("traceparent" in output)
@@ -153,10 +142,7 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.get_current_span(
             FORMAT.extract(
                 {
-                    "traceparent": [
-                        "00-12345678901234567890123456789012-"
-                        "1234567890123456-00-residue"
-                    ],
+                    "traceparent": ["00-12345678901234567890123456789012-1234567890123456-00-residue"],
                     "tracestate": ["foo=1,bar=2,foo=3"],
                 },
             )
@@ -175,9 +161,7 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.get_current_span(
             FORMAT.extract(
                 {
-                    "traceparent": [
-                        "00-12345678901234567890123456789012-1234567890123456-00"
-                    ],
+                    "traceparent": ["00-12345678901234567890123456789012-1234567890123456-00"],
                     "tracestate": ["foo=1", ""],
                 },
             )
@@ -189,9 +173,7 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.get_current_span(
             FORMAT.extract(
                 {
-                    "traceparent": [
-                        "00-12345678901234567890123456789012-1234567890123456-00"
-                    ],
+                    "traceparent": ["00-12345678901234567890123456789012-1234567890123456-00"],
                     "tracestate": ["foo=1,"],
                 },
             )
@@ -211,24 +193,15 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.get_current_span(
             FORMAT.extract(
                 {
-                    "traceparent": [
-                        "00-12345678901234567890123456789012-"
-                        "1234567890123456-00"
-                    ],
+                    "traceparent": ["00-12345678901234567890123456789012-1234567890123456-00"],
                     "tracestate": [tracestate_value],
                 },
             )
         )
-        self.assertEqual(
-            span.get_span_context().trace_state["1a-2f@foo"], "bar1"
-        )
-        self.assertEqual(
-            span.get_span_context().trace_state["1a-_*/2b@foo"], "bar2"
-        )
+        self.assertEqual(span.get_span_context().trace_state["1a-2f@foo"], "bar1")
+        self.assertEqual(span.get_span_context().trace_state["1a-_*/2b@foo"], "bar2")
         self.assertEqual(span.get_span_context().trace_state["foo"], "bar3")
-        self.assertEqual(
-            span.get_span_context().trace_state["foo-_*/bar"], "bar4"
-        )
+        self.assertEqual(span.get_span_context().trace_state["foo-_*/bar"], "bar4")
 
     @patch("opentelemetry.trace.INVALID_SPAN_CONTEXT")
     @patch("opentelemetry.trace.get_current_span")

@@ -164,15 +164,11 @@ class TestMapCompression(unittest.TestCase):
         self.assertIsNone(_map_compression("none", _CompressionWithDeflate))
 
     def test_gzip_maps_to_gzip(self):
-        self.assertEqual(
-            _map_compression("gzip", _CompressionWithDeflate), "gzip"
-        )
+        self.assertEqual(_map_compression("gzip", _CompressionWithDeflate), "gzip")
 
     def test_deflate_maps_when_enabled(self):
         self.assertEqual(
-            _map_compression(
-                "deflate", _CompressionWithDeflate, allow_deflate=True
-            ),
+            _map_compression("deflate", _CompressionWithDeflate, allow_deflate=True),
             "deflate",
         )
 
@@ -182,32 +178,25 @@ class TestMapCompression(unittest.TestCase):
 
         self.assertEqual(
             str(ctx.exception),
-            "Unsupported compression value 'deflate'. Supported values: "
-            "'gzip', 'none'.",
+            "Unsupported compression value 'deflate'. Supported values: 'gzip', 'none'.",
         )
 
     def test_deflate_raises_when_http_enum_lacks_support(self):
         with self.assertRaises(ConfigurationError) as ctx:
-            _map_compression(
-                "deflate", _CompressionWithoutDeflate, allow_deflate=True
-            )
+            _map_compression("deflate", _CompressionWithoutDeflate, allow_deflate=True)
 
         self.assertEqual(
             str(ctx.exception),
-            "Unsupported compression value 'deflate'. Supported values: "
-            "'gzip', 'none'.",
+            "Unsupported compression value 'deflate'. Supported values: 'gzip', 'none'.",
         )
 
     def test_http_error_message_includes_deflate(self):
         with self.assertRaises(ConfigurationError) as ctx:
-            _map_compression(
-                "brotli", _CompressionWithDeflate, allow_deflate=True
-            )
+            _map_compression("brotli", _CompressionWithDeflate, allow_deflate=True)
 
         self.assertEqual(
             str(ctx.exception),
-            "Unsupported compression value 'brotli'. Supported values: "
-            "'gzip', 'deflate', 'none'.",
+            "Unsupported compression value 'brotli'. Supported values: 'gzip', 'deflate', 'none'.",
         )
 
 
@@ -226,9 +215,7 @@ class TestParseOtlpFileOutputStream(unittest.TestCase):
 
     def test_file_uri_localhost_host_returns_path(self):
         self.assertEqual(
-            _parse_otlp_file_output_stream(
-                "file://localhost/tmp/traces.jsonl"
-            ),
+            _parse_otlp_file_output_stream("file://localhost/tmp/traces.jsonl"),
             "/tmp/traces.jsonl",
         )
 
@@ -271,8 +258,7 @@ class TestParseOtlpFileOutputStream(unittest.TestCase):
             _parse_otlp_file_output_stream("file://[::1")
 
         self.assertIn(
-            "Failed to parse output_stream 'file://[::1' for "
-            "otlp_file_development exporter",
+            "Failed to parse output_stream 'file://[::1' for otlp_file_development exporter",
             str(ctx.exception),
         )
 
@@ -282,8 +268,7 @@ class TestParseOtlpFileOutputStream(unittest.TestCase):
 
         self.assertEqual(
             str(ctx.exception),
-            "Unsupported output_stream 'file:traces.jsonl' for "
-            "otlp_file_development exporter. Path must be absolute.",
+            "Unsupported output_stream 'file:traces.jsonl' for otlp_file_development exporter. Path must be absolute.",
         )
 
     def test_trailing_slash_path_raises(self):
@@ -319,9 +304,7 @@ class TestAdditionalPropertiesSupport(unittest.TestCase):
         # pylint: disable=unexpected-keyword-arg
         obj = self.cls(my_plugin={"key": "val"})
         self.assertIsNone(obj.known_field)
-        self.assertEqual(
-            obj.additional_properties, {"my_plugin": {"key": "val"}}
-        )
+        self.assertEqual(obj.additional_properties, {"my_plugin": {"key": "val"}})
 
     def test_mixed_known_and_unknown_kwargs(self):
         # pylint: disable=unexpected-keyword-arg
@@ -373,9 +356,7 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
         self._assert_supports_additional_properties(TextMapPropagator)
 
     def test_resource_detector(self):
-        self._assert_supports_additional_properties(
-            ExperimentalResourceDetector
-        )
+        self._assert_supports_additional_properties(ExperimentalResourceDetector)
 
     def test_log_record_exporter(self):
         self._assert_supports_additional_properties(LogRecordExporter)
@@ -401,9 +382,7 @@ class TestResolveComponent(unittest.TestCase):
 
     def test_resolves_builtin_from_registry(self):
         config = self.cls(builtin_a={"key": "val"})
-        result = _resolve_component(
-            config, self.registry, "test_group", "test component"
-        )
+        result = _resolve_component(config, self.registry, "test_group", "test component")
         self.assertEqual(result, ("resolved_a", {"key": "val"}))
 
     def test_resolves_plugin_via_entry_point(self):
@@ -415,9 +394,7 @@ class TestResolveComponent(unittest.TestCase):
         ):
             # pylint: disable=unexpected-keyword-arg
             config = self.cls(my_plugin={"opt": "val"})
-            result = _resolve_component(
-                config, self.registry, "test_group", "test component"
-            )
+            result = _resolve_component(config, self.registry, "test_group", "test component")
         self.assertIs(result, mock_instance)
         mock_class.assert_called_once_with(opt="val")
 
@@ -430,17 +407,13 @@ class TestResolveComponent(unittest.TestCase):
         ):
             # pylint: disable=unexpected-keyword-arg
             config = self.cls(my_plugin={})
-            _resolve_component(
-                config, self.registry, "test_group", "test component"
-            )
+            _resolve_component(config, self.registry, "test_group", "test component")
         mock_class.assert_called_once_with()
 
     def test_no_component_raises_configuration_error(self):
         config = self.cls()
         with self.assertRaises(ConfigurationError):
-            _resolve_component(
-                config, self.registry, "test_group", "test component"
-            )
+            _resolve_component(config, self.registry, "test_group", "test component")
 
     def test_plugin_not_found_raises_configuration_error(self):
         with patch(
@@ -450,16 +423,12 @@ class TestResolveComponent(unittest.TestCase):
             # pylint: disable=unexpected-keyword-arg
             config = self.cls(missing_plugin={})
             with self.assertRaises(ConfigurationError):
-                _resolve_component(
-                    config, self.registry, "test_group", "test component"
-                )
+                _resolve_component(config, self.registry, "test_group", "test component")
 
     def test_first_registry_match_wins_when_multiple_set(self):
         """When multiple built-in fields are set (which the schema should
         prevent), the first registry match wins."""
         config = self.cls(builtin_a={"a": 1}, builtin_b="b")
-        result = _resolve_component(
-            config, self.registry, "test_group", "test component"
-        )
+        result = _resolve_component(config, self.registry, "test_group", "test component")
         # builtin_a comes first in the registry dict
         self.assertEqual(result, ("resolved_a", {"a": 1}))

@@ -95,17 +95,13 @@ class TestOTLPSpanExporter(TestCase):
                     **{
                         "context.trace_id": 1,
                         "context.span_id": 2,
-                        "attributes": BoundedAttributes(
-                            attributes={"a": 1, "b": False}
-                        ),
+                        "attributes": BoundedAttributes(attributes={"a": 1, "b": False}),
                         "dropped_attributes": 0,
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
                 )
             ],
-            instrumentation_scope=InstrumentationScope(
-                name="name", version="version"
-            ),
+            instrumentation_scope=InstrumentationScope(name="name", version="version"),
         )
 
         self.span2 = _Span(
@@ -156,9 +152,7 @@ class TestOTLPSpanExporter(TestCase):
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
         },
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__")
     def test_env_variables(self, mock_exporter_mixin):
         OTLPSpanExporter()
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
@@ -173,20 +167,15 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
-            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
-            + "/fixtures/test.cert",
-            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE: THIS_DIR
-            + "/fixtures/test-client-cert.pem",
-            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: THIS_DIR
-            + "/fixtures/test-client-key.pem",
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE: THIS_DIR + "/fixtures/test-client-cert.pem",
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY: THIS_DIR + "/fixtures/test-client-key.pem",
             OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
         },
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__")
     def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
         OTLPSpanExporter()
 
@@ -203,20 +192,15 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
-            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
-            + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR + "/fixtures/test.cert",
             OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
         },
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__")
     @patch("logging.Logger.error")
-    def test_env_variables_with_only_certificate(
-        self, mock_logger_error, mock_exporter_mixin
-    ):
+    def test_env_variables_with_only_certificate(self, mock_logger_error, mock_exporter_mixin):
         OTLPSpanExporter()
 
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
@@ -230,9 +214,7 @@ class TestOTLPSpanExporter(TestCase):
 
         mock_logger_error.assert_not_called()
 
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     # pylint: disable=unused-argument
     def test_no_credentials_error(self, mock_ssl_channel, mock_secure):
@@ -243,9 +225,7 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = VALUE=2 "},
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     # pylint: disable=unused-argument
     def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
@@ -258,9 +238,7 @@ class TestOTLPSpanExporter(TestCase):
                 ("key2", "VALUE=2"),
             ),
         )
-        exporter = OTLPSpanExporter(
-            headers=(("key3", "value3"), ("key4", "value4"))
-        )
+        exporter = OTLPSpanExporter(headers=(("key3", "value3"), ("key4", "value4")))
         # pylint: disable=protected-access
         self.assertEqual(
             exporter._headers,
@@ -269,9 +247,7 @@ class TestOTLPSpanExporter(TestCase):
                 ("key4", "value4"),
             ),
         )
-        exporter = OTLPSpanExporter(
-            headers={"key5": "value5", "key6": "value6"}
-        )
+        exporter = OTLPSpanExporter(headers={"key5": "value5", "key6": "value6"})
         # pylint: disable=protected-access
         self.assertEqual(
             exporter._headers,
@@ -320,9 +296,7 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
     )
-    def test_otlp_exporter_otlp_compression_precendence(
-        self, mock_insecure_channel
-    ):
+    def test_otlp_exporter_otlp_compression_precendence(self, mock_insecure_channel):
         """OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
         OTEL_EXPORTER_OTLP_COMPRESSION
         """
@@ -340,9 +314,7 @@ class TestOTLPSpanExporter(TestCase):
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
-    def test_otlp_exporter_otlp_channel_options_kwarg(
-        self, mock_insecure_channel
-    ):
+    def test_otlp_exporter_otlp_channel_options_kwarg(self, mock_insecure_channel):
         OTLPSpanExporter(insecure=True, channel_options=(("some", "options"),))
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317",
@@ -363,16 +335,12 @@ class TestOTLPSpanExporter(TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_spans=[
                         ScopeSpans(
-                            scope=PB2InstrumentationScope(
-                                name="name", version="version"
-                            ),
+                            scope=PB2InstrumentationScope(name="name", version="version"),
                             spans=[
                                 OTLPSpan(
                                     # pylint: disable=no-member
@@ -380,20 +348,14 @@ class TestOTLPSpanExporter(TestCase):
                                     start_time_unix_nano=self.span.start_time,
                                     end_time_unix_nano=self.span.end_time,
                                     trace_state="a=b,c=d",
-                                    span_id=int.to_bytes(
-                                        10217189687419569865, 8, "big"
-                                    ),
+                                    span_id=int.to_bytes(10217189687419569865, 8, "big"),
                                     trace_id=int.to_bytes(
                                         67545097771067222548457157018666467027,
                                         16,
                                         "big",
                                     ),
-                                    parent_span_id=(
-                                        b"\000\000\000\000\000\00009"
-                                    ),
-                                    kind=(
-                                        OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
-                                    ),
+                                    parent_span_id=(b"\000\000\000\000\000\00009"),
+                                    kind=(OTLPSpan.SpanKind.SPAN_KIND_INTERNAL),
                                     attributes=[
                                         KeyValue(
                                             key="a",
@@ -411,15 +373,11 @@ class TestOTLPSpanExporter(TestCase):
                                             attributes=[
                                                 KeyValue(
                                                     key="a",
-                                                    value=AnyValue(
-                                                        int_value=1
-                                                    ),
+                                                    value=AnyValue(int_value=1),
                                                 ),
                                                 KeyValue(
                                                     key="b",
-                                                    value=AnyValue(
-                                                        bool_value=False
-                                                    ),
+                                                    value=AnyValue(bool_value=False),
                                                 ),
                                             ],
                                         )
@@ -427,22 +385,16 @@ class TestOTLPSpanExporter(TestCase):
                                     status=Status(code=0, message=""),
                                     links=[
                                         OTLPSpan.Link(
-                                            trace_id=int.to_bytes(
-                                                1, 16, "big"
-                                            ),
+                                            trace_id=int.to_bytes(1, 16, "big"),
                                             span_id=int.to_bytes(2, 8, "big"),
                                             attributes=[
                                                 KeyValue(
                                                     key="a",
-                                                    value=AnyValue(
-                                                        int_value=1
-                                                    ),
+                                                    value=AnyValue(int_value=1),
                                                 ),
                                                 KeyValue(
                                                     key="b",
-                                                    value=AnyValue(
-                                                        bool_value=False
-                                                    ),
+                                                    value=AnyValue(bool_value=False),
                                                 ),
                                             ],
                                             flags=0x300,
@@ -471,16 +423,12 @@ class TestOTLPSpanExporter(TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_spans=[
                         ScopeSpans(
-                            scope=PB2InstrumentationScope(
-                                name="name", version="version"
-                            ),
+                            scope=PB2InstrumentationScope(name="name", version="version"),
                             spans=[
                                 OTLPSpan(
                                     # pylint: disable=no-member
@@ -488,20 +436,14 @@ class TestOTLPSpanExporter(TestCase):
                                     start_time_unix_nano=self.span.start_time,
                                     end_time_unix_nano=self.span.end_time,
                                     trace_state="a=b,c=d",
-                                    span_id=int.to_bytes(
-                                        10217189687419569865, 8, "big"
-                                    ),
+                                    span_id=int.to_bytes(10217189687419569865, 8, "big"),
                                     trace_id=int.to_bytes(
                                         67545097771067222548457157018666467027,
                                         16,
                                         "big",
                                     ),
-                                    parent_span_id=(
-                                        b"\000\000\000\000\000\00009"
-                                    ),
-                                    kind=(
-                                        OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
-                                    ),
+                                    parent_span_id=(b"\000\000\000\000\000\00009"),
+                                    kind=(OTLPSpan.SpanKind.SPAN_KIND_INTERNAL),
                                     attributes=[
                                         KeyValue(
                                             key="a",
@@ -519,15 +461,11 @@ class TestOTLPSpanExporter(TestCase):
                                             attributes=[
                                                 KeyValue(
                                                     key="a",
-                                                    value=AnyValue(
-                                                        int_value=1
-                                                    ),
+                                                    value=AnyValue(int_value=1),
                                                 ),
                                                 KeyValue(
                                                     key="b",
-                                                    value=AnyValue(
-                                                        bool_value=False
-                                                    ),
+                                                    value=AnyValue(bool_value=False),
                                                 ),
                                             ],
                                         )
@@ -535,22 +473,16 @@ class TestOTLPSpanExporter(TestCase):
                                     status=Status(code=0, message=""),
                                     links=[
                                         OTLPSpan.Link(
-                                            trace_id=int.to_bytes(
-                                                1, 16, "big"
-                                            ),
+                                            trace_id=int.to_bytes(1, 16, "big"),
                                             span_id=int.to_bytes(2, 8, "big"),
                                             attributes=[
                                                 KeyValue(
                                                     key="a",
-                                                    value=AnyValue(
-                                                        int_value=1
-                                                    ),
+                                                    value=AnyValue(int_value=1),
                                                 ),
                                                 KeyValue(
                                                     key="b",
-                                                    value=AnyValue(
-                                                        bool_value=False
-                                                    ),
+                                                    value=AnyValue(bool_value=False),
                                                 ),
                                             ],
                                             flags=0x300,
@@ -561,9 +493,7 @@ class TestOTLPSpanExporter(TestCase):
                             ],
                         ),
                         ScopeSpans(
-                            scope=PB2InstrumentationScope(
-                                name="name2", version="version2"
-                            ),
+                            scope=PB2InstrumentationScope(name="name2", version="version2"),
                             spans=[
                                 OTLPSpan(
                                     # pylint: disable=no-member
@@ -571,20 +501,14 @@ class TestOTLPSpanExporter(TestCase):
                                     start_time_unix_nano=self.span3.start_time,
                                     end_time_unix_nano=self.span3.end_time,
                                     trace_state="a=b,c=d",
-                                    span_id=int.to_bytes(
-                                        10217189687419569865, 8, "big"
-                                    ),
+                                    span_id=int.to_bytes(10217189687419569865, 8, "big"),
                                     trace_id=int.to_bytes(
                                         67545097771067222548457157018666467027,
                                         16,
                                         "big",
                                     ),
-                                    parent_span_id=(
-                                        b"\000\000\000\000\000\00009"
-                                    ),
-                                    kind=(
-                                        OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
-                                    ),
+                                    parent_span_id=(b"\000\000\000\000\000\00009"),
+                                    kind=(OTLPSpan.SpanKind.SPAN_KIND_INTERNAL),
                                     status=Status(code=0, message=""),
                                     flags=0x300,
                                 )
@@ -596,16 +520,12 @@ class TestOTLPSpanExporter(TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=2)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_spans=[
                         ScopeSpans(
-                            scope=PB2InstrumentationScope(
-                                name="name", version="version"
-                            ),
+                            scope=PB2InstrumentationScope(name="name", version="version"),
                             spans=[
                                 OTLPSpan(
                                     # pylint: disable=no-member
@@ -613,20 +533,14 @@ class TestOTLPSpanExporter(TestCase):
                                     start_time_unix_nano=self.span2.start_time,
                                     end_time_unix_nano=self.span2.end_time,
                                     trace_state="a=b,c=d",
-                                    span_id=int.to_bytes(
-                                        10217189687419569865, 8, "big"
-                                    ),
+                                    span_id=int.to_bytes(10217189687419569865, 8, "big"),
                                     trace_id=int.to_bytes(
                                         67545097771067222548457157018666467027,
                                         16,
                                         "big",
                                     ),
-                                    parent_span_id=(
-                                        b"\000\000\000\000\000\00009"
-                                    ),
-                                    kind=(
-                                        OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
-                                    ),
+                                    parent_span_id=(b"\000\000\000\000\000\00009"),
+                                    kind=(OTLPSpan.SpanKind.SPAN_KIND_INTERNAL),
                                     status=Status(code=0, message=""),
                                     flags=0x300,
                                 )
@@ -667,15 +581,9 @@ class TestOTLPSpanExporter(TestCase):
         unset = SDKStatus(status_code=SDKStatusCode.UNSET)
         ok = SDKStatus(status_code=SDKStatusCode.OK)
         error = SDKStatus(status_code=SDKStatusCode.ERROR)
-        unset_translated = self.exporter._translate_data(
-            [_create_span_with_status(unset)]
-        )
-        ok_translated = self.exporter._translate_data(
-            [_create_span_with_status(ok)]
-        )
-        error_translated = self.exporter._translate_data(
-            [_create_span_with_status(error)]
-        )
+        unset_translated = self.exporter._translate_data([_create_span_with_status(unset)])
+        ok_translated = self.exporter._translate_data([_create_span_with_status(ok)])
+        error_translated = self.exporter._translate_data([_create_span_with_status(error)])
         self._check_translated_status(
             unset_translated,
             Status.STATUS_CODE_UNSET,
@@ -733,40 +641,23 @@ class TestOTLPSpanExporter(TestCase):
         translated = self.exporter._translate_data([span])
         self.assertEqual(
             1,
-            translated.resource_spans[0]
-            .scope_spans[0]
-            .spans[0]
-            .dropped_links_count,
+            translated.resource_spans[0].scope_spans[0].spans[0].dropped_links_count,
         )
         self.assertEqual(
             2,
-            translated.resource_spans[0]
-            .scope_spans[0]
-            .spans[0]
-            .dropped_attributes_count,
+            translated.resource_spans[0].scope_spans[0].spans[0].dropped_attributes_count,
         )
         self.assertEqual(
             3,
-            translated.resource_spans[0]
-            .scope_spans[0]
-            .spans[0]
-            .dropped_events_count,
+            translated.resource_spans[0].scope_spans[0].spans[0].dropped_events_count,
         )
         self.assertEqual(
             2,
-            translated.resource_spans[0]
-            .scope_spans[0]
-            .spans[0]
-            .links[0]
-            .dropped_attributes_count,
+            translated.resource_spans[0].scope_spans[0].spans[0].links[0].dropped_attributes_count,
         )
         self.assertEqual(
             2,
-            translated.resource_spans[0]
-            .scope_spans[0]
-            .spans[0]
-            .events[0]
-            .dropped_attributes_count,
+            translated.resource_spans[0].scope_spans[0].spans[0].events[0].dropped_attributes_count,
         )
 
 

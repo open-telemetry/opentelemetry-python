@@ -117,9 +117,7 @@ _OTEL_SCOPE_SCHEMA_URL_LABEL = "otel_scope_schema_url"
 _OTEL_SCOPE_ATTR_PREFIX = "otel_scope_"
 
 
-def _convert_buckets(
-    bucket_counts: Sequence[int], explicit_bounds: Sequence[float]
-) -> Sequence[tuple[str, int]]:
+def _convert_buckets(bucket_counts: Sequence[int], explicit_bounds: Sequence[float]) -> Sequence[tuple[str, int]]:
     buckets = []
     total_count = 0
     for upper_bound, count in zip(
@@ -137,11 +135,7 @@ def _should_convert_sum_to_gauge(metric: Metric) -> bool:
     # to be exported as Gauges.
     if not isinstance(metric.data, Sum):
         return False
-    return (
-        not metric.data.is_monotonic
-        and metric.data.aggregation_temporality
-        == AggregationTemporality.CUMULATIVE
-    )
+    return not metric.data.is_monotonic and metric.data.aggregation_temporality == AggregationTemporality.CUMULATIVE
 
 
 _FamilyT = TypeVar("_FamilyT", bound=PrometheusMetric)
@@ -225,9 +219,7 @@ def _populate_histogram_family(
     label_rows: Sequence[Sequence[str]],
     values: Sequence[dict[str, Any]],
 ) -> None:
-    family_id = "|".join(
-        [per_metric_family_id, HistogramMetricFamily.__name__]
-    )
+    family_id = "|".join([per_metric_family_id, HistogramMetricFamily.__name__])
     family = _get_or_create_family(
         registry,
         family_id,
@@ -240,9 +232,7 @@ def _populate_histogram_family(
     for label_values, value in zip(label_rows, values):
         family.add_metric(
             labels=label_values,
-            buckets=_convert_buckets(
-                value["bucket_counts"], value["explicit_bounds"]
-            ),
+            buckets=_convert_buckets(value["bucket_counts"], value["explicit_bounds"]),
             sum_value=value["sum"],
         )
 
@@ -345,14 +335,10 @@ class _CustomCollector:
                     self._target_info = self._create_info_metric(
                         _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                     )
-                metric_family_id_metric_family[_TARGET_INFO_NAME] = (
-                    self._target_info
-                )
+                metric_family_id_metric_family[_TARGET_INFO_NAME] = self._target_info
 
         while self._metrics_datas:
-            self._translate_to_prometheus(
-                self._metrics_datas.popleft(), metric_family_id_metric_family
-            )
+            self._translate_to_prometheus(self._metrics_datas.popleft(), metric_family_id_metric_family)
 
             if metric_family_id_metric_family:
                 yield from metric_family_id_metric_family.values()
@@ -381,9 +367,7 @@ class _CustomCollector:
         metric_name = self._resolve_metric_name(metric.name)
         description = metric.description or ""
         unit = map_unit(metric.unit or "")
-        label_keys, label_rows, values = self._collect_data_points(
-            metric.data, scope_attrs
-        )
+        label_keys, label_rows, values = self._collect_data_points(metric.data, scope_attrs)
         per_metric_family_id = "|".join((metric_name, description, unit))
 
         convert_sum_to_gauge = _should_convert_sum_to_gauge(metric)
@@ -424,9 +408,7 @@ class _CustomCollector:
         else:
             _logger.warning("Unsupported metric data. %s", type(metric.data))
 
-    def _build_scope_attrs(
-        self, scope: InstrumentationScope
-    ) -> dict[str, AttributeValue]:
+    def _build_scope_attrs(self, scope: InstrumentationScope) -> dict[str, AttributeValue]:
         if not self._scope_info_enabled:
             return {}
         attrs: dict[str, AttributeValue] = {}
@@ -477,9 +459,7 @@ class _CustomCollector:
         label_keys = sorted(keys)
         # Backfill missing labels with "" so every data point exposes the
         # full label set expected by the Prometheus family.
-        label_rows = [
-            [labels.get(k, "") for k in label_keys] for labels in rows
-        ]
+        label_rows = [[labels.get(k, "") for k in label_keys] for labels in rows]
         return label_keys, label_rows, values
 
     # pylint: disable=no-self-use
@@ -489,15 +469,10 @@ class _CustomCollector:
             return dumps(value, default=str)
         return str(value)
 
-    def _create_info_metric(
-        self, name: str, description: str, attributes: dict[str, str]
-    ) -> InfoMetricFamily:
+    def _create_info_metric(self, name: str, description: str, attributes: dict[str, str]) -> InfoMetricFamily:
         """Create an Info Metric Family with list of attributes"""
         # sanitize the attribute names according to Prometheus rule
-        attributes = {
-            sanitize_attribute(key): self._check_value(value)
-            for key, value in attributes.items()
-        }
+        attributes = {sanitize_attribute(key): self._check_value(value) for key, value in attributes.items()}
         info = InfoMetricFamily(name, description, labels=attributes)
         info.add_metric(labels=list(attributes.keys()), value=attributes)
         return info

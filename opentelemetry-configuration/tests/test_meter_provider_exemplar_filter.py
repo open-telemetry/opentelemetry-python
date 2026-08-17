@@ -28,31 +28,17 @@ class TestExemplarFilter(unittest.TestCase):
         return MeterProviderConfig(readers=[], exemplar_filter=exemplar_filter)
 
     def test_always_on(self):
-        provider = create_meter_provider(
-            self._make_config(ExemplarFilterConfig.always_on)
-        )
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, AlwaysOnExemplarFilter
-        )
+        provider = create_meter_provider(self._make_config(ExemplarFilterConfig.always_on))
+        self.assertIsInstance(provider._sdk_config.exemplar_filter, AlwaysOnExemplarFilter)
 
     def test_always_off(self):
-        provider = create_meter_provider(
-            self._make_config(ExemplarFilterConfig.always_off)
-        )
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, AlwaysOffExemplarFilter
-        )
+        provider = create_meter_provider(self._make_config(ExemplarFilterConfig.always_off))
+        self.assertIsInstance(provider._sdk_config.exemplar_filter, AlwaysOffExemplarFilter)
 
     def test_trace_based(self):
-        provider = create_meter_provider(
-            self._make_config(ExemplarFilterConfig.trace_based)
-        )
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter
-        )
+        provider = create_meter_provider(self._make_config(ExemplarFilterConfig.trace_based))
+        self.assertIsInstance(provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter)
 
     def test_absent_defaults_to_trace_based(self):
         provider = create_meter_provider(MeterProviderConfig(readers=[]))
-        self.assertIsInstance(
-            provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter
-        )
+        self.assertIsInstance(provider._sdk_config.exemplar_filter, TraceBasedExemplarFilter)

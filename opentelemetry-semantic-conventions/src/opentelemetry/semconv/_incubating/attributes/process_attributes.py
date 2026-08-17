@@ -65,9 +65,7 @@ PROCESS_EXECUTABLE_BUILD_ID_GO: Final = "process.executable.build_id.go"
 The Go build ID as retrieved by `go tool buildid <go executable>`.
 """
 
-PROCESS_EXECUTABLE_BUILD_ID_HTLHASH: Final = (
-    "process.executable.build_id.htlhash"
-)
+PROCESS_EXECUTABLE_BUILD_ID_HTLHASH: Final = "process.executable.build_id.htlhash"
 """
 Deterministic build ID for executables.
 Note: GNU and Go build IDs may be stripped or unavailable in some environments
@@ -85,9 +83,7 @@ The result is the first 16 bytes (128 bits) of the SHA256 digest,
 represented as a hex string.
 """
 
-PROCESS_EXECUTABLE_BUILD_ID_PROFILING: Final = (
-    "process.executable.build_id.profiling"
-)
+PROCESS_EXECUTABLE_BUILD_ID_PROFILING: Final = "process.executable.build_id.profiling"
 """
 Deprecated: Replaced by `process.executable.build_id.htlhash`.
 """
@@ -228,9 +224,7 @@ class ProcessContextSwitchTypeValues(Enum):
     """involuntary."""
 
 
-@deprecated(
-    "The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`"
-)
+@deprecated("The attribute process.cpu.state is deprecated - Replaced by `cpu.mode`")
 class ProcessCpuStateValues(Enum):
     SYSTEM = "system"
     """system."""
@@ -240,9 +234,7 @@ class ProcessCpuStateValues(Enum):
     """wait."""
 
 
-@deprecated(
-    "The attribute process.paging.fault_type is deprecated - Replaced by `system.paging.fault.type`"
-)
+@deprecated("The attribute process.paging.fault_type is deprecated - Replaced by `system.paging.fault.type`")
 class ProcessPagingFaultTypeValues(Enum):
     MAJOR = "major"
     """major."""
