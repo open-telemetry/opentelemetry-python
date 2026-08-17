@@ -29,8 +29,8 @@ A boolean that is true if the message destination is anonymous (could be unnamed
 MESSAGING_DESTINATION_NAME: Final = "messaging.destination.name"
 """
 The message destination name.
-Note: Destination name SHOULD uniquely identify a specific queue, topic or other entity within the broker. If
-the broker doesn't have such notion, the destination name SHOULD uniquely identify the broker.
+Note: SHOULD uniquely identify a specific queue, topic or other entity within the broker. If
+the broker doesn't have such notion, it SHOULD uniquely identify the broker.
 """
 
 MESSAGING_DESTINATION_PARTITION_ID: Final = "messaging.destination.partition.id"
@@ -47,7 +47,7 @@ Note: Semantic conventions for individual messaging systems SHOULD document whet
 MESSAGING_DESTINATION_TEMPLATE: Final = "messaging.destination.template"
 """
 Low cardinality representation of the messaging destination name.
-Note: Destination names could be constructed from templates. An example would be a destination name involving a user name or product id. Although the destination name in this case is of high cardinality, the underlying template is of low cardinality and can be effectively used for grouping and aggregation.
+Note: Destination names could be constructed from templates. An example would be a destination name involving a username or product ID. Although the destination name in this case is of high cardinality, the underlying template is of low cardinality and can be effectively used for grouping and aggregation.
 """
 
 MESSAGING_DESTINATION_TEMPORARY: Final = "messaging.destination.temporary"
@@ -82,7 +82,7 @@ The ack deadline in seconds set for the modify ack deadline request.
 
 MESSAGING_GCP_PUBSUB_MESSAGE_ACK_ID: Final = "messaging.gcp_pubsub.message.ack_id"
 """
-The ack id for a given message.
+The ack ID for a given message.
 """
 
 MESSAGING_GCP_PUBSUB_MESSAGE_DELIVERY_ATTEMPT: Final = "messaging.gcp_pubsub.message.delivery_attempt"
@@ -95,6 +95,12 @@ MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY: Final = "messaging.gcp_pubsub.message
 The ordering key for a given message. If the attribute is not present, the message does not have an ordering key.
 """
 
+MESSAGING_KAFKA_CLUSTER_ID: Final = "messaging.kafka.cluster.id"
+"""
+The Kafka cluster ID, obtained from the broker metadata exposed through the Kafka client (or AdminClient) API.
+Note: The cluster ID is a unique identifier reported by the Kafka broker. It identifies the cluster independently of the individual brokers the client is configured to connect to, and remains stable even if broker hostnames, IP addresses, or ports change.
+"""
+
 MESSAGING_KAFKA_CONSUMER_GROUP: Final = "messaging.kafka.consumer.group"
 """
 Deprecated: Replaced by `messaging.consumer.group.name`.
@@ -102,7 +108,7 @@ Deprecated: Replaced by `messaging.consumer.group.name`.
 
 MESSAGING_KAFKA_DESTINATION_PARTITION: Final = "messaging.kafka.destination.partition"
 """
-Deprecated: Record string representation of the partition id in `messaging.destination.partition.id` attribute.
+Deprecated: Record string representation of the partition ID in `messaging.destination.partition.id` attribute.
 """
 
 MESSAGING_KAFKA_MESSAGE_KEY: Final = "messaging.kafka.message.key"
@@ -203,7 +209,7 @@ It is essential for FIFO message. Messages that belong to the same message group
 
 MESSAGING_ROCKETMQ_MESSAGE_KEYS: Final = "messaging.rocketmq.message.keys"
 """
-Key(s) of message, another way to mark message besides message id.
+Key(s) of message, another way to mark message besides message ID.
 """
 
 MESSAGING_ROCKETMQ_MESSAGE_TAG: Final = "messaging.rocketmq.message.tag"
