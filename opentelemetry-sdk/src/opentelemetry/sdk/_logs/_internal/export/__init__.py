@@ -116,7 +116,7 @@ class LogRecordExporter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Hint to ensure that the export of any ``ReadableLogRecord`` objects
         the exporter has received prior to the call to ``force_flush`` SHOULD be
         completed as soon as possible, preferably before returning from this method.
@@ -161,7 +161,7 @@ class ConsoleLogRecordExporter(LogRecordExporter):
     def shutdown(self):
         pass
 
-    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
 
 
@@ -242,7 +242,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._shutdown = True
         self._exporter.shutdown()
 
-    def force_flush(self, timeout_millis: int = 10_000) -> bool:  # pylint: disable=no-self-use
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # pylint: disable=no-self-use
         return True
 
 
@@ -321,7 +321,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
