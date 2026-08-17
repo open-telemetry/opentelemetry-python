@@ -80,7 +80,7 @@ To omit instrumentation scope labels from exported metrics, set
     reader = PrometheusMetricReader(scope_info_enabled=False)
 
 Resource labels
--------------------
+---------------
 
 By default, resource attributes are exported on the ``target_info`` metric. To
 also add selected resource attributes as Prometheus labels on every exported
