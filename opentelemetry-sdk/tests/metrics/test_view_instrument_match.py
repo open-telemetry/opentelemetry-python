@@ -4,7 +4,6 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
-import json
 from collections.abc import Callable, Sequence
 from time import time_ns
 from unittest import TestCase
@@ -12,7 +11,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
-    _unknown_type_handler,
+    _hash_attributes,
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -99,7 +98,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {json.dumps({"c": "d"}): self.mock_created_aggregation},
+            {_hash_attributes({"c": "d"}): self.mock_created_aggregation},
         )
 
         view_instrument_match.consume_measurement(
@@ -115,8 +114,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                json.dumps({}): self.mock_created_aggregation,
-                json.dumps({"c": "d"}): self.mock_created_aggregation,
+                _hash_attributes({}): self.mock_created_aggregation,
+                _hash_attributes({"c": "d"}): self.mock_created_aggregation,
             },
         )
 
@@ -143,7 +142,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {json.dumps({"c": "d", "f": "g"}): self.mock_created_aggregation},
+            {_hash_attributes({"c": "d", "f": "g"}): self.mock_created_aggregation},
         )
 
         # empty set attribute_keys will drop all attributes and aggregate
@@ -169,7 +168,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {json.dumps({}): self.mock_created_aggregation},
+            {_hash_attributes({}): self.mock_created_aggregation},
         )
 
         # Test that a drop aggregation is handled in the same way as any
@@ -196,7 +195,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[json.dumps({})],
+            view_instrument_match._attributes_aggregation[_hash_attributes({})],
             _DropAggregation,
         )
 
@@ -495,11 +494,11 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
 
         self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[json.dumps({"c": "d"})],
+            view_instrument_match._attributes_aggregation[_hash_attributes({"c": "d"})],
             _LastValueAggregation,
         )
 
-    def test_json_dumps_works_as_stable_hash_key(self):
+    def test_hash_attributes_works_as_stable_hash_key(self):
         attributes = {
             "a": [1, 2],
             "b": [2, 1],
@@ -509,39 +508,31 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             "f": {1: 2, 2: (1, 2, 3), 3: "a", 4: "bc"},
         }
         self.assertEqual(
-            json.dumps(attributes, sort_keys=True, default=_unknown_type_handler),
-            json.dumps(attributes, sort_keys=True, default=_unknown_type_handler),
+            _hash_attributes(attributes),
+            _hash_attributes(attributes),
         )
 
         self.assertNotEqual(
-            json.dumps(
-                {"1": (1, "2", 3, "4")},
-                sort_keys=True,
-                default=_unknown_type_handler,
-            ),
-            json.dumps(
-                {"1": ("1", 2, "3", 4)},
-                sort_keys=True,
-                default=_unknown_type_handler,
-            ),
+            _hash_attributes({"1": (1, "2", 3, "4")}),
+            _hash_attributes({"1": ("1", 2, "3", 4)}),
         )
 
-    def test_json_dumps_stable_hash_key_order_independence(self):
+    def test_hash_attributes_stable_hash_key_order_independence(self):
         attrs1 = {"b": 2, "a": 1, "c": 3}
         attrs2 = {"a": 1, "c": 3, "b": 2}
         self.assertEqual(
-            json.dumps(attrs1, sort_keys=True, default=_unknown_type_handler),
-            json.dumps(attrs2, sort_keys=True, default=_unknown_type_handler),
+            _hash_attributes(attrs1),
+            _hash_attributes(attrs2),
         )
 
         nested1 = {"root": {"z": (3, 2, 1), "x": "val", "y": b"bytes_data"}}
         nested2 = {"root": {"y": b"bytes_data", "z": (3, 2, 1), "x": "val"}}
         self.assertEqual(
-            json.dumps(nested1, sort_keys=True, default=_unknown_type_handler),
-            json.dumps(nested2, sort_keys=True, default=_unknown_type_handler),
+            _hash_attributes(nested1),
+            _hash_attributes(nested2),
         )
 
-    def test_json_dumps_stable_hash_with_tuples_and_nested_dicts(self):
+    def test_hash_attributes_stable_hash_with_tuples_and_nested_dicts(self):
         complex_attrs_a = {
             "service": {"name": "test-svc", "version": "1.0"},
             "tags": ("prod", "us-east-1"),
@@ -561,16 +552,51 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             "tags": ("prod", "us-east-1"),
         }
         self.assertEqual(
-            json.dumps(complex_attrs_a, sort_keys=True, default=_unknown_type_handler),
-            json.dumps(complex_attrs_b, sort_keys=True, default=_unknown_type_handler),
+            _hash_attributes(complex_attrs_a),
+            _hash_attributes(complex_attrs_b),
         )
 
-    def test_json_dumps_stable_hash_tuple_and_list_equivalence(self):
+    def test_hash_attributes_tuple_and_list_equivalence(self):
         attrs_tuple = {"values": (1, 2, 3), "nested": {"items": ("a", "b")}}
         attrs_list = {"values": [1, 2, 3], "nested": {"items": ["a", "b"]}}
         self.assertEqual(
-            json.dumps(attrs_tuple, sort_keys=True, default=_unknown_type_handler),
-            json.dumps(attrs_list, sort_keys=True, default=_unknown_type_handler),
+            _hash_attributes(attrs_tuple),
+            _hash_attributes(attrs_list),
+        )
+
+    def test_consume_measurement_with_non_string_keys(self):
+        instrument1 = _Counter(
+            name="instrument1",
+            instrumentation_scope=Mock(),
+            measurement_consumer=Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation={_Counter: LastValueAggregation()},
+        )
+
+        attributes = {"c": 1, 22: 3, (1,): 2}
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=Mock(name="instrument1"),
+                context=Context(),
+                attributes=attributes,
+            )
+        )
+        self.assertIn(
+            _hash_attributes(attributes),
+            view_instrument_match._attributes_aggregation,
         )
 
     def test_consume_measurement_stable_hash_key_order(self):
@@ -622,7 +648,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
 
         self.assertEqual(len(view_instrument_match._attributes_aggregation), 1)
-        expected_key = json.dumps(attrs1, sort_keys=True, default=_unknown_type_handler)
+        expected_key = _hash_attributes(attrs1)
         self.assertIn(expected_key, view_instrument_match._attributes_aggregation)
 
 
