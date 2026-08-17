@@ -8,6 +8,8 @@ from time import time_ns
 from types import NoneType
 from typing import cast
 
+from typing_extensions import Never
+
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
@@ -20,6 +22,11 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
 from opentelemetry.util.types import Attributes, AttributeValue
+
+
+def _assert_never(arg: Never) -> Never:
+    raise AssertionError(f"Type {type(arg)} is not supported.")
+
 
 _logger = getLogger(__name__)
 
@@ -39,7 +46,7 @@ def _hash_attributes(value: Attributes | AttributeValue) -> _HashedAttributes:
                 key=lambda item: item if isinstance(item, str) else str(item),
             )
         )
-    raise TypeError(f"Invalid value type for attributes: {type(value)}")
+    _assert_never(value)
 
 
 class _ViewInstrumentMatch:
