@@ -36,9 +36,7 @@ def get_span_with_dropped_attributes_events_links():
         span_limits=trace_sdk.SpanLimits(),
         resource=Resource(attributes=attributes),
     )
-    with tracer.start_as_current_span(
-        "span", links=links, attributes=attributes
-    ) as span:
+    with tracer.start_as_current_span("span", links=links, attributes=attributes) as span:
         for index in range(131):
             span.add_event(f"event{index}", attributes=attributes)
         return span

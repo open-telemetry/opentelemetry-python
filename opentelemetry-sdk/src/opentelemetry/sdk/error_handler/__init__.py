@@ -104,9 +104,7 @@ class GlobalErrorHandler:
 
         plugin_handled = False
 
-        error_handler_entry_points = entry_points(
-            group="opentelemetry_error_handler"
-        )
+        error_handler_entry_points = entry_points(group="opentelemetry_error_handler")
 
         for error_handler_entry_point in error_handler_entry_points:
             error_handler_class = error_handler_entry_point.load()

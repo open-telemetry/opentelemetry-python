@@ -30,54 +30,26 @@ class TestHistogramExport(TestCase):
 
         metric_data = in_memory_metric_reader.get_metrics_data()
 
-        self.assertEqual(
-            len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 2
-        )
+        self.assertEqual(len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 2)
 
         self.assertEqual(
-            (
-                metric_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .bucket_counts
-            ),
+            (metric_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].bucket_counts),
             (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
         )
         self.assertEqual(
-            (
-                metric_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[1]
-                .data.data_points[0]
-                .value
-            ),
+            (metric_data.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points[0].value),
             1,
         )
 
         metric_data = in_memory_metric_reader.get_metrics_data()
 
+        self.assertEqual(len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 2)
         self.assertEqual(
-            len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 2
-        )
-        self.assertEqual(
-            (
-                metric_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .bucket_counts
-            ),
+            (metric_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0].bucket_counts),
             (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
         )
         self.assertEqual(
-            (
-                metric_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[1]
-                .data.data_points[0]
-                .value
-            ),
+            (metric_data.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points[0].value),
             1,
         )
 
@@ -92,53 +64,29 @@ class TestHistogramExport(TestCase):
         meter = provider.get_meter("my-meter")
         histogram = meter.create_histogram("my_histogram")
 
-        histogram.record(
-            2, {"attribute": "value1"}
-        )  # Should go in the first bucket
-        histogram.record(
-            7, {"attribute": "value2"}
-        )  # Should go in the second bucket
-        histogram.record(
-            9, {"attribute": "value2"}
-        )  # Should also go in the second bucket
-        histogram.record(
-            15, {"attribute": "value3"}
-        )  # Should go in the third bucket
+        histogram.record(2, {"attribute": "value1"})  # Should go in the first bucket
+        histogram.record(7, {"attribute": "value2"})  # Should go in the second bucket
+        histogram.record(9, {"attribute": "value2"})  # Should also go in the second bucket
+        histogram.record(15, {"attribute": "value3"})  # Should go in the third bucket
 
         metric_data = in_memory_metric_reader.get_metrics_data()
 
-        self.assertEqual(
-            len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
-        histogram_metric = (
-            metric_data.resource_metrics[0].scope_metrics[0].metrics[0]
-        )
+        self.assertEqual(len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 1)
+        histogram_metric = metric_data.resource_metrics[0].scope_metrics[0].metrics[0]
 
         self.assertEqual(len(histogram_metric.data.data_points), 3)
 
-        self.assertEqual(
-            len(histogram_metric.data.data_points[0].exemplars), 1
-        )
-        self.assertEqual(
-            len(histogram_metric.data.data_points[1].exemplars), 1
-        )
-        self.assertEqual(
-            len(histogram_metric.data.data_points[2].exemplars), 1
-        )
+        self.assertEqual(len(histogram_metric.data.data_points[0].exemplars), 1)
+        self.assertEqual(len(histogram_metric.data.data_points[1].exemplars), 1)
+        self.assertEqual(len(histogram_metric.data.data_points[2].exemplars), 1)
 
         self.assertEqual(histogram_metric.data.data_points[0].sum, 2)
         self.assertEqual(histogram_metric.data.data_points[1].sum, 16)
         self.assertEqual(histogram_metric.data.data_points[2].sum, 15)
 
-        self.assertEqual(
-            histogram_metric.data.data_points[0].exemplars[0].value, 2.0
-        )
-        self.assertEqual(
-            histogram_metric.data.data_points[1].exemplars[0].value, 9.0
-        )
-        self.assertEqual(
-            histogram_metric.data.data_points[2].exemplars[0].value, 15.0
-        )
+        self.assertEqual(histogram_metric.data.data_points[0].exemplars[0].value, 2.0)
+        self.assertEqual(histogram_metric.data.data_points[1].exemplars[0].value, 9.0)
+        self.assertEqual(histogram_metric.data.data_points[2].exemplars[0].value, 15.0)
 
     def test_filter_with_exemplars(self):
         in_memory_metric_reader = InMemoryMetricReader()
@@ -151,27 +99,15 @@ class TestHistogramExport(TestCase):
         meter = provider.get_meter("my-meter")
         histogram = meter.create_histogram("my_histogram")
 
-        histogram.record(
-            2, {"attribute": "value1"}
-        )  # Should go in the first bucket
-        histogram.record(
-            7, {"attribute": "value2"}
-        )  # Should go in the second bucket
+        histogram.record(2, {"attribute": "value1"})  # Should go in the first bucket
+        histogram.record(7, {"attribute": "value2"})  # Should go in the second bucket
 
         metric_data = in_memory_metric_reader.get_metrics_data()
 
-        self.assertEqual(
-            len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
-        histogram_metric = (
-            metric_data.resource_metrics[0].scope_metrics[0].metrics[0]
-        )
+        self.assertEqual(len(metric_data.resource_metrics[0].scope_metrics[0].metrics), 1)
+        histogram_metric = metric_data.resource_metrics[0].scope_metrics[0].metrics[0]
 
         self.assertEqual(len(histogram_metric.data.data_points), 2)
 
-        self.assertEqual(
-            len(histogram_metric.data.data_points[0].exemplars), 0
-        )
-        self.assertEqual(
-            len(histogram_metric.data.data_points[1].exemplars), 0
-        )
+        self.assertEqual(len(histogram_metric.data.data_points[0].exemplars), 0)
+        self.assertEqual(len(histogram_metric.data.data_points[1].exemplars), 0)

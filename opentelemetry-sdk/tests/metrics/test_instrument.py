@@ -157,9 +157,7 @@ class TestObservableGauge(TestCase):
         self.assertEqual(_ObservableGauge("Name", Mock(), Mock()).name, "name")
 
     def test_callable_callback_0(self):
-        observable_gauge = _ObservableGauge(
-            "name", Mock(), Mock(), [callable_callback_0]
-        )
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [callable_callback_0])
 
         assert list(observable_gauge.callback(CallbackOptions())) == (
             [
@@ -188,9 +186,7 @@ class TestObservableGauge(TestCase):
         )
 
     def test_callable_multiple_callable_callback(self):
-        observable_gauge = _ObservableGauge(
-            "name", Mock(), Mock(), [callable_callback_0, callable_callback_1]
-        )
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [callable_callback_0, callable_callback_1])
 
         self.assertEqual(
             list(observable_gauge.callback(CallbackOptions())),
@@ -241,9 +237,7 @@ class TestObservableGauge(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_gauge = _ObservableGauge(
-            "name", Mock(), Mock(), [generator_callback_0()]
-        )
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [generator_callback_0()])
 
         self.assertEqual(
             list(observable_gauge.callback(CallbackOptions())),
@@ -335,9 +329,7 @@ class TestObservableGauge(TestCase):
                 Observation(1, attributes=TEST_ATTRIBUTES),
             ]
 
-        observable_gauge = _ObservableGauge(
-            "name", Mock(), Mock(), [nan_callback]
-        )
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [nan_callback])
         with self.assertLogs(level=WARNING):
             measurements = list(observable_gauge.callback(CallbackOptions()))
         self.assertEqual(len(measurements), 1)
@@ -350,9 +342,7 @@ class TestObservableGauge(TestCase):
                 Observation(1, attributes=TEST_ATTRIBUTES),
             ]
 
-        observable_gauge = _ObservableGauge(
-            "name", Mock(), Mock(), [inf_callback]
-        )
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [inf_callback])
         with self.assertLogs(level=WARNING):
             measurements = list(observable_gauge.callback(CallbackOptions()))
         self.assertEqual(len(measurements), 1)
@@ -370,9 +360,7 @@ class TestObservableGauge(TestCase):
 )
 class TestObservableCounter(TestCase):
     def test_callable_callback_0(self):
-        observable_counter = _ObservableCounter(
-            "name", Mock(), Mock(), [callable_callback_0]
-        )
+        observable_counter = _ObservableCounter("name", Mock(), Mock(), [callable_callback_0])
 
         self.assertEqual(
             list(observable_counter.callback(CallbackOptions())),
@@ -402,9 +390,7 @@ class TestObservableCounter(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_counter = _ObservableCounter(
-            "name", Mock(), Mock(), [generator_callback_0()]
-        )
+        observable_counter = _ObservableCounter("name", Mock(), Mock(), [generator_callback_0()])
 
         self.assertEqual(
             list(observable_counter.callback(CallbackOptions())),
@@ -476,9 +462,7 @@ class TestGauge(TestCase):
 )
 class TestObservableUpDownCounter(TestCase):
     def test_callable_callback_0(self):
-        observable_up_down_counter = _ObservableUpDownCounter(
-            "name", Mock(), Mock(), [callable_callback_0]
-        )
+        observable_up_down_counter = _ObservableUpDownCounter("name", Mock(), Mock(), [callable_callback_0])
 
         self.assertEqual(
             list(observable_up_down_counter.callback(CallbackOptions())),
@@ -508,9 +492,7 @@ class TestObservableUpDownCounter(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_up_down_counter = _ObservableUpDownCounter(
-            "name", Mock(), Mock(), [generator_callback_0()]
-        )
+        observable_up_down_counter = _ObservableUpDownCounter("name", Mock(), Mock(), [generator_callback_0()])
 
         self.assertEqual(
             list(observable_up_down_counter.callback(CallbackOptions())),
@@ -577,3 +559,17 @@ class TestHistogram(TestCase):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
             Histogram("name", Mock(), Mock())
+
+
+class TestInstrumentValidationMessages(TestCase):
+    def test_invalid_name_error_message(self):
+        with self.assertRaises(Exception) as ctx:
+            _Counter("1-invalid-name", Mock(), Mock())
+        self.assertIn("maximum length 255", str(ctx.exception))
+        self.assertNotIn("63", str(ctx.exception))
+
+    def test_invalid_unit_error_message(self):
+        with self.assertRaises(Exception) as ctx:
+            _Counter("name", Mock(), Mock(), unit="u" * 64)
+        self.assertIn("maximum length 63", str(ctx.exception))
+        self.assertNotIn("255", str(ctx.exception))

@@ -77,10 +77,7 @@ def _parent_context(is_remote: bool):
 
 
 def test_description_with_no_rules():
-    assert (
-        composable_rule_based(rules=[]).get_description()
-        == "ComposableRuleBased{[]}"
-    )
+    assert composable_rule_based(rules=[]).get_description() == "ComposableRuleBased{[]}"
 
 
 def test_always_match_predicate():
@@ -125,10 +122,7 @@ def test_all_predicate_does_not_match_when_any_predicate_does_not_match():
 
 
 def test_attribute_values_predicate_no_attributes():
-    assert (
-        _predicate_result(AttributeValuesPredicate("http.route", ["/users"]))
-        is False
-    )
+    assert _predicate_result(AttributeValuesPredicate("http.route", ["/users"])) is False
 
 
 def test_attribute_values_predicate_stringifies_values():
@@ -178,16 +172,8 @@ def test_attribute_patterns_predicate_include_exclude_precedence():
         excluded=["/api/private/*"],
     )
 
-    assert (
-        _predicate_result(predicate, attributes={"http.route": "/api/users"})
-        is True
-    )
-    assert (
-        _predicate_result(
-            predicate, attributes={"http.route": "/api/private/user"}
-        )
-        is False
-    )
+    assert _predicate_result(predicate, attributes={"http.route": "/api/users"}) is True
+    assert _predicate_result(predicate, attributes={"http.route": "/api/private/user"}) is False
 
 
 def test_attribute_patterns_predicate_is_case_sensitive():
@@ -226,35 +212,15 @@ def test_parent_predicate_matches_no_parent():
 def test_parent_predicate_matches_local_parent():
     local_parent_ctx = _parent_context(is_remote=False)
 
-    assert (
-        _predicate_result(
-            ParentPredicate(["local"]), parent_ctx=local_parent_ctx
-        )
-        is True
-    )
-    assert (
-        _predicate_result(
-            ParentPredicate(["remote"]), parent_ctx=local_parent_ctx
-        )
-        is False
-    )
+    assert _predicate_result(ParentPredicate(["local"]), parent_ctx=local_parent_ctx) is True
+    assert _predicate_result(ParentPredicate(["remote"]), parent_ctx=local_parent_ctx) is False
 
 
 def test_parent_predicate_matches_remote_parent():
     remote_parent_ctx = _parent_context(is_remote=True)
 
-    assert (
-        _predicate_result(
-            ParentPredicate(["remote"]), parent_ctx=remote_parent_ctx
-        )
-        is True
-    )
-    assert (
-        _predicate_result(
-            ParentPredicate(["local"]), parent_ctx=remote_parent_ctx
-        )
-        is False
-    )
+    assert _predicate_result(ParentPredicate(["remote"]), parent_ctx=remote_parent_ctx) is True
+    assert _predicate_result(ParentPredicate(["local"]), parent_ctx=remote_parent_ctx) is False
 
 
 def test_description_with_rules():
@@ -272,24 +238,14 @@ def test_sampling_intent_match():
     rules = [
         (NameIsFooPredicate(), composable_always_on()),
     ]
-    assert (
-        composable_rule_based(rules=rules)
-        .sampling_intent(None, "foo", None, {}, None, None)
-        .threshold
-        == 0
-    )
+    assert composable_rule_based(rules=rules).sampling_intent(None, "foo", None, {}, None, None).threshold == 0
 
 
 def test_sampling_intent_no_match():
     rules = [
         (NameIsFooPredicate(), composable_always_on()),
     ]
-    assert (
-        composable_rule_based(rules=rules)
-        .sampling_intent(None, "test", None, {}, None, None)
-        .threshold
-        == -1
-    )
+    assert composable_rule_based(rules=rules).sampling_intent(None, "test", None, {}, None, None).threshold == -1
 
 
 def test_should_sample_match():
@@ -359,12 +315,7 @@ def test_attribute_predicate_no_attributes():
     rules = [
         (AttributePredicate("foo", "bar"), composable_always_on()),
     ]
-    assert (
-        composable_rule_based(rules=rules)
-        .sampling_intent(None, "span", None, None, None, None)
-        .threshold
-        == -1
-    )
+    assert composable_rule_based(rules=rules).sampling_intent(None, "span", None, None, None, None).threshold == -1
 
 
 def test_attribute_predicate_no_match():
@@ -372,9 +323,7 @@ def test_attribute_predicate_no_match():
         (AttributePredicate("foo", "bar"), composable_always_on()),
     ]
     assert (
-        composable_rule_based(rules=rules)
-        .sampling_intent(None, "span", None, {"foo": "foo"}, None, None)
-        .threshold
+        composable_rule_based(rules=rules).sampling_intent(None, "span", None, {"foo": "foo"}, None, None).threshold
         == -1
     )
 
@@ -384,8 +333,6 @@ def test_attribute_predicate_match():
         (AttributePredicate("foo", "bar"), composable_always_on()),
     ]
     assert (
-        composable_rule_based(rules=rules)
-        .sampling_intent(None, "span", None, {"foo": "bar"}, None, None)
-        .threshold
+        composable_rule_based(rules=rules).sampling_intent(None, "span", None, {"foo": "bar"}, None, None).threshold
         == 0
     )

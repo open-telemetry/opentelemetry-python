@@ -92,9 +92,7 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
         >>> configure_sdk(config)
     """
     if config.disabled:
-        _logger.warning(
-            "Declarative configuration has disabled=true; skipping SDK setup."
-        )
+        _logger.warning("Declarative configuration has disabled=true; skipping SDK setup.")
         return
 
     if config.log_level is not None:

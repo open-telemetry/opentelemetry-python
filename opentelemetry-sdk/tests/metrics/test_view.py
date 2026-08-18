@@ -21,54 +21,56 @@ class TestView(TestCase):
         mock_instrument = Mock()
         mock_instrument.configure_mock(**{"name": "instrument_name"})
 
-        self.assertTrue(
-            View(instrument_name="instrument_name")._match(mock_instrument)
-        )
+        self.assertTrue(View(instrument_name="instrument_name")._match(mock_instrument))
+
+    def test_instrument_name_case_insensitive(self):
+        # The SDK stores instrument names lower-cased, so a view pattern that
+        # reuses the instrument's original name must still match regardless of
+        # case (and regardless of the host platform).
+        mock_instrument = Mock()
+        mock_instrument.configure_mock(**{"name": "instrument_name"})
+
+        self.assertTrue(View(instrument_name="Instrument_Name")._match(mock_instrument))
+        self.assertTrue(View(instrument_name="INSTRUMENT_*")._match(mock_instrument))
+        self.assertFalse(View(instrument_name="other_name")._match(mock_instrument))
 
     def test_instrument_unit(self):
         mock_instrument = Mock()
         mock_instrument.configure_mock(**{"unit": "instrument_unit"})
 
-        self.assertTrue(
-            View(instrument_unit="instrument_unit")._match(mock_instrument)
-        )
+        self.assertTrue(View(instrument_unit="instrument_unit")._match(mock_instrument))
+
+    def test_instrument_unit_case_sensitive(self):
+        # Units are case-sensitive and matching must not depend on the host
+        # platform's filename case sensitivity.
+        mock_instrument = Mock()
+        mock_instrument.configure_mock(**{"unit": "By"})
+
+        self.assertTrue(View(instrument_unit="By")._match(mock_instrument))
+        self.assertFalse(View(instrument_unit="by")._match(mock_instrument))
 
     def test_meter_name(self):
-        self.assertTrue(
-            View(meter_name="meter_name")._match(
-                Mock(**{"instrumentation_scope.name": "meter_name"})
-            )
-        )
+        self.assertTrue(View(meter_name="meter_name")._match(Mock(**{"instrumentation_scope.name": "meter_name"})))
 
     def test_meter_version(self):
         self.assertTrue(
-            View(meter_version="meter_version")._match(
-                Mock(**{"instrumentation_scope.version": "meter_version"})
-            )
+            View(meter_version="meter_version")._match(Mock(**{"instrumentation_scope.version": "meter_version"}))
         )
 
     def test_meter_schema_url(self):
         self.assertTrue(
             View(meter_schema_url="meter_schema_url")._match(
-                Mock(
-                    **{"instrumentation_scope.schema_url": "meter_schema_url"}
-                )
+                Mock(**{"instrumentation_scope.schema_url": "meter_schema_url"})
             )
         )
         self.assertFalse(
             View(meter_schema_url="meter_schema_url")._match(
-                Mock(
-                    **{
-                        "instrumentation_scope.schema_url": "meter_schema_urlabc"
-                    }
-                )
+                Mock(**{"instrumentation_scope.schema_url": "meter_schema_urlabc"})
             )
         )
         self.assertTrue(
             View(meter_schema_url="meter_schema_url")._match(
-                Mock(
-                    **{"instrumentation_scope.schema_url": "meter_schema_url"}
-                )
+                Mock(**{"instrumentation_scope.schema_url": "meter_schema_url"})
             )
         )
 

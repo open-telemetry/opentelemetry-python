@@ -16,6 +16,7 @@ dependencies = [
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
   "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-otlp-common",
   "opentelemetry-exporter-otlp-json-common",
   "opentelemetry-exporter-zipkin-json",
   "opentelemetry-exporter-prometheus",
@@ -78,7 +79,7 @@ log_cli = true
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
 target-version = "py310"
-line-length = 79
+line-length = 120
 extend-exclude = [
   "*_pb2*.py*",
   "opentelemetry-proto-json/src/*",
@@ -141,7 +142,8 @@ include = [
   "exporter/opentelemetry-exporter-otlp-proto-http",
   "exporter/opentelemetry-exporter-otlp-json-common",
   "exporter/opentelemetry-exporter-otlp-common",
-  "codegen/opentelemetry-codegen-json"
+  "codegen/opentelemetry-codegen-json",
+  "propagator/opentelemetry-propagator-jaeger",
 ]
 
 exclude = [
@@ -163,6 +165,7 @@ exclude = [
   "exporter/opentelemetry-exporter-otlp-json-http/tests",
   "exporter/opentelemetry-exporter-otlp-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
+  "propagator/opentelemetry-propagator-jaeger/tests",
 ]
 
 # When packages are correct typed add them to the strict list

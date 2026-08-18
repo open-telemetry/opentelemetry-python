@@ -1,48 +1,37 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-import gzip
+from __future__ import annotations
+
 import logging
 import os
-import random
-import threading
-import zlib
-from collections.abc import Sequence
-from io import BytesIO
-from os import environ
-from time import time
+from collections.abc import Mapping, Sequence
+from typing import TYPE_CHECKING, overload
 from urllib.parse import urlparse
 
-import requests
-from requests.exceptions import ConnectionError
-
+from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
     create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
-from opentelemetry.exporter.otlp.proto.http import (
-    _OTLP_HTTP_HEADERS,
-    Compression,
-)
+from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._common import (
     _DEFAULT_MAX_REQUEST_SIZE,
     RequestPayloadTooLargeError,
+    _build_transport,
     _is_request_too_large,
-    _is_retryable,
     _load_session_from_envvar,
+    _normalize_compression,
+    _resolve_compression,
+    _resolve_endpoint,
+    _resolve_headers,
+    _resolve_timeout,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
-    OTEL_EXPORTER_OTLP_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_CLIENT_KEY,
-    OTEL_EXPORTER_OTLP_COMPRESSION,
-    OTEL_EXPORTER_OTLP_ENDPOINT,
-    OTEL_EXPORTER_OTLP_HEADERS,
-    OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
@@ -60,7 +49,11 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
 from opentelemetry.semconv.attributes.http_attributes import (
     HTTP_RESPONSE_STATUS_CODE,
 )
-from opentelemetry.util.re import parse_env_headers
+
+if TYPE_CHECKING:
+    import requests
+
+    from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
 
 _logger = logging.getLogger(__name__)
 
@@ -69,24 +62,57 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
-_MAX_RETRYS = 6
 
 
 class OTLPSpanExporter(SpanExporter):
+    @overload
     def __init__(
         self,
         endpoint: str | None = None,
         certificate_file: str | None = None,
         client_key_file: str | None = None,
         client_certificate_file: str | None = None,
-        headers: dict[str, str] | None = None,
+        headers: Mapping[str, str] | None = None,
         timeout: float | None = None,
-        compression: Compression | None = None,
+        compression: Compression | _http.Compression | None = None,
         session: requests.Session | None = None,
         *,
         max_request_size: int | None = None,
         meter_provider: MeterProvider | None = None,
-    ):
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        endpoint: str | None = None,
+        certificate_file: None = None,
+        client_key_file: None = None,
+        client_certificate_file: None = None,
+        headers: Mapping[str, str] | None = None,
+        timeout: float | None = None,
+        compression: Compression | _http.Compression | None = None,
+        session: requests.Session | None = None,
+        *,
+        max_request_size: int | None = None,
+        meter_provider: MeterProvider | None = None,
+        _transport: BaseHTTPTransport,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        endpoint: str | None = None,
+        certificate_file: str | None = None,
+        client_key_file: str | None = None,
+        client_certificate_file: str | None = None,
+        headers: Mapping[str, str] | None = None,
+        timeout: float | None = None,
+        compression: Compression | _http.Compression | None = None,
+        session: requests.Session | None = None,
+        *,
+        max_request_size: int | None = None,
+        meter_provider: MeterProvider | None = None,
+        _transport: BaseHTTPTransport | None = None,
+    ) -> None:
         """OTLP HTTP span exporter.
 
         Args:
@@ -109,64 +135,29 @@ class OTLPSpanExporter(SpanExporter):
                 batches may approach it.
             meter_provider: MeterProvider used for the exporter's own metrics.
         """
-        self._shutdown_in_progress = threading.Event()
-        self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
-            _append_trace_path(
-                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
-            ),
+        self._endpoint = endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, DEFAULT_TRACES_EXPORT_PATH)
+        self._compression = _normalize_compression(compression) or _resolve_compression(
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
         )
-        self._certificate_file = certificate_file or environ.get(
+        transport = _transport or _build_transport(
+            certificate_file,
+            client_key_file,
+            client_certificate_file,
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
-        )
-        self._client_key_file = client_key_file or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
-            environ.get(OTEL_EXPORTER_OTLP_CLIENT_KEY, None),
-        )
-        self._client_certificate_file = client_certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE, None),
+            session=session or _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER),
         )
-        self._client_cert = (
-            (self._client_certificate_file, self._client_key_file)
-            if self._client_certificate_file and self._client_key_file
-            else self._client_certificate_file
+        self._max_request_size = _DEFAULT_MAX_REQUEST_SIZE if max_request_size is None else max_request_size
+        self._client = _http._OTLPHTTPClient(
+            transport=transport,
+            endpoint=self._endpoint,
+            kind="spans",
+            timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT),
+            compression=self._compression,
+            headers=_resolve_headers(headers, OTEL_EXPORTER_OTLP_TRACES_HEADERS),
+            logger=_logger,
         )
-        headers_string = environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_HEADERS,
-            environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
-        )
-        self._headers = headers or parse_env_headers(
-            headers_string, liberal=True
-        )
-        self._timeout = timeout or float(
-            environ.get(
-                OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
-                environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
-            )
-        )
-        self._max_request_size = (
-            _DEFAULT_MAX_REQUEST_SIZE
-            if max_request_size is None
-            else max_request_size
-        )
-        self._compression = compression or _compression_from_env()
-        self._session = (
-            session
-            or _load_session_from_envvar(
-                _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
-            )
-            or requests.Session()
-        )
-        self._session.headers.update(self._headers)
-        self._session.headers.update(_OTLP_HTTP_HEADERS)
-        # let users override our defaults
-        self._session.headers.update(self._headers)
-        if self._compression is not Compression.NoCompression:
-            self._session.headers.update(
-                {"Content-Encoding": self._compression.value}
-            )
         self._shutdown = False
 
         self._metrics = create_exporter_metrics(
@@ -174,48 +165,8 @@ class OTLPSpanExporter(SpanExporter):
             "traces",
             urlparse(self._endpoint),
             meter_provider,
-            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "")
-            .strip()
-            .lower()
-            == "true",
+            os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
-
-    def _export(
-        self, serialized_data: bytes, timeout_sec: float | None = None
-    ):
-        data = serialized_data
-        if self._compression == Compression.Gzip:
-            gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-                gzip_stream.write(serialized_data)
-            data = gzip_data.getvalue()
-        elif self._compression == Compression.Deflate:
-            data = zlib.compress(serialized_data)
-
-        if timeout_sec is None:
-            timeout_sec = self._timeout
-
-        # By default, keep-alive is enabled in Session's request
-        # headers. Backends may choose to close the connection
-        # while a post happens which causes an unhandled
-        # exception. This try/except will retry the post on such exceptions
-        try:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        except ConnectionError:
-            resp = self._session.post(
-                url=self._endpoint,
-                data=data,
-                verify=self._certificate_file,
-                timeout=timeout_sec,
-                cert=self._client_cert,
-            )
-        return resp
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         if self._shutdown:
@@ -223,11 +174,17 @@ class OTLPSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
 
         with self._metrics.export_operation(len(spans)) as result:
-            serialized_data = encode_spans(spans).SerializePartialToString()
+            try:
+                serialized_data = encode_spans(spans).SerializePartialToString()
+            # pylint: disable-next=broad-exception-caught
+            except Exception as error:
+                _logger.error("Failed to encode span batch: %s", error)
+                result.error = error
+                return SpanExportResult.FAILURE
+
             if _is_request_too_large(serialized_data, self._max_request_size):
                 _logger.warning(
-                    "Dropping span batch: serialized size %d bytes exceeds "
-                    "max_request_size %d bytes.",
+                    "Dropping span batch: serialized size %d bytes exceeds max_request_size %d bytes.",
                     len(serialized_data),
                     self._max_request_size,
                 )
@@ -237,94 +194,25 @@ class OTLPSpanExporter(SpanExporter):
                     f"{self._max_request_size} bytes."
                 )
                 return SpanExportResult.FAILURE
-            deadline_sec = time() + self._timeout
-            for retry_num in range(_MAX_RETRYS):
-                # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                export_error: Exception | None = None
-                try:
-                    resp = self._export(serialized_data, deadline_sec - time())
-                    if resp.ok:
-                        return SpanExportResult.SUCCESS
-                except requests.exceptions.RequestException as error:
-                    reason = error
-                    export_error = error
-                    retryable = isinstance(error, ConnectionError)
-                    status_code = None
-                else:
-                    reason = resp.reason
-                    retryable = _is_retryable(resp)
-                    status_code = resp.status_code
 
-                if not retryable:
-                    _logger.error(
-                        "Failed to export span batch code: %s, reason: %s",
-                        status_code,
-                        reason,
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
-                    result.error = export_error
-                    result.error_attrs = error_attrs
-                    return SpanExportResult.FAILURE
-
-                if (
-                    retry_num + 1 == _MAX_RETRYS
-                    or backoff_seconds > (deadline_sec - time())
-                    or self._shutdown
-                ):
-                    _logger.error(
-                        "Failed to export span batch due to timeout, "
-                        "max retries or shutdown."
-                    )
-                    error_attrs = (
-                        {HTTP_RESPONSE_STATUS_CODE: status_code}
-                        if status_code is not None
-                        else None
-                    )
-                    result.error = export_error
-                    result.error_attrs = error_attrs
-                    return SpanExportResult.FAILURE
-                _logger.warning(
-                    "Transient error %s encountered while exporting span batch, retrying in %.2fs.",
-                    reason,
-                    backoff_seconds,
+            export_result = self._client.export(serialized_data)
+            if not export_result.success:
+                result.error = export_result.error
+                result.error_attrs = (
+                    {HTTP_RESPONSE_STATUS_CODE: export_result.status_code}
+                    if export_result.status_code is not None
+                    else None
                 )
-                shutdown = self._shutdown_in_progress.wait(backoff_seconds)
-                if shutdown:
-                    _logger.warning("Shutdown in progress, aborting retry.")
-                    break
-            return SpanExportResult.FAILURE
+                return SpanExportResult.FAILURE
+        return SpanExportResult.SUCCESS
 
     def shutdown(self):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
         self._shutdown = True
-        self._shutdown_in_progress.set()
-        self._session.close()
+        self._client.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
         return True
-
-
-def _compression_from_env() -> Compression:
-    compression = (
-        environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
-            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
-        )
-        .lower()
-        .strip()
-    )
-    return Compression(compression)
-
-
-def _append_trace_path(endpoint: str) -> str:
-    if endpoint.endswith("/"):
-        return endpoint + DEFAULT_TRACES_EXPORT_PATH
-    return endpoint + f"/{DEFAULT_TRACES_EXPORT_PATH}"
