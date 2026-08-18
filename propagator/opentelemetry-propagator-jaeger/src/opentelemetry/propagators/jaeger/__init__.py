@@ -26,6 +26,11 @@ class JaegerPropagator(TextMapPropagator):
     TRACE_ID_KEY = "uber-trace-id"
     BAGGAGE_PREFIX = "uberctx-"
     DEBUG_FLAG = 0x02
+    # The Jaeger format defines no baggage limits, so the W3C Baggage spec
+    # limits are borrowed to bound an unbounded inbound carrier on extract.
+    MAX_BAGGAGE_ENTRIES = 180
+    MAX_BAGGAGE_ENTRY_BYTES = 4096
+    MAX_BAGGAGE_TOTAL_BYTES = 8192
 
     def extract(
         self,
@@ -105,15 +110,27 @@ class JaegerPropagator(TextMapPropagator):
         context: Context,
     ) -> Context:
         baggage_keys = [key for key in getter.keys(carrier) if key.startswith(self.BAGGAGE_PREFIX)]
+        entries = 0
+        total_bytes = 0
         for key in baggage_keys:
+            if entries >= self.MAX_BAGGAGE_ENTRIES:
+                break
             value = _extract_first_element(getter.get(carrier, key))
             if value is None:
                 continue
+            baggage_key = key.replace(self.BAGGAGE_PREFIX, "")
+            # The limits are byte-denominated, so a multibyte value cannot
+            # exceed the budget under a smaller character count.
+            entry_bytes = len(baggage_key.encode()) + len(value.encode())
+            if entry_bytes > self.MAX_BAGGAGE_ENTRY_BYTES or total_bytes + entry_bytes > self.MAX_BAGGAGE_TOTAL_BYTES:
+                continue
             context = baggage.set_baggage(
-                key.replace(self.BAGGAGE_PREFIX, ""),
+                baggage_key,
                 urllib.parse.unquote(value).strip(),
                 context=context,
             )
+            entries += 1
+            total_bytes += entry_bytes
         return context
 
 

@@ -134,6 +134,44 @@ class TestJaegerPropagator(TestCase):
         context = FORMAT.extract(old_carrier)
         self.assertDictEqual({"key3": "value3"}, context[_BAGGAGE_KEY])
 
+    def test_extract_enforces_max_baggage_entries(self):
+        old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
+        for i in range(200):
+            old_carrier[f"uberctx-k{i}"] = f"v{i}"
+        extracted = FORMAT.extract(old_carrier)[_BAGGAGE_KEY]
+        self.assertEqual(FORMAT.MAX_BAGGAGE_ENTRIES, len(extracted))
+        self.assertIn("k0", extracted)
+        self.assertNotIn("k180", extracted)
+
+    def test_extract_drops_oversized_baggage_entry(self):
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-ok": "value",
+            "uberctx-big": "x" * 5000,
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"ok": "value"}, context[_BAGGAGE_KEY])
+
+    def test_extract_measures_entry_limit_in_bytes(self):
+        # 2100 multibyte characters is 4200 bytes: under the character limit,
+        # over the byte limit, so the entry must be dropped.
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-ok": "value",
+            "uberctx-u": "é" * 2100,
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"ok": "value"}, context[_BAGGAGE_KEY])
+
+    def test_extract_enforces_max_baggage_total_bytes(self):
+        old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
+        for i in range(100):
+            old_carrier[f"uberctx-k{i}"] = "y" * 200
+        extracted = FORMAT.extract(old_carrier)[_BAGGAGE_KEY]
+        self.assertLess(len(extracted), 100)
+        self.assertIn("k0", extracted)
+        self.assertNotIn("k99", extracted)
+
     def test_extract_invalid_uber_trace_id(self):
         old_carrier = {
             "uber-trace-id": "000000000000000000000000deadbeef:00000000deadbef0:00",
