@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import collections.abc
+import itertools
 import urllib.parse
 
 from opentelemetry import baggage, trace
@@ -109,19 +110,22 @@ class JaegerPropagator(TextMapPropagator):
         carrier: CarrierT,
         context: Context,
     ) -> Context:
-        baggage_keys = [key for key in getter.keys(carrier) if key.startswith(self.BAGGAGE_PREFIX)]
-        entries = 0
+        # The limit bounds the candidates inspected, not the entries kept, so a
+        # carrier full of oversized ones cannot force unbounded work.
+        candidates = itertools.islice(
+            (key for key in getter.keys(carrier) if key.startswith(self.BAGGAGE_PREFIX)),
+            self.MAX_BAGGAGE_ENTRIES,
+        )
         total_bytes = 0
-        for key in baggage_keys:
-            if entries >= self.MAX_BAGGAGE_ENTRIES:
-                break
+        for key in candidates:
             value = _extract_first_element(getter.get(carrier, key))
             if value is None:
                 continue
             baggage_key = key.replace(self.BAGGAGE_PREFIX, "")
             # The limits are byte-denominated, so a multibyte value cannot
-            # exceed the budget under a smaller character count.
-            entry_bytes = len(baggage_key.encode()) + len(value.encode())
+            # exceed the budget under a smaller character count. The two extra
+            # bytes account for the "=" and "," a W3C baggage header would carry.
+            entry_bytes = len(baggage_key.encode()) + len(value.encode()) + 2
             if entry_bytes > self.MAX_BAGGAGE_ENTRY_BYTES or total_bytes + entry_bytes > self.MAX_BAGGAGE_TOTAL_BYTES:
                 continue
             context = baggage.set_baggage(
@@ -129,7 +133,6 @@ class JaegerPropagator(TextMapPropagator):
                 urllib.parse.unquote(value).strip(),
                 context=context,
             )
-            entries += 1
             total_bytes += entry_bytes
         return context
 

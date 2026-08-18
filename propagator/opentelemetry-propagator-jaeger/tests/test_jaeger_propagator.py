@@ -10,6 +10,7 @@ from opentelemetry.context import Context
 from opentelemetry.propagators import (  # pylint: disable=no-name-in-module
     jaeger,
 )
+from opentelemetry.propagators.textmap import DefaultGetter
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import id_generator
 from opentelemetry.test import TestCase
@@ -171,6 +172,34 @@ class TestJaegerPropagator(TestCase):
         self.assertLess(len(extracted), 100)
         self.assertIn("k0", extracted)
         self.assertNotIn("k99", extracted)
+
+    def test_extract_counts_the_separator_bytes(self):
+        # key + value is 4095 bytes, one under the per-entry limit, but the
+        # "=" and "," a baggage header would carry put it one over.
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-ok": "value",
+            "uberctx-edge": "x" * (FORMAT.MAX_BAGGAGE_ENTRY_BYTES - len("edge") - 1),
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"ok": "value"}, context[_BAGGAGE_KEY])
+
+    def test_extract_stops_inspecting_after_the_candidate_limit(self):
+        old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
+        for index in range(1000):
+            old_carrier[f"uberctx-k{index}"] = "x" * 5000
+
+        class CountingGetter(DefaultGetter):
+            def __init__(self):
+                self.reads = 0
+
+            def get(self, carrier, key):
+                self.reads += 1
+                return super().get(carrier, key)
+
+        getter = CountingGetter()
+        FORMAT.extract(old_carrier, getter=getter)
+        self.assertLessEqual(getter.reads, FORMAT.MAX_BAGGAGE_ENTRIES + 1)
 
     def test_extract_invalid_uber_trace_id(self):
         old_carrier = {
