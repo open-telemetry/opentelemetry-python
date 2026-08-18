@@ -51,20 +51,24 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertNotEqual(new_state.get("a"), ",,2,,f")
         self.assertEqual(new_state.get("a"), "1")
 
-    def test_tracestate_update_missing_key_returns_unchanged(self):
-        # update() only updates an existing key; for a key that is not present it
-        # returns the same tracestate unchanged (and never adds the key). This also
-        # guards the previous bug where updating a new key at the 32-entry limit
-        # wiped all existing entries.
+    def test_tracestate_update_new_key_added_below_capacity(self):
+        # update() keeps its upsert behavior: a key that is not present is added
+        # as long as there is room below the 32-entry limit.
+        small_state = TraceState([("a", "1")])
+        new_state = small_state.update("b", "2")
+        self.assertEqual(new_state.get("b"), "2")
+        self.assertEqual(new_state.get("a"), "1")
+
+    def test_tracestate_update_at_capacity_new_key_preserved(self):
+        # Guards the previous bug: adding a new key at the 32-entry limit used to
+        # push the list to 33 entries and cause the constructor to wipe them all.
+        # Now the tracestate is returned unchanged, preserving existing entries.
         pairs = [(f"key{i}", f"value{i}") for i in range(32)]
         state = TraceState(pairs)
         new_state = state.update("newkey", "newvalue")
         self.assertEqual(len(new_state), 32)
         self.assertIsNone(new_state.get("newkey"))
         self.assertEqual(new_state.get("key0"), "value0")
-
-        small_state = TraceState([("a", "1")])
-        self.assertIsNone(small_state.update("b", "2").get("b"))
 
     def test_tracestate_update_existing_key_at_capacity(self):
         # Updating an existing key while at the limit stays within the limit.

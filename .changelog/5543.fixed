@@ -1,1 +1,1 @@
-`opentelemetry-api`: fix `TraceState.update` to only update already existing keys
+`opentelemetry-api`: fix `TraceState.update` dropping all entries when adding a new key at the 32-key limit
