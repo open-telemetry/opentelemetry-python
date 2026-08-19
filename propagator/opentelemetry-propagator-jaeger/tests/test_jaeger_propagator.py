@@ -124,6 +124,16 @@ class TestJaegerPropagator(TestCase):
         ctx = FORMAT.extract(new_carrier)
         self.assertDictEqual(formatted_baggage, ctx[_BAGGAGE_KEY])
 
+    def test_extract_empty_baggage_value(self):
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-key1": [],
+            "uberctx-key2": None,
+            "uberctx-key3": "value3",
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"key3": "value3"}, context[_BAGGAGE_KEY])
+
     def test_extract_invalid_uber_trace_id(self):
         old_carrier = {
             "uber-trace-id": "000000000000000000000000deadbeef:00000000deadbef0:00",
