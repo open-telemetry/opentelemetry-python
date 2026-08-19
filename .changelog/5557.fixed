@@ -1,0 +1,1 @@
+`opentelemetry-propagator-jaeger`: strip only the leading `uberctx-` prefix when extracting a baggage key, so a carrier key that repeats the prefix keeps its inner literal (`uberctx-a-uberctx-b` now yields `a-uberctx-b` rather than `a-b`).
