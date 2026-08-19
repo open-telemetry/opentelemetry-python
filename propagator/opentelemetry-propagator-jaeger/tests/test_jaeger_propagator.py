@@ -46,6 +46,8 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
 
 
 class TestJaegerPropagator(TestCase):
+    # pylint: disable=too-many-public-methods
+
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()
@@ -133,6 +135,14 @@ class TestJaegerPropagator(TestCase):
         }
         context = FORMAT.extract(old_carrier)
         self.assertDictEqual({"key3": "value3"}, context[_BAGGAGE_KEY])
+
+    def test_extract_strips_only_the_leading_baggage_prefix(self):
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-a-uberctx-b": "value",
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"a-uberctx-b": "value"}, context[_BAGGAGE_KEY])
 
     def test_extract_invalid_uber_trace_id(self):
         old_carrier = {
