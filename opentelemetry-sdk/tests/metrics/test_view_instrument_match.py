@@ -585,17 +585,20 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         attributes = {"c": 1, 22: 3, (1,): 2}
 
-        view_instrument_match.consume_measurement(
-            Measurement(
-                value=0,
-                time_unix_nano=time_ns(),
-                instrument=Mock(name="instrument1"),
-                context=Context(),
-                attributes=attributes,
-            )
+        measurement = Measurement(
+            value=0,
+            time_unix_nano=time_ns(),
+            instrument=Mock(name="instrument1"),
+            context=Context(),
+            attributes=attributes,
+        )
+        view_instrument_match.consume_measurement(measurement)
+        self.assertEqual(
+            measurement.attributes,
+            {"c": 1, "22": 3, "(1,)": 2},
         )
         self.assertIn(
-            _hash_attributes(attributes),
+            _hash_attributes(measurement.attributes),
             view_instrument_match._attributes_aggregation,
         )
 

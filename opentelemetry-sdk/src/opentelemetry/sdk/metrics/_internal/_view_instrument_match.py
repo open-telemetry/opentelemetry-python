@@ -6,7 +6,7 @@ from logging import getLogger
 from threading import Lock
 from time import time_ns
 from types import NoneType
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from typing_extensions import assert_never
 
@@ -28,7 +28,10 @@ _logger = getLogger(__name__)
 _HashedAttributes = str | bool | int | float | bytes | None | tuple["_HashedAttributes", ...]
 
 
+# pylint: disable=inconsistent-return-statements
 def _hash_attributes(value: Attributes | AttributeValue) -> _HashedAttributes:
+    # Attributes have been cleaned and validated when Measurement was instantiated,
+    # so value is guaranteed to match one of the branches below at runtime.
     if isinstance(value, (NoneType, str, int, float, bool, bytes)):
         return value
     if isinstance(value, Sequence):
@@ -41,7 +44,8 @@ def _hash_attributes(value: Attributes | AttributeValue) -> _HashedAttributes:
                 key=lambda item: item if isinstance(item, str) else str(item),
             )
         )
-    assert_never(value)
+    if TYPE_CHECKING:
+        assert_never(value)
 
 
 class _ViewInstrumentMatch:
