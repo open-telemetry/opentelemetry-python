@@ -94,7 +94,10 @@ class TestExtendedAttributes(unittest.TestCase):
         self.assertEqual(_clean_extended_attribute(key, value, None), expected)
 
     def assertInvalid(self, value, key="k"):
-        self.assertIsNone(_clean_extended_attribute(key, value, None))
+        from opentelemetry.attributes import _INVALID_ATTRIBUTE
+
+        result = _clean_extended_attribute(key, value, None)
+        self.assertIn(result, (None, _INVALID_ATTRIBUTE))
 
     def test_attribute_key_validation(self):
         # only non-empty strings are valid keys
@@ -365,3 +368,23 @@ class TestBoundedAttributes(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             bdict_copy["invalid"] = "invalid"
+
+    def test_extended_attributes_none_value_stored(self):
+        """Regression test: BoundedAttributes with extended_attributes=True must
+        store a None value when explicitly set, rather than silently dropping it.
+
+        Previously, _clean_extended_attribute returned ``None`` for both valid
+        None values and invalid keys, so the None-check in __setitem__ would
+        skip storing a legitimate ``None`` attribute.  After the fix, invalid
+        cases return the ``_INVALID_ATTRIBUTE`` sentinel, so a real ``None``
+        value passes through correctly.
+        """
+        bdict = BoundedAttributes(extended_attributes=True, immutable=False)
+        bdict["nullkey"] = None
+        self.assertIn("nullkey", bdict)
+        self.assertIsNone(bdict["nullkey"])
+
+        # Invalid key must NOT be stored
+        bdict[""] = "should-not-be-stored"
+        self.assertNotIn("", bdict)
+

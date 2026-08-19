@@ -34,6 +34,12 @@ def _type_name(t):
 
 _logger = logging.getLogger(__name__)
 
+# Sentinel object returned by _clean_extended_attribute to signal that the
+# key/value was invalid and must not be stored in the attributes dict.
+# A plain ``None`` cannot serve this purpose because ``None`` is a valid
+# AnyValue and must be stored when explicitly set by the caller.
+_INVALID_ATTRIBUTE = object()
+
 
 # pylint: disable=too-many-return-statements
 # pylint: disable=too-many-branches
@@ -198,10 +204,15 @@ def _clean_extended_attribute_value(  # pylint: disable=too-many-branches
         )
 
 
-def _clean_extended_attribute(key: str, value: types.AnyValue, max_len: int | None) -> types.AnyValue:
+def _clean_extended_attribute(key: str, value: types.AnyValue, max_len: int | None) -> object:
     """Checks if attribute value is valid and cleans it if required.
 
-    The function returns the cleaned value or None if the value is not valid.
+    Returns the cleaned value, or the ``_INVALID_ATTRIBUTE`` sentinel when the
+    key or value is invalid.  The caller must check for ``_INVALID_ATTRIBUTE``
+    and skip storing that entry.
+
+    Using a sentinel (rather than ``None``) is necessary because ``None`` is a
+    perfectly valid ``AnyValue`` and must be stored when explicitly set.
 
     An attribute value is valid if it is an AnyValue.
     An attribute needs cleansing if:
@@ -210,13 +221,15 @@ def _clean_extended_attribute(key: str, value: types.AnyValue, max_len: int | No
 
     if not (key and isinstance(key, str)):
         _logger.warning("invalid key `%s`. must be non-empty string.", key)
-        return None
+        return _INVALID_ATTRIBUTE
 
     try:
-        return _clean_extended_attribute_value(value, max_len=max_len)
+        result = _clean_extended_attribute_value(value, max_len=max_len)
     except TypeError as exception:
         _logger.warning("Attribute %s: %s", key, exception)
-        return None
+        return _INVALID_ATTRIBUTE
+
+    return result
 
 
 class BoundedAttributes(MutableMapping):  # type: ignore
@@ -265,6 +278,8 @@ class BoundedAttributes(MutableMapping):  # type: ignore
             return
         if self._extended_attributes:
             value = _clean_extended_attribute(key, value, self.max_value_len)
+            if value is _INVALID_ATTRIBUTE:
+                return
         else:
             value = _clean_attribute(key, value, self.max_value_len)  # type: ignore
             if value is None:
@@ -283,6 +298,8 @@ class BoundedAttributes(MutableMapping):  # type: ignore
         for key, value in attributes.items():
             if self._extended_attributes:
                 cv = _clean_extended_attribute(key, value, self.max_value_len)
+                if cv is _INVALID_ATTRIBUTE:
+                    continue
             else:
                 cv = _clean_attribute(key, value, self.max_value_len)  # type: ignore
                 if cv is None:
