@@ -151,6 +151,7 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
         self.dropped = 0
         self.max_value_len = max_value_len
         self._lock = threading.Lock()
+        # setting False before adding items
         self._immutable = False
         if attributes:
             self._set_items(attributes)
