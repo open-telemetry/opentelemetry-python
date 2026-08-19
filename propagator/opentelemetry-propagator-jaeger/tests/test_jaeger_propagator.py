@@ -47,6 +47,8 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
 
 
 class TestJaegerPropagator(TestCase):
+    # pylint: disable=too-many-public-methods
+
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()
@@ -137,8 +139,8 @@ class TestJaegerPropagator(TestCase):
 
     def test_extract_enforces_max_baggage_entries(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
-        for i in range(200):
-            old_carrier[f"uberctx-k{i}"] = f"v{i}"
+        for index in range(200):
+            old_carrier[f"uberctx-k{index}"] = f"v{index}"
         extracted = FORMAT.extract(old_carrier)[_BAGGAGE_KEY]
         self.assertEqual(FORMAT.MAX_BAGGAGE_ENTRIES, len(extracted))
         self.assertIn("k0", extracted)
@@ -166,8 +168,8 @@ class TestJaegerPropagator(TestCase):
 
     def test_extract_enforces_max_baggage_total_bytes(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
-        for i in range(100):
-            old_carrier[f"uberctx-k{i}"] = "y" * 200
+        for index in range(100):
+            old_carrier[f"uberctx-k{index}"] = "y" * 200
         extracted = FORMAT.extract(old_carrier)[_BAGGAGE_KEY]
         self.assertLess(len(extracted), 100)
         self.assertIn("k0", extracted)
