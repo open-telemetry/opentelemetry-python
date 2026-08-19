@@ -1337,7 +1337,7 @@ class TracerProvider(trace_api.TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
-        attributes: types.Attributes | None = None,
+        attributes: types.Attributes = None,
     ) -> "trace_api.Tracer":
         if self._disabled:
             return NoOpTracer()
