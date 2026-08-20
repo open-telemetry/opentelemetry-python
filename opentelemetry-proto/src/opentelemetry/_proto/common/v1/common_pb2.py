@@ -20,7 +20,10 @@ from opentelemetry._proto._pyprotobuf import encode_int, encode_tag, encode_vari
 from opentelemetry._proto._pyprotobuf.fields import msg, string, u64, WT_LEN, WT_VARINT, WT_64BIT
 
 
-class AnyValue:
+from opentelemetry._proto._pyprotobuf.message import Message
+
+
+class AnyValue(Message):
     """Oneof value container — exactly one field is set."""
 
     def __init__(
@@ -82,7 +85,7 @@ class AnyValue:
         return b""
 
 
-class ArrayValue:
+class ArrayValue(Message):
     def __init__(self, values: list[AnyValue] | None = None):
         self.values: list[AnyValue] = list(values) if values else []
 
@@ -90,7 +93,7 @@ class ArrayValue:
         return b"".join(msg(1, v.SerializeToString()) for v in self.values)
 
 
-class KeyValueList:
+class KeyValueList(Message):
     def __init__(self, values: "list[KeyValue] | None" = None):
         self.values: list[KeyValue] = list(values) if values else []
 
@@ -98,7 +101,7 @@ class KeyValueList:
         return b"".join(msg(1, kv.SerializeToString()) for kv in self.values)
 
 
-class KeyValue:
+class KeyValue(Message):
     def __init__(self, key: str = "", value: AnyValue | None = None):
         self.key = key
         self.value = value
@@ -110,7 +113,7 @@ class KeyValue:
         return result
 
 
-class InstrumentationScope:
+class InstrumentationScope(Message):
     def __init__(
         self,
         name: str = "",

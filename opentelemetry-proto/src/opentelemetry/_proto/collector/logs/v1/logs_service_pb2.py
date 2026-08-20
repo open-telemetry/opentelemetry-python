@@ -11,7 +11,10 @@ from opentelemetry._proto.logs.v1.logs_pb2 import ResourceLogs
 from opentelemetry._proto._pyprotobuf.fields import msg
 
 
-class ExportLogsServiceRequest:
+from opentelemetry._proto._pyprotobuf.message import Message
+
+
+class ExportLogsServiceRequest(Message):
     def __init__(self, resource_logs: list[ResourceLogs] | None = None):
         self.resource_logs: list[ResourceLogs] = (
             list(resource_logs) if resource_logs else []
@@ -23,7 +26,7 @@ class ExportLogsServiceRequest:
         )
 
 
-class ExportLogsServiceResponse:
+class ExportLogsServiceResponse(Message):
     @classmethod
     def FromString(cls, data: bytes) -> 'ExportLogsServiceResponse':
         return cls()

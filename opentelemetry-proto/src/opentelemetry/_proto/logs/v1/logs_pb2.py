@@ -27,7 +27,10 @@ from opentelemetry._proto._pyprotobuf.fields import (
 )
 
 
-class LogRecord:
+from opentelemetry._proto._pyprotobuf.message import Message
+
+
+class LogRecord(Message):
     def __init__(
         self,
         time_unix_nano: int = 0,
@@ -74,7 +77,7 @@ class LogRecord:
         return result
 
 
-class ScopeLogs:
+class ScopeLogs(Message):
     def __init__(
         self,
         scope: InstrumentationScope | None = None,
@@ -94,7 +97,7 @@ class ScopeLogs:
         return result
 
 
-class ResourceLogs:
+class ResourceLogs(Message):
     def __init__(
         self,
         resource: Resource | None = None,

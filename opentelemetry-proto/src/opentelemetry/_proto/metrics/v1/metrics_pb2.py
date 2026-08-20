@@ -79,7 +79,43 @@ def _as_int(field: int, value: int) -> bytes:
     return encode_tag(field, WT_64BIT) + pack("<q", int(value))
 
 
-class Exemplar:
+from opentelemetry._proto._pyprotobuf.message import Message
+
+
+class _ValueOneof:
+    """Mixin for messages with a ``value`` oneof of ``as_double``/``as_int``.
+
+    Protobuf lets callers assign the oneof members as plain attributes
+    (``point.as_int = 5``); doing so selects that member and clears the other.
+    These properties reproduce that so the unchanged OTLP encoders keep working.
+    """
+
+    @property
+    def as_double(self) -> float | None:
+        return self._as_double
+
+    @as_double.setter
+    def as_double(self, value: float | None) -> None:
+        self._as_double = value
+        self._as_int = None
+        self._which = "as_double" if value is not None else None
+
+    @property
+    def as_int(self) -> int | None:
+        return self._as_int
+
+    @as_int.setter
+    def as_int(self, value: int | None) -> None:
+        if value is not None and not -(2**63) <= value < 2**63:
+            # protobuf raises ValueError when a value does not fit the signed
+            # 64-bit field; reproduce that so callers see the same failure.
+            raise ValueError(f"Value out of range for sfixed64: {value}")
+        self._as_int = value
+        self._as_double = None
+        self._which = "as_int" if value is not None else None
+
+
+class Exemplar(_ValueOneof, Message):
     def __init__(
         self,
         filtered_attributes: list[KeyValue] | None = None,
@@ -120,7 +156,7 @@ class Exemplar:
         return result
 
 
-class NumberDataPoint:
+class NumberDataPoint(_ValueOneof, Message):
     def __init__(
         self,
         attributes: list[KeyValue] | None = None,
@@ -160,7 +196,7 @@ class NumberDataPoint:
         return result
 
 
-class HistogramDataPoint:
+class HistogramDataPoint(Message):
     def __init__(
         self,
         attributes: list[KeyValue] | None = None,
@@ -205,8 +241,8 @@ class HistogramDataPoint:
         )
 
 
-class ExponentialHistogramDataPoint:
-    class Buckets:
+class ExponentialHistogramDataPoint(Message):
+    class Buckets(Message):
         def __init__(
             self,
             offset: int = 0,
@@ -279,8 +315,8 @@ class ExponentialHistogramDataPoint:
         return result
 
 
-class SummaryDataPoint:
-    class ValueAtQuantile:
+class SummaryDataPoint(Message):
+    class ValueAtQuantile(Message):
         def __init__(self, quantile: float = 0.0, value: float = 0.0):
             self.quantile = quantile
             self.value = value
@@ -320,7 +356,7 @@ class SummaryDataPoint:
         )
 
 
-class Gauge:
+class Gauge(Message):
     def __init__(self, data_points: list[NumberDataPoint] | None = None):
         self.data_points: list[NumberDataPoint] = (
             list(data_points) if data_points else []
@@ -330,7 +366,7 @@ class Gauge:
         return b"".join(msg(1, dp.SerializeToString()) for dp in self.data_points)
 
 
-class Sum:
+class Sum(Message):
     def __init__(
         self,
         data_points: list[NumberDataPoint] | None = None,
@@ -353,7 +389,7 @@ class Sum:
         )
 
 
-class Histogram:
+class Histogram(Message):
     def __init__(
         self,
         data_points: list[HistogramDataPoint] | None = None,
@@ -373,7 +409,7 @@ class Histogram:
         )
 
 
-class ExponentialHistogram:
+class ExponentialHistogram(Message):
     def __init__(
         self,
         data_points: list[ExponentialHistogramDataPoint] | None = None,
@@ -393,7 +429,7 @@ class ExponentialHistogram:
         )
 
 
-class Summary:
+class Summary(Message):
     def __init__(self, data_points: list[SummaryDataPoint] | None = None):
         self.data_points: list[SummaryDataPoint] = (
             list(data_points) if data_points else []
@@ -403,7 +439,40 @@ class Summary:
         return b"".join(msg(1, dp.SerializeToString()) for dp in self.data_points)
 
 
-class Metric:
+_METRIC_DATA_FIELDS = (
+    "gauge",
+    "sum",
+    "histogram",
+    "exponential_histogram",
+    "summary",
+)
+
+
+def _oneof_message_property(name: str, message_type: type):
+    """Build a property for one member of Metric's ``data`` oneof.
+
+    Reading an unset member auto-creates it, reproducing protobuf's mutable
+    message behaviour so ``metric.sum.aggregation_temporality = x`` works on a
+    freshly built Metric. Assigning a member selects it and clears the others.
+    """
+
+    def getter(self):
+        if getattr(self, f"_{name}") is None:
+            self._select_data(name, message_type())
+        return getattr(self, f"_{name}")
+
+    def setter(self, value):
+        if value is None:
+            setattr(self, f"_{name}", None)
+            if self._which_data == name:
+                self._which_data = None
+        else:
+            self._select_data(name, value)
+
+    return property(getter, setter)
+
+
+class Metric(Message):
     def __init__(
         self,
         name: str = "",
@@ -418,25 +487,34 @@ class Metric:
         self.name = name
         self.description = description
         self.unit = unit
-        self.gauge = gauge
-        self.sum = sum
-        self.histogram = histogram
-        self.exponential_histogram = exponential_histogram
-        self.summary = summary
+        self._gauge = None
+        self._sum = None
+        self._histogram = None
+        self._exponential_histogram = None
+        self._summary = None
+        self._which_data = None
+        for field_name, value in (
+            ("gauge", gauge),
+            ("sum", sum),
+            ("histogram", histogram),
+            ("exponential_histogram", exponential_histogram),
+            ("summary", summary),
+        ):
+            if value is not None:
+                self._select_data(field_name, value)
 
-        # Resolve oneof data field name
-        if gauge is not None:
-            self._which_data = "gauge"
-        elif sum is not None:
-            self._which_data = "sum"
-        elif histogram is not None:
-            self._which_data = "histogram"
-        elif exponential_histogram is not None:
-            self._which_data = "exponential_histogram"
-        elif summary is not None:
-            self._which_data = "summary"
-        else:
-            self._which_data = None
+    def _select_data(self, name: str, value) -> None:
+        for field_name in _METRIC_DATA_FIELDS:
+            setattr(self, f"_{field_name}", value if field_name == name else None)
+        self._which_data = name
+
+    gauge = _oneof_message_property("gauge", Gauge)
+    sum = _oneof_message_property("sum", Sum)
+    histogram = _oneof_message_property("histogram", Histogram)
+    exponential_histogram = _oneof_message_property(
+        "exponential_histogram", ExponentialHistogram
+    )
+    summary = _oneof_message_property("summary", Summary)
 
     def WhichOneof(self, oneof_name: str) -> str | None:
         if oneof_name == "data":
@@ -445,20 +523,20 @@ class Metric:
 
     def SerializeToString(self) -> bytes:
         result = string(1, self.name) + string(2, self.description) + string(3, self.unit)
-        if self.gauge is not None:
-            result += msg(5, self.gauge.SerializeToString())
-        elif self.sum is not None:
-            result += msg(7, self.sum.SerializeToString())
-        elif self.histogram is not None:
-            result += msg(9, self.histogram.SerializeToString())
-        elif self.exponential_histogram is not None:
-            result += msg(10, self.exponential_histogram.SerializeToString())
-        elif self.summary is not None:
-            result += msg(11, self.summary.SerializeToString())
+        if self._gauge is not None:
+            result += msg(5, self._gauge.SerializeToString())
+        elif self._sum is not None:
+            result += msg(7, self._sum.SerializeToString())
+        elif self._histogram is not None:
+            result += msg(9, self._histogram.SerializeToString())
+        elif self._exponential_histogram is not None:
+            result += msg(10, self._exponential_histogram.SerializeToString())
+        elif self._summary is not None:
+            result += msg(11, self._summary.SerializeToString())
         return result
 
 
-class ScopeMetrics:
+class ScopeMetrics(Message):
     def __init__(
         self,
         scope: InstrumentationScope | None = None,
@@ -478,7 +556,7 @@ class ScopeMetrics:
         return result
 
 
-class ResourceMetrics:
+class ResourceMetrics(Message):
     def __init__(
         self,
         resource: Resource | None = None,
