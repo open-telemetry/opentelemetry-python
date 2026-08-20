@@ -406,9 +406,7 @@ class AlwaysRecordSampler(Sampler):
             trace_state,
         )
         if result.decision is Decision.DROP:
-            result = SamplingResult(
-                Decision.RECORD_ONLY, result.attributes, result.trace_state
-            )
+            result = SamplingResult(Decision.RECORD_ONLY, result.attributes, result.trace_state)
 
         return result
 

@@ -486,17 +486,11 @@ class TestSampler(unittest.TestCase):
 class TestAlwaysRecordSampler(unittest.TestCase):
     def setUp(self):
         self.mock_sampler: sampling.Sampler = unittest.mock.MagicMock()
-        self.sampler: sampling.Sampler = sampling.AlwaysRecordSampler(
-            self.mock_sampler
-        )
+        self.sampler: sampling.Sampler = sampling.AlwaysRecordSampler(self.mock_sampler)
 
     def test_get_description(self):
-        static_sampler: sampling.Sampler = sampling.StaticSampler(
-            sampling.Decision.DROP
-        )
-        test_sampler: sampling.Sampler = sampling.AlwaysRecordSampler(
-            static_sampler
-        )
+        static_sampler: sampling.Sampler = sampling.StaticSampler(sampling.Decision.DROP)
+        test_sampler: sampling.Sampler = sampling.AlwaysRecordSampler(static_sampler)
         self.assertEqual(
             "AlwaysRecordSampler{AlwaysOffSampler}",
             test_sampler.get_description(),
@@ -509,14 +503,10 @@ class TestAlwaysRecordSampler(unittest.TestCase):
         )
 
     def test_record_only_sampling_decision(self):
-        self.validate_should_sample(
-            sampling.Decision.RECORD_ONLY, sampling.Decision.RECORD_ONLY
-        )
+        self.validate_should_sample(sampling.Decision.RECORD_ONLY, sampling.Decision.RECORD_ONLY)
 
     def test_drop_sampling_decision(self):
-        self.validate_should_sample(
-            sampling.Decision.DROP, sampling.Decision.RECORD_ONLY
-        )
+        self.validate_should_sample(sampling.Decision.DROP, sampling.Decision.RECORD_ONLY)
 
     def validate_should_sample(
         self,
