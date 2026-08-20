@@ -78,7 +78,7 @@ from opentelemetry.sdk.version import (
     __version__ as _OPENTELEMETRY_SDK_VERSION,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util.types import AttributeValue
+from opentelemetry.util.types import AnyValue
 
 psutil: ModuleType | None = None
 
@@ -89,7 +89,7 @@ try:
 except ImportError:
     pass
 
-LabelValue = AttributeValue
+LabelValue = AnyValue
 Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -310,7 +310,7 @@ class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
-        env_resource_map: dict[str, AttributeValue] = {}
+        env_resource_map: dict[str, AnyValue] = {}
 
         if env_resources_items:
             for item in env_resources_items.split(","):
@@ -374,7 +374,7 @@ class ProcessResourceDetector(ResourceDetector):
         # default because full command arguments are opt-in.
         _process_command = sys.orig_argv[0] if sys.orig_argv else ""
         executable = sys.executable or ""
-        resource_info: dict[str, AttributeValue] = {
+        resource_info: dict[str, AnyValue] = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
             PROCESS_RUNTIME_VERSION: _runtime_version,

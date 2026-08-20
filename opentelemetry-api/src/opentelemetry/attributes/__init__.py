@@ -26,31 +26,31 @@ def _is_non_custom_str(key: Any) -> bool:
 
 @overload
 def _clean_attribute_value(
-    value: Mapping[str, types.AttributeValue],
+    value: Mapping[str, types.AnyValue],
     max_string_value_length: int | None,
-) -> Mapping[str, types.AttributeValue]: ...
+) -> Mapping[str, types.AnyValue]: ...
 
 
 @overload
 def _clean_attribute_value(
-    value: types.AttributeValue,
+    value: types.AnyValue,
     max_string_value_length: int | None,
-) -> types.AttributeValue: ...
+) -> types.AnyValue: ...
 
 
 def _clean_attribute_value(
-    value: types.AttributeValue,
+    value: types.AnyValue,
     max_string_value_length: int | None,
-) -> types.AttributeValue:
+) -> types.AnyValue:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
     String values are truncated to max_string_value_length if provided.
-    Anything that isn't of `types.AttributeValue`, we attempt to cast to `str`.
+    Anything that isn't of `types.AnyValue`, we attempt to cast to `str`.
     If this fails, the value is replaced with None. Sequence's are converted to tuples and mappings
     are copied into new dicts.
 
     Returns:
-        The recursively cleaned AttributeValue.
+        The recursively cleaned AnyValue.
     """
     if isinstance(value, (NoneType, bool, int, float, bytes)):
         return value
@@ -65,7 +65,7 @@ def _clean_attribute_value(
     if isinstance(value, Sequence):
         return tuple(_clean_attribute_value(v, max_string_value_length) for v in value)
     if isinstance(value, Mapping):
-        cleaned_mapping: dict[str, types.AttributeValue] = {}
+        cleaned_mapping: dict[str, types.AnyValue] = {}
         for key, val in value.items():
             if not key:
                 _logger.warning(
@@ -98,7 +98,7 @@ def _clean_attribute_value(
     return None
 
 
-class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
+class BoundedAttributes(MutableMapping[str, types.AnyValue]):
     """A dict with a fixed max capacity which cleans and potentially drops values to ensure they are valid attribute values.
 
     Args:
@@ -146,7 +146,7 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
     ) -> None:
         if maxlen is not None and maxlen < 0:
             raise ValueError("maxlen must be valid int greater or equal to 0")
-        self._dict: dict[str, types.AttributeValue] = {}
+        self._dict: dict[str, types.AnyValue] = {}
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
@@ -160,14 +160,14 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
     def __repr__(self) -> str:
         return f"{dict(self._dict)}"
 
-    def __getitem__(self, key: str) -> types.AttributeValue:
+    def __getitem__(self, key: str) -> types.AnyValue:
         return self._dict[key]
 
     def _raise_if_immutable(self) -> None:
         if self._immutable:
             raise TypeError("Cannot mutate immutable BoundedAttributes")
 
-    def __setitem__(self, key: str, value: types.AttributeValue) -> None:
+    def __setitem__(self, key: str, value: types.AnyValue) -> None:
         self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
@@ -185,19 +185,19 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
         with self._lock:
             self._setitem_locked(key, cleaned)
 
-    def _set_items(self, attributes: Mapping[str, types.AttributeValue]) -> None:
+    def _set_items(self, attributes: Mapping[str, types.AnyValue]) -> None:
         self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
                 self.dropped += len(attributes)
             return
-        cleaned_attributes: Mapping[str, types.AttributeValue] = _clean_attribute_value(attributes, self.max_value_len)
+        cleaned_attributes: Mapping[str, types.AnyValue] = _clean_attribute_value(attributes, self.max_value_len)
         with self._lock:
             self.dropped += len(attributes) - len(cleaned_attributes)
             for key, value in cleaned_attributes.items():
                 self._setitem_locked(key, value)
 
-    def _setitem_locked(self, key: str, value: types.AttributeValue) -> None:
+    def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
         if key in self._dict:
             del self._dict[key]
         if self.maxlen is not None and len(self._dict) >= self.maxlen:
@@ -237,5 +237,5 @@ class BoundedAttributes(MutableMapping[str, types.AttributeValue]):
             copy_.dropped = self.dropped
         return copy_
 
-    def copy(self) -> MutableMapping[str, types.AttributeValue]:
+    def copy(self) -> MutableMapping[str, types.AnyValue]:
         return self._dict.copy()

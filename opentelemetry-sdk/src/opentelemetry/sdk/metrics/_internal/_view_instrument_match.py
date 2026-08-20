@@ -21,7 +21,7 @@ from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
-from opentelemetry.util.types import Attributes, AttributeValue
+from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
 
@@ -29,7 +29,7 @@ _HashedAttributes = str | bool | int | float | bytes | None | tuple["_HashedAttr
 
 
 # pylint: disable=inconsistent-return-statements
-def _hash_attributes(value: Attributes | AttributeValue) -> _HashedAttributes:
+def _hash_attributes(value: Attributes | AnyValue) -> _HashedAttributes:
     # Attributes have been cleaned and validated when Measurement was instantiated,
     # so value is guaranteed to match one of the branches below at runtime.
     if isinstance(value, (NoneType, str, int, float, bool, bytes)):

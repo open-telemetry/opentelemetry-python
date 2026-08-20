@@ -857,7 +857,7 @@ class Span(trace_api.Span, ReadableSpan):
     def get_span_context(self) -> trace_api.SpanContext:
         return typing.cast(trace_api.SpanContext, self._context)
 
-    def set_attributes(self, attributes: Mapping[str, types.AttributeValue]) -> None:
+    def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         with self._lock:
             if self._end_time is not None:
                 logger.warning("Setting attribute on ended span.")
@@ -865,7 +865,7 @@ class Span(trace_api.Span, ReadableSpan):
 
             self._attributes._set_items(attributes)  # pylint: disable=protected-access
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AnyValue) -> None:
         with self._lock:
             if self._end_time is not None:
                 logger.warning("Setting attribute on ended span.")
@@ -1035,7 +1035,7 @@ class Span(trace_api.Span, ReadableSpan):
         module = type(exception).__module__
         qualname = type(exception).__qualname__
         exception_type = f"{module}.{qualname}" if module and module != "builtins" else qualname
-        _attributes: MutableMapping[str, types.AttributeValue] = {
+        _attributes: MutableMapping[str, types.AnyValue] = {
             EXCEPTION_TYPE: exception_type,
             EXCEPTION_MESSAGE: str(exception),
             EXCEPTION_STACKTRACE: stacktrace,

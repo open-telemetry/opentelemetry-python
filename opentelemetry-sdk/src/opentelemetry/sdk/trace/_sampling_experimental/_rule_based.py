@@ -15,7 +15,7 @@ from opentelemetry.trace import (
     TraceState,
     get_current_span,
 )
-from opentelemetry.util.types import Attributes, AttributeValue
+from opentelemetry.util.types import AnyValue, Attributes
 
 from ._composable import ComposableSampler, SamplingIntent
 from ._util import INVALID_THRESHOLD
@@ -38,7 +38,7 @@ class PredicateT(Protocol):
 class AttributePredicate:
     """An exact match of an attribute value"""
 
-    def __init__(self, key: str, value: AttributeValue):
+    def __init__(self, key: str, value: AnyValue):
         logging.warning("This is deprecated, use AttributeValuesPredicate instead")
         self.key = key
         self.value = value

@@ -79,7 +79,7 @@ from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.util.types import Attributes, AttributeValue
+from opentelemetry.util.types import AnyValue, Attributes
 
 # pylint: disable=too-many-lines
 
@@ -723,7 +723,7 @@ class Logger(APILogger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
-        body: AttributeValue | None = None,
+        body: AnyValue | None = None,
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
