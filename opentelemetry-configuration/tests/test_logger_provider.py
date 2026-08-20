@@ -520,7 +520,7 @@ class TestLoggerConfigurator(unittest.TestCase):
         provider = create_logger_provider(config)
         self.assertTrue(self._enabled(provider, "any.scope"))
 
-    def test_unsupported_fields_log_warning(self):
+    def test_unsupported_minimum_severity_logs_warning(self):
         config = LoggerProviderConfig(
             processors=[],
             logger_configurator_development=LoggerConfiguratorConfig(
@@ -537,7 +537,27 @@ class TestLoggerConfigurator(unittest.TestCase):
             create_logger_provider(config)
         self.assertTrue(
             any("minimum_severity" in msg for msg in cm.output),
-            "Expected warning about unsupported minimum_severity/trace_based",
+            "Expected warning about unsupported minimum_severity",
+        )
+
+    def test_unsupported_trace_based_logs_warning(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            logger_configurator_development=LoggerConfiguratorConfig(
+                default_config=LoggerConfigConfig(
+                    enabled=True,
+                    trace_based=True,
+                ),
+            ),
+        )
+        with self.assertLogs(
+            "opentelemetry.configuration._logger_provider",
+            level="WARNING",
+        ) as cm:
+            create_logger_provider(config)
+        self.assertTrue(
+            any("trace_based" in msg for msg in cm.output),
+            "Expected warning about unsupported trace_based",
         )
 
 
