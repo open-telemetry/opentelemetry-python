@@ -10,7 +10,10 @@ from opentelemetry._proto.common.v1.common_pb2 import KeyValue
 from opentelemetry._proto._pyprotobuf.fields import msg, u64
 
 
-class Resource:
+from opentelemetry._proto._pyprotobuf.message import Message
+
+
+class Resource(Message):
     def __init__(
         self,
         attributes: list[KeyValue] | None = None,

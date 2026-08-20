@@ -31,7 +31,34 @@ from opentelemetry._proto._pyprotobuf.fields import (
 )
 
 
-class Status:
+from opentelemetry._proto._pyprotobuf.message import Message
+
+
+class SpanFlags:
+    """Top-level SpanFlags enum from opentelemetry/proto/trace/v1/trace.proto.
+
+    Mirrors the values of the protobuf-generated enum so downstream code that
+    reads the mask constants keeps working unchanged.
+    """
+
+    SPAN_FLAGS_DO_NOT_USE = 0
+    SPAN_FLAGS_TRACE_FLAGS_MASK = 0x000000FF
+    SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK = 0x00000100
+    SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK = 0x00000200
+
+
+class Status(Message):
+    class StatusCode:
+        STATUS_CODE_UNSET = 0
+        STATUS_CODE_OK = 1
+        STATUS_CODE_ERROR = 2
+
+    # protobuf also lifts nested enum values onto the containing message, so
+    # both Status.StatusCode.STATUS_CODE_OK and Status.STATUS_CODE_OK resolve.
+    STATUS_CODE_UNSET = 0
+    STATUS_CODE_OK = 1
+    STATUS_CODE_ERROR = 2
+
     def __init__(self, message: str = "", code: int = 0):
         self.message = message
         self.code = code
@@ -40,8 +67,24 @@ class Status:
         return string(2, self.message) + u64(3, self.code)
 
 
-class Span:
-    class Event:
+class Span(Message):
+    class SpanKind:
+        SPAN_KIND_UNSPECIFIED = 0
+        SPAN_KIND_INTERNAL = 1
+        SPAN_KIND_SERVER = 2
+        SPAN_KIND_CLIENT = 3
+        SPAN_KIND_PRODUCER = 4
+        SPAN_KIND_CONSUMER = 5
+
+    # protobuf lifts the nested enum values onto the message class too.
+    SPAN_KIND_UNSPECIFIED = 0
+    SPAN_KIND_INTERNAL = 1
+    SPAN_KIND_SERVER = 2
+    SPAN_KIND_CLIENT = 3
+    SPAN_KIND_PRODUCER = 4
+    SPAN_KIND_CONSUMER = 5
+
+    class Event(Message):
         def __init__(
             self,
             time_unix_nano: int = 0,
@@ -62,7 +105,7 @@ class Span:
                 + u64(4, self.dropped_attributes_count)
             )
 
-    class Link:
+    class Link(Message):
         def __init__(
             self,
             trace_id: bytes = b"",
@@ -123,6 +166,10 @@ class Span:
         self.dropped_events_count = dropped_events_count
         self.links: list[Span.Link] = list(links) if links else []
         self.dropped_links_count = dropped_links_count
+        # protobuf accepts a mapping for a message field; an empty dict means
+        # the field is present but default.
+        if isinstance(status, dict):
+            status = Status(**status)
         self.status = status
 
     def SerializeToString(self) -> bytes:
@@ -148,7 +195,7 @@ class Span:
         return result
 
 
-class ScopeSpans:
+class ScopeSpans(Message):
     def __init__(
         self,
         scope: InstrumentationScope | None = None,
@@ -168,7 +215,7 @@ class ScopeSpans:
         return result
 
 
-class ResourceSpans:
+class ResourceSpans(Message):
     def __init__(
         self,
         resource: Resource | None = None,
