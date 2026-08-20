@@ -590,8 +590,7 @@ def create_meter_provider(
 
     meter_configurator = (
         _create_meter_configurator(config.meter_configurator_development)
-        if config is not None
-        and config.meter_configurator_development is not None
+        if config is not None and config.meter_configurator_development is not None
         else None
     )
 

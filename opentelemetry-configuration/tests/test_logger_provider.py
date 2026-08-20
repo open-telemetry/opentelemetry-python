@@ -457,9 +457,7 @@ class TestLogRecordLimits(unittest.TestCase):
 class TestLoggerConfigurator(unittest.TestCase):
     @staticmethod
     def _enabled(provider, name):
-        return provider._apply_logger_configurator(
-            InstrumentationScope(name)
-        ).is_enabled
+        return provider._apply_logger_configurator(InstrumentationScope(name)).is_enabled
 
     def test_no_configurator_leaves_loggers_enabled(self):
         provider = create_logger_provider(LoggerProviderConfig(processors=[]))

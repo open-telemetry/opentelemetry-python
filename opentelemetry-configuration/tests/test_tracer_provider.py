@@ -858,9 +858,7 @@ class TestCreateIdGenerator(unittest.TestCase):
 class TestTracerConfigurator(unittest.TestCase):
     @staticmethod
     def _enabled(provider, name):
-        return provider._apply_tracer_configurator(
-            InstrumentationScope(name)
-        ).is_enabled
+        return provider._apply_tracer_configurator(InstrumentationScope(name)).is_enabled
 
     def test_no_configurator_leaves_tracers_enabled(self):
         provider = create_tracer_provider(TracerProviderConfig(processors=[]))
