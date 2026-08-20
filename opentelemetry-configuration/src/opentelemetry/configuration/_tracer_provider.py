@@ -466,8 +466,7 @@ def create_tracer_provider(
 
     tracer_configurator = (
         _create_tracer_configurator(config.tracer_configurator_development)
-        if config is not None
-        and config.tracer_configurator_development is not None
+        if config is not None and config.tracer_configurator_development is not None
         else None
     )
 

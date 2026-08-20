@@ -288,14 +288,11 @@ def create_logger_provider(
     """
     logger_configurator = (
         _create_logger_configurator(config.logger_configurator_development)
-        if config is not None
-        and config.logger_configurator_development is not None
+        if config is not None and config.logger_configurator_development is not None
         else None
     )
 
-    provider = LoggerProvider(
-        resource=resource, _logger_configurator=logger_configurator
-    )
+    provider = LoggerProvider(resource=resource, _logger_configurator=logger_configurator)
 
     if config is None:
         return provider

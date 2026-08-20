@@ -873,9 +873,7 @@ class TestCreateViews(unittest.TestCase):
 class TestMeterConfigurator(unittest.TestCase):
     @staticmethod
     def _enabled(provider, name):
-        return provider._apply_meter_configurator(
-            InstrumentationScope(name)
-        ).is_enabled
+        return provider._apply_meter_configurator(InstrumentationScope(name)).is_enabled
 
     def test_no_configurator_leaves_meters_enabled(self):
         provider = create_meter_provider(MeterProviderConfig(readers=[]))
