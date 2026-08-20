@@ -32,22 +32,18 @@ Example::
     def get_header_from_flask_request(request, key):
         return request.headers.get_all(key)
 
-    def set_header_into_requests_request(request: requests.Request,
-                                            key: str, value: str):
+
+    def set_header_into_requests_request(request: requests.Request, key: str, value: str):
         request.headers[key] = value
 
+
     def example_route():
-        context = PROPAGATOR.extract(
-            get_header_from_flask_request,
-            flask.request
-        )
-        request_to_downstream = requests.Request(
-            "GET", "http://httpbin.org/get"
-        )
+        context = PROPAGATOR.extract(get_header_from_flask_request, flask.request)
+        request_to_downstream = requests.Request("GET", "http://httpbin.org/get")
         PROPAGATOR.inject(
             set_header_into_requests_request,
             request_to_downstream,
-            context=context
+            context=context,
         )
         session = requests.Session()
         session.send(request_to_downstream.prepare())
@@ -121,9 +117,7 @@ def _load_propagators() -> textmap.TextMapPropagator:
             TraceContextTextMapPropagator,
         )
 
-        return composite.CompositePropagator(
-            [TraceContextTextMapPropagator(), W3CBaggagePropagator()]
-        )
+        return composite.CompositePropagator([TraceContextTextMapPropagator(), W3CBaggagePropagator()])
 
     # pylint: disable=import-outside-toplevel,no-name-in-module
     from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
@@ -134,9 +128,7 @@ def _load_propagators() -> textmap.TextMapPropagator:
     for _propagator in configured.split(","):
         _propagator = _propagator.strip()
         if _propagator.lower() == "none":
-            logger.debug(
-                "OTEL_PROPAGATORS environment variable contains none, removing all propagators"
-            )
+            logger.debug("OTEL_PROPAGATORS environment variable contains none, removing all propagators")
             return composite.CompositePropagator([])
         try:
             _propagators.append(
@@ -150,9 +142,7 @@ def _load_propagators() -> textmap.TextMapPropagator:
                 ).load()()
             )
         except StopIteration:
-            raise ValueError(
-                f"Propagator {_propagator} not found. It is either misspelled or not installed."
-            )
+            raise ValueError(f"Propagator {_propagator} not found. It is either misspelled or not installed.")
         except Exception:  # pylint: disable=broad-exception-caught
             logger.exception("Failed to load propagator: %s", _propagator)
             raise

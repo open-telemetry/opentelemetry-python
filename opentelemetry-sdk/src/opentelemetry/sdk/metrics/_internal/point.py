@@ -90,17 +90,12 @@ class ExponentialHistogram:
     """
 
     data_points: Sequence[ExponentialHistogramDataPoint]
-    aggregation_temporality: (
-        "opentelemetry.sdk.metrics.export.AggregationTemporality"
-    )
+    aggregation_temporality: "opentelemetry.sdk.metrics.export.AggregationTemporality"
 
     def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
-                "data_points": [
-                    loads(data_point.to_json(indent=indent))
-                    for data_point in self.data_points
-                ],
+                "data_points": [loads(data_point.to_json(indent=indent)) for data_point in self.data_points],
                 "aggregation_temporality": self.aggregation_temporality,
             },
             indent=indent,
@@ -113,18 +108,13 @@ class Sum:
     all reported measurements over a time interval."""
 
     data_points: Sequence[NumberDataPoint]
-    aggregation_temporality: (
-        "opentelemetry.sdk.metrics.export.AggregationTemporality"
-    )
+    aggregation_temporality: "opentelemetry.sdk.metrics.export.AggregationTemporality"
     is_monotonic: bool
 
     def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
-                "data_points": [
-                    loads(data_point.to_json(indent=indent))
-                    for data_point in self.data_points
-                ],
+                "data_points": [loads(data_point.to_json(indent=indent)) for data_point in self.data_points],
                 "aggregation_temporality": self.aggregation_temporality,
                 "is_monotonic": self.is_monotonic,
             },
@@ -143,10 +133,7 @@ class Gauge:
     def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
-                "data_points": [
-                    loads(data_point.to_json(indent=indent))
-                    for data_point in self.data_points
-                ],
+                "data_points": [loads(data_point.to_json(indent=indent)) for data_point in self.data_points],
             },
             indent=indent,
         )
@@ -158,17 +145,12 @@ class Histogram:
     histogram of all reported measurements over a time interval."""
 
     data_points: Sequence[HistogramDataPoint]
-    aggregation_temporality: (
-        "opentelemetry.sdk.metrics.export.AggregationTemporality"
-    )
+    aggregation_temporality: "opentelemetry.sdk.metrics.export.AggregationTemporality"
 
     def to_json(self, indent: int | None = 4) -> str:
         return dumps(
             {
-                "data_points": [
-                    loads(data_point.to_json(indent=indent))
-                    for data_point in self.data_points
-                ],
+                "data_points": [loads(data_point.to_json(indent=indent)) for data_point in self.data_points],
                 "aggregation_temporality": self.aggregation_temporality,
             },
             indent=indent,
@@ -177,9 +159,7 @@ class Histogram:
 
 # pylint: disable=invalid-name
 DataT = Sum | Gauge | Histogram | ExponentialHistogram
-DataPointT = (
-    NumberDataPoint | HistogramDataPoint | ExponentialHistogramDataPoint
-)
+DataPointT = NumberDataPoint | HistogramDataPoint | ExponentialHistogramDataPoint
 
 
 @dataclass(frozen=True)
@@ -216,10 +196,7 @@ class ScopeMetrics:
         return dumps(
             {
                 "scope": loads(self.scope.to_json(indent=indent)),
-                "metrics": [
-                    loads(metric.to_json(indent=indent))
-                    for metric in self.metrics
-                ],
+                "metrics": [loads(metric.to_json(indent=indent)) for metric in self.metrics],
                 "schema_url": self.schema_url,
             },
             indent=indent,
@@ -238,10 +215,7 @@ class ResourceMetrics:
         return dumps(
             {
                 "resource": loads(self.resource.to_json(indent=indent)),
-                "scope_metrics": [
-                    loads(scope_metrics.to_json(indent=indent))
-                    for scope_metrics in self.scope_metrics
-                ],
+                "scope_metrics": [loads(scope_metrics.to_json(indent=indent)) for scope_metrics in self.scope_metrics],
                 "schema_url": self.schema_url,
             },
             indent=indent,
@@ -258,8 +232,7 @@ class MetricsData:
         return dumps(
             {
                 "resource_metrics": [
-                    loads(resource_metrics.to_json(indent=indent))
-                    for resource_metrics in self.resource_metrics
+                    loads(resource_metrics.to_json(indent=indent)) for resource_metrics in self.resource_metrics
                 ]
             },
             indent=indent,

@@ -118,13 +118,9 @@ class TestW3CBaggagePropagator(TestCase):
             )
 
     def test_header_contains_too_many_entries(self):
-        header = ",".join(
-            [f"key{k}=val" for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)]
-        )
+        header = ",".join([f"key{k}=val" for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)])
         with self.assertLogs(level=WARNING):
-            self.assertEqual(
-                len(self._extract(header)), W3CBaggagePropagator._MAX_PAIRS
-            )
+            self.assertEqual(len(self._extract(header)), W3CBaggagePropagator._MAX_PAIRS)
 
     def test_header_contains_pair_too_long(self):
         long_value = "s" * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)
@@ -138,9 +134,7 @@ class TestW3CBaggagePropagator(TestCase):
             )
 
     def test_extract_unquote_plus(self):
-        self.assertEqual(
-            self._extract("keykey=value%5Evalue"), {"keykey": "value^value"}
-        )
+        self.assertEqual(self._extract("keykey=value%5Evalue"), {"keykey": "value^value"})
         self.assertEqual(
             self._extract("key%23key=value%23value"),
             {"key#key": "value#value"},
@@ -156,29 +150,16 @@ class TestW3CBaggagePropagator(TestCase):
                             (
                                 f"key{index}=value{index}"
                                 if index != 2
-                                else (
-                                    f"key{index}="
-                                    f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
-                                )
+                                else (f"key{index}=value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}")
                             )
-                            for index in range(
-                                W3CBaggagePropagator._MAX_PAIRS + 1
-                            )
+                            for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
                         ]
                     )
                 ),
-                {
-                    f"key{index}": f"value{index}"
-                    for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
-                    if index != 2
-                },
+                {f"key{index}": f"value{index}" for index in range(W3CBaggagePropagator._MAX_PAIRS + 1) if index != 2},
             )
             self.assertTrue(
-                any(
-                    "exceeded the maximum number of bytes per list-member"
-                    in msg
-                    for msg in warning.output
-                )
+                any("exceeded the maximum number of bytes per list-member" in msg for msg in warning.output)
             )
 
         # 181 entries where index 2 is malformed (no '='): _apply_baggage_limits
@@ -189,34 +170,15 @@ class TestW3CBaggagePropagator(TestCase):
                 self._extract(
                     ",".join(
                         [
-                            (
-                                f"key{index}=value{index}"
-                                if index != 2
-                                else f"key{index}xvalue{index}"
-                            )
-                            for index in range(
-                                W3CBaggagePropagator._MAX_PAIRS + 1
-                            )
+                            (f"key{index}=value{index}" if index != 2 else f"key{index}xvalue{index}")
+                            for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
                         ]
                     )
                 ),
-                {
-                    f"key{index}": f"value{index}"
-                    for index in range(W3CBaggagePropagator._MAX_PAIRS)
-                    if index != 2
-                },
+                {f"key{index}": f"value{index}" for index in range(W3CBaggagePropagator._MAX_PAIRS) if index != 2},
             )
-            self.assertTrue(
-                any(
-                    "exceeded the maximum number of list-members" in msg
-                    for msg in warning.output
-                )
-            )
-            self.assertTrue(
-                any(
-                    "doesn't match the format" in msg for msg in warning.output
-                )
-            )
+            self.assertTrue(any("exceeded the maximum number of list-members" in msg for msg in warning.output))
+            self.assertTrue(any("doesn't match the format" in msg for msg in warning.output))
 
     def test_inject_no_baggage_entries(self):
         values = {}
@@ -270,14 +232,9 @@ class TestW3CBaggagePropagator(TestCase):
 
     def test_encode_baggage_pairs(self):
         def _format_baggage(entries):
-            return ",".join(
-                quote_plus(str(k)) + "=" + quote_plus(str(v))
-                for k, v in entries.items()
-            )
+            return ",".join(quote_plus(str(k)) + "=" + quote_plus(str(v)) for k, v in entries.items())
 
-        self.assertEqual(
-            _format_baggage({"key key": "value value"}), "key+key=value+value"
-        )
+        self.assertEqual(_format_baggage({"key key": "value value"}), "key+key=value+value")
         self.assertEqual(
             _format_baggage({"key/key": "value/value"}),
             "key%2Fkey=value%2Fvalue",
@@ -285,10 +242,7 @@ class TestW3CBaggagePropagator(TestCase):
 
     def test_inject_too_many_entries(self):
         """Inject should drop entries exceeding _MAX_PAIRS."""
-        values = {
-            f"key{i}": f"val{i}"
-            for i in range(self.propagator._MAX_PAIRS + 10)
-        }
+        values = {f"key{i}": f"val{i}" for i in range(self.propagator._MAX_PAIRS + 10)}
         ctx = get_current()
         for key, val in values.items():
             ctx = set_baggage(key, val, context=ctx)
@@ -343,9 +297,7 @@ class TestW3CBaggagePropagator(TestCase):
                 warning.output[0],
             )
         baggage_str = output.get("baggage", "")
-        self.assertLessEqual(
-            len(baggage_str), self.propagator._MAX_HEADER_LENGTH
-        )
+        self.assertLessEqual(len(baggage_str), self.propagator._MAX_HEADER_LENGTH)
 
     def test_inject_empty_after_all_dropped(self):
         """If all entries are too long, nothing should be injected."""
@@ -362,18 +314,12 @@ class TestW3CBaggagePropagator(TestCase):
     def test_inject_extract(self):
         carrier = {}
 
-        context = set_baggage(
-            "transaction", "string with spaces", context=get_current()
-        )
+        context = set_baggage("transaction", "string with spaces", context=get_current())
 
         self.propagator.inject(carrier, context)
 
         context = self.propagator.extract(carrier)
 
-        self.assertEqual(
-            carrier, {"baggage": "transaction=string+with+spaces"}
-        )
+        self.assertEqual(carrier, {"baggage": "transaction=string+with+spaces"})
 
-        self.assertEqual(
-            context, {"abc": {"transaction": "string with spaces"}}
-        )
+        self.assertEqual(context, {"abc": {"transaction": "string with spaces"}})

@@ -1,15 +1,16 @@
 services:
   otopencensus:
-    image: rafaeljesus/opencensus-collector:latest
+    image: rafaeljesus/opencensus-collector:latest@sha256:1bfcd226bb2eaf0702e09888507abfe345537f9f859cfba4143c0093f20bf68a
     command: --logging-exporter DEBUG
     ports:
         - "8888:8888"
         - "55678:55678"
   otcollector:
-    image: otel/opentelemetry-collector:0.149.0
+    image: otel/opentelemetry-collector-contrib:0.158.0@sha256:c5918f78992ee73b0d6f0e599423ac5ec52dd5d9726733114d6eca53d5a32ed5
     command: ["--config=/etc/otelcol/collector-config.yaml"]
     volumes:
       - ./collector-config.yaml:/etc/otelcol/collector-config.yaml
+      - ./otlpexporter/otlp-file-data:/otlp-file-data
     ports:
       - "4317:4317"
       - "4318:4318"

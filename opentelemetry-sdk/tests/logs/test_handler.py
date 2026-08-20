@@ -17,8 +17,10 @@ from opentelemetry.sdk._logs import (
     ReadableLogRecord,
 )
 from opentelemetry.sdk.environment_variables import OTEL_ATTRIBUTE_COUNT_LIMIT
-from opentelemetry.semconv._incubating.attributes import code_attributes
-from opentelemetry.semconv.attributes import exception_attributes
+from opentelemetry.semconv.attributes import (
+    code_attributes,
+    exception_attributes,
+)
 from opentelemetry.trace import (
     INVALID_SPAN_CONTEXT,
     set_span_in_context,
@@ -67,9 +69,7 @@ class TestLoggingHandler(unittest.TestCase):
     # pylint: disable=protected-access
     def test_log_record_emit_noop(self):
         noop_logger_provder = NoOpLoggerProvider()
-        logger_mock = APIGetLogger(
-            __name__, logger_provider=noop_logger_provder
-        )
+        logger_mock = APIGetLogger(__name__, logger_provider=noop_logger_provder)
         logger = logging.getLogger(__name__)
         handler_mock = Mock(spec=LoggingHandler)
         handler_mock._logger = logger_mock
@@ -84,9 +84,7 @@ class TestLoggingHandler(unittest.TestCase):
         no_op_logger_provider = NoOpLoggerProvider()
 
         logger = logging.getLogger("foo")
-        handler = LoggingHandler(
-            level=logging.NOTSET, logger_provider=no_op_logger_provider
-        )
+        handler = LoggingHandler(level=logging.NOTSET, logger_provider=no_op_logger_provider)
         logger.addHandler(handler)
 
         with self.assertLogs(level=logging.WARNING):
@@ -94,9 +92,7 @@ class TestLoggingHandler(unittest.TestCase):
 
         # the LoggingHandler flush method will call the force_flush method of LoggerProvider in
         # a separate thread if present. NoOpLoggerProvider is not supposed to have that
-        with patch(
-            "opentelemetry.sdk._logs._internal.threading"
-        ) as threading_mock:
+        with patch("opentelemetry.sdk._logs._internal.threading") as threading_mock:
             logger.handlers[0].flush()
 
         threading_mock.Thread.assert_not_called()
@@ -113,12 +109,8 @@ class TestLoggingHandler(unittest.TestCase):
         record = processor.get_log_record(0)
 
         self.assertIsNotNone(record)
-        self.assertEqual(
-            record.log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id
-        )
-        self.assertEqual(
-            record.log_record.span_id, INVALID_SPAN_CONTEXT.span_id
-        )
+        self.assertEqual(record.log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
+        self.assertEqual(record.log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
         self.assertEqual(
             record.log_record.trace_flags,
             INVALID_SPAN_CONTEXT.trace_flags,
@@ -150,23 +142,15 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertIsNotNone(record)
         self.assertEqual(len(record.log_record.attributes), 4)
         self.assertEqual(record.log_record.attributes["http.status_code"], 200)
-        self.assertTrue(
-            record.log_record.attributes[
-                code_attributes.CODE_FILE_PATH
-            ].endswith("test_handler.py")
-        )
+        self.assertTrue(record.log_record.attributes[code_attributes.CODE_FILE_PATH].endswith("test_handler.py"))
         self.assertEqual(
             record.log_record.attributes[code_attributes.CODE_FUNCTION_NAME],
             "test_log_record_user_attributes",
         )
         # The line of the log statement is not a constant (changing tests may change that),
         # so only check that the attribute is present.
-        self.assertTrue(
-            code_attributes.CODE_LINE_NUMBER in record.log_record.attributes
-        )
-        self.assertTrue(
-            isinstance(record.log_record.attributes, BoundedAttributes)
-        )
+        self.assertTrue(code_attributes.CODE_LINE_NUMBER in record.log_record.attributes)
+        self.assertTrue(isinstance(record.log_record.attributes, BoundedAttributes))
 
         logger.removeHandler(handler)
 
@@ -190,14 +174,10 @@ class TestLoggingHandler(unittest.TestCase):
             ZeroDivisionError.__name__,
         )
         self.assertEqual(
-            record.log_record.attributes[
-                exception_attributes.EXCEPTION_MESSAGE
-            ],
+            record.log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
             "division by zero",
         )
-        stack_trace = record.log_record.attributes[
-            exception_attributes.EXCEPTION_STACKTRACE
-        ]
+        stack_trace = record.log_record.attributes[exception_attributes.EXCEPTION_STACKTRACE]
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
         self.assertTrue("ZeroDivisionError" in stack_trace)
@@ -211,9 +191,7 @@ class TestLoggingHandler(unittest.TestCase):
         processor, logger, handler = set_up_test_logging(logging.ERROR)
 
         try:
-            raise ZeroDivisionError(
-                ZeroDivisionError(ZeroDivisionError("division by zero"))
-            )
+            raise ZeroDivisionError(ZeroDivisionError(ZeroDivisionError("division by zero")))
         except ZeroDivisionError:
             with self.assertLogs(level=logging.ERROR):
                 logger.exception("Zero Division Error")
@@ -227,14 +205,10 @@ class TestLoggingHandler(unittest.TestCase):
             ZeroDivisionError.__name__,
         )
         self.assertEqual(
-            record.log_record.attributes[
-                exception_attributes.EXCEPTION_MESSAGE
-            ],
+            record.log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
             "division by zero",
         )
-        stack_trace = record.log_record.attributes[
-            exception_attributes.EXCEPTION_STACKTRACE
-        ]
+        stack_trace = record.log_record.attributes[exception_attributes.EXCEPTION_STACKTRACE]
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
         self.assertTrue("ZeroDivisionError" in stack_trace)
@@ -295,14 +269,10 @@ class TestLoggingHandler(unittest.TestCase):
             CustomException.__name__,
         )
         self.assertEqual(
-            record.log_record.attributes[
-                exception_attributes.EXCEPTION_MESSAGE
-            ],
+            record.log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
             "CustomException message",
         )
-        stack_trace = record.log_record.attributes[
-            exception_attributes.EXCEPTION_STACKTRACE
-        ]
+        stack_trace = record.log_record.attributes[exception_attributes.EXCEPTION_STACKTRACE]
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
         self.assertTrue("CustomException" in stack_trace)
@@ -337,12 +307,8 @@ class TestLoggingHandler(unittest.TestCase):
                 )
                 self.assertEqual(record.log_record.context, mock_context)
                 span_context = span.get_span_context()
-                self.assertEqual(
-                    record.log_record.trace_id, span_context.trace_id
-                )
-                self.assertEqual(
-                    record.log_record.span_id, span_context.span_id
-                )
+                self.assertEqual(record.log_record.trace_id, span_context.trace_id)
+                self.assertEqual(record.log_record.span_id, span_context.span_id)
                 self.assertEqual(
                     record.log_record.trace_flags,
                     span_context.trace_flags,
@@ -360,19 +326,13 @@ class TestLoggingHandler(unittest.TestCase):
 
             record = processor.get_log_record(0)
 
-            self.assertEqual(
-                record.log_record.body, "Critical message within span"
-            )
+            self.assertEqual(record.log_record.body, "Critical message within span")
             self.assertEqual(record.log_record.severity_text, "FATAL")
-            self.assertEqual(
-                record.log_record.severity_number, SeverityNumber.FATAL
-            )
+            self.assertEqual(record.log_record.severity_number, SeverityNumber.FATAL)
             span_context = span.get_span_context()
             self.assertEqual(record.log_record.trace_id, span_context.trace_id)
             self.assertEqual(record.log_record.span_id, span_context.span_id)
-            self.assertEqual(
-                record.log_record.trace_flags, span_context.trace_flags
-            )
+            self.assertEqual(record.log_record.trace_flags, span_context.trace_flags)
 
         logger.removeHandler(handler)
 
@@ -397,25 +357,19 @@ class TestLoggingHandler(unittest.TestCase):
     def test_warning_with_formatter(self):
         processor, logger, handler = set_up_test_logging(
             logging.WARNING,
-            formatter=logging.Formatter(
-                "%(name)s - %(levelname)s - %(message)s"
-            ),
+            formatter=logging.Formatter("%(name)s - %(levelname)s - %(message)s"),
         )
         logger.warning("Test message")
 
         record = processor.get_log_record(0)
-        self.assertEqual(
-            record.log_record.body, "foo - WARNING - Test message"
-        )
+        self.assertEqual(record.log_record.body, "foo - WARNING - Test message")
 
         logger.removeHandler(handler)
 
     def test_log_body_is_always_string_with_formatter(self):
         processor, logger, handler = set_up_test_logging(
             logging.WARNING,
-            formatter=logging.Formatter(
-                "%(name)s - %(levelname)s - %(message)s"
-            ),
+            formatter=logging.Formatter("%(name)s - %(levelname)s - %(message)s"),
         )
         logger.warning(["something", "of", "note"])
 
@@ -428,9 +382,7 @@ class TestLoggingHandler(unittest.TestCase):
     def test_handler_root_logger_with_disabled_sdk_does_not_go_into_recursion_error(
         self,
     ):
-        processor, logger, handler = set_up_test_logging(
-            logging.NOTSET, root_logger=True
-        )
+        processor, logger, handler = set_up_test_logging(logging.NOTSET, root_logger=True)
         logger.warning("hello")
 
         self.assertEqual(processor.emit_count(), 0)
@@ -446,18 +398,14 @@ class TestLoggingHandler(unittest.TestCase):
         processor = FakeProcessor()
         logger_provider.add_log_record_processor(processor)
         logger = logging.getLogger("env_test")
-        handler = LoggingHandler(
-            level=logging.WARNING, logger_provider=logger_provider
-        )
+        handler = LoggingHandler(level=logging.WARNING, logger_provider=logger_provider)
         logger.addHandler(handler)
 
         # Create a log record with many extra attributes
         extra_attrs = {f"custom_attr_{i}": f"value_{i}" for i in range(10)}
 
         with self.assertLogs(level=logging.WARNING):
-            logger.warning(
-                "Test message with many attributes", extra=extra_attrs
-            )
+            logger.warning("Test message with many attributes", extra=extra_attrs)
 
         record = processor.get_log_record(0)
 
@@ -487,9 +435,7 @@ class TestLoggingHandler(unittest.TestCase):
         processor = FakeProcessor()
         logger_provider.add_log_record_processor(processor)
         logger = logging.getLogger("env_test_2")
-        handler = LoggingHandler(
-            level=logging.WARNING, logger_provider=logger_provider
-        )
+        handler = LoggingHandler(level=logging.WARNING, logger_provider=logger_provider)
         logger.addHandler(handler)
 
         # Create a log record with some extra attributes
@@ -525,9 +471,7 @@ class TestLoggingHandler(unittest.TestCase):
         extra_attrs = {f"attr_{i}": f"value_{i}" for i in range(150)}
 
         with self.assertLogs(level=logging.WARNING):
-            logger.warning(
-                "Test message with many attributes", extra=extra_attrs
-            )
+            logger.warning("Test message with many attributes", extra=extra_attrs)
 
         record = processor.get_log_record(0)
 

@@ -58,15 +58,11 @@ class TestBase(unittest.TestCase):
         reset_metrics_globals()
 
     def get_finished_spans(self):
-        return FinishedTestSpans(
-            self, self.memory_exporter.get_finished_spans()
-        )
+        return FinishedTestSpans(self, self.memory_exporter.get_finished_spans())
 
     def assertEqualSpanInstrumentationScope(self, span, module):
         self.assertEqual(span.instrumentation_scope.name, module.__name__)
-        self.assertEqual(
-            span.instrumentation_scope.version, module.__version__
-        )
+        self.assertEqual(span.instrumentation_scope.version, module.__version__)
 
     def assertSpanHasAttributes(self, span, attributes):
         for key, val in attributes.items():
@@ -139,9 +135,7 @@ class TestBase(unittest.TestCase):
                    all metrics are returned.
         """
         metrics_data = self.memory_metrics_reader.get_metrics_data()
-        resource_metrics = (
-            metrics_data.resource_metrics if metrics_data else []
-        )
+        resource_metrics = metrics_data.resource_metrics if metrics_data else []
 
         all_metrics = []
         for metrics in resource_metrics:
@@ -168,13 +162,9 @@ class TestBase(unittest.TestCase):
         expected_data_points: Sequence[DataPointT],
         est_value_delta: float | None = 0,
     ):
-        self.assertEqual(
-            len(expected_data_points), len(metric.data.data_points)
-        )
+        self.assertEqual(len(expected_data_points), len(metric.data.data_points))
         for expected_data_point in expected_data_points:
-            self.assert_data_point_expected(
-                expected_data_point, metric.data.data_points, est_value_delta
-            )
+            self.assert_data_point_expected(expected_data_point, metric.data.data_points, est_value_delta)
 
     # pylint: disable=unidiomatic-typecheck
     @staticmethod
@@ -185,9 +175,7 @@ class TestBase(unittest.TestCase):
     ):
         if type(expected_data_point) != type(  # noqa: E721
             data_point
-        ) or not isinstance(
-            expected_data_point, (HistogramDataPoint, NumberDataPoint)
-        ):
+        ) or not isinstance(expected_data_point, (HistogramDataPoint, NumberDataPoint)):
             return False
 
         values_diff = None
@@ -197,23 +185,14 @@ class TestBase(unittest.TestCase):
             values_diff = abs(expected_data_point.sum - data_point.sum)
             if expected_data_point.count != data_point.count or (
                 est_value_delta == 0
-                and (
-                    expected_data_point.min != data_point.min
-                    or expected_data_point.max != data_point.max
-                )
+                and (expected_data_point.min != data_point.min or expected_data_point.max != data_point.max)
             ):
                 return False
 
-            if (
-                expected_data_point.explicit_bounds
-                != data_point.explicit_bounds
-            ):
+            if expected_data_point.explicit_bounds != data_point.explicit_bounds:
                 return False
 
-        return (
-            values_diff <= est_value_delta
-            and expected_data_point.attributes == dict(data_point.attributes)
-        )
+        return values_diff <= est_value_delta and expected_data_point.attributes == dict(data_point.attributes)
 
     def assert_data_point_expected(
         self,
@@ -223,9 +202,7 @@ class TestBase(unittest.TestCase):
     ):
         is_data_point_exist = False
         for data_point in data_points:
-            if self.is_data_points_equal(
-                expected_data_point, data_point, est_value_delta
-            ):
+            if self.is_data_points_equal(expected_data_point, data_point, est_value_delta):
                 is_data_point_exist = True
                 break
 

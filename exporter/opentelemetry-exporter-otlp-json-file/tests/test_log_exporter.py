@@ -169,19 +169,12 @@ class TestFileLogExporterRoundTrip(unittest.TestCase):
         self._file_exporter = FileLogExporter(stream=self._stream)
         self._in_memory = InMemoryLogRecordExporter()
         provider = LoggerProvider()
-        provider.add_log_record_processor(
-            SimpleLogRecordProcessor(self._file_exporter)
-        )
-        provider.add_log_record_processor(
-            SimpleLogRecordProcessor(self._in_memory)
-        )
+        provider.add_log_record_processor(SimpleLogRecordProcessor(self._file_exporter))
+        provider.add_log_record_processor(SimpleLogRecordProcessor(self._in_memory))
         self._logger = provider.get_logger("test.integration")
 
     def _expected(self) -> str:
-        return "".join(
-            _format_line(encode_logs([record]).to_dict())
-            for record in self._in_memory.get_finished_logs()
-        )
+        return "".join(_format_line(encode_logs([record]).to_dict()) for record in self._in_memory.get_finished_logs())
 
     def test_single_log_matches_in_memory(self):
         self._logger.emit(
@@ -193,14 +186,6 @@ class TestFileLogExporterRoundTrip(unittest.TestCase):
         self.assertEqual(self._stream.getvalue(), self._expected())
 
     def test_multiple_logs_match_in_memory(self):
-        self._logger.emit(
-            LogRecord(
-                body="first message", severity_number=SeverityNumber.INFO
-            )
-        )
-        self._logger.emit(
-            LogRecord(
-                body="second message", severity_number=SeverityNumber.WARN
-            )
-        )
+        self._logger.emit(LogRecord(body="first message", severity_number=SeverityNumber.INFO))
+        self._logger.emit(LogRecord(body="second message", severity_number=SeverityNumber.WARN))
         self.assertEqual(self._stream.getvalue(), self._expected())
