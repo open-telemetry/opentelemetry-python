@@ -11,7 +11,10 @@ from opentelemetry._proto.trace.v1.trace_pb2 import ResourceSpans
 from opentelemetry._proto._pyprotobuf.fields import msg
 
 
-class ExportTraceServiceRequest:
+from opentelemetry._proto._pyprotobuf.message import Message
+
+
+class ExportTraceServiceRequest(Message):
     def __init__(self, resource_spans: list[ResourceSpans] | None = None):
         self.resource_spans: list[ResourceSpans] = (
             list(resource_spans) if resource_spans else []
@@ -23,7 +26,7 @@ class ExportTraceServiceRequest:
         )
 
 
-class ExportTraceServiceResponse:
+class ExportTraceServiceResponse(Message):
     @classmethod
     def FromString(cls, data: bytes) -> 'ExportTraceServiceResponse':
         return cls()
