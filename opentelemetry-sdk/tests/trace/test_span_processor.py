@@ -37,9 +37,7 @@ class MySpanProcessor(trace.SpanProcessor):
         self.name = name
         self.span_list = span_list
 
-    def on_start(
-        self, span: "trace.Span", parent_context: Context | None = None
-    ) -> None:
+    def on_start(self, span: "trace.Span", parent_context: Context | None = None) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
     def on_end(self, span: "trace.Span") -> None:
@@ -243,9 +241,7 @@ class TestSpanProcessor(unittest.TestCase):
                     expected_list.append(span_event_start_fmt("SP1", "bar"))
 
                     with tracer.start_as_current_span("baz"):
-                        expected_list.append(
-                            span_event_start_fmt("SP1", "baz")
-                        )
+                        expected_list.append(span_event_start_fmt("SP1", "baz"))
 
                     expected_list.append(span_event_end_fmt("SP1", "baz"))
                 expected_list.append(span_event_end_fmt("SP1", "bar"))
@@ -260,10 +256,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
     @abc.abstractmethod
     def create_multi_span_processor(
         self,
-    ) -> (
-        trace.SynchronousMultiSpanProcessor
-        | trace.ConcurrentMultiSpanProcessor
-    ):
+    ) -> trace.SynchronousMultiSpanProcessor | trace.ConcurrentMultiSpanProcessor:
         pass
 
     @staticmethod
@@ -283,9 +276,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
         multi_processor.on_start(span, parent_context=context)
 
         for mock_processor in mocks:
-            mock_processor.on_start.assert_called_once_with(
-                span, parent_context=context
-            )
+            mock_processor.on_start.assert_called_once_with(span, parent_context=context)
         multi_processor.shutdown()
 
     def test_on_ending(self):
@@ -356,9 +347,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
 
         multi_processor = self.create_multi_span_processor()
         # Does not implement _on_ending
-        multi_processor.add_span_processor(
-            MySpanProcessor("SP1", spans_calls_list)
-        )
+        multi_processor.add_span_processor(MySpanProcessor("SP1", spans_calls_list))
 
         tracer_provider.add_span_processor(multi_processor)
 
@@ -370,9 +359,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
                     expected_list.append(span_event_start_fmt("SP1", "bar"))
 
                     with tracer.start_as_current_span("baz"):
-                        expected_list.append(
-                            span_event_start_fmt("SP1", "baz")
-                        )
+                        expected_list.append(span_event_start_fmt("SP1", "baz"))
 
                     expected_list.append(span_event_end_fmt("SP1", "baz"))
                 expected_list.append(span_event_end_fmt("SP1", "bar"))
@@ -385,9 +372,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
         self.assertListEqual(spans_calls_list, expected_list)
 
 
-class TestSynchronousMultiSpanProcessor(
-    MultiSpanProcessorTestBase, unittest.TestCase
-):
+class TestSynchronousMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.TestCase):
     def create_multi_span_processor(
         self,
     ) -> trace.SynchronousMultiSpanProcessor:
@@ -454,9 +439,7 @@ class TestSynchronousMultiSpanProcessor(
         self.assertEqual(1, mock_processor.force_flush.call_count)
 
 
-class TestConcurrentMultiSpanProcessor(
-    MultiSpanProcessorTestBase, unittest.TestCase
-):
+class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.TestCase):
     def create_multi_span_processor(
         self,
     ) -> trace.ConcurrentMultiSpanProcessor:
@@ -480,11 +463,11 @@ class TestConcurrentMultiSpanProcessor(
         flushed = multi_processor.force_flush(timeout_millis=25)
         # let the thread executing the late_mock continue
         wait_event.set()
+        multi_processor.shutdown()
 
         self.assertFalse(flushed)
         for mock_processor in mocks:
             self.assertEqual(1, mock_processor.force_flush.call_count)
-        multi_processor.shutdown()
 
     def test_force_flush_late_by_span_processor(self):
         multi_processor = trace.ConcurrentMultiSpanProcessor(5)
@@ -551,10 +534,7 @@ class TestConcurrentMultiSpanProcessor(
         # This is necessary in this test to start using the underlying ThreadPoolExecutor and avoid false positive:
         with tracer.start_as_current_span("main process before fork span"):
             pass
-        assert (
-            exporter.get_finished_spans()[-1].name
-            == "main process before fork span"
-        )
+        assert exporter.get_finished_spans()[-1].name == "main process before fork span"
 
         # The forked ConcurrentMultiSpanProcessor is usable in the child process:
         def child(conn):
@@ -564,23 +544,16 @@ class TestConcurrentMultiSpanProcessor(
             conn.close()
 
         parent_conn, child_conn = multiprocessing_context.Pipe()
-        process = multiprocessing_context.Process(
-            target=child, args=(child_conn,)
-        )
+        process = multiprocessing_context.Process(target=child, args=(child_conn,))
         process.start()
         has_response = parent_conn.poll(timeout=5)
         if not has_response:
             process.kill()
-            self.fail(
-                "The child process did not send any message after 5 seconds, it's very probably locked"
-            )
+            self.fail("The child process did not send any message after 5 seconds, it's very probably locked")
         process.join(timeout=5)
         assert parent_conn.recv() == "child process span"
 
         # The ConcurrentMultiSpanProcessor is still usable in the main process after the child process termination:
         with tracer.start_as_current_span("main process after fork span"):
             pass
-        assert (
-            exporter.get_finished_spans()[-1].name
-            == "main process after fork span"
-        )
+        assert exporter.get_finished_spans()[-1].name == "main process after fork span"

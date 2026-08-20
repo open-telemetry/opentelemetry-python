@@ -34,16 +34,16 @@ from opentelemetry.sdk.resources import (
 
 
 class TestCreateResourceDefaults(unittest.TestCase):
+    @patch("sys.executable", "/usr/bin/python3")
     def test_none_config_returns_sdk_defaults(self):
         resource = create_resource(None)
         self.assertIsInstance(resource, Resource)
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
-        self.assertEqual(
-            resource.attributes[TELEMETRY_SDK_NAME], "opentelemetry"
-        )
+        self.assertEqual(resource.attributes[TELEMETRY_SDK_NAME], "opentelemetry")
         self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_none_config_does_not_read_env_vars(self):
         with patch.dict(
             os.environ,
@@ -54,28 +54,29 @@ class TestCreateResourceDefaults(unittest.TestCase):
         ):
             resource = create_resource(None)
         self.assertNotIn("foo", resource.attributes)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_empty_resource_config(self):
         resource = create_resource(ResourceConfig())
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_service_name_default_added_when_missing(self):
-        config = ResourceConfig(
-            attributes=[AttributeNameValue(name="env", value="staging")]
-        )
+        config = ResourceConfig(attributes=[AttributeNameValue(name="env", value="staging")])
         resource = create_resource(config)
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
     def test_service_name_not_overridden_when_set(self):
-        config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(name="service.name", value="my-app")
-            ]
-        )
+        config = ResourceConfig(attributes=[AttributeNameValue(name="service.name", value="my-app")])
         resource = create_resource(config)
         self.assertEqual(resource.attributes[SERVICE_NAME], "my-app")
+
+    @patch("sys.executable", None)
+    def test_default_service_name_without_sys_executable_returns_plain_unkwnon_service(self):
+        resource = create_resource(None)
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
 
     def test_env_vars_not_read(self):
         """OTEL_RESOURCE_ATTRIBUTES must not affect declarative config resource."""
@@ -83,20 +84,14 @@ class TestCreateResourceDefaults(unittest.TestCase):
             os.environ,
             {"OTEL_RESOURCE_ATTRIBUTES": "injected=true"},
         ):
-            config = ResourceConfig(
-                attributes=[AttributeNameValue(name="k", value="v")]
-            )
+            config = ResourceConfig(attributes=[AttributeNameValue(name="k", value="v")])
             resource = create_resource(config)
         self.assertNotIn("injected", resource.attributes)
 
     def test_schema_url(self):
-        config = ResourceConfig(
-            schema_url="https://opentelemetry.io/schemas/1.24.0"
-        )
+        config = ResourceConfig(schema_url="https://opentelemetry.io/schemas/1.24.0")
         resource = create_resource(config)
-        self.assertEqual(
-            resource.schema_url, "https://opentelemetry.io/schemas/1.24.0"
-        )
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.24.0")
 
     def test_schema_url_none(self):
         resource = create_resource(ResourceConfig())
@@ -118,58 +113,30 @@ class TestCreateResourceAttributes(unittest.TestCase):
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
 
     def test_attribute_type_string(self):
-        config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(
-                    name="k", value=42, type=AttributeType.string
-                )
-            ]
-        )
+        config = ResourceConfig(attributes=[AttributeNameValue(name="k", value=42, type=AttributeType.string)])
         resource = create_resource(config)
         self.assertEqual(resource.attributes["k"], "42")
         self.assertIsInstance(resource.attributes["k"], str)
 
     def test_attribute_type_int(self):
-        config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(name="k", value=3.0, type=AttributeType.int)
-            ]
-        )
+        config = ResourceConfig(attributes=[AttributeNameValue(name="k", value=3.0, type=AttributeType.int)])
         resource = create_resource(config)
         self.assertEqual(resource.attributes["k"], 3)
         self.assertIsInstance(resource.attributes["k"], int)
 
     def test_attribute_type_double(self):
-        config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(
-                    name="k", value="1.5", type=AttributeType.double
-                )
-            ]
-        )
+        config = ResourceConfig(attributes=[AttributeNameValue(name="k", value="1.5", type=AttributeType.double)])
         resource = create_resource(config)
         self.assertAlmostEqual(resource.attributes["k"], 1.5)  # type: ignore[arg-type]
         self.assertIsInstance(resource.attributes["k"], float)
 
     def test_attribute_type_bool(self):
-        config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(
-                    name="k", value="true", type=AttributeType.bool
-                )
-            ]
-        )
+        config = ResourceConfig(attributes=[AttributeNameValue(name="k", value="true", type=AttributeType.bool)])
         resource = create_resource(config)
         self.assertTrue(resource.attributes["k"])
 
     def test_attribute_type_bool_false_string(self):
-        config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(
-                    name="k", value="false", type=AttributeType.bool
-                )
-            ]
-        )
+        config = ResourceConfig(attributes=[AttributeNameValue(name="k", value="false", type=AttributeType.bool)])
         resource = create_resource(config)
         self.assertFalse(resource.attributes["k"])
 
@@ -228,9 +195,7 @@ class TestCreateResourceAttributes(unittest.TestCase):
     def test_none_value_attribute_skipped_with_warning(self):
         """An unset ${VAR} with no default yields a null value; it must be
         skipped (not inserted as None or coerced) and a warning logged."""
-        with self.assertLogs(
-            "opentelemetry.configuration._resource", level="WARNING"
-        ) as cm:
+        with self.assertLogs("opentelemetry.configuration._resource", level="WARNING") as cm:
             config = ResourceConfig(
                 attributes=[
                     AttributeNameValue(name="empty", value=None),
@@ -245,16 +210,8 @@ class TestCreateResourceAttributes(unittest.TestCase):
     def test_none_value_typed_attribute_skipped(self):
         """A null value with a declared type must be skipped, not coerced
         (int(None)/str(None) would raise or produce garbage)."""
-        with self.assertLogs(
-            "opentelemetry.configuration._resource", level="WARNING"
-        ):
-            config = ResourceConfig(
-                attributes=[
-                    AttributeNameValue(
-                        name="k", value=None, type=AttributeType.int
-                    )
-                ]
-            )
+        with self.assertLogs("opentelemetry.configuration._resource", level="WARNING"):
+            config = ResourceConfig(attributes=[AttributeNameValue(name="k", value=None, type=AttributeType.int)])
             resource = create_resource(config)
         self.assertNotIn("k", resource.attributes)
 
@@ -275,9 +232,7 @@ class TestCreateResourceAttributes(unittest.TestCase):
 
 class TestCreateResourceAttributesList(unittest.TestCase):
     def test_attributes_list_parsed(self):
-        config = ResourceConfig(
-            attributes_list="service.name=my-svc,region=us-east-1"
-        )
+        config = ResourceConfig(attributes_list="service.name=my-svc,region=us-east-1")
         resource = create_resource(config)
         self.assertEqual(resource.attributes["service.name"], "my-svc")
         self.assertEqual(resource.attributes["region"], "us-east-1")
@@ -285,9 +240,7 @@ class TestCreateResourceAttributesList(unittest.TestCase):
     def test_attributes_list_does_not_override_attributes(self):
         """Explicit attributes take precedence over attributes_list."""
         config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(name="service.name", value="explicit")
-            ],
+            attributes=[AttributeNameValue(name="service.name", value="explicit")],
             attributes_list="service.name=from-list,extra=val",
         )
         resource = create_resource(config)
@@ -313,18 +266,12 @@ class TestCreateResourceAttributesList(unittest.TestCase):
         self.assertEqual(resource.attributes["foo"], "bar")
 
     def test_attributes_list_url_decoded(self):
-        config = ResourceConfig(
-            attributes_list="service.namespace=my%20namespace,region=us-east-1"
-        )
+        config = ResourceConfig(attributes_list="service.namespace=my%20namespace,region=us-east-1")
         resource = create_resource(config)
-        self.assertEqual(
-            resource.attributes["service.namespace"], "my namespace"
-        )
+        self.assertEqual(resource.attributes["service.namespace"], "my namespace")
 
     def test_attributes_list_invalid_pair_skipped(self):
-        with self.assertLogs(
-            "opentelemetry.configuration._resource", level="WARNING"
-        ) as cm:
+        with self.assertLogs("opentelemetry.configuration._resource", level="WARNING") as cm:
             config = ResourceConfig(attributes_list="no-equals,foo=bar")
             resource = create_resource(config)
         self.assertEqual(resource.attributes["foo"], "bar")
@@ -336,9 +283,7 @@ class TestServiceResourceDetector(unittest.TestCase):
     @staticmethod
     def _config_with_service() -> ResourceConfig:
         return ResourceConfig(
-            detection_development=ExperimentalResourceDetection(
-                detectors=[ExperimentalResourceDetector(service={})]
-            )
+            detection_development=ExperimentalResourceDetection(detectors=[ExperimentalResourceDetector(service={})])
         )
 
     def test_service_detector_adds_instance_id(self):
@@ -358,20 +303,17 @@ class TestServiceResourceDetector(unittest.TestCase):
             resource = create_resource(self._config_with_service())
         self.assertEqual(resource.attributes[SERVICE_NAME], "my-service")
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_service_detector_no_env_var_leaves_default_service_name(self):
         with patch.dict(os.environ, {}, clear=True):
             resource = create_resource(self._config_with_service())
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
     def test_explicit_service_name_overrides_env_var(self):
         """Config attributes win over the service detector's env-var value."""
         config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(name="service.name", value="explicit-svc")
-            ],
-            detection_development=ExperimentalResourceDetection(
-                detectors=[ExperimentalResourceDetector(service={})]
-            ),
+            attributes=[AttributeNameValue(name="service.name", value="explicit-svc")],
+            detection_development=ExperimentalResourceDetection(detectors=[ExperimentalResourceDetector(service={})]),
         )
         with patch.dict(os.environ, {"OTEL_SERVICE_NAME": "env-svc"}):
             resource = create_resource(config)
@@ -401,6 +343,7 @@ class TestServiceResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
         self.assertIn(TELEMETRY_SDK_VERSION, resource.attributes)
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_included_filter_limits_service_attributes(self):
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
@@ -413,16 +356,14 @@ class TestServiceResourceDetector(unittest.TestCase):
         self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
         # service.name comes from the filter-excluded detector output, but the
         # default "unknown_service" is still added by create_resource directly
-        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service")
+        self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
 
 class TestHostResourceDetector(unittest.TestCase):
     @staticmethod
     def _config_with_host() -> ResourceConfig:
         return ResourceConfig(
-            detection_development=ExperimentalResourceDetection(
-                detectors=[ExperimentalResourceDetector(host={})]
-            )
+            detection_development=ExperimentalResourceDetection(detectors=[ExperimentalResourceDetector(host={})])
         )
 
     def test_host_detector_adds_host_attributes(self):
@@ -446,20 +387,14 @@ class TestHostResourceDetector(unittest.TestCase):
         self.assertNotIn(HOST_NAME, resource.attributes)
 
     def test_host_detector_not_run_when_detectors_list_empty(self):
-        config = ResourceConfig(
-            detection_development=ExperimentalResourceDetection(detectors=[])
-        )
+        config = ResourceConfig(detection_development=ExperimentalResourceDetection(detectors=[]))
         resource = create_resource(config)
         self.assertNotIn(HOST_NAME, resource.attributes)
 
     def test_explicit_attributes_override_host_detector(self):
         config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(name="host.name", value="custom-host")
-            ],
-            detection_development=ExperimentalResourceDetection(
-                detectors=[ExperimentalResourceDetector(host={})]
-            ),
+            attributes=[AttributeNameValue(name="host.name", value="custom-host")],
+            detection_development=ExperimentalResourceDetection(detectors=[ExperimentalResourceDetector(host={})]),
         )
         resource = create_resource(config)
         self.assertEqual(resource.attributes[HOST_NAME], "custom-host")
@@ -491,9 +426,7 @@ class TestContainerResourceDetector(unittest.TestCase):
     @staticmethod
     def _config_with_container() -> ResourceConfig:
         return ResourceConfig(
-            detection_development=ExperimentalResourceDetection(
-                detectors=[ExperimentalResourceDetector(container={})]
-            )
+            detection_development=ExperimentalResourceDetection(detectors=[ExperimentalResourceDetector(container={})])
         )
 
     def test_container_detector_not_run_when_absent(self):
@@ -507,9 +440,7 @@ class TestContainerResourceDetector(unittest.TestCase):
         self.assertNotIn(CONTAINER_ID, resource.attributes)
 
     def test_container_detector_not_run_when_detectors_list_empty(self):
-        config = ResourceConfig(
-            detection_development=ExperimentalResourceDetection(detectors=[])
-        )
+        config = ResourceConfig(detection_development=ExperimentalResourceDetection(detectors=[]))
         resource = create_resource(config)
         self.assertNotIn(CONTAINER_ID, resource.attributes)
 
@@ -547,12 +478,8 @@ class TestContainerResourceDetector(unittest.TestCase):
         mock_ep.load.return_value = mock_detector
 
         config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(name="container.id", value="explicit-id")
-            ],
-            detection_development=ExperimentalResourceDetection(
-                detectors=[ExperimentalResourceDetector(container={})]
-            ),
+            attributes=[AttributeNameValue(name="container.id", value="explicit-id")],
+            detection_development=ExperimentalResourceDetection(detectors=[ExperimentalResourceDetector(container={})]),
         )
         with patch(
             "opentelemetry.configuration._common.entry_points",
@@ -567,9 +494,7 @@ class TestProcessResourceDetector(unittest.TestCase):
     @staticmethod
     def _config_with_process() -> ResourceConfig:
         return ResourceConfig(
-            detection_development=ExperimentalResourceDetection(
-                detectors=[ExperimentalResourceDetector(process={})]
-            )
+            detection_development=ExperimentalResourceDetection(detectors=[ExperimentalResourceDetector(process={})])
         )
 
     def test_process_detector_adds_process_attributes(self):
@@ -595,23 +520,15 @@ class TestProcessResourceDetector(unittest.TestCase):
         self.assertNotIn(PROCESS_PID, resource.attributes)
 
     def test_process_detector_not_run_when_detectors_list_empty(self):
-        config = ResourceConfig(
-            detection_development=ExperimentalResourceDetection(detectors=[])
-        )
+        config = ResourceConfig(detection_development=ExperimentalResourceDetection(detectors=[]))
         resource = create_resource(config)
         self.assertNotIn(PROCESS_PID, resource.attributes)
 
     def test_explicit_attributes_override_process_detector(self):
         """Config attributes win over detector-provided values."""
         config = ResourceConfig(
-            attributes=[
-                AttributeNameValue(
-                    name="process.pid", value=99999, type=AttributeType.int
-                )
-            ],
-            detection_development=ExperimentalResourceDetection(
-                detectors=[ExperimentalResourceDetector(process={})]
-            ),
+            attributes=[AttributeNameValue(name="process.pid", value=99999, type=AttributeType.int)],
+            detection_development=ExperimentalResourceDetection(detectors=[ExperimentalResourceDetector(process={})]),
         )
         resource = create_resource(config)
         self.assertEqual(resource.attributes[PROCESS_PID], 99999)

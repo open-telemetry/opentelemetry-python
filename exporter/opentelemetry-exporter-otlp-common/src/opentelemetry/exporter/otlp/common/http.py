@@ -90,14 +90,11 @@ class Compression(enum.Enum):
             case "gzip":
                 return Compression.GZIP
             case _:
-                raise ValueError(
-                    f"Invalid compression type: {value!r}. "
-                    "Expected one of: 'none', 'deflate', 'gzip'."
-                )
+                raise ValueError(f"Invalid compression type: {value!r}. Expected one of: 'none', 'deflate', 'gzip'.")
 
 
 @dataclass(slots=True, frozen=True)
-class ExportResult:
+class _ExportResult:
     """Outcome of an OTLP export attempt, including retry exhaustion."""
 
     success: bool
@@ -106,7 +103,7 @@ class ExportResult:
     error: Exception | None
 
 
-class OTLPHTTPClient:
+class _OTLPHTTPClient:
     """Sends serialized OTLP payloads over HTTP with retry logic.
 
     Compression, backoff, and connection-error recovery are handled internally.
@@ -178,7 +175,7 @@ class OTLPHTTPClient:
             )
         return result
 
-    def export(self, data: bytes) -> ExportResult:
+    def export(self, data: bytes) -> _ExportResult:
         """Export a serialized payload, retrying on transient failures.
 
         :param data: Serialized bytes to send.
@@ -204,19 +201,12 @@ class OTLPHTTPClient:
                 status_code = result.status_code
                 reason = result.reason
                 if status_code is not None and 200 <= status_code < 400:
-                    return ExportResult(True, status_code, reason, None)
+                    return _ExportResult(True, status_code, reason, None)
                 export_error = result.error
                 retryable = (
-                    _is_retryable(status_code)
-                    if status_code
-                    else self._transport.is_connection_error(result.error)
+                    _is_retryable(status_code) if status_code else self._transport.is_connection_error(result.error)
                 )
-                if (
-                    retryable
-                    and status_code is not None
-                    and (retry_after := _extract_retry_after(result))
-                    is not None
-                ):
+                if retryable and status_code is not None and (retry_after := _extract_retry_after(result)) is not None:
                     backoff = retry_after
 
             if not retryable:
@@ -226,19 +216,14 @@ class OTLPHTTPClient:
                     status_code,
                     reason or export_error or "unknown",
                 )
-                return ExportResult(False, status_code, reason, export_error)
+                return _ExportResult(False, status_code, reason, export_error)
 
-            if (
-                retry + 1 == _MAX_RETRIES
-                or backoff > (deadline - time.time())
-                or self._shutdown_event.is_set()
-            ):
+            if retry + 1 == _MAX_RETRIES or backoff > (deadline - time.time()) or self._shutdown_event.is_set():
                 self._logger.error(
-                    "Failed to export %s batch due to timeout, "
-                    "max retries or shutdown.",
+                    "Failed to export %s batch due to timeout, max retries or shutdown.",
                     self._kind,
                 )
-                return ExportResult(False, status_code, reason, export_error)
+                return _ExportResult(False, status_code, reason, export_error)
 
             self._logger.warning(
                 "Transient error %s encountered while exporting %s batch, retrying in %.2fs.",
@@ -251,7 +236,7 @@ class OTLPHTTPClient:
                 self._logger.warning("Shutdown in progress, aborting retry.")
                 break
 
-        return ExportResult(False, None, None, None)
+        return _ExportResult(False, None, None, None)
 
     def shutdown(self) -> None:
         """Shutdown the client."""

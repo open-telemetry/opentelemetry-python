@@ -85,15 +85,14 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
 
     Example:
         >>> from opentelemetry.configuration.file import (
-        ...     load_config_file, configure_sdk,
+        ...     load_config_file,
+        ...     configure_sdk,
         ... )
         >>> config = load_config_file("otel-config.yaml")
         >>> configure_sdk(config)
     """
     if config.disabled:
-        _logger.warning(
-            "Declarative configuration has disabled=true; skipping SDK setup."
-        )
+        _logger.warning("Declarative configuration has disabled=true; skipping SDK setup.")
         return
 
     if config.log_level is not None:

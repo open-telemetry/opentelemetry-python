@@ -88,18 +88,13 @@ class TestJaegerPropagator(TestCase):
     def test_sampled_flag_set(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
         _, new_carrier = get_context_new_carrier(old_carrier)
-        sample_flag_value = (
-            int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3]) & 0x01
-        )
+        sample_flag_value = int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3]) & 0x01
         self.assertEqual(1, sample_flag_value)
 
     def test_debug_flag_set(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
         _, new_carrier = get_context_new_carrier(old_carrier)
-        debug_flag_value = (
-            int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3])
-            & FORMAT.DEBUG_FLAG
-        )
+        debug_flag_value = int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3]) & FORMAT.DEBUG_FLAG
         self.assertEqual(FORMAT.DEBUG_FLAG, debug_flag_value)
 
     def test_sample_debug_flags_unset(self):
@@ -128,6 +123,16 @@ class TestJaegerPropagator(TestCase):
         _, new_carrier = get_context_new_carrier(old_carrier, input_baggage)
         ctx = FORMAT.extract(new_carrier)
         self.assertDictEqual(formatted_baggage, ctx[_BAGGAGE_KEY])
+
+    def test_extract_empty_baggage_value(self):
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-key1": [],
+            "uberctx-key2": None,
+            "uberctx-key3": "value3",
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"key3": "value3"}, context[_BAGGAGE_KEY])
 
     def test_extract_invalid_uber_trace_id(self):
         old_carrier = {

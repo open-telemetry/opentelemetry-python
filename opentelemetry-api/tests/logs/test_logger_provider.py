@@ -32,9 +32,7 @@ class TestGlobals(unittest.TestCase):
         # pylint: disable=protected-access
         self.assertIsNone(logs_internal._LOGGER_PROVIDER)
 
-        self.assertIsInstance(
-            get_logger_provider(), logs_internal.ProxyLoggerProvider
-        )
+        self.assertIsInstance(get_logger_provider(), logs_internal.ProxyLoggerProvider)
 
         logs_internal._LOGGER_PROVIDER = None
 
@@ -47,6 +45,4 @@ class TestGlobals(unittest.TestCase):
                     "opentelemetry._logs._internal.cast",
                     Mock(**{"return_value": "test_logger_provider"}),
                 ):
-                    self.assertEqual(
-                        get_logger_provider(), "test_logger_provider"
-                    )
+                    self.assertEqual(get_logger_provider(), "test_logger_provider")
