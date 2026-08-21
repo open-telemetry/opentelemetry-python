@@ -53,7 +53,7 @@ def _load_http_transport_factory(name: str) -> BaseHTTPTransportFactory:
     if name in _KNOWN_TRANSPORTS:
         return _KNOWN_TRANSPORTS[name]
     # pylint: disable-next=import-outside-toplevel,import-error
-    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
+    from opentelemetry.util._importlib_metadata import (
         entry_points,
     )
 

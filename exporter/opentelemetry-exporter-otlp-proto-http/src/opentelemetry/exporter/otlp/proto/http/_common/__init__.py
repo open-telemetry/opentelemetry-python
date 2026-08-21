@@ -79,7 +79,7 @@ def _load_session_from_envvar(
     if _credential_env:
         try:
             # pylint: disable-next=import-outside-toplevel
-            import requests  # noqa: PLC0415
+            import requests
         except ImportError as exc:
             raise ImportError(
                 "The 'requests' package is required to load a credential "

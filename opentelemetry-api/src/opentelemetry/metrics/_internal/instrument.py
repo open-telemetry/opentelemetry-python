@@ -157,7 +157,7 @@ class Counter(Synchronous):
     @abstractmethod
     def add(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -184,7 +184,7 @@ class NoOpCounter(Counter):
 
     def add(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -194,7 +194,7 @@ class NoOpCounter(Counter):
 class _ProxyCounter(_ProxyInstrument[Counter], Counter):
     def add(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -215,7 +215,7 @@ class UpDownCounter(Synchronous):
     @abstractmethod
     def add(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -246,7 +246,7 @@ class NoOpUpDownCounter(UpDownCounter):
 
     def add(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -256,7 +256,7 @@ class NoOpUpDownCounter(UpDownCounter):
 class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
     def add(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -362,7 +362,7 @@ class Histogram(Synchronous):
     @abstractmethod
     def record(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -401,7 +401,7 @@ class NoOpHistogram(Histogram):
 
     def record(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -421,7 +421,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
 
     def record(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -481,7 +481,7 @@ class Gauge(Synchronous):
     @abstractmethod
     def set(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -512,7 +512,7 @@ class NoOpGauge(Gauge):
 
     def set(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:
@@ -525,7 +525,7 @@ class _ProxyGauge(
 ):
     def set(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes | None = None,
         context: Context | None = None,
     ) -> None:

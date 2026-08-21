@@ -20,7 +20,7 @@ def main():
     DjangoInstrumentor().instrument()
 
     try:
-        from django.core.management import (  # noqa: PLC0415
+        from django.core.management import (
             execute_from_command_line,
         )
     except ImportError as exc:
