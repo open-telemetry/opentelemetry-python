@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from collections.abc import Callable
-from fnmatch import fnmatchcase
+from collections.abc import Callable, Iterable
+from fnmatch import fnmatch
 from logging import getLogger
 
 from opentelemetry.metrics import Instrument
@@ -88,6 +88,12 @@ class View:
         instrument_unit: This is an instrument matching attribute: the unit the
             instrument must have to match the view.
 
+        exclude_attribute_keys: This is a metric stream customizing attribute: this is
+            a set of attribute keys. If not `None` then measurement attributes whose
+            keys are in ``exclude_attribute_keys`` will be removed before identifying
+            the metric stream.
+
+
     This class is not intended to be subclassed by the user.
     """
 
@@ -102,10 +108,11 @@ class View:
         meter_schema_url: str | None = None,
         name: str | None = None,
         description: str | None = None,
-        attribute_keys: set[str] | None = None,
+        attribute_keys: Iterable[str] | None = None,
         aggregation: Aggregation | None = None,
         exemplar_reservoir_factory: Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None = None,
         instrument_unit: str | None = None,
+        exclude_attribute_keys: Iterable[str] | None = None,
     ):
         if (
             instrument_type
@@ -121,8 +128,28 @@ class View:
 
         if name is not None and instrument_name is not None and ("*" in instrument_name or "?" in instrument_name):
             # pylint: disable=broad-exception-raised
-            raise Exception(f"View {name} declared with wildcard characters in instrument_name")
+            raise Exception(
+                f"View {name} declared with wildcard "
+                "characters in instrument_name"
+            )
+        attribute_keys = (
+            set(attribute_keys) if attribute_keys is not None else None
+        )
+        exclude_attribute_keys = (
+            set(exclude_attribute_keys)
+            if exclude_attribute_keys is not None
+            else None
+        )
+        if attribute_keys is not None and exclude_attribute_keys is not None:
+            overlap = attribute_keys.intersection(exclude_attribute_keys)
 
+            if overlap:
+                # pylint: disable=broad-exception-raised
+                raise Exception(
+                    "attribute_keys and exclude_attribute_keys "
+                    f"must be disjoint. Overlapping keys: "
+                    f"{sorted(overlap)}"
+                )
         # _name, _description, _aggregation, _exemplar_reservoir_factory and
         # _attribute_keys will be accessed when instantiating a _ViewInstrumentMatch.
         self._name = name
@@ -134,9 +161,18 @@ class View:
         self._meter_schema_url = meter_schema_url
 
         self._description = description
-        self._attribute_keys = attribute_keys
+        self._attribute_keys = (
+            frozenset(attribute_keys) if attribute_keys is not None else None
+        )
         self._aggregation = aggregation or self._default_aggregation
-        self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
+        self._exemplar_reservoir_factory = (
+            exemplar_reservoir_factory or _default_reservoir_factory
+        )
+        self._exclude_attribute_keys = (
+            frozenset(exclude_attribute_keys)
+            if exclude_attribute_keys is not None
+            else None
+        )
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

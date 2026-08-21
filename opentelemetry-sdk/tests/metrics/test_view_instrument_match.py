@@ -72,6 +72,72 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             views=[],
         )
 
+    def test_consume_measurement_with_exclude_attribute_keys(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+
+        # exclude_attribute_keys should remove excluded attributes
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                exclude_attribute_keys={"f"},
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={"c": "d", "f": "g"},
+            )
+        )
+
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                frozenset([("c", "d")]): self.mock_created_aggregation,
+            },
+        )
+
+        # None measurement attributes should result in empty attributes
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                exclude_attribute_keys={"f"},
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes=None,
+            )
+        )
+
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                frozenset(): self.mock_created_aggregation,
+            },
+        )
+
     def test_consume_measurement(self):
         instrument1 = Mock(name="instrument1")
         instrument1.instrumentation_scope = self.mock_instrumentation_scope
