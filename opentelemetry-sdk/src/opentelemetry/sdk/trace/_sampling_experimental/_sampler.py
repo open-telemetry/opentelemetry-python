@@ -25,7 +25,7 @@ class _CompositeSampler(Sampler):
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:

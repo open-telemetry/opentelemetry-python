@@ -173,6 +173,7 @@ strict = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-sdk/src/opentelemetry/sdk/environment_variables",
   "opentelemetry-sdk/src/opentelemetry/sdk/resources",
+  "opentelemetry-api/src/opentelemetry/attributes/__init__.py",
 ]
 
 [tool.datamodel-codegen]
