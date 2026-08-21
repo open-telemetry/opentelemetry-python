@@ -91,6 +91,7 @@ class TestResources(unittest.TestCase):
     def tearDown(self) -> None:
         environ.pop(OTEL_RESOURCE_ATTRIBUTES)
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_create(self):
         attributes = {
             "service": "ui",
@@ -108,7 +109,7 @@ class TestResources(unittest.TestCase):
             TELEMETRY_SDK_LANGUAGE: "python",
             TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
             SERVICE_INSTANCE_ID: self._service_instance_id,
-            SERVICE_NAME: "unknown_service",
+            SERVICE_NAME: "unknown_service:python3",
         }
 
         resource = Resource.create(attributes)
@@ -138,7 +139,7 @@ class TestResources(unittest.TestCase):
             Resource(
                 {
                     SERVICE_INSTANCE_ID: self._service_instance_id,
-                    SERVICE_NAME: "unknown_service",
+                    SERVICE_NAME: "unknown_service:python3",
                 },
                 "",
             )
@@ -209,6 +210,7 @@ class TestResources(unittest.TestCase):
             Resource({"service": "not-ui", "host": "service-host"}),
         )
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_immutability(self):
         attributes = {
             "service": "ui",
@@ -222,7 +224,7 @@ class TestResources(unittest.TestCase):
             TELEMETRY_SDK_LANGUAGE: "python",
             TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
             SERVICE_INSTANCE_ID: self._service_instance_id,
-            SERVICE_NAME: "unknown_service",
+            SERVICE_NAME: "unknown_service:python3",
         }
 
         attributes_copy = attributes.copy()
@@ -242,13 +244,6 @@ class TestResources(unittest.TestCase):
             resource.schema_url = "bug"
 
         self.assertEqual(resource.schema_url, "")
-
-    def test_service_name_using_process_name(self):
-        resource = Resource.create({PROCESS_EXECUTABLE_NAME: "test"})
-        self.assertEqual(
-            resource.attributes.get(SERVICE_NAME),
-            "unknown_service:test",
-        )
 
     def test_invalid_resource_attribute_values(self):
         with self.assertLogs(level=WARNING):
@@ -270,6 +265,7 @@ class TestResources(unittest.TestCase):
         )
         self.assertEqual(len(resource.attributes), 1)
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = get_aggregated_resources([])
         self.assertEqual(
@@ -278,7 +274,7 @@ class TestResources(unittest.TestCase):
                 Resource(
                     {
                         SERVICE_INSTANCE_ID: self._service_instance_id,
-                        SERVICE_NAME: "unknown_service",
+                        SERVICE_NAME: "unknown_service:python3",
                     },
                     "",
                 )
@@ -309,6 +305,7 @@ class TestResources(unittest.TestCase):
             ),
         )
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_aggregated_resources_multiple_detectors(self):
         resource_detector1 = Mock(spec=ResourceDetector)
         resource_detector1.detect.return_value = Resource({"key1": "value1"})
@@ -329,7 +326,7 @@ class TestResources(unittest.TestCase):
                 Resource(
                     {
                         SERVICE_INSTANCE_ID: self._service_instance_id,
-                        SERVICE_NAME: "unknown_service",
+                        SERVICE_NAME: "unknown_service:python3",
                     },
                     "",
                 )
@@ -345,6 +342,7 @@ class TestResources(unittest.TestCase):
             ),
         )
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_aggregated_resources_different_schema_urls(self):
         resource_detector1 = Mock(spec=ResourceDetector)
         resource_detector1.detect.return_value = Resource({"key1": "value1"}, "")
@@ -374,7 +372,7 @@ class TestResources(unittest.TestCase):
                 Resource(
                     {
                         SERVICE_INSTANCE_ID: self._service_instance_id,
-                        SERVICE_NAME: "unknown_service",
+                        SERVICE_NAME: "unknown_service:python3",
                     },
                     "",
                 )
@@ -392,7 +390,7 @@ class TestResources(unittest.TestCase):
                     Resource(
                         {
                             SERVICE_INSTANCE_ID: self._service_instance_id,
-                            SERVICE_NAME: "unknown_service",
+                            SERVICE_NAME: "unknown_service:python3",
                         },
                         "",
                     )
@@ -414,7 +412,7 @@ class TestResources(unittest.TestCase):
                     Resource(
                         {
                             SERVICE_INSTANCE_ID: self._service_instance_id,
-                            SERVICE_NAME: "unknown_service",
+                            SERVICE_NAME: "unknown_service:python3",
                         },
                         "",
                     )
@@ -433,6 +431,7 @@ class TestResources(unittest.TestCase):
             self.assertIn("url1", log_entry.output[0])
             self.assertIn("url2", log_entry.output[0])
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_resource_detector_ignore_error(self):
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.side_effect = Exception()
@@ -444,7 +443,7 @@ class TestResources(unittest.TestCase):
                     Resource(
                         {
                             SERVICE_INSTANCE_ID: self._service_instance_id,
-                            SERVICE_NAME: "unknown_service",
+                            SERVICE_NAME: "unknown_service:python3",
                         },
                         "",
                     )
@@ -487,6 +486,7 @@ class TestResources(unittest.TestCase):
 
         self.assertEqual(_get_process_dependent_resource(), Resource.get_empty())
 
+    @patch("sys.executable", "/usr/bin/python3")
     @patch("opentelemetry.sdk.resources.logger")
     def test_resource_detector_timeout(self, mock_logger):
         resource_detector = Mock(spec=ResourceDetector)
@@ -498,7 +498,7 @@ class TestResources(unittest.TestCase):
                 Resource(
                     {
                         SERVICE_INSTANCE_ID: self._service_instance_id,
-                        SERVICE_NAME: "unknown_service",
+                        SERVICE_NAME: "unknown_service:python3",
                     },
                     "",
                 )
@@ -536,6 +536,11 @@ class TestResources(unittest.TestCase):
 
         resource = Resource.create({"service.name": "from-code"})
         self.assertEqual(resource.attributes["service.name"], "from-code")
+
+    @patch("sys.executable", "")
+    def test_service_name_without_sys_executable(self):
+        resource = Resource.create()
+        self.assertEqual(resource.attributes["service.name"], "unknown_service")
 
 
 # pylint: disable=too-many-public-methods
@@ -784,19 +789,20 @@ class TestOTELResourceDetector(unittest.TestCase):
             "",
         )
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_resource_detector_entry_points_default(self):
         resource = Resource({}).create()
 
         self.assertEqual(resource.attributes["telemetry.sdk.language"], "python")
         self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
-        self.assertEqual(resource.attributes["service.name"], "unknown_service")
+        self.assertEqual(resource.attributes["service.name"], "unknown_service:python3")
         self.assertEqual(resource.schema_url, "")
 
         resource = Resource({}).create({"a": "b", "c": "d"})
 
         self.assertEqual(resource.attributes["telemetry.sdk.language"], "python")
         self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
-        self.assertEqual(resource.attributes["service.name"], "unknown_service")
+        self.assertEqual(resource.attributes["service.name"], "unknown_service:python3")
         self.assertEqual(resource.attributes["a"], "b")
         self.assertEqual(resource.attributes["c"], "d")
         self.assertEqual(resource.schema_url, "")
@@ -810,11 +816,12 @@ class TestOTELResourceDetector(unittest.TestCase):
             ]
         ),
     )
+    @patch("sys.executable", "/usr/bin/python3")
     def test_resource_detector_entry_points_non_default(self):
         resource = Resource({}).create()
         self.assertEqual(resource.attributes["telemetry.sdk.language"], "python")
         self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
-        self.assertEqual(resource.attributes["service.name"], "unknown_service")
+        self.assertEqual(resource.attributes["service.name"], "unknown_service:python3")
         self.assertEqual(resource.attributes["a"], "b")
         self.assertEqual(resource.schema_url, "")
 
@@ -851,6 +858,7 @@ class TestOTELResourceDetector(unittest.TestCase):
             "'process' resource detector not enabled",
         )
 
+    @patch("sys.executable", "/usr/bin/python4")
     def test_resource_detector_entry_points_otel(self):
         """
         Test that OTELResourceDetector-resource-generated attributes are
@@ -860,7 +868,7 @@ class TestOTELResourceDetector(unittest.TestCase):
             resource = Resource({}).create()
             self.assertEqual(resource.attributes["telemetry.sdk.language"], "python")
             self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
-            self.assertEqual(resource.attributes["service.name"], "unknown_service")
+            self.assertEqual(resource.attributes["service.name"], "unknown_service:python4")
             self.assertEqual(resource.attributes["a"], "b")
             self.assertEqual(resource.attributes["c"], "d")
             self.assertEqual(resource.schema_url, "")
@@ -878,7 +886,7 @@ class TestOTELResourceDetector(unittest.TestCase):
             self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
             self.assertEqual(
                 resource.attributes["service.name"],
-                "unknown_service:" + resource.attributes["process.executable.name"],
+                "unknown_service:python4",
             )
             self.assertEqual(resource.attributes["a"], "b")
             self.assertEqual(resource.attributes["c"], "d")

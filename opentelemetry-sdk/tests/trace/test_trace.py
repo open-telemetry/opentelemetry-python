@@ -681,6 +681,7 @@ class TestSpanCreation(unittest.TestCase):
         new_span = updated_tracer.start_span("new")
         self.assertIs(new_span.resource, tracer_provider.resource)
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_default_span_resource(self):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
@@ -689,7 +690,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsInstance(span.resource, resources.Resource)
         self.assertEqual(
             span.resource.attributes.get(resources.SERVICE_NAME),
-            "unknown_service",
+            "unknown_service:python3",
         )
         self.assertEqual(
             span.resource.attributes.get(resources.TELEMETRY_SDK_LANGUAGE),
