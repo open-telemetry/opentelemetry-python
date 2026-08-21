@@ -308,7 +308,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             },
         )
         processor = PeriodicExportingMetricReader(exporter)
-        w_ref = weakref.ref(processor)
+        weak_ref = weakref.ref(processor)
         processor.shutdown()
         del processor
         gc.collect()
