@@ -1,5 +1,9 @@
 Installation
 ------------
+
+The source files of this example are available :scm_web:`here
+<docs/examples/fork-process-model/flask-uwsgi/>`.
+
 .. code-block:: sh
 
     pip install -rrequirements.txt

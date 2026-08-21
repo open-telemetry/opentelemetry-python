@@ -8,7 +8,8 @@ For more information on sqlcommenter concepts, see:
 * `Semantic Conventions - Database Spans <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sql-commenter>`_
 * `sqlcommenter <https://google.github.io/sqlcommenter/>`_
 
-The source files of this example are available `here <https://github.com/open-telemetry/opentelemetry-python/tree/main/docs/examples/sqlcommenter/>`_.
+The source files of this example are available :scm_web:`here
+<docs/examples/sqlcommenter/>`.
 This example uses Docker to manage a database server and OpenTelemetry collector.
 
 Run MySQL server
