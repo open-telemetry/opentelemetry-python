@@ -1,5 +1,5 @@
 iniconfig==2.3.0
-mocket==3.14.1
+mocket==3.14.3
 packaging==26.2
 pluggy==1.6.0
 pytest==9.0.3

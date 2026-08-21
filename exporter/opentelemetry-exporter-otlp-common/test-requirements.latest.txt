@@ -36,7 +36,7 @@ iniconfig==2.3.0
     # via
     #   -r exporter/opentelemetry-exporter-otlp-common/test-requirements.in
     #   pytest
-mocket==3.14.1
+mocket==3.14.3
     # via -r exporter/opentelemetry-exporter-otlp-common/test-requirements.in
 packaging==26.2
     # via

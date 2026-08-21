@@ -3,7 +3,7 @@ decorator==5.2.1
 h11==0.16.0
 importlib-metadata==6.11.0
 iniconfig==2.0.0
-mocket==3.14.1
+mocket==3.14.3
 packaging==24.0
 pluggy==1.6.0
 puremagic==1.30 ; python_full_version < '3.12'
