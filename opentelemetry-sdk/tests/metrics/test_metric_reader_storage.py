@@ -31,6 +31,7 @@ from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     DropAggregation,
     ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
     SumAggregation,
     View,
 )
@@ -304,6 +305,37 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(
                         instrument_name="observable_counter",
                         aggregation=ExplicitBucketHistogramAggregation(),
+                    ),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertLogs(level=WARNING):
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
+
+        self.assertIs(
+            metric_reader_storage._instrument_view_instrument_matches[observable_counter][0]._view,
+            _DEFAULT_VIEW,
+        )
+
+    def test_conflicting_view_configuration_exponential_histogram(self):
+        observable_counter = _ObservableCounter(
+            "observable_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                views=(
+                    View(
+                        instrument_name="observable_counter",
+                        aggregation=ExponentialBucketHistogramAggregation(),
                     ),
                 ),
             ),
