@@ -4,7 +4,7 @@ iniconfig==2.0.0
 opencensus-proto==0.1.0
 packaging==24.0
 pluggy==1.6.0
-protobuf==3.20.3
+protobuf==6.33.5
 py-cpuinfo==9.0.0
 pytest==9.0.3
 tomli==2.0.1
