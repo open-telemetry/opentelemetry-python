@@ -313,7 +313,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         del processor
         gc.collect()
 
-        self.assertIsNone(w_ref())
+        self.assertIsNone(weak_ref())
 
         # The bug causes an unraisable exception to be printed to stderr.
         # We redirect stderr to a pipe before fork to capture it.
