@@ -1,4 +1,4 @@
-asgiref==3.7.2
+asgiref==3.12.1
 certifi==2024.12.14
 charset-normalizer==3.3.2
 googleapis-common-protos==1.75.0
