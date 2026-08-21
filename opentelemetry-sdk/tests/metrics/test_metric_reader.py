@@ -7,7 +7,13 @@ from collections.abc import Iterable
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.sdk.metrics import Counter, Histogram, ObservableGauge
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+)
 from opentelemetry.sdk.metrics import _Gauge as _SDKGauge
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
@@ -26,6 +32,8 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.metrics.view import (
     Aggregation,
     DefaultAggregation,
+    ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
     LastValueAggregation,
 )
 
@@ -124,6 +132,38 @@ class TestMetricReader(TestCase):
         self.assertIsInstance(
             dummy_metric_reader._instrument_class_aggregation[_Counter],
             LastValueAggregation,
+        )
+
+    def test_configure_aggregation_asynchronous_histogram_incompatibility(self):
+        for instrument_class, internal_class in (
+            (ObservableCounter, _ObservableCounter),
+            (ObservableUpDownCounter, _ObservableUpDownCounter),
+            (ObservableGauge, _ObservableGauge),
+        ):
+            for aggregation in (
+                ExplicitBucketHistogramAggregation(),
+                ExponentialBucketHistogramAggregation(),
+            ):
+                with self.subTest(
+                    instrument=instrument_class.__name__,
+                    aggregation=type(aggregation).__name__,
+                ):
+                    with self.assertLogs(level="WARNING") as log:
+                        dummy_metric_reader = DummyMetricReader(preferred_aggregation={instrument_class: aggregation})
+                    self.assertIn("will produce semantic errors when matched", log.output[0])
+                    # The incompatible aggregation is ignored, so the instrument
+                    # keeps producing data through its default aggregation.
+                    self.assertIsInstance(
+                        dummy_metric_reader._instrument_class_aggregation[internal_class],
+                        DefaultAggregation,
+                    )
+
+    def test_configure_aggregation_synchronous_histogram_allowed(self):
+        aggregation = ExplicitBucketHistogramAggregation()
+        dummy_metric_reader = DummyMetricReader(preferred_aggregation={Counter: aggregation})
+        self.assertIs(
+            dummy_metric_reader._instrument_class_aggregation[_Counter],
+            aggregation,
         )
 
     # pylint: disable=no-self-use
