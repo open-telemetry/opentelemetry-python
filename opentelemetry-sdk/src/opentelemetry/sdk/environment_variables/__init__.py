@@ -9,6 +9,27 @@ The :envvar:`OTEL_SDK_DISABLED` environment variable disables the SDK for all si
 Default: "false"
 """
 
+OTEL_CONFIG_FILE = "OTEL_CONFIG_FILE"
+"""
+.. envvar:: OTEL_CONFIG_FILE
+
+The :envvar:`OTEL_CONFIG_FILE` environment variable points the SDK at a
+declarative configuration file (YAML or JSON). When set, the file is the
+sole source for SDK construction. Spec-defined ``OTEL_*`` variables with
+schema equivalents are ignored. Env vars may still be read indirectly by
+components the file enables (e.g. resource detectors) and via
+``${env:VAR}`` substitution inside the file.
+
+Python-implementation extensions outside the spec (``OTEL_PYTHON_*``
+variables such as ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
+:envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR`) are also bypassed when
+:envvar:`OTEL_CONFIG_FILE` is set, because the env-var initialisation path
+is skipped entirely in favour of the declarative file. Honouring these
+alongside a config file is tracked separately.
+
+See the OpenTelemetry declarative configuration specification for details.
+"""
+
 OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 """
 .. envvar:: OTEL_RESOURCE_ATTRIBUTES
@@ -141,7 +162,7 @@ OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT = "OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"
 """
 .. envvar:: OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
 
-The :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed attribute length.
+The :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed attribute value length for string attribute values.
 """
 
 OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = "OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT"
@@ -168,14 +189,28 @@ The :envvar:`OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed spa
 Default: 128
 """
 
-OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT = (
-    "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT"
-)
+OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT = "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT"
 """
 .. envvar:: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT
 
-The :envvar:`OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed length
-span attribute values can have. This takes precedence over :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`.
+The :envvar:`OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed attribute value length for string span attribute values. This takes precedence over :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`.
+"""
+
+OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT = "OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT"
+"""
+.. envvar:: OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT
+
+The :envvar:`OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed log record
+attribute count. This takes precedence over :envvar:`OTEL_ATTRIBUTE_COUNT_LIMIT`.
+"""
+
+OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT = "OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT"
+"""
+.. envvar:: OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT
+
+The :envvar:`OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed length
+log record attribute values can have. This takes precedence over
+:envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`.
 """
 
 OTEL_SPAN_EVENT_COUNT_LIMIT = "OTEL_SPAN_EVENT_COUNT_LIMIT"
@@ -337,9 +372,7 @@ The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https),
 A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
-_OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER = (
-    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER"
-)
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER = "OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER"
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER
 
@@ -356,9 +389,7 @@ Entry point providers should implement the following:
 Note: This environment variable is experimental and subject to change.
 """
 
-_OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER = (
-    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER"
-)
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER = "OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER"
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER
 
@@ -374,9 +405,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-_OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER = (
-    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER"
-)
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER = "OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER"
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_CREDENTIAL_PROVIDER
 
@@ -392,9 +421,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-_OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER = (
-    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER"
-)
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER = "OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER"
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER
 
@@ -410,9 +437,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER = (
-    "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER"
-)
+_OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER = "OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER"
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER
 
@@ -428,9 +453,7 @@ Entry point providers should implement the following:
 
 Note: This environment variable is experimental and subject to change.
 """
-_OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER = (
-    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER"
-)
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER = "OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER"
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER
 
@@ -483,9 +506,7 @@ Entry point providers should implement the following:
 Note: This environment variable is experimental and subject to change.
 """
 
-_OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES = (
-    "OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES"
-)
+_OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES = "OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES"
 """
 .. envvar:: OTEL_PYTHON_EXPORTER_OTLP_GRPC_RETRYABLE_ERROR_CODES
 
@@ -504,9 +525,7 @@ The :envvar:`OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE` stores the path to the certi
 TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
 """
 
-OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = (
-    "OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE"
-)
+OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = "OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
 
@@ -554,9 +573,7 @@ The :envvar:`OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE` stores the path to the clien
 clients private key to use in mTLS communication in PEM format.
 """
 
-OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE = (
-    "OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE"
-)
+OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE
 
@@ -564,9 +581,7 @@ The :envvar:`OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE` stores the path to th
 clients private key to use in mTLS communication in PEM format for traces.
 """
 
-OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE = (
-    "OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE"
-)
+OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE = "OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
 
@@ -574,9 +589,7 @@ The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE` stores the path to t
 clients private key to use in mTLS communication in PEM format for metrics.
 """
 
-OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE = (
-    "OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE"
-)
+OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE = "OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE
 
@@ -616,9 +629,7 @@ Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the span
 exporter. If both are present, this takes higher precedence.
 """
 
-OTEL_EXPORTER_OTLP_METRICS_COMPRESSION = (
-    "OTEL_EXPORTER_OTLP_METRICS_COMPRESSION"
-)
+OTEL_EXPORTER_OTLP_METRICS_COMPRESSION = "OTEL_EXPORTER_OTLP_METRICS_COMPRESSION"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
 
@@ -705,9 +716,7 @@ If both are set, :envvar:`OTEL_SERVICE_NAME` takes precedence.
 """
 
 
-_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED = (
-    "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
-)
+_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED = "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
 """
 .. envvar:: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
 
@@ -723,9 +732,7 @@ Note: Logs SDK and its related settings are experimental.
 """
 
 
-OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = (
-    "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
-)
+OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
 
@@ -761,9 +768,7 @@ OTEL_METRICS_EXEMPLAR_FILTER = "OTEL_METRICS_EXEMPLAR_FILTER"
 The :envvar:`OTEL_METRICS_EXEMPLAR_FILTER` is the filter for which measurements can become Exemplars.
 """
 
-OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION = (
-    "OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION"
-)
+OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION = "OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
 
@@ -848,9 +853,7 @@ This is an experimental environment variable and the name of this variable and i
 change in a non-backwards compatible way.
 """
 
-OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED = (
-    "OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED"
-)
+OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED = "OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED"
 """
 .. envvar:: OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
 

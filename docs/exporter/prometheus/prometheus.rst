@@ -39,6 +39,87 @@ Prometheus text format on request::
     provider = MeterProvider(resource=resource, metric_readers=[reader])
     metrics.set_meter_provider(provider)
 
+Scope labels
+------------
+
+By default, the Prometheus exporter adds instrumentation scope information as
+labels on every exported metric. These labels include ``otel_scope_name``,
+``otel_scope_version``, and ``otel_scope_schema_url``. Instrumentation scope
+attributes are exported with the ``otel_scope_`` prefix::
+
+    from prometheus_client import start_http_server
+
+    from opentelemetry import metrics
+    from opentelemetry.exporter.prometheus import PrometheusMetricReader
+    from opentelemetry.sdk.metrics import MeterProvider
+
+    start_http_server(port=9464, addr="localhost")
+    reader = PrometheusMetricReader()
+    provider = MeterProvider(metric_readers=[reader])
+    metrics.set_meter_provider(provider)
+
+    meter = metrics.get_meter(
+        "checkout",
+        "1.2.3",
+        schema_url="https://opentelemetry.io/schemas/1.21.0",
+        attributes={"region": "us-east-1"},
+    )
+    counter = meter.create_counter("orders")
+    counter.add(1, {"environment": "production"})
+
+The exported metric includes labels such as
+``otel_scope_name="checkout"``,
+``otel_scope_version="1.2.3"``,
+``otel_scope_schema_url="https://opentelemetry.io/schemas/1.21.0"``,
+``otel_scope_region="us-east-1"``, and
+``environment="production"``.
+
+To omit instrumentation scope labels from exported metrics, set
+``scope_info_enabled`` to ``False``::
+
+    reader = PrometheusMetricReader(scope_info_enabled=False)
+
+Resource labels
+---------------
+
+By default, resource attributes are exported on the ``target_info`` metric. To
+also add selected resource attributes as Prometheus labels on every exported
+metric, pass a ``resource_attribute_filter`` callback to ``PrometheusMetricReader``.
+The callback receives the original resource attribute key and returns ``True``
+for attributes that should be copied to metric labels::
+
+    from prometheus_client import start_http_server
+
+    from opentelemetry import metrics
+    from opentelemetry.exporter.prometheus import PrometheusMetricReader
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
+    resource = Resource.create(
+        attributes={
+            SERVICE_NAME: "checkout-service",
+            "service.namespace": "shop",
+            "deployment.environment": "production",
+        }
+    )
+
+    start_http_server(port=9464, addr="localhost")
+    included_resource_attrs = {SERVICE_NAME, "service.namespace"}
+    reader = PrometheusMetricReader(
+        resource_attribute_filter=lambda key: key in included_resource_attrs
+    )
+    provider = MeterProvider(resource=resource, metric_readers=[reader])
+    metrics.set_meter_provider(provider)
+
+    meter = metrics.get_meter(__name__)
+    counter = meter.create_counter("orders")
+    counter.add(1)
+
+The exported metric includes ``service_name="checkout-service"`` and
+``service_namespace="shop"`` labels. Resource attribute keys are sanitized to
+valid Prometheus label names, and metric attributes with the same sanitized name
+take precedence over copied resource attributes.
+
 Configuration
 -------------
 
@@ -56,4 +137,4 @@ References
 ----------
 
 * `Prometheus <https://prometheus.io/>`_
-* `OpenTelemetry Project <https://opentelemetry.io/>`_ 
+* `OpenTelemetry Project <https://opentelemetry.io/>`_

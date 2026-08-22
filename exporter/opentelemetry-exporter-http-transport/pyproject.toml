@@ -25,7 +25,9 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = []
+dependencies = [
+  "opentelemetry-api ~= 1.15",
+]
 
 [project.optional-dependencies]
 urllib3 = [
@@ -38,6 +40,10 @@ requests = [
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-http-transport"
 Repository = "https://github.com/open-telemetry/opentelemetry-python"
+
+[project.entry-points.opentelemetry_http_transport]
+urllib3 = "opentelemetry.exporter.http.transport._urllib3:Urllib3HTTPTransport"
+requests = "opentelemetry.exporter.http.transport._requests:RequestsHTTPTransport"
 
 [tool.hatch.version]
 path = "src/opentelemetry/exporter/http/transport/version/__init__.py"

@@ -37,6 +37,7 @@ from opentelemetry.sdk._logs.export import (
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_CONFIG_FILE,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
@@ -96,29 +97,20 @@ _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 _logger = logging.getLogger(__name__)
 
 ExporterArgsMap = Mapping[
-    type[SpanExporter]
-    | type[MetricExporter]
-    | type[MetricReader]
-    | type[LogRecordExporter],
+    type[SpanExporter] | type[MetricExporter] | type[MetricReader] | type[LogRecordExporter],
     Mapping[str, Any],
 ]
 
 
 class _ConfigurationExporterSpanProcessorT(Protocol):
-    def __call__(
-        self, span_exporter: SpanExporter, *args, **kwargs
-    ) -> SpanProcessor: ...
+    def __call__(self, span_exporter: SpanExporter, *args, **kwargs) -> SpanProcessor: ...
 
 
 class _ConfigurationExporterLogRecordProcessorT(Protocol):
-    def __call__(
-        self, exporter: LogRecordExporter, *args, **kwargs
-    ) -> LogRecordProcessor: ...
+    def __call__(self, exporter: LogRecordExporter, *args, **kwargs) -> LogRecordProcessor: ...
 
 
-def _import_config_components(
-    selected_components: Sequence[str], entry_point_name: str
-) -> list[tuple[str, type]]:
+def _import_config_components(selected_components: Sequence[str], entry_point_name: str) -> list[tuple[str, type]]:
     component_implementations = []
 
     for selected_component in selected_components:
@@ -126,24 +118,15 @@ def _import_config_components(
             component_implementations.append(
                 (
                     selected_component,
-                    next(
-                        iter(
-                            entry_points(
-                                group=entry_point_name, name=selected_component
-                            )
-                        )
-                    ).load(),
+                    next(iter(entry_points(group=entry_point_name, name=selected_component))).load(),
                 )
             )
         except KeyError:
-            raise RuntimeError(
-                f"Requested entry point '{entry_point_name}' not found"
-            )
+            raise RuntimeError(f"Requested entry point '{entry_point_name}' not found")
 
         except StopIteration:
             raise RuntimeError(
-                f"Requested component '{selected_component}' not found in "
-                f"entry point '{entry_point_name}'"
+                f"Requested component '{selected_component}' not found in entry point '{entry_point_name}'"
             )
 
     return component_implementations
@@ -169,9 +152,7 @@ def _get_logger_configurator() -> str | None:
     return environ.get(OTEL_PYTHON_LOGGER_CONFIGURATOR, None)
 
 
-def _get_exporter_entry_point(
-    exporter_name: str, signal_type: Literal["traces", "metrics", "logs"]
-):
+def _get_exporter_entry_point(exporter_name: str, signal_type: Literal["traces", "metrics", "logs"]):
     if exporter_name not in (
         _EXPORTER_OTLP,
         _EXPORTER_OTLP_PROTO_GRPC,
@@ -180,9 +161,7 @@ def _get_exporter_entry_point(
         return exporter_name
 
     # Checking env vars for OTLP protocol (grpc/http).
-    otlp_protocol = environ.get(
-        _PROTOCOL_ENV_BY_SIGNAL_TYPE[signal_type]
-    ) or environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
+    otlp_protocol = environ.get(_PROTOCOL_ENV_BY_SIGNAL_TYPE[signal_type]) or environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
 
     if not otlp_protocol:
         if exporter_name == _EXPORTER_OTLP:
@@ -194,9 +173,7 @@ def _get_exporter_entry_point(
     if exporter_name == _EXPORTER_OTLP:
         if otlp_protocol not in _EXPORTER_BY_OTLP_PROTOCOL:
             # Invalid value was set by the env var
-            raise RuntimeError(
-                f"Unsupported OTLP protocol '{otlp_protocol}' is configured"
-            )
+            raise RuntimeError(f"Unsupported OTLP protocol '{otlp_protocol}' is configured")
 
         return _EXPORTER_BY_OTLP_PROTOCOL[otlp_protocol]
 
@@ -221,10 +198,7 @@ def _get_exporter_names(
     if not names or names.lower().strip() == "none":
         return []
 
-    return [
-        _get_exporter_entry_point(_exporter.strip(), signal_type)
-        for _exporter in names.split(",")
-    ]
+    return [_get_exporter_entry_point(_exporter.strip(), signal_type) for _exporter in names.split(",")]
 
 
 def _init_tracing(
@@ -254,9 +228,7 @@ def _init_tracing(
 
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
-        provider.add_span_processor(
-            export_processor(exporter_class(**exporter_args))
-        )
+        provider.add_span_processor(export_processor(exporter_class(**exporter_args)))
 
 
 def _init_metrics(
@@ -273,11 +245,7 @@ def _init_metrics(
         if issubclass(exporter_or_reader_class, MetricReader):
             metric_readers.append(exporter_or_reader_class(**exporter_args))
         else:
-            metric_readers.append(
-                PeriodicExportingMetricReader(
-                    exporter_or_reader_class(**exporter_args)
-                )
-            )
+            metric_readers.append(PeriodicExportingMetricReader(exporter_or_reader_class(**exporter_args)))
 
     provider = MeterProvider(
         resource=resource,
@@ -294,13 +262,10 @@ def _init_logging(
     setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
-    export_log_record_processor: _ConfigurationExporterLogRecordProcessorT
-    | None = None,
+    export_log_record_processor: _ConfigurationExporterLogRecordProcessorT | None = None,
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
-    provider = LoggerProvider(
-        resource=resource, _logger_configurator=logger_configurator
-    )
+    provider = LoggerProvider(resource=resource, _logger_configurator=logger_configurator)
     set_logger_provider(provider)
 
     exporter_args_map = exporter_args_map or {}
@@ -312,23 +277,7 @@ def _init_logging(
 
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
-        provider.add_log_record_processor(
-            export_processor(exporter_class(**exporter_args))
-        )
-
-    # silence warnings from internal users until we drop the deprecated Events API
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=DeprecationWarning)
-        # pylint: disable=import-outside-toplevel
-        from opentelemetry._events import (  # noqa: PLC0415
-            set_event_logger_provider,
-        )
-        from opentelemetry.sdk._events import (  # noqa: PLC0415
-            EventLoggerProvider,
-        )
-
-        event_logger_provider = EventLoggerProvider(logger_provider=provider)
-        set_event_logger_provider(event_logger_provider)
+        provider.add_log_record_processor(export_processor(exporter_class(**exporter_args)))
 
     if setup_logging_handler:
         warnings.warn(
@@ -339,9 +288,7 @@ def _init_logging(
         )
 
         # Add OTel handler
-        handler = LoggingHandler(
-            level=logging.NOTSET, logger_provider=provider
-        )
+        handler = LoggingHandler(level=logging.NOTSET, logger_provider=provider)
         logging.getLogger().addHandler(handler)
         _overwrite_logging_config_fns(handler)
 
@@ -450,9 +397,7 @@ def _import_exporters(
     for (
         exporter_name,
         exporter_impl,
-    ) in _import_config_components(
-        trace_exporter_names, "opentelemetry_traces_exporter"
-    ):
+    ) in _import_config_components(trace_exporter_names, "opentelemetry_traces_exporter"):
         if issubclass(exporter_impl, SpanExporter):
             trace_exporters[exporter_name] = exporter_impl
         else:
@@ -461,9 +406,7 @@ def _import_exporters(
     for (
         exporter_name,
         exporter_impl,
-    ) in _import_config_components(
-        metric_exporter_names, "opentelemetry_metrics_exporter"
-    ):
+    ) in _import_config_components(metric_exporter_names, "opentelemetry_metrics_exporter"):
         # The metric exporter components may be push MetricExporter or pull exporters which
         # subclass MetricReader directly
         if issubclass(exporter_impl, (MetricExporter, MetricReader)):
@@ -474,9 +417,7 @@ def _import_exporters(
     for (
         exporter_name,
         exporter_impl,
-    ) in _import_config_components(
-        log_exporter_names, "opentelemetry_logs_exporter"
-    ):
+    ) in _import_config_components(log_exporter_names, "opentelemetry_logs_exporter"):
         if issubclass(exporter_impl, LogRecordExporter):
             log_exporters[exporter_name] = exporter_impl
         else:
@@ -488,9 +429,7 @@ def _import_exporters(
 def _import_sampler_factory(
     sampler_name: str,
 ) -> Callable[[float | str | None], Sampler]:
-    _, sampler_impl = _import_config_components(
-        [sampler_name.strip()], _OTEL_SAMPLER_ENTRY_POINT_GROUP
-    )[0]
+    _, sampler_impl = _import_config_components([sampler_name.strip()], _OTEL_SAMPLER_ENTRY_POINT_GROUP)[0]
     return sampler_impl
 
 
@@ -504,9 +443,7 @@ def _import_sampler(sampler_name: str | None) -> Sampler | None:
             try:
                 rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG, ""))
             except (ValueError, TypeError):
-                _logger.warning(
-                    "Could not convert TRACES_SAMPLER_ARG to float. Using default value 1.0."
-                )
+                _logger.warning("Could not convert TRACES_SAMPLER_ARG to float. Using default value 1.0.")
                 rate = 1.0
             arg = rate
         else:
@@ -550,9 +487,7 @@ def _import_opamp(
     """
     entry_point = None
     try:
-        entry_point = next(
-            iter(entry_points(group="_opentelemetry_opamp", name=name))
-        )
+        entry_point = next(iter(entry_points(group="_opentelemetry_opamp", name=name)))
         return entry_point.load()
     except StopIteration:
         _logger.debug("No OpAMP init function found")
@@ -579,8 +514,7 @@ def _initialize_components(
     span_processors: Sequence[SpanProcessor] | None = None,
     export_span_processor: _ConfigurationExporterSpanProcessorT | None = None,
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
-    export_log_record_processor: _ConfigurationExporterLogRecordProcessorT
-    | None = None,
+    export_log_record_processor: _ConfigurationExporterLogRecordProcessorT | None = None,
     tracer_configurator: _TracerConfiguratorT | None = None,
     meter_configurator: _MeterConfiguratorT | None = None,
     logger_configurator: _LoggerConfiguratorT | None = None,
@@ -627,19 +561,13 @@ def _initialize_components(
 
     if tracer_configurator is None:
         tracer_configurator_name = _get_tracer_configurator()
-        tracer_configurator = _import_tracer_configurator(
-            tracer_configurator_name
-        )
+        tracer_configurator = _import_tracer_configurator(tracer_configurator_name)
     if meter_configurator is None:
         meter_configurator_name = _get_meter_configurator()
-        meter_configurator = _import_meter_configurator(
-            meter_configurator_name
-        )
+        meter_configurator = _import_meter_configurator(meter_configurator_name)
     if logger_configurator is None:
         logger_configurator_name = _get_logger_configurator()
-        logger_configurator = _import_logger_configurator(
-            logger_configurator_name
-        )
+        logger_configurator = _import_logger_configurator(logger_configurator_name)
 
     _init_tracing(
         exporters=span_exporters,
@@ -659,12 +587,7 @@ def _initialize_components(
     )
     if setup_logging_handler is None:
         setup_logging_handler = (
-            os.getenv(
-                _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
-            )
-            .strip()
-            .lower()
-            == "true"
+            os.getenv(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false").strip().lower() == "true"
         )
     _init_logging(
         log_exporters,
@@ -720,4 +643,34 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
+        if config_file := environ.get(OTEL_CONFIG_FILE):
+            # Declarative configuration lives in the separate
+            # ``opentelemetry-configuration`` package. Import lazily so the
+            # SDK has no runtime dependency on it; users who don't set
+            # ``OTEL_CONFIG_FILE`` never pay the import cost.
+            try:
+                # opentelemetry-configuration is an optional runtime dep
+                # and is not installed in this package's lint env, so
+                # silence the static-analysis no-name-in-module on the
+                # conditional import.
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.configuration import (  # noqa: PLC0415
+                    configure_sdk,
+                    load_config_file,
+                )
+            except ImportError as exc:
+                raise RuntimeError(
+                    f"{OTEL_CONFIG_FILE} is set but "
+                    "opentelemetry-configuration is not installed. "
+                    "Install it with: pip install opentelemetry-configuration"
+                ) from exc
+
+            if kwargs:
+                _logger.warning(
+                    "%s is set; ignoring configurator kwargs: %s",
+                    OTEL_CONFIG_FILE,
+                    sorted(kwargs),
+                )
+            configure_sdk(load_config_file(config_file))
+            return
         _initialize_components(**kwargs)

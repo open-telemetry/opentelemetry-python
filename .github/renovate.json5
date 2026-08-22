@@ -1,0 +1,81 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    extends: [
+      "config:best-practices",
+      "helpers:pinGitHubActionDigestsToSemver",
+      ":semanticCommits"
+    ],
+    constraints: {
+      python: "==3.10"
+    },
+    labels: [
+      "dependencies",
+      "Skip Changelog",
+    ],
+    lockFileMaintenance: {
+      enabled: true,
+      schedule: ["before 8am on Monday"],
+    },
+    ignorePaths: [
+      ".github/renovate.json5",
+      "gen-requirements.txt",
+      "docs-requirements.txt",
+      // pyproject.toml files are intentionally excluded: package versions are managed
+      // by the release process and are not auto-updated by Renovate.
+      "**/pyproject.toml",
+    ],
+    // pip-compile manages the oldest|latest requirements files via lockFileMaintenance (re-runs uv pip compile --resolution=lowest|highest).
+    // pip_requirements is disabled for those files to avoid double-processing.
+    "pip-compile": {
+      managerFilePatterns: [
+        "/(^|/).*-requirements\.(oldest|latest)\.txt$/",
+      ],
+    },
+    // Also scan GitHub Actions workflow templates written as Jinja files.
+    "github-actions": {
+      managerFilePatterns: [
+        "/^\\.github/workflows/templates/.*\\.ya?ml\\.j2$/",
+      ],
+    },
+    packageRules: [
+      {
+        groupName: "all patch versions",
+        matchUpdateTypes: ["patch"],
+        schedule: ["before 8am every weekday"],
+      },
+      {
+        matchUpdateTypes: ["minor", "major"],
+        schedule: ["before 8am on Monday"],
+      },
+      {
+        matchManagers: ["pip_requirements"],
+        matchFileNames: ["**/*-requirements.oldest.txt", "**/*-requirements.latest.txt"],
+        enabled: false,
+      },
+      {
+        groupName: "docs deps",
+        matchFileNames: ["docs/**"],
+        semanticCommitScope: "docs",
+      },
+      {
+        groupName: "ci",
+        matchManagers: [
+          "github-actions",
+          "dockerfile",
+          "docker-compose",
+        ],
+        semanticCommitScope: "ci",
+      },
+      {
+        matchDepTypes: ["uses-with"],
+        matchDepNames: ["python"],
+        // Disable Renovate for the python version used in GitHub Actions workflows. The version is generated based on tox envs.
+        enabled: false,
+      },
+      {
+        matchManagers: ["github-actions"],
+        matchDepNames: ["open-telemetry/opentelemetry-python-contrib"],
+        enabled: false,
+      },
+    ],
+}

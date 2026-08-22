@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
 from opentelemetry.test.globals_test import LoggingGlobalsTest
-from opentelemetry.util.types import _ExtendedAttributes
+from opentelemetry.util.types import Attributes
 
 
 class TestProvider(_logs.NoOpLoggerProvider):
@@ -17,7 +17,7 @@ class TestProvider(_logs.NoOpLoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> _logs.Logger:
         return LoggerTest(name)
 
@@ -57,9 +57,7 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         self.assertIsInstance(_logs.get_logger_provider(), TestProvider)
 
         # logger provider now returns real instance
-        self.assertIsInstance(
-            _logs.get_logger_provider().get_logger("fresh"), LoggerTest
-        )
+        self.assertIsInstance(_logs.get_logger_provider().get_logger("fresh"), LoggerTest)
 
         # references to the old provider still work but return real logger now
         real_logger = provider.get_logger("proxy-test")

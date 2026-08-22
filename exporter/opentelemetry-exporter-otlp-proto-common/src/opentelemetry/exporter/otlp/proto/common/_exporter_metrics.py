@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from typing import Literal
     from urllib.parse import ParseResult as UrlParseResult
 
-    from opentelemetry.util.types import Attributes, AttributeValue
+    from opentelemetry.util.types import AnyValue, Attributes
 
 _component_counter = Counter()
 
@@ -47,9 +47,7 @@ class ExportResult:
 
 
 class ExporterMetricsT(Protocol):
-    def export_operation(
-        self, num_items: int
-    ) -> AbstractContextManager[ExportResult]: ...
+    def export_operation(self, num_items: int) -> AbstractContextManager[ExportResult]: ...
 
 
 class NoOpExporterMetrics:
@@ -73,12 +71,8 @@ class ExporterMetrics:
             create_exported = create_otel_sdk_exporter_log_exported
             create_inflight = create_otel_sdk_exporter_log_inflight
         else:
-            create_exported = (
-                create_otel_sdk_exporter_metric_data_point_exported
-            )
-            create_inflight = (
-                create_otel_sdk_exporter_metric_data_point_inflight
-            )
+            create_exported = create_otel_sdk_exporter_metric_data_point_exported
+            create_inflight = create_otel_sdk_exporter_metric_data_point_inflight
 
         port = endpoint.port
         if port is None:
@@ -87,12 +81,10 @@ class ExporterMetrics:
             elif endpoint.scheme == "http":
                 port = 80
 
-        component_type_value = (
-            component_type.value if component_type else "unknown_otlp_exporter"
-        )
+        component_type_value = component_type.value if component_type else "unknown_otlp_exporter"
         count = _component_counter[component_type_value]
         _component_counter[component_type_value] = count + 1
-        self._standard_attrs: dict[str, AttributeValue] = {
+        self._standard_attrs: dict[str, AnyValue] = {
             OTEL_COMPONENT_TYPE: component_type_value,
             OTEL_COMPONENT_NAME: f"{component_type_value}/{count}",
         }
@@ -122,16 +114,10 @@ class ExporterMetrics:
             end_time = perf_counter()
             self._inflight.add(-num_items, self._standard_attrs)
             exported_attrs = (
-                {**self._standard_attrs, ERROR_TYPE: type(error).__qualname__}
-                if error
-                else self._standard_attrs
+                {**self._standard_attrs, ERROR_TYPE: type(error).__qualname__} if error else self._standard_attrs
             )
             self._exported.add(num_items, exported_attrs)
-            duration_attrs = (
-                {**exported_attrs, **error_attrs}
-                if error_attrs
-                else exported_attrs
-            )
+            duration_attrs = {**exported_attrs, **error_attrs} if error_attrs else exported_attrs
             self._duration.record(end_time - start_time, duration_attrs)
 
 

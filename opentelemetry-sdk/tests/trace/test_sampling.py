@@ -4,6 +4,7 @@
 import contextlib
 import sys
 import unittest
+import unittest.mock
 
 from opentelemetry import context as context_api
 from opentelemetry import trace
@@ -15,23 +16,13 @@ TO_SAMPLED = trace.TraceFlags(trace.TraceFlags.SAMPLED)
 
 class TestDecision(unittest.TestCase):
     def test_is_recording(self):
-        self.assertTrue(
-            sampling.Decision.is_recording(sampling.Decision.RECORD_ONLY)
-        )
-        self.assertTrue(
-            sampling.Decision.is_recording(sampling.Decision.RECORD_AND_SAMPLE)
-        )
-        self.assertFalse(
-            sampling.Decision.is_recording(sampling.Decision.DROP)
-        )
+        self.assertTrue(sampling.Decision.is_recording(sampling.Decision.RECORD_ONLY))
+        self.assertTrue(sampling.Decision.is_recording(sampling.Decision.RECORD_AND_SAMPLE))
+        self.assertFalse(sampling.Decision.is_recording(sampling.Decision.DROP))
 
     def test_is_sampled(self):
-        self.assertFalse(
-            sampling.Decision.is_sampled(sampling.Decision.RECORD_ONLY)
-        )
-        self.assertTrue(
-            sampling.Decision.is_sampled(sampling.Decision.RECORD_AND_SAMPLE)
-        )
+        self.assertFalse(sampling.Decision.is_sampled(sampling.Decision.RECORD_ONLY))
+        self.assertTrue(sampling.Decision.is_sampled(sampling.Decision.RECORD_AND_SAMPLE))
         self.assertFalse(sampling.Decision.is_sampled(sampling.Decision.DROP))
 
 
@@ -41,9 +32,7 @@ class TestSamplingResult(unittest.TestCase):
         trace_state = {}
         # pylint: disable=E1137
         trace_state["test"] = "123"
-        result = sampling.SamplingResult(
-            sampling.Decision.RECORD_ONLY, attributes, trace_state
-        )
+        result = sampling.SamplingResult(sampling.Decision.RECORD_ONLY, attributes, trace_state)
         self.assertIs(result.decision, sampling.Decision.RECORD_ONLY)
         with self.assertRaises(TypeError):
             result.attributes["test"] = "mess-this-up"
@@ -58,14 +47,10 @@ class TestSampler(unittest.TestCase):
     ) -> context_api.Context | None:
         if trace_flags is None:
             return None
-        return trace.set_span_in_context(
-            self._create_parent_span(trace_flags, is_remote, trace_state)
-        )
+        return trace.set_span_in_context(self._create_parent_span(trace_flags, is_remote, trace_state))
 
     @staticmethod
-    def _create_parent_span(
-        trace_flags: trace.TraceFlags, is_remote=False, trace_state=None
-    ) -> trace.NonRecordingSpan:
+    def _create_parent_span(trace_flags: trace.TraceFlags, is_remote=False, trace_state=None) -> trace.NonRecordingSpan:
         return trace.NonRecordingSpan(
             trace.SpanContext(
                 0xDEADBEEF,
@@ -92,9 +77,7 @@ class TestSampler(unittest.TestCase):
                 )
 
                 self.assertTrue(sample_result.decision.is_sampled())
-                self.assertEqual(
-                    sample_result.attributes, {"sampled.expect": "true"}
-                )
+                self.assertEqual(sample_result.attributes, {"sampled.expect": "true"})
                 if context is not None:
                     self.assertEqual(sample_result.trace_state, trace_state)
                 else:
@@ -224,38 +207,20 @@ class TestSampler(unittest.TestCase):
 
     def test_probability_sampler_zero(self):
         default_off = sampling.TraceIdRatioBased(0.0)
-        self.assertFalse(
-            default_off.should_sample(
-                None, 0x0, "span name"
-            ).decision.is_sampled()
-        )
+        self.assertFalse(default_off.should_sample(None, 0x0, "span name").decision.is_sampled())
 
     def test_probability_sampler_one(self):
         default_off = sampling.TraceIdRatioBased(1.0)
-        self.assertTrue(
-            default_off.should_sample(
-                None, 0xFFFFFFFFFFFFFFFF, "span name"
-            ).decision.is_sampled()
-        )
+        self.assertTrue(default_off.should_sample(None, 0xFFFFFFFFFFFFFFFF, "span name").decision.is_sampled())
 
     def test_probability_sampler_limits(self):
         # Sample one of every 2^64 (= 5e-20) traces. This is the lowest
         # possible meaningful sampling rate, only traces with trace ID 0x0
         # should get sampled.
         almost_always_off = sampling.TraceIdRatioBased(2**-64)
-        self.assertTrue(
-            almost_always_off.should_sample(
-                None, 0x0, "span name"
-            ).decision.is_sampled()
-        )
-        self.assertFalse(
-            almost_always_off.should_sample(
-                None, 0x1, "span name"
-            ).decision.is_sampled()
-        )
-        self.assertEqual(
-            sampling.TraceIdRatioBased.get_bound_for_rate(2**-64), 0x1
-        )
+        self.assertTrue(almost_always_off.should_sample(None, 0x0, "span name").decision.is_sampled())
+        self.assertFalse(almost_always_off.should_sample(None, 0x1, "span name").decision.is_sampled())
+        self.assertEqual(sampling.TraceIdRatioBased.get_bound_for_rate(2**-64), 0x1)
 
         # Sample every trace with trace ID less than 0xffffffffffffffff. In
         # principle this is the highest possible sampling rate less than 1, but
@@ -266,11 +231,7 @@ class TestSampler(unittest.TestCase):
         #     1 - sys.float_info.epsilon
 
         almost_always_on = sampling.TraceIdRatioBased(1 - 2**-64)
-        self.assertTrue(
-            almost_always_on.should_sample(
-                None, 0xFFFFFFFFFFFFFFFE, "span name"
-            ).decision.is_sampled()
-        )
+        self.assertTrue(almost_always_on.should_sample(None, 0xFFFFFFFFFFFFFFFE, "span name").decision.is_sampled())
 
         # These tests are logically consistent, but fail because of the float
         # precision issue above. Changing the sampler to check fewer bytes of
@@ -290,13 +251,9 @@ class TestSampler(unittest.TestCase):
 
         # Check that a sampler with the highest effective sampling rate < 1
         # refuses to sample traces with trace ID 0xffffffffffffffff.
-        almost_almost_always_on = sampling.TraceIdRatioBased(
-            1 - sys.float_info.epsilon
-        )
+        almost_almost_always_on = sampling.TraceIdRatioBased(1 - sys.float_info.epsilon)
         self.assertFalse(
-            almost_almost_always_on.should_sample(
-                None, 0xFFFFFFFFFFFFFFFF, "span name"
-            ).decision.is_sampled()
+            almost_almost_always_on.should_sample(None, 0xFFFFFFFFFFFFFFFF, "span name").decision.is_sampled()
         )
         # Check that the highest effective sampling rate is actually lower than
         # the highest theoretical sampling rate. If this test fails the test
@@ -524,3 +481,56 @@ class TestSampler(unittest.TestCase):
             context_api.detach(token)
 
         self.exec_parent_based(implicit_parent_context)
+
+
+class TestAlwaysRecordSampler(unittest.TestCase):
+    def setUp(self):
+        self.mock_sampler: sampling.Sampler = unittest.mock.MagicMock()
+        self.sampler: sampling.Sampler = sampling.AlwaysRecordSampler(self.mock_sampler)
+
+    def test_get_description(self):
+        static_sampler: sampling.Sampler = sampling.StaticSampler(sampling.Decision.DROP)
+        test_sampler: sampling.Sampler = sampling.AlwaysRecordSampler(static_sampler)
+        self.assertEqual(
+            "AlwaysRecordSampler{AlwaysOffSampler}",
+            test_sampler.get_description(),
+        )
+
+    def test_record_and_sample_sampling_decision(self):
+        self.validate_should_sample(
+            sampling.Decision.RECORD_AND_SAMPLE,
+            sampling.Decision.RECORD_AND_SAMPLE,
+        )
+
+    def test_record_only_sampling_decision(self):
+        self.validate_should_sample(sampling.Decision.RECORD_ONLY, sampling.Decision.RECORD_ONLY)
+
+    def test_drop_sampling_decision(self):
+        self.validate_should_sample(sampling.Decision.DROP, sampling.Decision.RECORD_ONLY)
+
+    def validate_should_sample(
+        self,
+        root_decision: sampling.Decision,
+        expected_decision: sampling.Decision,
+    ):
+        trace_state: trace.TraceState = trace.TraceState()
+        trace_state = trace_state.add("key", root_decision.name)
+        root_result: sampling.SamplingResult = sampling.SamplingResult(
+            attributes={"key": root_decision.name},
+            decision=root_decision,
+            trace_state=trace_state,
+        )
+        self.mock_sampler.should_sample.return_value = root_result
+
+        actual_result: sampling.SamplingResult = self.sampler.should_sample(
+            parent_context=context_api.Context(),
+            trace_id=0,
+            name="name",
+            kind=trace.SpanKind.CLIENT,
+            attributes={"key": root_decision.name},
+            trace_state=trace.TraceState(),
+        )
+
+        self.assertEqual(actual_result.decision, expected_decision)
+        self.assertEqual(actual_result.attributes, root_result.attributes)
+        self.assertEqual(actual_result.trace_state, root_result.trace_state)

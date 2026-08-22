@@ -73,6 +73,14 @@ You can run `tox` with the following arguments:
 - `tox -e tracecontext` to run integration tests for tracecontext.
 - `tox -e precommit` to run all `pre-commit` actions
 
+The `docker-tests-otlpexporter` tests use
+[inline-snapshot](https://github.com/15r10nk/inline-snapshot) to assert
+on expected values inline in the test code. If you need to create or
+update a snapshot, run the tests with `--inline-snapshot=create` or
+`--inline-snapshot=fix` (see the
+[inline-snapshot docs](https://15r10nk.github.io/inline-snapshot/latest/)
+for all options).
+
 ### Changelog
 
 This project uses [towncrier](https://towncrier.readthedocs.io/) to manage the changelog. Instead of editing `CHANGELOG.md` directly, each PR should include a changelog fragment file in the `.changelog/` directory.

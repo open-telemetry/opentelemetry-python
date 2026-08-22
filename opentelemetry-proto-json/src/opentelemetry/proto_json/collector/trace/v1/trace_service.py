@@ -65,7 +65,7 @@ class ExportTraceServiceResponse(opentelemetry.proto_json._json_codec.JsonMessag
     Generated from protobuf message ExportTraceServiceResponse
     """
 
-    partial_success: typing.Optional[ExportTracePartialSuccess] = None
+    partial_success: ExportTracePartialSuccess | None = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -106,8 +106,8 @@ class ExportTracePartialSuccess(opentelemetry.proto_json._json_codec.JsonMessage
     Generated from protobuf message ExportTracePartialSuccess
     """
 
-    rejected_spans: typing.Optional[builtins.int] = 0
-    error_message: typing.Optional[builtins.str] = ""
+    rejected_spans: builtins.int | None = 0
+    error_message: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """

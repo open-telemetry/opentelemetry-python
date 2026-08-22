@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 """
 For general information about sampling, see `the specification <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#sampling>`_.
 
@@ -121,13 +122,14 @@ In order to configure you application with a custom sampler's entry point, set t
 above sampler, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES_SAMPLER_ARG=0.5``.
 """
 
+from __future__ import annotations
+
 import abc
 import enum
 import os
 from collections.abc import Sequence
 from logging import getLogger
 from types import MappingProxyType
-from typing import Optional
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
@@ -174,8 +176,8 @@ class SamplingResult:
     def __init__(
         self,
         decision: Decision,
-        attributes: "Attributes" = None,
-        trace_state: Optional["TraceState"] = None,
+        attributes: Attributes = None,
+        trace_state: TraceState | None = None,
     ) -> None:
         self.decision = decision
         if attributes is None:
@@ -189,14 +191,14 @@ class Sampler(abc.ABC):
     @abc.abstractmethod
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         pass
 
     @abc.abstractmethod
@@ -207,19 +209,19 @@ class Sampler(abc.ABC):
 class StaticSampler(Sampler):
     """Sampler that always returns the same decision."""
 
-    def __init__(self, decision: "Decision") -> None:
+    def __init__(self, decision: Decision) -> None:
         self._decision = decision
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         if self._decision is Decision.DROP:
             attributes = None
         return SamplingResult(
@@ -273,14 +275,14 @@ class TraceIdRatioBased(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> "SamplingResult":
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
             decision = Decision.RECORD_AND_SAMPLE
@@ -328,17 +330,15 @@ class ParentBased(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] | None = None,
-        trace_state: Optional["TraceState"] = None,
-    ) -> "SamplingResult":
-        parent_span_context = get_current_span(
-            parent_context
-        ).get_span_context()
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
+        parent_span_context = get_current_span(parent_context).get_span_context()
         # default to the root sampler
         sampler = self._root
         # respect the sampling and remote flag of the parent if present
@@ -365,6 +365,53 @@ class ParentBased(Sampler):
 
     def get_description(self):
         return f"ParentBased{{root:{self._root.get_description()},remoteParentSampled:{self._remote_parent_sampled.get_description()},remoteParentNotSampled:{self._remote_parent_not_sampled.get_description()},localParentSampled:{self._local_parent_sampled.get_description()},localParentNotSampled:{self._local_parent_not_sampled.get_description()}}}"
+
+
+class AlwaysRecordSampler(Sampler):
+    """
+    This sampler will return the sampling result of the provided `root`, unless the
+    sampling result contains the sampling decision `Decision.DROP`, in which case, a
+    new sampling result will be returned that is functionally equivalent to the original, except that
+    it contains the sampling decision `Decision.RECORD_ONLY`. This ensures that all
+    spans are recorded, with no change to sampling.
+
+    The intended use case of this sampler is to provide a means of sending all spans to a
+    processor without having an impact on the sampling rate. This may be desirable if a user wishes
+    to count or otherwise measure all spans produced in a service, without incurring the cost of 100%
+    sampling.
+    """
+
+    def __init__(self, root: Sampler):
+        if root is None:
+            raise ValueError("root must not be None")
+        self._root = root
+
+    def should_sample(
+        self,
+        parent_context: Context | None,
+        trace_id: int,
+        name: str,
+        kind: SpanKind | None = None,
+        attributes: Attributes = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
+        result: SamplingResult = self._root.should_sample(
+            parent_context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            links,
+            trace_state,
+        )
+        if result.decision is Decision.DROP:
+            result = SamplingResult(Decision.RECORD_ONLY, result.attributes, result.trace_state)
+
+        return result
+
+    def get_description(self):
+        return f"AlwaysRecordSampler{{{self._root.get_description()}}}"
 
 
 DEFAULT_OFF = ParentBased(ALWAYS_OFF)
@@ -416,9 +463,7 @@ _KNOWN_SAMPLERS = {
 
 
 def _get_from_env_or_default() -> Sampler:
-    trace_sampler = os.getenv(
-        OTEL_TRACES_SAMPLER, "parentbased_always_on"
-    ).lower()
+    trace_sampler = os.getenv(OTEL_TRACES_SAMPLER, "parentbased_always_on").lower()
     if trace_sampler not in _KNOWN_SAMPLERS:
         _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
         trace_sampler = "parentbased_always_on"
@@ -436,7 +481,7 @@ def _get_from_env_or_default() -> Sampler:
 
 def _get_parent_trace_state(
     parent_context: Context | None,
-) -> Optional["TraceState"]:
+) -> TraceState | None:
     parent_span_context = get_current_span(parent_context).get_span_context()
     if parent_span_context is None or not parent_span_context.is_valid:
         return None

@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: rename "known/unknown" to "built-in/user-defined" terminology in declarative config component loading code

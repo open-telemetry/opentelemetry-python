@@ -5,9 +5,8 @@ from __future__ import annotations
 
 import functools
 import json
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 # pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._base import (
@@ -16,6 +15,9 @@ from opentelemetry.exporter.http.transport._base import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Any
+
     from urllib3 import BaseHTTPResponse
 
 
@@ -33,9 +35,7 @@ def _get_connection_error_types() -> tuple[type[Exception], ...]:
     ]
 
     # NameResolutionError was added in urllib3 2.0
-    name_resolution_error = getattr(
-        urllib3.exceptions, "NameResolutionError", None
-    )
+    name_resolution_error = getattr(urllib3.exceptions, "NameResolutionError", None)
     if name_resolution_error is not None:
         types.append(name_resolution_error)
 
@@ -44,9 +44,7 @@ def _get_connection_error_types() -> tuple[type[Exception], ...]:
 
 @dataclass(frozen=True, slots=True)
 class Urllib3HTTPResult(BaseHTTPResult):
-    response: BaseHTTPResponse | None = field(
-        default=None, hash=False, compare=False
-    )
+    response: BaseHTTPResponse | None = field(default=None, hash=False, compare=False)
 
     def content(self) -> bytes:
         if self.response is None:
@@ -70,6 +68,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         *,
         verify: bool | str = True,
         cert: str | tuple[str, str] | None = None,
+        **kwargs: Any,
     ) -> None:
         # pylint: disable-next=import-outside-toplevel
         import urllib3  # noqa: PLC0415
@@ -109,9 +108,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
                 url=url,
                 headers=headers,
                 body=data,
-                timeout=urllib3.Timeout(total=timeout)
-                if timeout is not None
-                else None,
+                timeout=urllib3.Timeout(total=timeout) if timeout is not None else None,
                 preload_content=True,
             )
         # pylint: disable-next=broad-exception-caught

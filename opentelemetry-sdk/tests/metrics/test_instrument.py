@@ -51,6 +51,20 @@ class TestCounter(TestCase):
             counter.add(-1.0)
         mc.consume_measurement.assert_not_called()
 
+    def test_add_nan(self):
+        mc = Mock()
+        counter = _Counter("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            counter.add(float("nan"))
+        mc.consume_measurement.assert_not_called()
+
+    def test_add_inf(self):
+        mc = Mock()
+        counter = _Counter("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            counter.add(float("inf"))
+        mc.consume_measurement.assert_not_called()
+
     def test_disallow_direct_counter_creation(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
@@ -69,6 +83,20 @@ class TestUpDownCounter(TestCase):
         counter = _UpDownCounter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_called_once()
+
+    def test_add_nan(self):
+        mc = Mock()
+        counter = _UpDownCounter("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            counter.add(float("nan"))
+        mc.consume_measurement.assert_not_called()
+
+    def test_add_inf(self):
+        mc = Mock()
+        counter = _UpDownCounter("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            counter.add(float("inf"))
+        mc.consume_measurement.assert_not_called()
 
     def test_disallow_direct_up_down_counter_creation(self):
         with self.assertRaises(TypeError):
@@ -129,9 +157,7 @@ class TestObservableGauge(TestCase):
         self.assertEqual(_ObservableGauge("Name", Mock(), Mock()).name, "name")
 
     def test_callable_callback_0(self):
-        observable_gauge = _ObservableGauge(
-            "name", Mock(), Mock(), [callable_callback_0]
-        )
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [callable_callback_0])
 
         assert list(observable_gauge.callback(CallbackOptions())) == (
             [
@@ -160,9 +186,7 @@ class TestObservableGauge(TestCase):
         )
 
     def test_callable_multiple_callable_callback(self):
-        observable_gauge = _ObservableGauge(
-            "name", Mock(), Mock(), [callable_callback_0, callable_callback_1]
-        )
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [callable_callback_0, callable_callback_1])
 
         self.assertEqual(
             list(observable_gauge.callback(CallbackOptions())),
@@ -213,9 +237,7 @@ class TestObservableGauge(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_gauge = _ObservableGauge(
-            "name", Mock(), Mock(), [generator_callback_0()]
-        )
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [generator_callback_0()])
 
         self.assertEqual(
             list(observable_gauge.callback(CallbackOptions())),
@@ -300,6 +322,32 @@ class TestObservableGauge(TestCase):
             ],
         )
 
+    def test_nan_callback_value_is_dropped(self):
+        def nan_callback(options: CallbackOptions):
+            return [
+                Observation(float("nan"), attributes=TEST_ATTRIBUTES),
+                Observation(1, attributes=TEST_ATTRIBUTES),
+            ]
+
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [nan_callback])
+        with self.assertLogs(level=WARNING):
+            measurements = list(observable_gauge.callback(CallbackOptions()))
+        self.assertEqual(len(measurements), 1)
+        self.assertEqual(measurements[0].value, 1)
+
+    def test_inf_callback_value_is_dropped(self):
+        def inf_callback(options: CallbackOptions):
+            return [
+                Observation(float("inf"), attributes=TEST_ATTRIBUTES),
+                Observation(1, attributes=TEST_ATTRIBUTES),
+            ]
+
+        observable_gauge = _ObservableGauge("name", Mock(), Mock(), [inf_callback])
+        with self.assertLogs(level=WARNING):
+            measurements = list(observable_gauge.callback(CallbackOptions()))
+        self.assertEqual(len(measurements), 1)
+        self.assertEqual(measurements[0].value, 1)
+
     def test_disallow_direct_observable_gauge_creation(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
@@ -312,9 +360,7 @@ class TestObservableGauge(TestCase):
 )
 class TestObservableCounter(TestCase):
     def test_callable_callback_0(self):
-        observable_counter = _ObservableCounter(
-            "name", Mock(), Mock(), [callable_callback_0]
-        )
+        observable_counter = _ObservableCounter("name", Mock(), Mock(), [callable_callback_0])
 
         self.assertEqual(
             list(observable_counter.callback(CallbackOptions())),
@@ -344,9 +390,7 @@ class TestObservableCounter(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_counter = _ObservableCounter(
-            "name", Mock(), Mock(), [generator_callback_0()]
-        )
+        observable_counter = _ObservableCounter("name", Mock(), Mock(), [generator_callback_0()])
 
         self.assertEqual(
             list(observable_counter.callback(CallbackOptions())),
@@ -392,6 +436,20 @@ class TestGauge(TestCase):
         gauge.set(1.0)
         mc.consume_measurement.assert_called_once()
 
+    def test_set_nan(self):
+        mc = Mock()
+        gauge = _Gauge("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            gauge.set(float("nan"))
+        mc.consume_measurement.assert_not_called()
+
+    def test_set_inf(self):
+        mc = Mock()
+        gauge = _Gauge("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            gauge.set(float("inf"))
+        mc.consume_measurement.assert_not_called()
+
     def test_disallow_direct_counter_creation(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
@@ -404,9 +462,7 @@ class TestGauge(TestCase):
 )
 class TestObservableUpDownCounter(TestCase):
     def test_callable_callback_0(self):
-        observable_up_down_counter = _ObservableUpDownCounter(
-            "name", Mock(), Mock(), [callable_callback_0]
-        )
+        observable_up_down_counter = _ObservableUpDownCounter("name", Mock(), Mock(), [callable_callback_0])
 
         self.assertEqual(
             list(observable_up_down_counter.callback(CallbackOptions())),
@@ -436,9 +492,7 @@ class TestObservableUpDownCounter(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_up_down_counter = _ObservableUpDownCounter(
-            "name", Mock(), Mock(), [generator_callback_0()]
-        )
+        observable_up_down_counter = _ObservableUpDownCounter("name", Mock(), Mock(), [generator_callback_0()])
 
         self.assertEqual(
             list(observable_up_down_counter.callback(CallbackOptions())),
@@ -487,7 +541,35 @@ class TestHistogram(TestCase):
             hist.record(-1.0)
         mc.consume_measurement.assert_not_called()
 
+    def test_record_nan(self):
+        mc = Mock()
+        hist = _Histogram("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            hist.record(float("nan"))
+        mc.consume_measurement.assert_not_called()
+
+    def test_record_inf(self):
+        mc = Mock()
+        hist = _Histogram("name", Mock(), mc)
+        with self.assertLogs(level=WARNING):
+            hist.record(float("inf"))
+        mc.consume_measurement.assert_not_called()
+
     def test_disallow_direct_histogram_creation(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
             Histogram("name", Mock(), Mock())
+
+
+class TestInstrumentValidationMessages(TestCase):
+    def test_invalid_name_error_message(self):
+        with self.assertRaises(Exception) as ctx:
+            _Counter("1-invalid-name", Mock(), Mock())
+        self.assertIn("maximum length 255", str(ctx.exception))
+        self.assertNotIn("63", str(ctx.exception))
+
+    def test_invalid_unit_error_message(self):
+        with self.assertRaises(Exception) as ctx:
+            _Counter("name", Mock(), Mock(), unit="u" * 64)
+        self.assertIn("maximum length 63", str(ctx.exception))
+        self.assertNotIn("255", str(ctx.exception))

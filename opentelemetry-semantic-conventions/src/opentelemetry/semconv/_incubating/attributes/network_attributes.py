@@ -34,7 +34,7 @@ Note: Connection states are defined as part of the [rfc9293](https://datatracker
 
 NETWORK_CONNECTION_SUBTYPE: Final = "network.connection.subtype"
 """
-This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
+This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a Wi-Fi connection.
 """
 
 NETWORK_CONNECTION_TYPE: Final = "network.connection.type"
@@ -49,7 +49,7 @@ The network interface name.
 
 NETWORK_IO_DIRECTION: Final = "network.io.direction"
 """
-The network IO operation direction.
+The direction of traffic from the perspective of the observing host's physical or virtual network interface. It should not be used to represent the logical direction of a stateful connection or network flow.
 """
 
 NETWORK_LOCAL_ADDRESS: Final = "network.local.address"
@@ -165,7 +165,7 @@ class NetworkConnectionSubtypeValues(Enum):
 
 class NetworkConnectionTypeValues(Enum):
     WIFI = "wifi"
-    """wifi."""
+    """Wi-Fi."""
     WIRED = "wired"
     """wired."""
     CELL = "cell"

@@ -65,7 +65,7 @@ class ExportMetricsServiceResponse(opentelemetry.proto_json._json_codec.JsonMess
     Generated from protobuf message ExportMetricsServiceResponse
     """
 
-    partial_success: typing.Optional[ExportMetricsPartialSuccess] = None
+    partial_success: ExportMetricsPartialSuccess | None = None
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """
@@ -106,8 +106,8 @@ class ExportMetricsPartialSuccess(opentelemetry.proto_json._json_codec.JsonMessa
     Generated from protobuf message ExportMetricsPartialSuccess
     """
 
-    rejected_data_points: typing.Optional[builtins.int] = 0
-    error_message: typing.Optional[builtins.str] = ""
+    rejected_data_points: builtins.int | None = 0
+    error_message: builtins.str | None = ""
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:
         """

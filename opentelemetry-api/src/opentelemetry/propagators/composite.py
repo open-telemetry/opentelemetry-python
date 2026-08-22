@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+import collections.abc
 import logging
-import typing
 
 from typing_extensions import deprecated
 
@@ -19,9 +19,7 @@ class CompositePropagator(textmap.TextMapPropagator):
         propagators: the list of propagators to use
     """
 
-    def __init__(
-        self, propagators: typing.Sequence[textmap.TextMapPropagator]
-    ) -> None:
+    def __init__(self, propagators: collections.abc.Sequence[textmap.TextMapPropagator]) -> None:
         self._propagators = propagators
 
     def extract(
@@ -73,9 +71,7 @@ class CompositePropagator(textmap.TextMapPropagator):
         return composite_fields
 
 
-@deprecated(
-    "You should use CompositePropagator. Deprecated since version 1.2.0."
-)
+@deprecated("You should use CompositePropagator. Deprecated since version 1.2.0.")
 class CompositeHTTPPropagator(CompositePropagator):
     """CompositeHTTPPropagator provides a mechanism for combining multiple
     propagators into a single one.

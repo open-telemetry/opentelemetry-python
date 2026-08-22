@@ -38,9 +38,7 @@ def trace_v1_types() -> type[Any]:
 
 
 @pytest.fixture
-def complex_v1_types() -> tuple[
-    type[Any], type[Any], type[Any], type[Any], type[Any]
-]:
+def complex_v1_types() -> tuple[type[Any], type[Any], type[Any], type[Any], type[Any]]:
     from otel_test_json.test.v1.complex import (  # type: ignore
         DeeplyNested,
         NestedEnumSuite,
@@ -105,9 +103,7 @@ def test_generated_message_roundtrip(
     assert new_msg == msg
 
 
-def test_cross_reference(
-    common_v1_types: type[Any], trace_v1_types: type[Any]
-) -> None:
+def test_cross_reference(common_v1_types: type[Any], trace_v1_types: type[Any]) -> None:
     InstrumentationScope = common_v1_types
     Span = trace_v1_types
 

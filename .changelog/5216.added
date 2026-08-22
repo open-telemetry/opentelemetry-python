@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: add pull metric reader support to declarative file configuration, including Prometheus metric reader via the `prometheus_development` config field

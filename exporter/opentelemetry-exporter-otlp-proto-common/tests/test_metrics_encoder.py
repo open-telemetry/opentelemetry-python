@@ -116,16 +116,12 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_metrics=[
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=InstrumentationScope(name="first_name", version="first_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -138,15 +134,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=1641946015139533244,
@@ -197,16 +189,12 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_metrics=[
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=InstrumentationScope(name="first_name", version="first_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -219,15 +207,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=1641946015139533244,
@@ -278,16 +262,12 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_metrics=[
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=InstrumentationScope(name="first_name", version="first_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -300,15 +280,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 time_unix_nano=1641946016139533244,
@@ -357,16 +333,12 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_metrics=[
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=InstrumentationScope(name="first_name", version="first_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -379,15 +351,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 time_unix_nano=1641946016139533244,
@@ -435,16 +403,12 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_metrics=[
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=InstrumentationScope(name="first_name", version="first_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -457,15 +421,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=1641946016139533244,
@@ -483,9 +443,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -495,9 +453,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -566,16 +522,12 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_metrics=[
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=InstrumentationScope(name="first_name", version="first_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -588,15 +540,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=1641946016139533244,
@@ -614,9 +562,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -626,9 +572,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -650,15 +594,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=1641946016139533244,
@@ -676,9 +616,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -688,9 +626,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -705,9 +641,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             ],
                         ),
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="second_name", version="second_version"
-                            ),
+                            scope=InstrumentationScope(name="second_name", version="second_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -720,15 +654,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=1641946016139533244,
@@ -746,9 +676,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -758,9 +686,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -775,9 +701,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                             ],
                         ),
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="third_name", version="third_version"
-                            ),
+                            scope=InstrumentationScope(name="third_name", version="third_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -790,15 +714,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=1641946016139533244,
@@ -816,9 +736,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -828,9 +746,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                         filtered_attributes=[
                                                             KeyValue(
                                                                 key="filtered",
-                                                                value=AnyValue(
-                                                                    string_value="banana"
-                                                                ),
+                                                                value=AnyValue(string_value="banana"),
                                                             )
                                                         ],
                                                     ),
@@ -906,16 +822,12 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
-                            KeyValue(
-                                key="b", value=AnyValue(bool_value=False)
-                            ),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
                         ]
                     ),
                     scope_metrics=[
                         pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=InstrumentationScope(name="first_name", version="first_version"),
                             schema_url="instrumentation_scope_schema_url",
                             metrics=[
                                 pb2.Metric(
@@ -928,15 +840,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=0,
@@ -1039,9 +947,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                 name="first_name",
                                 version="first_version",
                                 attributes=[
-                                    KeyValue(
-                                        key="one", value=AnyValue(int_value=1)
-                                    ),
+                                    KeyValue(key="one", value=AnyValue(int_value=1)),
                                     KeyValue(
                                         key="two",
                                         value=AnyValue(string_value="2"),
@@ -1060,15 +966,11 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
-                                                        value=AnyValue(
-                                                            int_value=1
-                                                        ),
+                                                        value=AnyValue(int_value=1),
                                                     ),
                                                     KeyValue(
                                                         key="b",
-                                                        value=AnyValue(
-                                                            bool_value=True
-                                                        ),
+                                                        value=AnyValue(bool_value=True),
                                                     ),
                                                 ],
                                                 start_time_unix_nano=1641946015139533244,

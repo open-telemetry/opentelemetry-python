@@ -41,37 +41,36 @@ Note: This can sometimes be referred to as a "volume handle" in CSI implementati
 
 CONTAINER_ID: Final = "container.id"
 """
-Container ID. Usually a UUID, as for example used to [identify Docker containers](https://docs.docker.com/engine/containers/run/#container-identification). The UUID might be abbreviated.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.container_attributes.CONTAINER_ID`.
 """
 
 CONTAINER_IMAGE_ID: Final = "container.image.id"
 """
 Runtime specific image identifier. Usually a hash algorithm followed by a UUID.
-Note: Docker defines a sha256 of the image id; `container.image.id` corresponds to the `Image` field from the Docker container inspect [API](https://docs.docker.com/reference/api/engine/version/v1.52/#tag/Container/operation/ContainerInspect) endpoint.
+Note: Docker defines a sha256 of the image ID; `container.image.id` corresponds to the `Image` field from the Docker container inspect [API](https://docs.docker.com/reference/api/engine/version/v1.52/#tag/Container/operation/ContainerInspect) endpoint.
 K8s defines a link to the container registry repository with digest `"imageID": "registry.azurecr.io /namespace/service/dockerfile@sha256:bdeabd40c3a8a492eaf9e8e44d0ebbb84bac7ee25ac0cf8a7159d25f62555625"`.
 The ID is assigned by the container runtime and can vary in different environments. Consider using `oci.manifest.digest` if it is important to identify the same image in different environments/runtimes.
 """
 
 CONTAINER_IMAGE_NAME: Final = "container.image.name"
 """
-Name of the image the container was built on.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.container_attributes.CONTAINER_IMAGE_NAME`.
 """
 
 CONTAINER_IMAGE_REPO_DIGESTS: Final = "container.image.repo_digests"
 """
-Repo digests of the container image as provided by the container runtime.
-Note: [Docker](https://docs.docker.com/reference/api/engine/version/v1.52/#tag/Image/operation/ImageInspect) and [CRI](https://github.com/kubernetes/cri-api/blob/c75ef5b473bbe2d0a4fc92f82235efd665ea8e9f/pkg/apis/runtime/v1/api.proto#L1237-L1238) report those under the `RepoDigests` field.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.container_attributes.CONTAINER_IMAGE_REPO_DIGESTS`.
 """
 
 CONTAINER_IMAGE_TAGS: Final = "container.image.tags"
 """
-Container image tags. An example can be found in [Docker Image Inspect](https://docs.docker.com/reference/api/engine/version/v1.52/#tag/Image/operation/ImageInspect). Should be only the `<tag>` section of the full name for example from `registry.example.com/my-org/my-image:<tag>`.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.container_attributes.CONTAINER_IMAGE_TAGS`.
 """
 
 CONTAINER_LABEL_TEMPLATE: Final = "container.label"
 """
 Container labels, `<key>` being the label name, the value being the label value.
-Note: For example, a docker container label `app` with value `nginx` SHOULD be recorded as the `container.label.app` attribute with value `"nginx"`.
+Note: For example, a Docker container label `app` with value `nginx` SHOULD be recorded as the `container.label.app` attribute with value `"nginx"`.
 """
 
 CONTAINER_LABELS_TEMPLATE: Final = "container.labels"
@@ -105,9 +104,7 @@ The version of the runtime of this process, as returned by the runtime without m
 """
 
 
-@deprecated(
-    "The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`"
-)
+@deprecated("The attribute container.cpu.state is deprecated - Replaced by `cpu.mode`")
 class ContainerCpuStateValues(Enum):
     USER = "user"
     """When tasks of the cgroup are in user mode (Linux). When all container processes are in user mode (Windows)."""

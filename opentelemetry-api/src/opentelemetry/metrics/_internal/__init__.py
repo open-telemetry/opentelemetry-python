@@ -96,7 +96,7 @@ class MeterProvider(ABC):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
 
@@ -135,7 +135,7 @@ class NoOpMeterProvider(MeterProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
     ) -> "Meter":
         """Returns a NoOpMeter."""
         return NoOpMeter(name, version=version, schema_url=schema_url)
@@ -152,13 +152,11 @@ class _ProxyMeterProvider(MeterProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
     ) -> "Meter":
         with self._lock:
             if self._real_meter_provider is not None:
-                return self._real_meter_provider.get_meter(
-                    name, version, schema_url
-                )
+                return self._real_meter_provider.get_meter(name, version, schema_url)
 
             meter = _ProxyMeter(name, version=version, schema_url=schema_url)
             self._meters.append(meter)
@@ -240,9 +238,7 @@ class Meter(ABC):
         the registered instrument advisory.
         """
 
-        instrument_id = ",".join(
-            [name.strip().lower(), type_.__name__, unit, description]
-        )
+        instrument_id = ",".join([name.strip().lower(), type_.__name__, unit, description])
 
         already_registered = False
         conflict = False
@@ -332,43 +328,73 @@ class Meter(ABC):
         For example, an observable counter could be used to report system CPU
         time periodically. Here is a basic implementation::
 
-            def cpu_time_callback(options: CallbackOptions) -> Iterable[Observation]:
+            def cpu_time_callback(
+                options: CallbackOptions,
+            ) -> Iterable[Observation]:
                 observations = []
                 with open("/proc/stat") as procstat:
                     procstat.readline()  # skip the first line
                     for line in procstat:
-                        if not line.startswith("cpu"): break
+                        if not line.startswith("cpu"):
+                            break
                         cpu, *states = line.split()
-                        observations.append(Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
-                        observations.append(Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
-                        observations.append(Observation(int(states[2]) // 100, {"cpu": cpu, "state": "system"}))
+                        observations.append(
+                            Observation(
+                                int(states[0]) // 100,
+                                {"cpu": cpu, "state": "user"},
+                            )
+                        )
+                        observations.append(
+                            Observation(
+                                int(states[1]) // 100,
+                                {"cpu": cpu, "state": "nice"},
+                            )
+                        )
+                        observations.append(
+                            Observation(
+                                int(states[2]) // 100,
+                                {"cpu": cpu, "state": "system"},
+                            )
+                        )
                         # ... other states
                 return observations
+
 
             meter.create_observable_counter(
                 "system.cpu.time",
                 callbacks=[cpu_time_callback],
                 unit="s",
-                description="CPU time"
+                description="CPU time",
             )
 
         To reduce memory usage, you can use generator callbacks instead of
         building the full list::
 
-            def cpu_time_callback(options: CallbackOptions) -> Iterable[Observation]:
+            def cpu_time_callback(
+                options: CallbackOptions,
+            ) -> Iterable[Observation]:
                 with open("/proc/stat") as procstat:
                     procstat.readline()  # skip the first line
                     for line in procstat:
-                        if not line.startswith("cpu"): break
+                        if not line.startswith("cpu"):
+                            break
                         cpu, *states = line.split()
-                        yield Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"})
-                        yield Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"})
+                        yield Observation(
+                            int(states[0]) // 100,
+                            {"cpu": cpu, "state": "user"},
+                        )
+                        yield Observation(
+                            int(states[1]) // 100,
+                            {"cpu": cpu, "state": "nice"},
+                        )
                         # ... other states
 
         Alternatively, you can pass a sequence of generators directly instead of a sequence of
         callbacks, which each should return iterables of :class:`~opentelemetry.metrics.Observation`::
 
-            def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Observation]]:
+            def cpu_time_callback(
+                states_to_include: set[str],
+            ) -> Iterable[Iterable[Observation]]:
                 # accept options sent in from OpenTelemetry
                 options = yield
                 while True:
@@ -376,29 +402,46 @@ class Meter(ABC):
                     with open("/proc/stat") as procstat:
                         procstat.readline()  # skip the first line
                         for line in procstat:
-                            if not line.startswith("cpu"): break
+                            if not line.startswith("cpu"):
+                                break
                             cpu, *states = line.split()
                             if "user" in states_to_include:
-                                observations.append(Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
+                                observations.append(
+                                    Observation(
+                                        int(states[0]) // 100,
+                                        {"cpu": cpu, "state": "user"},
+                                    )
+                                )
                             if "nice" in states_to_include:
-                                observations.append(Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
+                                observations.append(
+                                    Observation(
+                                        int(states[1]) // 100,
+                                        {"cpu": cpu, "state": "nice"},
+                                    )
+                                )
                             # ... other states
                     # yield the observations and receive the options for next iteration
                     options = yield observations
+
 
             meter.create_observable_counter(
                 "system.cpu.time",
                 callbacks=[cpu_time_callback({"user", "system"})],
                 unit="s",
-                description="CPU time"
+                description="CPU time",
             )
 
         The :class:`~opentelemetry.metrics.CallbackOptions` contain a timeout which the
         callback should respect. For example if the callback does asynchronous work, like
         making HTTP requests, it should respect the timeout::
 
-            def scrape_http_callback(options: CallbackOptions) -> Iterable[Observation]:
-                r = requests.get('http://scrapethis.com', timeout=options.timeout_millis / 10**3)
+            def scrape_http_callback(
+                options: CallbackOptions,
+            ) -> Iterable[Observation]:
+                r = requests.get(
+                    "http://scrapethis.com",
+                    timeout=options.timeout_millis / 10**3,
+                )
                 for value in r.json():
                     yield Observation(value)
 
@@ -505,9 +548,7 @@ class _ProxyMeter(Meter):
         Creates a real backing meter for this instance and notifies all created
         instruments so they can create real backing instruments.
         """
-        real_meter = meter_provider.get_meter(
-            self._name, self._version, self._schema_url
-        )
+        real_meter = meter_provider.get_meter(self._name, self._version, self._schema_url)
 
         with self._lock:
             self._real_meter = real_meter
@@ -537,9 +578,7 @@ class _ProxyMeter(Meter):
     ) -> UpDownCounter:
         with self._lock:
             if self._real_meter:
-                return self._real_meter.create_up_down_counter(
-                    name, unit, description
-                )
+                return self._real_meter.create_up_down_counter(name, unit, description)
             proxy = _ProxyUpDownCounter(name, unit, description)
             self._instruments.append(proxy)
             return proxy
@@ -553,12 +592,8 @@ class _ProxyMeter(Meter):
     ) -> ObservableCounter:
         with self._lock:
             if self._real_meter:
-                return self._real_meter.create_observable_counter(
-                    name, callbacks, unit, description
-                )
-            proxy = _ProxyObservableCounter(
-                name, callbacks, unit=unit, description=description
-            )
+                return self._real_meter.create_observable_counter(name, callbacks, unit, description)
+            proxy = _ProxyObservableCounter(name, callbacks, unit=unit, description=description)
             self._instruments.append(proxy)
             return proxy
 
@@ -578,9 +613,7 @@ class _ProxyMeter(Meter):
                     description,
                     explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
                 )
-            proxy = _ProxyHistogram(
-                name, unit, description, explicit_bucket_boundaries_advisory
-            )
+            proxy = _ProxyHistogram(name, unit, description, explicit_bucket_boundaries_advisory)
             self._instruments.append(proxy)
             return proxy
 
@@ -606,12 +639,8 @@ class _ProxyMeter(Meter):
     ) -> ObservableGauge:
         with self._lock:
             if self._real_meter:
-                return self._real_meter.create_observable_gauge(
-                    name, callbacks, unit, description
-                )
-            proxy = _ProxyObservableGauge(
-                name, callbacks, unit=unit, description=description
-            )
+                return self._real_meter.create_observable_gauge(name, callbacks, unit, description)
+            proxy = _ProxyObservableGauge(name, callbacks, unit=unit, description=description)
             self._instruments.append(proxy)
             return proxy
 
@@ -630,9 +659,7 @@ class _ProxyMeter(Meter):
                     unit,
                     description,
                 )
-            proxy = _ProxyObservableUpDownCounter(
-                name, callbacks, unit=unit, description=description
-            )
+            proxy = _ProxyObservableUpDownCounter(name, callbacks, unit=unit, description=description)
             self._instruments.append(proxy)
             return proxy
 
@@ -650,9 +677,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> Counter:
         """Returns a no-op Counter."""
-        status = self._register_instrument(
-            name, NoOpCounter, unit, description
-        )
+        status = self._register_instrument(name, NoOpCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -689,9 +714,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
-        status = self._register_instrument(
-            name, NoOpUpDownCounter, unit, description
-        )
+        status = self._register_instrument(name, NoOpUpDownCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -710,9 +733,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
-        status = self._register_instrument(
-            name, NoOpObservableCounter, unit, description
-        )
+        status = self._register_instrument(name, NoOpObservableCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -742,9 +763,7 @@ class NoOpMeter(Meter):
             NoOpHistogram,
             unit,
             description,
-            _MetricsHistogramAdvisory(
-                explicit_bucket_boundaries=explicit_bucket_boundaries_advisory
-            ),
+            _MetricsHistogramAdvisory(explicit_bucket_boundaries=explicit_bucket_boundaries_advisory),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -769,9 +788,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
-        status = self._register_instrument(
-            name, NoOpObservableGauge, unit, description
-        )
+        status = self._register_instrument(name, NoOpObservableGauge, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -795,9 +812,7 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
-        status = self._register_instrument(
-            name, NoOpObservableUpDownCounter, unit, description
-        )
+        status = self._register_instrument(name, NoOpObservableUpDownCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -824,7 +839,7 @@ def get_meter(
     version: str = "",
     meter_provider: MeterProvider | None = None,
     schema_url: str | None = None,
-    attributes: Attributes | None = None,
+    attributes: Attributes = None,
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
 

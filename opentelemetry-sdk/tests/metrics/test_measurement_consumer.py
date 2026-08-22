@@ -17,10 +17,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 )
 
 
-@patch(
-    "opentelemetry.sdk.metrics._internal."
-    "measurement_consumer.MetricReaderStorage"
-)
+@patch("opentelemetry.sdk.metrics._internal.measurement_consumer.MetricReaderStorage")
 class TestSynchronousMeasurementConsumer(TestCase):
     def test_parent(self, _):
         self.assertIsInstance(
@@ -41,9 +38,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         )
         self.assertEqual(len(MockMetricReaderStorage.mock_calls), 5)
 
-    def test_measurements_passed_to_each_reader_storage(
-        self, MockMetricReaderStorage
-    ):
+    def test_measurements_passed_to_each_reader_storage(self, MockMetricReaderStorage):
         reader_mocks = [Mock() for _ in range(5)]
         reader_storage_mocks = [Mock() for _ in range(5)]
         MockMetricReaderStorage.side_effect = reader_storage_mocks
@@ -60,9 +55,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         consumer.consume_measurement(measurement_mock)
 
         for rs_mock in reader_storage_mocks:
-            rs_mock.consume_measurement.assert_called_once_with(
-                measurement_mock, False
-            )
+            rs_mock.consume_measurement.assert_called_once_with(measurement_mock, False)
 
     def test_collect_passed_to_reader_stage(self, MockMetricReaderStorage):
         """Its collect() method should defer to the underlying MetricReaderStorage"""
@@ -109,9 +102,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
             i_mock.callback.assert_called_once()
 
         # it should pass measurements to reader storage
-        self.assertEqual(
-            len(reader_storage_mock.consume_measurement.mock_calls), 5
-        )
+        self.assertEqual(len(reader_storage_mock.consume_measurement.mock_calls), 5)
         # assert consume_measurement was called with at least 2 arguments the second
         # matching the mocked exemplar filter
         self.assertFalse(reader_storage_mock.consume_measurement.call_args[1])
@@ -132,25 +123,16 @@ class TestSynchronousMeasurementConsumer(TestCase):
         def sleep_1(*args, **kwargs):
             sleep(1)
 
-        consumer.register_asynchronous_instrument(
-            Mock(**{"callback.side_effect": sleep_1})
-        )
+        consumer.register_asynchronous_instrument(Mock(**{"callback.side_effect": sleep_1}))
 
         with self.assertRaises(Exception) as error:
             consumer.collect(reader_mock, timeout_millis=10)
 
-        self.assertIn(
-            "Timed out while executing callback", error.exception.args[0]
-        )
+        self.assertIn("Timed out while executing callback", error.exception.args[0])
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal."
-        "measurement_consumer.CallbackOptions"
-    )
+    @patch("opentelemetry.sdk.metrics._internal.measurement_consumer.CallbackOptions")
     @patch("opentelemetry.sdk.metrics._internal.measurement_consumer.time_ns")
-    def test_collect_deadline(
-        self, mock_time_ns, mock_callback_options, MockMetricReaderStorage
-    ):
+    def test_collect_deadline(self, mock_time_ns, mock_callback_options, MockMetricReaderStorage):
         reader_mock = Mock()
         reader_storage_mock = Mock()
         MockMetricReaderStorage.return_value = reader_storage_mock
@@ -163,12 +145,8 @@ class TestSynchronousMeasurementConsumer(TestCase):
             metric_readers=[reader_mock],
         )
 
-        consumer.register_asynchronous_instrument(
-            Mock(**{"callback.return_value": []})
-        )
-        consumer.register_asynchronous_instrument(
-            Mock(**{"callback.return_value": []})
-        )
+        consumer.register_asynchronous_instrument(Mock(**{"callback.return_value": []}))
+        consumer.register_asynchronous_instrument(Mock(**{"callback.return_value": []}))
 
         # collect start, first remaining_time, post-first callback,
         # second remaining_time, post-second callback
@@ -182,9 +160,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         consumer.collect(reader_mock)
 
-        callback_options_time_call = mock_callback_options.mock_calls[
-            -1
-        ].kwargs["timeout_millis"]
+        callback_options_time_call = mock_callback_options.mock_calls[-1].kwargs["timeout_millis"]
 
         self.assertLess(
             callback_options_time_call,
@@ -193,6 +169,26 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
 
 class TestSynchronousMeasurementConsumerConcurrency(TestCase):
+    def test_consume_measurement_does_not_acquire_lock(self):
+        """consume_measurement must stay lock free on the hot path."""
+        with patch("opentelemetry.sdk.metrics._internal.measurement_consumer.MetricReaderStorage"):
+            consumer = SynchronousMeasurementConsumer(
+                SdkConfiguration(
+                    exemplar_filter=Mock(should_sample=Mock(return_value=False)),
+                    resource=Mock(),
+                    views=Mock(),
+                ),
+                metric_readers=[Mock()],
+            )
+
+        mock_lock = MagicMock()
+        # pylint: disable-next=protected-access
+        consumer._lock = mock_lock
+
+        consumer.consume_measurement(Mock())
+
+        mock_lock.__enter__.assert_not_called()
+
     def test_concurrent_changes_to_metric_readers(self):
         timeout = 1
         failure = None
@@ -221,17 +217,8 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
             yield from iterable
 
         class HookedDict(dict):
-            def __iter__(self):
-                return _hooked_iter(super().__iter__())
-
-            def keys(self):
-                return _hooked_iter(super().keys())
-
             def values(self):
                 return _hooked_iter(super().values())
-
-            def items(self):
-                return _hooked_iter(super().items())
 
         with patch.object(
             consumer,
@@ -247,6 +234,7 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
                     failure = iteration_timeout_error
                 # pylint: disable-next=protected-access
                 consumer._reader_storages.clear()
+                mutation_done.set()
 
             # Verify that test setup works (direct mutation with no synchronization fails)
             with self.assertRaises(RuntimeError) as cm:
@@ -256,25 +244,38 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
                     consumer.consume_measurement(MagicMock())
                 finally:
                     t.join()
-            self.assertEqual(
-                "dictionary changed size during iteration", str(cm.exception)
-            )
+            self.assertEqual("dictionary changed size during iteration", str(cm.exception))
+            self.assertIsNone(failure)
+
+        # Reset the events for the second scenario
+        iteration_started.clear()
+        mutation_done.clear()
+        failure = None
+
+        with patch.object(
+            consumer,
+            "_reader_storages",
+            # pylint: disable-next=protected-access
+            HookedDict(consumer._reader_storages),
+        ):
 
             def add_and_remove_readers():
-                """Modifies _reader_storages after iteration starts"""
+                """Mutate via the public API while consume_measurement runs"""
                 nonlocal failure
                 if not iteration_started.wait(timeout):
                     failure = iteration_timeout_error
                 reader = MagicMock()
                 consumer.add_metric_reader(reader)
                 consumer.remove_metric_reader(reader)
+                mutation_done.set()
 
-            # Verify the API calls do not attempt concurrent modification of reader storages
+            # The copy-on-write API never mutates the mapping being
+            # iterated, so `consume_measurement` completes without raising even
+            # though add/remove run concurrently mid-iteration.
             t = Thread(target=add_and_remove_readers)
             t.start()
             try:
-                consumer.add_metric_reader(MagicMock())
                 consumer.consume_measurement(MagicMock())
             finally:
                 t.join()
-            self.assertEqual(mutation_timeout_error, failure)
+            self.assertIsNone(failure)

@@ -25,7 +25,7 @@ class Resource(opentelemetry.proto_json._json_codec.JsonMessage):
     """
 
     attributes: builtins.list[opentelemetry.proto_json.common.v1.common.KeyValue] = dataclasses.field(default_factory=builtins.list)
-    dropped_attributes_count: typing.Optional[builtins.int] = 0
+    dropped_attributes_count: builtins.int | None = 0
     entity_refs: builtins.list[opentelemetry.proto_json.common.v1.common.EntityRef] = dataclasses.field(default_factory=builtins.list)
 
     def to_dict(self) -> builtins.dict[builtins.str, typing.Any]:

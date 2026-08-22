@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: remove unnecessary `copy` in Span creation

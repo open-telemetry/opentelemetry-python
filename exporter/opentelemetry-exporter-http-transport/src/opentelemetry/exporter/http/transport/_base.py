@@ -1,11 +1,16 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import json
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,7 +40,7 @@ class BaseHTTPResult(ABC):
         keys. Headers with multiple values are represented as a single string
         of comma separated values.
 
-        Implementations may raise an exception the returned headers are malformed.
+        Implementations may raise an exception if the returned headers are malformed.
         """
 
     def text(self) -> str:

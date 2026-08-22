@@ -36,6 +36,8 @@ coverage.xml
 .cache
 htmlcov
 
+.agent/
+
 # Translations
 *.mo
 

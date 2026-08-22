@@ -8,23 +8,24 @@ import base64
 import concurrent.futures
 import json
 import logging
+import os
 import threading
 import traceback
 import warnings
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from os import environ
 from threading import Lock
 from time import time_ns
+from types import NoneType
 from typing import (  # noqa
     Any,
-    Callable,
-    Sequence,
     Tuple,
     Union,
     cast,
     overload,
 )
-from weakref import WeakSet
+from weakref import WeakMethod, WeakSet
 
 from typing_extensions import deprecated
 
@@ -37,7 +38,7 @@ from opentelemetry._logs import (
     get_logger,
     get_logger_provider,
 )
-from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
@@ -53,25 +54,32 @@ from opentelemetry.sdk._logs._internal._logger_metrics import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+    OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
     OTEL_SDK_DISABLED,
 )
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import (
+    Resource,
+    _get_process_dependent_resource,
+)
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util._configurator import RuleBasedConfigurator
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope,
 )
-from opentelemetry.semconv._incubating.attributes import code_attributes
-from opentelemetry.semconv.attributes import exception_attributes
+from opentelemetry.semconv.attributes import (
+    code_attributes,
+    exception_attributes,
+)
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 # pylint: disable=too-many-lines
 
@@ -130,41 +138,61 @@ class LogRecordLimits:
     - Else if the global limit has a default value, the default value will be used.
 
     Args:
-        max_attributes: Maximum number of attributes that can be added to a span, event, and link.
+        max_attributes: Maximum number of attributes that can be added to a log record (global fallback).
             Environment variable: ``OTEL_ATTRIBUTE_COUNT_LIMIT``
             Default: {_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}
-        max_attribute_length: Maximum length an attribute value can have. Values longer than
-            the specified length will be truncated.
+        max_attribute_length: Maximum length an attribute value can have (global fallback). Values
+            longer than the specified length will be truncated.
+        max_log_record_attributes: Maximum number of attributes that can be added to a log record.
+            Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT``
+            Falls back to ``max_attributes`` when unset.
+        max_log_record_attribute_length: Maximum length a log record attribute value can have.
+            Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT``
+            Falls back to ``max_attribute_length`` when unset.
     """
 
     def __init__(
         self,
         max_attributes: int | None = None,
         max_attribute_length: int | None = None,
+        max_log_record_attributes: int | None = None,
+        max_log_record_attribute_length: int | None = None,
     ):
-        # attribute count
-        global_max_attributes = self._from_env_if_absent(
-            max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
-        )
+        # global attribute count
+        global_max_attributes = self._from_env_if_absent(max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT)
         self.max_attributes = (
-            global_max_attributes
-            if global_max_attributes is not None
-            else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+            global_max_attributes if global_max_attributes is not None else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
         )
 
-        # attribute length
+        # global attribute length
         self.max_attribute_length = self._from_env_if_absent(
             max_attribute_length,
             OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
         )
 
+        self.max_log_record_attributes = self._from_env_if_absent(
+            max_log_record_attributes,
+            OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT,
+            default=self.max_attributes,
+        )
+
+        self.max_log_record_attribute_length = self._from_env_if_absent(
+            max_log_record_attribute_length,
+            OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+            default=self.max_attribute_length,
+        )
+
     def __repr__(self):
-        return f"{type(self).__name__}(max_attributes={self.max_attributes}, max_attribute_length={self.max_attribute_length})"
+        return (
+            f"{type(self).__name__}("
+            f"max_attributes={self.max_attributes}, "
+            f"max_attribute_length={self.max_attribute_length}, "
+            f"max_log_record_attributes={self.max_log_record_attributes}, "
+            f"max_log_record_attribute_length={self.max_log_record_attribute_length})"
+        )
 
     @classmethod
-    def _from_env_if_absent(
-        cls, value: int | None, env_var: str, default: int | None = None
-    ) -> int | None:
+    def _from_env_if_absent(cls, value: int | None, env_var: str, default: int | None = None) -> int | None:
         err_msg = "{} must be a non-negative integer but got {}"
 
         # if no value is provided for the limit, try to load it from env
@@ -187,9 +215,7 @@ class LogRecordLimits:
         return value
 
 
-@deprecated(
-    "Use LogRecordLimits. Since logs are not stable yet this WILL be removed in future releases."
-)
+@deprecated("Use LogRecordLimits. Since logs are not stable yet this WILL be removed in future releases.")
 class LogLimits(LogRecordLimits):
     pass
 
@@ -217,33 +243,21 @@ class ReadableLogRecord:
                 if self.log_record.severity_number is not None
                 else None,
                 "severity_text": self.log_record.severity_text,
-                "attributes": (
-                    dict(self.log_record.attributes)
-                    if bool(self.log_record.attributes)
-                    else None
-                ),
+                "attributes": (dict(self.log_record.attributes) if bool(self.log_record.attributes) else None),
                 "dropped_attributes": self.dropped_attributes,
                 "timestamp": ns_to_iso_str(self.log_record.timestamp)
                 if self.log_record.timestamp is not None
                 else None,
-                "observed_timestamp": ns_to_iso_str(
-                    self.log_record.observed_timestamp
-                ),
+                "observed_timestamp": ns_to_iso_str(self.log_record.observed_timestamp),
                 "trace_id": (
-                    f"0x{format_trace_id(self.log_record.trace_id)}"
-                    if self.log_record.trace_id is not None
-                    else ""
+                    f"0x{format_trace_id(self.log_record.trace_id)}" if self.log_record.trace_id is not None else ""
                 ),
                 "span_id": (
-                    f"0x{format_span_id(self.log_record.span_id)}"
-                    if self.log_record.span_id is not None
-                    else ""
+                    f"0x{format_span_id(self.log_record.span_id)}" if self.log_record.span_id is not None else ""
                 ),
                 "trace_flags": self.log_record.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
-                "event_name": self.log_record.event_name
-                if self.log_record.event_name
-                else "",
+                "event_name": self.log_record.event_name if self.log_record.event_name else "",
             },
             indent=indent,
             cls=BytesEncoder,
@@ -265,12 +279,10 @@ class ReadWriteLogRecord:
 
     def __post_init__(self):
         self.log_record.attributes = BoundedAttributes(
-            maxlen=self.limits.max_attributes,
-            attributes=self.log_record.attributes
-            if self.log_record.attributes
-            else None,
+            maxlen=self.limits.max_log_record_attributes,
+            attributes=self.log_record.attributes if self.log_record.attributes else None,
             immutable=False,
-            max_value_len=self.limits.max_attribute_length,
+            max_value_len=self.limits.max_log_record_attribute_length,
             extended_attributes=True,
         )
         if self.dropped_attributes > 0:
@@ -381,12 +393,10 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
-        self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
+        self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
 
-    def add_log_record_processor(
-        self, log_record_processor: LogRecordProcessor
-    ) -> None:
+    def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:
         """Adds a Logprocessor to the list of log processors handled by this instance"""
         with self._lock:
             self._log_record_processors += (log_record_processor,)
@@ -441,15 +451,11 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     def __init__(self, max_workers: int = 2):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
-        self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
+        self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
-        self._executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=max_workers
-        )
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
 
-    def add_log_record_processor(
-        self, log_record_processor: LogRecordProcessor
-    ):
+    def add_log_record_processor(self, log_record_processor: LogRecordProcessor):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
@@ -488,9 +494,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             future = self._executor.submit(lp.force_flush, timeout_millis)
             futures.append(future)
 
-        done_futures, not_done_futures = concurrent.futures.wait(
-            futures, timeout_millis / 1e3
-        )
+        done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_millis / 1e3)
 
         if not_done_futures:
             return False
@@ -555,10 +559,8 @@ class LoggingHandler(logging.Handler):
         )
 
     @staticmethod
-    def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
-        attributes = {
-            k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
-        }
+    def _get_attributes(record: logging.LogRecord) -> Attributes:
+        attributes = {k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS}
 
         # Add standard code attributes for logs.
         attributes[code_attributes.CODE_FILE_PATH] = record.pathname
@@ -568,17 +570,13 @@ class LoggingHandler(logging.Handler):
         if record.exc_info:
             exctype, value, tb = record.exc_info
             if exctype is not None:
-                attributes[exception_attributes.EXCEPTION_TYPE] = (
-                    exctype.__name__
-                )
+                attributes[exception_attributes.EXCEPTION_TYPE] = exctype.__name__
             if value is not None and value.args:
-                attributes[exception_attributes.EXCEPTION_MESSAGE] = str(
-                    value.args[0]
-                )
+                attributes[exception_attributes.EXCEPTION_MESSAGE] = str(value.args[0])
             if tb is not None:
                 # https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-spans/#stacktrace-representation
-                attributes[exception_attributes.EXCEPTION_STACKTRACE] = (
-                    "".join(traceback.format_exception(*record.exc_info))
+                attributes[exception_attributes.EXCEPTION_STACKTRACE] = "".join(
+                    traceback.format_exception(*record.exc_info)
                 )
         return attributes
 
@@ -603,7 +601,21 @@ class LoggingHandler(logging.Handler):
             # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
             if not record.args and not isinstance(record.msg, str):
                 #  if record.msg is not a value we can export, cast it to string
-                if not isinstance(record.msg, _VALID_ANY_VALUE_TYPES):
+                # TODO: https://github.com/open-telemetry/opentelemetry-python/issues/5304 - do something better
+                # than just casting to a string.
+                if not isinstance(
+                    record.msg,
+                    (
+                        NoneType,
+                        bool,
+                        bytes,
+                        int,
+                        float,
+                        str,
+                        Sequence,
+                        Mapping,
+                    ),
+                ):
                     body = str(record.msg)
                 else:
                     body = record.msg
@@ -618,9 +630,7 @@ class LoggingHandler(logging.Handler):
             "WARNING": "WARN",
             "CRITICAL": "FATAL",
         }
-        level_name = _python_to_otel_severity_text.get(
-            record.levelname, record.levelname
-        )
+        level_name = _python_to_otel_severity_text.get(record.levelname, record.levelname)
 
         return LogRecord(
             timestamp=timestamp,
@@ -668,8 +678,7 @@ class Logger(APILogger):
     def __init__(
         self,
         resource: Resource,
-        multi_log_record_processor: SynchronousMultiLogRecordProcessor
-        | ConcurrentMultiLogRecordProcessor,
+        multi_log_record_processor: SynchronousMultiLogRecordProcessor | ConcurrentMultiLogRecordProcessor,
         instrumentation_scope: InstrumentationScope,
         *,
         logger_metrics: LoggerMetricsT,
@@ -693,6 +702,9 @@ class Logger(APILogger):
     def _set_logger_config(self, logger_config: _LoggerConfig) -> None:
         self._logger_config = logger_config
 
+    def _set_resource(self, resource: Resource) -> None:
+        self._resource = resource
+
     @property
     def instrumentation_scope(self):
         return self._instrumentation_scope
@@ -712,7 +724,7 @@ class Logger(APILogger):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -791,20 +803,14 @@ class LoggerProvider(APILoggerProvider):
             self._resource = Resource.create({})
         else:
             self._resource = resource
-        self._multi_log_record_processor = (
-            multi_log_record_processor or SynchronousMultiLogRecordProcessor()
-        )
+        self._multi_log_record_processor = multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         self._logger_metrics = create_logger_metrics(
             meter_provider or get_meter_provider(),
-            parse_boolean_environment_variable(
-                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-            ),
+            parse_boolean_environment_variable(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED),
         )
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
-        self._logger_configurator = (
-            _logger_configurator or _default_logger_configurator
-        )
+        self._logger_configurator = _logger_configurator or _default_logger_configurator
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
@@ -812,17 +818,37 @@ class LoggerProvider(APILoggerProvider):
         self._logger_cache_lock = Lock()
         self._active_loggers: WeakSet[Logger] = WeakSet()
         self._active_loggers_lock = Lock()
+        if hasattr(os, "register_at_fork"):
+            weak_at_fork = WeakMethod(self._handle_fork)
+
+            def _after_in_child() -> None:
+                if at_fork := weak_at_fork():
+                    at_fork()
+
+            os.register_at_fork(after_in_child=_after_in_child)
+
+    def _handle_fork(self) -> None:
+        self._logger_cache_lock = Lock()
+        self._active_loggers_lock = Lock()
+        self._update_resource(_get_process_dependent_resource())
 
     @property
     def resource(self):
         return self._resource
+
+    def _update_resource(self, resource: Resource) -> None:
+        with self._active_loggers_lock:
+            self._resource = self._resource.merge(resource)
+            for logger in list(self._active_loggers):
+                # pylint: disable-next=protected-access
+                logger._set_resource(self._resource)
 
     def _get_logger_no_cache(
         self,
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         scope = InstrumentationScope(name, version, schema_url, attributes)
 
@@ -845,9 +871,7 @@ class LoggerProvider(APILoggerProvider):
             if key in self._logger_cache:
                 return self._logger_cache[key]
 
-            self._logger_cache[key] = self._get_logger_no_cache(
-                name, version, schema_url
-            )
+            self._logger_cache[key] = self._get_logger_no_cache(name, version, schema_url)
             return self._logger_cache[key]
 
     def get_logger(
@@ -855,7 +879,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> APILogger:
         if self._disabled:
             return NoOpLogger(
@@ -867,28 +891,20 @@ class LoggerProvider(APILoggerProvider):
         logger = (
             self._get_logger_cached(name, version, schema_url)
             if attributes is None
-            else self._get_logger_no_cache(
-                name, version, schema_url, attributes
-            )
+            else self._get_logger_no_cache(name, version, schema_url, attributes)
         )
         with self._active_loggers_lock:
             self._active_loggers.add(logger)
         return logger
 
-    def add_log_record_processor(
-        self, log_record_processor: LogRecordProcessor
-    ):
+    def add_log_record_processor(self, log_record_processor: LogRecordProcessor):
         """Registers a new :class:`LogRecordProcessor` for this `LoggerProvider` instance.
 
         The log processors are invoked in the same order they are registered.
         """
-        self._multi_log_record_processor.add_log_record_processor(
-            log_record_processor
-        )
+        self._multi_log_record_processor.add_log_record_processor(log_record_processor)
 
-    def _set_logger_configurator(
-        self, *, logger_configurator: _LoggerConfiguratorT
-    ):
+    def _set_logger_configurator(self, *, logger_configurator: _LoggerConfiguratorT):
         """Set a new LoggerConfigurator for this LoggerProvider.
 
         Setting a new LoggerConfigurator will result in the configurator being called
@@ -897,17 +913,11 @@ class LoggerProvider(APILoggerProvider):
         """
         self._logger_configurator = logger_configurator
         with self._active_loggers_lock:
-            for logger in self._active_loggers:
+            for logger in list(self._active_loggers):
                 # pylint: disable-next=protected-access
-                logger._set_logger_config(
-                    self._apply_logger_configurator(
-                        logger.instrumentation_scope
-                    )
-                )
+                logger._set_logger_config(self._apply_logger_configurator(logger.instrumentation_scope))
 
-    def _apply_logger_configurator(
-        self, instrumentation_scope: InstrumentationScope
-    ) -> _LoggerConfig:
+    def _apply_logger_configurator(self, instrumentation_scope: InstrumentationScope) -> _LoggerConfig:
         try:
             return self._logger_configurator(instrumentation_scope)
         # pylint: disable-next=broad-exception-caught

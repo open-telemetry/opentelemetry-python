@@ -21,9 +21,7 @@ from opentelemetry.sdk.trace.export import (
 )
 
 trace.set_tracer_provider(TracerProvider())
-trace.get_tracer_provider().add_span_processor(
-    BatchSpanProcessor(ConsoleSpanExporter())
-)
+trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
 logger_provider = LoggerProvider(
     resource=Resource.create(
@@ -48,6 +46,9 @@ logging.getLogger().addHandler(handler)
 # Create different namespaced loggers
 # It is recommended to not use the root logger with OTLP handler
 # so telemetry is collected only for the application
+# Logger.propagate is True by default, ensure it is not set to False so log
+# records reach the root logger handler. See
+# https://docs.python.org/3/library/logging.html#logging.Logger.propagate
 logger1 = logging.getLogger("myapp.area1")
 logger2 = logging.getLogger("myapp.area2")
 

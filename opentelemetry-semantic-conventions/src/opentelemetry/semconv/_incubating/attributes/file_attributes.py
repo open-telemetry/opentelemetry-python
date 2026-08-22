@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import Enum
 from typing import Final
 
 FILE_ACCESSED: Final = "file.accessed"
@@ -35,14 +36,14 @@ Directory where the file is located. It should include the drive letter, when ap
 FILE_EXTENSION: Final = "file.extension"
 """
 File extension, excluding the leading dot.
-Note: When the file name has multiple extensions (example.tar.gz), only the last one should be captured ("gz", not "tar.gz").
+Note: When the filename has multiple extensions (example.tar.gz), only the last one should be captured ("gz", not "tar.gz").
 """
 
 FILE_FORK_NAME: Final = "file.fork_name"
 """
 Name of the fork. A fork is additional data associated with a filesystem object.
 Note: On Linux, a resource fork is used to store additional data with a filesystem object. A file always has at least one fork for the data portion, and additional forks may exist.
-On NTFS, this is analogous to an Alternate Data Stream (ADS), and the default data stream for a file is just called $DATA. Zone.Identifier is commonly used by Windows to track contents downloaded from the Internet. An ADS is typically of the form: C:\\path\\to\\filename.extension:some_fork_name, and some_fork_name is the value that should populate `fork_name`. `filename.extension` should populate `file.name`, and `extension` should populate `file.extension`. The full path, `file.path`, will include the fork name.
+On NTFS, this is analogous to an Alternate Data Stream (ADS), and the default data stream for a file is just called $DATA. Zone.Identifier is commonly used by Windows to track contents downloaded from the internet. An ADS is typically of the form: C:\\path\\to\\filename.extension:some_fork_name, and some_fork_name is the value that should populate `fork_name`. `filename.extension` should populate `file.name`, and `extension` should populate `file.extension`. The full path, `file.path`, will include the fork name.
 """
 
 FILE_GROUP_ID: Final = "file.group.id"
@@ -58,6 +59,21 @@ Primary group name of the file.
 FILE_INODE: Final = "file.inode"
 """
 Inode representing the file in the filesystem.
+"""
+
+FILE_LOCK_MECHANISM: Final = "file.lock.mechanism"
+"""
+The lock mechanism such as noted by [POSIX](https://pubs.opengroup.org/onlinepubs/9699919799/functions/fcntl.html).
+"""
+
+FILE_LOCK_MODE: Final = "file.lock.mode"
+"""
+Mode of lock or operation such as documented by [POSIX](https://pubs.opengroup.org/onlinepubs/9699919799/functions/fcntl.html).
+"""
+
+FILE_LOCK_TYPE: Final = "file.lock.type"
+"""
+The lock type as represented by i.e. [POSIX](https://pubs.opengroup.org/onlinepubs/9699919799/functions/fcntl.html)'s l_type.
 """
 
 FILE_MODE: Final = "file.mode"
@@ -87,7 +103,7 @@ Username of the file owner.
 
 FILE_PATH: Final = "file.path"
 """
-Full path to the file, including the file name. It should include the drive letter, when appropriate.
+Full path to the file, including the filename. It should include the drive letter, when appropriate.
 """
 
 FILE_SIZE: Final = "file.size"
@@ -100,3 +116,10 @@ FILE_SYMBOLIC_LINK_TARGET_PATH: Final = "file.symbolic_link.target_path"
 Path to the target of a symbolic link.
 Note: This attribute is only applicable to symbolic links.
 """
+
+
+class FileLockTypeValues(Enum):
+    READ = "read"
+    """read."""
+    WRITE = "write"
+    """write."""

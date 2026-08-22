@@ -7,6 +7,7 @@ from typing import Final
 CLOUD_ACCOUNT_ID: Final = "cloud.account.id"
 """
 The cloud account ID the resource is assigned to.
+Note: For Azure, this is the subscription ID.
 """
 
 CLOUD_AVAILABILITY_ZONE: Final = "cloud.availability_zone"
@@ -116,6 +117,8 @@ class CloudPlatformValues(Enum):
     """Compute on Oracle Cloud Infrastructure (OCI)."""
     ORACLE_CLOUD_OKE = "oracle_cloud_oke"
     """Kubernetes Engine (OKE) on Oracle Cloud Infrastructure (OCI)."""
+    SCALEWAY_CLOUD_COMPUTE = "scaleway_cloud_compute"
+    """Compute on Scaleway Cloud."""
     TENCENT_CLOUD_CVM = "tencent_cloud_cvm"
     """Tencent Cloud Cloud Virtual Machine (CVM)."""
     TENCENT_CLOUD_EKS = "tencent_cloud_eks"
@@ -145,6 +148,8 @@ class CloudProviderValues(Enum):
     """IBM Cloud."""
     ORACLE_CLOUD = "oracle_cloud"
     """Oracle Cloud Infrastructure (OCI)."""
+    SCALEWAY_CLOUD = "scaleway_cloud"
+    """Scaleway Cloud."""
     TENCENT_CLOUD = "tencent_cloud"
     """Tencent Cloud."""
     VULTR = "vultr"
