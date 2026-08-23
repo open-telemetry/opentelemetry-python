@@ -467,8 +467,13 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     ):
         futures = []
         for lp in self._log_record_processors:
-            future = self._executor.submit(func(lp), *args, **kwargs)
-            futures.append(future)
+            try:
+                future = self._executor.submit(func(lp), *args, **kwargs)
+            except RuntimeError:
+                # See ConcurrentMultiSpanProcessor._submit_and_await.
+                func(lp)(*args, **kwargs)
+            else:
+                futures.append(future)
         for future in futures:
             future.result()
 
@@ -491,7 +496,12 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         """
         futures = []
         for lp in self._log_record_processors:
-            future = self._executor.submit(lp.force_flush, timeout_millis)
+            try:
+                future = self._executor.submit(lp.force_flush, timeout_millis)
+            except RuntimeError:
+                if lp.force_flush(timeout_millis) is False:
+                    return False
+                continue
             futures.append(future)
 
         done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_millis / 1e3)

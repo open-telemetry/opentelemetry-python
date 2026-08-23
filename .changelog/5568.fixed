@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: run `ConcurrentMultiSpanProcessor` and `ConcurrentMultiLogRecordProcessor` work inline once the thread pool is closed, so telemetry is still flushed at interpreter exit
