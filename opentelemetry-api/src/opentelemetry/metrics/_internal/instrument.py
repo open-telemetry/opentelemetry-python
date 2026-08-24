@@ -158,7 +158,7 @@ class Counter(Synchronous):
     def add(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         """Records an increment to the counter.
@@ -185,7 +185,7 @@ class NoOpCounter(Counter):
     def add(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         return super().add(amount, attributes=attributes, context=context)
@@ -195,7 +195,7 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
     def add(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         if self._real_instrument:
@@ -216,7 +216,7 @@ class UpDownCounter(Synchronous):
     def add(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         """Records an increment or decrement to the counter.
@@ -247,7 +247,7 @@ class NoOpUpDownCounter(UpDownCounter):
     def add(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         return super().add(amount, attributes=attributes, context=context)
@@ -257,7 +257,7 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
     def add(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         if self._real_instrument:
@@ -363,7 +363,7 @@ class Histogram(Synchronous):
     def record(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         """Records a measurement.
@@ -402,7 +402,7 @@ class NoOpHistogram(Histogram):
     def record(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         return super().record(amount, attributes=attributes, context=context)
@@ -422,7 +422,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
     def record(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         if self._real_instrument:
@@ -482,7 +482,7 @@ class Gauge(Synchronous):
     def set(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         """Records the current value of the gauge.
@@ -513,7 +513,7 @@ class NoOpGauge(Gauge):
     def set(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         return super().set(amount, attributes=attributes, context=context)
@@ -526,7 +526,7 @@ class _ProxyGauge(
     def set(
         self,
         amount: int | float,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         if self._real_instrument:
