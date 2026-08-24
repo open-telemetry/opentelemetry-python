@@ -81,6 +81,16 @@ class TestConfigPropertiesScalars(unittest.TestCase):
         self.assertIn("name", self.props)
         self.assertNotIn("nope", self.props)
 
+    def test_present_null_distinguishable_from_absent(self):
+        props = ConfigProperties({"endpoint": None})
+        # Both getters return None, so the caller uses membership or keys() to
+        # tell "present with a null value" from "not set".
+        self.assertIsNone(props.get_string("endpoint"))
+        self.assertIsNone(props.get_string("absent"))
+        self.assertIn("endpoint", props)
+        self.assertNotIn("absent", props)
+        self.assertEqual(props.keys(), {"endpoint"})
+
 
 class TestConfigPropertiesTypeMismatch(unittest.TestCase):
     @patch("opentelemetry.configuration._config_provider._logger")
@@ -126,6 +136,28 @@ class TestConfigPropertiesStructured(unittest.TestCase):
     def test_get_config_list_missing_returns_none(self):
         self.assertIsNone(ConfigProperties({}).get_config_list("servers"))
 
+    def test_get_config_list_accepts_empty_mapping_element(self):
+        props = ConfigProperties({"servers": [{}, {"host": "a"}]})
+        result = props.get_config_list("servers")
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].keys(), set())
+        self.assertEqual(result[1].get_string("host"), "a")
+
+    @patch("opentelemetry.configuration._config_provider._logger")
+    def test_get_config_list_null_element_logs_and_returns_none(self, mock_logger):
+        props = ConfigProperties({"servers": [{"host": "a"}, None]})
+        self.assertIsNone(props.get_config_list("servers"))
+        mock_logger.warning.assert_called_once()
+        # The warning names the offending element, not the whole list.
+        self.assertIn("servers[1]", mock_logger.warning.call_args.args)
+
+    @patch("opentelemetry.configuration._config_provider._logger")
+    def test_get_config_list_scalar_element_logs_and_returns_none(self, mock_logger):
+        props = ConfigProperties({"servers": [5]})
+        self.assertIsNone(props.get_config_list("servers"))
+        mock_logger.warning.assert_called_once()
+        self.assertIn("servers[0]", mock_logger.warning.call_args.args)
+
     def test_get_string_list_drops_non_matching(self):
         props = ConfigProperties({"names": ["a", "b", 3]})
         # Non-matching element (3) dropped.
@@ -147,9 +179,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
         self.assertIsNone(ConfigProperties({}).get_string_list("x"))
 
     @patch("opentelemetry.configuration._config_provider._logger")
-    def test_get_string_list_non_sequence_logs_and_returns_none(
-        self, mock_logger
-    ):
+    def test_get_string_list_non_sequence_logs_and_returns_none(self, mock_logger):
         props = ConfigProperties({"names": "not-a-list"})
         self.assertIsNone(props.get_string_list("names"))
         mock_logger.warning.assert_called_once()
@@ -157,11 +187,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
 
 class TestNodeToMapping(unittest.TestCase):
     def test_dataclass_node_converted_recursively(self):
-        node = ExperimentalInstrumentation(
-            general=ExperimentalGeneralInstrumentation(
-                stability_opt_in_list="http"
-            )
-        )
+        node = ExperimentalInstrumentation(general=ExperimentalGeneralInstrumentation(stability_opt_in_list="http"))
         mapping = _node_to_mapping(node)
         self.assertEqual(mapping["general"]["stability_opt_in_list"], "http")
 
@@ -169,11 +195,7 @@ class TestNodeToMapping(unittest.TestCase):
         self.assertEqual(_node_to_mapping(None), {})
 
     def test_config_properties_over_instrumentation_node(self):
-        node = ExperimentalInstrumentation(
-            general=ExperimentalGeneralInstrumentation(
-                stability_opt_in_list="http"
-            )
-        )
+        node = ExperimentalInstrumentation(general=ExperimentalGeneralInstrumentation(stability_opt_in_list="http"))
         props = ConfigProperties(_node_to_mapping(node))
         general = props.get_config("general")
         self.assertIsInstance(general, ConfigProperties)
@@ -196,9 +218,7 @@ class TestGlobalConfigProvider(unittest.TestCase):
             provider.get_instrumentation_config().keys(),
             set(),
         )
-        self.assertIsNone(
-            provider.get_instrumentation_config().get_string("anything")
-        )
+        self.assertIsNone(provider.get_instrumentation_config().get_string("anything"))
 
     def test_proxy_forwards_to_later_set_provider(self):
         # A caller that grabs the provider before it is set still sees the
@@ -206,9 +226,7 @@ class TestGlobalConfigProvider(unittest.TestCase):
         proxy = get_config_provider()
         self.assertIsInstance(proxy, ProxyConfigProvider)
         set_config_provider(ConfigProvider(ConfigProperties({"k": "v"})))
-        self.assertEqual(
-            proxy.get_instrumentation_config().get_string("k"), "v"
-        )
+        self.assertEqual(proxy.get_instrumentation_config().get_string("k"), "v")
 
     def test_noop_provider_is_empty(self):
         provider = NoOpConfigProvider()
@@ -232,6 +250,4 @@ class TestGlobalConfigProvider(unittest.TestCase):
         # The second set is ignored and a warning is logged, matching
         # set_tracer_provider semantics.
         self.assertIs(get_config_provider(), first)
-        mock_logger.warning.assert_called_once_with(
-            "Overriding of current ConfigProvider is not allowed"
-        )
+        mock_logger.warning.assert_called_once_with("Overriding of current ConfigProvider is not allowed")

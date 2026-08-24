@@ -4,9 +4,10 @@
 """Read view over declarative instrumentation configuration.
 
 Implements the spec's ``ConfigProvider`` / ``ConfigProperties`` API
-(``configuration/api.md``): a stateless, typed read view over the parsed
-``instrumentation`` node of a declarative configuration, plus a global
-``ConfigProvider`` that makes it retrievable by instrumentation code.
+(https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/configuration/api.md):
+a stateless, typed read view over the parsed ``instrumentation`` node of a
+declarative configuration, plus a global ``ConfigProvider`` that makes it
+retrievable by instrumentation code.
 
 ``ConfigProperties`` wraps a mapping (a parsed sub-tree of the config) and
 exposes typed getters that return ``None`` when a key is absent or cannot
@@ -50,12 +51,14 @@ class ConfigProperties:
     is missing or the value has an incompatible type. ``get_config`` returns
     a nested :class:`ConfigProperties` for a sub-mapping, enabling traversal
     of the full instrumentation tree.
+
+    A getter returns ``None`` both for an absent key and for a key that is
+    present with a null value. Use ``name in properties`` or :meth:`keys` to
+    tell those two cases apart, as the spec requires.
     """
 
     def __init__(self, properties: Mapping[str, Any] | None = None) -> None:
-        self._properties: dict[str, Any] = (
-            dict(properties) if properties is not None else {}
-        )
+        self._properties: dict[str, Any] = dict(properties) if properties is not None else {}
 
     @staticmethod
     def _log_type_mismatch(name: str, value: Any, expected: str) -> None:
@@ -156,9 +159,10 @@ class ConfigProperties:
     def get_config_list(self, name: str) -> list[ConfigProperties] | None:
         """Return the list at ``name`` as a list of :class:`ConfigProperties`.
 
-        Each element must be a mapping / dataclass node; returns ``None``
-        when ``name`` is absent or is not a list of mappings. Logs a warning if
-        ``name`` is present with an incompatible type.
+        Every element must be a mapping / dataclass node. An empty mapping is
+        valid and yields an empty view. Returns ``None`` when ``name`` is
+        absent, is not a list, or holds an element that is not a mapping (a
+        null element included). Logs a warning naming the offending element.
         """
         value = self._properties.get(name)
         if value is None:
@@ -167,12 +171,14 @@ class ConfigProperties:
             self._log_type_mismatch(name, value, "list of mappings")
             return None
         result: list[ConfigProperties] = []
-        for item in value:
-            mapping = _node_to_mapping(item)
-            if not mapping and item is not None:
-                self._log_type_mismatch(name, value, "list of mappings")
+        for index, item in enumerate(value):
+            if is_dataclass(item) and not isinstance(item, type):
+                result.append(ConfigProperties(_node_to_mapping(item)))
+            elif isinstance(item, Mapping):
+                result.append(ConfigProperties(dict(item)))
+            else:
+                self._log_type_mismatch(f"{name}[{index}]", item, "mapping")
                 return None
-            result.append(ConfigProperties(mapping))
         return result
 
     def get_string_list(self, name: str) -> list[str] | None:
