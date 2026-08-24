@@ -86,9 +86,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 exclude_attribute_keys={"f"},
             ),
             instrument=instrument1,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         view_instrument_match.consume_measurement(
@@ -117,9 +115,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 exclude_attribute_keys={"f"},
             ),
             instrument=instrument1,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         view_instrument_match.consume_measurement(
