@@ -28,7 +28,7 @@ Installation
 Run the Example
 ---------------
 
-Start the Collector locally to see data being exported. Write the following file:
+Start the Collector locally to see :scm_web:`otel-collector-config.yaml <docs/examples/logs/otel-collector-config.yaml>`:
 
 .. code-block:: yaml
 
@@ -60,6 +60,8 @@ Then start the Docker container:
         -p 4317:4317 \
         -v $(pwd)/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml \
         otel/opentelemetry-collector-contrib:latest
+
+Run :scm_web:`example.py <docs/examples/logs/example.py>`:
 
 .. code-block:: sh
 

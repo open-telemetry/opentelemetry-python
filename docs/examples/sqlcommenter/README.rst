@@ -16,6 +16,9 @@ Run MySQL server
 
 A running MySQL server with general logs enabled will store query statements with context resulting from the sqlcommenter feature enabled in this example.
 
+Change into the :scm_web:`books_database <docs/examples/sqlcommenter/books_database>`
+directory:
+
 .. code-block:: sh
 
     cd books_database
@@ -32,7 +35,8 @@ Check that the run is working and the general log is available:
 Run OpenTelemetry Collector
 ---------------------------
 
-Running the OpenTelemetry collector will show the MySQL instrumentor's
+Running the OpenTelemetry collector using
+:scm_web:`collector-config.yaml <docs/examples/sqlcommenter/collector-config.yaml>` will show the MySQL instrumentor's
 comment-in-span-attribute feature, which this example has also enabled.
 
 .. code-block:: sh
@@ -55,8 +59,7 @@ dependencies of the sqlcommenter example:
         opentelemetry-instrumentation-mysql \
         mysql-connector-python
 
-Then, run this script, which instruments all mysql-connector calls with
-two sqlcommenter features opted in.
+Then, run the :scm_web:`instrumented_query.py <docs/examples/sqlcommenter/instrumented_query.py>` script, which instruments all mysql-connector calls with two sqlcommenter features opted in.
 
 .. code-block:: sh
 

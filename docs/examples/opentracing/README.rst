@@ -74,7 +74,7 @@ The example script calculates a few Fibonacci numbers and stores the results in
 Redis. The script, the ``rediscache`` library, and the OpenTracing Redis
 integration all contribute spans to the trace.
 
-To run the script:
+To run the :scm_web:`main.py <docs/examples/opentracing/main.py>` script:
 
 .. code-block:: sh
 

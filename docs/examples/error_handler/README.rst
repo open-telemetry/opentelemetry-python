@@ -31,6 +31,14 @@ error handlers are installed: ``error_handler_0``  will handle
 
     $ pip install opentelemetry-sdk
     $ git clone https://github.com/open-telemetry/opentelemetry-python.git
+
+The two error handler packages are available:
+:scm_web:`error_handler_0 <docs/examples/error_handler/error_handler_0>`
+and
+:scm_web:`error_handler_1 <docs/examples/error_handler/error_handler_1>`.
+
+.. code-block:: sh
+
     $ pip install -e opentelemetry-python/docs/examples/error_handler/error_handler_0
     $ pip install -e opentelemetry-python/docs/examples/error_handler/error_handler_1
 
@@ -38,7 +46,7 @@ Execution
 ---------
 
 An example is provided in the
-``opentelemetry-python/docs/examples/error_handler/example.py``.
+:scm_web:`example.py <docs/examples/error_handler/example.py>`.
 
 You can just run it, you should get output similar to this one:
 

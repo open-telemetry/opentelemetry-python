@@ -46,7 +46,7 @@ an ``opentelemetry.instrumentation.django.DjangoInstrumentor`` to instrument the
 
 Clone the ``opentelemetry-python`` repository and go to ``opentelemetry-python/docs/examples/django``.
 
-Once there, open the ``manage.py`` file. The call to ``DjangoInstrumentor().instrument()``
+Once there, open the :scm_web:`manage.py <docs/examples/django/manage.py>` file. The call to ``DjangoInstrumentor().instrument()``
 in ``main`` is all that is needed to make the app be instrumented.
 
 Run the Django app with ``python manage.py runserver --noreload``.

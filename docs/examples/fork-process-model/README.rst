@@ -15,6 +15,8 @@ The source code for the examples with Flask app are available :scm_web:`here <do
 Gunicorn post_fork hook
 -----------------------
 
+See the :scm_web:`Gunicorn configuration <docs/examples/fork-process-model/flask-gunicorn/gunicorn.conf.py>`.
+
 .. code-block:: python
 
     from opentelemetry import trace
@@ -40,6 +42,8 @@ Gunicorn post_fork hook
 
 uWSGI postfork decorator
 ------------------------
+
+See the :scm_web:`uWSGI application <docs/examples/fork-process-model/flask-uwsgi/app.py>`.
 
 .. code-block:: python
 

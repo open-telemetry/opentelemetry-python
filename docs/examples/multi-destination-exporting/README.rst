@@ -41,8 +41,14 @@ Installation
     pip install opentelemetry-exporter-otlp-proto-http
     pip install opentelemetry-instrumentation-logging # For LoggingHandler
 
-Run the Example
----------------
+Run the Examples
+----------------
+
+Run:
+
+- :scm_web:`multi_destination_traces.py <docs/examples/multi-destination-exporting/multi_destination_traces.py>`
+- :scm_web:`multi_destination_metrics.py <docs/examples/multi-destination-exporting/multi_destination_metrics.py>`
+- :scm_web:`multi_destination_logs.py <docs/examples/multi-destination-exporting/multi_destination_logs.py>`
 
 .. code-block:: sh
 

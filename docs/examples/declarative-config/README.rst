@@ -67,8 +67,8 @@ Then start the Collector:
 Run the example
 ---------------
 
-Point the SDK at ``otel-config.yaml`` with ``OTEL_CONFIG_FILE`` and let
-auto-instrumentation apply it. No configuration code lives in ``app.py``:
+Point the SDK at :scm_web:`otel-config.yaml <docs/examples/declarative-config/otel-config.yaml>` with ``OTEL_CONFIG_FILE`` and let
+auto-instrumentation apply it. No configuration code lives in :scm_web:`app.py <docs/examples/declarative-config/app.py>`:
 
 .. code-block:: sh
 
@@ -76,14 +76,15 @@ auto-instrumentation apply it. No configuration code lives in ``app.py``:
     opentelemetry-instrument python app.py
 
 You should see the exported span in the Collector's debug output. The
-``instrumentation/development.python`` section in ``otel-config.yaml``
+``instrumentation/development.python`` section in
+:scm_web:`otel-config.yaml <docs/examples/declarative-config/otel-config.yaml>`
 activates the ``requests`` instrumentation so outgoing HTTP calls made by
-``app.py`` are automatically traced without any code changes.
+:scm_web:`app.py <docs/examples/declarative-config/app.py>` are automatically traced without any code changes.
 
 Environment variable substitution
 ----------------------------------
 
-``otel-config.yaml`` uses ``${DEPLOYMENT_ENVIRONMENT:-development}`` to read the
+:scm_web:`otel-config.yaml <docs/examples/declarative-config/otel-config.yaml>` uses ``${DEPLOYMENT_ENVIRONMENT:-development}`` to read the
 deployment environment from the environment, defaulting to ``development``. Set
 it before running to override:
 

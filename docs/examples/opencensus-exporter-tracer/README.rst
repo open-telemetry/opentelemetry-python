@@ -30,7 +30,8 @@ services.
     docker-compose up
 
 
-Now, the example can be executed:
+Now, run the :scm_web:`collector.py <docs/examples/opencensus-exporter-tracer/collector.py>`
+example:
 
 .. code-block:: sh
 

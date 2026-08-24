@@ -54,7 +54,7 @@ Alternatively, you can install the Python dependencies separately:
 Run the Application
 -------------------
 
-Start the application in a terminal.
+Start the :scm_web:`app.py <docs/examples/opencensus-shim/app.py>` application in a terminal.
 
 .. code-block:: sh
 
