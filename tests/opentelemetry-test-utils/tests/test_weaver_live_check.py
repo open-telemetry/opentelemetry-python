@@ -164,3 +164,51 @@ class TestOutputCapture(unittest.TestCase):
             provider.force_flush()
             report = weaver.end()
         self.assertIsInstance(report, LiveCheckReport)
+
+
+class TestWeaverLiveCheckUnit(unittest.TestCase):
+    """Unit tests for WeaverLiveCheck helpers and data structures."""
+
+    def test_live_check_report_properties(self):
+        raw_data = {
+            "samples": [{"span": {"name": "test-span"}}],
+            "statistics": {"seen_registry_metrics": {"metric.a": 1}},
+            "live_check_result": {
+                "all_advice": [
+                    {
+                        "level": "violation",
+                        "id": "v1",
+                        "message": "msg1",
+                        "context": {"key": "val"},
+                        "signal_name": "s1",
+                        "signal_type": "span",
+                    }
+                ]
+            },
+        }
+        report = LiveCheckReport(raw_data)
+        self.assertEqual(report.raw, raw_data)
+        self.assertEqual(report.to_dict(), raw_data)
+        self.assertEqual(report.samples, [{"span": {"name": "test-span"}}])
+        self.assertEqual(
+            report.statistics,
+            {"seen_registry_metrics": {"metric.a": 1}},
+        )
+        self.assertEqual(len(report.violations), 1)
+        self.assertEqual(report.violations[0]["id"], "v1")
+
+    def test_live_check_error_stdout_stderr(self):
+        report = LiveCheckReport({})
+        err = LiveCheckError("test error", report, stdout="some out", stderr="some err")
+        self.assertEqual(err.report, report)
+        self.assertEqual(err.stdout, "some out")
+        self.assertEqual(err.stderr, "some err")
+
+    def test_end_after_stopped_raises(self):
+        report = LiveCheckReport({})
+        weaver = WeaverLiveCheck.__new__(WeaverLiveCheck)
+        weaver._stopped = True
+        with self.assertRaises(RuntimeError):
+            weaver.end()
+        with self.assertRaises(RuntimeError):
+            weaver.end_and_check()

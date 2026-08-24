@@ -9,6 +9,7 @@ import shutil
 import socket
 import subprocess
 import tempfile
+import time
 from collections import defaultdict
 from collections.abc import Sequence
 from itertools import chain
@@ -121,9 +122,17 @@ class LiveCheckError(AssertionError):
         )
     """
 
-    def __init__(self, message: str, report: "LiveCheckReport") -> None:
+    def __init__(
+        self,
+        message: str,
+        report: "LiveCheckReport",
+        stdout: str | None = None,
+        stderr: str | None = None,
+    ) -> None:
         super().__init__(message)
         self.report = report
+        self.stdout = stdout
+        self.stderr = stderr
 
 
 class LiveCheckReport:
@@ -137,7 +146,7 @@ class LiveCheckReport:
     Example — asserting on metrics statistics::
 
         report = weaver.end()
-        seen = report["statistics"]["seen_registry_metrics"]
+        seen = report.statistics.get("seen_registry_metrics", {})
         assert seen.get("http.server.request.duration") == 1
 
     Example — asserting on violations::
@@ -150,6 +159,25 @@ class LiveCheckReport:
 
     def __init__(self, report: dict[str, Any]) -> None:
         self._report = report
+
+    @property
+    def raw(self) -> dict[str, Any]:
+        """The underlying raw JSON report dictionary."""
+        return self._report
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return the underlying raw JSON report dictionary."""
+        return self._report
+
+    @property
+    def samples(self) -> list[dict[str, Any]]:
+        """List of telemetry samples captured during the live-check run."""
+        return self._report.get("samples", [])
+
+    @property
+    def statistics(self) -> dict[str, Any]:
+        """Statistics captured during the live-check run."""
+        return self._report.get("statistics", {})
 
     @functools.cached_property
     def violations(self) -> list[dict[str, Any]]:
@@ -231,8 +259,11 @@ class WeaverLiveCheck:
         self,
         registry: str | None = None,
         schema_version: str | None = None,
-        policies_dir: str | None = None,
+        policies_dir: str | Sequence[str] | None = None,
+        config: str | None = None,
+        advice_data: str | None = None,
         inactivity_timeout: int = 30,
+        startup_timeout: int = 10,
         otlp_port: int = 0,
         admin_port: int = 0,
         extra_args: Sequence[str] | None = None,
@@ -252,6 +283,7 @@ class WeaverLiveCheck:
 
         self._otlp_port = otlp_port or _find_free_port()
         self._admin_port = admin_port or _find_free_port()
+        self._startup_timeout = startup_timeout
         self._ready = False
         self._stopped = False
         self._process: subprocess.Popen[bytes] | None = None
@@ -269,8 +301,18 @@ class WeaverLiveCheck:
             "--format=json",
         ]
 
+        if config:
+            command += ["--config", os.path.abspath(config)]
+
+        if advice_data:
+            command += ["--advice-data", os.path.abspath(advice_data)]
+
         if policies_dir:
-            command += ["--advice-policies", os.path.abspath(policies_dir)]
+            if isinstance(policies_dir, str):
+                command += ["--advice-policies", os.path.abspath(policies_dir)]
+            else:
+                for p in policies_dir:
+                    command += ["--advice-policies", os.path.abspath(p)]
 
         if registry is None:
             if schema_version is None:
@@ -319,29 +361,58 @@ class WeaverLiveCheck:
         return self
 
     def _wait_for_ready(self) -> None:
-        retry = Retry(
-            total=10,
-            backoff_factor=1,
-            backoff_max=1,
-            # Any non-2xx response from /health means weaver isn't ready yet.
-            status_forcelist=list(range(300, 600)),
-            raise_on_status=True,
-            allowed_methods=["GET"],
-        )
         session = Session()
-        session.mount("http://", HTTPAdapter(max_retries=retry))
+        start_time = time.monotonic()
+        urllib_logger = logging.getLogger("urllib3.connectionpool")
+        prev_level = urllib_logger.level
+        urllib_logger.setLevel(logging.ERROR)
         try:
-            session.get(f"http://localhost:{self._admin_port}/health", timeout=5)
-        except Exception as exc:  # pylint: disable=broad-except
-            if self._process is not None and self._process.poll() is not None:
-                raise RuntimeError(
-                    f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
-                ) from exc
-            raise TimeoutError("WeaverLiveCheck did not become ready in time") from exc
+            while time.monotonic() - start_time < self._startup_timeout:
+                if self._process is not None and self._process.poll() is not None:
+                    raise RuntimeError(
+                        f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
+                    )
+                try:
+                    resp = session.get(f"http://localhost:{self._admin_port}/health", timeout=1)
+                    if resp.status_code == 200:
+                        return
+                except Exception:
+                    pass
+                time.sleep(0.1)
+        finally:
+            urllib_logger.setLevel(prev_level)
+
+        if self._process is not None and self._process.poll() is not None:
+            raise RuntimeError(
+                f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
+            )
+        raise TimeoutError("WeaverLiveCheck did not become ready in time")
 
     @property
     def otlp_endpoint(self) -> str:
         return f"http://localhost:{self._otlp_port}"
+
+    @property
+    def stdout(self) -> str | None:
+        """Captured standard output from the weaver process."""
+        if self._stdout_path and os.path.exists(self._stdout_path):
+            try:
+                with open(self._stdout_path, "rb") as fp:
+                    return fp.read().decode(errors="replace")
+            except OSError:
+                pass
+        return None
+
+    @property
+    def stderr(self) -> str | None:
+        """Captured standard error from the weaver process."""
+        if self._stderr_path and os.path.exists(self._stderr_path):
+            try:
+                with open(self._stderr_path, "rb") as fp:
+                    return fp.read().decode(errors="replace")
+            except OSError:
+                pass
+        return None
 
     def _do_stop(self, timeout: int) -> tuple["LiveCheckReport", int]:
         """POST /stop, wait for the process to exit, return (report, exit_code).
@@ -377,8 +448,7 @@ class WeaverLiveCheck:
         for the report structure.
         """
         if self._stopped:
-            logger.warning("end() called after weaver already stopped; returning empty report")
-            return LiveCheckReport({})
+            raise RuntimeError("WeaverLiveCheck has already been stopped")
         self._stopped = True
         report, _ = self._do_stop(timeout)
         return report
@@ -399,8 +469,7 @@ class WeaverLiveCheck:
         to start, HTTP communication error, etc.).
         """
         if self._stopped:
-            logger.warning("end_and_check() called after weaver already stopped; returning empty report")
-            return LiveCheckReport({})
+            raise RuntimeError("WeaverLiveCheck has already been stopped")
         self._stopped = True
         report, exit_code = self._do_stop(timeout)
         if exit_code == 0:
@@ -409,6 +478,8 @@ class WeaverLiveCheck:
         raise LiveCheckError(
             f"Semconv violations found:\n{_format_violations(report.violations)}",
             report,
+            stdout=self.stdout,
+            stderr=self.stderr,
         )
 
     def _read_weaver_logs(self) -> str | None:
