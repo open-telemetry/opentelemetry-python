@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix instrumentation scope name matching in the tracer, meter and logger configurators so it is case-sensitive on every platform instead of relying on `fnmatch`'s OS-dependent case handling
