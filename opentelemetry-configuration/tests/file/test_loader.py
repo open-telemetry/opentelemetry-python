@@ -389,6 +389,21 @@ class TestFileFormatValidation(unittest.TestCase):
         self.assertIn("file_format", str(ctx.exception))
 
 
+def _substitute_yaml(text: str):
+    """Parse ``text``, run the node walker over it, and build the document.
+
+    This is what ``_parse_config_content`` does for YAML, without the schema
+    validation, so walker behavior can be asserted on any document shape.
+    """
+    loader = yaml.SafeLoader(text)
+    try:
+        node = loader.get_single_node()
+        _substitute_env_in_yaml_node(node, loader)
+        return loader.construct_document(node)
+    finally:
+        loader.dispose()
+
+
 class TestEnvVarSubstitutionScope(unittest.TestCase):
     """Substitution applies only to configuration values, per the config spec.
 
@@ -396,50 +411,97 @@ class TestEnvVarSubstitutionScope(unittest.TestCase):
     scope rules can be asserted without the JSON schema constraining shape.
     """
 
-    @staticmethod
-    def _substitute_yaml(text: str):
-        loader = yaml.SafeLoader(text)
-        try:
-            node = loader.get_single_node()
-            _substitute_env_in_yaml_node(node, loader)
-            return loader.construct_document(node)
-        finally:
-            loader.dispose()
-
     def test_unquoted_standalone_reference_is_type_coerced(self):
         with patch.dict(os.environ, {"N": "42", "FLAG": "true"}):
-            result = self._substitute_yaml("count: ${N}\nflag: ${FLAG}")
+            result = _substitute_yaml("count: ${N}\nflag: ${FLAG}")
         self.assertEqual(result["count"], 42)
         self.assertIsInstance(result["count"], int)
         self.assertIs(result["flag"], True)
 
     def test_quoted_reference_stays_string(self):
         with patch.dict(os.environ, {"N": "42"}):
-            result = self._substitute_yaml('count: "${N}"')
+            result = _substitute_yaml('count: "${N}"')
         self.assertEqual(result["count"], "42")
 
     def test_embedded_reference_resolves_to_string(self):
         with patch.dict(os.environ, {"N": "42"}):
-            result = self._substitute_yaml("name: svc-${N}")
+            result = _substitute_yaml("name: svc-${N}")
         self.assertEqual(result["name"], "svc-42")
 
     def test_mapping_key_is_not_substituted(self):
         # A ${VAR} in a key position is left verbatim and triggers no lookup,
         # so an undefined variable there does not raise.
         with patch.dict(os.environ, {}, clear=True):
-            result = self._substitute_yaml("${UNDEFINED_KEY}: value")
+            result = _substitute_yaml("${UNDEFINED_KEY}: value")
         self.assertEqual(result, {"${UNDEFINED_KEY}": "value"})
 
     def test_escape_sequence_is_not_a_reference(self):
         with patch.dict(os.environ, {}, clear=True):
-            result = self._substitute_yaml("literal: $${NOT_A_VAR}")
+            result = _substitute_yaml("literal: $${NOT_A_VAR}")
         self.assertEqual(result["literal"], "${NOT_A_VAR}")
 
     def test_value_newline_cannot_inject_mapping_keys(self):
         with patch.dict(os.environ, {"VAL": "legit\nmalicious_key: injected"}):
-            result = self._substitute_yaml("service_name: ${VAL}")
+            result = _substitute_yaml("service_name: ${VAL}")
         self.assertEqual(list(result), ["service_name"])
         self.assertEqual(result["service_name"], "legit\nmalicious_key: injected")
+
+
+class TestEnvVarSubstitutionWithAliases(unittest.TestCase):
+    """An anchored value is substituted once, however many aliases reach it.
+
+    An alias resolves to the very same composed node as its anchor, so the
+    walker reaches one node once per reference. Substituting it more than once
+    would re-read the first pass's output and defeat the ``$$`` escape, and a
+    cyclic alias would recurse without end.
+    """
+
+    def test_aliased_reference_resolves_for_every_alias(self):
+        with patch.dict(os.environ, {"TOKEN": "resolved"}):
+            result = _substitute_yaml("a: &anchor ${TOKEN}\nb: *anchor\nc: *anchor")
+        self.assertEqual(result, {"a": "resolved", "b": "resolved", "c": "resolved"})
+
+    def test_aliased_escape_stays_literal(self):
+        # Without a visited set the first visit turns $${TOKEN} into the
+        # literal ${TOKEN} and the second resolves it, leaking TOKEN's value.
+        with patch.dict(os.environ, {"TOKEN": "leaked"}):
+            result = _substitute_yaml("a: &anchor $${TOKEN}\nb: *anchor\nc: *anchor")
+        self.assertEqual(result, {"a": "${TOKEN}", "b": "${TOKEN}", "c": "${TOKEN}"})
+
+    def test_aliased_reference_is_type_coerced_once(self):
+        with patch.dict(os.environ, {"N": "42"}):
+            result = _substitute_yaml("a: &anchor ${N}\nb: *anchor")
+        self.assertEqual(result["a"], 42)
+        self.assertIsInstance(result["a"], int)
+        self.assertEqual(result["b"], 42)
+
+    def test_merge_key_escape_stays_literal(self):
+        # A merge key's value node is the anchored mapping itself, so the
+        # merged-in values are reached twice as well.
+        text = "base: &base\n  x: $${TOKEN}\nderived:\n  <<: *base\n  y: 1\n"
+        with patch.dict(os.environ, {"TOKEN": "leaked"}):
+            result = _substitute_yaml(text)
+        self.assertEqual(result, {"base": {"x": "${TOKEN}"}, "derived": {"x": "${TOKEN}", "y": 1}})
+
+    def test_merge_key_resolves_reference(self):
+        text = "base: &base\n  x: ${TOKEN}\nderived:\n  <<: *base\n  y: 1\n"
+        with patch.dict(os.environ, {"TOKEN": "resolved"}):
+            result = _substitute_yaml(text)
+        self.assertEqual(result, {"base": {"x": "resolved"}, "derived": {"x": "resolved", "y": 1}})
+
+    def test_cyclic_alias_terminates(self):
+        # A mapping that aliases itself makes the node tree a graph with a
+        # loop; the walk must end instead of raising RecursionError.
+        with patch.dict(os.environ, {"TOKEN": "resolved"}):
+            result = _substitute_yaml("a: &anchor\n  self: *anchor\n  value: ${TOKEN}")
+        self.assertIs(result["a"]["self"], result["a"])
+        self.assertEqual(result["a"]["value"], "resolved")
+
+    def test_cyclic_alias_in_sequence_terminates(self):
+        with patch.dict(os.environ, {"TOKEN": "resolved"}):
+            result = _substitute_yaml("a: &anchor\n  - *anchor\n  - ${TOKEN}")
+        self.assertIs(result["a"][0], result["a"])
+        self.assertEqual(result["a"][1], "resolved")
 
 
 class TestJsonEnvVarSubstitution(unittest.TestCase):

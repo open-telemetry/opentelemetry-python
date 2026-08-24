@@ -72,7 +72,11 @@ _YAML_STR_TAG = "tag:yaml.org,2002:str"
 _STANDALONE_ENV_REF = re.compile(r"\A\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}\Z")
 
 
-def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
+def _substitute_env_in_yaml_node(
+    node: yaml.Node,
+    loader: yaml.SafeLoader,
+    visited: set[int] | None = None,
+):
     """Apply env-var substitution to string configuration values in a node tree.
 
     Substitution runs after parsing on configuration values only, so comments
@@ -80,7 +84,33 @@ def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
     unquoted standalone ``${VAR}`` reference the node's type tag is re-resolved
     from the substituted value so YAML type coercion still applies (e.g.
     ``${LIMIT}`` -> int); quoted or embedded references stay strings.
+
+    Args:
+        node: Root of the node tree to walk. Substitution happens in place.
+        loader: The loader that composed ``node``; used to re-resolve tags.
+        visited: Ids of nodes already processed in this traversal. Callers pass
+            nothing; the walker creates and threads one set through the whole
+            tree.
     """
+    # Every anchor/alias pair shares one composed node, so the same node is
+    # reached once per reference to it. Each node must be substituted exactly
+    # once for two reasons:
+    #
+    #   1. Substituting twice re-reads the output of the first pass. An
+    #      anchored ``$${TOKEN}`` becomes the escaped literal ``${TOKEN}`` on
+    #      the first visit, which the second visit then resolves as a real
+    #      variable -- silently defeating the ``$$`` escape.
+    #   2. A cyclic alias (``a: &anchor {self: *anchor}``) makes the node tree
+    #      a graph with a loop, so an unguarded walk recurses until it raises
+    #      ``RecursionError``.
+    #
+    # Tracking ``id(node)`` is safe here because ``root_node`` keeps every node
+    # in the tree alive for the whole traversal, so no id can be reused.
+    if visited is None:
+        visited = set()
+    if id(node) in visited:
+        return
+    visited.add(id(node))
     # Worked example: a node value that makes all three checks below true.
     #
     # YAML (with environment LIMIT=100):
@@ -127,12 +157,14 @@ def _substitute_env_in_yaml_node(node: yaml.Node, loader: yaml.SafeLoader):
     elif isinstance(node, yaml.SequenceNode):
         # A sequence (list): each item is itself a value node -- recurse.
         for item in node.value:
-            _substitute_env_in_yaml_node(item, loader)
+            _substitute_env_in_yaml_node(item, loader, visited)
     elif isinstance(node, yaml.MappingNode):
         # A mapping (dict): recurse into values only; keys are not
-        # substitution candidates per the spec.
+        # substitution candidates per the spec. A merge key (``<<: *base``)
+        # appears here as an ordinary pair whose value node is the anchored
+        # mapping itself, so ``visited`` also covers the merged-in values.
         for _key_node, value_node in node.value:
-            _substitute_env_in_yaml_node(value_node, loader)
+            _substitute_env_in_yaml_node(value_node, loader, visited)
 
 
 def _substitute_env_in_json_value(value: Any) -> Any:
