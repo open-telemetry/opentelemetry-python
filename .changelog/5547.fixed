@@ -1,1 +1,1 @@
-`opentelemetry-sdk`: don't read eventually set `process.executable.name` resource attribute when building default `service.name`
+`opentelemetry-sdk`: don't read `process.executable.name` resource attribute when building default `service.name`
