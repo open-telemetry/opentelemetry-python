@@ -44,8 +44,8 @@ class HistogramDataPoint:
     sum: int | float
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
-    min: float
-    max: float
+    min: float | None = None
+    max: float | None = None
     exemplars: Sequence[Exemplar] = field(default_factory=list)
 
     def to_json(self, indent: int | None = 4) -> str:
@@ -75,8 +75,8 @@ class ExponentialHistogramDataPoint:
     positive: Buckets
     negative: Buckets
     flags: int
-    min: float
-    max: float
+    min: float | None = None
+    max: float | None = None
     exemplars: Sequence[Exemplar] = field(default_factory=list)
 
     def to_json(self, indent: int | None = 4) -> str:

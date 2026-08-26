@@ -325,7 +325,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         explicit_bucket_histogram_aggregation = _ExplicitBucketHistogramAggregation(
             Mock(),
-            AggregationTemporality.CUMULATIVE,
+            AggregationTemporality.DELTA,
             0,
             _default_reservoir_factory(_ExplicitBucketHistogramAggregation),
             record_min_max=False,
@@ -339,6 +339,11 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         self.assertEqual(explicit_bucket_histogram_aggregation._min, inf)
         self.assertEqual(explicit_bucket_histogram_aggregation._max, -inf)
+        point = explicit_bucket_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 1
+        )
+        self.assertIsNone(point.min)
+        self.assertIsNone(point.max)
 
     def test_collect(self):
         """

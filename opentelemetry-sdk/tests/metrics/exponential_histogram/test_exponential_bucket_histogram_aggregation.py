@@ -137,7 +137,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 exponential_histogram_aggregation = _ExponentialBucketHistogramAggregation(
                     Mock(),
                     _default_reservoir_factory(_ExponentialBucketHistogramAggregation),
-                    AggregationTemporality.CUMULATIVE,
+                    AggregationTemporality.DELTA,
                     0,
                     record_min_max=record_min_max,
                 )
@@ -147,6 +147,15 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
                 self.assertEqual(exponential_histogram_aggregation._min, expected_min)
                 self.assertEqual(exponential_histogram_aggregation._max, expected_max)
+                point = exponential_histogram_aggregation.collect(
+                    AggregationTemporality.CUMULATIVE, 1
+                )
+                if record_min_max:
+                    self.assertEqual(point.min, expected_min)
+                    self.assertEqual(point.max, expected_max)
+                else:
+                    self.assertIsNone(point.min)
+                    self.assertIsNone(point.max)
 
     def assertInEpsilon(self, first, second, epsilon):
         self.assertLessEqual(first, (second * (1 + epsilon)))

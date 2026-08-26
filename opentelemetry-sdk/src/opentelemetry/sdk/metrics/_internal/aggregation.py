@@ -522,8 +522,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         sum=sum_,
                         bucket_counts=tuple(value),
                         explicit_bounds=self._boundaries,
-                        min=min_,
-                        max=max_,
+                        min=min_ if self._record_min_max else None,
+                        max=max_ if self._record_min_max else None,
                     )
 
                 if value is None:
@@ -552,8 +552,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     sum=self._previous_sum,
                     bucket_counts=tuple(self._previous_value),
                     explicit_bounds=self._boundaries,
-                    min=self._previous_min,
-                    max=self._previous_max,
+                    min=self._previous_min if self._record_min_max else None,
+                    max=self._previous_max if self._record_min_max else None,
                 )
 
             return None
@@ -808,8 +808,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         ),
                         # FIXME: Find the right value for flags
                         flags=0,
-                        min=min_,
-                        max=max_,
+                        min=min_ if self._record_min_max else None,
+                        max=max_ if self._record_min_max else None,
                     )
 
                 # Here collection_temporality is CUMULATIVE.
@@ -950,8 +950,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     ),
                     # FIXME: Find the right value for flags
                     flags=0,
-                    min=self._previous_min,
-                    max=self._previous_max,
+                    min=self._previous_min if self._record_min_max else None,
+                    max=self._previous_max if self._record_min_max else None,
                 )
 
             return None
