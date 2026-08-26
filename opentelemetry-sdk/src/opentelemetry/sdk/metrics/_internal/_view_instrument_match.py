@@ -6,7 +6,7 @@ from logging import getLogger
 from threading import Lock
 from time import time_ns
 from types import NoneType
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from typing_extensions import assert_never
 
@@ -25,24 +25,40 @@ from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
 
-_HashedAttributes = str | bool | int | float | bytes | None | tuple["_HashedAttributes", ...]
+_HashedAttributes = (
+    str
+    | bytes
+    | None
+    | tuple[type, bool | int | float]
+    | tuple[type, tuple["_HashedAttributes", ...]]
+    | tuple[type, tuple[tuple[Any, "_HashedAttributes"], ...]]
+)
 
 
 # pylint: disable=inconsistent-return-statements
 def _hash_attributes(value: Attributes | AnyValue) -> _HashedAttributes:
     # Attributes have been cleaned and validated when Measurement was instantiated,
     # so value is guaranteed to match one of the branches below at runtime.
-    if isinstance(value, (NoneType, str, int, float, bool, bytes)):
+    if isinstance(value, (NoneType, str, bytes)):
         return value
+    if isinstance(value, bool):
+        return (bool, value)
+    if isinstance(value, int):
+        return (int, value)
+    if isinstance(value, float):
+        return (float, value)
     if isinstance(value, Sequence):
-        return tuple(_hash_attributes(v) for v in value)
+        return (list, tuple(_hash_attributes(v) for v in value))
     if isinstance(value, Mapping):
-        return tuple(
-            (k, _hash_attributes(value[k]))
-            for k in sorted(
-                value,
-                key=lambda item: item if isinstance(item, str) else str(item),
-            )
+        return (
+            dict,
+            tuple(
+                (k, _hash_attributes(value[k]))
+                for k in sorted(
+                    value,
+                    key=lambda item: item if isinstance(item, str) else str(item),
+                )
+            ),
         )
     if TYPE_CHECKING:
         assert_never(value)

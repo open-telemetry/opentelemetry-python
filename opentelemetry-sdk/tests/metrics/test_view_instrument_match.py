@@ -564,6 +564,34 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             _hash_attributes(attrs_list),
         )
 
+    def test_hash_attributes_discriminates_scalar_types(self):
+        self.assertNotEqual(
+            _hash_attributes({"k": True}),
+            _hash_attributes({"k": 1}),
+        )
+        self.assertNotEqual(
+            _hash_attributes({"k": True}),
+            _hash_attributes({"k": 1.0}),
+        )
+        self.assertNotEqual(
+            _hash_attributes({"k": 1}),
+            _hash_attributes({"k": 1.0}),
+        )
+        self.assertNotEqual(
+            _hash_attributes({"k": False}),
+            _hash_attributes({"k": 0}),
+        )
+        self.assertNotEqual(
+            _hash_attributes({"k": False}),
+            _hash_attributes({"k": 0.0}),
+        )
+
+    def test_hash_attributes_sequence_vs_mapping_distinct(self):
+        self.assertNotEqual(
+            _hash_attributes({"a": 1}),
+            _hash_attributes([("a", 1)]),
+        )
+
     def test_consume_measurement_with_non_string_keys(self):
         instrument1 = _Counter(
             name="instrument1",
