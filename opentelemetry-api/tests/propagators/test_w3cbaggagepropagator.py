@@ -6,7 +6,7 @@
 from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, patch
-from urllib.parse import quote_plus
+from urllib.parse import quote
 
 from opentelemetry.baggage import get_all, set_baggage
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
@@ -139,6 +139,14 @@ class TestW3CBaggagePropagator(TestCase):
             self._extract("key%23key=value%23value"),
             {"key#key": "value#value"},
         )
+        self.assertEqual(
+            self._extract("key=a+b"),
+            {"key": "a+b"},
+        )
+        self.assertEqual(
+            self._extract("key=a%20b"),
+            {"key": "a b"},
+        )
 
     def test_header_max_entries_skip_invalid_entry(self):
         # 181 entries where index 2 is too long: skipping it leaves exactly 180 valid entries
@@ -186,7 +194,7 @@ class TestW3CBaggagePropagator(TestCase):
         self.assertEqual(None, output)
 
     def test_inject_space_entries(self):
-        self.assertEqual("key=val+ue", self._inject({"key": "val ue"}))
+        self.assertEqual("key=val%20ue", self._inject({"key": "val ue"}))
 
     def test_inject(self):
         values = {
@@ -232,12 +240,16 @@ class TestW3CBaggagePropagator(TestCase):
 
     def test_encode_baggage_pairs(self):
         def _format_baggage(entries):
-            return ",".join(quote_plus(str(k)) + "=" + quote_plus(str(v)) for k, v in entries.items())
+            return ",".join(quote(str(k), safe="") + "=" + quote(str(v), safe="") for k, v in entries.items())
 
-        self.assertEqual(_format_baggage({"key key": "value value"}), "key+key=value+value")
+        self.assertEqual(_format_baggage({"key key": "value value"}), "key%20key=value%20value")
         self.assertEqual(
             _format_baggage({"key/key": "value/value"}),
             "key%2Fkey=value%2Fvalue",
+        )
+        self.assertEqual(
+            _format_baggage({"key+key": "value+value"}),
+            "key%2Bkey=value%2Bvalue",
         )
 
     def test_inject_too_many_entries(self):
@@ -320,6 +332,6 @@ class TestW3CBaggagePropagator(TestCase):
 
         context = self.propagator.extract(carrier)
 
-        self.assertEqual(carrier, {"baggage": "transaction=string+with+spaces"})
+        self.assertEqual(carrier, {"baggage": "transaction=string%20with%20spaces"})
 
         self.assertEqual(context, {"abc": {"transaction": "string with spaces"}})
