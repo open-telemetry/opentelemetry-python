@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
+    _hash_attributes,
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -97,7 +98,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {frozenset([("c", "d")]): self.mock_created_aggregation},
+            {_hash_attributes({"c": "d"}): self.mock_created_aggregation},
         )
 
         view_instrument_match.consume_measurement(
@@ -113,12 +114,13 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                frozenset(): self.mock_created_aggregation,
-                frozenset([("c", "d")]): self.mock_created_aggregation,
+                _hash_attributes({}): self.mock_created_aggregation,
+                _hash_attributes({"c": "d"}): self.mock_created_aggregation,
             },
         )
 
-        # None attribute_keys (default) will keep all attributes
+        # setup new instrument match without `attribute_keys` set, defaults to keeping
+        # all attributes.
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
@@ -140,10 +142,10 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {frozenset([("c", "d"), ("f", "g")]): self.mock_created_aggregation},
+            {_hash_attributes({"c": "d", "f": "g"}): self.mock_created_aggregation},
         )
 
-        # empty set attribute_keys will drop all labels and aggregate
+        # empty set attribute_keys will drop all attributes and aggregate
         # everything together
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
@@ -161,12 +163,12 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 time_unix_nano=time_ns(),
                 instrument=instrument1,
                 context=Context(),
-                attributes=None,
+                attributes={"a": 1, "b": 2},
             )
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {frozenset({}): self.mock_created_aggregation},
+            {_hash_attributes({}): self.mock_created_aggregation},
         )
 
         # Test that a drop aggregation is handled in the same way as any
@@ -193,7 +195,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             )
         )
         self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[frozenset({})],
+            view_instrument_match._attributes_aggregation[_hash_attributes({})],
             _DropAggregation,
         )
 
@@ -238,6 +240,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
     def test_consume_measurement_attributes_are_copied(self):
         """Mutating the attributes dict after recording must not affect stored data points."""
+        # Note mutating mutable objects in the attributes dict will still cause issues,
+        # as they are not deep copied.
         instrument1 = _Counter(
             "instrument1",
             Mock(),
@@ -269,11 +273,13 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
 
         # Mutate the original dict after recording
         attributes["key"] = "mutated"
-
         number_data_points = view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0)
         number_data_points = list(number_data_points)
         self.assertEqual(len(number_data_points), 1)
-        self.assertEqual(number_data_points[0].attributes, {"key": "original"})
+        self.assertEqual(
+            number_data_points[0].attributes,
+            {"key": "original"},
+        )
 
     @patch(
         "opentelemetry.sdk.metrics._internal._view_instrument_match.time_ns",
@@ -488,9 +494,165 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         )
 
         self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[frozenset({("c", "d")})],
+            view_instrument_match._attributes_aggregation[_hash_attributes({"c": "d"})],
             _LastValueAggregation,
         )
+
+    def test_hash_attributes_works_as_stable_hash_key(self):
+        attributes = {
+            "a": [1, 2],
+            "b": [2, 1],
+            "c": b"1234asf",
+            "d": 1.2324124,
+            "e": -2.32323124,
+            "f": {1: 2, 2: (1, 2, 3), 3: "a", 4: "bc"},
+        }
+        self.assertEqual(
+            _hash_attributes(attributes),
+            _hash_attributes(attributes),
+        )
+
+        self.assertNotEqual(
+            _hash_attributes({"1": (1, "2", 3, "4")}),
+            _hash_attributes({"1": ("1", 2, "3", 4)}),
+        )
+
+    def test_hash_attributes_stable_hash_key_order_independence(self):
+        attrs1 = {"b": 2, "a": 1, "c": 3}
+        attrs2 = {"a": 1, "c": 3, "b": 2}
+        self.assertEqual(
+            _hash_attributes(attrs1),
+            _hash_attributes(attrs2),
+        )
+
+        nested1 = {"root": {"z": (3, 2, 1), "x": "val", "y": b"bytes_data"}}
+        nested2 = {"root": {"y": b"bytes_data", "z": (3, 2, 1), "x": "val"}}
+        self.assertEqual(
+            _hash_attributes(nested1),
+            _hash_attributes(nested2),
+        )
+
+    def test_hash_attributes_stable_hash_with_tuples_and_nested_dicts(self):
+        complex_attrs_a = {
+            "service": {"name": "test-svc", "version": "1.0"},
+            "tags": ("prod", "us-east-1"),
+            "endpoints": (
+                {"host": "a.com", "port": 80},
+                {"host": "b.com", "port": 443},
+            ),
+            "payload": b"binary-content",
+        }
+        complex_attrs_b = {
+            "payload": b"binary-content",
+            "endpoints": (
+                {"port": 80, "host": "a.com"},
+                {"port": 443, "host": "b.com"},
+            ),
+            "service": {"version": "1.0", "name": "test-svc"},
+            "tags": ("prod", "us-east-1"),
+        }
+        self.assertEqual(
+            _hash_attributes(complex_attrs_a),
+            _hash_attributes(complex_attrs_b),
+        )
+
+    def test_hash_attributes_tuple_and_list_equivalence(self):
+        attrs_tuple = {"values": (1, 2, 3), "nested": {"items": ("a", "b")}}
+        attrs_list = {"values": [1, 2, 3], "nested": {"items": ["a", "b"]}}
+        self.assertEqual(
+            _hash_attributes(attrs_tuple),
+            _hash_attributes(attrs_list),
+        )
+
+    def test_consume_measurement_with_non_string_keys(self):
+        instrument1 = _Counter(
+            name="instrument1",
+            instrumentation_scope=Mock(),
+            measurement_consumer=Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation={_Counter: LastValueAggregation()},
+        )
+
+        attributes = {"c": 1, 22: 3, (1,): 2}
+
+        measurement = Measurement(
+            value=0,
+            time_unix_nano=time_ns(),
+            instrument=Mock(name="instrument1"),
+            context=Context(),
+            attributes=attributes,
+        )
+        view_instrument_match.consume_measurement(measurement)
+        self.assertEqual(
+            measurement.attributes,
+            {"c": 1, "22": 3, "(1,)": 2},
+        )
+        self.assertIn(
+            _hash_attributes(measurement.attributes),
+            view_instrument_match._attributes_aggregation,
+        )
+
+    def test_consume_measurement_stable_hash_key_order(self):
+        instrument1 = _Counter(
+            "instrument1",
+            Mock(),
+            Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        attrs1 = {
+            "service": {"version": "1.0", "name": "app"},
+            "tags": ("prod", "v1"),
+            "region": "us-east-1",
+        }
+        attrs2 = {
+            "region": "us-east-1",
+            "tags": ("prod", "v1"),
+            "service": {"name": "app", "version": "1.0"},
+        }
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes=attrs1,
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=2,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes=attrs2,
+            )
+        )
+
+        self.assertEqual(len(view_instrument_match._attributes_aggregation), 1)
+        expected_key = _hash_attributes(attrs1)
+        self.assertIn(expected_key, view_instrument_match._attributes_aggregation)
 
 
 class TestSimpleFixedSizeExemplarReservoir(TestCase):

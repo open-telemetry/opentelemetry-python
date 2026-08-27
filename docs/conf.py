@@ -26,14 +26,17 @@ from django.conf import settings
 
 settings.configure()
 
-# Provide AnyValue in opentelemetry.attributes module's namespace so the
-# "AnyValue" forward reference in opentelemetry.util.types._ExtendedAttributes
-# resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
-# BoundedAttributes (whose __globals__ is the attributes module). Docs-only.
-import opentelemetry.attributes
-from opentelemetry.util.types import AnyValue as _AnyValue
+# Docs-only: resolves the "AnyValue" forward reference wherever
+# get_type_hints() evaluates it. AnyValue is a recursive alias, so
+# modules that import it only under TYPE_CHECKING hit a NameError.
+# TODO: https://github.com/open-telemetry/opentelemetry-python/issues/5304
+# this can be removed by importing AnyValue at runtime in the
+# modules that annotate with it
+import builtins
 
-opentelemetry.attributes.AnyValue = _AnyValue
+from opentelemetry.util.types import AnyValue
+
+builtins.AnyValue = AnyValue
 
 
 source_dirs = [
@@ -178,10 +181,6 @@ nitpick_ignore = [
     (
         "py:class",
         "AnyValue",
-    ),
-    (
-        "py:class",
-        "_ExtendedAttributes",
     ),
     ("py:class", "Token"),
     # ``from os import PathLike`` renders as the bare name ``PathLike`` in the
