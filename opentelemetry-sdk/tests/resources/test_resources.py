@@ -275,6 +275,26 @@ class TestResources(unittest.TestCase):
         )
         self.assertEqual(len(resource.attributes), 2)
 
+    def test_bytes_valued_resource_attribute(self):
+        """bytes is a valid AnyValue type; Resource.__hash__ and to_json must
+        not raise TypeError for bytes-valued attributes (issue #5576)."""
+        resource = Resource({"service.name": "svc", "build.id": b"\x01\x02\x03"})
+        # hashing must not raise
+        h = hash(resource)
+        self.assertIsInstance(h, int)
+        # to_json must not raise
+        json_str = resource.to_json()
+        self.assertIn("build.id", json_str)
+        # two identical resources must hash the same
+        resource2 = Resource({"service.name": "svc", "build.id": b"\x01\x02\x03"})
+        self.assertEqual(hash(resource), hash(resource2))
+        # different bytes must produce different hashes
+        resource3 = Resource({"service.name": "svc", "build.id": b"\xff"})
+        self.assertNotEqual(hash(resource), hash(resource3))
+        # usable as a dict key (covers the OTLP encoder use-case)
+        d = {resource: "value"}
+        self.assertEqual(d[resource], "value")
+
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = get_aggregated_resources([])
         self.assertEqual(

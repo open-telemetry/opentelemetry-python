@@ -62,7 +62,7 @@ import sys
 import threading
 import uuid
 from collections.abc import Mapping, Sequence
-from json import dumps
+from json import JSONEncoder, dumps
 from os import environ
 from types import ModuleType
 from typing import cast
@@ -92,6 +92,29 @@ except ImportError:
 LabelValue = AnyValue
 Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
+
+
+class _ResourceJsonEncoder(JSONEncoder):
+    """JSON encoder that handles attribute value types not natively supported
+    by :mod:`json`, specifically :class:`bytes` which is a valid
+    ``AnyValue`` type in the OpenTelemetry data model but is not
+    JSON-serializable by default.
+
+    ``bytes`` values are encoded as their hexadecimal string representation
+    so that hashing and serialisation remain deterministic and stable.
+    """
+
+    def default(self, o: object) -> object:
+        if isinstance(o, bytes):
+            return o.hex()
+        return super().default(o)
+
+
+def _dumps_resource(obj: object, **kwargs: object) -> str:
+    """Like :func:`json.dumps` but using :class:`_ResourceJsonEncoder`."""
+    return dumps(obj, cls=_ResourceJsonEncoder, **kwargs)
+
+
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
 CLOUD_REGION = ResourceAttributes.CLOUD_REGION
@@ -253,10 +276,12 @@ class Resource:
         return self._attributes == other._attributes and self._schema_url == other._schema_url
 
     def __hash__(self) -> int:
-        return hash(f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}")
+        return hash(
+            f"{_dumps_resource(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
+        )
 
     def to_json(self, indent: int | None = 4) -> str:
-        return dumps(
+        return _dumps_resource(
             {
                 "attributes": dict(self.attributes),
                 "schema_url": self._schema_url,
