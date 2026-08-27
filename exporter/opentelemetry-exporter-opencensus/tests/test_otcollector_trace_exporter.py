@@ -258,13 +258,13 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
         # pylint: disable=unsubscriptable-object
         export_arg = mock_export.call_args[0]
         service_request = next(export_arg[0])
-        output_spans = getattr(service_request, "spans")
-        output_node = getattr(service_request, "node")
+        output_spans = service_request.spans
+        output_node = service_request.node
         self.assertEqual(len(output_spans), 1)
-        self.assertIsNotNone(getattr(output_node, "library_info"))
-        self.assertIsNotNone(getattr(output_node, "service_info"))
-        output_identifier = getattr(output_node, "identifier")
-        self.assertEqual(getattr(output_identifier, "host_name"), "testHostName")
+        self.assertIsNotNone(output_node.library_info)
+        self.assertIsNotNone(output_node.service_info)
+        output_identifier = output_node.identifier
+        self.assertEqual(output_identifier.host_name, "testHostName")
 
     def test_export_service_name(self):
         trace_api.set_tracer_provider(TracerProvider(resource=Resource.create({SERVICE_NAME: "testServiceName"})))
