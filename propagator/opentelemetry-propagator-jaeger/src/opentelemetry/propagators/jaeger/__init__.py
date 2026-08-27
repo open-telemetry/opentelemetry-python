@@ -110,7 +110,7 @@ class JaegerPropagator(TextMapPropagator):
             if value is None:
                 continue
             context = baggage.set_baggage(
-                key[len(self.BAGGAGE_PREFIX) :],
+                key.removeprefix(self.BAGGAGE_PREFIX),
                 urllib.parse.unquote(value).strip(),
                 context=context,
             )
