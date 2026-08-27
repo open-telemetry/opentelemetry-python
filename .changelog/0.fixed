@@ -1,0 +1,1 @@
+`opentelemetry-api`: set `escaped=True` when auto-recording an exception raised inside a `start_as_current_span` block, matching the behavior of the raw `Span` context manager

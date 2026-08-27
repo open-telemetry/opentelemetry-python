@@ -13,6 +13,7 @@ from opentelemetry.trace.status import Status, StatusCode
 class SpanTest(trace.NonRecordingSpan):
     has_ended = False
     recorded_exception = None
+    recorded_exception_escaped = None
     recorded_status = Status(status_code=StatusCode.UNSET)
 
     def set_status(self, status, description=None):
@@ -29,6 +30,7 @@ class SpanTest(trace.NonRecordingSpan):
 
     def record_exception(self, exception, attributes=None, timestamp=None, escaped=False):
         self.recorded_exception = exception
+        self.recorded_exception_escaped = escaped
 
 
 class TestGlobals(TraceGlobalsTest, unittest.TestCase):
@@ -128,6 +130,9 @@ class TestUseTracer(unittest.TestCase):
                 raise exception
 
         self.assertEqual(test_span.recorded_exception, exception)
+        # The exception propagates out of the `with` block, so it is, by
+        # definition, escaping the span's scope.
+        self.assertTrue(test_span.recorded_exception_escaped)
 
     def test_use_span_set_status(self):
         class TestUseSpanException(Exception):

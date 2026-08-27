@@ -1409,6 +1409,7 @@ class TestSpan(unittest.TestCase):
     raise RuntimeError("example error")
 RuntimeError: example error"""
             self.assertIn(stacktrace, event.attributes["exception.stacktrace"])
+            self.assertEqual("True", event.attributes["exception.escaped"])
 
         try:
             with self.tracer.start_as_current_span("span", record_exception=False) as span:
@@ -1417,6 +1418,34 @@ RuntimeError: example error"""
             pass
         finally:
             self.assertEqual(len(span.events), 0)
+
+    def test_record_exception_escaped_consistent_across_span_apis(self):
+        # An exception that propagates out of the `with` block is,
+        # by definition, escaping the span's scope in both APIs below.
+        # start_as_current_span (the common, documented API) and the
+        # raw start_span context manager must agree on this.
+        span_from_current = None
+        try:
+            with self.tracer.start_as_current_span("span") as span_from_current:
+                raise RuntimeError("example error")
+        except RuntimeError:
+            pass
+
+        span_from_raw = None
+        try:
+            with self.tracer.start_span("span") as span_from_raw:
+                raise RuntimeError("example error")
+        except RuntimeError:
+            pass
+
+        self.assertEqual(
+            "True",
+            span_from_current.events[0].attributes["exception.escaped"],
+        )
+        self.assertEqual(
+            "True",
+            span_from_raw.events[0].attributes["exception.escaped"],
+        )
 
     def test_record_exception_out_of_scope(self):
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))

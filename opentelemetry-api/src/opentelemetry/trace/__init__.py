@@ -610,7 +610,7 @@ def use_span(
         if isinstance(span, Span) and span.is_recording():
             # Record the exception as an event
             if record_exception:
-                span.record_exception(exc)
+                span.record_exception(exc, escaped=True)
 
             # Set status in case exception was raised
             if set_status_on_exception:
