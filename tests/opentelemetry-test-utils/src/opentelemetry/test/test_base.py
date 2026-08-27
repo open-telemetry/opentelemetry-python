@@ -173,7 +173,7 @@ class TestBase(unittest.TestCase):
         data_point: DataPointT,
         est_value_delta: float | None = 0,
     ):
-        if type(expected_data_point) != type(data_point) or not isinstance(
+        if type(expected_data_point) != type(data_point) or not isinstance(  # noqa: E721
             expected_data_point, (HistogramDataPoint, NumberDataPoint)
         ):
             return False

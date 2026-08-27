@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 @functools.cache
 def _get_connection_error_types() -> tuple[type[Exception], ...]:
     # pylint: disable-next=import-outside-toplevel
-    import requests.exceptions
+    import requests.exceptions  # noqa: PLC0415
 
     return (
         requests.exceptions.ConnectionError,
@@ -71,7 +71,7 @@ class RequestsHTTPTransport(BaseHTTPTransport):
         **kwargs: Any,
     ) -> None:
         # pylint: disable-next=import-outside-toplevel
-        import requests
+        import requests  # noqa: PLC0415
 
         self._session = session if session is not None else requests.Session()
         self._session.verify = verify

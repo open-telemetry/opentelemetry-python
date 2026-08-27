@@ -51,15 +51,15 @@ def _make_handler(
     logs_path: str,
 ) -> type[BaseHTTPRequestHandler]:
     # pylint: disable=import-outside-toplevel,no-name-in-module
-    from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (  # noqa: PLC0415
         ExportLogsServiceRequest,
         ExportLogsServiceResponse,
     )
-    from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
+    from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: PLC0415
         ExportMetricsServiceRequest,
         ExportMetricsServiceResponse,
     )
-    from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (  # noqa: PLC0415
         ExportTraceServiceRequest,
         ExportTraceServiceResponse,
     )
@@ -146,7 +146,7 @@ class OtlpProtoTestServer:
     def __init__(self, host: str = "127.0.0.1", port: int = 0, base_path: str = "") -> None:
         try:
             # pylint: disable-next=import-outside-toplevel,unused-import
-            import opentelemetry.proto  # noqa: F401
+            import opentelemetry.proto  # noqa: PLC0415, F401
         except ImportError:
             raise ImportError(
                 "opentelemetry-proto is required to use OtlpProtoTestServer. "

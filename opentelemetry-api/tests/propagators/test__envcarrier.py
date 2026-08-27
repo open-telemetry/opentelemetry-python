@@ -430,7 +430,7 @@ class TestEnvironmentCarrierWithTraceContext(unittest.TestCase):
     def test_fields(self, mock_get_current_span, mock_invalid_span_context):
         """Test that propagator.fields matches injected keys."""
         # pylint: disable=import-outside-toplevel
-        from opentelemetry.trace.span import TraceState
+        from opentelemetry.trace.span import TraceState  # noqa: PLC0415
 
         mock_get_current_span.configure_mock(
             return_value=Mock(
@@ -547,7 +547,7 @@ class TestEnvironmentCarrierWithCompositePropagator(unittest.TestCase):
 
     def setUp(self):
         # pylint: disable=import-outside-toplevel
-        from opentelemetry.propagators.composite import (
+        from opentelemetry.propagators.composite import (  # noqa: PLC0415
             CompositePropagator,
         )
 

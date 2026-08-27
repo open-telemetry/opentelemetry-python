@@ -27,7 +27,7 @@ def _load_runtime_context() -> _RuntimeContext:
         return ContextVarsRuntimeContext()
 
     # pylint: disable=import-outside-toplevel,no-name-in-module
-    from opentelemetry.util._importlib_metadata import (
+    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
         entry_points,
     )
 

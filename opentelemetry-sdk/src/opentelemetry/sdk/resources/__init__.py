@@ -554,7 +554,7 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
         return [ServiceInstanceIdResourceDetector(), OTELResourceDetector()]
 
     # pylint: disable=import-outside-toplevel
-    from opentelemetry.util._importlib_metadata import (
+    from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
         entry_points,  # type: ignore[reportUnknownVariableType]
     )
 

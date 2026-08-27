@@ -654,7 +654,7 @@ class _OTelSDKConfigurator(_BaseConfigurator):
                 # silence the static-analysis no-name-in-module on the
                 # conditional import.
                 # pylint: disable=import-outside-toplevel,no-name-in-module
-                from opentelemetry.configuration import (
+                from opentelemetry.configuration import (  # noqa: PLC0415
                     configure_sdk,
                     load_config_file,
                 )

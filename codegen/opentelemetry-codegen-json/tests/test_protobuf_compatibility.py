@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: skip-file
+# ruff: noqa: PLC0415
 
 import base64
 from typing import Any

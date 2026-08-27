@@ -32,7 +32,7 @@ class TestPropagators(TestCase):
         mock_compositehttppropagator.configure_mock(side_effect=test_propagators)
 
         # pylint: disable=import-outside-toplevel
-        import opentelemetry.propagate
+        import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
 
@@ -51,7 +51,7 @@ class TestPropagators(TestCase):
         mock_compositehttppropagator.configure_mock(side_effect=test_propagators)
 
         # pylint: disable=import-outside-toplevel
-        import opentelemetry.propagate
+        import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
 
@@ -70,7 +70,7 @@ class TestPropagators(TestCase):
         mock_compositehttppropagator.configure_mock(side_effect=test_propagators)
 
         # pylint: disable=import-outside-toplevel
-        import opentelemetry.propagate
+        import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
 
@@ -94,7 +94,7 @@ class TestPropagators(TestCase):
         mock_compositehttppropagator.configure_mock(side_effect=test_propagators)
 
         # pylint: disable=import-outside-toplevel
-        import opentelemetry.propagate
+        import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
 
@@ -102,7 +102,7 @@ class TestPropagators(TestCase):
     def test_composite_propagators_error(self):
         with self.assertRaises(ValueError) as cm:
             # pylint: disable=import-outside-toplevel
-            import opentelemetry.propagate
+            import opentelemetry.propagate  # noqa: PLC0415
 
             reload(opentelemetry.propagate)
 

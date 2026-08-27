@@ -32,9 +32,9 @@ settings.configure()
 # TODO: https://github.com/open-telemetry/opentelemetry-python/issues/5304
 # this can be removed by importing AnyValue at runtime in the
 # modules that annotate with it
-import builtins
+import builtins  # noqa: E402
 
-from opentelemetry.util.types import AnyValue
+from opentelemetry.util.types import AnyValue  # noqa: E402
 
 builtins.AnyValue = AnyValue
 
