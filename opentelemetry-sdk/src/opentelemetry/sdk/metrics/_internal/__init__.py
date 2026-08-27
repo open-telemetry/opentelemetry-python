@@ -606,7 +606,7 @@ class MeterProvider(APIMeterProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
     ) -> APIMeter:
         if self._disabled:
             return NoOpMeter(name, version=version, schema_url=schema_url)

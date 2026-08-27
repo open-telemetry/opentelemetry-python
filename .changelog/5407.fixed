@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: perform environment variable substitution on scalar values after parsing the configuration file, so `${VAR}` references inside comments and mapping keys are no longer substituted and undefined references in comments no longer abort loading
