@@ -395,3 +395,24 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(name.startswith("periodic_metric_reader/"))
 
         mp.shutdown()
+
+    def test_shutdown_timeout_passed_to_exporter(self):
+        """Verify that PeriodicExportingMetricReader.shutdown forwards remaining
+        budget as timeout_millis to exporter.shutdown (issue #5574)."""
+        class TimeoutCapturingExporter(FakeMetricsExporter):
+            def __init__(self):
+                super().__init__()
+                self.received_timeout_millis = None
+
+            def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+                self.received_timeout_millis = timeout_millis
+                self._shutdown = True
+
+        exporter = TimeoutCapturingExporter()
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=60000)
+        pmr.shutdown(timeout_millis=5000)
+
+        self.assertIsNotNone(exporter.received_timeout_millis)
+        # Should be <= 5000 and > 0, not default 30000
+        self.assertLessEqual(exporter.received_timeout_millis, 5000)
+        self.assertGreater(exporter.received_timeout_millis, 0)
