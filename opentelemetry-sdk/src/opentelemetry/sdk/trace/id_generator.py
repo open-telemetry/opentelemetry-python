@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import abc
-import random
+import secrets
 
 from opentelemetry import trace
 
@@ -54,18 +54,25 @@ class IdGenerator(abc.ABC):
 class RandomIdGenerator(IdGenerator):
     """The default ID generator for TracerProvider which randomly generates all
     bits when generating IDs.
+
+    IDs are drawn from operating-system entropy (:mod:`secrets`) rather than
+    the global :mod:`random` generator. Applications that call
+    ``random.seed()`` (for example, for reproducibility in machine learning
+    workloads) therefore no longer cause separate processes or restarts to
+    deterministically generate identical IDs, and forked worker processes do
+    not inherit a common generator state.
     """
 
     def generate_span_id(self) -> int:
-        span_id = random.getrandbits(64)
+        span_id = secrets.randbits(64)
         while span_id == trace.INVALID_SPAN_ID:
-            span_id = random.getrandbits(64)
+            span_id = secrets.randbits(64)
         return span_id
 
     def generate_trace_id(self) -> int:
-        trace_id = random.getrandbits(128)
+        trace_id = secrets.randbits(128)
         while trace_id == trace.INVALID_TRACE_ID:
-            trace_id = random.getrandbits(128)
+            trace_id = secrets.randbits(128)
         return trace_id
 
     def is_trace_id_random(self) -> bool:
