@@ -264,10 +264,10 @@ def _create_otlp_http_metric_exporter(
     """Create an OTLP HTTP metric exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.proto.http import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415  # type: ignore[import-untyped]
             Compression,
         )
-        from opentelemetry.exporter.otlp.proto.http.metric_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.http.metric_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             OTLPMetricExporter,
         )
     except ImportError as exc:
@@ -298,9 +298,9 @@ def _create_otlp_grpc_metric_exporter(
     """Create an OTLP gRPC metric exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        import grpc  # type: ignore[import-untyped]  # noqa: PLC0415
+        import grpc  # noqa: PLC0415  # type: ignore[import-untyped]
 
-        from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             OTLPMetricExporter,
         )
     except ImportError as exc:
@@ -331,7 +331,7 @@ def _create_otlp_file_development_metric_exporter(
     """Create an OTLP file (JSON Lines) metric exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.json.file.metric_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.json.file.metric_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             FileMetricExporter,
         )
     except ImportError as exc:
@@ -416,7 +416,7 @@ def _create_prometheus_metric_reader(
     """
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.prometheus import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.prometheus import (  # noqa: PLC0415  # type: ignore[import-untyped]
             PrometheusMetricReader,
             start_http_server,
         )
