@@ -27,7 +27,7 @@ from opentelemetry.sdk.trace.sampling import (
     Sampler,
     SamplingResult,
 )
-from opentelemetry.trace import set_span_in_context
+from opentelemetry.trace import TraceState, set_span_in_context
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
@@ -66,7 +66,8 @@ def _remote_context():
 
 
 class TestSamplerReceivesTraceState(unittest.TestCase):
-    def _run(self, sampler):
+    @staticmethod
+    def _run(sampler):
         provider = TracerProvider(sampler=sampler, shutdown_on_exit=False)
         provider.get_tracer(__name__).start_span("child", context=_remote_context())
         provider.shutdown()
@@ -94,7 +95,8 @@ class TestSamplerReceivesTraceState(unittest.TestCase):
 
 
 class TestCompositeSamplerPreservesTraceState(unittest.TestCase):
-    def _outgoing_tracestate(self, sampler):
+    @staticmethod
+    def _outgoing_tracestate(sampler):
         provider = TracerProvider(sampler=sampler, shutdown_on_exit=False)
         span = provider.get_tracer(__name__).start_span("child", context=_remote_context())
         carrier = {}
@@ -138,8 +140,6 @@ class TestSamplingIntentTraceStateUpdate(unittest.TestCase):
         self.assertEqual(result.trace_state.get("vendorb"), "beta")
 
     def test_applied_when_incoming_tracestate_is_present(self):
-        from opentelemetry.trace import TraceState
-
         result = self.sampler.should_sample(
             None, self.trace_id, "op", trace_state=TraceState([("other", "1")])
         )
