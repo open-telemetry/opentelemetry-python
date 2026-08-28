@@ -314,6 +314,14 @@ class TraceState(Mapping[str, str]):
         """Updates a key-value pair in tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
 
+        Note:
+            This method performs an "upsert": if ``key`` is not already present
+            it is added (when the tracestate is below the 32-entry limit),
+            otherwise its value is updated. This upsert behaviour is intentional
+            but goes beyond what the OpenTelemetry specification defines for
+            ``update`` (https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#tracestate),
+            and is kept for backwards compatibility with callers that rely on it.
+
         Args:
             key: A valid tracestate key to update
             value: A valid tracestate value to update for key
