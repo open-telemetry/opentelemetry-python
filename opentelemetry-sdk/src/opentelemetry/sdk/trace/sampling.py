@@ -171,7 +171,7 @@ class SamplingResult:
     """
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({str(self.decision)}, attributes={str(self.attributes)})"
+        return f"{type(self).__name__}({self.decision!s}, attributes={self.attributes!s})"
 
     def __init__(
         self,
