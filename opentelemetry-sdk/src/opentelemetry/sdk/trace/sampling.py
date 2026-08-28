@@ -473,7 +473,7 @@ def _get_from_env_or_default() -> Sampler:
             rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG, ""))
             return _KNOWN_SAMPLERS[trace_sampler](rate)
         except (ValueError, TypeError):
-            _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
+            _logger.warning("Could not convert TRACES_SAMPLER_ARG to float. Using default rate 1.0.")
             return _KNOWN_SAMPLERS[trace_sampler](1.0)
 
     return _KNOWN_SAMPLERS[trace_sampler]
