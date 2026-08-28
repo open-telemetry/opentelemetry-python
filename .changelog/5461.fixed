@@ -1,2 +1,1 @@
-Reject views with `ExponentialBucketHistogramAggregation` for asynchronous
-instruments instead of silently producing no data
+`opentelemetry-sdk`: reject views with `ExponentialBucketHistogramAggregation` for asynchronous instruments instead of silently producing no data
