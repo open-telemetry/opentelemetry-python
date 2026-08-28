@@ -80,6 +80,7 @@ log_cli = true
 # https://docs.astral.sh/ruff/configuration/
 target-version = "py310"
 line-length = 120
+force-exclude = true
 extend-exclude = [
   "*_pb2*.py*",
   "opentelemetry-proto-json/src/*",
@@ -90,21 +91,26 @@ extension = { added = "markdown", changed = "markdown", deprecated = "markdown",
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/linter/#rule-selection
 # pylint: https://github.com/astral-sh/ruff/issues/970
-select = [
-  "I",   # https://docs.astral.sh/ruff/rules/#isort-i
-  "F",   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+extend-select = [
   "E",   # https://docs.astral.sh/ruff/rules/#error-e
-  "W",   # https://docs.astral.sh/ruff/rules/#warning-w
+  "F",   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+  "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
+  "I",   # https://docs.astral.sh/ruff/rules/#isort-i
   "PLC", # https://docs.astral.sh/ruff/rules/#convention-plc
   "PLE", # https://docs.astral.sh/ruff/rules/#error-ple
   "Q",   # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
-  "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
   "TID", # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
   "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+  "W",   # https://docs.astral.sh/ruff/rules/#warning-w
 ]
-
+# Ignore rules from the default ruleset that don't have auto-fixes available and need to be
+# manually resolved, plus RUF023 which is intentionally ignored.
 ignore = [
-  "E501", # line-too-long
+  "B008", "B017", "B018", "B020", "B023", "B039", "BLE001", "C401",
+  "C408", "C417", "DTZ007", "E501", "FLY002", "ISC004", "LOG015", "PERF102",
+  "PIE796", "PLW0602", "PLW1508", "PT014", "PYI034", "PYI036", "RUF009", "RUF012",
+  "RUF013", "RUF015", "RUF023", "S110", "SIM102", "SIM103", "SIM115", "SIM117",
+  "SIM118", "TRY002", "TRY004", "TRY201", "TRY401",
 ]
 
 [tool.ruff.lint.per-file-ignores]
