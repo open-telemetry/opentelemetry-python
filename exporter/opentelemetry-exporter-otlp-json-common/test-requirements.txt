@@ -2,7 +2,7 @@ asgiref==3.7.2
 iniconfig==2.0.0
 packaging==24.0
 pluggy==1.6.0
-protobuf==6.31.1
+protobuf==6.33.5
 py-cpuinfo==9.0.0
 pytest==9.0.3
 tomli==2.0.1

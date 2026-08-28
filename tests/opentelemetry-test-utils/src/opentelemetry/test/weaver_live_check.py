@@ -290,7 +290,7 @@ class WeaverLiveCheck:
     def __enter__(self) -> "WeaverLiveCheck":
         return self.start()
 
-    def __exit__(self, exc_type: Any, *_: Any) -> None:
+    def __exit__(self, exc_type: Any, *_: object) -> None:
         if exc_type is not None:
             self._stopped = True
         self.close()
