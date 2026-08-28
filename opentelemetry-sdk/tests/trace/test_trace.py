@@ -718,7 +718,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_links(self):
         # pylint: disable=protected-access
         max_links = trace.SpanLimits().max_links
-        links = [trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False)) for idx in range(0, 16 + max_links)]
+        links = [trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False)) for idx in range(16 + max_links)]
         tracer = new_tracer()
         with tracer.start_as_current_span("span", links=links) as root:
             self.assertEqual(len(root.links), max_links)
@@ -726,7 +726,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_attributes(self):
         # pylint: disable=protected-access
         max_attrs = trace.SpanLimits().max_span_attributes
-        attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
+        attributes = {str(idx): idx for idx in range(16 + max_attrs)}
         tracer = new_tracer()
         with tracer.start_as_current_span("span", attributes=attributes) as root:
             self.assertEqual(len(root.attributes), max_attrs)
@@ -2080,15 +2080,17 @@ class TestParentChildSpanException(unittest.TestCase):
 
         child_span = None
         try:
-            with tracer.start_as_current_span(
-                "parent",
-            ) as parent_span:
-                with tracer.start_as_current_span(
+            with (
+                tracer.start_as_current_span(
+                    "parent",
+                ) as parent_span,
+                tracer.start_as_current_span(
                     "child",
                     record_exception=False,
                     set_status_on_exception=False,
-                ) as child_span:
-                    raise exception
+                ) as child_span,
+            ):
+                raise exception
 
         except Exception:  # pylint: disable=broad-exception-caught
             pass
