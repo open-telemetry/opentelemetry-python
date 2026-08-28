@@ -1,24 +1,24 @@
-asgiref==3.7.2
-attrs==23.1.0
-certifi==2024.7.4
-charset-normalizer==2.0.12
-click==8.1.7
+asgiref==3.12.1
+attrs==23.2.0
+certifi==2024.12.14
+charset-normalizer==2.1.1
+click==8.5.0
 Flask==2.3.3
-idna==3.15
-iniconfig==2.0.0
-itsdangerous==2.1.2
+idna==3.19
+iniconfig==2.3.0
+itsdangerous==2.2.0
 Jinja2==3.1.6
-MarkupSafe==2.1.3
-packaging==24.0
+MarkupSafe==2.1.5
+packaging==24.2
 pluggy==1.6.0
 py-cpuinfo==9.0.0
-pytest==9.0.3
+pytest==9.1.1
 requests==2.32.3
-tomli==2.0.1
-typing_extensions==4.12.0
+tomli==2.4.1
+typing_extensions==4.16.0
 urllib3==2.7.0
-Werkzeug==3.1.6
-wrapt==1.15.0
+Werkzeug==3.1.8
+wrapt==1.17.3
 -e opentelemetry-semantic-conventions
 -e opentelemetry-proto
 -e exporter/opentelemetry-exporter-otlp-proto-common
