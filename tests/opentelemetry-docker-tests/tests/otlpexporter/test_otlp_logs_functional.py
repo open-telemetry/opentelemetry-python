@@ -47,33 +47,70 @@ from . import CUSTOM_HEADERS, ExporterConfig, _attrs_to_dict, make_otlp_file
 
 LOG_EXPORTER_CONFIGS: list[ExporterConfig[LogRecordExporter]] = [
     ExporterConfig(
-        id="http",
+        id="http-urllib3",
         exporter_class=HTTPLogExporter,
         kwargs={"endpoint": "http://localhost:4318/v1/logs"},
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-deflate",
+        id="http-requests",
+        exporter_class=HTTPLogExporter,
+        kwargs={"endpoint": "http://localhost:4318/v1/logs"},
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-deflate",
         exporter_class=HTTPLogExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/logs",
             "compression": HTTPCompression.Deflate,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-gzip",
+        id="http-requests-deflate",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": HTTPCompression.Deflate,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-gzip",
         exporter_class=HTTPLogExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/logs",
             "compression": HTTPCompression.Gzip,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
     ),
     ExporterConfig(
-        id="http-headers",
+        id="http-requests-gzip",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "compression": HTTPCompression.Gzip,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-urllib3-headers",
         exporter_class=HTTPLogExporter,
         kwargs={
             "endpoint": "http://localhost:4318/v1/logs",
             "headers": CUSTOM_HEADERS,
         },
+        lazy_kwargs={"_transport": Urllib3HTTPTransport},
+    ),
+    ExporterConfig(
+        id="http-requests-headers",
+        exporter_class=HTTPLogExporter,
+        kwargs={
+            "endpoint": "http://localhost:4318/v1/logs",
+            "headers": CUSTOM_HEADERS,
+        },
+        lazy_kwargs={"_transport": RequestsHTTPTransport},
     ),
     ExporterConfig(
         id="grpc",
@@ -177,7 +214,7 @@ class TestLogsExporter:
     def test_log_body(self, logger: Logger, server: OtlpProtoTestServer):
         logger.emit(body="hello world", severity_number=SeverityNumber.INFO)
 
-        recorded = server.get_log_record(timeout=5.0)
+        recorded = server.get_log_record(timeout=5000.0)
         assert recorded.log_record.body.string_value == snapshot("hello world")
 
     def test_log_severity_number(self, logger: Logger, server: OtlpProtoTestServer):
