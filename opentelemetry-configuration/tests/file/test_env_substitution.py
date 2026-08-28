@@ -7,10 +7,7 @@ from unittest.mock import patch
 
 import yaml
 
-from opentelemetry.configuration.file import (
-    EnvSubstitutionError,
-    substitute_env_vars,
-)
+from opentelemetry.configuration.file import substitute_env_vars
 
 
 class TestEnvSubstitution(unittest.TestCase):
@@ -40,12 +37,17 @@ class TestEnvSubstitution(unittest.TestCase):
             result = substitute_env_vars("name: ${SERVICE_NAME:-default}")
             self.assertEqual(result, "name: actual")
 
-    def test_missing_variable_raises_error(self):
-        """Test ${VAR} raises error when variable missing."""
+    def test_missing_variable_without_default_substitutes_empty(self):
+        """An unset ${VAR} without a default is replaced with an empty value.
+
+        Per the declarative configuration spec, unset variables without
+        defaults are replaced with an empty value, which YAML then reads as
+        null. This matches the Java and Node.js implementations.
+        """
         with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaises(EnvSubstitutionError) as ctx:
-                substitute_env_vars("name: ${MISSING_VAR}")
-            self.assertIn("MISSING_VAR", str(ctx.exception))
+            result = substitute_env_vars("name: ${MISSING_VAR}")
+            self.assertEqual(result, "name: ")
+            self.assertIsNone(yaml.safe_load(result)["name"])
 
     def test_dollar_sign_escape(self):
         """Test $$ escapes to literal $."""
@@ -107,44 +109,27 @@ line2: value2"""
         result = substitute_env_vars("$$$$")
         self.assertEqual(result, "$$")
 
-    def test_newline_in_value_prevents_yaml_injection(self):
-        """Values containing newlines must not inject YAML structure.
+    def test_newline_in_value_returned_verbatim(self):
+        """A newline in a value is returned as-is.
 
-        Per spec: "It MUST NOT be possible to inject YAML structures by
-        environment variables." A value like "legit\\nmalicious_key: val"
-        must be emitted as a quoted scalar, not raw YAML.
+        Substitution runs per configuration value after parsing, so it does
+        not escape or quote newlines; YAML injection is prevented structurally
+        (see the loader tests), not by rewriting the value here.
         """
-        with patch.dict(
-            os.environ,
-            {"SERVICE_NAME": "legit-service\nmalicious_key: injected_value"},
-        ):
-            result = substitute_env_vars(
-                "file_format: '1.0'\nservice_name: ${SERVICE_NAME}"
-            )
-        parsed = yaml.safe_load(result)
-        self.assertNotIn("malicious_key", parsed)
-        self.assertIn("legit-service", parsed["service_name"])
-
-    def test_newline_in_value_preserved_as_literal(self):
-        """Newline within a value is preserved as a literal newline character."""
         with patch.dict(os.environ, {"MULTI": "line1\nline2"}):
-            result = substitute_env_vars("key: ${MULTI}")
-        parsed = yaml.safe_load(result)
-        self.assertEqual(parsed["key"], "line1\nline2")
+            result = substitute_env_vars("${MULTI}")
+        self.assertEqual(result, "line1\nline2")
 
-    def test_carriage_return_in_value_is_escaped(self):
-        """Carriage return in value is escaped, not injected."""
+    def test_carriage_return_in_value_returned_verbatim(self):
+        """A carriage return in a value is returned as-is, not escaped."""
         with patch.dict(os.environ, {"VAL": "text\r\nmore"}):
-            result = substitute_env_vars("key: ${VAL}")
-        parsed = yaml.safe_load(result)
-        self.assertIsInstance(parsed["key"], str)
+            result = substitute_env_vars("${VAL}")
+        self.assertEqual(result, "text\r\nmore")
 
     def test_type_coercion_preserved_for_simple_values(self):
         """Simple values without newlines still undergo YAML type coercion per spec."""
         with patch.dict(os.environ, {"BOOL_VAL": "true", "INT_VAL": "42"}):
-            bool_result = yaml.safe_load(
-                substitute_env_vars("key: ${BOOL_VAL}")
-            )
+            bool_result = yaml.safe_load(substitute_env_vars("key: ${BOOL_VAL}"))
             int_result = yaml.safe_load(substitute_env_vars("key: ${INT_VAL}"))
         self.assertIs(bool_result["key"], True)
         self.assertEqual(int_result["key"], 42)

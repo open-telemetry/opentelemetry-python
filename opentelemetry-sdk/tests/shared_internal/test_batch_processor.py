@@ -6,6 +6,7 @@ import gc
 import logging
 import multiprocessing
 import os
+import sys
 import threading
 import time
 import unittest
@@ -79,9 +80,7 @@ class MockExporterForTesting:
 )
 class TestBatchProcessor:
     # pylint: disable=no-self-use
-    def test_telemetry_exported_once_batch_size_reached(
-        self, batch_processor_class, telemetry
-    ):
+    def test_telemetry_exported_once_batch_size_reached(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -103,9 +102,7 @@ class TestBatchProcessor:
         batch_processor.shutdown()
 
     # pylint: disable=no-self-use
-    def test_telemetry_exported_once_schedule_delay_reached(
-        self, batch_processor_class, telemetry
-    ):
+    def test_telemetry_exported_once_schedule_delay_reached(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -119,9 +116,7 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry])
         batch_processor.shutdown()
 
-    def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(
-        self, batch_processor_class, telemetry
-    ):
+    def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -142,9 +137,7 @@ class TestBatchProcessor:
         exporter.export.assert_called_once()
 
     # pylint: disable=no-self-use
-    def test_force_flush_flushes_telemetry(
-        self, batch_processor_class, telemetry
-    ):
+    def test_force_flush_flushes_telemetry(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -164,9 +157,7 @@ class TestBatchProcessor:
         hasattr(os, "fork"),
         "needs *nix",
     )
-    def test_batch_telemetry_record_processor_fork(
-        self, batch_processor_class, telemetry
-    ):
+    def test_batch_telemetry_record_processor_fork(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -200,9 +191,7 @@ class TestBatchProcessor:
         assert exporter.export.call_count == 1
         batch_processor.shutdown()
 
-    def test_record_processor_is_garbage_collected(
-        self, batch_processor_class, telemetry
-    ):
+    def test_record_processor_is_garbage_collected(self, batch_processor_class, telemetry):
         exporter = Mock()
         processor = batch_processor_class(exporter)
         weak_ref = weakref.ref(processor)
@@ -215,9 +204,64 @@ class TestBatchProcessor:
         # Then the reference to the processor should no longer exist
         assert weak_ref() is None
 
-    def test_shutdown_allows_1_export_to_finish(
-        self, batch_processor_class, telemetry
-    ):
+    @unittest.skipUnless(
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "needs fork and register_at_fork",
+    )
+    def test_garbage_collected_processor_does_not_crash_on_fork(self, batch_processor_class, telemetry):
+        exporter = Mock()
+        processor = batch_processor_class(exporter)
+        w_ref = weakref.ref(processor)
+        processor.shutdown()
+        del processor
+        gc.collect()
+
+        assert w_ref() is None
+
+        # The bug causes an unraisable exception to be printed to stderr.
+        # We redirect stderr to a pipe before fork to capture it.
+        r_fd, w_fd = os.pipe()
+
+        # Save original stderr and redirect it to the pipe
+        # We also temporarily restore the default sys.unraisablehook. Pytest overrides
+        # it to capture exceptions in memory, which would be lost on os._exit(0).
+        old_fd = os.dup(sys.stderr.fileno())
+        old_hook = sys.unraisablehook
+
+        try:
+            os.dup2(w_fd, sys.stderr.fileno())
+            sys.unraisablehook = sys.__unraisablehook__
+
+            pid = os.fork()
+            if pid == 0:
+                os.close(r_fd)
+                # os.fork() has already run the at_fork hooks.
+                os._exit(0)
+
+            os.waitpid(pid, 0)
+        finally:
+            # Restore original stderr and hook in parent
+            sys.unraisablehook = old_hook
+            os.dup2(old_fd, sys.stderr.fileno())
+            os.close(old_fd)
+            os.close(w_fd)
+
+        os.set_blocking(r_fd, False)
+        child_stderr = b""
+        while True:
+            try:
+                chunk = os.read(r_fd, 4096)
+                if not chunk:
+                    break
+                child_stderr += chunk
+            except BlockingIOError:
+                break
+        child_stderr = child_stderr.decode("utf-8")
+        os.close(r_fd)
+
+        assert "TypeError" not in child_stderr
+
+    def test_shutdown_allows_1_export_to_finish(self, batch_processor_class, telemetry):
         # This exporter throws an exception if it's export sleep cannot finish.
         exporter = MockExporterForTesting(export_sleep=2)
         processor = batch_processor_class(

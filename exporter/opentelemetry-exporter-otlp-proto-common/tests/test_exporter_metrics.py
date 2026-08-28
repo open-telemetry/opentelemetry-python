@@ -20,8 +20,7 @@ class TestExporterMetrics(unittest.TestCase):
         meter_provider = Mock()
 
         with patch(
-            "opentelemetry.exporter.otlp.proto.common."
-            "_exporter_metrics.get_meter_provider"
+            "opentelemetry.exporter.otlp.proto.common._exporter_metrics.get_meter_provider"
         ) as get_meter_provider:
             metrics = create_exporter_metrics(
                 OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,

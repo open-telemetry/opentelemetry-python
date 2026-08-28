@@ -25,19 +25,23 @@ to the exporter, which can send on this information as it sees fit.
 
     trace.set_tracer_provider(
         TracerProvider(
-            resource=Resource.create({
-                "service.name": "shoppingcart",
-                "service.instance.id": "instance-12",
-            }),
+            resource=Resource.create(
+                {
+                    "service.name": "shoppingcart",
+                    "service.instance.id": "instance-12",
+                }
+            ),
         ),
     )
     print(trace.get_tracer_provider().resource.attributes)
 
-    {'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '0.13.dev0',
-    'service.name': 'shoppingcart',
-    'service.instance.id': 'instance-12'}
+    {
+        "telemetry.sdk.language": "python",
+        "telemetry.sdk.name": "opentelemetry",
+        "telemetry.sdk.version": "0.13.dev0",
+        "service.name": "shoppingcart",
+        "service.instance.id": "instance-12",
+    }
 
 Note that the OpenTelemetry project documents certain `"standard attributes"
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md>`_
@@ -74,7 +78,7 @@ from opentelemetry.sdk.version import (
     __version__ as _OPENTELEMETRY_SDK_VERSION,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util.types import AttributeValue
+from opentelemetry.util.types import AnyValue
 
 psutil: ModuleType | None = None
 
@@ -85,10 +89,9 @@ try:
 except ImportError:
     pass
 
-LabelValue = AttributeValue
+LabelValue = AnyValue
 Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
-
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
 CLOUD_REGION = ResourceAttributes.CLOUD_REGION
@@ -156,7 +159,8 @@ class Resource:
     _schema_url: str
 
     def __init__(self, attributes: Attributes, schema_url: str | None = None):
-        self._attributes = BoundedAttributes(attributes=attributes)
+        # Immutable set to true so attributes cannot be added or removed after creation.
+        self._attributes = BoundedAttributes(attributes=attributes, immutable=True)
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
@@ -181,9 +185,9 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        resource = get_aggregated_resources(
-            _build_resource_detectors(), _DEFAULT_RESOURCE
-        ).merge(Resource(attributes, schema_url))
+        resource = get_aggregated_resources(_build_resource_detectors(), _DEFAULT_RESOURCE).merge(
+            Resource(attributes, schema_url)
+        )
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
@@ -193,9 +197,7 @@ class Resource:
             )
             if process_executable_name:
                 default_service_name += ":" + process_executable_name
-            resource = resource.merge(
-                Resource({SERVICE_NAME: default_service_name}, schema_url)
-            )
+            resource = resource.merge(Resource({SERVICE_NAME: default_service_name}, schema_url))
         return resource
 
     @staticmethod
@@ -248,15 +250,10 @@ class Resource:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return (
-            self._attributes == other._attributes
-            and self._schema_url == other._schema_url
-        )
+        return self._attributes == other._attributes and self._schema_url == other._schema_url
 
     def __hash__(self) -> int:
-        return hash(
-            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
-        )
+        return hash(f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}")
 
     def to_json(self, indent: int | None = 4) -> str:
         return dumps(
@@ -313,7 +310,7 @@ class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
-        env_resource_map: dict[str, AttributeValue] = {}
+        env_resource_map: dict[str, AnyValue] = {}
 
         if env_resources_items:
             for item in env_resources_items.split(","):
@@ -364,28 +361,26 @@ class ProcessResourceDetector(ResourceDetector):
                 str,
                 (
                     sys.version_info[:3]
-                    if sys.version_info.releaselevel == "final"
-                    and not sys.version_info.serial
+                    if sys.version_info.releaselevel == "final" and not sys.version_info.serial
                     else sys.version_info
                 ),
             )
         )
         _process_pid = os.getpid()
-        _process_executable_name = sys.executable
-        _process_executable_path = os.path.dirname(_process_executable_name)
         # Use sys.orig_argv, which preserves the original arguments received
         # by the interpreter. This correctly captures ``python -m <module>``
         # invocations where sys.argv is rewritten to the resolved module path
         # and the ``-m <module>`` information is lost. Only read argv[0] by
         # default because full command arguments are opt-in.
         _process_command = sys.orig_argv[0] if sys.orig_argv else ""
-        resource_info: dict[str, AttributeValue] = {
+        executable = sys.executable or ""
+        resource_info: dict[str, AnyValue] = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
             PROCESS_RUNTIME_VERSION: _runtime_version,
             PROCESS_PID: _process_pid,
-            PROCESS_EXECUTABLE_NAME: _process_executable_name,
-            PROCESS_EXECUTABLE_PATH: _process_executable_path,
+            PROCESS_EXECUTABLE_NAME: os.path.basename(executable),
+            PROCESS_EXECUTABLE_PATH: executable,
             PROCESS_COMMAND: _process_command,
         }
         if self._include_command_args:
@@ -528,10 +523,7 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
         global _service_instance_id, _service_instance_id_pid
         with _service_instance_id_lock:
             current_pid = os.getpid()
-            if (
-                _service_instance_id is None
-                or _service_instance_id_pid != current_pid
-            ):
+            if _service_instance_id is None or _service_instance_id_pid != current_pid:
                 _service_instance_id = str(uuid.uuid4())
                 _service_instance_id_pid = current_pid
             instance_id = _service_instance_id
@@ -552,13 +544,7 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     """
     detector_names: list[str] = list(
         dict.fromkeys(
-            [
-                name.strip()
-                for name in environ.get(
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-                ).split(",")
-                if name.strip()
-            ]
+            [name.strip() for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",") if name.strip()]
             + ["service_instance", "otel"]
         )
     )
@@ -575,16 +561,12 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     if "*" in detector_names:
         registered = set(
             name
-            for name in entry_points(
-                group="opentelemetry_resource_detector"
-            ).names  # type: ignore[reportUnknownArgumentType]
+            for name in entry_points(group="opentelemetry_resource_detector").names  # type: ignore[reportUnknownArgumentType]
             if name != "otel"
         )
         expansion = sorted(registered - set(detector_names))
         idx = detector_names.index("*")
-        detector_names = (
-            detector_names[:idx] + expansion + detector_names[idx + 1 :]
-        )
+        detector_names = detector_names[:idx] + expansion + detector_names[idx + 1 :]
 
     detectors: list[ResourceDetector] = []
     for name in detector_names:
@@ -609,11 +591,7 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
 
 def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
     return get_aggregated_resources(
-        [
-            detector
-            for detector in _build_resource_detectors()
-            if detector.is_process_dependent()
-        ],
+        [detector for detector in _build_resource_detectors() if detector.is_process_dependent()],
         Resource.get_empty(),
     )
 
@@ -651,12 +629,8 @@ def get_aggregated_resources(
             except Exception as ex:
                 if detector.raise_on_error:
                     raise ex
-                logger.warning(
-                    "Exception %s in detector %s, ignoring", ex, detector
-                )
+                logger.warning("Exception %s in detector %s, ignoring", ex, detector)
             finally:
-                detectors_merged_resource = detectors_merged_resource.merge(
-                    detected_resource
-                )
+                detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
 
     return detectors_merged_resource

@@ -41,6 +41,7 @@ from opentelemetry.sdk.metrics._internal import (
     _ProxyMeterConfig,
     _RuleBasedMeterConfigurator,
 )
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics.export import (
     InMemoryMetricReader,
     Metric,
@@ -126,17 +127,13 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         self.assertIsInstance(meter_provider_1._sdk_config.resource, Resource)
 
         resource = Resource({"key": "value"})
-        self.assertIs(
-            MeterProvider(resource=resource)._sdk_config.resource, resource
-        )
+        self.assertIs(MeterProvider(resource=resource)._sdk_config.resource, resource)
 
     def test_update_resource(self):
         initial_resource = Resource({"one": "one", "two": "old"})
         updating_resource = Resource({"two": "new", "three": "three"})
         reader = InMemoryMetricReader()
-        meter_provider = MeterProvider(
-            metric_readers=[reader], resource=initial_resource
-        )
+        meter_provider = MeterProvider(metric_readers=[reader], resource=initial_resource)
         meter = meter_provider.get_meter("name")
         counter = meter.create_counter("counter")
 
@@ -170,11 +167,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
     def test_meter_provider_updates_process_dependent_resource_after_fork(
         self,
     ):
-        script_path = (
-            Path(__file__).parent
-            / "scripts"
-            / "meter_provider_resource_after_fork.py"
-        )
+        script_path = Path(__file__).parent / "scripts" / "meter_provider_resource_after_fork.py"
 
         result = subprocess.run(
             [sys.executable, str(script_path)],
@@ -195,20 +188,14 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         child_payload = json.loads(lines[0])
         parent_payload = json.loads(lines[1])
 
-        self.assertEqual(
-            parent_payload["parent_resource_pid"], parent_payload["parent_pid"]
-        )
+        self.assertEqual(parent_payload["parent_resource_pid"], parent_payload["parent_pid"])
         self.assertEqual(
             parent_payload["parent_resource_pid_after_fork"],
             parent_payload["parent_pid"],
         )
 
-        self.assertNotEqual(
-            child_payload["child_pid"], parent_payload["parent_pid"]
-        )
-        self.assertEqual(
-            child_payload["provider_pid"], child_payload["child_pid"]
-        )
+        self.assertNotEqual(child_payload["child_pid"], parent_payload["parent_pid"])
+        self.assertEqual(child_payload["provider_pid"], child_payload["child_pid"])
         self.assertEqual(
             child_payload["exported_resource_pids"],
             [child_payload["child_pid"]],
@@ -234,9 +221,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         self.assertEqual(meter._instrumentation_scope.name, "name")
         self.assertEqual(meter._instrumentation_scope.version, "version")
         self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
-        self.assertEqual(
-            meter._instrumentation_scope.attributes, {"key": "value"}
-        )
+        self.assertEqual(meter._instrumentation_scope.attributes, {"key": "value"})
 
     def test_get_meter_attributes(self):
         """
@@ -338,12 +323,8 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         )
         self.assertIs(meter1, meter2)
         self.assertIsNot(meter1, meter3)
-        self.assertTrue(
-            meter3._instrumentation_scope > meter4._instrumentation_scope
-        )
-        self.assertIsInstance(
-            meter4._instrumentation_scope.attributes, BoundedAttributes
-        )
+        self.assertTrue(meter3._instrumentation_scope > meter4._instrumentation_scope)
+        self.assertIsInstance(meter4._instrumentation_scope.attributes, BoundedAttributes)
 
     def test_shutdown(self):
         mock_metric_reader_0 = MagicMock(
@@ -357,9 +338,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
             }
         )
 
-        meter_provider = MeterProvider(
-            metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
-        )
+        meter_provider = MeterProvider(metric_readers=[mock_metric_reader_0, mock_metric_reader_1])
 
         with self.assertRaises(Exception) as error:
             meter_provider.shutdown()
@@ -382,9 +361,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         mock_metric_reader_0 = Mock()
         mock_metric_reader_1 = Mock()
 
-        meter_provider = MeterProvider(
-            metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
-        )
+        meter_provider = MeterProvider(metric_readers=[mock_metric_reader_0, mock_metric_reader_1])
 
         self.assertIsNone(meter_provider.shutdown())
         mock_metric_reader_0.shutdown.assert_called_once()
@@ -410,17 +387,11 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         mock_logger.warning = MockFunc()
         meter_provider = MeterProvider()
         num_threads = 70
-        self.run_with_many_threads(
-            meter_provider.shutdown, num_threads=num_threads
-        )
+        self.run_with_many_threads(meter_provider.shutdown, num_threads=num_threads)
         self.assertEqual(mock_logger.warning.call_count, num_threads - 1)
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_measurement_collect_callback(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_measurement_collect_callback(self, mock_sync_measurement_consumer):
         metric_readers = [
             DummyMetricReader(),
             DummyMetricReader(),
@@ -434,47 +405,29 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
 
         for reader in metric_readers:
             reader.collect()
-        self.assertEqual(
-            sync_consumer_instance.collect.call_count, len(metric_readers)
-        )
+        self.assertEqual(sync_consumer_instance.collect.call_count, len(metric_readers))
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_creates_sync_measurement_consumer(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_creates_sync_measurement_consumer(self, mock_sync_measurement_consumer):
         MeterProvider()
         mock_sync_measurement_consumer.assert_called()
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_register_asynchronous_instrument(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_register_asynchronous_instrument(self, mock_sync_measurement_consumer):
         meter_provider = MeterProvider()
 
         # pylint: disable=no-member
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
-            meter_provider.get_meter("name").create_observable_counter(
-                "name0", callbacks=[Mock()]
-            )
+            meter_provider.get_meter("name").create_observable_counter("name0", callbacks=[Mock()])
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
-            meter_provider.get_meter("name").create_observable_up_down_counter(
-                "name1", callbacks=[Mock()]
-            )
+            meter_provider.get_meter("name").create_observable_up_down_counter("name1", callbacks=[Mock()])
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
-            meter_provider.get_meter("name").create_observable_gauge(
-                "name2", callbacks=[Mock()]
-            )
+            meter_provider.get_meter("name").create_observable_gauge("name2", callbacks=[Mock()])
         )
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
     def test_consume_measurement_counter(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         meter_provider = MeterProvider()
@@ -484,28 +437,18 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
 
         sync_consumer_instance.consume_measurement.assert_called()
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_consume_measurement_up_down_counter(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_consume_measurement_up_down_counter(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         meter_provider = MeterProvider()
-        counter = meter_provider.get_meter("name").create_up_down_counter(
-            "name"
-        )
+        counter = meter_provider.get_meter("name").create_up_down_counter("name")
 
         counter.add(1)
 
         sync_consumer_instance.consume_measurement.assert_called()
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_consume_measurement_histogram(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_consume_measurement_histogram(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         meter_provider = MeterProvider()
         counter = meter_provider.get_meter("name").create_histogram("name")
@@ -536,16 +479,12 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         meter = mp.get_meter("test")
         self.assertTrue(meter._is_enabled())
 
-        mp._set_meter_configurator(
-            meter_configurator=_disable_meter_configurator
-        )
+        mp._set_meter_configurator(meter_configurator=_disable_meter_configurator)
         self.assertFalse(meter._is_enabled())
 
     def test_set_meter_configurator_affects_new_meters(self):
         mp = MeterProvider()
-        mp._set_meter_configurator(
-            meter_configurator=_disable_meter_configurator
-        )
+        mp._set_meter_configurator(meter_configurator=_disable_meter_configurator)
         meter = mp.get_meter("new_meter")
         self.assertFalse(meter._is_enabled())
 
@@ -573,9 +512,7 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         # Should still be enabled (default config) despite the error
         self.assertTrue(meter._is_enabled())
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
     def test_consume_measurement_gauge(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         meter_provider = MeterProvider()
@@ -640,16 +577,10 @@ class TestMeterConcurrency(ConcurrencyTestBase, TestCase):
                 sleep(0.25)
             return status
 
-        def make_create_instrument(
-            meter: Meter, method_name: str, args: list[Any]
-        ) -> Callable[[], Any]:
-            return lambda: getattr(meter, method_name)(
-                f"concurrent_{method_name}", *args
-            )
+        def make_create_instrument(meter: Meter, method_name: str, args: list[Any]) -> Callable[[], Any]:
+            return lambda: getattr(meter, method_name)(f"concurrent_{method_name}", *args)
 
-        with patch.object(
-            meter, "_register_instrument", side_effect=mocked_register
-        ):
+        with patch.object(meter, "_register_instrument", side_effect=mocked_register):
             create_methods = [
                 ("create_counter", []),
                 ("create_up_down_counter", []),
@@ -679,17 +610,11 @@ class TestMeter(TestCase):
         with self.assertNotRaises(Exception):
             self.meter.create_counter("counter")
             self.meter.create_up_down_counter("up_down_counter")
-            self.meter.create_observable_counter(
-                "observable_counter", callbacks=[Mock()]
-            )
+            self.meter.create_observable_counter("observable_counter", callbacks=[Mock()])
             self.meter.create_histogram("histogram")
             self.meter.create_gauge("gauge")
-            self.meter.create_observable_gauge(
-                "observable_gauge", callbacks=[Mock()]
-            )
-            self.meter.create_observable_up_down_counter(
-                "observable_up_down_counter", callbacks=[Mock()]
-            )
+            self.meter.create_observable_gauge("observable_gauge", callbacks=[Mock()])
+            self.meter.create_observable_up_down_counter("observable_up_down_counter", callbacks=[Mock()])
 
         for instrument_name in [
             "counter",
@@ -697,51 +622,35 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            with self.assertNoLogs(
-                "opentelemetry.sdk.metrics._internal", level="WARNING"
-            ):
-                getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name
-                )
+            with self.assertNoLogs("opentelemetry.sdk.metrics._internal", level="WARNING"):
+                getattr(self.meter, f"create_{instrument_name}")(instrument_name)
 
         for instrument_name in [
             "observable_counter",
             "observable_gauge",
             "observable_up_down_counter",
         ]:
-            with self.assertNoLogs(
-                "opentelemetry.sdk.metrics._internal", level="WARNING"
-            ):
-                getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name, callbacks=[Mock()]
-                )
+            with self.assertNoLogs("opentelemetry.sdk.metrics._internal", level="WARNING"):
+                getattr(self.meter, f"create_{instrument_name}")(instrument_name, callbacks=[Mock()])
 
     def test_repeated_instrument_names_with_different_advisory(self):
         with self.assertNotRaises(Exception):
-            self.meter.create_histogram(
-                "histogram", explicit_bucket_boundaries_advisory=[1.0]
-            )
+            self.meter.create_histogram("histogram", explicit_bucket_boundaries_advisory=[1.0])
 
         for instrument_name in [
             "histogram",
         ]:
             with self.assertLogs(level=WARNING):
-                getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name
-                )
+                getattr(self.meter, f"create_{instrument_name}")(instrument_name)
 
     def test_create_counter(self):
-        counter = self.meter.create_counter(
-            "name", unit="unit", description="description"
-        )
+        counter = self.meter.create_counter("name", unit="unit", description="description")
 
         self.assertIsInstance(counter, Counter)
         self.assertEqual(counter.name, "name")
 
     def test_create_up_down_counter(self):
-        up_down_counter = self.meter.create_up_down_counter(
-            "name", unit="unit", description="description"
-        )
+        up_down_counter = self.meter.create_up_down_counter("name", unit="unit", description="description")
 
         self.assertIsInstance(up_down_counter, UpDownCounter)
         self.assertEqual(up_down_counter.name, "name")
@@ -755,9 +664,7 @@ class TestMeter(TestCase):
         self.assertEqual(observable_counter.name, "name")
 
     def test_create_histogram(self):
-        histogram = self.meter.create_histogram(
-            "name", unit="unit", description="description"
-        )
+        histogram = self.meter.create_histogram("name", unit="unit", description="description")
 
         self.assertIsInstance(histogram, Histogram)
         self.assertEqual(histogram.name, "name")
@@ -801,25 +708,19 @@ class TestMeter(TestCase):
         self.assertEqual(observable_gauge.name, "name")
 
     def test_create_gauge(self):
-        gauge = self.meter.create_gauge(
-            "name", unit="unit", description="description"
-        )
+        gauge = self.meter.create_gauge("name", unit="unit", description="description")
 
         self.assertIsInstance(gauge, _Gauge)
         self.assertEqual(gauge.name, "name")
 
     def test_create_observable_up_down_counter(self):
-        observable_up_down_counter = (
-            self.meter.create_observable_up_down_counter(
-                "name",
-                callbacks=[Mock()],
-                unit="unit",
-                description="description",
-            )
+        observable_up_down_counter = self.meter.create_observable_up_down_counter(
+            "name",
+            callbacks=[Mock()],
+            unit="unit",
+            description="description",
         )
-        self.assertIsInstance(
-            observable_up_down_counter, ObservableUpDownCounter
-        )
+        self.assertIsInstance(observable_up_down_counter, ObservableUpDownCounter)
         self.assertEqual(observable_up_down_counter.name, "name")
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
@@ -896,14 +797,8 @@ class TestMeter(TestCase):
             ],
             default_config=_MeterConfig.default(),
         )
-        self.assertFalse(
-            configurator(
-                InstrumentationScope("opentelemetry.sdk", "1.0")
-            ).is_enabled
-        )
-        self.assertTrue(
-            configurator(InstrumentationScope("custom.name", "1.0")).is_enabled
-        )
+        self.assertFalse(configurator(InstrumentationScope("opentelemetry.sdk", "1.0")).is_enabled)
+        self.assertTrue(configurator(InstrumentationScope("custom.name", "1.0")).is_enabled)
 
     def test_scope_name_matches_glob_exact(self):
         predicate = _scope_name_matches_glob("my.meter")
@@ -919,48 +814,32 @@ class TestMeter(TestCase):
         predicate = _scope_name_matches_glob("no.match")
         self.assertFalse(predicate(InstrumentationScope("my.meter", "1.0")))
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_disabled_meter_counter_skips_measurement(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_disabled_meter_counter_skips_measurement(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         mp = MeterProvider(_meter_configurator=_disable_meter_configurator)
         counter = mp.get_meter("test").create_counter("c")
         counter.add(1)
         sync_consumer_instance.consume_measurement.assert_not_called()
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_disabled_meter_up_down_counter_skips_measurement(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_disabled_meter_up_down_counter_skips_measurement(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         mp = MeterProvider(_meter_configurator=_disable_meter_configurator)
         counter = mp.get_meter("test").create_up_down_counter("udc")
         counter.add(1)
         sync_consumer_instance.consume_measurement.assert_not_called()
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_disabled_meter_histogram_skips_measurement(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_disabled_meter_histogram_skips_measurement(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         mp = MeterProvider(_meter_configurator=_disable_meter_configurator)
         histogram = mp.get_meter("test").create_histogram("h")
         histogram.record(1)
         sync_consumer_instance.consume_measurement.assert_not_called()
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_disabled_meter_gauge_skips_measurement(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_disabled_meter_gauge_skips_measurement(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         mp = MeterProvider(_meter_configurator=_disable_meter_configurator)
         gauge = mp.get_meter("test").create_gauge("g")
@@ -970,9 +849,7 @@ class TestMeter(TestCase):
     def test_disabled_meter_observable_counter_skips_callback(self):
         cb = Mock()
         mp = MeterProvider(_meter_configurator=_disable_meter_configurator)
-        oc = mp.get_meter("test").create_observable_counter(
-            "oc", callbacks=[cb]
-        )
+        oc = mp.get_meter("test").create_observable_counter("oc", callbacks=[cb])
         # Trigger callback collection
         list(oc.callback(Mock()))
         cb.assert_not_called()
@@ -987,50 +864,32 @@ class TestMeter(TestCase):
     def test_disabled_meter_observable_up_down_counter_skips_callback(self):
         cb = Mock()
         mp = MeterProvider(_meter_configurator=_disable_meter_configurator)
-        oudc = mp.get_meter("test").create_observable_up_down_counter(
-            "oudc", callbacks=[cb]
-        )
+        oudc = mp.get_meter("test").create_observable_up_down_counter("oudc", callbacks=[cb])
         list(oudc.callback(Mock()))
         cb.assert_not_called()
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_counter_noop_after_meter_disabled(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_counter_noop_after_meter_disabled(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         mp = MeterProvider()
         meter = mp.get_meter("test")
         counter = meter.create_counter("c")
 
         counter.add(1)
-        self.assertEqual(
-            sync_consumer_instance.consume_measurement.call_count, 1
-        )
+        self.assertEqual(sync_consumer_instance.consume_measurement.call_count, 1)
 
         counter.add(2)
-        self.assertEqual(
-            sync_consumer_instance.consume_measurement.call_count, 2
-        )
+        self.assertEqual(sync_consumer_instance.consume_measurement.call_count, 2)
 
-        mp._set_meter_configurator(
-            meter_configurator=_disable_meter_configurator
-        )
+        mp._set_meter_configurator(meter_configurator=_disable_meter_configurator)
         self.assertFalse(meter._is_enabled())
 
         counter.add(3)
         counter.add(4)
-        self.assertEqual(
-            sync_consumer_instance.consume_measurement.call_count, 2
-        )
+        self.assertEqual(sync_consumer_instance.consume_measurement.call_count, 2)
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer"
-    )
-    def test_reenable_meter_after_disable(
-        self, mock_sync_measurement_consumer
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
+    def test_reenable_meter_after_disable(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         mp = MeterProvider(_meter_configurator=_disable_meter_configurator)
         meter = mp.get_meter("test")
@@ -1039,9 +898,7 @@ class TestMeter(TestCase):
         counter.add(1)
         sync_consumer_instance.consume_measurement.assert_not_called()
 
-        mp._set_meter_configurator(
-            meter_configurator=_default_meter_configurator
-        )
+        mp._set_meter_configurator(meter_configurator=_default_meter_configurator)
         self.assertTrue(meter._is_enabled())
         counter.add(1)
         sync_consumer_instance.consume_measurement.assert_called_once()
@@ -1073,9 +930,7 @@ class InMemoryMetricExporter(MetricExporter):
 class TestDuplicateInstrumentAggregateData(TestCase):
     def test_duplicate_instrument_aggregate_data(self):
         exporter = InMemoryMetricExporter()
-        reader = PeriodicExportingMetricReader(
-            exporter, export_interval_millis=500
-        )
+        reader = PeriodicExportingMetricReader(exporter, export_interval_millis=500)
         view = View(
             instrument_type=Counter,
             attribute_keys=[],
@@ -1097,15 +952,9 @@ class TestDuplicateInstrumentAggregateData(TestCase):
             version="version",
             schema_url="schema_url",
         )
-        counter_0_0 = meter_0.create_counter(
-            "counter", unit="unit", description="description"
-        )
-        counter_0_1 = meter_0.create_counter(
-            "counter", unit="unit", description="description"
-        )
-        counter_1_0 = meter_1.create_counter(
-            "counter", unit="unit", description="description"
-        )
+        counter_0_0 = meter_0.create_counter("counter", unit="unit", description="description")
+        counter_0_1 = meter_0.create_counter("counter", unit="unit", description="description")
+        counter_1_0 = meter_1.create_counter("counter", unit="unit", description="description")
 
         self.assertIs(counter_0_0, counter_0_1)
         self.assertIsNot(counter_0_0, counter_1_0)
@@ -1140,3 +989,49 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         self.assertEqual(metric_1.unit, "unit")
         self.assertEqual(metric_1.description, "description")
         self.assertEqual(next(iter(metric_1.data.data_points)).value, 7)
+
+
+class TestMeasurement(TestCase):
+    def test_measurement_attributes_cleaned(self):
+        measurement = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes={"a": "b", 1: 2, "seq": [1, 2]},
+        )
+        self.assertEqual(
+            measurement.attributes,
+            {"a": "b", "1": 2, "seq": (1, 2)},
+        )
+
+    def test_measurement_attributes_invalid_type(self):
+        with self.assertLogs(level=WARNING) as logs:
+            measurement = Measurement(
+                value=10,
+                time_unix_nano=0,
+                instrument=Mock(),
+                context=Mock(),
+                attributes="invalid",
+            )
+        self.assertIsNone(measurement.attributes)
+        self.assertIn("Invalid type", logs.output[0])
+
+    def test_measurement_attributes_none_or_empty(self):
+        m1 = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes=None,
+        )
+        self.assertIsNone(m1.attributes)
+
+        m2 = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes={},
+        )
+        self.assertEqual(m2.attributes, {})

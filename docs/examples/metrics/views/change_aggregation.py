@@ -14,9 +14,7 @@ from opentelemetry.sdk.metrics.view import SumAggregation, View
 
 # Create a view matching the histogram instrument name `http.client.request.latency`
 # and configure the `SumAggregation` for the result metrics stream
-hist_to_sum_view = View(
-    instrument_name="http.client.request.latency", aggregation=SumAggregation()
-)
+hist_to_sum_view = View(instrument_name="http.client.request.latency", aggregation=SumAggregation())
 
 # Use console exporter for the example
 exporter = ConsoleMetricExporter()

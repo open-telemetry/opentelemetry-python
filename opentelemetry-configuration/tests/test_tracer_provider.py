@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
+from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._tracer_provider import (
     configure_tracer_provider,
     create_tracer_provider,
@@ -118,9 +119,7 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
 
     def test_none_config_no_processors(self):
         provider = create_tracer_provider(None)
-        self.assertEqual(
-            len(provider._active_span_processor._span_processors), 0
-        )
+        self.assertEqual(len(provider._active_span_processor._span_processors), 0)
 
     def test_none_config_does_not_read_sampler_env_var(self):
         with patch.dict(os.environ, {"OTEL_TRACES_SAMPLER": "always_off"}):
@@ -133,20 +132,14 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
         self.assertEqual(provider._span_limits.max_span_attributes, 128)
 
     def test_configure_none_does_not_set_global(self):
-        original = __import__(
-            "opentelemetry.trace", fromlist=["get_tracer_provider"]
-        ).get_tracer_provider()
+        original = __import__("opentelemetry.trace", fromlist=["get_tracer_provider"]).get_tracer_provider()
         configure_tracer_provider(None)
-        after = __import__(
-            "opentelemetry.trace", fromlist=["get_tracer_provider"]
-        ).get_tracer_provider()
+        after = __import__("opentelemetry.trace", fromlist=["get_tracer_provider"]).get_tracer_provider()
         self.assertIs(original, after)
 
     def test_configure_with_config_sets_global(self):
         config = TracerProviderConfig(processors=[])
-        with patch(
-            "opentelemetry.configuration._tracer_provider.trace.set_tracer_provider"
-        ) as mock_set:
+        with patch("opentelemetry.configuration._tracer_provider.trace.set_tracer_provider") as mock_set:
             configure_tracer_provider(config)
             mock_set.assert_called_once()
             arg = mock_set.call_args[0][0]
@@ -181,9 +174,7 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
 class TestCreateSampler(unittest.TestCase):
     @staticmethod
     def _make_provider(sampler_config):
-        return create_tracer_provider(
-            TracerProviderConfig(processors=[], sampler=sampler_config)
-        )
+        return create_tracer_provider(TracerProviderConfig(processors=[], sampler=sampler_config))
 
     def test_always_on(self):
         provider = self._make_provider(SamplerConfig(always_on={}))
@@ -194,35 +185,23 @@ class TestCreateSampler(unittest.TestCase):
         self.assertIs(provider.sampler, ALWAYS_OFF)
 
     def test_trace_id_ratio_based(self):
-        provider = self._make_provider(
-            SamplerConfig(
-                trace_id_ratio_based=TraceIdRatioBasedConfig(ratio=0.5)
-            )
-        )
+        provider = self._make_provider(SamplerConfig(trace_id_ratio_based=TraceIdRatioBasedConfig(ratio=0.5)))
         self.assertIsInstance(provider.sampler, TraceIdRatioBased)
         self.assertAlmostEqual(provider.sampler._rate, 0.5)
 
     def test_trace_id_ratio_based_none_ratio_defaults_to_1(self):
-        provider = self._make_provider(
-            SamplerConfig(trace_id_ratio_based=TraceIdRatioBasedConfig())
-        )
+        provider = self._make_provider(SamplerConfig(trace_id_ratio_based=TraceIdRatioBasedConfig()))
         self.assertIsInstance(provider.sampler, TraceIdRatioBased)
         self.assertAlmostEqual(provider.sampler._rate, 1.0)
 
     def test_parent_based_with_root(self):
         provider = self._make_provider(
-            SamplerConfig(
-                parent_based=ParentBasedSamplerConfig(
-                    root=SamplerConfig(always_on={})
-                )
-            )
+            SamplerConfig(parent_based=ParentBasedSamplerConfig(root=SamplerConfig(always_on={})))
         )
         self.assertIsInstance(provider.sampler, ParentBased)
 
     def test_parent_based_no_root_defaults_to_always_on(self):
-        provider = self._make_provider(
-            SamplerConfig(parent_based=ParentBasedSamplerConfig())
-        )
+        provider = self._make_provider(SamplerConfig(parent_based=ParentBasedSamplerConfig()))
         self.assertIsInstance(provider.sampler, ParentBased)
         self.assertIs(provider.sampler._root, ALWAYS_ON)
 
@@ -249,6 +228,39 @@ class TestCreateSampler(unittest.TestCase):
         with self.assertRaises(ConfigurationError):
             self._make_provider(SamplerConfig())
 
+    def test_null_valued_always_on_from_parsed_config(self):
+        # Regression test for #5451: a leaf sampler written as ``always_on:``
+        # (present, null) is parsed to ``None`` by the YAML loader. It must be
+        # treated the same as ``always_on: {}`` rather than failing type
+        # dispatch.
+        sampler_config = _dict_to_dataclass({"always_on": None}, SamplerConfig)
+        provider = self._make_provider(sampler_config)
+        self.assertIs(provider.sampler, ALWAYS_ON)
+
+    def test_null_valued_parent_based_delegates_from_parsed_config(self):
+        # Regression test for #5451: the exact parent_based config from the
+        # issue, where every leaf delegate is written with a null value.
+        sampler_config = _dict_to_dataclass(
+            {
+                "parent_based": {
+                    "root": {"always_on": None},
+                    "remote_parent_sampled": {"always_on": None},
+                    "remote_parent_not_sampled": {"always_off": None},
+                    "local_parent_sampled": {"always_on": None},
+                    "local_parent_not_sampled": {"always_off": None},
+                }
+            },
+            SamplerConfig,
+        )
+        provider = self._make_provider(sampler_config)
+        sampler = provider.sampler
+        self.assertIsInstance(sampler, ParentBased)
+        self.assertIs(sampler._root, ALWAYS_ON)
+        self.assertIs(sampler._remote_parent_sampled, ALWAYS_ON)
+        self.assertIs(sampler._remote_parent_not_sampled, ALWAYS_OFF)
+        self.assertIs(sampler._local_parent_sampled, ALWAYS_ON)
+        self.assertIs(sampler._local_parent_not_sampled, ALWAYS_OFF)
+
     def test_user_defined_sampler_loaded_via_entry_point(self):
         mock_sampler = MagicMock(spec=Sampler)
         mock_class = MagicMock(return_value=mock_sampler)
@@ -261,13 +273,15 @@ class TestCreateSampler(unittest.TestCase):
         self.assertIs(provider.sampler, mock_sampler)
 
     def test_user_defined_sampler_not_found_raises_configuration_error(self):
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                # pylint: disable=unexpected-keyword-arg
-                self._make_provider(SamplerConfig(no_such_sampler={}))
+            # pylint: disable=unexpected-keyword-arg
+            self._make_provider(SamplerConfig(no_such_sampler={}))
 
 
 class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
@@ -276,11 +290,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         return create_tracer_provider(
             TracerProviderConfig(
                 processors=[],
-                sampler=SamplerConfig(
-                    composite_development=ComposableSamplerConfig(
-                        rule_based=rule_based_config
-                    )
-                ),
+                sampler=SamplerConfig(composite_development=ComposableSamplerConfig(rule_based=rule_based_config)),
             )
         )
 
@@ -333,9 +343,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         self.assertEqual(decision, Decision.DROP)
 
     def test_composite_rule_based_no_condition_rule_matches(self):
-        decision = self._decision(
-            RuleBasedSamplerConfig(rules=[self._rule(self._always_on())])
-        )
+        decision = self._decision(RuleBasedSamplerConfig(rules=[self._rule(self._always_on())]))
 
         self.assertEqual(decision, Decision.RECORD_AND_SAMPLE)
 
@@ -344,22 +352,16 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
             rules=[
                 self._rule(
                     self._always_off(),
-                    attribute_values=self._attribute_values(
-                        "http.route", ["/health"]
-                    ),
+                    attribute_values=self._attribute_values("http.route", ["/health"]),
                 ),
                 self._rule(
                     self._always_on(),
-                    attribute_values=self._attribute_values(
-                        "http.route", ["/health"]
-                    ),
+                    attribute_values=self._attribute_values("http.route", ["/health"]),
                 ),
             ]
         )
 
-        decision = self._decision(
-            rule_based, attributes={"http.route": "/health"}
-        )
+        decision = self._decision(rule_based, attributes={"http.route": "/health"})
 
         self.assertEqual(decision, Decision.DROP)
 
@@ -369,9 +371,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
                 rules=[
                     self._rule(
                         self._always_on(),
-                        attribute_values=self._attribute_values(
-                            "http.response.status_code", ["404"]
-                        ),
+                        attribute_values=self._attribute_values("http.response.status_code", ["404"]),
                     )
                 ]
             ),
@@ -386,9 +386,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
                 rules=[
                     self._rule(
                         self._always_on(),
-                        attribute_values=self._attribute_values(
-                            "http.request.method", ["POST"]
-                        ),
+                        attribute_values=self._attribute_values("http.request.method", ["POST"]),
                     )
                 ]
             ),
@@ -411,15 +409,9 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
             ]
         )
 
-        included = self._decision(
-            rule_based, attributes={"http.route": "/api/users"}
-        )
-        excluded = self._decision(
-            rule_based, attributes={"http.route": "/api/private/user"}
-        )
-        case_mismatch = self._decision(
-            rule_based, attributes={"http.route": "/API/users"}
-        )
+        included = self._decision(rule_based, attributes={"http.route": "/api/users"})
+        excluded = self._decision(rule_based, attributes={"http.route": "/api/private/user"})
+        case_mismatch = self._decision(rule_based, attributes={"http.route": "/API/users"})
 
         self.assertEqual(included, Decision.RECORD_AND_SAMPLE)
         self.assertEqual(excluded, Decision.DROP)
@@ -472,9 +464,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         )
 
         local = self._decision(rule_based, parent_context=local_parent_context)
-        remote = self._decision(
-            rule_based, parent_context=remote_parent_context
-        )
+        remote = self._decision(rule_based, parent_context=remote_parent_context)
         no_parent = self._decision(rule_based)
 
         self.assertEqual(local, Decision.RECORD_AND_SAMPLE)
@@ -486,9 +476,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
             rules=[
                 self._rule(
                     self._always_on(),
-                    attribute_values=self._attribute_values(
-                        "http.route", ["/users"]
-                    ),
+                    attribute_values=self._attribute_values("http.route", ["/users"]),
                     span_kinds=[SpanKindConfig.server],
                 )
             ]
@@ -511,20 +499,11 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
     def test_composite_rule_based_nested_probability_sampler(self):
         provider = self._make_provider(
             RuleBasedSamplerConfig(
-                rules=[
-                    self._rule(
-                        ComposableSamplerConfig(
-                            probability=ComposableProbabilityConfig(ratio=0.0)
-                        )
-                    )
-                ]
+                rules=[self._rule(ComposableSamplerConfig(probability=ComposableProbabilityConfig(ratio=0.0)))]
             )
         )
 
-        expected = (
-            "ComposableRuleBased{[(AlwaysMatch:"
-            "ComposableTraceIDRatioBased{threshold=max, ratio=0.0})]}"
-        )
+        expected = "ComposableRuleBased{[(AlwaysMatch:ComposableTraceIDRatioBased{threshold=max, ratio=0.0})]}"
         self.assertEqual(
             provider.sampler.get_description(),
             expected,
@@ -537,21 +516,13 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
     @staticmethod
     def _make_batch_config(exporter_config):
         return TracerProviderConfig(
-            processors=[
-                SpanProcessorConfig(
-                    batch=BatchSpanProcessorConfig(exporter=exporter_config)
-                )
-            ]
+            processors=[SpanProcessorConfig(batch=BatchSpanProcessorConfig(exporter=exporter_config))]
         )
 
     @staticmethod
     def _make_simple_config(exporter_config):
         return TracerProviderConfig(
-            processors=[
-                SpanProcessorConfig(
-                    simple=SimpleSpanProcessorConfig(exporter=exporter_config)
-                )
-            ]
+            processors=[SpanProcessorConfig(simple=SimpleSpanProcessorConfig(exporter=exporter_config))]
         )
 
     def test_console_exporter_batch(self):
@@ -570,18 +541,18 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
 
     def test_otlp_http_missing_package_raises(self):
-        config = self._make_batch_config(
-            SpanExporterConfig(otlp_http=OtlpHttpExporterConfig())
-        )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
-                "opentelemetry.exporter.otlp.proto.http": None,
-            },
+        config = self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig()))
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
+            create_tracer_provider(config)
         self.assertIn("otlp-proto-http", str(ctx.exception))
 
     def test_otlp_http_created_with_endpoint(self):
@@ -601,11 +572,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             },
         ):
             config = self._make_batch_config(
-                SpanExporterConfig(
-                    otlp_http=OtlpHttpExporterConfig(
-                        endpoint="http://localhost:4318"
-                    )
-                )
+                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(endpoint="http://localhost:4318"))
             )
             create_tracer_provider(config)
 
@@ -633,9 +600,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             },
         ):
             config = self._make_batch_config(
-                SpanExporterConfig(
-                    otlp_http=OtlpHttpExporterConfig(compression="deflate")
-                )
+                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(compression="deflate"))
             )
             create_tracer_provider(config)
 
@@ -656,36 +621,26 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             },
         ):
             config = self._make_batch_config(
-                SpanExporterConfig(
-                    otlp_http=OtlpHttpExporterConfig(
-                        headers_list="x-api-key=secret,env=prod"
-                    )
-                )
+                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(headers_list="x-api-key=secret,env=prod"))
             )
             create_tracer_provider(config)
 
         _, kwargs = mock_exporter_cls.call_args
-        self.assertEqual(
-            kwargs["headers"], {"x-api-key": "secret", "env": "prod"}
-        )
+        self.assertEqual(kwargs["headers"], {"x-api-key": "secret", "env": "prod"})
 
     def test_otlp_file_development_missing_package_raises(self):
-        config = self._make_batch_config(
-            SpanExporterConfig(
-                otlp_file_development=ExperimentalOtlpFileExporterConfig()
-            )
-        )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.json.file.trace_exporter": None,
-            },
+        config = self._make_batch_config(SpanExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig()))
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.json.file.trace_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
-        self.assertIn(
-            "opentelemetry-exporter-otlp-json-file", str(ctx.exception)
-        )
+            create_tracer_provider(config)
+        self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
         mock_exporter_cls = MagicMock()
@@ -699,9 +654,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             },
         ):
             config = self._make_batch_config(
-                SpanExporterConfig(
-                    otlp_file_development=ExperimentalOtlpFileExporterConfig()
-                )
+                SpanExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig())
             )
             create_tracer_provider(config)
 
@@ -720,9 +673,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         ):
             config = self._make_batch_config(
                 SpanExporterConfig(
-                    otlp_file_development=ExperimentalOtlpFileExporterConfig(
-                        output_stream="file:///tmp/traces.jsonl"
-                    )
+                    otlp_file_development=ExperimentalOtlpFileExporterConfig(output_stream="file:///tmp/traces.jsonl")
                 )
             )
             create_tracer_provider(config)
@@ -742,9 +693,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         ):
             config = self._make_batch_config(
                 SpanExporterConfig(
-                    otlp_file_development=ExperimentalOtlpFileExporterConfig(
-                        output_stream="http://example"
-                    )
+                    otlp_file_development=ExperimentalOtlpFileExporterConfig(output_stream="http://example")
                 )
             )
             with self.assertRaises(ConfigurationError) as ctx:
@@ -753,18 +702,18 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         mock_exporter_cls.assert_not_called()
 
     def test_otlp_grpc_missing_package_raises(self):
-        config = self._make_batch_config(
-            SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig())
-        )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": None,
-                "grpc": None,
-            },
+        config = self._make_batch_config(SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig()))
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": None,
+                    "grpc": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
+            create_tracer_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
     def test_no_processor_type_raises(self):
@@ -789,9 +738,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
                 SpanExporterConfig(my_custom_exporter={})
             )
             provider = create_tracer_provider(config)
-        self.assertEqual(
-            len(provider._active_span_processor._span_processors), 1
-        )
+        self.assertEqual(len(provider._active_span_processor._span_processors), 1)
 
     def test_unknown_span_exporter_raises_configuration_error(self):
         with patch(
@@ -811,32 +758,22 @@ class TestCreateSpanLimits(unittest.TestCase):
 
     @staticmethod
     def _create_with_limits(limits_config):
-        return create_tracer_provider(
-            TracerProviderConfig(processors=[], limits=limits_config)
-        )
+        return create_tracer_provider(TracerProviderConfig(processors=[], limits=limits_config))
 
     def test_explicit_attribute_count_limit(self):
-        provider = self._create_with_limits(
-            SpanLimitsConfig(attribute_count_limit=10)
-        )
+        provider = self._create_with_limits(SpanLimitsConfig(attribute_count_limit=10))
         self.assertEqual(provider._span_limits.max_span_attributes, 10)
 
     def test_explicit_event_count_limit(self):
-        provider = self._create_with_limits(
-            SpanLimitsConfig(event_count_limit=5)
-        )
+        provider = self._create_with_limits(SpanLimitsConfig(event_count_limit=5))
         self.assertEqual(provider._span_limits.max_events, 5)
 
     def test_explicit_link_count_limit(self):
-        provider = self._create_with_limits(
-            SpanLimitsConfig(link_count_limit=2)
-        )
+        provider = self._create_with_limits(SpanLimitsConfig(link_count_limit=2))
         self.assertEqual(provider._span_limits.max_links, 2)
 
     def test_explicit_attribute_value_length_limit(self):
-        provider = self._create_with_limits(
-            SpanLimitsConfig(attribute_value_length_limit=64)
-        )
+        provider = self._create_with_limits(SpanLimitsConfig(attribute_value_length_limit=64))
         self.assertEqual(provider._span_limits.max_attribute_length, 64)
 
     def test_absent_limits_use_spec_defaults(self):
@@ -863,11 +800,7 @@ class TestCreateIdGenerator(unittest.TestCase):
 
     @staticmethod
     def _make_provider(id_generator_config):
-        return create_tracer_provider(
-            TracerProviderConfig(
-                processors=[], id_generator=id_generator_config
-            )
-        )
+        return create_tracer_provider(TracerProviderConfig(processors=[], id_generator=id_generator_config))
 
     def test_absent_id_generator_uses_sdk_default(self):
         """When id_generator is omitted, the SDK's default RandomIdGenerator is used."""
@@ -888,20 +821,20 @@ class TestCreateIdGenerator(unittest.TestCase):
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             # pylint: disable=unexpected-keyword-arg
-            provider = self._make_provider(
-                IdGeneratorConfig(my_custom_generator={})
-            )
+            provider = self._make_provider(IdGeneratorConfig(my_custom_generator={}))
         self.assertIs(provider.id_generator, mock_generator)
 
     def test_unknown_id_generator_raises_configuration_error(self):
         """Unknown id_generator name with no matching entry point raises ConfigurationError."""
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                # pylint: disable=unexpected-keyword-arg
-                self._make_provider(IdGeneratorConfig(no_such_generator={}))
+            # pylint: disable=unexpected-keyword-arg
+            self._make_provider(IdGeneratorConfig(no_such_generator={}))
 
     def test_empty_id_generator_raises_configuration_error(self):
         """Empty IdGenerator config (no type specified) raises ConfigurationError."""

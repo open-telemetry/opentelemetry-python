@@ -116,15 +116,18 @@ class BatchProcessor(Generic[Telemetry]):
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
             weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
-            os.register_at_fork(after_in_child=lambda: weak_reinit()())  # pyright: ignore[reportOptionalCall] pylint: disable=unnecessary-lambda
+
+            def _after_in_child() -> None:
+                if reinit := weak_reinit():
+                    reinit()
+
+            os.register_at_fork(after_in_child=_after_in_child)
         self._pid = os.getpid()
 
         metrics.register_queue_size(lambda: len(self._queue))
         self._metrics = metrics
 
-    def _should_export_batch(
-        self, batch_strategy: BatchExportStrategy, num_iterations: int
-    ) -> bool:
+    def _should_export_batch(self, batch_strategy: BatchExportStrategy, num_iterations: int) -> bool:
         if not self._queue or self._shutdown_timeout_exceeded:
             return False
         # Always continue to export while queue length exceeds max batch size.
@@ -172,32 +175,24 @@ class BatchProcessor(Generic[Telemetry]):
             while self._should_export_batch(batch_strategy, iteration):
                 iteration += 1
                 token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-                error: Exception | None = None
-                count = 0
+                count = min(
+                    self._max_export_batch_size,
+                    len(self._queue),
+                )
+                # Oldest records are at the back, so pop from there.
+                batch = [self._queue.pop() for _ in range(count)]
+                # Record on submission to the exporter.
+                self._metrics.finish_items(count)
                 try:
-                    count = min(
-                        self._max_export_batch_size,
-                        len(self._queue),
-                    )
-                    self._exporter.export(
-                        [
-                            # Oldest records are at the back, so pop from there.
-                            self._queue.pop()
-                            for _ in range(count)
-                        ]
-                    )
-                except Exception as err:  # pylint: disable=broad-exception-caught
-                    error = err
-                    _logger.exception(
-                        "Exception while exporting %s.", self._exporting
-                    )
-                finally:
-                    self._metrics.finish_items(count, error)
+                    self._exporter.export(batch)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _logger.exception("Exception while exporting %s.", self._exporting)
                 detach(token)
 
     def emit(self, data: Telemetry) -> None:
         if self._shutdown:
             _logger.info("Shutdown called, ignoring %s.", self._exporting)
+            self._metrics.drop_items(1, "already_shutdown")
             return
         if self._pid != os.getpid():
             self._bsp_reset_once.do_once(self._at_fork_reinit)
@@ -206,10 +201,7 @@ class BatchProcessor(Generic[Telemetry]):
             self._metrics.drop_items(1)
         # This will drop a log from the right side if the queue is at _max_queue_size.
         self._queue.appendleft(data)
-        if (
-            len(self._queue) >= self._max_export_batch_size
-            and not self._worker_awaken.is_set()
-        ):
+        if len(self._queue) >= self._max_export_batch_size and not self._worker_awaken.is_set():
             self._worker_awaken.set()
 
     def shutdown(self, timeout_millis: int = 30000):
@@ -226,10 +218,7 @@ class BatchProcessor(Generic[Telemetry]):
         # We want to shutdown immediately only if we already waited `timeout_secs`.
         # Otherwise we pass the remaining timeout to the exporter.
         # Some exporter's shutdown support a timeout param.
-        if (
-            "timeout_millis"
-            in inspect.getfullargspec(self._exporter.shutdown).args
-        ):
+        if "timeout_millis" in inspect.getfullargspec(self._exporter.shutdown).args:
             remaining_millis = (shutdown_should_end - time.time()) * 1000
             self._exporter.shutdown(timeout_millis=max(0, remaining_millis))  # type: ignore
         else:

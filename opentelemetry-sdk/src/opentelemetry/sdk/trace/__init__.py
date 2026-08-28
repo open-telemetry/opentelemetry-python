@@ -214,10 +214,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             if current_time_ns >= deadline_ns:
                 return False
 
-            if (
-                sp.force_flush((deadline_ns - current_time_ns) // 1000000)
-                is False
-            ):
+            if sp.force_flush((deadline_ns - current_time_ns) // 1000000) is False:
                 all_flushed = False
 
         return all_flushed
@@ -257,9 +254,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             os.register_at_fork(after_in_child=_after_in_child)
 
     def _init_executor(self, num_threads: int) -> None:
-        self._executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=num_threads
-        )
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=num_threads)
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Adds a SpanProcessor to the list handled by this instance."""
@@ -284,9 +279,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         span: "Span",
         parent_context: context_api.Context | None = None,
     ) -> None:
-        self._submit_and_await(
-            lambda sp: sp.on_start, span, parent_context=parent_context
-        )
+        self._submit_and_await(lambda sp: sp.on_start, span, parent_context=parent_context)
 
     def _on_ending(self, span: "Span") -> None:
         # pylint: disable=protected-access
@@ -316,9 +309,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             futures.append(future)
 
         timeout_sec = timeout_millis / 1e3
-        done_futures, not_done_futures = concurrent.futures.wait(
-            futures, timeout_sec
-        )
+        done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_sec)
         if not_done_futures:
             return False
 
@@ -399,9 +390,7 @@ def _check_span_ended(func):
 
 
 def _is_valid_link(context: SpanContext, attributes: types.Attributes) -> bool:
-    return bool(
-        context and (context.is_valid or (attributes or context.trace_state))
-    )
+    return bool(context and (context.is_valid or (attributes or context.trace_state)))
 
 
 class ReadableSpan:
@@ -511,9 +500,7 @@ class ReadableSpan:
         return self._resource
 
     @property
-    @deprecated(
-        "You should use instrumentation_scope. Deprecated since version 1.11.1."
-    )
+    @deprecated("You should use instrumentation_scope. Deprecated since version 1.11.1.")
     def instrumentation_info(self) -> InstrumentationInfo | None:
         return self._instrumentation_info
 
@@ -542,9 +529,7 @@ class ReadableSpan:
 
         f_span = {
             "name": self._name,
-            "context": (
-                self._format_context(self._context) if self._context else None
-            ),
+            "context": (self._format_context(self._context) if self._context else None),
             "kind": str(self.kind),
             "parent_id": parent_id,
             "start_time": start_time,
@@ -671,41 +656,25 @@ class SpanLimits:
         )
 
         # attribute count
-        global_max_attributes = self._from_env_if_absent(
-            max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
-        )
+        global_max_attributes = self._from_env_if_absent(max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT)
         self.max_attributes = (
-            global_max_attributes
-            if global_max_attributes is not None
-            else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+            global_max_attributes if global_max_attributes is not None else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
         )
 
         self.max_span_attributes = self._from_env_if_absent(
             max_span_attributes,
             OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-            (
-                global_max_attributes
-                if global_max_attributes is not None
-                else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
-            ),
+            (global_max_attributes if global_max_attributes is not None else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT),
         )
         self.max_event_attributes = self._from_env_if_absent(
             max_event_attributes,
             OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
-            (
-                global_max_attributes
-                if global_max_attributes is not None
-                else _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT
-            ),
+            (global_max_attributes if global_max_attributes is not None else _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT),
         )
         self.max_link_attributes = self._from_env_if_absent(
             max_link_attributes,
             OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
-            (
-                global_max_attributes
-                if global_max_attributes is not None
-                else _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
-            ),
+            (global_max_attributes if global_max_attributes is not None else _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT),
         )
 
         # attribute length
@@ -724,9 +693,7 @@ class SpanLimits:
         return f"{type(self).__name__}(max_span_attributes={self.max_span_attributes}, max_events_attributes={self.max_event_attributes}, max_link_attributes={self.max_link_attributes}, max_attributes={self.max_attributes}, max_events={self.max_events}, max_links={self.max_links}, max_attribute_length={self.max_attribute_length})"
 
     @classmethod
-    def _from_env_if_absent(
-        cls, value: int | None, env_var: str, default: int | None = None
-    ) -> int | None:
+    def _from_env_if_absent(cls, value: int | None, env_var: str, default: int | None = None) -> int | None:
         if value == cls.UNSET:
             return None
 
@@ -849,10 +816,12 @@ class Span(trace_api.Span, ReadableSpan):
         self._events = self._new_events()
         if events:
             for event in events:
+                # Immutable set to true so attributes cannot be added or removed after creation.
                 event._attributes = BoundedAttributes(
                     self._limits.max_event_attributes,
                     event.attributes,
                     max_value_len=self._limits.max_attribute_length,
+                    immutable=True,
                 )
                 self._events.append(event)
 
@@ -873,11 +842,13 @@ class Span(trace_api.Span, ReadableSpan):
         valid_links = []
         for link in links:
             if link and _is_valid_link(link.context, link.attributes):
+                # Immutable set to true so attributes cannot be added or removed after creation.
                 # pylint: disable=protected-access
                 link._attributes = BoundedAttributes(
                     self._limits.max_link_attributes,
                     link.attributes,
                     max_value_len=self._limits.max_attribute_length,
+                    immutable=True,
                 )
                 valid_links.append(link)
 
@@ -886,9 +857,7 @@ class Span(trace_api.Span, ReadableSpan):
     def get_span_context(self) -> trace_api.SpanContext:
         return typing.cast(trace_api.SpanContext, self._context)
 
-    def set_attributes(
-        self, attributes: Mapping[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         with self._lock:
             if self._end_time is not None:
                 logger.warning("Setting attribute on ended span.")
@@ -896,7 +865,7 @@ class Span(trace_api.Span, ReadableSpan):
 
             self._attributes._set_items(attributes)  # pylint: disable=protected-access
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AnyValue) -> None:
         with self._lock:
             if self._end_time is not None:
                 logger.warning("Setting attribute on ended span.")
@@ -914,10 +883,12 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: int | None = None,
     ) -> None:
+        # Immutable set to true so attributes cannot be added or removed after creation.
         attributes = BoundedAttributes(
             self._limits.max_event_attributes,
             attributes,
             max_value_len=self._limits.max_attribute_length,
+            immutable=True,
         )
         self._add_event(
             Event(
@@ -938,11 +909,12 @@ class Span(trace_api.Span, ReadableSpan):
     ) -> None:
         if not _is_valid_link(context, attributes):
             return
-
+        # Immutable set to true so attributes cannot be added or removed after creation.
         attributes = BoundedAttributes(
             self._limits.max_link_attributes,
             attributes,
             max_value_len=self._limits.max_attribute_length,
+            immutable=True,
         )
         self._add_link(
             trace_api.Link(
@@ -977,9 +949,7 @@ class Span(trace_api.Span, ReadableSpan):
             if self._start_time is not None:
                 logger.warning("Calling start() on a started span.")
                 return
-            self._start_time = (
-                start_time if start_time is not None else time_ns()
-            )
+            self._start_time = start_time if start_time is not None else time_ns()
 
         self._span_processor.on_start(self, parent_context=parent_context)
 
@@ -1016,11 +986,7 @@ class Span(trace_api.Span, ReadableSpan):
         # Ignore future calls if status is already set to OK
         # Ignore calls to set to StatusCode.UNSET
         if isinstance(status, Status):
-            if (
-                self._status
-                and self._status.status_code is StatusCode.OK
-                or status.status_code is StatusCode.UNSET
-            ):
+            if self._status and self._status.status_code is StatusCode.OK or status.status_code is StatusCode.UNSET:
                 return
             if description is not None:
                 logger.warning(
@@ -1029,11 +995,7 @@ class Span(trace_api.Span, ReadableSpan):
                 )
             self._status = status
         elif isinstance(status, StatusCode):
-            if (
-                self._status
-                and self._status.status_code is StatusCode.OK
-                or status is StatusCode.UNSET
-            ):
+            if self._status and self._status.status_code is StatusCode.OK or status is StatusCode.UNSET:
                 return
             self._status = Status(status, description)
 
@@ -1072,12 +1034,8 @@ class Span(trace_api.Span, ReadableSpan):
         stacktrace = "".join(traceback.format_exception(exception))
         module = type(exception).__module__
         qualname = type(exception).__qualname__
-        exception_type = (
-            f"{module}.{qualname}"
-            if module and module != "builtins"
-            else qualname
-        )
-        _attributes: MutableMapping[str, types.AttributeValue] = {
+        exception_type = f"{module}.{qualname}" if module and module != "builtins" else qualname
+        _attributes: MutableMapping[str, types.AnyValue] = {
             EXCEPTION_TYPE: exception_type,
             EXCEPTION_MESSAGE: str(exception),
             EXCEPTION_STACKTRACE: stacktrace,
@@ -1085,9 +1043,7 @@ class Span(trace_api.Span, ReadableSpan):
         }
         if attributes:
             _attributes.update(attributes)
-        self.add_event(
-            name="exception", attributes=_attributes, timestamp=timestamp
-        )
+        self.add_event(name="exception", attributes=_attributes, timestamp=timestamp)
 
 
 class _Span(Span):
@@ -1114,8 +1070,7 @@ class Tracer(trace_api.Tracer):
         self,
         sampler: sampling.Sampler,
         resource: Resource,
-        span_processor: SynchronousMultiSpanProcessor
-        | ConcurrentMultiSpanProcessor,
+        span_processor: SynchronousMultiSpanProcessor | ConcurrentMultiSpanProcessor,
         id_generator: IdGenerator,
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
@@ -1136,9 +1091,7 @@ class Tracer(trace_api.Tracer):
         meter_provider = meter_provider or metrics_api.get_meter_provider()
         self._tracer_metrics = create_tracer_metrics(
             meter_provider,
-            parse_boolean_environment_variable(
-                OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED
-            ),
+            parse_boolean_environment_variable(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED),
         )
 
     def _set_tracer_config(self, tracer_config: _TracerConfig):
@@ -1194,16 +1147,10 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
         links = links or ()
-        parent_span_context = trace_api.get_current_span(
-            context
-        ).get_span_context()
+        parent_span_context = trace_api.get_current_span(context).get_span_context()
 
-        if parent_span_context is not None and not isinstance(
-            parent_span_context, trace_api.SpanContext
-        ):
-            raise TypeError(
-                "parent_span_context must be a SpanContext or None."
-            )
+        if parent_span_context is not None and not isinstance(parent_span_context, trace_api.SpanContext):
+            raise TypeError("parent_span_context must be a SpanContext or None.")
 
         if not self._is_enabled():
             return trace_api.NonRecordingSpan(context=parent_span_context)
@@ -1221,9 +1168,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         # The sampler may also modify the parent span context's tracestate
-        sampling_result = self.sampler.should_sample(
-            context, trace_id, name, kind, attributes, links
-        )
+        sampling_result = self.sampler.should_sample(context, trace_id, name, kind, attributes, links)
 
         trace_flags = (
             trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
@@ -1237,9 +1182,7 @@ class Tracer(trace_api.Tracer):
             random_trace_id = parent_span_context.trace_flags.random_trace_id
 
         if random_trace_id:
-            trace_flags = trace_api.TraceFlags(
-                trace_flags | trace_api.TraceFlags.RANDOM_TRACE_ID
-            )
+            trace_flags = trace_api.TraceFlags(trace_flags | trace_api.TraceFlags.RANDOM_TRACE_ID)
 
         span_context = trace_api.SpanContext(
             trace_id,
@@ -1249,9 +1192,7 @@ class Tracer(trace_api.Tracer):
             trace_state=sampling_result.trace_state,
         )
 
-        record_end_metrics = self._tracer_metrics.start_span(
-            parent_span_context, sampling_result.decision
-        )
+        record_end_metrics = self._tracer_metrics.start_span(parent_span_context, sampling_result.decision)
 
         # Only record if is_recording() is true
         if sampling_result.decision.is_recording():
@@ -1314,18 +1255,14 @@ class TracerProvider(trace_api.TracerProvider):
         sampler: sampling.Sampler | None = None,
         resource: Resource | None = None,
         shutdown_on_exit: bool = True,
-        active_span_processor: SynchronousMultiSpanProcessor
-        | ConcurrentMultiSpanProcessor
-        | None = None,
+        active_span_processor: SynchronousMultiSpanProcessor | ConcurrentMultiSpanProcessor | None = None,
         id_generator: IdGenerator | None = None,
         span_limits: SpanLimits | None = None,
         *,
         meter_provider: metrics_api.MeterProvider | None = None,
         _tracer_configurator: _TracerConfiguratorT | None = None,
     ) -> None:
-        self._active_span_processor = (
-            active_span_processor or SynchronousMultiSpanProcessor()
-        )
+        self._active_span_processor = active_span_processor or SynchronousMultiSpanProcessor()
         if id_generator is None:
             self.id_generator = RandomIdGenerator()
         else:
@@ -1346,9 +1283,7 @@ class TracerProvider(trace_api.TracerProvider):
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
 
-        self._tracer_configurator = (
-            _tracer_configurator or _default_tracer_configurator
-        )
+        self._tracer_configurator = _tracer_configurator or _default_tracer_configurator
         self._tracers_lock = threading.Lock()
         self._tracers: dict[InstrumentationScope, Tracer] = {}
         if hasattr(os, "register_at_fork"):
@@ -1364,9 +1299,7 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracers_lock = threading.Lock()
         self._update_resource(_get_process_dependent_resource())
 
-    def _set_tracer_configurator(
-        self, *, tracer_configurator: _TracerConfiguratorT
-    ):
+    def _set_tracer_configurator(self, *, tracer_configurator: _TracerConfiguratorT):
         """This is the function used to update the TracerProvider TracerConfigurator
 
         Setting a new TracerConfigurator for a TracerProvider will update the
@@ -1375,9 +1308,7 @@ class TracerProvider(trace_api.TracerProvider):
         self._tracer_configurator = tracer_configurator
         with self._tracers_lock:
             for instrumentation_scope, tracer in self._tracers.items():
-                tracer_config = self._apply_tracer_configurator(
-                    instrumentation_scope
-                )
+                tracer_config = self._apply_tracer_configurator(instrumentation_scope)
                 # pylint: disable-next=protected-access
                 tracer._set_tracer_config(tracer_config)
 
@@ -1391,9 +1322,7 @@ class TracerProvider(trace_api.TracerProvider):
             for tracer in self._tracers.values():
                 tracer._set_resource(self._resource)  # pylint: disable=protected-access
 
-    def _apply_tracer_configurator(
-        self, instrumentation_scope: InstrumentationScope
-    ):
+    def _apply_tracer_configurator(self, instrumentation_scope: InstrumentationScope):
         try:
             return self._tracer_configurator(instrumentation_scope)
         except Exception:  # pylint: disable=broad-exception-caught
@@ -1408,7 +1337,7 @@ class TracerProvider(trace_api.TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
-        attributes: types.Attributes | None = None,
+        attributes: types.Attributes = None,
     ) -> "trace_api.Tracer":
         if self._disabled:
             return NoOpTracer()
@@ -1420,9 +1349,7 @@ class TracerProvider(trace_api.TracerProvider):
 
         filterwarnings(
             "ignore",
-            message=(
-                r"You should use InstrumentationScope. Deprecated since version 1.11.1."
-            ),
+            message=(r"You should use InstrumentationScope. Deprecated since version 1.11.1."),
             category=DeprecationWarning,
             module="opentelemetry.sdk.trace",
         )
@@ -1444,9 +1371,7 @@ class TracerProvider(trace_api.TracerProvider):
             if instrumentation_scope in self._tracers:
                 return self._tracers[instrumentation_scope]
 
-            tracer_config = self._apply_tracer_configurator(
-                instrumentation_scope
-            )
+            tracer_config = self._apply_tracer_configurator(instrumentation_scope)
             tracer = Tracer(
                 self.sampler,
                 self.resource,

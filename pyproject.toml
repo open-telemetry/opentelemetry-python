@@ -11,10 +11,12 @@ dependencies = [
   "opentelemetry-proto-json",
   "opentelemetry-test-utils",
   "opentelemetry-exporter-otlp-json-file",
+  "opentelemetry-exporter-otlp-json-http",
   "opentelemetry-exporter-http-transport",
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-exporter-otlp-proto-http",
   "opentelemetry-exporter-otlp-proto-common",
+  "opentelemetry-exporter-otlp-common",
   "opentelemetry-exporter-otlp-json-common",
   "opentelemetry-exporter-zipkin-json",
   "opentelemetry-exporter-prometheus",
@@ -36,12 +38,14 @@ opentelemetry-proto = { workspace = true }
 opentelemetry-proto-json = { workspace = true }
 opentelemetry-semantic-conventions = { workspace = true }
 opentelemetry-test-utils = { workspace = true }
-opentelemetry-exporter-otlp-json-file = { workspace = true }
 opentelemetry-exporter-http-transport = { workspace = true }
+opentelemetry-exporter-otlp-json-file = { workspace = true }
+opentelemetry-exporter-otlp-json-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-grpc = { workspace = true }
 opentelemetry-exporter-otlp-proto-http = { workspace = true }
 opentelemetry-exporter-otlp-proto-common = { workspace = true }
 opentelemetry-exporter-otlp-json-common = { workspace = true }
+opentelemetry-exporter-otlp-common = { workspace = true }
 opentelemetry-exporter-zipkin-json = { workspace = true }
 opentelemetry-exporter-prometheus = {workspace = true }
 opentelemetry-propagator-jaeger = { workspace = true }
@@ -75,31 +79,38 @@ log_cli = true
 [tool.ruff]
 # https://docs.astral.sh/ruff/configuration/
 target-version = "py310"
-line-length = 79
+line-length = 120
+force-exclude = true
 extend-exclude = [
   "*_pb2*.py*",
   "opentelemetry-proto-json/src/*",
 ]
 output-format = "concise"
+extension = { added = "markdown", changed = "markdown", deprecated = "markdown", removed = "markdown", fixed = "markdown" }
 
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/linter/#rule-selection
 # pylint: https://github.com/astral-sh/ruff/issues/970
-select = [
-  "I",   # https://docs.astral.sh/ruff/rules/#isort-i
-  "F",   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+extend-select = [
   "E",   # https://docs.astral.sh/ruff/rules/#error-e
-  "W",   # https://docs.astral.sh/ruff/rules/#warning-w
+  "F",   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+  "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
+  "I",   # https://docs.astral.sh/ruff/rules/#isort-i
   "PLC", # https://docs.astral.sh/ruff/rules/#convention-plc
   "PLE", # https://docs.astral.sh/ruff/rules/#error-ple
   "Q",   # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
-  "G",   # https://docs.astral.sh/ruff/rules/#flake8-logging-format-g
   "TID", # https://docs.astral.sh/ruff/rules/#flake8-tidy-imports-tid
   "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+  "W",   # https://docs.astral.sh/ruff/rules/#warning-w
 ]
-
+# Ignore rules from the default ruleset that don't have auto-fixes available and need to be
+# manually resolved, plus RUF023 which is intentionally ignored.
 ignore = [
-  "E501", # line-too-long
+  "B008", "B017", "B018", "B020", "B023", "B039", "BLE001", "C401",
+  "C408", "C417", "DTZ007", "E501", "FLY002", "ISC004", "LOG015", "PERF102",
+  "PIE796", "PLW0602", "PLW1508", "PT014", "PYI034", "PYI036", "RUF009", "RUF012",
+  "RUF013", "RUF015", "RUF023", "S110", "SIM102", "SIM103", "SIM115", "SIM117",
+  "SIM118", "TRY002", "TRY004", "TRY201", "TRY401",
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -117,6 +128,9 @@ known-third-party = [
 ]
 known-first-party = ["opentelemetry", "opentelemetry_example_app"]
 
+[tool.ruff.format]
+docstring-code-format = true
+
 [tool.pyright]
 typeCheckingMode = "standard"
 pythonVersion = "3.10"
@@ -128,12 +142,14 @@ include = [
   "opentelemetry-configuration",
   "opentelemetry-proto-json",
   "exporter/opentelemetry-exporter-otlp-json-file",
+  "exporter/opentelemetry-exporter-otlp-json-http",
   "exporter/opentelemetry-exporter-http-transport",
   "exporter/opentelemetry-exporter-otlp-proto-grpc",
   "exporter/opentelemetry-exporter-otlp-proto-http",
   "exporter/opentelemetry-exporter-otlp-json-common",
   "exporter/opentelemetry-exporter-otlp-common",
-  "codegen/opentelemetry-codegen-json"
+  "codegen/opentelemetry-codegen-json",
+  "propagator/opentelemetry-propagator-jaeger",
 ]
 
 exclude = [
@@ -152,8 +168,10 @@ exclude = [
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
   "exporter/opentelemetry-exporter-otlp-proto-http/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/tests",
+  "exporter/opentelemetry-exporter-otlp-json-http/tests",
   "exporter/opentelemetry-exporter-otlp-common/tests",
   "exporter/opentelemetry-exporter-otlp-json-common/benchmarks",
+  "propagator/opentelemetry-propagator-jaeger/tests",
 ]
 
 # When packages are correct typed add them to the strict list
@@ -161,6 +179,7 @@ strict = [
   "opentelemetry-semantic-conventions",
   "opentelemetry-sdk/src/opentelemetry/sdk/environment_variables",
   "opentelemetry-sdk/src/opentelemetry/sdk/resources",
+  "opentelemetry-api/src/opentelemetry/attributes/__init__.py",
 ]
 
 [tool.datamodel-codegen]

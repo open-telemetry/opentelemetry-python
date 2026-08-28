@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
 from random import randrange
+from threading import Lock
 from typing import (
     Any,
 )
@@ -25,6 +26,11 @@ class ExemplarReservoir(ABC):
         The constructor MUST accept ``**kwargs`` that may be set from aggregation
         parameters.
 
+    Note:
+        All methods MUST be safe to call concurrently. Measurements are offered
+        from application threads while a metric reader collects from its own
+        thread.
+
     Reference:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exemplarreservoir
     """
@@ -32,7 +38,7 @@ class ExemplarReservoir(ABC):
     @abstractmethod
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -60,9 +66,7 @@ class ExemplarReservoir(ABC):
             exemplars contain the attributes that were filtered out by the aggregator,
             but recorded alongside the original measurement.
         """
-        raise NotImplementedError(
-            "ExemplarReservoir.collect is not implemented"
-        )
+        raise NotImplementedError("ExemplarReservoir.collect is not implemented")
 
 
 class ExemplarBucket:
@@ -76,7 +80,7 @@ class ExemplarBucket:
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -109,13 +113,7 @@ class ExemplarBucket:
         # See the specification for more details:
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exemplar
         filtered_attributes = (
-            {
-                k: v
-                for k, v in self.__attributes.items()
-                if k not in point_attributes
-            }
-            if self.__attributes
-            else None
+            {k: v for k, v in self.__attributes.items() if k not in point_attributes} if self.__attributes else None
         )
 
         exemplar = Exemplar(
@@ -148,9 +146,8 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     def __init__(self, size: int, **kwargs) -> None:
         super().__init__(**kwargs)
         self._size: int = size
-        self._reservoir_storage: Mapping[int, ExemplarBucket] = defaultdict(
-            ExemplarBucket
-        )
+        self._reservoir_storage: Mapping[int, ExemplarBucket] = defaultdict(ExemplarBucket)
+        self._lock = Lock()
 
     def collect(self, point_attributes: Attributes) -> list[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
@@ -164,20 +161,18 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
             exemplars contain the attributes that were filtered out by the aggregator,
             but recorded alongside the original measurement.
         """
-        exemplars = [
-            e
-            for e in (
-                bucket.collect(point_attributes)
-                for _, bucket in sorted(self._reservoir_storage.items())
-            )
-            if e is not None
-        ]
-        self._reset()
+        with self._lock:
+            exemplars = [
+                e
+                for e in (bucket.collect(point_attributes) for _, bucket in sorted(self._reservoir_storage.items()))
+                if e is not None
+            ]
+            self._reset()
         return exemplars
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -190,22 +185,19 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
             attributes: Measurement attributes
             context: Measurement context
         """
-        try:
-            index = self._find_bucket_index(
-                value, time_unix_nano, attributes, context
-            )
+        with self._lock:
+            try:
+                index = self._find_bucket_index(value, time_unix_nano, attributes, context)
 
-            self._reservoir_storage[index].offer(
-                value, time_unix_nano, attributes, context
-            )
-        except BucketIndexError:
-            # Ignore invalid bucket index
-            pass
+                self._reservoir_storage[index].offer(value, time_unix_nano, attributes, context)
+            except BucketIndexError:
+                # Ignore invalid bucket index
+                pass
 
     @abstractmethod
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -250,7 +242,7 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -279,24 +271,9 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         super().__init__(len(boundaries) + 1, **kwargs)
         self._boundaries: Sequence[float] = boundaries
 
-    def offer(
-        self,
-        value: int | float,
-        time_unix_nano: int,
-        attributes: Attributes,
-        context: Context,
-    ) -> None:
-        """Offers a measurement to be sampled."""
-        index = self._find_bucket_index(
-            value, time_unix_nano, attributes, context
-        )
-        self._reservoir_storage[index].offer(
-            value, time_unix_nano, attributes, context
-        )
-
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,

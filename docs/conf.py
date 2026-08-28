@@ -26,14 +26,17 @@ from django.conf import settings
 
 settings.configure()
 
-# Provide AnyValue in opentelemetry.attributes module's namespace so the
-# "AnyValue" forward reference in opentelemetry.util.types._ExtendedAttributes
-# resolves when sphinx_autodoc_typehints calls typing.get_type_hints() on
-# BoundedAttributes (whose __globals__ is the attributes module). Docs-only.
-import opentelemetry.attributes  # noqa: E402
-from opentelemetry.util.types import AnyValue as _AnyValue  # noqa: E402
+# Docs-only: resolves the "AnyValue" forward reference wherever
+# get_type_hints() evaluates it. AnyValue is a recursive alias, so
+# modules that import it only under TYPE_CHECKING hit a NameError.
+# TODO: https://github.com/open-telemetry/opentelemetry-python/issues/5304
+# this can be removed by importing AnyValue at runtime in the
+# modules that annotate with it
+import builtins  # noqa: E402
 
-opentelemetry.attributes.AnyValue = _AnyValue
+from opentelemetry.util.types import AnyValue  # noqa: E402
+
+builtins.AnyValue = AnyValue
 
 
 source_dirs = [
@@ -41,18 +44,10 @@ source_dirs = [
 ]
 
 exp = "../exporter"
-exp_dirs = [
-    os.path.abspath("/".join(["../exporter", f, "src"]))
-    for f in listdir(exp)
-    if isdir(join(exp, f))
-]
+exp_dirs = [os.path.abspath("/".join(["../exporter", f, "src"])) for f in listdir(exp) if isdir(join(exp, f))]
 
 shim = "../shim"
-shim_dirs = [
-    os.path.abspath("/".join(["../shim", f, "src"]))
-    for f in listdir(shim)
-    if isdir(join(shim, f))
-]
+shim_dirs = [os.path.abspath("/".join(["../shim", f, "src"])) for f in listdir(shim) if isdir(join(shim, f))]
 
 sys.path[:0] = source_dirs + exp_dirs + shim_dirs
 
@@ -99,6 +94,7 @@ intersphinx_mapping = {
     "wrapt": ("https://wrapt.readthedocs.io/en/latest/", None),
     "pymongo": ("https://pymongo.readthedocs.io/en/stable/", None),
     "grpc": ("https://grpc.github.io/grpc/python/", None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
 }
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky
@@ -186,14 +182,16 @@ nitpick_ignore = [
         "py:class",
         "AnyValue",
     ),
-    (
-        "py:class",
-        "_ExtendedAttributes",
-    ),
     ("py:class", "Token"),
     # ``from os import PathLike`` renders as the bare name ``PathLike`` in the
     # file exporter type hints, which sphinx cannot resolve to os.PathLike.
     ("py:class", "PathLike"),
+    ("py:class", "BaseHTTPTransport"),
+    ("py:class", "opentelemetry.exporter.otlp.common.http.Compression"),
+    (
+        "py:class",
+        "opentelemetry.exporter.http.transport._base.BaseHTTPTransport",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.

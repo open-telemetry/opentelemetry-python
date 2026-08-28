@@ -12,9 +12,7 @@ from opentelemetry.sdk.trace.export import (
 from opentelemetry.trace import get_tracer_provider, set_tracer_provider
 
 set_tracer_provider(TracerProvider())
-get_tracer_provider().add_span_processor(
-    BatchSpanProcessor(ConsoleSpanExporter())
-)
+get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
 instrumentor = FlaskInstrumentor()
 

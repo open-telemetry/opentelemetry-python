@@ -47,10 +47,7 @@ class CallbackOptions:
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 # pylint: disable=invalid-name
-CallbackT = (
-    Callable[[CallbackOptions], Iterable[Observation]]
-    | Generator[Iterable[Observation], CallbackOptions, None]
-)
+CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
 
 
 class Instrument(ABC):
@@ -66,9 +63,7 @@ class Instrument(ABC):
         pass
 
     @staticmethod
-    def _check_name_unit_description(
-        name: str, unit: str, description: str
-    ) -> dict[str, str | None]:
+    def _check_name_unit_description(name: str, unit: str, description: str) -> dict[str, str | None]:
         """
         Checks the following instrument name, unit and description for
         compliance with the spec.
@@ -162,8 +157,8 @@ class Counter(Synchronous):
     @abstractmethod
     def add(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         """Records an increment to the counter.
@@ -189,8 +184,8 @@ class NoOpCounter(Counter):
 
     def add(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         return super().add(amount, attributes=attributes, context=context)
@@ -199,8 +194,8 @@ class NoOpCounter(Counter):
 class _ProxyCounter(_ProxyInstrument[Counter], Counter):
     def add(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         if self._real_instrument:
@@ -220,8 +215,8 @@ class UpDownCounter(Synchronous):
     @abstractmethod
     def add(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         """Records an increment or decrement to the counter.
@@ -251,8 +246,8 @@ class NoOpUpDownCounter(UpDownCounter):
 
     def add(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         return super().add(amount, attributes=attributes, context=context)
@@ -261,8 +256,8 @@ class NoOpUpDownCounter(UpDownCounter):
 class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
     def add(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         if self._real_instrument:
@@ -300,12 +295,8 @@ class NoOpObservableCounter(ObservableCounter):
         )
 
 
-class _ProxyObservableCounter(
-    _ProxyAsynchronousInstrument[ObservableCounter], ObservableCounter
-):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableCounter:
+class _ProxyObservableCounter(_ProxyAsynchronousInstrument[ObservableCounter], ObservableCounter):
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableCounter:
         return meter.create_observable_counter(
             self._name,
             self._callbacks,
@@ -343,9 +334,7 @@ class _ProxyObservableUpDownCounter(
     _ProxyAsynchronousInstrument[ObservableUpDownCounter],
     ObservableUpDownCounter,
 ):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableUpDownCounter:
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
             self._name,
             self._callbacks,
@@ -373,8 +362,8 @@ class Histogram(Synchronous):
     @abstractmethod
     def record(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         """Records a measurement.
@@ -412,8 +401,8 @@ class NoOpHistogram(Histogram):
 
     def record(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         return super().record(amount, attributes=attributes, context=context)
@@ -428,14 +417,12 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> None:
         super().__init__(name, unit=unit, description=description)
-        self._explicit_bucket_boundaries_advisory = (
-            explicit_bucket_boundaries_advisory
-        )
+        self._explicit_bucket_boundaries_advisory = explicit_bucket_boundaries_advisory
 
     def record(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         if self._real_instrument:
@@ -479,9 +466,7 @@ class _ProxyObservableGauge(
     _ProxyAsynchronousInstrument[ObservableGauge],
     ObservableGauge,
 ):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableGauge:
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableGauge:
         return meter.create_observable_gauge(
             self._name,
             self._callbacks,
@@ -496,8 +481,8 @@ class Gauge(Synchronous):
     @abstractmethod
     def set(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         """Records the current value of the gauge.
@@ -527,8 +512,8 @@ class NoOpGauge(Gauge):
 
     def set(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         return super().set(amount, attributes=attributes, context=context)
@@ -540,8 +525,8 @@ class _ProxyGauge(
 ):
     def set(
         self,
-        amount: int | float,
-        attributes: Attributes | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:
         if self._real_instrument:

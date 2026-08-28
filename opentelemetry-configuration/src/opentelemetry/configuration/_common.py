@@ -70,9 +70,7 @@ def load_entry_point(group: str, name: str) -> type:
     except ConfigurationError:
         raise
     except Exception as exc:
-        raise ConfigurationError(
-            f"Failed to load plugin '{name}' from group '{group}': {exc}"
-        ) from exc
+        raise ConfigurationError(f"Failed to load plugin '{name}' from group '{group}': {exc}") from exc
 
 
 class _ComponentConfig(Protocol):
@@ -129,9 +127,7 @@ def _resolve_component(
             return factory(value)
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point(entry_point_group, name)(
-            **(plugin_config or {})
-        )
+        return load_entry_point(entry_point_group, name)(**(plugin_config or {}))
     raise ConfigurationError(f"No {component_type} type specified in config.")
 
 
@@ -192,8 +188,7 @@ def _map_compression(
         supported_values.insert(1, "'deflate'")
 
     raise ConfigurationError(
-        f"Unsupported compression value '{value}'. Supported values: "
-        f"{', '.join(supported_values)}."
+        f"Unsupported compression value '{value}'. Supported values: {', '.join(supported_values)}."
     )
 
 
@@ -209,14 +204,9 @@ def _parse_otlp_file_output_stream(output_stream: str | None) -> str | None:
         parsed = urlparse(output_stream)
     except ValueError as exc:
         raise ConfigurationError(
-            f"Failed to parse output_stream '{output_stream}' for "
-            f"otlp_file_development exporter: {exc}"
+            f"Failed to parse output_stream '{output_stream}' for otlp_file_development exporter: {exc}"
         ) from exc
-    is_local_file_uri = (
-        parsed.scheme == "file"
-        and parsed.netloc in ("", "localhost")
-        and bool(parsed.path)
-    )
+    is_local_file_uri = parsed.scheme == "file" and parsed.netloc in ("", "localhost") and bool(parsed.path)
     has_extra_components = parsed.params or parsed.query or parsed.fragment
     if is_local_file_uri and not has_extra_components:
         path = parsed.path
