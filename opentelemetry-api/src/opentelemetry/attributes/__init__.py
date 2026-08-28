@@ -40,7 +40,7 @@ def _is_non_custom_str(key: Any) -> bool:
     return type(key).__str__ is not object.__str__ or type(key).__repr__ is not object.__repr__
 
 
-def _clean_key(key: Any) -> str | None:
+def _clean_key(key: object) -> str | None:
     """Validate an attribute key, returning None if it must be dropped."""
     if not key:
         _logger.warning(

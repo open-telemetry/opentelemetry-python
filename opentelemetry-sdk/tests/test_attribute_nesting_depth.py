@@ -10,6 +10,10 @@ user handing the SDK a self-referential structure must not blow the stack.
 import unittest
 
 from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs.export import (
+    InMemoryLogExporter,
+    SimpleLogRecordProcessor,
+)
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.resources import Resource
@@ -77,9 +81,15 @@ class TestAttributeNestingDepthDoesNotRaise(unittest.TestCase):
         meter_provider.shutdown()
 
     def test_logger_emit_with_cyclic_value(self):
+        exporter = InMemoryLogExporter()
         logger_provider = LoggerProvider(shutdown_on_exit=False)
-        # Must not raise; the record is dropped at the processor, not here.
-        logger_provider.get_logger(__name__).emit(body="body", attributes={"cyclic": _cyclic_list()})
+        logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
+        logger_provider.get_logger(__name__).emit(
+            body="body", attributes={"cyclic": _cyclic_list()}
+        )
+        record = exporter.get_finished_logs()[0].log_record
+        self.assertIsNone(dict(record.attributes)["cyclic"])
+        logger_provider.shutdown()
 
     def tearDown(self):
         self.tracer_provider.shutdown()
