@@ -1,5 +1,5 @@
-opentelemetry-api==1.15.0
-opentelemetry-sdk==1.15.0
+opentelemetry-api==1.44.0
+opentelemetry-sdk==1.44.0
 opentelemetry-semantic-conventions==0.36b0
-typing_extensions==4.5.0
-wrapt==1.14.1
+typing_extensions==4.16.0
+wrapt==1.17.3
