@@ -54,7 +54,8 @@ class TestHashAttributesDistinguishesTypes(unittest.TestCase):
         self.assertEqual(_hash_attributes({"a": "x"}), _hash_attributes({"a": "x"}))
 
     def test_result_is_hashable(self):
-        hash(_hash_attributes({"a": 1, "b": (1, 2), "c": {"d": None}}))
+        key = _hash_attributes({"a": 1, "b": (1, 2), "c": {"d": None}})
+        self.assertIsInstance(hash(key), int)
 
 
 class TestDistinctAttributeTypesProduceDistinctStreams(unittest.TestCase):

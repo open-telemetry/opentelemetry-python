@@ -28,7 +28,17 @@ _logger = getLogger(__name__)
 # Every branch is tagged so that values Python considers equal but the OTel
 # data model does not -- True/1/1.0, or a sequence of pairs and the mapping
 # it resembles -- produce different aggregation keys.
-_HashedAttributes = tuple[str, "str | bool | int | float | bytes | None | tuple[_HashedAttributes, ...]"]
+_HashedAttributes = tuple[
+    str,
+    str
+    | bool
+    | int
+    | float
+    | bytes
+    | None
+    | tuple["_HashedAttributes", ...]
+    | tuple[tuple[str, "_HashedAttributes"], ...],
+]
 
 
 # pylint: disable=inconsistent-return-statements
