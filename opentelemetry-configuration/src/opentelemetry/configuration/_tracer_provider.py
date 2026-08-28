@@ -112,10 +112,10 @@ def _create_otlp_http_span_exporter(
     """Create an OTLP HTTP span exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.proto.http import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415  # type: ignore[import-untyped]
             Compression,
         )
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             OTLPSpanExporter,
         )
     except ImportError as exc:
@@ -142,9 +142,9 @@ def _create_otlp_grpc_span_exporter(
     """Create an OTLP gRPC span exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        import grpc  # type: ignore[import-untyped]  # noqa: PLC0415
+        import grpc  # noqa: PLC0415  # type: ignore[import-untyped]
 
-        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             OTLPSpanExporter,
         )
     except ImportError as exc:
@@ -171,7 +171,7 @@ def _create_otlp_file_development_span_exporter(
     """Create an OTLP file (JSON Lines) span exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.json.file.trace_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.json.file.trace_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             FileSpanExporter,
         )
     except ImportError as exc:
