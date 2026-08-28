@@ -1,0 +1,1 @@
+`opentelemetry-propagator-jaeger`: enforce baggage limits on both `uberctx-` extract and inject, borrowing the same limits (180 entries, 4096 bytes per entry, 8192 bytes total) the package's core `W3CBaggagePropagator` already uses, so neither an inbound carrier nor an in-process baggage map can produce unbounded work or headers.
