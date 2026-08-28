@@ -72,7 +72,7 @@ pytest==9.0.3
     # via
     #   -c dev-requirements.txt
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
-requests==2.32.3
+requests==2.33.0
     # via
     #   -c dev-requirements.txt
     #   opentelemetry-test-utils
