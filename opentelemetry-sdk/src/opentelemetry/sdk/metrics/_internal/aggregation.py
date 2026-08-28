@@ -539,12 +539,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         previous_value_element,
                     ) in zip(value, self._previous_value)
                 ]
-                if self._record_min_max:
-                    self._previous_min = min(min_, self._previous_min)
-                    self._previous_max = max(max_, self._previous_max)
-                else:
-                    self._previous_min = None
-                    self._previous_max = None
+                self._previous_min = min(min_, self._previous_min) if self._record_min_max else None
+                self._previous_max = max(max_, self._previous_max) if self._record_min_max else None
                 self._previous_sum = sum_ + self._previous_sum
 
                 return HistogramDataPoint(
@@ -928,12 +924,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     collection_aggregation_temporality,
                 )
 
-                if self._record_min_max:
-                    self._previous_min = min(min_, self._previous_min)
-                    self._previous_max = max(max_, self._previous_max)
-                else:
-                    self._previous_min = None
-                    self._previous_max = None
+                self._previous_min = min(min_, self._previous_min) if self._record_min_max else None
+                self._previous_max = max(max_, self._previous_max) if self._record_min_max else None
                 self._previous_sum = sum_ + self._previous_sum
                 self._previous_count = count + self._previous_count
                 self._previous_zero_count = zero_count + self._previous_zero_count

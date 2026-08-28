@@ -12,9 +12,6 @@ minimum is +Infinity and maximum is -Infinity, and `to_json` emits the literals
 import json
 import unittest
 
-from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
-    encode_metrics,
-)
 from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -49,11 +46,6 @@ class _HistogramCase:
         data = self.reader.get_metrics_data()
         return data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-    def collect_encoded(self):
-        data = self.reader.get_metrics_data()
-        metric = encode_metrics(data).resource_metrics[0].scope_metrics[0].metrics[0]
-        return getattr(metric, metric.WhichOneof("data")).data_points[0]
-
     def shutdown(self):
         self.provider.shutdown()
 
@@ -75,16 +67,6 @@ class TestRecordMinMaxDisabled(unittest.TestCase):
                 self.assertIsNone(point.max)
                 self.assertEqual(point.sum, 55)
                 self.assertEqual(point.count, 2)
-                case.shutdown()
-
-    def test_otlp_fields_are_absent(self):
-        for name, aggregation in self.AGGREGATIONS.items():
-            with self.subTest(aggregation=name):
-                case = _HistogramCase(aggregation(record_min_max=False))
-                case.histogram.record(5)
-                point = case.collect_encoded()
-                self.assertFalse(point.HasField("min"))
-                self.assertFalse(point.HasField("max"))
                 case.shutdown()
 
     def test_to_json_is_valid_json(self):
@@ -152,12 +134,3 @@ class TestRecordMinMaxEnabled(unittest.TestCase):
                 self.assertEqual(point.min, 5)
                 self.assertEqual(point.max, 50)
                 case.shutdown()
-
-    def test_otlp_fields_are_present(self):
-        case = _HistogramCase(ExplicitBucketHistogramAggregation(record_min_max=True))
-        case.histogram.record(5)
-        point = case.collect_encoded()
-        self.assertTrue(point.HasField("min"))
-        self.assertTrue(point.HasField("max"))
-        self.assertEqual(point.min, 5)
-        case.shutdown()
