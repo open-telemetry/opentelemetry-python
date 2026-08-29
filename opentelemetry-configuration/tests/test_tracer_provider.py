@@ -273,13 +273,15 @@ class TestCreateSampler(unittest.TestCase):
         self.assertIs(provider.sampler, mock_sampler)
 
     def test_user_defined_sampler_not_found_raises_configuration_error(self):
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                # pylint: disable=unexpected-keyword-arg
-                self._make_provider(SamplerConfig(no_such_sampler={}))
+            # pylint: disable=unexpected-keyword-arg
+            self._make_provider(SamplerConfig(no_such_sampler={}))
 
 
 class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
@@ -540,15 +542,17 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_otlp_http_missing_package_raises(self):
         config = self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig()))
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
-                "opentelemetry.exporter.otlp.proto.http": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
+            create_tracer_provider(config)
         self.assertIn("otlp-proto-http", str(ctx.exception))
 
     def test_otlp_http_created_with_endpoint(self):
@@ -626,14 +630,16 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_otlp_file_development_missing_package_raises(self):
         config = self._make_batch_config(SpanExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig()))
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.json.file.trace_exporter": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.json.file.trace_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
+            create_tracer_provider(config)
         self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
@@ -697,15 +703,17 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_batch_config(SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig()))
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": None,
-                "grpc": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": None,
+                    "grpc": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
+            create_tracer_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
     def test_no_processor_type_raises(self):
@@ -818,13 +826,15 @@ class TestCreateIdGenerator(unittest.TestCase):
 
     def test_unknown_id_generator_raises_configuration_error(self):
         """Unknown id_generator name with no matching entry point raises ConfigurationError."""
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                # pylint: disable=unexpected-keyword-arg
-                self._make_provider(IdGeneratorConfig(no_such_generator={}))
+            # pylint: disable=unexpected-keyword-arg
+            self._make_provider(IdGeneratorConfig(no_such_generator={}))
 
     def test_empty_id_generator_raises_configuration_error(self):
         """Empty IdGenerator config (no type specified) raises ConfigurationError."""
