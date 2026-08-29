@@ -572,7 +572,14 @@ class LoggingHandler(logging.Handler):
             if exctype is not None:
                 attributes[exception_attributes.EXCEPTION_TYPE] = exctype.__name__
             if value is not None and value.args:
-                attributes[exception_attributes.EXCEPTION_MESSAGE] = str(value.args[0])
+                try:
+                    attributes[exception_attributes.EXCEPTION_MESSAGE] = str(value.args[0])
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _logger.warning(
+                        "Failed to stringify exception message of type `%s`.",
+                        type(value.args[0]),
+                    )
+                    attributes[exception_attributes.EXCEPTION_MESSAGE] = "<unprintable exception message>"
             if tb is not None:
                 # https://opentelemetry.io/docs/specs/semconv/exceptions/exceptions-spans/#stacktrace-representation
                 attributes[exception_attributes.EXCEPTION_STACKTRACE] = "".join(

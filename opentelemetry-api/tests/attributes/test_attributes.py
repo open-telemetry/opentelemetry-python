@@ -20,6 +20,14 @@ class _NoStrNoReprObject:
         pass
 
 
+class _RaisingReprObject:
+    """An object whose __repr__ itself raises -- simulates a broken
+    third-party object being passed as an attribute value/key."""
+
+    def __repr__(self):
+        raise RuntimeError("boom from __repr__")
+
+
 class TestBoundedAttributes(unittest.TestCase):
     # pylint: disable=consider-using-dict-items
     base = {
@@ -220,6 +228,31 @@ class TestBoundedAttributes(unittest.TestCase):
             self.assertEqual(bdict.get("reentrant.key"), "set_by_handler")
         finally:
             otel_logger.removeHandler(handler)
+
+    def test_clean_attribute_value_raising_repr_does_not_crash(self):
+        """A value whose __repr__/__str__ itself raises must not crash the
+        caller -- the docstring promises the value is replaced with None
+        on stringification failure, and _clean_attribute_value must
+        deliver on that promise instead of propagating the exception."""
+        with self.assertLogs("opentelemetry", level="WARNING"):
+            self.assertIsNone(_clean_attribute_value(_RaisingReprObject(), None))
+
+    def test_bounded_attributes_raising_repr_value_does_not_crash(self):
+        """End-to-end: setting an attribute whose value's __repr__ raises
+        must not crash the caller; the attribute becomes None instead."""
+        bdict = BoundedAttributes(immutable=False)
+        with self.assertLogs("opentelemetry", level="WARNING"):
+            bdict["bad"] = _RaisingReprObject()
+        self.assertIsNone(bdict["bad"])
+
+    def test_bounded_attributes_raising_repr_key_does_not_crash(self):
+        """End-to-end: a mapping value with a key whose __repr__ raises
+        must not crash the caller; the offending key is dropped, other
+        keys are preserved."""
+        bdict = BoundedAttributes(immutable=False)
+        with self.assertLogs("opentelemetry", level="WARNING"):
+            bdict["outer"] = {_RaisingReprObject(): "value", "good_key": "good_value"}
+        self.assertEqual(bdict["outer"], {"good_key": "good_value"})
 
     def test_wsgi_request_conversion_to_string(self):
         """Test that WSGI request objects are converted to strings when _clean_attribute_value is called."""

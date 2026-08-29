@@ -76,12 +76,18 @@ def _clean_attribute_value(
             # Spec says to convert unknown types to strings if possible (here and below too).
             if not isinstance(key, str):
                 _logger.warning(
-                    "Invalid type `%s` for attribute key `%s`, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
+                    "Invalid type `%s` for attribute key, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
                     type(key),
-                    key,
                 )
                 if _is_non_custom_str(key):
-                    key = str(key)
+                    try:
+                        key = str(key)
+                    except Exception:
+                        _logger.warning(
+                            "Failed to stringify attribute key of type `%s`. Dropping key from attributes.",
+                            type(key),
+                        )
+                        continue
                 else:
                     continue
             cleaned_mapping[key] = _clean_attribute_value(val, max_string_value_length)
@@ -94,7 +100,14 @@ def _clean_attribute_value(
         type(value),
     )
     if _is_non_custom_str(value):
-        return str(value)
+        try:
+            return str(value)
+        except Exception:
+            _logger.warning(
+                "Failed to stringify attribute value of type `%s`. Replacing with None.",
+                type(value),
+            )
+            return None
     return None
 
 
