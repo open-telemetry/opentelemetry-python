@@ -130,6 +130,7 @@ import os
 from collections.abc import Sequence
 from logging import getLogger
 from types import MappingProxyType
+from typing import Any
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
@@ -137,11 +138,15 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
+
+_NOT_IMPLEMENTED_MESSAGE = "{} must implement should_sample_span"
 
 
 class Decision(enum.Enum):
@@ -188,8 +193,34 @@ class SamplingResult:
 
 
 class Sampler(abc.ABC):
-    @abc.abstractmethod
     def should_sample(
+        self,
+        parent_context: Context | None,
+        trace_id: int,
+        name: str,
+        kind: SpanKind | None = None,
+        attributes: Attributes = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+    ) -> SamplingResult:
+        """Returns the sampling decision for a span about to be created.
+
+        .. deprecated:: 1.45.0
+            Implement and call :meth:`should_sample_span` instead, which also
+            receives the span type, instrumentation scope and resource. This
+            method remains for samplers written against the older signature.
+        """
+        return self.should_sample_span(
+            parent_context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            links,
+            trace_state,
+        )
+
+    def should_sample_span(
         self,
         parent_context: Context | None,
         trace_id: int,
@@ -200,8 +231,33 @@ class Sampler(abc.ABC):
         trace_state: TraceState | None = None,
         *,
         span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingResult:
-        pass
+        """Sampling entry point called by the SDK.
+
+        Carries the inputs `should_sample` cannot take without breaking its
+        stable signature: the span type, and the instrumentation scope and
+        resource of the tracer creating the span
+        (`spec#1588 <https://github.com/open-telemetry/opentelemetry-specification/issues/1588>`_).
+        The default implementation ignores them and delegates to
+        `should_sample`, so samplers written against the older signature keep
+        working. Samplers that want them override this method instead of
+        `should_sample`.
+        """
+        # a sampler implementing neither would bounce between the two defaults
+        if type(self).should_sample is Sampler.should_sample:
+            raise NotImplementedError(_NOT_IMPLEMENTED_MESSAGE.format(type(self).__name__))
+        return self.should_sample(
+            parent_context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            links,
+            trace_state,
+        )
 
     @abc.abstractmethod
     def get_description(self) -> str:
@@ -214,7 +270,7 @@ class StaticSampler(Sampler):
     def __init__(self, decision: Decision) -> None:
         self._decision = decision
 
-    def should_sample(
+    def should_sample_span(
         self,
         parent_context: Context | None,
         trace_id: int,
@@ -225,6 +281,9 @@ class StaticSampler(Sampler):
         trace_state: TraceState | None = None,
         *,
         span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingResult:
         if self._decision is Decision.DROP:
             attributes = None
@@ -277,7 +336,7 @@ class TraceIdRatioBased(Sampler):
     def bound(self) -> int:
         return self._bound
 
-    def should_sample(
+    def should_sample_span(
         self,
         parent_context: Context | None,
         trace_id: int,
@@ -288,6 +347,9 @@ class TraceIdRatioBased(Sampler):
         trace_state: TraceState | None = None,
         *,
         span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingResult:
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
@@ -334,18 +396,7 @@ class ParentBased(Sampler):
         self._local_parent_sampled = local_parent_sampled
         self._local_parent_not_sampled = local_parent_not_sampled
 
-    def should_sample(
-        self,
-        parent_context: Context | None,
-        trace_id: int,
-        name: str,
-        kind: SpanKind | None = None,
-        attributes: Attributes = None,
-        links: Sequence[Link] | None = None,
-        trace_state: TraceState | None = None,
-        *,
-        span_type: str | None = None,
-    ) -> SamplingResult:
+    def _delegate_for(self, parent_context: Context | None) -> Sampler:
         parent_span_context = get_current_span(parent_context).get_span_context()
         # default to the root sampler
         sampler = self._root
@@ -361,15 +412,35 @@ class ParentBased(Sampler):
                     sampler = self._local_parent_sampled
                 else:
                     sampler = self._local_parent_not_sampled
+        return sampler
 
-        return sampler.should_sample(
+    def should_sample_span(
+        self,
+        parent_context: Context | None,
+        trace_id: int,
+        name: str,
+        kind: SpanKind | None = None,
+        attributes: Attributes = None,
+        links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
+    ) -> SamplingResult:
+        return self._delegate_for(parent_context).should_sample_span(
             parent_context=parent_context,
             trace_id=trace_id,
             name=name,
             kind=kind,
             attributes=attributes,
             links=links,
+            trace_state=trace_state,
             span_type=span_type,
+            instrumentation_scope=instrumentation_scope,
+            resource=resource,
+            **kwargs,
         )
 
     def get_description(self):
@@ -395,7 +466,7 @@ class AlwaysRecordSampler(Sampler):
             raise ValueError("root must not be None")
         self._root = root
 
-    def should_sample(
+    def should_sample_span(
         self,
         parent_context: Context | None,
         trace_id: int,
@@ -404,8 +475,13 @@ class AlwaysRecordSampler(Sampler):
         attributes: Attributes = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingResult:
-        result: SamplingResult = self._root.should_sample(
+        result: SamplingResult = self._root.should_sample_span(
             parent_context,
             trace_id,
             name,
@@ -413,6 +489,10 @@ class AlwaysRecordSampler(Sampler):
             attributes,
             links,
             trace_state,
+            span_type=span_type,
+            instrumentation_scope=instrumentation_scope,
+            resource=resource,
+            **kwargs,
         )
         if result.decision is Decision.DROP:
             result = SamplingResult(Decision.RECORD_ONLY, result.attributes, result.trace_state)

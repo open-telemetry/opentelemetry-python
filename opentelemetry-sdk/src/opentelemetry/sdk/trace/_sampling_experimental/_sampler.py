@@ -4,9 +4,12 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from opentelemetry.context import Context
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.sampling import Decision, Sampler, SamplingResult
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link, SpanKind, TraceState
 from opentelemetry.util.types import Attributes
 
@@ -19,7 +22,7 @@ class _CompositeSampler(Sampler):
     def __init__(self, delegate: ComposableSampler):
         self._delegate = delegate
 
-    def should_sample(
+    def should_sample_span(
         self,
         parent_context: Context | None,
         trace_id: int,
@@ -30,6 +33,9 @@ class _CompositeSampler(Sampler):
         trace_state: TraceState | None = None,
         *,
         span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingResult:
         ot_trace_state = OtelTraceState.parse(trace_state)
 
