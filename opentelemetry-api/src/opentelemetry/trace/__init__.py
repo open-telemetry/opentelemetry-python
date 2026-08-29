@@ -325,7 +325,8 @@ class Tracer(ABC):
             span_type: Identifies the semantic convention definition this span follows
                 (within schema_url specified for this tracer), for example 
                 ``"http.server.request"``. Low-cardinality and immutable after
-                creation. Not validated by the API.
+                creation. Not validated by the API; the SDK drops values that do
+                not conform to the span type syntax.
 
         Returns:
             The newly-created span.
@@ -405,7 +406,8 @@ class Tracer(ABC):
                 context manager.
             span_type: Identifies the semantic convention definition this span
                 follows, for example ``"http.server.request"``. Low-cardinality
-                and immutable after creation. Not validated by the API.
+                and immutable after creation. Not validated by the API; the SDK
+                drops values that do not conform to the span type syntax.
 
         Yields:
             The newly-created span.

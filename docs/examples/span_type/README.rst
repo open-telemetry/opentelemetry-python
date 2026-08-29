@@ -2,7 +2,7 @@ Span type
 =========
 
 Prototype for the `Span type OTEP
-<https://github.com/open-telemetry/opentelemetry-specification/pull/4849>`_:
+<https://github.com/open-telemetry/opentelemetry-specification/pull/5233>`_:
 a span property that identifies the semantic convention definition the span
 follows.
 

@@ -21,6 +21,7 @@ from collections.abc import (
 )
 from dataclasses import dataclass
 from os import environ
+from string import ascii_letters, digits
 from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
@@ -75,6 +76,23 @@ from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
+
+_SPAN_TYPE_ERROR_MESSAGE = "Dropping span type: expected ASCII string of maximum length 255 characters starting with a letter but got %s"
+
+# Span type syntax, same as the metrics instrument name syntax: an ASCII string
+# of at most 255 characters starting with a letter.
+_SPAN_TYPE_MAX_LENGTH = 255
+_SPAN_TYPE_CHARS = frozenset(ascii_letters + digits + "_./-")
+
+
+def _is_valid_span_type(span_type: str) -> bool:
+    """Checks the span type for compliance with the span type syntax."""
+    return (
+        0 < len(span_type) <= _SPAN_TYPE_MAX_LENGTH
+        and span_type[0] in ascii_letters
+        and all(char in _SPAN_TYPE_CHARS for char in span_type)
+    )
+
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
@@ -1164,6 +1182,12 @@ class Tracer(trace_api.Tracer):
         span_type: str | None = None,
     ) -> trace_api.Span:
         links = links or ()
+        if span_type is not None and not _is_valid_span_type(span_type):
+            # unlike an instrument name, span type is optional: an invalid value
+            # is dropped and the span is still created
+            logger.debug(_SPAN_TYPE_ERROR_MESSAGE, span_type)
+            span_type = None
+
         parent_span_context = trace_api.get_current_span(context).get_span_context()
 
         if parent_span_context is not None and not isinstance(parent_span_context, trace_api.SpanContext):
