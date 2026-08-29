@@ -13,7 +13,11 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link, SpanKind, TraceState
 from opentelemetry.util.types import Attributes
 
-from ._composable import ComposableSampler, SamplingIntent
+from ._composable import (
+    ComposableSampler,
+    SamplingIntent,
+    delegate_sampling_intent,
+)
 from ._trace_state import OTEL_TRACE_STATE_KEY, OtelTraceState
 from ._util import INVALID_THRESHOLD, is_valid_random_value, is_valid_threshold
 
@@ -42,7 +46,18 @@ class _CompositeSampler(Sampler):
     ) -> SamplingResult:
         ot_trace_state = OtelTraceState.parse(trace_state)
 
-        intent = self._delegate.sampling_intent(parent_context, name, kind, attributes, links, trace_state)
+        intent = delegate_sampling_intent(
+            self._delegate,
+            parent_context,
+            name,
+            kind,
+            attributes,
+            links,
+            trace_state,
+            span_type=span_type,
+            instrumentation_scope=instrumentation_scope,
+            resource=resource,
+        )
         threshold = intent.threshold
 
         if is_valid_threshold(threshold):

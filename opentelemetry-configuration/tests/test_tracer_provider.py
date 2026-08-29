@@ -326,15 +326,17 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         kind=None,
         attributes=None,
         parent_context=None,
+        span_type=None,
     ):
         provider = self._make_provider(rule_based_config)
-        return provider.sampler.should_sample(
+        return provider.sampler.should_sample_span(
             parent_context,
             TRACE_ID,
             name,
             kind,
             attributes,
             None,
+            span_type=span_type,
         ).decision
 
     def test_composite_rule_based_no_rules_drops(self):
@@ -432,6 +434,43 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
 
         self.assertEqual(server, Decision.RECORD_AND_SAMPLE)
         self.assertEqual(client, Decision.DROP)
+
+    def test_composite_rule_based_span_type(self):
+        rule_based = RuleBasedSamplerConfig(
+            rules=[
+                self._rule(
+                    self._always_on(),
+                    span_types=["http.server.request", "db.client.call"],
+                )
+            ]
+        )
+
+        matched = self._decision(rule_based, span_type="http.server.request")
+        other_matched = self._decision(rule_based, span_type="db.client.call")
+        unmatched = self._decision(rule_based, span_type="messaging.producer.send")
+        untyped = self._decision(rule_based)
+
+        self.assertEqual(matched, Decision.RECORD_AND_SAMPLE)
+        self.assertEqual(other_matched, Decision.RECORD_AND_SAMPLE)
+        self.assertEqual(unmatched, Decision.DROP)
+        self.assertEqual(untyped, Decision.DROP)
+
+    def test_composite_rule_based_span_type_and_kind_are_anded(self):
+        rule_based = RuleBasedSamplerConfig(
+            rules=[
+                self._rule(
+                    self._always_on(),
+                    span_types=["http.server.request"],
+                    span_kinds=[SpanKindConfig.server],
+                )
+            ]
+        )
+
+        both = self._decision(rule_based, kind=TraceSpanKind.SERVER, span_type="http.server.request")
+        kind_only = self._decision(rule_based, kind=TraceSpanKind.SERVER, span_type="db.client.call")
+
+        self.assertEqual(both, Decision.RECORD_AND_SAMPLE)
+        self.assertEqual(kind_only, Decision.DROP)
 
     def test_composite_rule_based_parent(self):
         local_parent_context = trace_api.set_span_in_context(
