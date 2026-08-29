@@ -566,6 +566,9 @@ class _SpanTypeSampler(sampling.Sampler):
     def __init__(self):
         self.seen = []
 
+    def should_sample(self, *args, **kwargs):
+        return self.should_sample_span(*args, **kwargs)
+
     def should_sample_span(
         self,
         parent_context,
@@ -653,12 +656,16 @@ class TestSamplerBackwardCompatibility(unittest.TestCase):
         self._tracer(sampling.ParentBased(sampler)).start_span("s", span_type="a.b.c")
         self.assertEqual(sampler.seen[0][0], "a.b.c")
 
-    def test_sampler_implementing_neither_method_raises(self):
-        class Broken(sampling.Sampler):
-            def get_description(self):
-                return "Broken"
+    def test_sampler_implementing_only_the_new_method_raises(self):
+        """should_sample stays required, so a sampler implementing only
+        should_sample_span is rejected by abc."""
 
-        with self.assertRaises(NotImplementedError):
-            Broken().should_sample(None, 0, "name")
-        with self.assertRaises(NotImplementedError):
-            Broken().should_sample_span(None, 0, "name")
+        class SpanOnly(sampling.Sampler):
+            def should_sample_span(self, *args, **kwargs):
+                return sampling.SamplingResult(sampling.Decision.RECORD_AND_SAMPLE)
+
+            def get_description(self):
+                return "SpanOnly"
+
+        with self.assertRaises(TypeError):
+            SpanOnly()

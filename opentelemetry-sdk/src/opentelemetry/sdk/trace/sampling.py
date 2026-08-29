@@ -146,8 +146,6 @@ from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
-_NOT_IMPLEMENTED_MESSAGE = "{} must implement should_sample_span"
-
 
 class Decision(enum.Enum):
     # IsRecording() == false, span will not be recorded and all events and attributes will be dropped.
@@ -193,6 +191,21 @@ class SamplingResult:
 
 
 class Sampler(abc.ABC):
+    # Keeping this abstract forces every sampler implementing should_sample_span
+    # to also write a should_sample that delegates to it. That can be relaxed
+    # later without breaking anyone: drop the abstractmethod here and have this
+    # method call should_sample_span when the subclass overrides it, leaving the
+    # subclass to implement only one of the two. abc cannot express "implement
+    # at least one of these", so the check that a sampler implements neither
+    # has to happen at runtime, either in Sampler.__init_subclass__ (see
+    # https://peps.python.org/pep-0487/) or on the first call.
+    #
+    # The alternative is a second base class holding should_sample_span as its
+    # own abstract method, with a concrete should_sample delegating to it. New
+    # samplers extend that class, old ones extend Sampler, and abc enforces
+    # both on its own - at the cost of another public class and isinstance
+    # dispatch wherever a sampler is called.
+    @abc.abstractmethod
     def should_sample(
         self,
         parent_context: Context | None,
@@ -210,15 +223,6 @@ class Sampler(abc.ABC):
             receives the span type, instrumentation scope and resource. This
             method remains for samplers written against the older signature.
         """
-        return self.should_sample_span(
-            parent_context,
-            trace_id,
-            name,
-            kind,
-            attributes,
-            links,
-            trace_state,
-        )
 
     def should_sample_span(
         self,
@@ -246,9 +250,6 @@ class Sampler(abc.ABC):
         working. Samplers that want them override this method instead of
         `should_sample`.
         """
-        # a sampler implementing neither would bounce between the two defaults
-        if type(self).should_sample is Sampler.should_sample:
-            raise NotImplementedError(_NOT_IMPLEMENTED_MESSAGE.format(type(self).__name__))
         return self.should_sample(
             parent_context,
             trace_id,
@@ -269,6 +270,9 @@ class StaticSampler(Sampler):
 
     def __init__(self, decision: Decision) -> None:
         self._decision = decision
+
+    def should_sample(self, *args: Any, **kwargs: Any) -> SamplingResult:
+        return self.should_sample_span(*args, **kwargs)
 
     def should_sample_span(
         self,
@@ -335,6 +339,9 @@ class TraceIdRatioBased(Sampler):
     @property
     def bound(self) -> int:
         return self._bound
+
+    def should_sample(self, *args: Any, **kwargs: Any) -> SamplingResult:
+        return self.should_sample_span(*args, **kwargs)
 
     def should_sample_span(
         self,
@@ -414,6 +421,9 @@ class ParentBased(Sampler):
                     sampler = self._local_parent_not_sampled
         return sampler
 
+    def should_sample(self, *args: Any, **kwargs: Any) -> SamplingResult:
+        return self.should_sample_span(*args, **kwargs)
+
     def should_sample_span(
         self,
         parent_context: Context | None,
@@ -465,6 +475,9 @@ class AlwaysRecordSampler(Sampler):
         if root is None:
             raise ValueError("root must not be None")
         self._root = root
+
+    def should_sample(self, *args: Any, **kwargs: Any) -> SamplingResult:
+        return self.should_sample_span(*args, **kwargs)
 
     def should_sample_span(
         self,

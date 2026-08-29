@@ -22,6 +22,9 @@ class _CompositeSampler(Sampler):
     def __init__(self, delegate: ComposableSampler):
         self._delegate = delegate
 
+    def should_sample(self, *args: Any, **kwargs: Any) -> SamplingResult:
+        return self.should_sample_span(*args, **kwargs)
+
     def should_sample_span(
         self,
         parent_context: Context | None,
