@@ -1,0 +1,1 @@
+Publish a sha256 `checksums.txt` alongside GitHub release artifacts, matching the layout used by other OpenTelemetry language repos.

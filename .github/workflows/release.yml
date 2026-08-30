@@ -79,6 +79,10 @@ jobs:
       - name: Build wheels
         run: ./scripts/build.sh
 
+      - name: Generate checksums
+        run: |
+          (cd dist && sha256sum * > ../checksums.txt)
+
       - name: Install twine
         run: |
           pip install twine
@@ -133,4 +137,5 @@ jobs:
                             --title "Version ${STABLE_VERSION}/${UNSTABLE_VERSION}" \
                             --notes-file /tmp/release-notes.txt \
                             --discussion-category announcements \
-                            v$STABLE_VERSION
+                            v$STABLE_VERSION \
+                            checksums.txt
