@@ -482,7 +482,7 @@ class _CustomCollector:
         return label_keys, label_rows, values
 
     # pylint: disable=no-self-use
-    def _check_value(self, value: int | float | str | Sequence) -> str:
+    def _check_value(self, value: float | str | Sequence) -> str:
         """Check the label value and return is appropriate representation"""
         if not isinstance(value, str):
             return dumps(value, default=str)
