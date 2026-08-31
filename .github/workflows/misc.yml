@@ -43,7 +43,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e test-scripts
@@ -62,7 +62,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e spellcheck
@@ -88,7 +88,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e tracecontext
@@ -107,7 +107,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e typecheck
@@ -130,7 +130,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e docs
@@ -149,7 +149,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e docker-tests-otlpexporter
@@ -168,7 +168,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e docker-tests-opencensus
@@ -201,7 +201,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e public-symbols-check
@@ -220,7 +220,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e shellcheck
@@ -242,7 +242,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e generate-workflows
@@ -264,7 +264,7 @@ jobs:
           python-version: "3.11"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Run tests
         run: uvx --with tox-uv tox -e precommit
