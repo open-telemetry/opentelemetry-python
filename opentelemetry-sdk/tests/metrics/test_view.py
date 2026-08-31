@@ -19,7 +19,7 @@ class TestView(TestCase):
 
     def test_instrument_name(self):
         mock_instrument = Mock()
-        mock_instrument.configure_mock(**{"name": "instrument_name"})
+        mock_instrument.configure_mock(name="instrument_name")
 
         self.assertTrue(View(instrument_name="instrument_name")._match(mock_instrument))
 
@@ -28,7 +28,7 @@ class TestView(TestCase):
         # reuses the instrument's original name must still match regardless of
         # case (and regardless of the host platform).
         mock_instrument = Mock()
-        mock_instrument.configure_mock(**{"name": "instrument_name"})
+        mock_instrument.configure_mock(name="instrument_name")
 
         self.assertTrue(View(instrument_name="Instrument_Name")._match(mock_instrument))
         self.assertTrue(View(instrument_name="INSTRUMENT_*")._match(mock_instrument))
@@ -36,7 +36,7 @@ class TestView(TestCase):
 
     def test_instrument_unit(self):
         mock_instrument = Mock()
-        mock_instrument.configure_mock(**{"unit": "instrument_unit"})
+        mock_instrument.configure_mock(unit="instrument_unit")
 
         self.assertTrue(View(instrument_unit="instrument_unit")._match(mock_instrument))
 
@@ -44,7 +44,7 @@ class TestView(TestCase):
         # Units are case-sensitive and matching must not depend on the host
         # platform's filename case sensitivity.
         mock_instrument = Mock()
-        mock_instrument.configure_mock(**{"unit": "By"})
+        mock_instrument.configure_mock(unit="By")
 
         self.assertTrue(View(instrument_unit="By")._match(mock_instrument))
         self.assertFalse(View(instrument_unit="by")._match(mock_instrument))

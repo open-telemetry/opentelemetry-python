@@ -188,7 +188,7 @@ class Counter(_Synchronous, APICounter):
 
     def add(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes = None,
         context: Context | None = None,
     ):
@@ -226,7 +226,7 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
     def add(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes = None,
         context: Context | None = None,
     ):
@@ -296,7 +296,7 @@ class Histogram(_Synchronous, APIHistogram):
 
     def record(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes = None,
         context: Context | None = None,
     ):
@@ -337,7 +337,7 @@ class Gauge(_Synchronous, APIGauge):
 
     def set(
         self,
-        amount: int | float,
+        amount: float,
         attributes: Attributes = None,
         context: Context | None = None,
     ):
