@@ -102,7 +102,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                frozenset([("c", "d")]): self.mock_created_aggregation,
+                _hash_attributes({"c": "d"}): self.mock_created_aggregation,
             },
         )
 
@@ -131,7 +131,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
             {
-                frozenset(): self.mock_created_aggregation,
+                _hash_attributes({}): self.mock_created_aggregation,
             },
         )
 
