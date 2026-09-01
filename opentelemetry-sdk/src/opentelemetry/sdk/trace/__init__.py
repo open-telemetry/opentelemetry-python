@@ -378,7 +378,8 @@ def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
         with self._lock:  # pylint: disable=protected-access
-            if self._end_time is None:  # pylint: disable=protected-access
+            # pylint: disable=protected-access
+            if self._end_time is None or self._ending:
                 func(self, *args, **kwargs)
             else:
                 already_ended = True
@@ -807,6 +808,9 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor = span_processor
         self._limits = limits
         self._lock = threading.Lock()
+        # True while the _on_ending callbacks run: the end timestamp is
+        # already set but the span must remain mutable until they return.
+        self._ending = False
         self._attributes = BoundedAttributes(
             self._limits.max_span_attributes,
             attributes,
@@ -859,7 +863,7 @@ class Span(trace_api.Span, ReadableSpan):
 
     def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         with self._lock:
-            if self._end_time is not None:
+            if self._end_time is not None and not self._ending:
                 logger.warning("Setting attribute on ended span.")
                 return
 
@@ -867,7 +871,7 @@ class Span(trace_api.Span, ReadableSpan):
 
     def set_attribute(self, key: str, value: types.AnyValue) -> None:
         with self._lock:
-            if self._end_time is not None:
+            if self._end_time is not None and not self._ending:
                 logger.warning("Setting attribute on ended span.")
                 return
 
@@ -962,12 +966,19 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             self._end_time = end_time if end_time is not None else time_ns()
-            self._attributes._immutable = True  # pylint: disable=protected-access
+            self._ending = True
 
         if self._record_end_metrics:
             self._record_end_metrics()
+        # The span must remain mutable while _on_ending callbacks run; it
+        # only becomes immutable once they have returned.
         # pylint: disable=protected-access
-        self._span_processor._on_ending(self)
+        try:
+            self._span_processor._on_ending(self)
+        finally:
+            with self._lock:
+                self._ending = False
+                self._attributes._immutable = True
         self._span_processor.on_end(self._readable_span())
 
     @_check_span_ended
@@ -975,7 +986,7 @@ class Span(trace_api.Span, ReadableSpan):
         self._name = name
 
     def is_recording(self) -> bool:
-        return self._end_time is None
+        return self._end_time is None or self._ending
 
     @_check_span_ended
     def set_status(
