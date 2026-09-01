@@ -1,5 +1,7 @@
 pylint==3.3.4
+griffe==1.7.3
 httpretty==1.1.4
+inline-snapshot==0.34.2
 mocket==3.14.1
 pyright==1.1.405
 sphinx==8.1.3
