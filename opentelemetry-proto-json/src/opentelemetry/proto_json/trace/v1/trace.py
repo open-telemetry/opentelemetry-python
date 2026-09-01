@@ -49,7 +49,7 @@ class TracesData(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "TracesData":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> TracesData:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -96,7 +96,7 @@ class ResourceSpans(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceSpans":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ResourceSpans:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -148,7 +148,7 @@ class ScopeSpans(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeSpans":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ScopeSpans:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -223,7 +223,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
             return _result
 
         @builtins.classmethod
-        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Span.Event":
+        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Span.Event:
             """
             Create from a dictionary with lowerCamelCase keys.
 
@@ -286,7 +286,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
             return _result
 
         @builtins.classmethod
-        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Span.Link":
+        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Span.Link:
             """
             Create from a dictionary with lowerCamelCase keys.
 
@@ -377,7 +377,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Span":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Span:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -467,7 +467,7 @@ class Status(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Status":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Status:
         """
         Create from a dictionary with lowerCamelCase keys.
 

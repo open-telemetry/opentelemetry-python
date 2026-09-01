@@ -42,7 +42,7 @@ class Resource(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Resource":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Resource:
         """
         Create from a dictionary with lowerCamelCase keys.
 

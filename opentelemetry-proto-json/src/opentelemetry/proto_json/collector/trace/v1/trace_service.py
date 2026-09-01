@@ -36,7 +36,7 @@ class ExportTraceServiceRequest(opentelemetry.proto_json._json_codec.JsonMessage
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportTraceServiceRequest":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportTraceServiceRequest:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -77,7 +77,7 @@ class ExportTraceServiceResponse(opentelemetry.proto_json._json_codec.JsonMessag
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportTraceServiceResponse":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportTraceServiceResponse:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -121,7 +121,7 @@ class ExportTracePartialSuccess(opentelemetry.proto_json._json_codec.JsonMessage
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportTracePartialSuccess":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportTracePartialSuccess:
         """
         Create from a dictionary with lowerCamelCase keys.
 

@@ -56,7 +56,7 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "AnyValue":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> AnyValue:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -114,7 +114,7 @@ class ArrayValue(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ArrayValue":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ArrayValue:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -155,7 +155,7 @@ class KeyValueList(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "KeyValueList":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> KeyValueList:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -202,7 +202,7 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "KeyValue":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> KeyValue:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -258,7 +258,7 @@ class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "InstrumentationScope":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> InstrumentationScope:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -317,7 +317,7 @@ class EntityRef(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "EntityRef":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> EntityRef:
         """
         Create from a dictionary with lowerCamelCase keys.
 

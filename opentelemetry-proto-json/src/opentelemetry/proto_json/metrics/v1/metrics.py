@@ -57,7 +57,7 @@ class MetricsData(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "MetricsData":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> MetricsData:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -104,7 +104,7 @@ class ResourceMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceMetrics":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ResourceMetrics:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -156,7 +156,7 @@ class ScopeMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeMetrics":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ScopeMetrics:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -226,7 +226,7 @@ class Metric(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Metric":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Metric:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -286,7 +286,7 @@ class Gauge(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Gauge":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Gauge:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -333,7 +333,7 @@ class Sum(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Sum":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Sum:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -382,7 +382,7 @@ class Histogram(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Histogram":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Histogram:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -428,7 +428,7 @@ class ExponentialHistogram(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExponentialHistogram":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExponentialHistogram:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -471,7 +471,7 @@ class Summary(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Summary":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Summary:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -530,7 +530,7 @@ class NumberDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "NumberDataPoint":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> NumberDataPoint:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -614,7 +614,7 @@ class HistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "HistogramDataPoint":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> HistogramDataPoint:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -686,7 +686,7 @@ class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMes
             return _result
 
         @builtins.classmethod
-        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExponentialHistogramDataPoint.Buckets":
+        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExponentialHistogramDataPoint.Buckets:
             """
             Create from a dictionary with lowerCamelCase keys.
 
@@ -761,7 +761,7 @@ class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMes
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExponentialHistogramDataPoint":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExponentialHistogramDataPoint:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -840,7 +840,7 @@ class SummaryDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
             return _result
 
         @builtins.classmethod
-        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "SummaryDataPoint.ValueAtQuantile":
+        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> SummaryDataPoint.ValueAtQuantile:
             """
             Create from a dictionary with lowerCamelCase keys.
 
@@ -893,7 +893,7 @@ class SummaryDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "SummaryDataPoint":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> SummaryDataPoint:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -962,7 +962,7 @@ class Exemplar(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Exemplar":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Exemplar:
         """
         Create from a dictionary with lowerCamelCase keys.
 

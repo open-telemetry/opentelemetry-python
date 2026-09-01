@@ -202,8 +202,7 @@ class OtlpJsonGenerator:
             Python module path (dot-separated)
         """
         transformed = self._transform_proto_path(proto_file)
-        if transformed.endswith(".py"):
-            transformed = transformed[:-3]
+        transformed = transformed.removesuffix(".py")
         return transformed.replace("/", ".")
 
     def _generate_file(self, file_desc: descriptor.FileDescriptorProto) -> str:
