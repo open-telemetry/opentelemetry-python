@@ -42,7 +42,7 @@ from opentelemetry.sdk.metrics.view import (
 from opentelemetry.util.types import Attributes
 
 
-def measurement(value: int | float, attributes: Attributes = None) -> Measurement:
+def measurement(value: float, attributes: Attributes = None) -> Measurement:
     return Measurement(
         value,
         time_ns(),

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import collections.abc
+import itertools
 import urllib.parse
 
 from opentelemetry import baggage, trace
@@ -26,6 +27,11 @@ class JaegerPropagator(TextMapPropagator):
     TRACE_ID_KEY = "uber-trace-id"
     BAGGAGE_PREFIX = "uberctx-"
     DEBUG_FLAG = 0x02
+    # The Jaeger format defines no baggage limits, so the W3C Baggage spec
+    # limits are borrowed to bound an unbounded inbound carrier on extract.
+    MAX_BAGGAGE_ENTRIES = 180
+    MAX_BAGGAGE_ENTRY_BYTES = 4096
+    MAX_BAGGAGE_TOTAL_BYTES = 8192
 
     def extract(
         self,
@@ -90,9 +96,7 @@ class JaegerPropagator(TextMapPropagator):
         baggage_entries = baggage.get_all(context=context)
         if not baggage_entries:
             return
-        for key, value in baggage_entries.items():
-            baggage_key = self.BAGGAGE_PREFIX + key
-            setter.set(carrier, baggage_key, urllib.parse.quote(str(value)))
+        self._inject_baggage(setter, carrier, baggage_entries)
 
     @property
     def fields(self) -> set[str]:
@@ -104,17 +108,60 @@ class JaegerPropagator(TextMapPropagator):
         carrier: CarrierT,
         context: Context,
     ) -> Context:
-        baggage_keys = [key for key in getter.keys(carrier) if key.startswith(self.BAGGAGE_PREFIX)]
-        for key in baggage_keys:
+        # The limit bounds the candidates inspected, not the entries kept, so a
+        # carrier full of oversized ones cannot force unbounded work.
+        candidates = itertools.islice(
+            (key for key in getter.keys(carrier) if key.startswith(self.BAGGAGE_PREFIX)),
+            self.MAX_BAGGAGE_ENTRIES,
+        )
+        pairs = []
+        for key in candidates:
             value = _extract_first_element(getter.get(carrier, key))
-            if value is None:
-                continue
+            if value is not None:
+                pairs.append((key.replace(self.BAGGAGE_PREFIX, ""), value))
+
+        for baggage_key, value in _limit_baggage_bytes(
+            pairs, self.MAX_BAGGAGE_ENTRY_BYTES, self.MAX_BAGGAGE_TOTAL_BYTES
+        ):
             context = baggage.set_baggage(
-                key.replace(self.BAGGAGE_PREFIX, ""),
+                baggage_key,
                 urllib.parse.unquote(value).strip(),
                 context=context,
             )
         return context
+
+    def _inject_baggage(
+        self,
+        setter: Setter[CarrierT],
+        carrier: CarrierT,
+        baggage_entries: collections.abc.Mapping[str, object],
+    ) -> None:
+        candidates = itertools.islice(baggage_entries.items(), self.MAX_BAGGAGE_ENTRIES)
+        pairs = [(key, urllib.parse.quote(str(value))) for key, value in candidates]
+
+        for key, encoded_value in _limit_baggage_bytes(
+            pairs, self.MAX_BAGGAGE_ENTRY_BYTES, self.MAX_BAGGAGE_TOTAL_BYTES
+        ):
+            setter.set(carrier, self.BAGGAGE_PREFIX + key, encoded_value)
+
+
+def _limit_baggage_bytes(
+    pairs: collections.abc.Iterable[tuple[str, str]],
+    max_entry_bytes: int,
+    max_total_bytes: int,
+) -> collections.abc.Iterator[tuple[str, str]]:
+    total_bytes = 0
+    accepted = 0
+    for key, value in pairs:
+        entry_bytes = len(key.encode()) + len(value.encode()) + 1
+        if entry_bytes > max_entry_bytes:
+            continue
+        separator_bytes = 1 if accepted > 0 else 0
+        if total_bytes + separator_bytes + entry_bytes > max_total_bytes:
+            continue
+        yield key, value
+        total_bytes += separator_bytes + entry_bytes
+        accepted += 1
 
 
 def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
