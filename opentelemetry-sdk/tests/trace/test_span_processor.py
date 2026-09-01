@@ -251,6 +251,67 @@ class TestSpanProcessor(unittest.TestCase):
 
         self.assertListEqual(spans_calls_list, expected_list)
 
+    def test_span_mutable_during_on_ending(self):
+        exporter = InMemorySpanExporter()
+
+        class MutatingSpanProcessor(trace.SpanProcessor):
+            def _on_ending(self, span: "trace.Span") -> None:
+                assert span.is_recording()
+                assert span.end_time is not None
+                span.update_name("renamed")
+                span.set_attribute("attribute", "value")
+                span.set_attributes({"attributes": "value"})
+                span.add_event("event")
+                span.add_link(
+                    trace_api.SpanContext(
+                        trace_id=0x1,
+                        span_id=0x2,
+                        is_remote=False,
+                    )
+                )
+                span.set_status(trace_api.StatusCode.ERROR)
+
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(MutatingSpanProcessor())
+        tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
+        tracer = tracer_provider.get_tracer(__name__)
+
+        tracer.start_span("foo").end()
+
+        (span,) = exporter.get_finished_spans()
+        self.assertEqual(span.name, "renamed")
+        self.assertEqual(span.attributes["attribute"], "value")
+        self.assertEqual(span.attributes["attributes"], "value")
+        self.assertEqual(span.events[0].name, "event")
+        self.assertEqual(len(span.links), 1)
+        self.assertIs(span.status.status_code, trace_api.StatusCode.ERROR)
+
+    def test_end_during_on_ending_is_ignored(self):
+        exporter = InMemorySpanExporter()
+        on_ending_calls = []
+
+        class ReentrantSpanProcessor(trace.SpanProcessor):
+            def _on_ending(self, span: "trace.Span") -> None:
+                on_ending_calls.append(span)
+                span.end()
+
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(ReentrantSpanProcessor())
+        tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
+        tracer = tracer_provider.get_tracer(__name__)
+
+        span = tracer.start_span("foo")
+        span.end()
+
+        self.assertEqual(len(on_ending_calls), 1)
+        self.assertEqual(len(exporter.get_finished_spans()), 1)
+
+        # After end() returns the span is immutable again.
+        self.assertFalse(span.is_recording())
+        span.set_attribute("late", "value")
+        (exported,) = exporter.get_finished_spans()
+        self.assertNotIn("late", exported.attributes)
+
 
 class MultiSpanProcessorTestBase(abc.ABC):
     @abc.abstractmethod
