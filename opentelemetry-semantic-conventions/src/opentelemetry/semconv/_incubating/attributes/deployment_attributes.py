@@ -18,7 +18,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.deploy
 
 DEPLOYMENT_ID: Final = "deployment.id"
 """
-The id of the deployment.
+The ID of the deployment.
 """
 
 DEPLOYMENT_NAME: Final = "deployment.name"

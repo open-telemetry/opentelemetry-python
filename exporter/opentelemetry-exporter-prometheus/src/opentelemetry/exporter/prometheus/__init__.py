@@ -101,11 +101,12 @@ from opentelemetry.sdk.metrics.export import (
     Sum,
 )
 from opentelemetry.sdk.metrics.view import Aggregation
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
-from opentelemetry.util.types import Attributes, AttributeValue
+from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
 
@@ -243,14 +244,18 @@ class PrometheusMetricReader(MetricReader):
 
     Args:
         disable_target_info: Whether to disable the ``target_info`` metric.
+        prefix: Prefix added to exported Prometheus metric names.
         scope_info_enabled: Whether to include instrumentation scope labels on
             exported metrics. Scope labels are exported by default.
-        prefix: Prefix added to exported Prometheus metric names.
         preferred_aggregation: A mapping between instrument classes and
             aggregation instances used to override the default aggregation of
             the corresponding instrument classes. Classes not included in the
             mapping retain their default aggregation. See
             :class:`~opentelemetry.sdk.metrics.export.MetricReader` for details.
+        resource_attribute_filter: Optional callback to select resource attributes
+            that are copied as labels on exported metrics. The callback receives
+            the original resource attribute key. Selected keys are sanitized to
+            valid Prometheus label names.
     """
 
     def __init__(
@@ -260,6 +265,7 @@ class PrometheusMetricReader(MetricReader):
         scope_info_enabled: bool = True,
         preferred_aggregation: Mapping[type, Aggregation] | None = None,
         *,
+        resource_attribute_filter: Callable[[str], bool] | None = None,
         registry: CollectorRegistry = REGISTRY,
     ) -> None:
         super().__init__(
@@ -271,15 +277,14 @@ class PrometheusMetricReader(MetricReader):
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             },
-            preferred_aggregation=dict(preferred_aggregation)
-            if preferred_aggregation is not None
-            else None,
+            preferred_aggregation=dict(preferred_aggregation) if preferred_aggregation is not None else None,
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(
             disable_target_info=disable_target_info,
             prefix=prefix,
             scope_info_enabled=scope_info_enabled,
+            resource_attribute_filter=resource_attribute_filter,
         )
         self._registry = registry
         self._registry.register(self._collector)
@@ -312,13 +317,15 @@ class _CustomCollector:
         disable_target_info: bool = False,
         prefix: str = "",
         scope_info_enabled: bool = True,
+        resource_attribute_filter: Callable[[str], bool] | None = None,
     ):
         self._callback = None
         self._metrics_datas: deque[MetricsData] = deque()
         self._disable_target_info = disable_target_info
-        self._scope_info_enabled = scope_info_enabled
         self._target_info = None
         self._prefix = prefix
+        self._scope_info_enabled = scope_info_enabled
+        self._resource_attribute_filter = resource_attribute_filter
 
     def add_metrics_data(self, metrics_data: MetricsData) -> None:
         """Add metrics to Prometheus data"""
@@ -359,25 +366,28 @@ class _CustomCollector:
         metric_family_id_metric_family: dict[str, PrometheusMetric],
     ):
         for rm in metrics_data.resource_metrics:
+            resource_attrs = self._build_resource_attrs(rm.resource)
             for sm in rm.scope_metrics:
                 scope_attrs = self._build_scope_attrs(sm.scope)
                 for metric in sm.metrics:
                     self._translate_metric(
-                        metric,
-                        scope_attrs,
-                        metric_family_id_metric_family,
+                        metric=metric,
+                        scope_attrs=scope_attrs,
+                        resource_attrs=resource_attrs,
+                        metric_family_id_metric_family=metric_family_id_metric_family,
                     )
 
     def _translate_metric(
         self,
         metric: Metric,
-        scope_attrs: dict[str, Any],
+        scope_attrs: dict[str, AnyValue],
+        resource_attrs: dict[str, AnyValue],
         metric_family_id_metric_family: dict[str, PrometheusMetric],
     ) -> None:
         metric_name = self._resolve_metric_name(metric.name)
         description = metric.description or ""
         unit = map_unit(metric.unit or "")
-        label_keys, label_rows, values = self._collect_data_points(metric.data, scope_attrs)
+        label_keys, label_rows, values = self._collect_data_points(metric.data, scope_attrs, resource_attrs)
         per_metric_family_id = "|".join((metric_name, description, unit))
 
         convert_sum_to_gauge = _should_convert_sum_to_gauge(metric)
@@ -418,10 +428,10 @@ class _CustomCollector:
         else:
             _logger.warning("Unsupported metric data. %s", type(metric.data))
 
-    def _build_scope_attrs(self, scope: InstrumentationScope) -> dict[str, AttributeValue]:
+    def _build_scope_attrs(self, scope: InstrumentationScope) -> dict[str, AnyValue]:
         if not self._scope_info_enabled:
             return {}
-        attrs: dict[str, AttributeValue] = {}
+        attrs: dict[str, AnyValue] = {}
         if scope.attributes:
             for key, value in scope.attributes.items():
                 attrs[_OTEL_SCOPE_ATTR_PREFIX + key] = value
@@ -429,6 +439,11 @@ class _CustomCollector:
         attrs[_OTEL_SCOPE_VERSION_LABEL] = scope.version or ""
         attrs[_OTEL_SCOPE_SCHEMA_URL_LABEL] = scope.schema_url or ""
         return attrs
+
+    def _build_resource_attrs(self, resource: Resource) -> dict[str, AnyValue]:
+        if not self._resource_attribute_filter:
+            return {}
+        return {key: value for key, value in resource.attributes.items() if self._resource_attribute_filter(key)}
 
     def _resolve_metric_name(self, name: str) -> str:
         if self._prefix:
@@ -438,7 +453,8 @@ class _CustomCollector:
     def _collect_data_points(
         self,
         metric_data: DataT,
-        scope_attrs: dict[str, AttributeValue],
+        scope_attrs: dict[str, AnyValue],
+        resource_attrs: dict[str, AnyValue],
     ) -> tuple[list[str], list[list[str]], list[float | dict[str, Any]]]:
         keys: set[str] = set()
         rows: list[dict[str, str]] = []
@@ -447,6 +463,7 @@ class _CustomCollector:
         for point in metric_data.data_points:
             labels: dict[str, str] = {}
             for key, value in chain(
+                resource_attrs.items(),
                 scope_attrs.items(),
                 point.attributes.items(),
             ):
@@ -473,7 +490,7 @@ class _CustomCollector:
         return label_keys, label_rows, values
 
     # pylint: disable=no-self-use
-    def _check_value(self, value: int | float | str | Sequence) -> str:
+    def _check_value(self, value: float | str | Sequence) -> str:
         """Check the label value and return is appropriate representation"""
         if not isinstance(value, str):
             return dumps(value, default=str)

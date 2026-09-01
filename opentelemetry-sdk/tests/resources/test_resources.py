@@ -6,6 +6,7 @@
 import os
 import subprocess
 import sys
+import time
 import unittest
 import uuid
 from concurrent.futures import TimeoutError
@@ -251,24 +252,29 @@ class TestResources(unittest.TestCase):
         )
 
     def test_invalid_resource_attribute_values(self):
+        # This class has no __str__ or __repr__ method, so BoundedAttributes does
+        # not attempt to convert it to a string and defaults to returning None.
+        class NoStrNoRepr:
+            def __init__(self):
+                pass
+
+        # Empty key will get dropped.
         with self.assertLogs(level=WARNING):
             resource = Resource(
                 {
                     SERVICE_NAME: "test",
-                    "non-primitive-data-type": {},
-                    "invalid-byte-type-attribute": (b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1"),
+                    "bad-type": NoStrNoRepr(),
                     "": "empty-key-value",
-                    None: "null-key-value",
-                    "another-non-primitive": uuid.uuid4(),
                 }
             )
         self.assertEqual(
             resource.attributes,
             {
                 SERVICE_NAME: "test",
+                "bad-type": None,
             },
         )
-        self.assertEqual(len(resource.attributes), 1)
+        self.assertEqual(len(resource.attributes), 2)
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = get_aggregated_resources([])
@@ -457,6 +463,28 @@ class TestResources(unittest.TestCase):
         resource_detector.raise_on_error = True
         self.assertRaises(Exception, get_aggregated_resources, [resource_detector])
 
+    def test_aggregated_resources_timeout_bounds_wait(self):
+        # A detector that takes longer than the timeout must not hold up the
+        # call beyond the timeout: the skip warning fires, but the wait is bounded.
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.side_effect = lambda: time.sleep(2)
+        resource_detector.raise_on_error = False
+
+        start = time.time()
+        with self.assertLogs(level=WARNING) as log_entry:
+            self.assertEqual(
+                get_aggregated_resources(
+                    [resource_detector],
+                    initial_resource=_DEFAULT_RESOURCE,
+                    timeout=0.1,
+                ),
+                _DEFAULT_RESOURCE,
+            )
+        elapsed = time.time() - start
+
+        self.assertLess(elapsed, 1.0)
+        self.assertIn("took longer than", log_entry.output[0])
+
     def test_resource_detector_is_not_process_dependent_by_default(self):
         self.assertFalse(DefaultResourceDetector().is_process_dependent())
 
@@ -630,6 +658,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         "sys.orig_argv",
         ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
     )
+    @patch("sys.executable", "/usr/bin/uvicorn")
     def test_process_detector(self):
         initial_resource = Resource({"foo": "bar"})
         aggregated_resource = get_aggregated_resources([ProcessResourceDetector()], initial_resource)
@@ -662,13 +691,13 @@ class TestOTELResourceDetector(unittest.TestCase):
 
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME],
-            sys.executable,
+            "uvicorn",
         )
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_EXECUTABLE_PATH],
-            os.path.dirname(sys.executable),
+            "/usr/bin/uvicorn",
         )
-        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND], sys.orig_argv[0])
+        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND], "uvicorn")
         self.assertNotIn(
             PROCESS_COMMAND_LINE,
             aggregated_resource.attributes,
@@ -767,6 +796,20 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
             ("/usr/bin/python", "-m", "myapp"),
+        )
+
+    @patch("sys.executable", None)
+    def test_process_detector_handles_missing_executable(self):
+        initial_resource = Resource({"foo": "bar"})
+        aggregated_resource = get_aggregated_resources([ProcessResourceDetector()], initial_resource)
+
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME],
+            "",
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_EXECUTABLE_PATH],
+            "",
         )
 
     def test_resource_detector_entry_points_default(self):

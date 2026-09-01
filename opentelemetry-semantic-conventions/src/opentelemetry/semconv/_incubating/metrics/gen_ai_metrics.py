@@ -27,9 +27,7 @@ Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](h
 """
 
 
-def create_gen_ai_client_operation_time_per_output_chunk(
-    meter: Meter,
-) -> Histogram:
+def create_gen_ai_client_operation_time_per_output_chunk(meter: Meter) -> Histogram:
     """Time per output chunk, recorded for each chunk received after the first one, measured as the time elapsed from the end of the previous chunk to the end of the current chunk"""
     return meter.create_histogram(
         name=GEN_AI_CLIENT_OPERATION_TIME_PER_OUTPUT_CHUNK,
@@ -44,9 +42,7 @@ Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](h
 """
 
 
-def create_gen_ai_client_operation_time_to_first_chunk(
-    meter: Meter,
-) -> Histogram:
+def create_gen_ai_client_operation_time_to_first_chunk(meter: Meter) -> Histogram:
     """Time to receive the first chunk, measured from when the client issues the generation request to when the first chunk is received in the response stream"""
     return meter.create_histogram(
         name=GEN_AI_CLIENT_OPERATION_TIME_TO_FIRST_CHUNK,
