@@ -15,7 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
+          # zizmor: ignore[artipacked] Credentials are required by the branch pushes below.
+          persist-credentials: true
 
       - name: Install toml
         run: pip install toml
@@ -54,7 +55,6 @@ jobs:
 
       - name: Create release branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
           if [[ -z $PRERELEASE_VERSION ]]; then
@@ -79,9 +79,7 @@ jobs:
             exit 1
           fi
 
-          auth_header="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth_header}" \
-            push origin HEAD:$release_branch_name
+          git push origin HEAD:$release_branch_name
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
@@ -112,9 +110,7 @@ jobs:
           branch="otelbot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
 
           git commit -a -m "$message"
-          auth_header="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth_header}" \
-            push origin HEAD:$branch
+          git push origin HEAD:$branch
           pr_url=$(gh pr create --title "[$RELEASE_BRANCH_NAME] $message" \
                        --body "$message." \
                        --head $branch \
@@ -137,7 +133,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Install dependencies
         run: pip install toml towncrier
@@ -211,9 +208,7 @@ jobs:
           branch="otelbot/update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_NEXT_VERSION}"
 
           git commit -a -m "$message"
-          auth_header="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth_header}" \
-            push origin HEAD:$branch
+          git push origin HEAD:$branch
           pr_url=$(gh pr create --title "$message" \
                        --body "$body" \
                        --head $branch \

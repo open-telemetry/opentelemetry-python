@@ -23,9 +23,10 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
           # history is needed to run git cherry-pick below
           fetch-depth: 0
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -48,9 +49,7 @@ jobs:
           branch="otelbot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
           git cherry-pick $commit
-          auth_header="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth_header}" \
-            push origin HEAD:$branch
+          git push origin HEAD:$branch
           gh pr create --title "[$GITHUB_REF_NAME] $title" \
                        --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
                        --head $branch \
