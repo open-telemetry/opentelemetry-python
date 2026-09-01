@@ -253,7 +253,7 @@ class Resource:
         return self._attributes == other._attributes and self._schema_url == other._schema_url
 
     def __hash__(self) -> int:
-        return hash(f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}")
+        return hash(f"{dumps(self._attributes.copy(), sort_keys=True, default=_json_default)}|{self._schema_url}")
 
     def to_json(self, indent: int | None = 4) -> str:
         return dumps(
@@ -262,7 +262,21 @@ class Resource:
                 "schema_url": self._schema_url,
             },
             indent=indent,
+            default=_json_default,
         )
+
+
+def _json_default(value: object) -> str:
+    """Represent attribute values that `json` cannot encode natively.
+
+    `types.AnyValue` admits `bytes`, which `json.dumps` rejects. Rendering it
+    as hex keeps `to_json` readable and keeps `__hash__` working; `__eq__`
+    still distinguishes `b"\x01"` from the string `"01"`, so the resulting
+    hash collision is harmless.
+    """
+    if isinstance(value, (bytes, bytearray)):
+        return value.hex()
+    return str(value)
 
 
 _EMPTY_RESOURCE = Resource({})
