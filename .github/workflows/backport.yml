@@ -48,7 +48,9 @@ jobs:
           branch="otelbot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
           git cherry-pick $commit
-          git push origin HEAD:$branch
+          auth_header="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth_header}" \
+            push origin HEAD:$branch
           gh pr create --title "[$GITHUB_REF_NAME] $title" \
                        --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
                        --head $branch \

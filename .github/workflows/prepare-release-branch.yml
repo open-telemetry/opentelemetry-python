@@ -54,6 +54,7 @@ jobs:
 
       - name: Create release branch
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
           if [[ -z $PRERELEASE_VERSION ]]; then
@@ -78,7 +79,9 @@ jobs:
             exit 1
           fi
 
-          git push origin HEAD:$release_branch_name
+          auth_header="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth_header}" \
+            push origin HEAD:$release_branch_name
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
@@ -109,7 +112,9 @@ jobs:
           branch="otelbot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
 
           git commit -a -m "$message"
-          git push origin HEAD:$branch
+          auth_header="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth_header}" \
+            push origin HEAD:$branch
           pr_url=$(gh pr create --title "[$RELEASE_BRANCH_NAME] $message" \
                        --body "$message." \
                        --head $branch \
@@ -206,7 +211,9 @@ jobs:
           branch="otelbot/update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_NEXT_VERSION}"
 
           git commit -a -m "$message"
-          git push origin HEAD:$branch
+          auth_header="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic ${auth_header}" \
+            push origin HEAD:$branch
           pr_url=$(gh pr create --title "$message" \
                        --body "$body" \
                        --head $branch \
