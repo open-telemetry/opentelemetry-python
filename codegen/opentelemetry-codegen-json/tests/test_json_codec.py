@@ -149,9 +149,7 @@ def test_encode_float(value: float, expected: float | str) -> None:
         (None, 0.0),
     ],
 )
-def test_decode_float(
-    value: float | int | str | None, expected: float
-) -> None:
+def test_decode_float(value: float | int | str | None, expected: float) -> None:
     result = decode_float(value, "field")
     if math.isnan(expected):
         assert math.isnan(result)
@@ -188,9 +186,7 @@ def test_validate_type() -> None:
     validate_type(1, (int, str), "field")
     validate_type("s", (int, str), "field")
 
-    with pytest.raises(
-        TypeError, match="Field 'field' expected <class 'int'>, got str"
-    ):
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got str"):
         validate_type("s", int, "field")
 
     with pytest.raises(
@@ -223,9 +219,7 @@ def test_decode_enum(value: int | str, expected: _Color) -> None:
         ("NOT_A_COLOR", KeyError),
     ],
 )
-def test_decode_enum_errors(
-    value: Any, expected_error: type[Exception]
-) -> None:
+def test_decode_enum_errors(value: Any, expected_error: type[Exception]) -> None:
     with pytest.raises(expected_error):
         decode_enum(value, _Color, "field")
 

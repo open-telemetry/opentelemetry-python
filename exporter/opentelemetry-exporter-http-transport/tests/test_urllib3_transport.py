@@ -56,9 +56,7 @@ class TestUrllib3HTTPResult(unittest.TestCase):
     def test_text_raises_for_non_utf8_content(self):
         mock_response = MagicMock()
         mock_response.data = b"\xff\xfe"
-        result = Urllib3HTTPResult(
-            status_code=200, reason="OK", response=mock_response
-        )
+        result = Urllib3HTTPResult(status_code=200, reason="OK", response=mock_response)
         self.assertRaises(UnicodeDecodeError, result.text)
 
     @mocketize
@@ -124,9 +122,7 @@ class TestUrllib3HTTPResult(unittest.TestCase):
         headers.add("X-Multi", "value1")
         headers.add("X-Multi", "value2")
         mock_response.headers = headers
-        result = Urllib3HTTPResult(
-            status_code=200, reason="OK", response=mock_response
-        )
+        result = Urllib3HTTPResult(status_code=200, reason="OK", response=mock_response)
         self.assertEqual(result.headers()["X-Multi"], "value1, value2")
 
 
@@ -141,9 +137,7 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
         for status_code, reason in cases:
             with self.subTest(status_code=status_code):
                 with Mocketizer():
-                    Entry.single_register(
-                        Entry.POST, _TEST_URL, status=status_code
-                    )
+                    Entry.single_register(Entry.POST, _TEST_URL, status=status_code)
                     transport = Urllib3HTTPTransport()
                     result = transport.request("POST", _TEST_URL)
                     self.assertEqual(result.status_code, status_code)
@@ -187,9 +181,7 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
         for error, expected_is_connection_error in cases:
             with self.subTest(error_type=type(error).__name__):
                 transport = Urllib3HTTPTransport()
-                with patch.object(
-                    transport._pool, "request", side_effect=error
-                ):
+                with patch.object(transport._pool, "request", side_effect=error):
                     result = transport.request("POST", _TEST_URL)
                 self.assertIsNone(result.status_code)
                 self.assertIsNone(result.reason)
@@ -207,26 +199,20 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
             (urllib3.exceptions.MaxRetryError(None, "http://x"), True),
             (urllib3.exceptions.HTTPError("error"), False),
             (
-                urllib3.exceptions.ReadTimeoutError(
-                    None, "http://x", "timeout"
-                ),
+                urllib3.exceptions.ReadTimeoutError(None, "http://x", "timeout"),
                 False,
             ),
             (RuntimeError("error"), False),
             (ValueError("error"), False),
             (None, False),
         ]
-        name_resolution_error = getattr(
-            urllib3.exceptions, "NameResolutionError", None
-        )
+        name_resolution_error = getattr(urllib3.exceptions, "NameResolutionError", None)
         if name_resolution_error is not None:
             cases.append((name_resolution_error("host", None, "error"), True))
         transport = Urllib3HTTPTransport()
         for exception, expected in cases:
             with self.subTest(error_type=type(exception).__name__):
-                self.assertEqual(
-                    transport.is_connection_error(exception), expected
-                )
+                self.assertEqual(transport.is_connection_error(exception), expected)
 
     def test_request_passes_timeout(self):
         cases = [
@@ -237,9 +223,7 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
             with self.subTest(timeout=timeout):
                 transport = Urllib3HTTPTransport()
                 with patch.object(transport._pool, "request") as mock_request:
-                    mock_request.return_value = MagicMock(
-                        status=200, reason="OK"
-                    )
+                    mock_request.return_value = MagicMock(status=200, reason="OK")
                     transport.request("POST", _TEST_URL, timeout=timeout)
                 timeout_kwarg = mock_request.call_args.kwargs["timeout"]
                 if timeout is not None:

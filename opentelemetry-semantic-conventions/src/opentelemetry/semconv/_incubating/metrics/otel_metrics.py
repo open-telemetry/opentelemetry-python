@@ -48,9 +48,7 @@ def create_otel_sdk_exporter_log_inflight(meter: Meter) -> UpDownCounter:
     )
 
 
-OTEL_SDK_EXPORTER_METRIC_DATA_POINT_EXPORTED: Final = (
-    "otel.sdk.exporter.metric_data_point.exported"
-)
+OTEL_SDK_EXPORTER_METRIC_DATA_POINT_EXPORTED: Final = "otel.sdk.exporter.metric_data_point.exported"
 """
 The number of metric data points for which the export has finished, either successful or failed
 Instrument: counter
@@ -75,9 +73,7 @@ def create_otel_sdk_exporter_metric_data_point_exported(
     )
 
 
-OTEL_SDK_EXPORTER_METRIC_DATA_POINT_INFLIGHT: Final = (
-    "otel.sdk.exporter.metric_data_point.inflight"
-)
+OTEL_SDK_EXPORTER_METRIC_DATA_POINT_INFLIGHT: Final = "otel.sdk.exporter.metric_data_point.inflight"
 """
 The number of metric data points which were passed to the exporter, but that have not been exported yet (neither successful, nor failed)
 Instrument: updowncounter
@@ -98,9 +94,7 @@ def create_otel_sdk_exporter_metric_data_point_inflight(
     )
 
 
-OTEL_SDK_EXPORTER_OPERATION_DURATION: Final = (
-    "otel.sdk.exporter.operation.duration"
-)
+OTEL_SDK_EXPORTER_OPERATION_DURATION: Final = "otel.sdk.exporter.operation.duration"
 """
 The duration of exporting a batch of telemetry records
 Instrument: histogram
@@ -146,9 +140,7 @@ def create_otel_sdk_exporter_span_exported(meter: Meter) -> Counter:
     )
 
 
-OTEL_SDK_EXPORTER_SPAN_EXPORTED_COUNT: Final = (
-    "otel.sdk.exporter.span.exported.count"
-)
+OTEL_SDK_EXPORTER_SPAN_EXPORTED_COUNT: Final = "otel.sdk.exporter.span.exported.count"
 """
 Deprecated: Replaced by `otel.sdk.exporter.span.exported`.
 """
@@ -184,9 +176,7 @@ def create_otel_sdk_exporter_span_inflight(meter: Meter) -> UpDownCounter:
     )
 
 
-OTEL_SDK_EXPORTER_SPAN_INFLIGHT_COUNT: Final = (
-    "otel.sdk.exporter.span.inflight.count"
-)
+OTEL_SDK_EXPORTER_SPAN_INFLIGHT_COUNT: Final = "otel.sdk.exporter.span.inflight.count"
 """
 Deprecated: Replaced by `otel.sdk.exporter.span.inflight`.
 """
@@ -220,9 +210,7 @@ def create_otel_sdk_log_created(meter: Meter) -> Counter:
     )
 
 
-OTEL_SDK_METRIC_READER_COLLECTION_DURATION: Final = (
-    "otel.sdk.metric_reader.collection.duration"
-)
+OTEL_SDK_METRIC_READER_COLLECTION_DURATION: Final = "otel.sdk.metric_reader.collection.duration"
 """
 The duration of the collect operation of the metric reader
 Instrument: histogram
@@ -265,9 +253,7 @@ def create_otel_sdk_processor_log_processed(meter: Meter) -> Counter:
     )
 
 
-OTEL_SDK_PROCESSOR_LOG_QUEUE_CAPACITY: Final = (
-    "otel.sdk.processor.log.queue.capacity"
-)
+OTEL_SDK_PROCESSOR_LOG_QUEUE_CAPACITY: Final = "otel.sdk.processor.log.queue.capacity"
 """
 The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold
 Instrument: updowncounter
@@ -326,9 +312,7 @@ def create_otel_sdk_processor_span_processed(meter: Meter) -> Counter:
     )
 
 
-OTEL_SDK_PROCESSOR_SPAN_PROCESSED_COUNT: Final = (
-    "otel.sdk.processor.span.processed.count"
-)
+OTEL_SDK_PROCESSOR_SPAN_PROCESSED_COUNT: Final = "otel.sdk.processor.span.processed.count"
 """
 Deprecated: Replaced by `otel.sdk.processor.span.processed`.
 """
@@ -345,9 +329,7 @@ def create_otel_sdk_processor_span_processed_count(
     )
 
 
-OTEL_SDK_PROCESSOR_SPAN_QUEUE_CAPACITY: Final = (
-    "otel.sdk.processor.span.queue.capacity"
-)
+OTEL_SDK_PROCESSOR_SPAN_QUEUE_CAPACITY: Final = "otel.sdk.processor.span.queue.capacity"
 """
 The maximum number of spans the queue of a given instance of an SDK span processor can hold
 Instrument: updowncounter
@@ -367,9 +349,7 @@ def create_otel_sdk_processor_span_queue_capacity(
     )
 
 
-OTEL_SDK_PROCESSOR_SPAN_QUEUE_SIZE: Final = (
-    "otel.sdk.processor.span.queue.size"
-)
+OTEL_SDK_PROCESSOR_SPAN_QUEUE_SIZE: Final = "otel.sdk.processor.span.queue.size"
 """
 The number of spans in the queue of a given instance of an SDK span processor
 Instrument: updowncounter
@@ -422,6 +402,7 @@ OTEL_SDK_SPAN_LIVE: Final = "otel.sdk.span.live"
 The number of created spans with `recording=true` for which the end operation has not been called yet
 Instrument: updowncounter
 Unit: {span}
+Note: Non-recording spans are not counted, hence `otel.span.sampling_result` can only take values `RECORD_ONLY` and `RECORD_AND_SAMPLE`, not `DROP`.
 """
 
 

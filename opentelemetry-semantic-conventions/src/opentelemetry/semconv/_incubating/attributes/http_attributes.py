@@ -66,9 +66,7 @@ HTTP_REQUEST_CONTENT_LENGTH: Final = "http.request_content_length"
 Deprecated: Replaced by `http.request.header.content-length`.
 """
 
-HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED: Final = (
-    "http.request_content_length_uncompressed"
-)
+HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED: Final = "http.request_content_length_uncompressed"
 """
 Deprecated: Replaced by `http.request.body.size`.
 """
@@ -98,9 +96,7 @@ HTTP_RESPONSE_CONTENT_LENGTH: Final = "http.response_content_length"
 Deprecated: Replaced by `http.response.header.content-length`.
 """
 
-HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED: Final = (
-    "http.response_content_length_uncompressed"
-)
+HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED: Final = "http.response_content_length_uncompressed"
 """
 Deprecated: Replaced by `http.response.body.size`.
 """

@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: raise `ValueError` when `ExplicitBucketHistogramAggregation` boundaries are not strictly increasing or finite

@@ -47,9 +47,7 @@ class Client:
             scope.span.set_tag(tags.SPAN_KIND, tags.SPAN_KIND_RPC_CLIENT)
 
             message = {}
-            self.tracer.inject(
-                scope.span.context, opentracing.Format.TEXT_MAP, message
-            )
+            self.tracer.inject(scope.span.context, opentracing.Format.TEXT_MAP, message)
             self.queue.put(message)
 
         logger.info("Sent message from client")
@@ -69,9 +67,5 @@ class TestThreads(OpenTelemetryTestCase):
         await_until(lambda: len(self.tracer.finished_spans()) >= 2)
 
         spans = self.tracer.finished_spans()
-        self.assertIsNotNone(
-            get_one_by_tag(spans, tags.SPAN_KIND, tags.SPAN_KIND_RPC_SERVER)
-        )
-        self.assertIsNotNone(
-            get_one_by_tag(spans, tags.SPAN_KIND, tags.SPAN_KIND_RPC_CLIENT)
-        )
+        self.assertIsNotNone(get_one_by_tag(spans, tags.SPAN_KIND, tags.SPAN_KIND_RPC_SERVER))
+        self.assertIsNotNone(get_one_by_tag(spans, tags.SPAN_KIND, tags.SPAN_KIND_RPC_CLIENT))

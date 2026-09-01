@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: drop non-finite measurements (NaN and Inf) at the instrument level to prevent permanent aggregation poisoning

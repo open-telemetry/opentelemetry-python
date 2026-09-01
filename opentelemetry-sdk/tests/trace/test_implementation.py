@@ -22,9 +22,7 @@ class TestTracerImplementation(unittest.TestCase):
             self.assertNotEqual(span, INVALID_SPAN)
             self.assertIs(span.is_recording(), True)
             with tracer.start_span("test2") as span2:
-                self.assertNotEqual(
-                    span2.get_span_context(), INVALID_SPAN_CONTEXT
-                )
+                self.assertNotEqual(span2.get_span_context(), INVALID_SPAN_CONTEXT)
                 self.assertNotEqual(span2, INVALID_SPAN)
                 self.assertIs(span2.is_recording(), True)
 

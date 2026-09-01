@@ -7,6 +7,7 @@ from typing import Final
 CLOUD_ACCOUNT_ID: Final = "cloud.account.id"
 """
 The cloud account ID the resource is assigned to.
+Note: For Azure, this is the subscription ID.
 """
 
 CLOUD_AVAILABILITY_ZONE: Final = "cloud.availability_zone"

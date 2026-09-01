@@ -54,12 +54,8 @@ class TestOtlpProtoTestServer(unittest.TestCase):
     def tearDown(self):
         self.server.stop()
 
-    def _make_trace_provider(
-        self, service: str = "trace-svc", **exporter_kwargs
-    ) -> TracerProvider:
-        provider = TracerProvider(
-            resource=Resource.create({"service.name": service})
-        )
+    def _make_trace_provider(self, service: str = "trace-svc", **exporter_kwargs) -> TracerProvider:
+        provider = TracerProvider(resource=Resource.create({"service.name": service}))
         provider.add_span_processor(
             SimpleSpanProcessor(
                 OTLPSpanExporter(
@@ -88,12 +84,8 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         )
         return reader, provider
 
-    def _make_log_provider(
-        self, service: str = "log-svc", **exporter_kwargs
-    ) -> LoggerProvider:
-        provider = LoggerProvider(
-            resource=Resource.create({"service.name": service})
-        )
+    def _make_log_provider(self, service: str = "log-svc", **exporter_kwargs) -> LoggerProvider:
+        provider = LoggerProvider(resource=Resource.create({"service.name": service}))
         provider.add_log_record_processor(
             SimpleLogRecordProcessor(
                 OTLPLogExporter(
@@ -114,17 +106,11 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         tracer.start_span("baz").end()
 
         spans = self.server.get_spans(count=3, timeout=5.0)
-        self.assertEqual(
-            {recorded.span.name for recorded in spans}, {"foo", "bar", "baz"}
-        )
+        self.assertEqual({recorded.span.name for recorded in spans}, {"foo", "bar", "baz"})
         for recorded in spans:
             self.assertIsInstance(recorded, RecordedSpan)
             self.assertEqual(recorded.scope.name, "trace-scope")
-            svc = next(
-                a.value.string_value
-                for a in recorded.resource.attributes
-                if a.key == "service.name"
-            )
+            svc = next(a.value.string_value for a in recorded.resource.attributes if a.key == "service.name")
             self.assertEqual(svc, "trace-svc")
         provider.shutdown()
 
@@ -164,17 +150,11 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         reader.force_flush(timeout_millis=3000)
 
         metrics = self.server.get_metrics(count=2, timeout=5.0)
-        self.assertEqual(
-            {r.metric.name for r in metrics}, {"test.requests", "test.latency"}
-        )
+        self.assertEqual({r.metric.name for r in metrics}, {"test.requests", "test.latency"})
         for recorded in metrics:
             self.assertIsInstance(recorded, RecordedMetric)
             self.assertEqual(recorded.scope.name, "metrics-scope")
-            svc = next(
-                a.value.string_value
-                for a in recorded.resource.attributes
-                if a.key == "service.name"
-            )
+            svc = next(a.value.string_value for a in recorded.resource.attributes if a.key == "service.name")
             self.assertEqual(svc, "metrics-svc")
         provider.shutdown()
 
@@ -206,9 +186,7 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         provider = self._make_log_provider()
         logger = provider.get_logger("log-scope")
         logger.emit(body="first message", severity_number=SeverityNumber.WARN)
-        logger.emit(
-            body="second message", severity_number=SeverityNumber.ERROR
-        )
+        logger.emit(body="second message", severity_number=SeverityNumber.ERROR)
 
         log_records = self.server.get_log_records(count=2, timeout=5.0)
         self.assertEqual(
@@ -218,11 +196,7 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         for recorded in log_records:
             self.assertIsInstance(recorded, RecordedLogRecord)
             self.assertEqual(recorded.scope.name, "log-scope")
-            svc = next(
-                a.value.string_value
-                for a in recorded.resource.attributes
-                if a.key == "service.name"
-            )
+            svc = next(a.value.string_value for a in recorded.resource.attributes if a.key == "service.name")
             self.assertEqual(svc, "log-svc")
         provider.shutdown()
 
@@ -248,32 +222,20 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         provider.shutdown()
 
     def test_compression(self):
-        trace_provider = self._make_trace_provider(
-            compression=Compression.Gzip
-        )
-        metrics_reader, metrics_provider = self._make_metrics_provider(
-            compression=Compression.Gzip
-        )
+        trace_provider = self._make_trace_provider(compression=Compression.Gzip)
+        metrics_reader, metrics_provider = self._make_metrics_provider(compression=Compression.Gzip)
         log_provider = self._make_log_provider(compression=Compression.Gzip)
 
         trace_provider.get_tracer("s").start_span("gzip-span").end()
-        self.assertEqual(
-            self.server.get_span(timeout=5.0).span.name, "gzip-span"
-        )
+        self.assertEqual(self.server.get_span(timeout=5.0).span.name, "gzip-span")
 
         metrics_provider.get_meter("s").create_counter("gzip.counter").add(1)
         metrics_reader.force_flush(timeout_millis=3000)
-        self.assertEqual(
-            self.server.get_metric(timeout=5.0).metric.name, "gzip.counter"
-        )
+        self.assertEqual(self.server.get_metric(timeout=5.0).metric.name, "gzip.counter")
 
-        log_provider.get_logger("s").emit(
-            body="gzip log", severity_number=SeverityNumber.INFO
-        )
+        log_provider.get_logger("s").emit(body="gzip log", severity_number=SeverityNumber.INFO)
         self.assertEqual(
-            self.server.get_log_record(
-                timeout=5.0
-            ).log_record.body.string_value,
+            self.server.get_log_record(timeout=5.0).log_record.body.string_value,
             "gzip log",
         )
 
@@ -284,24 +246,14 @@ class TestOtlpProtoTestServer(unittest.TestCase):
     def test_endpoint_urls(self):
         port = self.server.port
         self.assertGreater(port, 0)
-        self.assertEqual(
-            self.server.traces_endpoint, f"http://127.0.0.1:{port}/v1/traces"
-        )
-        self.assertEqual(
-            self.server.metrics_endpoint, f"http://127.0.0.1:{port}/v1/metrics"
-        )
-        self.assertEqual(
-            self.server.logs_endpoint, f"http://127.0.0.1:{port}/v1/logs"
-        )
+        self.assertEqual(self.server.traces_endpoint, f"http://127.0.0.1:{port}/v1/traces")
+        self.assertEqual(self.server.metrics_endpoint, f"http://127.0.0.1:{port}/v1/metrics")
+        self.assertEqual(self.server.logs_endpoint, f"http://127.0.0.1:{port}/v1/logs")
 
     def test_context_manager(self):
         with OtlpProtoTestServer() as srv:
             provider = TracerProvider()
-            provider.add_span_processor(
-                SimpleSpanProcessor(
-                    OTLPSpanExporter(endpoint=srv.traces_endpoint, timeout=1)
-                )
-            )
+            provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter(endpoint=srv.traces_endpoint, timeout=1)))
             provider.get_tracer("s").start_span("ctx-span").end()
             self.assertEqual(srv.get_span(timeout=5.0).span.name, "ctx-span")
             provider.shutdown()
@@ -310,15 +262,9 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         with OtlpProtoTestServer(base_path="/custom") as srv:
             self.assertTrue(srv.traces_endpoint.endswith("/custom/v1/traces"))
             provider = TracerProvider()
-            provider.add_span_processor(
-                SimpleSpanProcessor(
-                    OTLPSpanExporter(endpoint=srv.traces_endpoint, timeout=1)
-                )
-            )
+            provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter(endpoint=srv.traces_endpoint, timeout=1)))
             provider.get_tracer("s").start_span("prefixed-span").end()
-            self.assertEqual(
-                srv.get_span(timeout=5.0).span.name, "prefixed-span"
-            )
+            self.assertEqual(srv.get_span(timeout=5.0).span.name, "prefixed-span")
             provider.shutdown()
 
     def test_signal_routing(self):
@@ -329,20 +275,12 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         trace_provider.get_tracer("s").start_span("routed-span").end()
         metrics_provider.get_meter("s").create_counter("routed.counter").add(1)
         metrics_reader.force_flush(timeout_millis=3000)
-        log_provider.get_logger("s").emit(
-            body="routed log", severity_number=SeverityNumber.INFO
-        )
+        log_provider.get_logger("s").emit(body="routed log", severity_number=SeverityNumber.INFO)
 
+        self.assertEqual(self.server.get_span(timeout=5.0).span.name, "routed-span")
+        self.assertEqual(self.server.get_metric(timeout=5.0).metric.name, "routed.counter")
         self.assertEqual(
-            self.server.get_span(timeout=5.0).span.name, "routed-span"
-        )
-        self.assertEqual(
-            self.server.get_metric(timeout=5.0).metric.name, "routed.counter"
-        )
-        self.assertEqual(
-            self.server.get_log_record(
-                timeout=5.0
-            ).log_record.body.string_value,
+            self.server.get_log_record(timeout=5.0).log_record.body.string_value,
             "routed log",
         )
 
@@ -360,9 +298,7 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_missing_proto_raises_import_error(self):
-        with unittest.mock.patch.dict(
-            "sys.modules", {"opentelemetry.proto": None}
-        ):
+        with unittest.mock.patch.dict("sys.modules", {"opentelemetry.proto": None}):
             with self.assertRaises(ImportError) as cm:
                 OtlpProtoTestServer()
         self.assertIn("opentelemetry-proto", str(cm.exception))

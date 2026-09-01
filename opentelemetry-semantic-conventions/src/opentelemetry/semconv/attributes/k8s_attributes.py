@@ -82,9 +82,9 @@ K8S_DAEMONSET_ANNOTATION_TEMPLATE: Final = "k8s.daemonset.annotation"
 The annotation placed on the DaemonSet, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
 Note: Examples:
 
-- A label `replicas` with value `1` SHOULD be recorded
+- An annotation `replicas` with value `1` SHOULD be recorded
   as the `k8s.daemonset.annotation.replicas` attribute with value `"1"`.
-- A label `data` with empty string value SHOULD be recorded as
+- An annotation `data` with empty string value SHOULD be recorded as
   the `k8s.daemonset.annotation.data` attribute with value `""`.
 """
 
@@ -95,7 +95,7 @@ Note: Examples:
 
 - A label `app` with value `guestbook` SHOULD be recorded
   as the `k8s.daemonset.label.app` attribute with value `"guestbook"`.
-- A label `data` with empty string value SHOULD be recorded as
+- A label `injected` with empty string value SHOULD be recorded as
   the `k8s.daemonset.label.injected` attribute with value `""`.
 """
 
@@ -114,9 +114,9 @@ K8S_DEPLOYMENT_ANNOTATION_TEMPLATE: Final = "k8s.deployment.annotation"
 The annotation placed on the Deployment, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
 Note: Examples:
 
-- A label `replicas` with value `1` SHOULD be recorded
+- An annotation `replicas` with value `1` SHOULD be recorded
   as the `k8s.deployment.annotation.replicas` attribute with value `"1"`.
-- A label `data` with empty string value SHOULD be recorded as
+- An annotation `data` with empty string value SHOULD be recorded as
   the `k8s.deployment.annotation.data` attribute with value `""`.
 """
 
@@ -125,7 +125,7 @@ K8S_DEPLOYMENT_LABEL_TEMPLATE: Final = "k8s.deployment.label"
 The label placed on the Deployment, the `<key>` being the label name, the value being the label value, even if the value is empty.
 Note: Examples:
 
-- A label `replicas` with value `0` SHOULD be recorded
+- A label `app` with value `guestbook` SHOULD be recorded
   as the `k8s.deployment.label.app` attribute with value `"guestbook"`.
 - A label `injected` with empty string value SHOULD be recorded as
   the `k8s.deployment.label.injected` attribute with value `""`.
@@ -146,9 +146,9 @@ K8S_JOB_ANNOTATION_TEMPLATE: Final = "k8s.job.annotation"
 The annotation placed on the Job, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
 Note: Examples:
 
-- A label `number` with value `1` SHOULD be recorded
+- An annotation `number` with value `1` SHOULD be recorded
   as the `k8s.job.annotation.number` attribute with value `"1"`.
-- A label `data` with empty string value SHOULD be recorded as
+- An annotation `data` with empty string value SHOULD be recorded as
   the `k8s.job.annotation.data` attribute with value `""`.
 """
 
@@ -159,7 +159,7 @@ Note: Examples:
 
 - A label `jobtype` with value `ci` SHOULD be recorded
   as the `k8s.job.label.jobtype` attribute with value `"ci"`.
-- A label `data` with empty string value SHOULD be recorded as
+- A label `automated` with empty string value SHOULD be recorded as
   the `k8s.job.label.automated` attribute with value `""`.
 """
 
@@ -178,9 +178,9 @@ K8S_NAMESPACE_ANNOTATION_TEMPLATE: Final = "k8s.namespace.annotation"
 The annotation placed on the Namespace, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
 Note: Examples:
 
-- A label `ttl` with value `0` SHOULD be recorded
+- An annotation `ttl` with value `0` SHOULD be recorded
   as the `k8s.namespace.annotation.ttl` attribute with value `"0"`.
-- A label `data` with empty string value SHOULD be recorded as
+- An annotation `data` with empty string value SHOULD be recorded as
   the `k8s.namespace.annotation.data` attribute with value `""`.
 """
 
@@ -302,9 +302,9 @@ K8S_REPLICASET_ANNOTATION_TEMPLATE: Final = "k8s.replicaset.annotation"
 The annotation placed on the ReplicaSet, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
 Note: Examples:
 
-- A label `replicas` with value `0` SHOULD be recorded
+- An annotation `replicas` with value `0` SHOULD be recorded
   as the `k8s.replicaset.annotation.replicas` attribute with value `"0"`.
-- A label `data` with empty string value SHOULD be recorded as
+- An annotation `data` with empty string value SHOULD be recorded as
   the `k8s.replicaset.annotation.data` attribute with value `""`.
 """
 
@@ -334,9 +334,9 @@ K8S_STATEFULSET_ANNOTATION_TEMPLATE: Final = "k8s.statefulset.annotation"
 The annotation placed on the StatefulSet, the `<key>` being the annotation name, the value being the annotation value, even if the value is empty.
 Note: Examples:
 
-- A label `replicas` with value `1` SHOULD be recorded
+- An annotation `replicas` with value `1` SHOULD be recorded
   as the `k8s.statefulset.annotation.replicas` attribute with value `"1"`.
-- A label `data` with empty string value SHOULD be recorded as
+- An annotation `data` with empty string value SHOULD be recorded as
   the `k8s.statefulset.annotation.data` attribute with value `""`.
 """
 
@@ -345,7 +345,7 @@ K8S_STATEFULSET_LABEL_TEMPLATE: Final = "k8s.statefulset.label"
 The label placed on the StatefulSet, the `<key>` being the label name, the value being the label value, even if the value is empty.
 Note: Examples:
 
-- A label `replicas` with value `0` SHOULD be recorded
+- A label `app` with value `guestbook` SHOULD be recorded
   as the `k8s.statefulset.label.app` attribute with value `"guestbook"`.
 - A label `injected` with empty string value SHOULD be recorded as
   the `k8s.statefulset.label.injected` attribute with value `""`.

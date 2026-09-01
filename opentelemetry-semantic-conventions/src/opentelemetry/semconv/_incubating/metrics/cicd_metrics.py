@@ -81,7 +81,7 @@ CICD_WORKER_COUNT: Final = "cicd.worker.count"
 """
 The number of workers on the CI/CD system by state
 Instrument: updowncounter
-Unit: {count}
+Unit: {worker}
 """
 
 
@@ -90,5 +90,5 @@ def create_cicd_worker_count(meter: Meter) -> UpDownCounter:
     return meter.create_up_down_counter(
         name=CICD_WORKER_COUNT,
         description="The number of workers on the CI/CD system by state.",
-        unit="{count}",
+        unit="{worker}",
     )
