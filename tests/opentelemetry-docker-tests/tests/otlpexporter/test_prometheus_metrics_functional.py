@@ -108,10 +108,7 @@ def _data_points(
 
 
 def _has_recorded_value(recorded: RecordedMetric) -> bool:
-    return any(
-        not (dp.flags & _NO_RECORDED_VALUE_FLAG)
-        for dp in _data_points(recorded.metric)
-    )
+    return any(not (dp.flags & _NO_RECORDED_VALUE_FLAG) for dp in _data_points(recorded.metric))
 
 
 def _wait_for_metric_matching(
@@ -125,26 +122,18 @@ def _wait_for_metric_matching(
     while True:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise TimeoutError(
-                f"No matching metric within {timeout}s, saw names={seen!r}"
-            )
+            raise TimeoutError(f"No matching metric within {timeout}s, saw names={seen!r}")
         try:
             recorded = server.get_metric(timeout=remaining)
         except TimeoutError:
-            raise TimeoutError(
-                f"No matching metric within {timeout}s, saw names={seen!r}"
-            ) from None
+            raise TimeoutError(f"No matching metric within {timeout}s, saw names={seen!r}") from None
         if predicate(recorded) and _has_recorded_value(recorded):
             return recorded
         seen.append(recorded.metric.name)
 
 
-def _wait_for_named_metric(
-    server: OtlpProtoTestServer, name: str
-) -> RecordedMetric:
-    recorded = _wait_for_metric_matching(
-        server, lambda r: r.metric.name == name
-    )
+def _wait_for_named_metric(server: OtlpProtoTestServer, name: str) -> RecordedMetric:
+    recorded = _wait_for_metric_matching(server, lambda r: r.metric.name == name)
     assert recorded.metric.name == name
     return recorded
 
@@ -176,9 +165,7 @@ class TestPrometheusMetricsExporter:
         registry: CollectorRegistry,
         reader: PrometheusMetricReader,
     ) -> Iterator[None]:
-        httpd, _thread = start_http_server(
-            port=_PROMETHEUS_PORT, addr="0.0.0.0", registry=registry
-        )
+        httpd, _thread = start_http_server(port=_PROMETHEUS_PORT, addr="0.0.0.0", registry=registry)
         try:
             yield
         finally:
@@ -221,9 +208,7 @@ class TestPrometheusMetricsExporter:
         counter.add(3, {"status": "ok"})
         counter.add(7, {"status": "ok"})
 
-        recorded = _wait_for_named_metric(
-            server, config.expected_name("prom_counter", is_counter=True)
-        )
+        recorded = _wait_for_named_metric(server, config.expected_name("prom_counter", is_counter=True))
         assert recorded.metric.HasField("sum")
         sum_ = recorded.metric.sum
         assert sum_.is_monotonic
@@ -243,9 +228,7 @@ class TestPrometheusMetricsExporter:
         counter.add(10)
         counter.add(-3)
 
-        recorded = _wait_for_named_metric(
-            server, config.expected_name("prom_updown")
-        )
+        recorded = _wait_for_named_metric(server, config.expected_name("prom_updown"))
         # A cumulative non-monotonic sum is exported as a Prometheus gauge.
         assert recorded.metric.HasField("gauge")
         assert len(recorded.metric.gauge.data_points) == 1
@@ -262,9 +245,7 @@ class TestPrometheusMetricsExporter:
         gauge = meter.create_gauge("prom_gauge")
         gauge.set(42, {"status": "active"})
 
-        recorded = _wait_for_named_metric(
-            server, config.expected_name("prom_gauge")
-        )
+        recorded = _wait_for_named_metric(server, config.expected_name("prom_gauge"))
         assert recorded.metric.HasField("gauge")
         assert len(recorded.metric.gauge.data_points) == 1
         (data_point,) = recorded.metric.gauge.data_points
@@ -282,9 +263,7 @@ class TestPrometheusMetricsExporter:
         histogram.record(15)
         histogram.record(150)
 
-        recorded = _wait_for_named_metric(
-            server, config.expected_name("prom_histogram")
-        )
+        recorded = _wait_for_named_metric(server, config.expected_name("prom_histogram"))
         assert recorded.metric.HasField("histogram")
         assert recorded.metric.histogram.aggregation_temporality == _CUMULATIVE
         assert len(recorded.metric.histogram.data_points) == 1
@@ -322,9 +301,7 @@ class TestPrometheusMetricsExporter:
         counter = meter.create_counter("prom_attrs")
         counter.add(1, {"str_key": "hello", "int_key": 42})
 
-        recorded = _wait_for_named_metric(
-            server, config.expected_name("prom_attrs", is_counter=True)
-        )
+        recorded = _wait_for_named_metric(server, config.expected_name("prom_attrs", is_counter=True))
         (data_point,) = recorded.metric.sum.data_points
         # Prometheus labels are strings, so integer attributes roundtrip as text.
         assert _attrs_to_dict(data_point.attributes) == {
@@ -341,9 +318,7 @@ class TestPrometheusMetricsExporter:
         counter = meter.create_counter("prom_target")
         counter.add(1)
 
-        recorded = _wait_for_named_metric(
-            server, config.expected_name("prom_target", is_counter=True)
-        )
+        recorded = _wait_for_named_metric(server, config.expected_name("prom_target", is_counter=True))
         resource_attrs = _attrs_to_dict(recorded.resource.attributes)
         # The resource's SDK/service attributes reach the receiver only via the
         # target_info metric
@@ -364,9 +339,7 @@ class TestPrometheusMetricsExporter:
         counter = scoped_meter.create_counter("prom_scope")
         counter.add(1)
 
-        recorded = _wait_for_named_metric(
-            server, config.expected_name("prom_scope", is_counter=True)
-        )
+        recorded = _wait_for_named_metric(server, config.expected_name("prom_scope", is_counter=True))
         if config.scope_info_enabled:
             assert recorded.scope.name == "test-scope"
             assert recorded.scope.version == "1.2.3"
@@ -388,9 +361,7 @@ class TestPrometheusMetricsExporter:
         counter = scoped_meter.create_counter("prom_scope_attrs")
         counter.add(1)
 
-        recorded = _wait_for_named_metric(
-            server, config.expected_name("prom_scope_attrs", is_counter=True)
-        )
+        recorded = _wait_for_named_metric(server, config.expected_name("prom_scope_attrs", is_counter=True))
         scope_attrs = _attrs_to_dict(recorded.scope.attributes)
         if config.scope_info_enabled:
             assert recorded.scope.name == "attr-scope"

@@ -57,9 +57,7 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         self.assertIsInstance(_logs.get_logger_provider(), TestProvider)
 
         # logger provider now returns real instance
-        self.assertIsInstance(
-            _logs.get_logger_provider().get_logger("fresh"), LoggerTest
-        )
+        self.assertIsInstance(_logs.get_logger_provider().get_logger("fresh"), LoggerTest)
 
         # references to the old provider still work but return real logger now
         real_logger = provider.get_logger("proxy-test")

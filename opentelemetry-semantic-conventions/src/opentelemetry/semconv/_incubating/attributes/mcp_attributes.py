@@ -47,9 +47,7 @@ class McpMethodNameValues(Enum):
     """Request to list resource templates available on server."""
     RESOURCES_READ = "resources/read"
     """Request to read a resource."""
-    NOTIFICATIONS_RESOURCES_LIST_CHANGED = (
-        "notifications/resources/list_changed"
-    )
+    NOTIFICATIONS_RESOURCES_LIST_CHANGED = "notifications/resources/list_changed"
     """Notification indicating that the list of resources has changed."""
     RESOURCES_SUBSCRIBE = "resources/subscribe"
     """Request to subscribe to a resource."""

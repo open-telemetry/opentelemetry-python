@@ -86,20 +86,13 @@ class OTLPSpanExporter(SpanExporter):
         )
         self._client = _OTLPHTTPClient(
             transport=transport,
-            endpoint=endpoint
-            or _resolve_endpoint(
-                OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, _DEFAULT_TRACES_EXPORT_PATH
-            ),
+            endpoint=endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, _DEFAULT_TRACES_EXPORT_PATH),
             kind="spans",
-            timeout=timeout
-            if timeout is not None
-            else _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT),
+            timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT),
             compression=compression
             if compression is not None
             else _resolve_compression(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION),
-            headers=_resolve_headers(
-                headers, OTEL_EXPORTER_OTLP_TRACES_HEADERS
-            ),
+            headers=_resolve_headers(headers, OTEL_EXPORTER_OTLP_TRACES_HEADERS),
             logger=_logger,
         )
         self._shutdown = False
@@ -115,11 +108,7 @@ class OTLPSpanExporter(SpanExporter):
             _logger.error("Failed to encode spans: %s", error)
             return SpanExportResult.FAILURE
         export_result = self._client.export(body)
-        return (
-            SpanExportResult.SUCCESS
-            if export_result.success
-            else SpanExportResult.FAILURE
-        )
+        return SpanExportResult.SUCCESS if export_result.success else SpanExportResult.FAILURE
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:

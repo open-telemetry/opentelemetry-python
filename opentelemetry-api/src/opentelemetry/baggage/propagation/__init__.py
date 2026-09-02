@@ -50,20 +50,14 @@ def _apply_baggage_limits(
     Logs warnings when entries are dropped.
     """
     length = 0
-    for index, entry in enumerate(
-        _filter_valid_entries(entries, max_pair_length)
-    ):
+    for index, entry in enumerate(_filter_valid_entries(entries, max_pair_length)):
         if index >= max_pairs:
-            _logger.warning(
-                "Baggage exceeded the maximum number of list-members"
-            )
+            _logger.warning("Baggage exceeded the maximum number of list-members")
             return
 
         length += (1 if index > 0 else 0) + len(entry)
         if length > max_header_length:
-            _logger.warning(
-                "Baggage exceeded the maximum number of bytes per baggage-string"
-            )
+            _logger.warning("Baggage exceeded the maximum number of bytes per baggage-string")
             return
         yield entry
 
@@ -91,9 +85,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         if context is None:
             context = get_current()
 
-        header = _extract_first_element(
-            getter.get(carrier, self._BAGGAGE_HEADER_NAME)
-        )
+        header = _extract_first_element(getter.get(carrier, self._BAGGAGE_HEADER_NAME))
 
         if not header:
             return context
@@ -116,9 +108,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             try:
                 name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-exception-caught
-                _logger.warning(
-                    "Baggage list-member `%s` doesn't match the format", entry
-                )
+                _logger.warning("Baggage list-member `%s` doesn't match the format", entry)
                 continue
 
             if not _is_valid_pair(name, value):

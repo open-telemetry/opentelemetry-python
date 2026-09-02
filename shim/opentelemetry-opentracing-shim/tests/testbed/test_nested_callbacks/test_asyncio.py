@@ -40,9 +40,7 @@ class TestAsyncio(OpenTelemetryTestCase):
         self.assertEqual(spans[0].name, "one")
 
         for idx in range(1, 4):
-            self.assertEqual(
-                spans[0].attributes.get(f"key{idx}", None), str(idx)
-            )
+            self.assertEqual(spans[0].attributes.get(f"key{idx}", None), str(idx))
 
     def submit(self):
         span = self.tracer.scope_manager.active.span

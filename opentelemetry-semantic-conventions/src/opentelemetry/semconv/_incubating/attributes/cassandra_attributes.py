@@ -29,9 +29,7 @@ CASSANDRA_QUERY_IDEMPOTENT: Final = "cassandra.query.idempotent"
 Whether or not the query is idempotent.
 """
 
-CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = (
-    "cassandra.speculative_execution.count"
-)
+CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = "cassandra.speculative_execution.count"
 """
 The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
 """
