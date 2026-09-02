@@ -75,24 +75,18 @@ def _point_value(scope_metrics: ScopeMetrics, metric_name: str):
 
 
 class _FakeProducer(MetricProducer):
-    def __init__(
-        self, scope_name: str = "fake-producer", value: int = 7
-    ) -> None:
+    def __init__(self, scope_name: str = "fake-producer", value: int = 7) -> None:
         self.produce_calls = 0
         self._scope_name = scope_name
         self._value = value
 
-    def produce(
-        self, timeout_millis: float = 10_000
-    ) -> Iterable[ScopeMetrics]:
+    def produce(self, timeout_millis: float = 10_000) -> Iterable[ScopeMetrics]:
         self.produce_calls += 1
         return [_make_scope_metrics(self._scope_name, self._value)]
 
 
 class _FailingProducer(MetricProducer):
-    def produce(
-        self, timeout_millis: float = 10_000
-    ) -> Iterable[ScopeMetrics]:
+    def produce(self, timeout_millis: float = 10_000) -> Iterable[ScopeMetrics]:
         raise RuntimeError("produce failed")
 
 
@@ -102,9 +96,7 @@ class _ClockAdvancingProducer(MetricProducer):
         self._advance_ns = advance_ns
         self.produce_calls = 0
 
-    def produce(
-        self, timeout_millis: float = 10_000
-    ) -> Iterable[ScopeMetrics]:
+    def produce(self, timeout_millis: float = 10_000) -> Iterable[ScopeMetrics]:
         self.produce_calls += 1
         self._clock[0] += self._advance_ns
         return [_make_scope_metrics("slow-producer")]
@@ -128,23 +120,15 @@ class TestMetricProducer(TestCase):
         self.assertEqual(len(metrics_data.resource_metrics), 1)
         resource_metrics = metrics_data.resource_metrics[0]
         self.assertIs(resource_metrics.resource, resource)
-        self.assertEqual(
-            resource_metrics.resource.attributes["service.name"], "test"
-        )
-        self.assertEqual(
-            _get_scope_names(metrics_data), {"sdk-scope", "fake-producer"}
-        )
+        self.assertEqual(resource_metrics.resource.attributes["service.name"], "test")
+        self.assertEqual(_get_scope_names(metrics_data), {"sdk-scope", "fake-producer"})
 
         self.assertEqual(
-            _point_value(
-                _find_scope(metrics_data, "sdk-scope"), "sdk.counter"
-            ),
+            _point_value(_find_scope(metrics_data, "sdk-scope"), "sdk.counter"),
             1,
         )
         self.assertEqual(
-            _point_value(
-                _find_scope(metrics_data, "fake-producer"), "produced.metric"
-            ),
+            _point_value(_find_scope(metrics_data, "fake-producer"), "produced.metric"),
             42,
         )
 
@@ -159,14 +143,10 @@ class TestMetricProducer(TestCase):
         self.assertEqual(len(metrics_data.resource_metrics), 1)
         resource_metrics = metrics_data.resource_metrics[0]
         self.assertIs(resource_metrics.resource, resource)
-        self.assertEqual(
-            resource_metrics.resource.attributes["service.name"], "test"
-        )
+        self.assertEqual(resource_metrics.resource.attributes["service.name"], "test")
         self.assertEqual(_get_scope_names(metrics_data), {"fake-producer"})
         self.assertEqual(
-            _point_value(
-                _find_scope(metrics_data, "fake-producer"), "produced.metric"
-            ),
+            _point_value(_find_scope(metrics_data, "fake-producer"), "produced.metric"),
             13,
         )
 
@@ -182,12 +162,8 @@ class TestMetricProducer(TestCase):
         metrics_data = reader.get_metrics_data()
 
         self.assertEqual(_get_scope_names(metrics_data), {"p1", "p2"})
-        self.assertEqual(
-            _point_value(_find_scope(metrics_data, "p1"), "produced.metric"), 1
-        )
-        self.assertEqual(
-            _point_value(_find_scope(metrics_data, "p2"), "produced.metric"), 2
-        )
+        self.assertEqual(_point_value(_find_scope(metrics_data, "p1"), "produced.metric"), 1)
+        self.assertEqual(_point_value(_find_scope(metrics_data, "p2"), "produced.metric"), 2)
 
     def test_no_producers(self):
         reader = InMemoryMetricReader()
@@ -202,9 +178,7 @@ class TestMetricProducer(TestCase):
     def test_failing_producer_is_isolated(self):
         resource = Resource.create({})
         good = _FakeProducer("good", value=99)
-        reader = InMemoryMetricReader(
-            metric_producers=[_FailingProducer(), good]
-        )
+        reader = InMemoryMetricReader(metric_producers=[_FailingProducer(), good])
         provider = MeterProvider(metric_readers=[reader], resource=resource)
         provider.get_meter("sdk-scope").create_counter("sdk.counter").add(1)
 
@@ -214,20 +188,14 @@ class TestMetricProducer(TestCase):
         self.assertEqual(_get_scope_names(metrics_data), {"sdk-scope", "good"})
         self.assertEqual(good.produce_calls, 1)
         self.assertEqual(
-            _point_value(
-                _find_scope(metrics_data, "sdk-scope"), "sdk.counter"
-            ),
+            _point_value(_find_scope(metrics_data, "sdk-scope"), "sdk.counter"),
             1,
         )
         self.assertEqual(
             _point_value(_find_scope(metrics_data, "good"), "produced.metric"),
             99,
         )
-        self.assertTrue(
-            any(
-                "failed to produce metrics" in message for message in cm.output
-            )
-        )
+        self.assertTrue(any("failed to produce metrics" in message for message in cm.output))
 
     # pylint: disable-next=no-self-use
     def test_producer_receives_remaining_timeout_budget(self):
@@ -236,9 +204,7 @@ class TestMetricProducer(TestCase):
         MeterProvider(metric_readers=[reader])
 
         # Freeze the clock so the producer receives exactly the full budget.
-        with patch.object(
-            producer, "produce", wraps=producer.produce
-        ) as produce_mock:
+        with patch.object(producer, "produce", wraps=producer.produce) as produce_mock:
             with patch(_TIME_NS, lambda: 0):
                 reader.collect(timeout_millis=5_000)
 
@@ -260,11 +226,7 @@ class TestMetricProducer(TestCase):
         self.assertEqual(never.produce_calls, 0)
         self.assertIn("slow-producer", _get_scope_names(metrics_data))
         self.assertEqual(
-            _point_value(
-                _find_scope(metrics_data, "slow-producer"), "produced.metric"
-            ),
+            _point_value(_find_scope(metrics_data, "slow-producer"), "produced.metric"),
             7,
         )
-        self.assertTrue(
-            any("Timed out collecting" in message for message in cm.output)
-        )
+        self.assertTrue(any("Timed out collecting" in message for message in cm.output))

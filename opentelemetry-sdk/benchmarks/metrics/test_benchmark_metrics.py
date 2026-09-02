@@ -81,16 +81,12 @@ def num_meter_configurator_rules(request):
 
 
 # pylint: disable=protected-access,redefined-outer-name
-def test_counter_add_with_meter_configurator_rules(
-    benchmark, num_meter_configurator_rules
-):
+def test_counter_add_with_meter_configurator_rules(benchmark, num_meter_configurator_rules):
     def benchmark_counter_add():
         counter_cumulative.add(1, {})
 
     if num_meter_configurator_rules is None:
-        provider_reader_cumulative._set_meter_configurator(
-            meter_configurator=_disable_meter_configurator
-        )
+        provider_reader_cumulative._set_meter_configurator(meter_configurator=_disable_meter_configurator)
     else:
 
         def meter_configurator(meter_scope):
@@ -105,11 +101,7 @@ def test_counter_add_with_meter_configurator_rules(
                 default_config=_MeterConfig(is_enabled=True),
             )(meter_scope)
 
-        provider_reader_cumulative._set_meter_configurator(
-            meter_configurator=meter_configurator
-        )
+        provider_reader_cumulative._set_meter_configurator(meter_configurator=meter_configurator)
 
     benchmark(benchmark_counter_add)
-    provider_reader_cumulative._set_meter_configurator(
-        meter_configurator=_default_meter_configurator
-    )
+    provider_reader_cumulative._set_meter_configurator(meter_configurator=_default_meter_configurator)

@@ -24,13 +24,7 @@ class Test_Providers(TestCase):  # pylint: disable=invalid-name
             **{
                 "side_effect": [
                     [
-                        Mock(
-                            **{
-                                "load.return_value": Mock(
-                                    **{"return_value": "a"}
-                                )
-                            }
-                        ),
+                        Mock(**{"load.return_value": Mock(**{"return_value": "a"})}),
                     ],
                 ]
             }

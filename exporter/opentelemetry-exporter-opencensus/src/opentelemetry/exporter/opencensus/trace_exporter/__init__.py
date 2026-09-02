@@ -49,9 +49,7 @@ class OpenCensusSpanExporter(SpanExporter):
         self.endpoint = endpoint
         if client is None:
             self.channel = grpc.insecure_channel(self.endpoint)
-            self.client = trace_service_pb2_grpc.TraceServiceStub(
-                channel=self.channel
-            )
+            self.client = trace_service_pb2_grpc.TraceServiceStub(channel=self.channel)
         else:
             self.client = client
 
@@ -85,9 +83,7 @@ class OpenCensusSpanExporter(SpanExporter):
 
     def generate_span_requests(self, spans):
         collector_spans = translate_to_collector(spans)
-        service_request = trace_service_pb2.ExportTraceServiceRequest(
-            node=self.node, spans=collector_spans
-        )
+        service_request = trace_service_pb2.ExportTraceServiceRequest(node=self.node, spans=collector_spans)
         yield service_request
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
@@ -127,9 +123,7 @@ def translate_to_collector(spans: Sequence[ReadableSpan]):
 
         if span.attributes:
             for key, value in span.attributes.items():
-                utils.add_proto_attribute_value(
-                    collector_span.attributes, key, value
-                )
+                utils.add_proto_attribute_value(collector_span.attributes, key, value)
 
         if span.events:
             for event in span.events:
@@ -139,9 +133,7 @@ def translate_to_collector(spans: Sequence[ReadableSpan]):
 
                 if event.attributes:
                     for key, value in event.attributes.items():
-                        utils.add_proto_attribute_value(
-                            collector_annotation.attributes, key, value
-                        )
+                        utils.add_proto_attribute_value(collector_annotation.attributes, key, value)
 
                 collector_span.time_events.time_event.add(
                     time=utils.proto_timestamp_from_time_ns(event.timestamp),
@@ -151,30 +143,17 @@ def translate_to_collector(spans: Sequence[ReadableSpan]):
         if span.links:
             for link in span.links:
                 collector_span_link = collector_span.links.link.add()
-                collector_span_link.trace_id = link.context.trace_id.to_bytes(
-                    16, "big"
-                )
-                collector_span_link.span_id = link.context.span_id.to_bytes(
-                    8, "big"
-                )
+                collector_span_link.trace_id = link.context.trace_id.to_bytes(16, "big")
+                collector_span_link.span_id = link.context.span_id.to_bytes(8, "big")
 
-                collector_span_link.type = (
-                    trace_pb2.Span.Link.Type.TYPE_UNSPECIFIED
-                )
+                collector_span_link.type = trace_pb2.Span.Link.Type.TYPE_UNSPECIFIED
                 if span.parent is not None:
-                    if (
-                        link.context.span_id == span.parent.span_id
-                        and link.context.trace_id == span.parent.trace_id
-                    ):
-                        collector_span_link.type = (
-                            trace_pb2.Span.Link.Type.PARENT_LINKED_SPAN
-                        )
+                    if link.context.span_id == span.parent.span_id and link.context.trace_id == span.parent.trace_id:
+                        collector_span_link.type = trace_pb2.Span.Link.Type.PARENT_LINKED_SPAN
 
                 if link.attributes:
                     for key, value in link.attributes.items():
-                        utils.add_proto_attribute_value(
-                            collector_span_link.attributes, key, value
-                        )
+                        utils.add_proto_attribute_value(collector_span_link.attributes, key, value)
 
         collector_spans.append(collector_span)
     return collector_spans

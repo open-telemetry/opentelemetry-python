@@ -50,13 +50,8 @@ def mock_instrument() -> Mock:
 
 
 class TestMetricReaderStorage(ConcurrencyTestBase):
-    @patch(
-        "opentelemetry.sdk.metrics._internal"
-        ".metric_reader_storage._ViewInstrumentMatch"
-    )
-    def test_creates_view_instrument_matches(
-        self, MockViewInstrumentMatch: Mock
-    ):
+    @patch("opentelemetry.sdk.metrics._internal.metric_reader_storage._ViewInstrumentMatch")
+    def test_creates_view_instrument_matches(self, MockViewInstrumentMatch: Mock):
         """It should create a MockViewInstrumentMatch when an instrument
         matches a view"""
         instrument1 = Mock(name="instrument1")
@@ -70,55 +65,34 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 views=(view1, view2),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         # instrument1 matches view1 and view2, so should create two
         # ViewInstrumentMatch objects
-        storage.consume_measurement(
-            Measurement(1, time_ns(), instrument1, Context())
-        )
+        storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
         self.assertEqual(
             len(MockViewInstrumentMatch.call_args_list),
             2,
             MockViewInstrumentMatch.mock_calls,
         )
         # they should only be created the first time the instrument is seen
-        storage.consume_measurement(
-            Measurement(1, time_ns(), instrument1, Context())
-        )
+        storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 2)
 
         # instrument2 matches view2, so should create a single
         # ViewInstrumentMatch
         MockViewInstrumentMatch.call_args_list.clear()
         with self.assertLogs(level=WARNING):
-            storage.consume_measurement(
-                Measurement(1, time_ns(), instrument2, Context())
-            )
+            storage.consume_measurement(Measurement(1, time_ns(), instrument2, Context()))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal."
-        "metric_reader_storage._ViewInstrumentMatch"
-    )
-    def test_forwards_calls_to_view_instrument_match(
-        self, MockViewInstrumentMatch: Mock
-    ):
-        view_instrument_match1 = Mock(
-            _aggregation=_LastValueAggregation({}, Mock())
-        )
-        view_instrument_match2 = Mock(
-            _aggregation=_LastValueAggregation({}, Mock())
-        )
-        view_instrument_match3 = Mock(
-            _aggregation=_LastValueAggregation({}, Mock())
-        )
+    @patch("opentelemetry.sdk.metrics._internal.metric_reader_storage._ViewInstrumentMatch")
+    def test_forwards_calls_to_view_instrument_match(self, MockViewInstrumentMatch: Mock):
+        view_instrument_match1 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
+        view_instrument_match2 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
+        view_instrument_match3 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
         MockViewInstrumentMatch.side_effect = [
             view_instrument_match1,
             view_instrument_match2,
@@ -136,11 +110,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 views=(view1, view2),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
@@ -148,20 +118,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # ViewInstrumentMatch objects created for that instrument
         measurement = Measurement(1, time_ns(), instrument1, Context())
         storage.consume_measurement(measurement)
-        view_instrument_match1.consume_measurement.assert_called_once_with(
-            measurement, True
-        )
-        view_instrument_match2.consume_measurement.assert_called_once_with(
-            measurement, True
-        )
+        view_instrument_match1.consume_measurement.assert_called_once_with(measurement, True)
+        view_instrument_match2.consume_measurement.assert_called_once_with(measurement, True)
         view_instrument_match3.consume_measurement.assert_not_called()
 
         measurement = Measurement(1, time_ns(), instrument2, Context())
         with self.assertLogs(level=WARNING):
             storage.consume_measurement(measurement)
-        view_instrument_match3.consume_measurement.assert_called_once_with(
-            measurement, True
-        )
+        view_instrument_match3.consume_measurement.assert_called_once_with(measurement, True)
 
         # collect() should call collect on all of its _ViewInstrumentMatch
         # objects and combine them together
@@ -175,64 +139,31 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_instrument_match2.collect.assert_called_once()
         view_instrument_match3.collect.assert_called_once()
         self.assertEqual(
-            (
-                result.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            ),
+            (result.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]),
             all_metrics[0],
         )
         self.assertEqual(
-            (
-                result.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[1]
-            ),
+            (result.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[1]),
             all_metrics[1],
         )
         self.assertEqual(
-            (
-                result.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[1]
-                .data.data_points[0]
-            ),
+            (result.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points[0]),
             all_metrics[2],
         )
         self.assertEqual(
-            (
-                result.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[1]
-                .data.data_points[1]
-            ),
+            (result.resource_metrics[0].scope_metrics[0].metrics[1].data.data_points[1]),
             all_metrics[3],
         )
         self.assertEqual(
-            (
-                result.resource_metrics[0]
-                .scope_metrics[1]
-                .metrics[0]
-                .data.data_points[0]
-            ),
+            (result.resource_metrics[0].scope_metrics[1].metrics[0].data.data_points[0]),
             all_metrics[4],
         )
         self.assertEqual(
-            (
-                result.resource_metrics[0]
-                .scope_metrics[1]
-                .metrics[0]
-                .data.data_points[1]
-            ),
+            (result.resource_metrics[0].scope_metrics[1].metrics[0].data.data_points[1]),
             all_metrics[5],
         )
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal."
-        "metric_reader_storage._ViewInstrumentMatch"
-    )
+    @patch("opentelemetry.sdk.metrics._internal.metric_reader_storage._ViewInstrumentMatch")
     def test_race_concurrent_measurements(self, MockViewInstrumentMatch: Mock):
         mock_view_instrument_match_ctor = MockFunc()
         MockViewInstrumentMatch.side_effect = mock_view_instrument_match_ctor
@@ -245,18 +176,12 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 views=(view1,),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         def send_measurement():
-            storage.consume_measurement(
-                Measurement(1, time_ns(), instrument1, Context())
-            )
+            storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
 
         # race sending many measurements concurrently
         self.run_with_many_threads(send_measurement)
@@ -264,9 +189,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # Only one cached entry should exist for the instrument, with exactly
         # one view-instrument match — duplicate initialization is the bug we're guarding against
         self.assertIn(instrument1, storage._instrument_view_instrument_matches)
-        self.assertEqual(
-            len(storage._instrument_view_instrument_matches[instrument1]), 1
-        )
+        self.assertEqual(len(storage._instrument_view_instrument_matches[instrument1]), 1)
 
     def test_race_collect_with_new_instruments(self):
         storage = MetricReaderStorage(
@@ -275,22 +198,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 views=(View(instrument_name="test"),),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         counter = _Counter("counter", Mock(), Mock())
-        storage.consume_measurement(
-            Measurement(1, time_ns(), counter, Context())
-        )
+        storage.consume_measurement(Measurement(1, time_ns(), counter, Context()))
 
-        view_instrument_match = storage._instrument_view_instrument_matches[
-            counter
-        ][0]
+        view_instrument_match = storage._instrument_view_instrument_matches[counter][0]
         original_collect = view_instrument_match.collect
 
         new_counter = _Counter("new_counter", Mock(), Mock())
@@ -305,10 +220,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
         self.assertIn(new_counter, storage._instrument_view_instrument_matches)
 
-    @patch(
-        "opentelemetry.sdk.metrics._internal."
-        "metric_reader_storage._ViewInstrumentMatch"
-    )
+    @patch("opentelemetry.sdk.metrics._internal.metric_reader_storage._ViewInstrumentMatch")
     def test_default_view_enabled(self, MockViewInstrumentMatch: Mock):
         """Instruments should be matched with default views when enabled"""
         instrument1 = Mock(name="instrument1")
@@ -320,31 +232,21 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 views=(),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
-        storage.consume_measurement(
-            Measurement(1, time_ns(), instrument1, Context())
-        )
+        storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
         self.assertEqual(
             len(MockViewInstrumentMatch.call_args_list),
             1,
             MockViewInstrumentMatch.mock_calls,
         )
-        storage.consume_measurement(
-            Measurement(1, time_ns(), instrument1, Context())
-        )
+        storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
         MockViewInstrumentMatch.call_args_list.clear()
-        storage.consume_measurement(
-            Measurement(1, time_ns(), instrument2, Context())
-        )
+        storage.consume_measurement(Measurement(1, time_ns(), instrument2, Context()))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
     def test_drop_aggregation(self):
@@ -353,22 +255,12 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                views=(
-                    View(
-                        instrument_name="name", aggregation=DropAggregation()
-                    ),
-                ),
+                views=(View(instrument_name="name", aggregation=DropAggregation()),),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
-        metric_reader_storage.consume_measurement(
-            Measurement(1, time_ns(), counter, Context())
-        )
+        metric_reader_storage.consume_measurement(Measurement(1, time_ns(), counter, Context()))
 
         self.assertIsNone(metric_reader_storage.collect())
 
@@ -382,36 +274,18 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 views=(View(instrument_name="name"),),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
-        metric_reader_storage.consume_measurement(
-            Measurement(1, time_ns(), counter, Context())
-        )
-        metric_reader_storage.consume_measurement(
-            Measurement(1, time_ns(), up_down_counter, Context())
-        )
+        metric_reader_storage.consume_measurement(Measurement(1, time_ns(), counter, Context()))
+        metric_reader_storage.consume_measurement(Measurement(1, time_ns(), up_down_counter, Context()))
 
         actual = metric_reader_storage.collect()
 
         self.assertEqual(
-            list(
-                actual.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points
-            )[0].time_unix_nano,
-            list(
-                actual.resource_metrics[0]
-                .scope_metrics[1]
-                .metrics[0]
-                .data.data_points
-            )[0].time_unix_nano,
+            list(actual.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points)[0].time_unix_nano,
+            list(actual.resource_metrics[0].scope_metrics[1].metrics[0].data.data_points)[0].time_unix_nano,
         )
 
     def test_conflicting_view_configuration(self):
@@ -433,23 +307,15 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     ),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertLogs(level=WARNING):
-            metric_reader_storage.consume_measurement(
-                Measurement(1, time_ns(), observable_counter, Context())
-            )
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
 
         self.assertIs(
-            metric_reader_storage._instrument_view_instrument_matches[
-                observable_counter
-            ][0]._view,
+            metric_reader_storage._instrument_view_instrument_matches[observable_counter][0]._view,
             _DEFAULT_VIEW,
         )
 
@@ -479,24 +345,16 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="observable_counter_1", name="foo"),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), observable_counter_0, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_0, Context()))
 
         with self.assertLogs(level=WARNING) as log:
-            metric_reader_storage.consume_measurement(
-                Measurement(1, time_ns(), observable_counter_1, Context())
-            )
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_1, Context()))
 
         self.assertIn(
             "will cause conflicting metrics",
@@ -536,26 +394,16 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="baz", name="foo"),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(
-                        1, time_ns(), observable_counter_foo, Context()
-                    )
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_foo, Context()))
 
         with self.assertLogs(level=WARNING) as log:
-            metric_reader_storage.consume_measurement(
-                Measurement(1, time_ns(), observable_counter_bar, Context())
-            )
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_bar, Context()))
 
         self.assertIn(
             "will cause conflicting metrics",
@@ -563,18 +411,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
 
         with self.assertLogs(level=WARNING) as log:
-            metric_reader_storage.consume_measurement(
-                Measurement(1, time_ns(), observable_counter_baz, Context())
-            )
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_baz, Context()))
 
         self.assertIn(
             "will cause conflicting metrics",
             log.records[0].message,
         )
 
-        for view_instrument_matches in (
-            metric_reader_storage._instrument_view_instrument_matches.values()
-        ):
+        for view_instrument_matches in metric_reader_storage._instrument_view_instrument_matches.values():
             for view_instrument_match in view_instrument_matches:
                 self.assertEqual(view_instrument_match._name, "foo")
 
@@ -604,29 +448,17 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="bar"),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(
-                        1, time_ns(), observable_counter_foo, Context()
-                    )
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_foo, Context()))
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(
-                        1, time_ns(), observable_counter_bar, Context()
-                    )
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_bar, Context()))
 
     def test_view_instrument_match_conflict_3(self):
         # There is no conflict because the aggregation temporality of the
@@ -656,27 +488,17 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="baz", name="foo"),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), counter_bar, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), counter_bar, Context()))
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(
-                        1, time_ns(), observable_counter_baz, Context()
-                    )
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_baz, Context()))
 
     def test_view_instrument_match_conflict_4(self):
         # There is no conflict because the monotonicity of the instruments is
@@ -706,25 +528,17 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="baz", name="foo"),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), counter_bar, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), counter_bar, Context()))
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), up_down_counter_baz, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), up_down_counter_baz, Context()))
 
     def test_view_instrument_match_conflict_5(self):
         # There is no conflict because the instrument units are different.
@@ -752,25 +566,17 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="observable_counter_1", name="foo"),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), observable_counter_0, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_0, Context()))
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), observable_counter_1, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_1, Context()))
 
     def test_view_instrument_match_conflict_6(self):
         # There is no conflict because the instrument data points are
@@ -807,31 +613,21 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="gauge", name="foo"),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), observable_counter, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), histogram, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), histogram, Context()))
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), gauge, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), gauge, Context()))
 
     def test_view_instrument_match_conflict_7(self):
         # There is a conflict between views and instruments because the
@@ -860,24 +656,16 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="observable_counter_1", name="foo"),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), observable_counter_0, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_0, Context()))
 
         with self.assertLogs(level=WARNING) as log:
-            metric_reader_storage.consume_measurement(
-                Measurement(1, time_ns(), observable_counter_1, Context())
-            )
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_1, Context()))
 
         self.assertIn(
             "will cause conflicting metrics",
@@ -918,24 +706,16 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     ),
                 ),
             ),
-            MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, time_ns(), up_down_counter, Context())
-                )
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), up_down_counter, Context()))
 
         with self.assertLogs(level=WARNING) as log:
-            metric_reader_storage.consume_measurement(
-                Measurement(1, time_ns(), histogram, Context())
-            )
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), histogram, Context()))
 
         self.assertIn(
             "will cause conflicting metrics",

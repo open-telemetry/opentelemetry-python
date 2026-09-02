@@ -83,10 +83,7 @@ class OTLPSpanExporter(
         endpoint: str | None = None,
         insecure: bool | None = None,
         credentials: ChannelCredentials | None = None,
-        headers: TypingSequence[tuple[str, str]]
-        | dict[str, str]
-        | str
-        | None = None,
+        headers: TypingSequence[tuple[str, str]] | dict[str, str] | str | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
         channel_options: tuple[tuple[str, str]] | None = None,
@@ -98,10 +95,7 @@ class OTLPSpanExporter(
         if insecure is None and insecure_spans is not None:
             insecure = insecure_spans.lower() == "true"
 
-        if (
-            not insecure
-            and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
-        ):
+        if not insecure and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None:
             credentials = _get_credentials(
                 credentials,
                 _OTEL_PYTHON_EXPORTER_OTLP_GRPC_TRACES_CREDENTIAL_PROVIDER,
@@ -111,22 +105,17 @@ class OTLPSpanExporter(
             )
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
-        environ_timeout = (
-            float(environ_timeout) if environ_timeout is not None else None
-        )
+        environ_timeout = float(environ_timeout) if environ_timeout is not None else None
 
         compression = (
-            environ_to_compression(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION)
-            if compression is None
-            else compression
+            environ_to_compression(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION) if compression is None else compression
         )
 
         OTLPExporterMixin.__init__(
             self,
             stub=TraceServiceStub,
             result=SpanExportResult,
-            endpoint=endpoint
-            or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
+            endpoint=endpoint or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
             insecure=insecure,
             credentials=credentials,
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
@@ -139,9 +128,7 @@ class OTLPSpanExporter(
             meter_provider=meter_provider,
         )
 
-    def _translate_data(
-        self, data: Sequence[ReadableSpan]
-    ) -> ExportTraceServiceRequest:
+    def _translate_data(self, data: Sequence[ReadableSpan]) -> ExportTraceServiceRequest:
         return encode_spans(data)
 
     def _count_data(self, data: Sequence[ReadableSpan]):

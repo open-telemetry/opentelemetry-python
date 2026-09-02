@@ -101,11 +101,7 @@ def _make_handler(
             for rs in request.resource_spans:
                 for ss in rs.scope_spans:
                     for span in ss.spans:
-                        spans_queue.put(
-                            RecordedSpan(
-                                span=span, resource=rs.resource, scope=ss.scope
-                            )
-                        )
+                        spans_queue.put(RecordedSpan(span=span, resource=rs.resource, scope=ss.scope))
             return ExportTraceServiceResponse().SerializeToString()
 
         @staticmethod
@@ -147,9 +143,7 @@ def _make_handler(
 
 
 class OtlpProtoTestServer:
-    def __init__(
-        self, host: str = "127.0.0.1", port: int = 0, base_path: str = ""
-    ) -> None:
+    def __init__(self, host: str = "127.0.0.1", port: int = 0, base_path: str = "") -> None:
         try:
             # pylint: disable-next=import-outside-toplevel,unused-import
             import opentelemetry.proto  # noqa: F401, PLC0415
@@ -221,36 +215,26 @@ class OtlpProtoTestServer:
         except Empty:
             raise TimeoutError(f"No span received within {timeout}s") from None
 
-    def get_spans(
-        self, count: int = 1, timeout: float = 5.0
-    ) -> list[RecordedSpan]:
+    def get_spans(self, count: int = 1, timeout: float = 5.0) -> list[RecordedSpan]:
         deadline = time.monotonic() + timeout
         spans = []
         for _ in range(count):
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise TimeoutError(
-                    f"Timed out after receiving {len(spans)}/{count} spans"
-                )
+                raise TimeoutError(f"Timed out after receiving {len(spans)}/{count} spans")
             spans.append(self.get_span(timeout=remaining))
         return spans
 
-    def wait_for_span(
-        self, *, name: str | None = None, timeout: float = 5.0
-    ) -> RecordedSpan:
+    def wait_for_span(self, *, name: str | None = None, timeout: float = 5.0) -> RecordedSpan:
         deadline = time.monotonic() + timeout
         while True:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise TimeoutError(
-                    f"No span with name={name!r} received within {timeout}s"
-                )
+                raise TimeoutError(f"No span with name={name!r} received within {timeout}s")
             try:
                 recorded = self._spans_queue.get(timeout=remaining)
             except Empty:
-                raise TimeoutError(
-                    f"No span with name={name!r} received within {timeout}s"
-                ) from None
+                raise TimeoutError(f"No span with name={name!r} received within {timeout}s") from None
             if name is None or recorded.span.name == name:
                 return recorded
 
@@ -266,40 +250,28 @@ class OtlpProtoTestServer:
         try:
             return self._metrics_queue.get(timeout=timeout)
         except Empty:
-            raise TimeoutError(
-                f"No metric received within {timeout}s"
-            ) from None
+            raise TimeoutError(f"No metric received within {timeout}s") from None
 
-    def get_metrics(
-        self, count: int = 1, timeout: float = 5.0
-    ) -> list[RecordedMetric]:
+    def get_metrics(self, count: int = 1, timeout: float = 5.0) -> list[RecordedMetric]:
         deadline = time.monotonic() + timeout
         metrics = []
         for _ in range(count):
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise TimeoutError(
-                    f"Timed out after receiving {len(metrics)}/{count} metrics"
-                )
+                raise TimeoutError(f"Timed out after receiving {len(metrics)}/{count} metrics")
             metrics.append(self.get_metric(timeout=remaining))
         return metrics
 
-    def wait_for_metric(
-        self, *, name: str | None = None, timeout: float = 5.0
-    ) -> RecordedMetric:
+    def wait_for_metric(self, *, name: str | None = None, timeout: float = 5.0) -> RecordedMetric:
         deadline = time.monotonic() + timeout
         while True:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise TimeoutError(
-                    f"No metric with name={name!r} received within {timeout}s"
-                )
+                raise TimeoutError(f"No metric with name={name!r} received within {timeout}s")
             try:
                 recorded = self._metrics_queue.get(timeout=remaining)
             except Empty:
-                raise TimeoutError(
-                    f"No metric with name={name!r} received within {timeout}s"
-                ) from None
+                raise TimeoutError(f"No metric with name={name!r} received within {timeout}s") from None
             if name is None or recorded.metric.name == name:
                 return recorded
 
@@ -315,33 +287,23 @@ class OtlpProtoTestServer:
         try:
             return self._logs_queue.get(timeout=timeout)
         except Empty:
-            raise TimeoutError(
-                f"No log record received within {timeout}s"
-            ) from None
+            raise TimeoutError(f"No log record received within {timeout}s") from None
 
-    def get_log_records(
-        self, count: int = 1, timeout: float = 5.0
-    ) -> list[RecordedLogRecord]:
+    def get_log_records(self, count: int = 1, timeout: float = 5.0) -> list[RecordedLogRecord]:
         deadline = time.monotonic() + timeout
         log_records = []
         for _ in range(count):
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise TimeoutError(
-                    f"Timed out after receiving {len(log_records)}/{count} log records"
-                )
+                raise TimeoutError(f"Timed out after receiving {len(log_records)}/{count} log records")
             log_records.append(self.get_log_record(timeout=remaining))
         return log_records
 
-    def wait_for_log_record(
-        self, *, timeout: float = 5.0
-    ) -> RecordedLogRecord:
+    def wait_for_log_record(self, *, timeout: float = 5.0) -> RecordedLogRecord:
         try:
             return self._logs_queue.get(timeout=timeout)
         except Empty:
-            raise TimeoutError(
-                f"No log record received within {timeout}s"
-            ) from None
+            raise TimeoutError(f"No log record received within {timeout}s") from None
 
     def drain_log_records(self) -> list[RecordedLogRecord]:
         result = []

@@ -36,9 +36,7 @@ class MeasurementConsumer(ABC):
     @abstractmethod
     def register_asynchronous_instrument(
         self,
-        instrument: (
-            "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
-        ),
+        instrument: ("opentelemetry.sdk.metrics._internal.instrument._Asynchronous"),
     ):
         pass
 
@@ -59,9 +57,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
-        self._reader_storages: Mapping[
-            opentelemetry.sdk.metrics.export.MetricReader, MetricReaderStorage
-        ] = {
+        self._reader_storages: Mapping[opentelemetry.sdk.metrics.export.MetricReader, MetricReaderStorage] = {
             reader: MetricReaderStorage(
                 sdk_config,
                 reader._instrument_class_temporality,
@@ -69,32 +65,24 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             )
             for reader in metric_readers
         }
-        self._async_instruments: list[
-            opentelemetry.sdk.metrics._internal.instrument._Asynchronous
-        ] = []
+        self._async_instruments: list[opentelemetry.sdk.metrics._internal.instrument._Asynchronous] = []
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        should_sample_exemplar = (
-            self._sdk_config.exemplar_filter.should_sample(
-                measurement.value,
-                measurement.time_unix_nano,
-                measurement.attributes,
-                measurement.context,
-            )
+        should_sample_exemplar = self._sdk_config.exemplar_filter.should_sample(
+            measurement.value,
+            measurement.time_unix_nano,
+            measurement.attributes,
+            measurement.context,
         )
         # `_reader_storages` is replaced (never mutated in place) by
         # `add_metric_reader` and `remove_metric_reader`, so it is safe
         # to iterate over without a lock.
         for reader_storage in self._reader_storages.values():
-            reader_storage.consume_measurement(
-                measurement, should_sample_exemplar
-            )
+            reader_storage.consume_measurement(measurement, should_sample_exemplar)
 
     def register_asynchronous_instrument(
         self,
-        instrument: (
-            "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
-        ),
+        instrument: ("opentelemetry.sdk.metrics._internal.instrument._Asynchronous"),
     ) -> None:
         with self._lock:
             self._async_instruments.append(instrument)
@@ -116,37 +104,25 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                 remaining_time = deadline_ns - time_ns()
 
                 if remaining_time < default_timeout_ns:
-                    callback_options = CallbackOptions(
-                        timeout_millis=remaining_time / 1e6
-                    )
+                    callback_options = CallbackOptions(timeout_millis=remaining_time / 1e6)
 
                 measurements = async_instrument.callback(callback_options)
                 if time_ns() >= deadline_ns:
-                    raise MetricsTimeoutError(
-                        "Timed out while executing callback"
-                    )
+                    raise MetricsTimeoutError("Timed out while executing callback")
 
                 for measurement in measurements:
-                    should_sample_exemplar = (
-                        self._sdk_config.exemplar_filter.should_sample(
-                            measurement.value,
-                            measurement.time_unix_nano,
-                            measurement.attributes,
-                            measurement.context,
-                        )
+                    should_sample_exemplar = self._sdk_config.exemplar_filter.should_sample(
+                        measurement.value,
+                        measurement.time_unix_nano,
+                        measurement.attributes,
+                        measurement.context,
                     )
-                    metric_reader_storage.consume_measurement(
-                        measurement, should_sample_exemplar
-                    )
+                    metric_reader_storage.consume_measurement(measurement, should_sample_exemplar)
 
             result = self._reader_storages[metric_reader].collect()
 
-            if producer_scope_metrics := self._collect_from_producers(
-                metric_reader, deadline_ns
-            ):
-                result = self._merge_producer_metrics(
-                    result, producer_scope_metrics, self._sdk_config.resource
-                )
+            if producer_scope_metrics := self._collect_from_producers(metric_reader, deadline_ns):
+                result = self._merge_producer_metrics(result, producer_scope_metrics, self._sdk_config.resource)
 
         return result
 
@@ -166,16 +142,11 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         for producer in metric_reader._metric_producers:
             remaining_millis = (deadline_ns - time_ns()) / 1e6
             if remaining_millis <= 0:
-                _logger.warning(
-                    "Timed out collecting from metric producers, "
-                    "skipping remaining producers."
-                )
+                _logger.warning("Timed out collecting from metric producers, skipping remaining producers.")
                 break
 
             try:
-                scopes = list(
-                    producer.produce(timeout_millis=remaining_millis)
-                )
+                scopes = list(producer.produce(timeout_millis=remaining_millis))
             # pylint: disable-next=broad-except
             except Exception:
                 _logger.exception(
@@ -204,9 +175,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                 ],
                 schema_url=sdk_resource_metrics.schema_url,
             )
-            return MetricsData(
-                resource_metrics=[merged, *result.resource_metrics[1:]]
-            )
+            return MetricsData(resource_metrics=[merged, *result.resource_metrics[1:]])
 
         return MetricsData(
             resource_metrics=[
@@ -218,9 +187,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             ]
         )
 
-    def add_metric_reader(
-        self, metric_reader: "opentelemetry.sdk.metrics.MetricReader"
-    ) -> None:
+    def add_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.MetricReader") -> None:
         """Registers a new metric reader."""
         # Build a new mapping and swap it in atomically so that
         # a concurrent consume_measurement never iterates a mapping
@@ -236,9 +203,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             )
             self._reader_storages = new_reader_storages
 
-    def remove_metric_reader(
-        self, metric_reader: "opentelemetry.sdk.metrics.MetricReader"
-    ) -> None:
+    def remove_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.MetricReader") -> None:
         """Unregisters the given metric reader."""
         # Mutate using copy-on-write: see add_metric_reader.
         with self._lock:
