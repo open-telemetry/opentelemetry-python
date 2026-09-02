@@ -35,25 +35,19 @@ class AsgiTestBase(TestBase):
 
     def tearDown(self):
         if self.communicator:
-            asyncio.get_event_loop().run_until_complete(
-                self.communicator.wait()
-            )
+            asyncio.get_event_loop().run_until_complete(self.communicator.wait())
 
     def seed_app(self, app):
         self.communicator = ApplicationCommunicator(app, self.scope)
 
     def send_input(self, message):
-        asyncio.get_event_loop().run_until_complete(
-            self.communicator.send_input(message)
-        )
+        asyncio.get_event_loop().run_until_complete(self.communicator.send_input(message))
 
     def send_default_request(self):
         self.send_input({"type": "http.request", "body": b""})
 
     def get_output(self):
-        output = asyncio.get_event_loop().run_until_complete(
-            self.communicator.receive_output(0)
-        )
+        output = asyncio.get_event_loop().run_until_complete(self.communicator.receive_output(0))
         return output
 
     def get_all_output(self):
@@ -76,9 +70,7 @@ class AsyncAsgiTestBase(TestBase, IsolatedAsyncioTestCase):
 
     def tearDown(self):
         if self.communicator:
-            asyncio.get_event_loop().run_until_complete(
-                self.communicator.wait()
-            )
+            asyncio.get_event_loop().run_until_complete(self.communicator.wait())
 
     def seed_app(self, app):
         self.communicator = ApplicationCommunicator(app, self.scope)

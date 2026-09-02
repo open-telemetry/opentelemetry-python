@@ -338,9 +338,7 @@ class ParentBased(Sampler):
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
-        parent_span_context = get_current_span(
-            parent_context
-        ).get_span_context()
+        parent_span_context = get_current_span(parent_context).get_span_context()
         # default to the root sampler
         sampler = self._root
         # respect the sampling and remote flag of the parent if present
@@ -418,9 +416,7 @@ _KNOWN_SAMPLERS = {
 
 
 def _get_from_env_or_default() -> Sampler:
-    trace_sampler = os.getenv(
-        OTEL_TRACES_SAMPLER, "parentbased_always_on"
-    ).lower()
+    trace_sampler = os.getenv(OTEL_TRACES_SAMPLER, "parentbased_always_on").lower()
     if trace_sampler not in _KNOWN_SAMPLERS:
         _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
         trace_sampler = "parentbased_always_on"

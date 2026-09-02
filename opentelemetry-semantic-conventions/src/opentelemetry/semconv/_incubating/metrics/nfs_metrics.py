@@ -24,9 +24,7 @@ def create_nfs_client_net_count(meter: Meter) -> Counter:
     )
 
 
-NFS_CLIENT_NET_TCP_CONNECTION_ACCEPTED: Final = (
-    "nfs.client.net.tcp.connection.accepted"
-)
+NFS_CLIENT_NET_TCP_CONNECTION_ACCEPTED: Final = "nfs.client.net.tcp.connection.accepted"
 """
 Reports the count of kernel NFS client TCP connections accepted
 Instrument: counter
@@ -186,9 +184,7 @@ def create_nfs_server_net_count(meter: Meter) -> Counter:
     )
 
 
-NFS_SERVER_NET_TCP_CONNECTION_ACCEPTED: Final = (
-    "nfs.server.net.tcp.connection.accepted"
-)
+NFS_SERVER_NET_TCP_CONNECTION_ACCEPTED: Final = "nfs.server.net.tcp.connection.accepted"
 """
 Reports the count of kernel NFS server TCP connections accepted
 Instrument: counter

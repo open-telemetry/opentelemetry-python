@@ -50,10 +50,7 @@ class CallbackOptions:
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 SyncInstrumentT = TypeVar("SyncInstrumentT", bound="Synchronous")
 # pylint: disable=invalid-name
-CallbackT = (
-    Callable[[CallbackOptions], Iterable[Observation]]
-    | Generator[Iterable[Observation], CallbackOptions, None]
-)
+CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
 
 
 class Instrument(ABC):
@@ -69,9 +66,7 @@ class Instrument(ABC):
         pass
 
     @staticmethod
-    def _check_name_unit_description(
-        name: str, unit: str, description: str
-    ) -> dict[str, str | None]:
+    def _check_name_unit_description(name: str, unit: str, description: str) -> dict[str, str | None]:
         """
         Checks the following instrument name, unit and description for
         compliance with the spec.
@@ -309,12 +304,8 @@ class NoOpObservableCounter(ObservableCounter):
         )
 
 
-class _ProxyObservableCounter(
-    _ProxyAsynchronousInstrument[ObservableCounter], ObservableCounter
-):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableCounter:
+class _ProxyObservableCounter(_ProxyAsynchronousInstrument[ObservableCounter], ObservableCounter):
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableCounter:
         return meter.create_observable_counter(
             self._name,
             self._callbacks,
@@ -352,9 +343,7 @@ class _ProxyObservableUpDownCounter(
     _ProxyAsynchronousInstrument[ObservableUpDownCounter],
     ObservableUpDownCounter,
 ):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableUpDownCounter:
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
             self._name,
             self._callbacks,
@@ -440,9 +429,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> None:
         super().__init__(name, unit=unit, description=description)
-        self._explicit_bucket_boundaries_advisory = (
-            explicit_bucket_boundaries_advisory
-        )
+        self._explicit_bucket_boundaries_advisory = explicit_bucket_boundaries_advisory
 
     def record(
         self,
@@ -491,9 +478,7 @@ class _ProxyObservableGauge(
     _ProxyAsynchronousInstrument[ObservableGauge],
     ObservableGauge,
 ):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableGauge:
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableGauge:
         return meter.create_observable_gauge(
             self._name,
             self._callbacks,
@@ -571,16 +556,12 @@ class _ProxyGauge(
 
 
 class _BoundInstrument(Generic[SyncInstrumentT]):
-    def __init__(
-        self, instrument: SyncInstrumentT, attributes: Attributes
-    ) -> None:
+    def __init__(self, instrument: SyncInstrumentT, attributes: Attributes) -> None:
         if isinstance(instrument, _BoundInstrument):
             attributes = {**instrument._attributes, **(attributes or {})}
             instrument = cast(SyncInstrumentT, instrument._instrument)
         self._instrument: SyncInstrumentT = instrument
-        self._attributes: dict = (
-            {} if attributes is None else deepcopy(dict(attributes))
-        )
+        self._attributes: dict = {} if attributes is None else deepcopy(dict(attributes))
 
 
 class _BoundCounter(_BoundInstrument["Counter"], Counter):
@@ -593,9 +574,7 @@ class _BoundCounter(_BoundInstrument["Counter"], Counter):
         if not attributes:
             self._instrument.add(amount, self._attributes, context)
             return
-        self._instrument.add(
-            amount, {**self._attributes, **attributes}, context
-        )
+        self._instrument.add(amount, {**self._attributes, **attributes}, context)
 
 
 class _BoundUpDownCounter(_BoundInstrument["UpDownCounter"], UpDownCounter):
@@ -608,9 +587,7 @@ class _BoundUpDownCounter(_BoundInstrument["UpDownCounter"], UpDownCounter):
         if not attributes:
             self._instrument.add(amount, self._attributes, context)
             return
-        self._instrument.add(
-            amount, {**self._attributes, **attributes}, context
-        )
+        self._instrument.add(amount, {**self._attributes, **attributes}, context)
 
 
 class _BoundHistogram(_BoundInstrument["Histogram"], Histogram):
@@ -623,9 +600,7 @@ class _BoundHistogram(_BoundInstrument["Histogram"], Histogram):
         if not attributes:
             self._instrument.record(amount, self._attributes, context)
             return
-        self._instrument.record(
-            amount, {**self._attributes, **attributes}, context
-        )
+        self._instrument.record(amount, {**self._attributes, **attributes}, context)
 
 
 class _BoundGauge(_BoundInstrument["Gauge"], Gauge):
@@ -638,6 +613,4 @@ class _BoundGauge(_BoundInstrument["Gauge"], Gauge):
         if not attributes:
             self._instrument.set(amount, self._attributes, context)
             return
-        self._instrument.set(
-            amount, {**self._attributes, **attributes}, context
-        )
+        self._instrument.set(amount, {**self._attributes, **attributes}, context)
