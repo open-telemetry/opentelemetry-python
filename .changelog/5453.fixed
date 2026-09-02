@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix `TypeError` in `os.fork()` when a `BatchProcessor` or `PeriodicExportingMetricReader` is garbage collected

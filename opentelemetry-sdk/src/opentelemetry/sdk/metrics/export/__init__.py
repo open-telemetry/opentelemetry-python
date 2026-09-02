@@ -16,7 +16,7 @@ from opentelemetry.sdk.metrics._internal.export import (
 )
 
 # The point module is not in the export directory to avoid a circular import.
-from opentelemetry.sdk.metrics._internal.point import (  # noqa: F401
+from opentelemetry.sdk.metrics._internal.point import (
     Buckets,
     DataPointT,
     DataT,
@@ -37,12 +37,6 @@ __all__ = [
     "AggregationTemporality",
     "Buckets",
     "ConsoleMetricExporter",
-    "InMemoryMetricReader",
-    "MetricExporter",
-    "MetricExportResult",
-    "MetricProducer",
-    "MetricReader",
-    "PeriodicExportingMetricReader",
     "DataPointT",
     "DataT",
     "ExponentialHistogram",
@@ -50,9 +44,15 @@ __all__ = [
     "Gauge",
     "Histogram",
     "HistogramDataPoint",
+    "InMemoryMetricReader",
     "Metric",
+    "MetricExportResult",
+    "MetricExporter",
+    "MetricProducer",
+    "MetricReader",
     "MetricsData",
     "NumberDataPoint",
+    "PeriodicExportingMetricReader",
     "ResourceMetrics",
     "ScopeMetrics",
     "Sum",

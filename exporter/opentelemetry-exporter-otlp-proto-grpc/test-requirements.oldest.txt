@@ -70,7 +70,9 @@ protobuf==5.29.5
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   googleapis-common-protos
     #   opentelemetry-proto
-pytest==7.4.4
+pygments==2.7.2
+    # via pytest
+pytest==9.0.3
     # via
     #   -c dev-requirements.txt
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in

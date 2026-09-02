@@ -50,9 +50,7 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> JSONLogRecord:
         flags=int(readable_log_record.log_record.trace_flags),
         body=_encode_value(readable_log_record.log_record.body),
         severity_text=readable_log_record.log_record.severity_text,
-        attributes=_encode_attributes(
-            cast(Attributes, readable_log_record.log_record.attributes),
-        ),
+        attributes=_encode_attributes(cast(Attributes, readable_log_record.log_record.attributes)),
         dropped_attributes_count=readable_log_record.dropped_attributes,
         severity_number=getattr(readable_log_record.log_record.severity_number, "value", None),
         event_name=readable_log_record.log_record.event_name,

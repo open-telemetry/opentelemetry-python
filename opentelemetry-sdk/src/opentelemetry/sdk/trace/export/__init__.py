@@ -99,6 +99,7 @@ class SimpleSpanProcessor(SpanProcessor):
         meter_provider: MeterProvider | None = None,
     ):
         self.span_exporter = span_exporter
+        self._shutdown = False
         self._metrics = create_processor_metrics(
             "traces",
             OtelComponentTypeValues.SIMPLE_SPAN_PROCESSOR,
@@ -115,6 +116,10 @@ class SimpleSpanProcessor(SpanProcessor):
     def on_end(self, span: ReadableSpan) -> None:
         if not (span.context and span.context.trace_flags.sampled):
             return
+        if self._shutdown:
+            logger.warning("Processor is already shutdown, ignoring call")
+            self._metrics.drop_items(1, "already_shutdown")
+            return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         # Record on submission to the exporter.
         self._metrics.finish_items(1)
@@ -127,6 +132,7 @@ class SimpleSpanProcessor(SpanProcessor):
             detach(token)
 
     def shutdown(self) -> None:
+        self._shutdown = True
         self.span_exporter.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
