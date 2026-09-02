@@ -13,7 +13,7 @@ jobs:
       contents: write # required for pushing to gh-pages
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
     container:
-      image: python:3.13-slim
+      image: python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4
     steps:
     - name: Install Git # since Git isn't available in the container image used above
       run: |
@@ -22,13 +22,13 @@ jobs:
     - name: Make repo safe for Git inside container
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-      uses: actions/checkout@v4
-    - name: Install tox
-      run: pip install tox-uv
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Set up uv
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
     - name: Run tox
-      run: tox -e benchmark-opentelemetry-sdk -- -k opentelemetry-sdk/benchmarks --benchmark-json=opentelemetry-sdk/output.json
+      run: uvx --with tox-uv tox -e benchmark-opentelemetry-sdk -- --benchmark-json=opentelemetry-sdk/output.json
     - name: Report on SDK benchmark results
-      uses: benchmark-action/github-action-benchmark@v1
+      uses: benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba # v1.22.1
       with:
         name: OpenTelemetry Python SDK Benchmarks
         tool: pytest
