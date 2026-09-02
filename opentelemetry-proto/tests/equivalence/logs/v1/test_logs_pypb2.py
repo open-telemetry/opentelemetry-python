@@ -1,14 +1,14 @@
-from opentelemetry.proto.common.v1.common_pb2 import (
+from opentelemetry.proto._test.common.v1.common_pb2 import (
     AnyValue as ProtoAnyValue,
     InstrumentationScope as ProtoInstrumentationScope,
     KeyValue as ProtoKeyValue,
 )
-from opentelemetry.proto.logs.v1.logs_pb2 import (
+from opentelemetry.proto._test.logs.v1.logs_pb2 import (
     LogRecord as ProtoLogRecord,
     ResourceLogs as ProtoResourceLogs,
     ScopeLogs as ProtoScopeLogs,
 )
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource as ProtoResource
+from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
 
 from opentelemetry._proto.common.v1.common_pb2 import (
     AnyValue,

@@ -1,4 +1,4 @@
-from opentelemetry.proto.common.v1.common_pb2 import (
+from opentelemetry.proto._test.common.v1.common_pb2 import (
     AnyValue as ProtoAnyValue,
     ArrayValue as ProtoArrayValue,
     InstrumentationScope as ProtoInstrumentationScope,
