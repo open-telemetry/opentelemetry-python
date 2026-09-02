@@ -563,6 +563,9 @@ class ResourceMetrics(Message):
         scope_metrics: list[ScopeMetrics] | None = None,
         schema_url: str = "",
     ):
+        # protobuf accepts a mapping for a message field and coerces it.
+        if isinstance(resource, dict):
+            resource = Resource(**resource)
         self.resource = resource
         self.scope_metrics: list[ScopeMetrics] = (
             list(scope_metrics) if scope_metrics else []

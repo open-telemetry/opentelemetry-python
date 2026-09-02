@@ -104,6 +104,9 @@ class KeyValueList(Message):
 class KeyValue(Message):
     def __init__(self, key: str = "", value: AnyValue | None = None):
         self.key = key
+        # protobuf accepts a mapping for a message field and coerces it.
+        if isinstance(value, dict):
+            value = AnyValue(**value)
         self.value = value
 
     def SerializeToString(self) -> bytes:
