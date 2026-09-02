@@ -98,7 +98,7 @@ class MeterProvider(ABC):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
 
@@ -137,7 +137,7 @@ class NoOpMeterProvider(MeterProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
     ) -> "Meter":
         """Returns a NoOpMeter."""
         return NoOpMeter(name, version=version, schema_url=schema_url)
@@ -154,7 +154,7 @@ class _ProxyMeterProvider(MeterProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
     ) -> "Meter":
         with self._lock:
             if self._real_meter_provider is not None:
@@ -1008,7 +1008,7 @@ def get_meter(
     version: str = "",
     meter_provider: MeterProvider | None = None,
     schema_url: str | None = None,
-    attributes: Attributes | None = None,
+    attributes: Attributes = None,
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
 

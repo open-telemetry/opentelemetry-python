@@ -41,6 +41,7 @@ from opentelemetry.sdk.metrics._internal import (
     _ProxyMeterConfig,
     _RuleBasedMeterConfigurator,
 )
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics.export import (
     InMemoryMetricReader,
     Metric,
@@ -988,3 +989,49 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         self.assertEqual(metric_1.unit, "unit")
         self.assertEqual(metric_1.description, "description")
         self.assertEqual(next(iter(metric_1.data.data_points)).value, 7)
+
+
+class TestMeasurement(TestCase):
+    def test_measurement_attributes_cleaned(self):
+        measurement = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes={"a": "b", 1: 2, "seq": [1, 2]},
+        )
+        self.assertEqual(
+            measurement.attributes,
+            {"a": "b", "1": 2, "seq": (1, 2)},
+        )
+
+    def test_measurement_attributes_invalid_type(self):
+        with self.assertLogs(level=WARNING) as logs:
+            measurement = Measurement(
+                value=10,
+                time_unix_nano=0,
+                instrument=Mock(),
+                context=Mock(),
+                attributes="invalid",
+            )
+        self.assertIsNone(measurement.attributes)
+        self.assertIn("Invalid type", logs.output[0])
+
+    def test_measurement_attributes_none_or_empty(self):
+        m1 = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes=None,
+        )
+        self.assertIsNone(m1.attributes)
+
+        m2 = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes={},
+        )
+        self.assertEqual(m2.attributes, {})
