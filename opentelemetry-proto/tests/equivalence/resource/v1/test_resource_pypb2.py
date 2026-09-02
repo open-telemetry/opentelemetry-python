@@ -1,8 +1,8 @@
-from opentelemetry.proto.common.v1.common_pb2 import (
+from opentelemetry.proto._test.common.v1.common_pb2 import (
     AnyValue as ProtoAnyValue,
     KeyValue as ProtoKeyValue,
 )
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource as ProtoResource
+from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
 
 from opentelemetry._proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry._proto.resource.v1.resource_pb2 import Resource

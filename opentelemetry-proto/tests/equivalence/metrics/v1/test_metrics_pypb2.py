@@ -1,9 +1,9 @@
-from opentelemetry.proto.common.v1.common_pb2 import (
+from opentelemetry.proto._test.common.v1.common_pb2 import (
     AnyValue as ProtoAnyValue,
     InstrumentationScope as ProtoInstrumentationScope,
     KeyValue as ProtoKeyValue,
 )
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
     Exemplar as ProtoExemplar,
     ExponentialHistogram as ProtoExponentialHistogram,
     ExponentialHistogramDataPoint as ProtoExponentialHistogramDataPoint,
@@ -18,7 +18,7 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     Summary as ProtoSummary,
     SummaryDataPoint as ProtoSummaryDataPoint,
 )
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource as ProtoResource
+from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
 
 from opentelemetry._proto.common.v1.common_pb2 import (
     AnyValue,

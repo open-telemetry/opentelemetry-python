@@ -1,8 +1,8 @@
-from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+from opentelemetry.proto._test.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest as ProtoExportTraceServiceRequest,
     ExportTraceServiceResponse as ProtoExportTraceServiceResponse,
 )
-from opentelemetry.proto.trace.v1.trace_pb2 import (
+from opentelemetry.proto._test.trace.v1.trace_pb2 import (
     ResourceSpans as ProtoResourceSpans,
 )
 
