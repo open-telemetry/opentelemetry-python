@@ -63,6 +63,28 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         self.assertIn("key1", exemplars[0].filtered_attributes)
         self.assertNotIn("key2", exemplars[0].filtered_attributes)
 
+    def test_fills_every_bucket_before_sampling(self):
+        # The first `size` measurements must each land in their own bucket,
+        # otherwise the reservoir never reaches its configured capacity.
+        for size in (1, 2, 4, 10):
+            with self.subTest(size=size):
+                reservoir = SimpleFixedSizeExemplarReservoir(size)
+
+                for value in range(size):
+                    reservoir.offer(
+                        float(value),
+                        time_ns(),
+                        {"attribute": "value"},
+                        Context(),
+                    )
+
+                exemplars = reservoir.collect({})
+                self.assertEqual(len(exemplars), size)
+                self.assertEqual(
+                    sorted(exemplar.value for exemplar in exemplars),
+                    [float(value) for value in range(size)],
+                )
+
     def test_reset_after_collection(self):
         reservoir = SimpleFixedSizeExemplarReservoir(4)
 
