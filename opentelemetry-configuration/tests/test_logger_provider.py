@@ -545,6 +545,10 @@ class TestLoggerConfigurator(unittest.TestCase):
             any("minimum_severity" in msg for msg in cm.output),
             "Expected warning about unsupported minimum_severity",
         )
+        self.assertFalse(
+            any("trace_based" in msg for msg in cm.output),
+            "Warning must not name trace_based when it is not set",
+        )
 
     def test_unsupported_trace_based_logs_warning(self):
         config = LoggerProviderConfig(
@@ -564,6 +568,10 @@ class TestLoggerConfigurator(unittest.TestCase):
         self.assertTrue(
             any("trace_based" in msg for msg in cm.output),
             "Expected warning about unsupported trace_based",
+        )
+        self.assertFalse(
+            any("minimum_severity" in msg for msg in cm.output),
+            "Warning must not name minimum_severity when it is not set",
         )
 
 

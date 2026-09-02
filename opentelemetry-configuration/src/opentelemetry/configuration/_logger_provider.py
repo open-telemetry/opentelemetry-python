@@ -232,16 +232,18 @@ def _to_logger_config(config: LoggerConfigConfig | None) -> _LoggerConfig:
 
     Only ``enabled`` is honored. ``minimum_severity`` and ``trace_based`` are
     accepted by the config schema but not supported by the Python SDK
-    ``_LoggerConfig``; when set, they are ignored with a warning. An absent
-    ``enabled`` leaves the logger enabled.
+    ``_LoggerConfig``; the ones that are set are ignored with a warning naming
+    them. An absent ``enabled`` leaves the logger enabled.
     """
     if config is None:
         return _LoggerConfig.default()
-    if config.minimum_severity is not None or config.trace_based is not None:
+    unsupported_fields = [
+        field_name for field_name in ("minimum_severity", "trace_based") if getattr(config, field_name) is not None
+    ]
+    if unsupported_fields:
         _logger.warning(
-            "logger_configurator minimum_severity/trace_based are specified in "
-            "config but are not supported by the Python SDK LoggerProvider; "
-            "they will be ignored."
+            "Ignoring logger_configurator fields that are not supported by the Python SDK LoggerProvider: %s",
+            ", ".join(unsupported_fields),
         )
     if config.enabled is None:
         return _LoggerConfig.default()
