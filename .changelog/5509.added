@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: count records dropped after shutdown on `otel.sdk.processor.{span,log}.processed` with `error.type=already_shutdown` (batch span/log and simple log processors), which the semantic conventions define as a valid value for this metric.
