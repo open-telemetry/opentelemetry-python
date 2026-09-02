@@ -1,8 +1,8 @@
-from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
+from opentelemetry.proto._test.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest as ProtoExportMetricsServiceRequest,
     ExportMetricsServiceResponse as ProtoExportMetricsServiceResponse,
 )
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
     ResourceMetrics as ProtoResourceMetrics,
 )
 
