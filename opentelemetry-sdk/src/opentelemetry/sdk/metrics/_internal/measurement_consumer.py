@@ -98,11 +98,10 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                 if remaining_time < default_timeout_ns:
                     callback_options = CallbackOptions(timeout_millis=remaining_time / 1e6)
 
-                measurements = async_instrument.callback(callback_options)
-                if time_ns() >= deadline_ns:
-                    raise MetricsTimeoutError("Timed out while executing callback")
-
-                for measurement in measurements:
+                # callback() is a generator function: the user callback
+                # only runs while the loop below iterates it, so the
+                # deadline can only be observed after iteration completes.
+                for measurement in async_instrument.callback(callback_options):
                     should_sample_exemplar = self._sdk_config.exemplar_filter.should_sample(
                         measurement.value,
                         measurement.time_unix_nano,
@@ -110,6 +109,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                         measurement.context,
                     )
                     metric_reader_storage.consume_measurement(measurement, should_sample_exemplar)
+
+                if time_ns() >= deadline_ns:
+                    raise MetricsTimeoutError("Timed out while executing callback")
 
             result = self._reader_storages[metric_reader].collect()
 
