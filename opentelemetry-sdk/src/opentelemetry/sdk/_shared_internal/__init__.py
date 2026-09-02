@@ -116,7 +116,12 @@ class BatchProcessor(Generic[Telemetry]):
         self._worker_thread.start()
         if hasattr(os, "register_at_fork"):
             weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
-            os.register_at_fork(after_in_child=lambda: weak_reinit()())  # pyright: ignore[reportOptionalCall] pylint: disable=unnecessary-lambda
+
+            def _after_in_child() -> None:
+                if reinit := weak_reinit():
+                    reinit()
+
+            os.register_at_fork(after_in_child=_after_in_child)
         self._pid = os.getpid()
 
         metrics.register_queue_size(lambda: len(self._queue))

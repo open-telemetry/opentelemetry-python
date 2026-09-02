@@ -47,9 +47,9 @@ def _extract_violations(report: dict) -> list:
             result: list[dict] = []
             lcr = obj.get("live_check_result")
             if isinstance(lcr, dict):
-                advices = lcr.get("all_advice")
-                if isinstance(advices, list):
-                    result.extend(a for a in advices if a.get("level") == "violation")
+                advice_list = lcr.get("all_advice")
+                if isinstance(advice_list, list):
+                    result.extend(a for a in advice_list if a.get("level") == "violation")
             for value in obj.values():
                 result.extend(_collect(value))
             return result
@@ -290,7 +290,7 @@ class WeaverLiveCheck:
     def __enter__(self) -> "WeaverLiveCheck":
         return self.start()
 
-    def __exit__(self, exc_type: Any, *_: Any) -> None:
+    def __exit__(self, exc_type: Any, *_: object) -> None:
         if exc_type is not None:
             self._stopped = True
         self.close()

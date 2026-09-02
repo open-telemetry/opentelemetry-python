@@ -32,6 +32,7 @@ from opentelemetry.metrics._internal.instrument import (
     _MetricsHistogramAdvisory,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.util.types import Attributes
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.metrics._internal import (
@@ -187,8 +188,8 @@ class Counter(_Synchronous, APICounter):
 
     def add(
         self,
-        amount: int | float,
-        attributes: dict[str, str] | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ):
         if not self._is_enabled():
@@ -225,8 +226,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
     def add(
         self,
-        amount: int | float,
-        attributes: dict[str, str] | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ):
         if not self._is_enabled():
@@ -295,8 +296,8 @@ class Histogram(_Synchronous, APIHistogram):
 
     def record(
         self,
-        amount: int | float,
-        attributes: dict[str, str] | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ):
         if not self._is_enabled():
@@ -336,8 +337,8 @@ class Gauge(_Synchronous, APIGauge):
 
     def set(
         self,
-        amount: int | float,
-        attributes: dict[str, str] | None = None,
+        amount: float,
+        attributes: Attributes = None,
         context: Context | None = None,
     ):
         if not self._is_enabled():

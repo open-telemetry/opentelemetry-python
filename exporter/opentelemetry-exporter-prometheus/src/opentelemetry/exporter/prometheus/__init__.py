@@ -105,7 +105,7 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
-from opentelemetry.util.types import Attributes, AttributeValue
+from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
 
@@ -372,8 +372,8 @@ class _CustomCollector:
     def _translate_metric(
         self,
         metric: Metric,
-        scope_attrs: dict[str, AttributeValue],
-        resource_attrs: dict[str, AttributeValue],
+        scope_attrs: dict[str, AnyValue],
+        resource_attrs: dict[str, AnyValue],
         metric_family_id_metric_family: dict[str, PrometheusMetric],
     ) -> None:
         metric_name = self._resolve_metric_name(metric.name)
@@ -420,10 +420,10 @@ class _CustomCollector:
         else:
             _logger.warning("Unsupported metric data. %s", type(metric.data))
 
-    def _build_scope_attrs(self, scope: InstrumentationScope) -> dict[str, AttributeValue]:
+    def _build_scope_attrs(self, scope: InstrumentationScope) -> dict[str, AnyValue]:
         if not self._scope_info_enabled:
             return {}
-        attrs: dict[str, AttributeValue] = {}
+        attrs: dict[str, AnyValue] = {}
         if scope.attributes:
             for key, value in scope.attributes.items():
                 attrs[_OTEL_SCOPE_ATTR_PREFIX + key] = value
@@ -432,7 +432,7 @@ class _CustomCollector:
         attrs[_OTEL_SCOPE_SCHEMA_URL_LABEL] = scope.schema_url or ""
         return attrs
 
-    def _build_resource_attrs(self, resource: Resource) -> dict[str, AttributeValue]:
+    def _build_resource_attrs(self, resource: Resource) -> dict[str, AnyValue]:
         if not self._resource_attribute_filter:
             return {}
         return {key: value for key, value in resource.attributes.items() if self._resource_attribute_filter(key)}
@@ -445,8 +445,8 @@ class _CustomCollector:
     def _collect_data_points(
         self,
         metric_data: DataT,
-        scope_attrs: dict[str, AttributeValue],
-        resource_attrs: dict[str, AttributeValue],
+        scope_attrs: dict[str, AnyValue],
+        resource_attrs: dict[str, AnyValue],
     ) -> tuple[list[str], list[list[str]], list[float | dict[str, Any]]]:
         keys: set[str] = set()
         rows: list[dict[str, str]] = []
@@ -482,7 +482,7 @@ class _CustomCollector:
         return label_keys, label_rows, values
 
     # pylint: disable=no-self-use
-    def _check_value(self, value: int | float | str | Sequence) -> str:
+    def _check_value(self, value: float | str | Sequence) -> str:
         """Check the label value and return is appropriate representation"""
         if not isinstance(value, str):
             return dumps(value, default=str)
