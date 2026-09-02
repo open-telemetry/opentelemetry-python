@@ -213,7 +213,7 @@ def u64(field: int, value: int) -> bytes:
     bytes
         b"" if value is 0, otherwise tag + varint(value).
     """
-    if value == 0:
+    if not value:
         return b""
     return encode_tag(field, WT_VARINT) + encode_varint(value)
 
@@ -276,7 +276,7 @@ def fix32(field: int, value: int) -> bytes:
     bytes
         b"" if value is 0, otherwise tag + 4 bytes little-endian.
     """
-    if value == 0:
+    if not value:
         return b""
     return encode_tag(field, WT_32BIT) + encode_fixed32(value)
 
@@ -308,7 +308,7 @@ def fix64(field: int, value: int) -> bytes:
     bytes
         b"" if value is 0, otherwise tag + 8 bytes little-endian.
     """
-    if value == 0:
+    if not value:
         return b""
     return encode_tag(field, WT_64BIT) + encode_fixed64(value)
 
@@ -342,7 +342,7 @@ def dbl(field: int, value: float) -> bytes:
     bytes
         b"" if value == 0.0, otherwise tag + 8-byte little-endian double.
     """
-    if value == 0.0:
+    if not value:
         return b""
     return encode_tag(field, WT_64BIT) + pack("<d", value)
 
@@ -422,7 +422,7 @@ def sint32(field: int, value: int) -> bytes:
     bytes
         b"" if value is 0, otherwise tag + ZigZag-encoded varint.
     """
-    if value == 0:
+    if not value:
         return b""
     return encode_tag(field, WT_VARINT) + encode_sint32(value)
 
