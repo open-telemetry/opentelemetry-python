@@ -44,9 +44,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         ]
         for name, value, is_int in cases:
             with self.subTest(name=name):
-                result = encode_metrics(
-                    make_metrics_data([make_sum(value=value)])
-                )
+                result = encode_metrics(make_metrics_data([make_sum(value=value)]))
                 encoded = _get_first_metric(result)
 
                 self.assertIsNotNone(encoded.sum)
@@ -74,9 +72,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         ]
         for name, value, is_int in cases:
             with self.subTest(name=name):
-                result = encode_metrics(
-                    make_metrics_data([make_gauge(value=value)])
-                )
+                result = encode_metrics(make_metrics_data([make_gauge(value=value)]))
                 encoded = _get_first_metric(result)
 
                 self.assertIsNotNone(encoded.gauge)
@@ -92,9 +88,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
     def test_encode_histogram(self):
         metric = make_histogram(
             exemplars=[
-                Exemplar(
-                    {"filtered": "banana"}, 298.0, TIME, SPAN_ID, TRACE_ID
-                ),
+                Exemplar({"filtered": "banana"}, 298.0, TIME, SPAN_ID, TRACE_ID),
             ],
         )
         result = encode_metrics(make_metrics_data([metric]))
@@ -116,9 +110,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         self.assertEqual(len(dp.exemplars), 1)
 
     def test_encode_exponential_histogram(self):
-        result = encode_metrics(
-            make_metrics_data([make_exponential_histogram()])
-        )
+        result = encode_metrics(make_metrics_data([make_exponential_histogram()]))
         encoded = _get_first_metric(result)
 
         self.assertIsNotNone(encoded.exponential_histogram)
@@ -184,11 +176,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
                     exemplars=[exemplar],
                 )
                 result = encode_metrics(make_metrics_data([metric]))
-                enc_ex = (
-                    _get_first_metric(result)
-                    .histogram.data_points[0]
-                    .exemplars[0]
-                )
+                enc_ex = _get_first_metric(result).histogram.data_points[0].exemplars[0]
                 if has_ids:
                     self.assertTrue(enc_ex.span_id)
                     self.assertTrue(enc_ex.trace_id)
@@ -221,9 +209,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         self.assertEqual(sm.scope.version, "2.0")
 
     def test_encode_metrics_to_dict(self):
-        result = encode_metrics(
-            make_metrics_data([make_sum(name="sum_int", value=33)])
-        )
+        result = encode_metrics(make_metrics_data([make_sum(name="sum_int", value=33)]))
         result_dict = result.to_dict()
 
         self.assertIn("resourceMetrics", result_dict)
@@ -250,9 +236,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         ]
         result = encode_metrics(make_metrics_data(metrics))
         json_str = result.to_json()
-        roundtripped = JSONExportMetricsServiceRequest.from_dict(
-            json.loads(json_str)
-        )
+        roundtripped = JSONExportMetricsServiceRequest.from_dict(json.loads(json_str))
         assert_proto_json_equal(self, result, roundtripped)
 
     def test_unsupported_metric_type(self):

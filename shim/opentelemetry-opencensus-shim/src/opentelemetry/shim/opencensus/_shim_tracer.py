@@ -19,9 +19,7 @@ _SHIM_SPAN_KEY = context.create_key("opencensus-shim-span-key")
 _SAMPLED = trace.TraceFlags(trace.TraceFlags.SAMPLED)
 
 
-def set_shim_span_in_context(
-    span: ShimSpan, ctx: context.Context
-) -> context.Context:
+def set_shim_span_in_context(span: ShimSpan, ctx: context.Context) -> context.Context:
     return context.set_value(_SHIM_SPAN_KEY, span, ctx)
 
 
@@ -29,9 +27,7 @@ def get_shim_span_in_context() -> ShimSpan:
     return context.get_value(_SHIM_SPAN_KEY)
 
 
-def set_oc_span_in_context(
-    oc_span_context: SpanContext, ctx: context.Context
-) -> context.Context:
+def set_oc_span_in_context(oc_span_context: SpanContext, ctx: context.Context) -> context.Context:
     """Returns a new OTel context based on ctx with oc_span_context set as the current span"""
 
     # If no SpanContext is passed to the opencensus.trace.tracer.Tracer, it creates a new one
@@ -46,9 +42,7 @@ def set_oc_span_in_context(
     trace_id = int(oc_span_context.trace_id, 16)
     span_id = int(oc_span_context.span_id, 16)
     is_remote = oc_span_context.from_header
-    trace_flags = (
-        _SAMPLED if oc_span_context.trace_options.get_enabled() else None
-    )
+    trace_flags = _SAMPLED if oc_span_context.trace_options.get_enabled() else None
     trace_state = (
         trace.TraceState(tuple(oc_span_context.tracestate.items()))
         # OC SpanContext does not validate this type
@@ -95,9 +89,7 @@ class ShimTracer(wrapt.ObjectProxy):
         # If there is no current span in context, use the one provided to the OC Tracer at
         # creation time
         if trace.get_current_span(parent_ctx) is trace.INVALID_SPAN:
-            parent_ctx = set_oc_span_in_context(
-                self._self_oc_span_context, parent_ctx
-            )
+            parent_ctx = set_oc_span_in_context(self._self_oc_span_context, parent_ctx)
 
         span = self._self_otel_tracer.start_span(name, context=parent_ctx)
         shim_span = ShimSpan(

@@ -42,15 +42,11 @@ class TestConfiguratorFileRouting(unittest.TestCase):
     @patch("opentelemetry.sdk._configuration._initialize_components")
     def test_env_var_unset_runs_env_var_path(self, mock_init_components):
         _OTelSDKConfigurator()._configure(auto_instrumentation_version="X")
-        mock_init_components.assert_called_once_with(
-            auto_instrumentation_version="X"
-        )
+        mock_init_components.assert_called_once_with(auto_instrumentation_version="X")
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
     @patch("opentelemetry.sdk._configuration._initialize_components")
-    def test_env_var_set_routes_to_declarative_path(
-        self, mock_init_components
-    ):
+    def test_env_var_set_routes_to_declarative_path(self, mock_init_components):
         fake = _FakeConfigurationModule()
         sentinel_config = object()
         fake.load_config_file.return_value = sentinel_config
@@ -63,13 +59,9 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         mock_init_components.assert_not_called()
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
-    @patch.dict(
-        "sys.modules", {"opentelemetry.configuration": None}, clear=False
-    )
+    @patch.dict("sys.modules", {"opentelemetry.configuration": None}, clear=False)
     @patch("opentelemetry.sdk._configuration._initialize_components")
-    def test_env_var_set_but_package_missing_raises(
-        self, mock_init_components
-    ):
+    def test_env_var_set_but_package_missing_raises(self, mock_init_components):
         # When opentelemetry-configuration is not installed but the env
         # var is set, surface a clear RuntimeError instead of a bare
         # ImportError so users know which package to install.
@@ -84,18 +76,11 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         fake.load_config_file.return_value = object()
 
         with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
-            with self.assertLogs(
-                "opentelemetry.sdk._configuration", level="WARNING"
-            ) as captured:
-                _OTelSDKConfigurator()._configure(
-                    sampler="X", auto_instrumentation_version="Y"
-                )
+            with self.assertLogs("opentelemetry.sdk._configuration", level="WARNING") as captured:
+                _OTelSDKConfigurator()._configure(sampler="X", auto_instrumentation_version="Y")
 
         self.assertTrue(
-            any(
-                "OTEL_CONFIG_FILE" in msg and "sampler" in msg
-                for msg in captured.output
-            ),
+            any("OTEL_CONFIG_FILE" in msg and "sampler" in msg for msg in captured.output),
             f"Expected warning about ignored kwargs, got: {captured.output}",
         )
         fake.configure_sdk.assert_called_once()
@@ -110,6 +95,4 @@ class TestConfiguratorFileRouting(unittest.TestCase):
 
         CustomConfigurator()._configure(auto_instrumentation_version="V")
 
-        mock_init_components.assert_called_once_with(
-            auto_instrumentation_version="V", sampler="TEST_SAMPLER"
-        )
+        mock_init_components.assert_called_once_with(auto_instrumentation_version="V", sampler="TEST_SAMPLER")

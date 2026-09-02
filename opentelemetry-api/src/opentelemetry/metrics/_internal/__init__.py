@@ -158,9 +158,7 @@ class _ProxyMeterProvider(MeterProvider):
     ) -> "Meter":
         with self._lock:
             if self._real_meter_provider is not None:
-                return self._real_meter_provider.get_meter(
-                    name, version, schema_url
-                )
+                return self._real_meter_provider.get_meter(name, version, schema_url)
 
             meter = _ProxyMeter(name, version=version, schema_url=schema_url)
             self._meters.append(meter)
@@ -242,9 +240,7 @@ class Meter(ABC):
         the registered instrument advisory.
         """
 
-        instrument_id = ",".join(
-            [name.strip().lower(), type_.__name__, unit, description]
-        )
+        instrument_id = ",".join([name.strip().lower(), type_.__name__, unit, description])
 
         already_registered = False
         conflict = False
@@ -567,9 +563,7 @@ class _ProxyMeter(Meter):
         Creates a real backing meter for this instance and notifies all created
         instruments so they can create real backing instruments.
         """
-        real_meter = meter_provider.get_meter(
-            self._name, self._version, self._schema_url
-        )
+        real_meter = meter_provider.get_meter(self._name, self._version, self._schema_url)
 
         with self._lock:
             self._real_meter = real_meter
@@ -786,9 +780,7 @@ class NoOpMeter(Meter):
             NoOpCounter,
             unit,
             description,
-            _MetricsAdvisory(
-                attributes=_validate_attributes_advisory(_attributes_advisory)
-            ),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -820,9 +812,7 @@ class NoOpMeter(Meter):
             NoOpGauge,
             unit,
             description,
-            _MetricsAdvisory(
-                attributes=_validate_attributes_advisory(_attributes_advisory)
-            ),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -853,9 +843,7 @@ class NoOpMeter(Meter):
             NoOpUpDownCounter,
             unit,
             description,
-            _MetricsAdvisory(
-                attributes=_validate_attributes_advisory(_attributes_advisory)
-            ),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -887,9 +875,7 @@ class NoOpMeter(Meter):
             NoOpObservableCounter,
             unit,
             description,
-            _MetricsAdvisory(
-                attributes=_validate_attributes_advisory(_attributes_advisory)
-            ),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -960,9 +946,7 @@ class NoOpMeter(Meter):
             NoOpObservableGauge,
             unit,
             description,
-            _MetricsAdvisory(
-                attributes=_validate_attributes_advisory(_attributes_advisory)
-            ),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -995,9 +979,7 @@ class NoOpMeter(Meter):
             NoOpObservableUpDownCounter,
             unit,
             description,
-            _MetricsAdvisory(
-                attributes=_validate_attributes_advisory(_attributes_advisory)
-            ),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(

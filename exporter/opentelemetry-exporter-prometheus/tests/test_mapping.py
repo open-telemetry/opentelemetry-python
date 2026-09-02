@@ -12,24 +12,12 @@ from opentelemetry.exporter.prometheus._mapping import (
 
 class TestMapping(TestCase):
     def test_sanitize_full_name(self):
-        self.assertEqual(
-            sanitize_full_name("valid_metric_name"), "valid_metric_name"
-        )
-        self.assertEqual(
-            sanitize_full_name("VALID_METRIC_NAME"), "VALID_METRIC_NAME"
-        )
-        self.assertEqual(
-            sanitize_full_name("_valid_metric_name"), "_valid_metric_name"
-        )
-        self.assertEqual(
-            sanitize_full_name("valid:metric_name"), "valid:metric_name"
-        )
-        self.assertEqual(
-            sanitize_full_name("valid_1_metric_name"), "valid_1_metric_name"
-        )
-        self.assertEqual(
-            sanitize_full_name("1leading_digit"), "_leading_digit"
-        )
+        self.assertEqual(sanitize_full_name("valid_metric_name"), "valid_metric_name")
+        self.assertEqual(sanitize_full_name("VALID_METRIC_NAME"), "VALID_METRIC_NAME")
+        self.assertEqual(sanitize_full_name("_valid_metric_name"), "_valid_metric_name")
+        self.assertEqual(sanitize_full_name("valid:metric_name"), "valid:metric_name")
+        self.assertEqual(sanitize_full_name("valid_1_metric_name"), "valid_1_metric_name")
+        self.assertEqual(sanitize_full_name("1leading_digit"), "_leading_digit")
         self.assertEqual(
             sanitize_full_name("consective_____underscores"),
             "consective_underscores",
@@ -47,24 +35,12 @@ class TestMapping(TestCase):
         self.assertEqual(sanitize_full_name("aAbBcC_12_oi"), "aAbBcC_12_oi")
 
     def test_sanitize_attribute(self):
-        self.assertEqual(
-            sanitize_attribute("valid_attr_key"), "valid_attr_key"
-        )
-        self.assertEqual(
-            sanitize_attribute("VALID_attr_key"), "VALID_attr_key"
-        )
-        self.assertEqual(
-            sanitize_attribute("_valid_attr_key"), "_valid_attr_key"
-        )
-        self.assertEqual(
-            sanitize_attribute("valid_1_attr_key"), "valid_1_attr_key"
-        )
-        self.assertEqual(
-            sanitize_attribute("sanitize:colons"), "sanitize_colons"
-        )
-        self.assertEqual(
-            sanitize_attribute("1leading_digit"), "_leading_digit"
-        )
+        self.assertEqual(sanitize_attribute("valid_attr_key"), "valid_attr_key")
+        self.assertEqual(sanitize_attribute("VALID_attr_key"), "VALID_attr_key")
+        self.assertEqual(sanitize_attribute("_valid_attr_key"), "_valid_attr_key")
+        self.assertEqual(sanitize_attribute("valid_1_attr_key"), "valid_1_attr_key")
+        self.assertEqual(sanitize_attribute("sanitize:colons"), "sanitize_colons")
+        self.assertEqual(sanitize_attribute("1leading_digit"), "_leading_digit")
         self.assertEqual(
             sanitize_attribute("1_~#consective_underscores"),
             "_consective_underscores",

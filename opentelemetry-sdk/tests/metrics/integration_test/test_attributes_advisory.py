@@ -30,29 +30,20 @@ class TestAttributesAdvisory(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
-        return [
-            dict(data_point.attributes)
-            for data_point in metric.data.data_points
-        ]
+        return [dict(data_point.attributes) for data_point in metric.data.data_points]
 
     def _record(self, meter, instrument, attributes, **create_kwargs):
         if instrument in self._SYNC_INSTRUMENTS:
             create_method, record_method = self._SYNC_INSTRUMENTS[instrument]
-            synchronous = getattr(meter, create_method)(
-                "testinstrument", **create_kwargs
-            )
+            synchronous = getattr(meter, create_method)("testinstrument", **create_kwargs)
             getattr(synchronous, record_method)(1, attributes)
         else:
             create_method = self._ASYNC_INSTRUMENTS[instrument]
             getattr(meter, create_method)(
                 "testinstrument",
-                callbacks=[
-                    lambda options, values=attributes: [Observation(1, values)]
-                ],
+                callbacks=[lambda options, values=attributes: [Observation(1, values)]],
                 **create_kwargs,
             )
 
@@ -68,9 +59,7 @@ class TestAttributesAdvisory(TestCase):
                     _attributes_advisory=["label"],
                 )
 
-                self.assertEqual(
-                    self._collect_attributes(reader), [{"label": "value"}]
-                )
+                self.assertEqual(self._collect_attributes(reader), [{"label": "value"}])
 
     def test_no_advisory(self):
         for instrument in self._ALL_INSTRUMENTS:
@@ -108,9 +97,7 @@ class TestAttributesAdvisory(TestCase):
                 reader = InMemoryMetricReader()
                 meter = MeterProvider(
                     metric_readers=[reader],
-                    views=[
-                        View(instrument_name="testinstrument", name="renamed")
-                    ],
+                    views=[View(instrument_name="testinstrument", name="renamed")],
                 ).get_meter("m")
                 self._record(
                     meter,
@@ -119,9 +106,7 @@ class TestAttributesAdvisory(TestCase):
                     _attributes_advisory=["label"],
                 )
 
-                self.assertEqual(
-                    self._collect_attributes(reader), [{"label": "value"}]
-                )
+                self.assertEqual(self._collect_attributes(reader), [{"label": "value"}])
 
     def test_view_overrides_advisory(self):
         for instrument in self._ALL_INSTRUMENTS:
@@ -143,9 +128,7 @@ class TestAttributesAdvisory(TestCase):
                     _attributes_advisory=["label"],
                 )
 
-                self.assertEqual(
-                    self._collect_attributes(reader), [{"other": "value"}]
-                )
+                self.assertEqual(self._collect_attributes(reader), [{"other": "value"}])
 
     def test_invalid_advisory_ignored(self):
         for instrument in self._ALL_INSTRUMENTS:
@@ -155,13 +138,9 @@ class TestAttributesAdvisory(TestCase):
                 "label",
                 123,
             ):
-                with self.subTest(
-                    instrument=instrument, invalid_advisory=invalid_advisory
-                ):
+                with self.subTest(instrument=instrument, invalid_advisory=invalid_advisory):
                     reader = InMemoryMetricReader()
-                    meter = MeterProvider(metric_readers=[reader]).get_meter(
-                        "m"
-                    )
+                    meter = MeterProvider(metric_readers=[reader]).get_meter("m")
 
                     # the warning is emitted when the instrument is created
                     with self.assertLogs(level=WARNING) as log:

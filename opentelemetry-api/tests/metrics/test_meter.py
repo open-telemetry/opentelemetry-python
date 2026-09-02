@@ -13,9 +13,7 @@ from opentelemetry.metrics import Meter, NoOpMeter
 
 class ChildMeter(Meter):
     # pylint: disable=signature-differs
-    def create_counter(
-        self, name, unit="", description="", *, _attributes_advisory=None
-    ):
+    def create_counter(self, name, unit="", description="", *, _attributes_advisory=None):
         super().create_counter(
             name,
             unit=unit,
@@ -23,9 +21,7 @@ class ChildMeter(Meter):
             _attributes_advisory=_attributes_advisory,
         )
 
-    def create_up_down_counter(
-        self, name, unit="", description="", *, _attributes_advisory=None
-    ):
+    def create_up_down_counter(self, name, unit="", description="", *, _attributes_advisory=None):
         super().create_up_down_counter(
             name,
             unit=unit,
@@ -67,9 +63,7 @@ class ChildMeter(Meter):
             _attributes_advisory=_attributes_advisory,
         )
 
-    def create_gauge(
-        self, name, unit="", description="", *, _attributes_advisory=None
-    ):
+    def create_gauge(self, name, unit="", description="", *, _attributes_advisory=None):
         super().create_gauge(
             name,
             unit=unit,
@@ -124,9 +118,7 @@ class TestMeter(TestCase):
             test_meter.create_histogram("histogram")
             test_meter.create_gauge("gauge")
             test_meter.create_observable_gauge("observable_gauge", Mock())
-            test_meter.create_observable_up_down_counter(
-                "observable_up_down_counter", Mock()
-            )
+            test_meter.create_observable_up_down_counter("observable_up_down_counter", Mock())
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.fail(f"Unexpected exception raised {error}")
 
@@ -136,32 +128,22 @@ class TestMeter(TestCase):
             "histogram",
             "gauge",
         ]:
-            with self.assertNoLogs(
-                "opentelemetry.metrics._internal", level="WARNING"
-            ):
-                getattr(test_meter, f"create_{instrument_name}")(
-                    instrument_name
-                )
+            with self.assertNoLogs("opentelemetry.metrics._internal", level="WARNING"):
+                getattr(test_meter, f"create_{instrument_name}")(instrument_name)
 
         for instrument_name in [
             "observable_counter",
             "observable_gauge",
             "observable_up_down_counter",
         ]:
-            with self.assertNoLogs(
-                "opentelemetry.metrics._internal", level="WARNING"
-            ):
-                getattr(test_meter, f"create_{instrument_name}")(
-                    instrument_name, Mock()
-                )
+            with self.assertNoLogs("opentelemetry.metrics._internal", level="WARNING"):
+                getattr(test_meter, f"create_{instrument_name}")(instrument_name, Mock())
 
     def test_repeated_instrument_names_with_different_advisory(self):
         try:
             test_meter = NoOpMeter("name")
 
-            test_meter.create_histogram(
-                "histogram", explicit_bucket_boundaries_advisory=[1.0]
-            )
+            test_meter.create_histogram("histogram", explicit_bucket_boundaries_advisory=[1.0])
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.fail(f"Unexpected exception raised {error}")
 
@@ -188,22 +170,14 @@ class TestMeter(TestCase):
             "observable_gauge",
         ]:
             with self.subTest(instrument_name=instrument_name):
-                create_instrument = getattr(
-                    test_meter, f"create_{instrument_name}"
-                )
-                create_instrument(
-                    instrument_name, _attributes_advisory=["a", "b"]
-                )
+                create_instrument = getattr(test_meter, f"create_{instrument_name}")
+                create_instrument(instrument_name, _attributes_advisory=["a", "b"])
 
                 with self.assertNoLogs(level=WARNING):
-                    create_instrument(
-                        instrument_name, _attributes_advisory=["b", "a"]
-                    )
+                    create_instrument(instrument_name, _attributes_advisory=["b", "a"])
 
                 with self.assertLogs(level=WARNING):
-                    create_instrument(
-                        instrument_name, _attributes_advisory=["c"]
-                    )
+                    create_instrument(instrument_name, _attributes_advisory=["c"])
 
     def test_create_counter(self):
         """
@@ -259,6 +233,4 @@ class TestMeter(TestCase):
         """
 
         self.assertTrue(hasattr(Meter, "create_observable_up_down_counter"))
-        self.assertTrue(
-            Meter.create_observable_up_down_counter.__isabstractmethod__
-        )
+        self.assertTrue(Meter.create_observable_up_down_counter.__isabstractmethod__)

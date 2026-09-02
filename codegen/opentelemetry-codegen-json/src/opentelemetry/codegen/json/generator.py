@@ -55,14 +55,10 @@ class OtlpJsonGenerator:
         self._version = version
         self._generated_files: dict[str, str] = {}
         self._common_root: str = ""
-        self._file_to_proto: dict[str, descriptor.FileDescriptorProto] = {
-            f.name: f for f in request.proto_file
-        }
+        self._file_to_proto: dict[str, descriptor.FileDescriptorProto] = {f.name: f for f in request.proto_file}
         self._fqn_to_file: dict[str, str] = {}
         self._fqn_to_class_path: dict[str, str] = {}
-        self._file_dependencies: dict[str, list[str]] = {
-            f.name: list(f.dependency) for f in request.proto_file
-        }
+        self._file_dependencies: dict[str, list[str]] = {f.name: list(f.dependency) for f in request.proto_file}
 
         for proto_file in request.proto_file:
             self._index_file(proto_file)
@@ -75,10 +71,7 @@ class OtlpJsonGenerator:
             Dictionary mapping output file paths to generated code
         """
         files_to_generate = self._request.file_to_generate
-        file_to_output = {
-            proto_file: self._transform_proto_path(proto_file)
-            for proto_file in files_to_generate
-        }
+        file_to_output = {proto_file: self._transform_proto_path(proto_file) for proto_file in files_to_generate}
 
         if not file_to_output:
             return {}
@@ -135,9 +128,7 @@ class OtlpJsonGenerator:
             file_name: Proto file where the message is defined
             parent_path: Full parent class path for nested messages
         """
-        current_path = (
-            f"{parent_path}.{msg_desc.name}" if parent_path else msg_desc.name
-        )
+        current_path = f"{parent_path}.{msg_desc.name}" if parent_path else msg_desc.name
         fqn = f"{package}.{current_path}" if package else current_path
         self._fqn_to_file[fqn] = file_name
         self._fqn_to_class_path[fqn] = current_path
@@ -145,15 +136,11 @@ class OtlpJsonGenerator:
         for enum_desc in msg_desc.enum_type:
             enum_fqn = f"{fqn}.{enum_desc.name}"
             self._fqn_to_file[enum_fqn] = file_name
-            self._fqn_to_class_path[enum_fqn] = (
-                f"{current_path}.{enum_desc.name}"
-            )
+            self._fqn_to_class_path[enum_fqn] = f"{current_path}.{enum_desc.name}"
 
         for nested_msg in msg_desc.nested_type:
             if not nested_msg.options.map_entry:
-                self._index_message(
-                    nested_msg, package, file_name, current_path
-                )
+                self._index_message(nested_msg, package, file_name, current_path)
 
     def _ensure_init_files(self) -> None:
         """
@@ -181,11 +168,7 @@ class OtlpJsonGenerator:
         Returns:
             Absolute module path as a string
         """
-        return (
-            f"{self._common_root.replace('/', '.')}.{CODEC_MODULE_NAME}"
-            if self._common_root
-            else CODEC_MODULE_NAME
-        )
+        return f"{self._common_root.replace('/', '.')}.{CODEC_MODULE_NAME}" if self._common_root else CODEC_MODULE_NAME
 
     def _transform_proto_path(self, proto_path: str) -> str:
         """
@@ -237,20 +220,14 @@ class OtlpJsonGenerator:
         proto_file = file_desc.name
 
         self._generate_header(writer, proto_file)
-        self._generate_imports(
-            writer, proto_file, self._file_has_enums(file_desc)
-        )
+        self._generate_imports(writer, proto_file, self._file_has_enums(file_desc))
         self._generate_enums_for_file(writer, file_desc.enum_type)
-        self._generate_messages_for_file(
-            writer, proto_file, file_desc.message_type
-        )
+        self._generate_messages_for_file(writer, proto_file, file_desc.message_type)
         writer.blank_line()
 
         return writer.to_string()
 
-    def _file_has_enums(
-        self, file_desc: descriptor.FileDescriptorProto
-    ) -> bool:
+    def _file_has_enums(self, file_desc: descriptor.FileDescriptorProto) -> bool:
         """
         Check if the file or any of its messages (recursively) contain enums.
 
@@ -283,9 +260,7 @@ class OtlpJsonGenerator:
         return False
 
     @classmethod
-    def _generate_header(
-        cls, writer: CodeWriter, proto_file: str = ""
-    ) -> None:
+    def _generate_header(cls, writer: CodeWriter, proto_file: str = "") -> None:
         """
         Generate file header with license and metadata.
 
@@ -364,8 +339,7 @@ class OtlpJsonGenerator:
             Set of import statement strings
         """
         return set(
-            "import " + self._get_module_path(dep_file)
-            for dep_file in self._file_dependencies.get(proto_file, [])
+            "import " + self._get_module_path(dep_file) for dep_file in self._file_dependencies.get(proto_file, [])
         )
 
     def _generate_enums_for_file(
@@ -420,9 +394,7 @@ class OtlpJsonGenerator:
             msg_desc: Message descriptor
             parent_path: Full parent class path for nested messages
         """
-        current_path = (
-            f"{parent_path}.{msg_desc.name}" if parent_path else msg_desc.name
-        )
+        current_path = f"{parent_path}.{msg_desc.name}" if parent_path else msg_desc.name
         codec = self._get_codec_module_path()
         with writer.dataclass(
             msg_desc.name,
@@ -431,9 +403,7 @@ class OtlpJsonGenerator:
             decorator_name="_dataclass",
         ):
             if msg_desc.field or msg_desc.nested_type or msg_desc.enum_type:
-                writer.docstring(
-                    [f"Generated from protobuf message {msg_desc.name}"]
-                )
+                writer.docstring([f"Generated from protobuf message {msg_desc.name}"])
                 writer.blank_line()
 
             for enum_desc in msg_desc.enum_type:
@@ -442,9 +412,7 @@ class OtlpJsonGenerator:
 
             for nested_desc in msg_desc.nested_type:
                 if not nested_desc.options.map_entry:
-                    self._generate_message_class(
-                        writer, proto_file, nested_desc, current_path
-                    )
+                    self._generate_message_class(writer, proto_file, nested_desc, current_path)
                     writer.blank_line()
 
             if msg_desc.field:
@@ -456,14 +424,10 @@ class OtlpJsonGenerator:
             writer.blank_line()
             self._generate_to_dict(writer, msg_desc)
             writer.blank_line()
-            self._generate_from_dict(
-                writer, proto_file, msg_desc, current_path
-            )
+            self._generate_from_dict(writer, proto_file, msg_desc, current_path)
 
     @classmethod
-    def _generate_enum_class(
-        cls, writer: CodeWriter, enum_desc: descriptor.EnumDescriptorProto
-    ) -> None:
+    def _generate_enum_class(cls, writer: CodeWriter, enum_desc: descriptor.EnumDescriptorProto) -> None:
         """
         Generate an IntEnum class for a protobuf enum.
 
@@ -476,9 +440,7 @@ class OtlpJsonGenerator:
             enum_type="enum.IntEnum",
             decorators=("typing.final",),
         ):
-            writer.docstring(
-                [f"Generated from protobuf enum {enum_desc.name}"]
-            )
+            writer.docstring([f"Generated from protobuf enum {enum_desc.name}"])
             writer.blank_line()
 
             if enum_desc.value:
@@ -536,9 +498,7 @@ class OtlpJsonGenerator:
             writer.assignment("_result", "{}")
 
             # Separate fields into oneof groups and standalone fields
-            oneof_groups: dict[int, list[descriptor.FieldDescriptorProto]] = (
-                defaultdict(list)
-            )
+            oneof_groups: dict[int, list[descriptor.FieldDescriptorProto]] = defaultdict(list)
             standalone_fields: list[descriptor.FieldDescriptorProto] = []
 
             for field in msg_desc.field:
@@ -548,27 +508,17 @@ class OtlpJsonGenerator:
                     standalone_fields.append(field)
 
             for field in standalone_fields:
-                with writer.if_(
-                    f"self.{field.name} is not None"
-                    if field.proto3_optional
-                    else f"self.{field.name}"
-                ):
-                    self._generate_serialization_statements(
-                        writer, field, "_result"
-                    )
+                with writer.if_(f"self.{field.name} is not None" if field.proto3_optional else f"self.{field.name}"):
+                    self._generate_serialization_statements(writer, field, "_result")
 
             for group_index in sorted(oneof_groups.keys()):
                 group_fields = oneof_groups[group_index]
                 for i, field in enumerate(reversed(group_fields)):
                     condition = f"self.{field.name} is not None"
-                    context = (
-                        writer.elif_(condition) if i else writer.if_(condition)
-                    )
+                    context = writer.elif_(condition) if i else writer.if_(condition)
 
                     with context:
-                        self._generate_serialization_statements(
-                            writer, field, "_result"
-                        )
+                        self._generate_serialization_statements(writer, field, "_result")
 
             writer.return_("_result")
 
@@ -606,16 +556,12 @@ class OtlpJsonGenerator:
                 ]
             )
             codec = self._get_codec_module_path()
-            writer.writeln(
-                f'{codec}.validate_type(data, builtins.dict, "data")'
-            )
+            writer.writeln(f'{codec}.validate_type(data, builtins.dict, "data")')
             writer.assignment("_args", "{}")
             writer.blank_line()
 
             # Separate fields into oneof groups and standalone fields
-            oneof_groups: dict[int, list[descriptor.FieldDescriptorProto]] = (
-                defaultdict(list)
-            )
+            oneof_groups: dict[int, list[descriptor.FieldDescriptorProto]] = defaultdict(list)
             standalone_fields: list[descriptor.FieldDescriptorProto] = []
 
             for field in msg_desc.field:
@@ -626,38 +572,20 @@ class OtlpJsonGenerator:
 
             # Handle standalone fields
             for field in standalone_fields:
-                json_name = (
-                    field.json_name
-                    if field.json_name
-                    else to_json_field_name(field.name)
-                )
-                with writer.if_(
-                    f'(_value := data.get("{json_name}")) is not None'
-                ):
-                    self._generate_deserialization_statements(
-                        writer, proto_file, field, "_value", "_args"
-                    )
+                json_name = field.json_name if field.json_name else to_json_field_name(field.name)
+                with writer.if_(f'(_value := data.get("{json_name}")) is not None'):
+                    self._generate_deserialization_statements(writer, proto_file, field, "_value", "_args")
 
             # Handle oneof groups
             for group_index in sorted(oneof_groups.keys()):
                 group_fields = oneof_groups[group_index]
                 for i, field in enumerate(reversed(group_fields)):
-                    json_name = (
-                        field.json_name
-                        if field.json_name
-                        else to_json_field_name(field.name)
-                    )
-                    condition = (
-                        f'(_value := data.get("{json_name}")) is not None'
-                    )
-                    context = (
-                        writer.elif_(condition) if i else writer.if_(condition)
-                    )
+                    json_name = field.json_name if field.json_name else to_json_field_name(field.name)
+                    condition = f'(_value := data.get("{json_name}")) is not None'
+                    context = writer.elif_(condition) if i else writer.if_(condition)
 
                     with context:
-                        self._generate_deserialization_statements(
-                            writer, proto_file, field, "_value", "_args"
-                        )
+                        self._generate_deserialization_statements(writer, proto_file, field, "_value", "_args")
 
             writer.blank_line()
             writer.return_("cls(**_args)")
@@ -676,17 +604,11 @@ class OtlpJsonGenerator:
             field_desc: Field descriptor for the field being serialized
             target_dict: Name of the dictionary variable to assign the serialized value to
         """
-        json_name = (
-            field_desc.json_name
-            if field_desc.json_name
-            else to_json_field_name(field_desc.name)
-        )
+        json_name = field_desc.json_name if field_desc.json_name else to_json_field_name(field_desc.name)
         if field_desc.label == descriptor.FieldDescriptorProto.LABEL_REPEATED:
             item_expr = self._get_serialization_expr(field_desc, "_v")
             if item_expr == "_v":
-                writer.assignment(
-                    f'{target_dict}["{json_name}"]', f"self.{field_desc.name}"
-                )
+                writer.assignment(f'{target_dict}["{json_name}"]', f"self.{field_desc.name}")
             else:
                 codec = self._get_codec_module_path()
                 writer.assignment(
@@ -694,15 +616,11 @@ class OtlpJsonGenerator:
                     f"{codec}.encode_repeated(self.{field_desc.name}, lambda _v: {item_expr})",
                 )
         else:
-            val_expr = self._get_serialization_expr(
-                field_desc, f"self.{field_desc.name}"
-            )
+            val_expr = self._get_serialization_expr(field_desc, f"self.{field_desc.name}")
             writer.assignment(f'{target_dict}["{json_name}"]', val_expr)
 
     # pylint: disable-next=too-many-return-statements
-    def _get_serialization_expr(
-        self, field_desc: descriptor.FieldDescriptorProto, var_name: str
-    ) -> str:
+    def _get_serialization_expr(self, field_desc: descriptor.FieldDescriptorProto, var_name: str) -> str:
         """
         Get the Python expression to serialize a value of a given type for JSON output.
 
@@ -749,9 +667,7 @@ class OtlpJsonGenerator:
         """
         codec = self._get_codec_module_path()
         if field_desc.label == descriptor.FieldDescriptorProto.LABEL_REPEATED:
-            item_expr = self._get_deserialization_expr(
-                proto_file, field_desc, "_v"
-            )
+            item_expr = self._get_deserialization_expr(proto_file, field_desc, "_v")
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
                 f'{codec}.decode_repeated({var_name}, lambda _v: {item_expr}, "{field_desc.name}")',
@@ -759,20 +675,14 @@ class OtlpJsonGenerator:
             return
 
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_MESSAGE:
-            msg_type = self._resolve_message_type(
-                field_desc.type_name, proto_file
-            )
+            msg_type = self._resolve_message_type(field_desc.type_name, proto_file)
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
                 f"{msg_type}.from_dict({var_name})",
             )
         elif field_desc.type == descriptor.FieldDescriptorProto.TYPE_ENUM:
-            enum_type = self._resolve_enum_type(
-                field_desc.type_name, proto_file
-            )
-            writer.writeln(
-                f'{codec}.validate_type({var_name}, builtins.int, "{field_desc.name}")'
-            )
+            enum_type = self._resolve_enum_type(field_desc.type_name, proto_file)
+            writer.writeln(f'{codec}.validate_type({var_name}, builtins.int, "{field_desc.name}")')
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
                 f"{enum_type}({var_name})",
@@ -801,12 +711,8 @@ class OtlpJsonGenerator:
                 f'{codec}.decode_float({var_name}, "{field_desc.name}")',
             )
         else:
-            allowed_types = get_json_allowed_types(
-                field_desc.type, field_desc.name
-            )
-            writer.writeln(
-                f'{codec}.validate_type({var_name}, {allowed_types}, "{field_desc.name}")'
-            )
+            allowed_types = get_json_allowed_types(field_desc.type, field_desc.name)
+            writer.writeln(f'{codec}.validate_type({var_name}, {allowed_types}, "{field_desc.name}")')
             writer.assignment(f'{target_dict}["{field_desc.name}"]', var_name)
 
     # pylint: disable-next=too-many-return-statements
@@ -829,14 +735,10 @@ class OtlpJsonGenerator:
         """
         codec = self._get_codec_module_path()
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_MESSAGE:
-            msg_type = self._resolve_message_type(
-                field_desc.type_name, proto_file
-            )
+            msg_type = self._resolve_message_type(field_desc.type_name, proto_file)
             return f"{msg_type}.from_dict({var_name})"
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_ENUM:
-            enum_type = self._resolve_enum_type(
-                field_desc.type_name, proto_file
-            )
+            enum_type = self._resolve_enum_type(field_desc.type_name, proto_file)
             return f"{enum_type}({var_name})"
         if is_hex_encoded_field(field_desc.name):
             return f'{codec}.decode_hex({var_name}, "{field_desc.name}")'
@@ -852,9 +754,7 @@ class OtlpJsonGenerator:
 
         return var_name
 
-    def _get_field_type_hint(
-        self, proto_file: str, field_desc: descriptor.FieldDescriptorProto
-    ) -> str:
+    def _get_field_type_hint(self, proto_file: str, field_desc: descriptor.FieldDescriptorProto) -> str:
         """
         Get the Python type hint for a field.
 
@@ -866,13 +766,9 @@ class OtlpJsonGenerator:
             Python type hint string
         """
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_MESSAGE:
-            base_type = self._resolve_message_type(
-                field_desc.type_name, proto_file
-            )
+            base_type = self._resolve_message_type(field_desc.type_name, proto_file)
         elif field_desc.type == descriptor.FieldDescriptorProto.TYPE_ENUM:
-            base_type = self._resolve_enum_type(
-                field_desc.type_name, proto_file
-            )
+            base_type = self._resolve_enum_type(field_desc.type_name, proto_file)
         else:
             base_type = get_python_type(field_desc.type)
 
@@ -937,9 +833,7 @@ class OtlpJsonGenerator:
         return f"{module_path}.{class_path}"
 
     @classmethod
-    def _get_field_default(
-        cls, field_desc: descriptor.FieldDescriptorProto
-    ) -> str | None:
+    def _get_field_default(cls, field_desc: descriptor.FieldDescriptorProto) -> str | None:
         """
         Get the default value for a field.
 
@@ -985,9 +879,7 @@ def _load_codec_source() -> str:
             codec_src_path,
             e,
         )
-        raise RuntimeError(
-            f"Failed to load codec module source from {codec_src_path}"
-        ) from e
+        raise RuntimeError(f"Failed to load codec module source from {codec_src_path}") from e
 
 
 def _find_common_root(paths: Iterable[str]) -> str:
@@ -1020,9 +912,7 @@ def _find_common_root(paths: Iterable[str]) -> str:
 
 def generate_code(
     request: plugin.CodeGeneratorRequest,
-    package_transform: Callable[[str], str] = lambda p: p.replace(
-        "opentelemetry/proto/", "opentelemetry/proto_json/"
-    ),
+    package_transform: Callable[[str], str] = lambda p: p.replace("opentelemetry/proto/", "opentelemetry/proto_json/"),
 ) -> dict[str, str]:
     """
     Main entry point for code generation.
@@ -1040,9 +930,7 @@ def generate_code(
 
 def generate_plugin_response(
     request: plugin.CodeGeneratorRequest,
-    package_transform: Callable[[str], str] = lambda p: p.replace(
-        "opentelemetry/proto/", "opentelemetry/proto_json/"
-    ),
+    package_transform: Callable[[str], str] = lambda p: p.replace("opentelemetry/proto/", "opentelemetry/proto_json/"),
 ) -> plugin.CodeGeneratorResponse:
     """
     Generate plugin response with all generated files.
@@ -1057,12 +945,8 @@ def generate_plugin_response(
     response = plugin.CodeGeneratorResponse()
 
     # Declare support for optional proto3 fields
-    response.supported_features |= (
-        plugin.CodeGeneratorResponse.FEATURE_PROTO3_OPTIONAL
-    )
-    response.supported_features |= (
-        plugin.CodeGeneratorResponse.FEATURE_SUPPORTS_EDITIONS
-    )
+    response.supported_features |= plugin.CodeGeneratorResponse.FEATURE_PROTO3_OPTIONAL
+    response.supported_features |= plugin.CodeGeneratorResponse.FEATURE_SUPPORTS_EDITIONS
 
     response.minimum_edition = descriptor.EDITION_LEGACY
     response.maximum_edition = descriptor.EDITION_2024

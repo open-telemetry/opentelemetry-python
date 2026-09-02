@@ -43,9 +43,7 @@ def _validate_attributes_advisory(
     if attributes_advisory is None:
         return None
 
-    if isinstance(attributes_advisory, Sequence) and not isinstance(
-        attributes_advisory, str
-    ):
+    if isinstance(attributes_advisory, Sequence) and not isinstance(attributes_advisory, str):
         try:
             if all(isinstance(entry, str) for entry in attributes_advisory):
                 return frozenset(attributes_advisory)
@@ -67,17 +65,12 @@ def _validate_explicit_bucket_boundaries_advisory(
 
     if isinstance(explicit_bucket_boundaries_advisory, Sequence):
         try:
-            if all(
-                isinstance(entry, (float, int))
-                for entry in explicit_bucket_boundaries_advisory
-            ):
+            if all(isinstance(entry, (float, int)) for entry in explicit_bucket_boundaries_advisory):
                 return tuple(explicit_bucket_boundaries_advisory)
         except (KeyError, TypeError):
             pass
 
-    _logger.warning(
-        "explicit_bucket_boundaries_advisory must be a sequence of numbers"
-    )
+    _logger.warning("explicit_bucket_boundaries_advisory must be a sequence of numbers")
     return None
 
 
@@ -95,10 +88,7 @@ class CallbackOptions:
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 # pylint: disable=invalid-name
-CallbackT = (
-    Callable[[CallbackOptions], Iterable[Observation]]
-    | Generator[Iterable[Observation], CallbackOptions, None]
-)
+CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
 
 
 class Instrument(ABC):
@@ -116,9 +106,7 @@ class Instrument(ABC):
         pass
 
     @staticmethod
-    def _check_name_unit_description(
-        name: str, unit: str, description: str
-    ) -> dict[str, str | None]:
+    def _check_name_unit_description(name: str, unit: str, description: str) -> dict[str, str | None]:
         """
         Checks the following instrument name, unit and description for
         compliance with the spec.
@@ -386,12 +374,8 @@ class NoOpObservableCounter(ObservableCounter):
         )
 
 
-class _ProxyObservableCounter(
-    _ProxyAsynchronousInstrument[ObservableCounter], ObservableCounter
-):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableCounter:
+class _ProxyObservableCounter(_ProxyAsynchronousInstrument[ObservableCounter], ObservableCounter):
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableCounter:
         return meter.create_observable_counter(
             self._name,
             self._callbacks,
@@ -433,9 +417,7 @@ class _ProxyObservableUpDownCounter(
     _ProxyAsynchronousInstrument[ObservableUpDownCounter],
     ObservableUpDownCounter,
 ):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableUpDownCounter:
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
             self._name,
             self._callbacks,
@@ -531,9 +513,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
             description=description,
             _attributes_advisory=_attributes_advisory,
         )
-        self._explicit_bucket_boundaries_advisory = (
-            explicit_bucket_boundaries_advisory
-        )
+        self._explicit_bucket_boundaries_advisory = explicit_bucket_boundaries_advisory
 
     def record(
         self,
@@ -586,9 +566,7 @@ class _ProxyObservableGauge(
     _ProxyAsynchronousInstrument[ObservableGauge],
     ObservableGauge,
 ):
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> ObservableGauge:
+    def _create_real_instrument(self, meter: "metrics.Meter") -> ObservableGauge:
         return meter.create_observable_gauge(
             self._name,
             self._callbacks,

@@ -113,9 +113,7 @@ class Meter(APIMeter):
         self._measurement_consumer = measurement_consumer
         self._instrument_id_instrument = {}
         self._instrument_registration_lock = Lock()
-        self._meter_config = _ProxyMeterConfig(
-            _meter_config or _MeterConfig.default()
-        )
+        self._meter_config = _ProxyMeterConfig(_meter_config or _MeterConfig.default())
 
     def _is_enabled(self) -> bool:
         return self._meter_config.is_enabled
@@ -131,25 +129,19 @@ class Meter(APIMeter):
         *,
         _attributes_advisory: Sequence[str] | None = None,
     ) -> APICounter:
-        advisory = _MetricsAdvisory(
-            attributes=_validate_attributes_advisory(_attributes_advisory)
-        )
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
 
         with self._instrument_registration_lock:
-            status = self._register_instrument(
-                name, _Counter, unit, description, advisory
-            )
+            status = self._register_instrument(name, _Counter, unit, description, advisory)
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = (
-                    _Counter(
-                        name,
-                        self._instrumentation_scope,
-                        self._measurement_consumer,
-                        unit,
-                        description,
-                        _advisory=advisory,
-                        _meter_config=self._meter_config,
-                    )
+                self._instrument_id_instrument[status.instrument_id] = _Counter(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    unit,
+                    description,
+                    _advisory=advisory,
+                    _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
@@ -174,25 +166,19 @@ class Meter(APIMeter):
         *,
         _attributes_advisory: Sequence[str] | None = None,
     ) -> APIUpDownCounter:
-        advisory = _MetricsAdvisory(
-            attributes=_validate_attributes_advisory(_attributes_advisory)
-        )
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
 
         with self._instrument_registration_lock:
-            status = self._register_instrument(
-                name, _UpDownCounter, unit, description, advisory
-            )
+            status = self._register_instrument(name, _UpDownCounter, unit, description, advisory)
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = (
-                    _UpDownCounter(
-                        name,
-                        self._instrumentation_scope,
-                        self._measurement_consumer,
-                        unit,
-                        description,
-                        _advisory=advisory,
-                        _meter_config=self._meter_config,
-                    )
+                self._instrument_id_instrument[status.instrument_id] = _UpDownCounter(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    unit,
+                    description,
+                    _advisory=advisory,
+                    _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
@@ -218,33 +204,25 @@ class Meter(APIMeter):
         *,
         _attributes_advisory: Sequence[str] | None = None,
     ) -> APIObservableCounter:
-        advisory = _MetricsAdvisory(
-            attributes=_validate_attributes_advisory(_attributes_advisory)
-        )
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
 
         with self._instrument_registration_lock:
-            status = self._register_instrument(
-                name, _ObservableCounter, unit, description, advisory
-            )
+            status = self._register_instrument(name, _ObservableCounter, unit, description, advisory)
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = (
-                    _ObservableCounter(
-                        name,
-                        self._instrumentation_scope,
-                        self._measurement_consumer,
-                        callbacks,
-                        unit,
-                        description,
-                        _advisory=advisory,
-                        _meter_config=self._meter_config,
-                    )
+                self._instrument_id_instrument[status.instrument_id] = _ObservableCounter(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    callbacks,
+                    unit,
+                    description,
+                    _advisory=advisory,
+                    _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
         if not status.already_registered:
-            self._measurement_consumer.register_asynchronous_instrument(
-                instrument
-            )
+            self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -284,16 +262,14 @@ class Meter(APIMeter):
                 advisory,
             )
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = (
-                    _Histogram(
-                        name,
-                        self._instrumentation_scope,
-                        self._measurement_consumer,
-                        unit,
-                        description,
-                        _advisory=advisory,
-                        _meter_config=self._meter_config,
-                    )
+                self._instrument_id_instrument[status.instrument_id] = _Histogram(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    unit,
+                    description,
+                    _advisory=advisory,
+                    _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
@@ -318,14 +294,10 @@ class Meter(APIMeter):
         *,
         _attributes_advisory: Sequence[str] | None = None,
     ) -> APIGauge:
-        advisory = _MetricsAdvisory(
-            attributes=_validate_attributes_advisory(_attributes_advisory)
-        )
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
 
         with self._instrument_registration_lock:
-            status = self._register_instrument(
-                name, _Gauge, unit, description, advisory
-            )
+            status = self._register_instrument(name, _Gauge, unit, description, advisory)
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _Gauge(
                     name,
@@ -360,33 +332,25 @@ class Meter(APIMeter):
         *,
         _attributes_advisory: Sequence[str] | None = None,
     ) -> APIObservableGauge:
-        advisory = _MetricsAdvisory(
-            attributes=_validate_attributes_advisory(_attributes_advisory)
-        )
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
 
         with self._instrument_registration_lock:
-            status = self._register_instrument(
-                name, _ObservableGauge, unit, description, advisory
-            )
+            status = self._register_instrument(name, _ObservableGauge, unit, description, advisory)
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = (
-                    _ObservableGauge(
-                        name,
-                        self._instrumentation_scope,
-                        self._measurement_consumer,
-                        callbacks,
-                        unit,
-                        description,
-                        _advisory=advisory,
-                        _meter_config=self._meter_config,
-                    )
+                self._instrument_id_instrument[status.instrument_id] = _ObservableGauge(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    callbacks,
+                    unit,
+                    description,
+                    _advisory=advisory,
+                    _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
         if not status.already_registered:
-            self._measurement_consumer.register_asynchronous_instrument(
-                instrument
-            )
+            self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -410,33 +374,25 @@ class Meter(APIMeter):
         *,
         _attributes_advisory: Sequence[str] | None = None,
     ) -> APIObservableUpDownCounter:
-        advisory = _MetricsAdvisory(
-            attributes=_validate_attributes_advisory(_attributes_advisory)
-        )
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
 
         with self._instrument_registration_lock:
-            status = self._register_instrument(
-                name, _ObservableUpDownCounter, unit, description, advisory
-            )
+            status = self._register_instrument(name, _ObservableUpDownCounter, unit, description, advisory)
             if not status.already_registered:
-                self._instrument_id_instrument[status.instrument_id] = (
-                    _ObservableUpDownCounter(
-                        name,
-                        self._instrumentation_scope,
-                        self._measurement_consumer,
-                        callbacks,
-                        unit,
-                        description,
-                        _advisory=advisory,
-                        _meter_config=self._meter_config,
-                    )
+                self._instrument_id_instrument[status.instrument_id] = _ObservableUpDownCounter(
+                    name,
+                    self._instrumentation_scope,
+                    self._measurement_consumer,
+                    callbacks,
+                    unit,
+                    description,
+                    _advisory=advisory,
+                    _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
         if not status.already_registered:
-            self._measurement_consumer.register_asynchronous_instrument(
-                instrument
-            )
+            self._measurement_consumer.register_asynchronous_instrument(instrument)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -528,9 +484,7 @@ class MeterProvider(APIMeterProvider):
 
     def __init__(
         self,
-        metric_readers: Sequence[
-            "opentelemetry.sdk.metrics.export.MetricReader"
-        ] = (),
+        metric_readers: Sequence["opentelemetry.sdk.metrics.export.MetricReader"] = (),
         resource: Resource | None = None,
         exemplar_filter: ExemplarFilter | None = None,
         shutdown_on_exit: bool = True,
@@ -545,10 +499,7 @@ class MeterProvider(APIMeterProvider):
             resource = Resource.create({})
         self._sdk_config = SdkConfiguration(
             exemplar_filter=(
-                exemplar_filter
-                or _get_exemplar_filter(
-                    environ.get(OTEL_METRICS_EXEMPLAR_FILTER, "trace_based")
-                )
+                exemplar_filter or _get_exemplar_filter(environ.get(OTEL_METRICS_EXEMPLAR_FILTER, "trace_based"))
             ),
             resource=resource,
             views=views,
@@ -567,24 +518,19 @@ class MeterProvider(APIMeterProvider):
         self._meters: dict[InstrumentationScope, Meter] = {}
         self._shutdown_once = Once()
         self._shutdown = False
-        self._meter_configurator = (
-            _meter_configurator or _default_meter_configurator
-        )
+        self._meter_configurator = _meter_configurator or _default_meter_configurator
 
         for metric_reader in self._metric_readers:
             with self._all_metric_readers_lock:
                 if metric_reader in self._all_metric_readers:
                     # pylint: disable=broad-exception-raised
                     raise Exception(
-                        f"MetricReader {metric_reader} has been registered "
-                        "already in other MeterProvider instance"
+                        f"MetricReader {metric_reader} has been registered already in other MeterProvider instance"
                     )
 
                 self._all_metric_readers.add(metric_reader)
 
-            metric_reader._set_collect_callback(
-                self._measurement_consumer.collect
-            )
+            metric_reader._set_collect_callback(self._measurement_consumer.collect)
             metric_reader._set_meter_provider(self)
 
         if hasattr(os, "register_at_fork"):
@@ -602,9 +548,7 @@ class MeterProvider(APIMeterProvider):
         type(self)._all_metric_readers_lock = Lock()
         self._update_resource(_get_process_dependent_resource())
 
-    def _set_meter_configurator(
-        self, *, meter_configurator: _MeterConfiguratorT
-    ):
+    def _set_meter_configurator(self, *, meter_configurator: _MeterConfiguratorT):
         """Set a new MeterConfigurator for this MeterProvider.
 
         Setting a new MeterConfigurator will result in the configurator being called
@@ -615,19 +559,13 @@ class MeterProvider(APIMeterProvider):
             self._meter_configurator = meter_configurator
             for instrumentation_scope, meter in self._meters.items():
                 # pylint: disable-next=protected-access
-                meter._set_meter_config(
-                    self._apply_meter_configurator(instrumentation_scope)
-                )
+                meter._set_meter_config(self._apply_meter_configurator(instrumentation_scope))
 
     def _update_resource(self, resource: Resource) -> None:
         with self._meter_lock:
-            self._sdk_config.resource = self._sdk_config.resource.merge(
-                resource
-            )
+            self._sdk_config.resource = self._sdk_config.resource.merge(resource)
 
-    def _apply_meter_configurator(
-        self, instrumentation_scope: InstrumentationScope
-    ) -> _MeterConfig:
+    def _apply_meter_configurator(self, instrumentation_scope: InstrumentationScope) -> _MeterConfig:
         try:
             return self._meter_configurator(instrumentation_scope)
         # pylint: disable-next=broad-exception-caught
@@ -647,12 +585,8 @@ class MeterProvider(APIMeterProvider):
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
-                    raise MetricsTimeoutError(
-                        "Timed out while flushing metric readers"
-                    )
-                metric_reader.force_flush(
-                    timeout_millis=(deadline_ns - current_ts) / 10**6
-                )
+                    raise MetricsTimeoutError("Timed out while flushing metric readers")
+                metric_reader.force_flush(timeout_millis=(deadline_ns - current_ts) / 10**6)
 
             # pylint: disable=broad-exception-caught
             except Exception as error:
@@ -693,12 +627,8 @@ class MeterProvider(APIMeterProvider):
             try:
                 if current_ts >= deadline_ns:
                     # pylint: disable=broad-exception-raised
-                    raise Exception(
-                        "Didn't get to execute, deadline already exceeded"
-                    )
-                metric_reader.shutdown(
-                    timeout_millis=(deadline_ns - current_ts) / 10**6
-                )
+                    raise Exception("Didn't get to execute, deadline already exceeded")
+                metric_reader.shutdown(timeout_millis=(deadline_ns - current_ts) / 10**6)
 
             # pylint: disable=broad-exception-caught
             except Exception as error:
@@ -734,18 +664,14 @@ class MeterProvider(APIMeterProvider):
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
         if self._shutdown:
-            _logger.warning(
-                "A shutdown `MeterProvider` can not provide a `Meter`"
-            )
+            _logger.warning("A shutdown `MeterProvider` can not provide a `Meter`")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
         if not name:
             _logger.warning("Meter name cannot be None or empty.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
-        instrumentation_scope = InstrumentationScope(
-            name, version, schema_url, attributes
-        )
+        instrumentation_scope = InstrumentationScope(name, version, schema_url, attributes)
         with self._meter_lock:
             if not self._meters.get(instrumentation_scope):
                 # FIXME #2558 pass SDKConfig object to meter so that the meter
@@ -753,15 +679,11 @@ class MeterProvider(APIMeterProvider):
                 self._meters[instrumentation_scope] = Meter(
                     instrumentation_scope,
                     self._measurement_consumer,
-                    _meter_config=self._apply_meter_configurator(
-                        instrumentation_scope
-                    ),
+                    _meter_config=self._apply_meter_configurator(instrumentation_scope),
                 )
             return self._meters[instrumentation_scope]
 
-    def add_metric_reader(
-        self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader"
-    ) -> None:
+    def add_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader") -> None:
         with self._all_metric_readers_lock:
             if metric_reader in self._all_metric_readers:
                 _logger.warning(
@@ -771,9 +693,7 @@ class MeterProvider(APIMeterProvider):
                 return
             self._measurement_consumer.add_metric_reader(metric_reader)
             # pylint: disable-next=protected-access
-            metric_reader._set_collect_callback(
-                self._measurement_consumer.collect
-            )
+            metric_reader._set_collect_callback(self._measurement_consumer.collect)
             self._all_metric_readers.add(metric_reader)
 
     def remove_metric_reader(
@@ -782,9 +702,7 @@ class MeterProvider(APIMeterProvider):
     ) -> None:
         with self._all_metric_readers_lock:
             if metric_reader not in self._all_metric_readers:
-                _logger.warning(
-                    "MetricReader '%s' has not been registered!", metric_reader
-                )
+                _logger.warning("MetricReader '%s' has not been registered!", metric_reader)
                 return
             self._measurement_consumer.remove_metric_reader(metric_reader)
             # pylint: disable-next=protected-access
