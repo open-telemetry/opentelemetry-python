@@ -19,6 +19,12 @@ from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
+
+# MessageToDict needs a real protobuf message with a DESCRIPTOR; the pure-Python
+# classes only serialize. See opentelemetry-proto[test].
+from opentelemetry.proto._test.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsServiceRequest as _RealExportLogsServiceRequest,
+)
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope as PB2InstrumentationScope,
@@ -268,7 +274,11 @@ class TestOTLPLogExporter(TestCase):
     def export_log_and_deserialize(self, log_data):
         # pylint: disable=protected-access
         translated_data = self.exporter._translate_data([log_data])
-        request_dict = MessageToDict(translated_data)
+        request_dict = MessageToDict(
+            _RealExportLogsServiceRequest.FromString(
+                translated_data.SerializeToString()
+            )
+        )
         log_records = request_dict.get("resourceLogs")[0].get("scopeLogs")[0].get("logRecords")
         return log_records
 
