@@ -28,8 +28,11 @@ class ExporterConfig(Generic[ExporterT]):
     lazy_kwargs: dict[str, Callable[[], Any]] = field(default_factory=dict)
 
     def build(self) -> ExporterT:
-        extra = {key: factory() for key, factory in self.lazy_kwargs.items()}
-        return self.exporter_class(**self.kwargs, **extra)
+        kwargs = {
+            **self.kwargs,
+            **{key: factory() for key, factory in self.lazy_kwargs.items()},
+        }
+        return self.exporter_class(**kwargs)
 
 
 def make_otlp_file(signal: Literal["traces", "metrics", "logs"]) -> str:
