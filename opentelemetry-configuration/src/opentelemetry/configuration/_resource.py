@@ -7,6 +7,7 @@ import dataclasses
 import fnmatch
 import logging
 import os
+import sys
 from collections.abc import Callable
 from typing import Any
 from urllib import parse
@@ -28,7 +29,7 @@ from opentelemetry.sdk.resources import (
     ServiceInstanceIdResourceDetector,
     _HostResourceDetector,
 )
-from opentelemetry.util.types import AttributeValue
+from opentelemetry.util.types import AnyValue
 
 _logger = logging.getLogger(__name__)
 
@@ -101,7 +102,9 @@ def create_resource(config: ResourceConfig | None) -> Resource:
     """
     # Spec requires service.name to always be present; detectors and explicit
     # config attributes can override this default.
-    base = _DEFAULT_RESOURCE.merge(Resource({SERVICE_NAME: "unknown_service"}))
+    executable_name = os.path.basename(sys.executable) if sys.executable else None
+    default_service_name = f"unknown_service:{executable_name}" if executable_name else "unknown_service"
+    base = _DEFAULT_RESOURCE.merge(Resource({SERVICE_NAME: default_service_name}))
 
     if config is None:
         return base
@@ -144,15 +147,15 @@ def create_resource(config: ResourceConfig | None) -> Resource:
     return result.merge(config_resource)
 
 
-def _detect_service(_config: Any) -> dict[str, AttributeValue]:
+def _detect_service(_config: Any) -> dict[str, AnyValue]:
     """Service detector: generates instance ID and reads OTEL_SERVICE_NAME."""
-    attrs: dict[str, AttributeValue] = dict(ServiceInstanceIdResourceDetector().detect().attributes)
+    attrs: dict[str, AnyValue] = dict(ServiceInstanceIdResourceDetector().detect().attributes)
     if service_name := os.environ.get(OTEL_SERVICE_NAME):
         attrs[SERVICE_NAME] = service_name
     return attrs
 
 
-_RESOURCE_DETECTOR_REGISTRY: dict[str, Callable[[Any], dict[str, AttributeValue]]] = {
+_RESOURCE_DETECTOR_REGISTRY: dict[str, Callable[[Any], dict[str, AnyValue]]] = {
     "service": _detect_service,
     "host": lambda _: dict(_HostResourceDetector().detect().attributes),
     "process": lambda _: dict(ProcessResourceDetector().detect().attributes),

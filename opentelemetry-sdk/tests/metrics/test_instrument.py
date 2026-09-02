@@ -598,3 +598,17 @@ class TestBind(TestCase):
         with self.assertLogs(level=WARNING):
             bound.add(-1.0)
         mc.consume_measurement.assert_not_called()
+
+
+class TestInstrumentValidationMessages(TestCase):
+    def test_invalid_name_error_message(self):
+        with self.assertRaises(Exception) as ctx:
+            _Counter("1-invalid-name", Mock(), Mock())
+        self.assertIn("maximum length 255", str(ctx.exception))
+        self.assertNotIn("63", str(ctx.exception))
+
+    def test_invalid_unit_error_message(self):
+        with self.assertRaises(Exception) as ctx:
+            _Counter("name", Mock(), Mock(), unit="u" * 64)
+        self.assertIn("maximum length 63", str(ctx.exception))
+        self.assertNotIn("255", str(ctx.exception))
