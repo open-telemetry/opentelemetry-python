@@ -79,9 +79,9 @@ from .tag import encode_tag
 from .varint import encode_varint
 
 WT_VARINT = 0  # int32, int64, uint32, uint64, bool, enum
-WT_64BIT = 1   # double, fixed64, sfixed64
-WT_LEN = 2     # string, bytes, embedded messages, packed arrays
-WT_32BIT = 5   # float, fixed32, sfixed32
+WT_64BIT = 1  # double, fixed64, sfixed64
+WT_LEN = 2  # string, bytes, embedded messages, packed arrays
+WT_32BIT = 5  # float, fixed32, sfixed32
 
 
 def msg(field: int, content: bytes) -> bytes:

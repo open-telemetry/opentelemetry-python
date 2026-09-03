@@ -1,28 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from opentelemetry.proto._test.common.v1.common_pb2 import (
-    AnyValue as ProtoAnyValue,
-    InstrumentationScope as ProtoInstrumentationScope,
-    KeyValue as ProtoKeyValue,
-)
-from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
-    Exemplar as ProtoExemplar,
-    ExponentialHistogram as ProtoExponentialHistogram,
-    ExponentialHistogramDataPoint as ProtoExponentialHistogramDataPoint,
-    Gauge as ProtoGauge,
-    Histogram as ProtoHistogram,
-    HistogramDataPoint as ProtoHistogramDataPoint,
-    Metric as ProtoMetric,
-    NumberDataPoint as ProtoNumberDataPoint,
-    ResourceMetrics as ProtoResourceMetrics,
-    ScopeMetrics as ProtoScopeMetrics,
-    Sum as ProtoSum,
-    Summary as ProtoSummary,
-    SummaryDataPoint as ProtoSummaryDataPoint,
-)
-from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
-
 from opentelemetry._proto.common.v1.common_pb2 import (
     AnyValue,
     InstrumentationScope,
@@ -44,9 +22,58 @@ from opentelemetry._proto.metrics.v1.metrics_pb2 import (
     SummaryDataPoint,
 )
 from opentelemetry._proto.resource.v1.resource_pb2 import Resource
-
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    AnyValue as ProtoAnyValue,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    InstrumentationScope as ProtoInstrumentationScope,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    KeyValue as ProtoKeyValue,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    Exemplar as ProtoExemplar,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    ExponentialHistogram as ProtoExponentialHistogram,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    ExponentialHistogramDataPoint as ProtoExponentialHistogramDataPoint,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    Gauge as ProtoGauge,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    Histogram as ProtoHistogram,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    HistogramDataPoint as ProtoHistogramDataPoint,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    Metric as ProtoMetric,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    NumberDataPoint as ProtoNumberDataPoint,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    ResourceMetrics as ProtoResourceMetrics,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    ScopeMetrics as ProtoScopeMetrics,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    Sum as ProtoSum,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    Summary as ProtoSummary,
+)
+from opentelemetry.proto._test.metrics.v1.metrics_pb2 import (
+    SummaryDataPoint as ProtoSummaryDataPoint,
+)
+from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
 
 # ── Exemplar ──────────────────────────────────────────────────────────────────
+
 
 def test_exemplar_empty() -> None:
     assert Exemplar().SerializeToString() == b""
@@ -85,6 +112,7 @@ def test_exemplar_with_filtered_attributes() -> None:
 
 
 # ── NumberDataPoint ───────────────────────────────────────────────────────────
+
 
 def test_number_data_point_empty() -> None:
     assert NumberDataPoint().SerializeToString() == b""
@@ -134,6 +162,7 @@ def test_number_data_point_with_exemplar() -> None:
 
 # ── Gauge ─────────────────────────────────────────────────────────────────────
 
+
 def test_gauge_empty() -> None:
     assert Gauge().SerializeToString() == b""
 
@@ -149,6 +178,7 @@ def test_gauge_with_data_point() -> None:
 
 
 # ── Sum ───────────────────────────────────────────────────────────────────────
+
 
 def test_sum_empty() -> None:
     assert Sum().SerializeToString() == b""
@@ -174,15 +204,13 @@ def test_sum_with_data_and_temporality() -> None:
 
 # ── HistogramDataPoint ────────────────────────────────────────────────────────
 
+
 def test_histogram_data_point_empty() -> None:
     assert HistogramDataPoint().SerializeToString() == b""
 
 
 def test_histogram_data_point_empty_matches_proto() -> None:
-    assert (
-        HistogramDataPoint().SerializeToString()
-        == ProtoHistogramDataPoint().SerializeToString()
-    )
+    assert HistogramDataPoint().SerializeToString() == ProtoHistogramDataPoint().SerializeToString()
 
 
 def test_histogram_data_point_with_count_and_buckets() -> None:
@@ -211,6 +239,7 @@ def test_histogram_data_point_with_min_max() -> None:
 
 # ── Histogram ─────────────────────────────────────────────────────────────────
 
+
 def test_histogram_empty() -> None:
     assert Histogram().SerializeToString() == b""
 
@@ -232,6 +261,7 @@ def test_histogram_with_data_and_temporality() -> None:
 
 
 # ── ExponentialHistogramDataPoint.Buckets ─────────────────────────────────────
+
 
 def test_exp_histogram_buckets_empty() -> None:
     assert ExponentialHistogramDataPoint.Buckets().SerializeToString() == b""
@@ -258,14 +288,14 @@ def test_exp_histogram_buckets_negative_offset() -> None:
 
 # ── ExponentialHistogramDataPoint ─────────────────────────────────────────────
 
+
 def test_exp_histogram_data_point_empty() -> None:
     assert ExponentialHistogramDataPoint().SerializeToString() == b""
 
 
 def test_exp_histogram_data_point_empty_matches_proto() -> None:
     assert (
-        ExponentialHistogramDataPoint().SerializeToString()
-        == ProtoExponentialHistogramDataPoint().SerializeToString()
+        ExponentialHistogramDataPoint().SerializeToString() == ProtoExponentialHistogramDataPoint().SerializeToString()
     )
 
 
@@ -290,9 +320,7 @@ def test_exp_histogram_data_point_with_buckets() -> None:
     neg = ExponentialHistogramDataPoint.Buckets(offset=-1, bucket_counts=[1])
     proto_pos = ProtoExponentialHistogramDataPoint.Buckets(offset=1, bucket_counts=[3, 4])
     proto_neg = ProtoExponentialHistogramDataPoint.Buckets(offset=-1, bucket_counts=[1])
-    our = ExponentialHistogramDataPoint(
-        count=8, scale=2, positive=pos, negative=neg, time_unix_nano=1_000
-    )
+    our = ExponentialHistogramDataPoint(count=8, scale=2, positive=pos, negative=neg, time_unix_nano=1_000)
     proto = ProtoExponentialHistogramDataPoint(
         count=8, scale=2, positive=proto_pos, negative=proto_neg, time_unix_nano=1_000
     )
@@ -301,15 +329,13 @@ def test_exp_histogram_data_point_with_buckets() -> None:
 
 # ── ExponentialHistogram ──────────────────────────────────────────────────────
 
+
 def test_exp_histogram_empty() -> None:
     assert ExponentialHistogram().SerializeToString() == b""
 
 
 def test_exp_histogram_empty_matches_proto() -> None:
-    assert (
-        ExponentialHistogram().SerializeToString()
-        == ProtoExponentialHistogram().SerializeToString()
-    )
+    assert ExponentialHistogram().SerializeToString() == ProtoExponentialHistogram().SerializeToString()
 
 
 def test_exp_histogram_with_data() -> None:
@@ -325,6 +351,7 @@ def test_exp_histogram_with_data() -> None:
 
 
 # ── SummaryDataPoint.ValueAtQuantile ──────────────────────────────────────────
+
 
 def test_value_at_quantile_empty() -> None:
     assert SummaryDataPoint.ValueAtQuantile().SerializeToString() == b""
@@ -351,15 +378,13 @@ def test_value_at_quantile_p99() -> None:
 
 # ── SummaryDataPoint ──────────────────────────────────────────────────────────
 
+
 def test_summary_data_point_empty() -> None:
     assert SummaryDataPoint().SerializeToString() == b""
 
 
 def test_summary_data_point_empty_matches_proto() -> None:
-    assert (
-        SummaryDataPoint().SerializeToString()
-        == ProtoSummaryDataPoint().SerializeToString()
-    )
+    assert SummaryDataPoint().SerializeToString() == ProtoSummaryDataPoint().SerializeToString()
 
 
 def test_summary_data_point_with_count_and_sum() -> None:
@@ -390,6 +415,7 @@ def test_summary_data_point_with_quantiles() -> None:
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 
+
 def test_summary_empty() -> None:
     assert Summary().SerializeToString() == b""
 
@@ -406,6 +432,7 @@ def test_summary_with_data_point() -> None:
 
 # ── Metric ────────────────────────────────────────────────────────────────────
 
+
 def test_metric_empty() -> None:
     assert Metric().SerializeToString() == b""
 
@@ -415,64 +442,94 @@ def test_metric_empty_matches_proto() -> None:
 
 
 def test_metric_gauge() -> None:
-    our = Metric(name="cpu", description="CPU usage", unit="%", gauge=Gauge(
-        data_points=[NumberDataPoint(as_double=0.75)]
-    ))
-    proto = ProtoMetric(name="cpu", description="CPU usage", unit="%", gauge=ProtoGauge(
-        data_points=[ProtoNumberDataPoint(as_double=0.75)]
-    ))
+    our = Metric(
+        name="cpu", description="CPU usage", unit="%", gauge=Gauge(data_points=[NumberDataPoint(as_double=0.75)])
+    )
+    proto = ProtoMetric(
+        name="cpu",
+        description="CPU usage",
+        unit="%",
+        gauge=ProtoGauge(data_points=[ProtoNumberDataPoint(as_double=0.75)]),
+    )
     assert our.SerializeToString() == proto.SerializeToString()
 
 
 def test_metric_sum() -> None:
-    our = Metric(name="requests", unit="1", sum=Sum(
-        data_points=[NumberDataPoint(as_int=100)],
-        aggregation_temporality=2,
-        is_monotonic=True,
-    ))
-    proto = ProtoMetric(name="requests", unit="1", sum=ProtoSum(
-        data_points=[ProtoNumberDataPoint(as_int=100)],
-        aggregation_temporality=2,
-        is_monotonic=True,
-    ))
+    our = Metric(
+        name="requests",
+        unit="1",
+        sum=Sum(
+            data_points=[NumberDataPoint(as_int=100)],
+            aggregation_temporality=2,
+            is_monotonic=True,
+        ),
+    )
+    proto = ProtoMetric(
+        name="requests",
+        unit="1",
+        sum=ProtoSum(
+            data_points=[ProtoNumberDataPoint(as_int=100)],
+            aggregation_temporality=2,
+            is_monotonic=True,
+        ),
+    )
     assert our.SerializeToString() == proto.SerializeToString()
 
 
 def test_metric_histogram() -> None:
-    our = Metric(name="latency", histogram=Histogram(
-        data_points=[HistogramDataPoint(count=5, time_unix_nano=1_000)],
-        aggregation_temporality=1,
-    ))
-    proto = ProtoMetric(name="latency", histogram=ProtoHistogram(
-        data_points=[ProtoHistogramDataPoint(count=5, time_unix_nano=1_000)],
-        aggregation_temporality=1,
-    ))
+    our = Metric(
+        name="latency",
+        histogram=Histogram(
+            data_points=[HistogramDataPoint(count=5, time_unix_nano=1_000)],
+            aggregation_temporality=1,
+        ),
+    )
+    proto = ProtoMetric(
+        name="latency",
+        histogram=ProtoHistogram(
+            data_points=[ProtoHistogramDataPoint(count=5, time_unix_nano=1_000)],
+            aggregation_temporality=1,
+        ),
+    )
     assert our.SerializeToString() == proto.SerializeToString()
 
 
 def test_metric_summary() -> None:
-    our = Metric(name="duration", summary=Summary(
-        data_points=[SummaryDataPoint(count=10, sum=500.0)],
-    ))
-    proto = ProtoMetric(name="duration", summary=ProtoSummary(
-        data_points=[ProtoSummaryDataPoint(count=10, sum=500.0)],
-    ))
+    our = Metric(
+        name="duration",
+        summary=Summary(
+            data_points=[SummaryDataPoint(count=10, sum=500.0)],
+        ),
+    )
+    proto = ProtoMetric(
+        name="duration",
+        summary=ProtoSummary(
+            data_points=[ProtoSummaryDataPoint(count=10, sum=500.0)],
+        ),
+    )
     assert our.SerializeToString() == proto.SerializeToString()
 
 
 def test_metric_exponential_histogram() -> None:
-    our = Metric(name="exp_lat", exponential_histogram=ExponentialHistogram(
-        data_points=[ExponentialHistogramDataPoint(count=3, time_unix_nano=1_000)],
-        aggregation_temporality=2,
-    ))
-    proto = ProtoMetric(name="exp_lat", exponential_histogram=ProtoExponentialHistogram(
-        data_points=[ProtoExponentialHistogramDataPoint(count=3, time_unix_nano=1_000)],
-        aggregation_temporality=2,
-    ))
+    our = Metric(
+        name="exp_lat",
+        exponential_histogram=ExponentialHistogram(
+            data_points=[ExponentialHistogramDataPoint(count=3, time_unix_nano=1_000)],
+            aggregation_temporality=2,
+        ),
+    )
+    proto = ProtoMetric(
+        name="exp_lat",
+        exponential_histogram=ProtoExponentialHistogram(
+            data_points=[ProtoExponentialHistogramDataPoint(count=3, time_unix_nano=1_000)],
+            aggregation_temporality=2,
+        ),
+    )
     assert our.SerializeToString() == proto.SerializeToString()
 
 
 # ── ScopeMetrics ──────────────────────────────────────────────────────────────
+
 
 def test_scope_metrics_empty() -> None:
     assert ScopeMetrics().SerializeToString() == b""
@@ -499,6 +556,7 @@ def test_scope_metrics_with_scope_and_metric() -> None:
 
 
 # ── ResourceMetrics ───────────────────────────────────────────────────────────
+
 
 def test_resource_metrics_empty() -> None:
     assert ResourceMetrics().SerializeToString() == b""

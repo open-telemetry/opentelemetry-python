@@ -1,18 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from opentelemetry.proto._test.common.v1.common_pb2 import (
-    AnyValue as ProtoAnyValue,
-    InstrumentationScope as ProtoInstrumentationScope,
-    KeyValue as ProtoKeyValue,
-)
-from opentelemetry.proto._test.logs.v1.logs_pb2 import (
-    LogRecord as ProtoLogRecord,
-    ResourceLogs as ProtoResourceLogs,
-    ScopeLogs as ProtoScopeLogs,
-)
-from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
-
 from opentelemetry._proto.common.v1.common_pb2 import (
     AnyValue,
     InstrumentationScope,
@@ -20,9 +8,28 @@ from opentelemetry._proto.common.v1.common_pb2 import (
 )
 from opentelemetry._proto.logs.v1.logs_pb2 import LogRecord, ResourceLogs, ScopeLogs
 from opentelemetry._proto.resource.v1.resource_pb2 import Resource
-
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    AnyValue as ProtoAnyValue,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    InstrumentationScope as ProtoInstrumentationScope,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    KeyValue as ProtoKeyValue,
+)
+from opentelemetry.proto._test.logs.v1.logs_pb2 import (
+    LogRecord as ProtoLogRecord,
+)
+from opentelemetry.proto._test.logs.v1.logs_pb2 import (
+    ResourceLogs as ProtoResourceLogs,
+)
+from opentelemetry.proto._test.logs.v1.logs_pb2 import (
+    ScopeLogs as ProtoScopeLogs,
+)
+from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
 
 # ── LogRecord ─────────────────────────────────────────────────────────────────
+
 
 def test_log_record_empty() -> None:
     assert LogRecord().SerializeToString() == b""
@@ -92,6 +99,7 @@ def test_log_record_flags() -> None:
 
 # ── ScopeLogs ─────────────────────────────────────────────────────────────────
 
+
 def test_scope_logs_empty() -> None:
     assert ScopeLogs().SerializeToString() == b""
 
@@ -125,6 +133,7 @@ def test_scope_logs_with_scope_and_records() -> None:
 
 
 # ── ResourceLogs ──────────────────────────────────────────────────────────────
+
 
 def test_resource_logs_empty() -> None:
     assert ResourceLogs().SerializeToString() == b""

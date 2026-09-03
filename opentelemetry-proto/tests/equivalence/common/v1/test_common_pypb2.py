@@ -1,14 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from opentelemetry.proto._test.common.v1.common_pb2 import (
-    AnyValue as ProtoAnyValue,
-    ArrayValue as ProtoArrayValue,
-    InstrumentationScope as ProtoInstrumentationScope,
-    KeyValue as ProtoKeyValue,
-    KeyValueList as ProtoKeyValueList,
-)
-
 from opentelemetry._proto.common.v1.common_pb2 import (
     AnyValue,
     ArrayValue,
@@ -16,9 +8,24 @@ from opentelemetry._proto.common.v1.common_pb2 import (
     KeyValue,
     KeyValueList,
 )
-
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    AnyValue as ProtoAnyValue,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    ArrayValue as ProtoArrayValue,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    InstrumentationScope as ProtoInstrumentationScope,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    KeyValue as ProtoKeyValue,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    KeyValueList as ProtoKeyValueList,
+)
 
 # ── AnyValue ──────────────────────────────────────────────────────────────────
+
 
 def test_any_value_empty() -> None:
     assert AnyValue().SerializeToString() == b""
@@ -84,6 +91,7 @@ def test_any_value_kvlist_empty() -> None:
 
 # ── ArrayValue ────────────────────────────────────────────────────────────────
 
+
 def test_array_value_empty() -> None:
     assert ArrayValue().SerializeToString() == b""
 
@@ -100,6 +108,7 @@ def test_array_value_with_elements() -> None:
 
 # ── KeyValueList ──────────────────────────────────────────────────────────────
 
+
 def test_kvlist_empty() -> None:
     assert KeyValueList().SerializeToString() == b""
 
@@ -115,6 +124,7 @@ def test_kvlist_with_values() -> None:
 
 
 # ── KeyValue ──────────────────────────────────────────────────────────────────
+
 
 def test_key_value_empty() -> None:
     assert KeyValue().SerializeToString() == b""
@@ -150,15 +160,13 @@ def test_key_value_double() -> None:
 
 # ── InstrumentationScope ──────────────────────────────────────────────────────
 
+
 def test_instrumentation_scope_empty() -> None:
     assert InstrumentationScope().SerializeToString() == b""
 
 
 def test_instrumentation_scope_empty_matches_proto() -> None:
-    assert (
-        InstrumentationScope().SerializeToString()
-        == ProtoInstrumentationScope().SerializeToString()
-    )
+    assert InstrumentationScope().SerializeToString() == ProtoInstrumentationScope().SerializeToString()
 
 
 def test_instrumentation_scope_name() -> None:

@@ -1,19 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from opentelemetry.proto._test.common.v1.common_pb2 import (
-    AnyValue as ProtoAnyValue,
-    InstrumentationScope as ProtoInstrumentationScope,
-    KeyValue as ProtoKeyValue,
-)
-from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
-from opentelemetry.proto._test.trace.v1.trace_pb2 import (
-    ResourceSpans as ProtoResourceSpans,
-    ScopeSpans as ProtoScopeSpans,
-    Span as ProtoSpan,
-    Status as ProtoStatus,
-)
-
 from opentelemetry._proto.common.v1.common_pb2 import (
     AnyValue,
     InstrumentationScope,
@@ -26,9 +13,31 @@ from opentelemetry._proto.trace.v1.trace_pb2 import (
     Span,
     Status,
 )
-
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    AnyValue as ProtoAnyValue,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    InstrumentationScope as ProtoInstrumentationScope,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
+    KeyValue as ProtoKeyValue,
+)
+from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
+from opentelemetry.proto._test.trace.v1.trace_pb2 import (
+    ResourceSpans as ProtoResourceSpans,
+)
+from opentelemetry.proto._test.trace.v1.trace_pb2 import (
+    ScopeSpans as ProtoScopeSpans,
+)
+from opentelemetry.proto._test.trace.v1.trace_pb2 import (
+    Span as ProtoSpan,
+)
+from opentelemetry.proto._test.trace.v1.trace_pb2 import (
+    Status as ProtoStatus,
+)
 
 # ── Status ────────────────────────────────────────────────────────────────────
+
 
 def test_status_empty() -> None:
     assert Status().SerializeToString() == b""
@@ -51,6 +60,7 @@ def test_status_code_and_message() -> None:
 
 
 # ── Span.Event ────────────────────────────────────────────────────────────────
+
 
 def test_span_event_empty() -> None:
     assert Span.Event().SerializeToString() == b""
@@ -75,6 +85,7 @@ def test_span_event_with_attributes() -> None:
 
 
 # ── Span.Link ─────────────────────────────────────────────────────────────────
+
 
 def test_span_link_empty() -> None:
     assert Span.Link().SerializeToString() == b""
@@ -101,6 +112,7 @@ def test_span_link_with_flags() -> None:
 
 
 # ── Span ──────────────────────────────────────────────────────────────────────
+
 
 def test_span_empty() -> None:
     assert Span().SerializeToString() == b""
@@ -190,6 +202,7 @@ def test_span_kind() -> None:
 
 # ── ScopeSpans ────────────────────────────────────────────────────────────────
 
+
 def test_scope_spans_empty() -> None:
     assert ScopeSpans().SerializeToString() == b""
 
@@ -215,6 +228,7 @@ def test_scope_spans_with_scope_and_span() -> None:
 
 
 # ── ResourceSpans ─────────────────────────────────────────────────────────────
+
 
 def test_resource_spans_empty() -> None:
     assert ResourceSpans().SerializeToString() == b""

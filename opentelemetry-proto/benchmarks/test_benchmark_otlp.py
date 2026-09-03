@@ -81,11 +81,11 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as _pb_metrics
 from opentelemetry.proto.resource.v1 import resource_pb2 as _pb_resource
 from opentelemetry.proto.trace.v1 import trace_pb2 as _pb_trace
 
-
 # ── Class bundles ───────────────────────────────────────────────────────────
 #
 # Both implementations share the same class names and constructor kwargs, so a
 # builder written against one bundle works verbatim against the other.
+
 
 def _bundle(common, resource, trace, logs, metrics, coll_trace, coll_logs, coll_metrics):
     return SimpleNamespace(
@@ -114,12 +114,24 @@ def _bundle(common, resource, trace, logs, metrics, coll_trace, coll_logs, coll_
 
 
 PY = _bundle(
-    _py_common, _py_resource, _py_trace, _py_logs, _py_metrics,
-    _py_coll_trace, _py_coll_logs, _py_coll_metrics,
+    _py_common,
+    _py_resource,
+    _py_trace,
+    _py_logs,
+    _py_metrics,
+    _py_coll_trace,
+    _py_coll_logs,
+    _py_coll_metrics,
 )
 PB = _bundle(
-    _pb_common, _pb_resource, _pb_trace, _pb_logs, _pb_metrics,
-    _pb_coll_trace, _pb_coll_logs, _pb_coll_metrics,
+    _pb_common,
+    _pb_resource,
+    _pb_trace,
+    _pb_logs,
+    _pb_metrics,
+    _pb_coll_trace,
+    _pb_coll_logs,
+    _pb_coll_metrics,
 )
 
 
@@ -255,6 +267,7 @@ def _metric(M, i: int, n_dp: int):
 
 # ── Payload builders (batch of resources × scopes × items) ──────────────────
 
+
 def build_trace_request(M, n_res: int, n_scope: int, n_span: int):
     return M.ExportTraceServiceRequest(
         resource_spans=[
@@ -346,11 +359,7 @@ _SIGNALS = {
 # The benchmark only means something if both implementations do the same work.
 # Proto3 field-order serialization makes the byte streams comparable directly.
 
-_ALL_CASES = [
-    (signal, label, dims)
-    for signal, (_builder, scales) in _SIGNALS.items()
-    for label, dims in scales
-]
+_ALL_CASES = [(signal, label, dims) for signal, (_builder, scales) in _SIGNALS.items() for label, dims in scales]
 _ALL_IDS = [f"{signal}-{label}" for signal, label, _ in _ALL_CASES]
 
 
@@ -360,8 +369,7 @@ def test_otlp_outputs_identical(signal, label, dims) -> None:
     py_bytes = builder(PY, *dims).SerializeToString()
     pb_bytes = builder(PB, *dims).SerializeToString()
     assert py_bytes == pb_bytes, (
-        f"{signal}/{label}: pyproto and protobuf disagree "
-        f"({len(py_bytes)} vs {len(pb_bytes)} bytes)"
+        f"{signal}/{label}: pyproto and protobuf disagree ({len(py_bytes)} vs {len(pb_bytes)} bytes)"
     )
 
 
@@ -369,6 +377,7 @@ def test_otlp_outputs_identical(signal, label, dims) -> None:
 #
 # One full encode of a logical payload from source data — construct the message
 # tree and serialize it, as an exporter does on every export.
+
 
 @mark.parametrize("signal,label,dims", _ALL_CASES, ids=_ALL_IDS)
 @mark.benchmark(group="build_serialize")
@@ -392,6 +401,7 @@ def test_build_serialize_protobuf(benchmark, signal, label, dims) -> None:
 # up front (its constructors just stash references), so its serialize-only and
 # build+serialize numbers are close; google.protobuf does real work in both
 # construction and serialization, so this split shows where its time goes.
+
 
 @mark.parametrize("signal,label,dims", _ALL_CASES, ids=_ALL_IDS)
 @mark.benchmark(group="serialize_only")

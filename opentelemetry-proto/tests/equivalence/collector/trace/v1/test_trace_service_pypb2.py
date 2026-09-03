@@ -1,19 +1,20 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from opentelemetry.proto._test.collector.trace.v1.trace_service_pb2 import (
-    ExportTraceServiceRequest as ProtoExportTraceServiceRequest,
-    ExportTraceServiceResponse as ProtoExportTraceServiceResponse,
-)
-from opentelemetry.proto._test.trace.v1.trace_pb2 import (
-    ResourceSpans as ProtoResourceSpans,
-)
-
 from opentelemetry._proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
 )
 from opentelemetry._proto.trace.v1.trace_pb2 import ResourceSpans
+from opentelemetry.proto._test.collector.trace.v1.trace_service_pb2 import (
+    ExportTraceServiceRequest as ProtoExportTraceServiceRequest,
+)
+from opentelemetry.proto._test.collector.trace.v1.trace_service_pb2 import (
+    ExportTraceServiceResponse as ProtoExportTraceServiceResponse,
+)
+from opentelemetry.proto._test.trace.v1.trace_pb2 import (
+    ResourceSpans as ProtoResourceSpans,
+)
 
 
 def test_export_response_empty() -> None:
@@ -21,10 +22,7 @@ def test_export_response_empty() -> None:
 
 
 def test_export_response_matches_proto() -> None:
-    assert (
-        ExportTraceServiceResponse().SerializeToString()
-        == ProtoExportTraceServiceResponse().SerializeToString()
-    )
+    assert ExportTraceServiceResponse().SerializeToString() == ProtoExportTraceServiceResponse().SerializeToString()
 
 
 def test_export_request_empty() -> None:
@@ -32,10 +30,7 @@ def test_export_request_empty() -> None:
 
 
 def test_export_request_empty_matches_proto() -> None:
-    assert (
-        ExportTraceServiceRequest().SerializeToString()
-        == ProtoExportTraceServiceRequest().SerializeToString()
-    )
+    assert ExportTraceServiceRequest().SerializeToString() == ProtoExportTraceServiceRequest().SerializeToString()
 
 
 def test_export_request_with_empty_resource_spans() -> None:
@@ -45,12 +40,8 @@ def test_export_request_with_empty_resource_spans() -> None:
 
 
 def test_export_request_with_schema_url() -> None:
-    our = ExportTraceServiceRequest(
-        resource_spans=[ResourceSpans(schema_url="https://example.com/schema")]
-    )
-    proto = ProtoExportTraceServiceRequest(
-        resource_spans=[ProtoResourceSpans(schema_url="https://example.com/schema")]
-    )
+    our = ExportTraceServiceRequest(resource_spans=[ResourceSpans(schema_url="https://example.com/schema")])
+    proto = ProtoExportTraceServiceRequest(resource_spans=[ProtoResourceSpans(schema_url="https://example.com/schema")])
     assert our.SerializeToString() == proto.SerializeToString()
 
 
