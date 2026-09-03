@@ -68,7 +68,10 @@ done
 find "$OUT_DIR/opentelemetry/proto/_test" -regex ".*_pb2.*\.pyi?" -exec rm {} + 2>/dev/null || true
 
 all_protos=$(find "$XFORM_DIR" -iname "*.proto")
-protoc -I "$XFORM_DIR" --python_out="$OUT_DIR" $all_protos
+# --pyi_out emits the *_pb2.pyi type stubs alongside the *_pb2.py modules. The
+# lint envs run pylint with --prefer-stubs yes, so these stubs let pylint resolve
+# the dynamically built message classes that tests import from the _test set.
+protoc -I "$XFORM_DIR" --python_out="$OUT_DIR" --pyi_out="$OUT_DIR" $all_protos
 
 service_protos=$(grep -REl "service \w+ {" "$XFORM_DIR")
 protoc -I "$XFORM_DIR" --python_out="$OUT_DIR" --grpc_python_out="$OUT_DIR" $service_protos
