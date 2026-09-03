@@ -1136,6 +1136,19 @@ requires-dist = [{ name = "opentelemetry-api", editable = "opentelemetry-api" }]
 name = "opentelemetry-proto"
 source = { editable = "opentelemetry-proto" }
 
+[package.optional-dependencies]
+test = [
+    { name = "grpcio" },
+    { name = "protobuf" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "grpcio", marker = "extra == 'test'", specifier = ">=1.63.2" },
+    { name = "protobuf", marker = "extra == 'test'", specifier = ">=5.0,<8.0" },
+]
+provides-extras = ["test"]
+
 [[package]]
 name = "opentelemetry-proto-json"
 source = { editable = "opentelemetry-proto-json" }
