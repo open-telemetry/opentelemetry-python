@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # tests/_pyprotobuf/test_benchmark.py
 #
 # Benchmark: _pyprotobuf (pure-Python) vs google.protobuf (C extension)

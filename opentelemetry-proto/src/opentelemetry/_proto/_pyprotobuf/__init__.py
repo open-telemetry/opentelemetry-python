@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 from .enum import encode_enum
 from .scalars import (
     encode_bool,

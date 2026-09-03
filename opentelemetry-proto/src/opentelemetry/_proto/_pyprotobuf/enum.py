@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Encoder for protobuf enum field values.
 
 Protobuf enum fields use wire type 0 (varint) and share the exact same wire

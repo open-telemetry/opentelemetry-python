@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # tests/test__varint.py
 
 from google.protobuf import descriptor_pb2, descriptor_pool, message_factory

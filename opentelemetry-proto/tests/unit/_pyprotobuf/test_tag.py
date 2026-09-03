@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # tests/test__tag.py
 #
 # encode_tag(field_number, wire_type) encodes (field_number << 3) | wire_type

@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Base class for the pure-Python protobuf message equivalents.
 
 The protobuf-generated message classes support value equality and a readable

@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 from opentelemetry.proto._test.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest as ProtoExportTraceServiceRequest,
     ExportTraceServiceResponse as ProtoExportTraceServiceResponse,

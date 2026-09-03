@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # tests/test__scalars.py
 #
 # Tests for all scalar encoders in _scalars.py. The oracle for fixed-width

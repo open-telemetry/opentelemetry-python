@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 from opentelemetry.proto._test.common.v1.common_pb2 import (
     AnyValue as ProtoAnyValue,
     InstrumentationScope as ProtoInstrumentationScope,
