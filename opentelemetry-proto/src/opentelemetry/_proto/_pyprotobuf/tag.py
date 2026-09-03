@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Tag encoding for the protobuf wire format.
 
 Every protobuf message on the wire is a flat sequence of records. Each record

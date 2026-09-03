@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # tests/performance/test_benchmark_otlp.py
 #
 # Benchmark: pure-Python pyproto (opentelemetry._proto) vs the real

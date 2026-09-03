@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Encoders for protobuf scalar field types.
 
 This module contains one encoding function for each protobuf scalar type.

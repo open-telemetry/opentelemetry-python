@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 """Proto3 field-level encoding helpers for SerializeToString() implementations.
 
 Why this module exists
