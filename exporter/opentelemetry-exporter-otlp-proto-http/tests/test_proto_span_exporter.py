@@ -39,6 +39,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
+
 # Decoding OTLP bytes needs the protobuf-backed reference classes: the
 # runtime opentelemetry.proto classes only serialize. See
 # opentelemetry-proto[test].

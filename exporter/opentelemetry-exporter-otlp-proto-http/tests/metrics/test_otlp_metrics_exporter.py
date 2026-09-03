@@ -38,6 +38,13 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     _split_metrics_data,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
+
+# _split_metrics_data builds pure-Python messages, so the tests above compare
+# against pure-Python classes. Decoding raw OTLP bytes instead needs the
+# protobuf-backed reference class (see opentelemetry-proto[test]).
+from opentelemetry.proto._test.collector.metrics.v1.metrics_service_pb2 import (
+    ExportMetricsServiceRequest as _RealExportMetricsServiceRequest,
+)
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -48,13 +55,6 @@ from opentelemetry.proto.common.v1.common_pb2 import (
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as Pb2Resource,
-)
-
-# _split_metrics_data builds pure-Python messages, so the tests above compare
-# against pure-Python classes. Decoding raw OTLP bytes instead needs the
-# protobuf-backed reference class (see opentelemetry-proto[test]).
-from opentelemetry.proto._test.collector.metrics.v1.metrics_service_pb2 import (
-    ExportMetricsServiceRequest as _RealExportMetricsServiceRequest,
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER,

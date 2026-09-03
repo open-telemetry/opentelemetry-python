@@ -40,7 +40,6 @@ from opentelemetry._proto._pyprotobuf.fields import (
     u64,
 )
 
-
 # ── Wire-type constants ────────────────────────────────────────────────────────
 
 
@@ -152,7 +151,7 @@ def test_string_length_is_byte_count_not_char_count() -> None:
     assert result[1] == 3
 
 
-@mark.parametrize("value", ["a", "hello", "café", "Ünïcödé", "日本語", "\U0001F600"])
+@mark.parametrize("value", ["a", "hello", "café", "Ünïcödé", "日本語", "\U0001f600"])
 def test_string_matches_formula(value: str) -> None:
     utf8 = value.encode("utf-8")
     expected = encode_tag(1, WT_LEN) + encode_varint(len(utf8)) + utf8
