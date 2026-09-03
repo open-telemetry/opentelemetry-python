@@ -7,18 +7,18 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from pathlib import Path
 
 from google.protobuf import descriptor_pb2 as descriptor
 from google.protobuf.compiler import plugin_pb2 as plugin
 
 from opentelemetry.codegen.pyproto.types import (
-    get_default_value,
-    get_python_type,
     INT_BOUNDS,
     PACKED_WIRE_HELPER,
     SINGULAR_WIRE_HELPER,
+    get_default_value,
+    get_python_type,
 )
 from opentelemetry.codegen.pyproto.writer import CodeWriter
 
@@ -62,15 +62,11 @@ class PyProtoGenerator:
         self._request = request
         self._package_transform = package_transform
         self._generated_files: dict[str, str] = {}
-        self._file_to_proto: dict[str, descriptor.FileDescriptorProto] = {
-            f.name: f for f in request.proto_file
-        }
+        self._file_to_proto: dict[str, descriptor.FileDescriptorProto] = {f.name: f for f in request.proto_file}
         self._fqn_to_file: dict[str, str] = {}
         self._fqn_to_class_path: dict[str, str] = {}
         self._fqn_is_enum: dict[str, bool] = {}
-        self._file_dependencies: dict[str, list[str]] = {
-            f.name: list(f.dependency) for f in request.proto_file
-        }
+        self._file_dependencies: dict[str, list[str]] = {f.name: list(f.dependency) for f in request.proto_file}
 
         # Per-file import tracking, reset in _generate_file.
         self._used_helpers: set[str] = set()
@@ -141,8 +137,7 @@ class PyProtoGenerator:
 
     def _get_module_path(self, proto_file: str) -> str:
         transformed = self._transform_proto_path(proto_file)
-        if transformed.endswith(".py"):
-            transformed = transformed[:-3]
+        transformed = transformed.removesuffix(".py")
         return transformed.replace("/", ".")
 
     def _ensure_init_files(self) -> None:
@@ -225,9 +220,7 @@ class PyProtoGenerator:
 
     # ---- enums -----------------------------------------------------------
 
-    def _generate_enum_class(
-        self, writer: CodeWriter, enum_desc: descriptor.EnumDescriptorProto
-    ) -> None:
+    def _generate_enum_class(self, writer: CodeWriter, enum_desc: descriptor.EnumDescriptorProto) -> None:
         self._need_intenum = True
         with writer.enum(enum_desc.name, enum_type="IntEnum"):
             if enum_desc.value:
@@ -236,9 +229,7 @@ class PyProtoGenerator:
             else:
                 writer.pass_()
 
-    def _generate_module_aliases(
-        self, writer: CodeWriter, file_desc: descriptor.FileDescriptorProto
-    ) -> None:
+    def _generate_module_aliases(self, writer: CodeWriter, file_desc: descriptor.FileDescriptorProto) -> None:
         for enum_desc in file_desc.enum_type:
             # Lift the top-level enum's values to module scope.
             for val_desc in enum_desc.value:
@@ -405,9 +396,7 @@ class PyProtoGenerator:
         msg_desc: descriptor.DescriptorProto,
         oneof_members: dict[int, list[descriptor.FieldDescriptorProto]],
     ) -> None:
-        with writer.method(
-            "WhichOneof", ["self", "oneof_name: str"], return_type="str | None"
-        ):
+        with writer.method("WhichOneof", ["self", "oneof_name: str"], return_type="str | None"):
             for oneof_index in sorted(oneof_members):
                 oneof_name = msg_desc.oneof_decl[oneof_index].name
                 with writer.if_(f'oneof_name == "{oneof_name}"'):
@@ -446,9 +435,7 @@ class PyProtoGenerator:
         if field.label == _FD.LABEL_REPEATED:
             if field.type == _FD.TYPE_MESSAGE:
                 self._use_helper("msg")
-                writer.writeln(
-                    f'result += b"".join(msg({n}, _v.SerializeToString()) for _v in self.{field.name})'
-                )
+                writer.writeln(f'result += b"".join(msg({n}, _v.SerializeToString()) for _v in self.{field.name})')
             elif field.type in PACKED_WIRE_HELPER:
                 helper = PACKED_WIRE_HELPER[field.type]
                 self._use_helper(helper)
@@ -457,9 +444,7 @@ class PyProtoGenerator:
                 # Non-packed repeated scalar (string, bytes).
                 helper = SINGULAR_WIRE_HELPER[field.type]
                 self._use_helper(helper)
-                writer.writeln(
-                    f'result += b"".join({helper}({n}, _v) for _v in self.{field.name})'
-                )
+                writer.writeln(f'result += b"".join({helper}({n}, _v) for _v in self.{field.name})')
             return
 
         if field.type == _FD.TYPE_MESSAGE:
@@ -481,9 +466,7 @@ class PyProtoGenerator:
         self._use_helper(helper)
         writer.writeln(f"result += {helper}({n}, self.{field.name})")
 
-    def _emit_optional_scalar(
-        self, writer: CodeWriter, field: descriptor.FieldDescriptorProto
-    ) -> None:
+    def _emit_optional_scalar(self, writer: CodeWriter, field: descriptor.FieldDescriptorProto) -> None:
         n = field.number
         if field.type == _FD.TYPE_DOUBLE:
             self._use_helper("opt_dbl")
@@ -568,11 +551,7 @@ class PyProtoGenerator:
     def _param_default(self, field: descriptor.FieldDescriptorProto) -> str:
         if field.label == _FD.LABEL_REPEATED:
             return "None"
-        if (
-            field.type == _FD.TYPE_MESSAGE
-            or field.HasField("oneof_index")
-            or field.proto3_optional
-        ):
+        if field.type == _FD.TYPE_MESSAGE or field.HasField("oneof_index") or field.proto3_optional:
             return "None"
         if field.type == _FD.TYPE_ENUM:
             return "0"
@@ -581,18 +560,14 @@ class PyProtoGenerator:
 
 def generate_code(
     request: plugin.CodeGeneratorRequest,
-    package_transform: Callable[[str], str] = lambda p: p.replace(
-        "opentelemetry/proto/", "opentelemetry/_proto/"
-    ),
+    package_transform: Callable[[str], str] = lambda p: p.replace("opentelemetry/proto/", "opentelemetry/_proto/"),
 ) -> dict[str, str]:
     return PyProtoGenerator(request, package_transform).generate_all()
 
 
 def generate_plugin_response(
     request: plugin.CodeGeneratorRequest,
-    package_transform: Callable[[str], str] = lambda p: p.replace(
-        "opentelemetry/proto/", "opentelemetry/_proto/"
-    ),
+    package_transform: Callable[[str], str] = lambda p: p.replace("opentelemetry/proto/", "opentelemetry/_proto/"),
 ) -> plugin.CodeGeneratorResponse:
     response = plugin.CodeGeneratorResponse()
     response.supported_features |= plugin.CodeGeneratorResponse.FEATURE_PROTO3_OPTIONAL

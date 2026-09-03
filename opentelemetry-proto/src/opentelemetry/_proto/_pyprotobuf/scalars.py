@@ -51,7 +51,6 @@ from struct import pack
 
 from .varint import encode_varint
 
-
 # ── Wire type 0 — Varint ──────────────────────────────────────────────────────
 
 

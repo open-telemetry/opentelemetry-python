@@ -40,6 +40,7 @@ _T = descriptor_pb2.FieldDescriptorProto
 
 # ── Proto builders ─────────────────────────────────────────────────────────────
 
+
 def _build_full_record_classes():
     """Record message with one field of every type (full-message benchmark)."""
     fp = descriptor_pb2.FileDescriptorProto()
@@ -50,27 +51,36 @@ def _build_full_record_classes():
     inner.name = "Inner"
     for name, number, tid in (("label", 1, _T.TYPE_STRING), ("seq", 2, _T.TYPE_UINT64)):
         f = inner.field.add()
-        f.name = name; f.number = number; f.type = tid; f.label = _T.LABEL_OPTIONAL
+        f.name = name
+        f.number = number
+        f.type = tid
+        f.label = _T.LABEL_OPTIONAL
 
     rec = fp.message_type.add()
     rec.name = "Record"
     for name, number, tid, lbl in (
-        ("name",          1,  _T.TYPE_STRING,  _T.LABEL_OPTIONAL),
-        ("count",         2,  _T.TYPE_UINT64,  _T.LABEL_OPTIONAL),
-        ("value",         3,  _T.TYPE_DOUBLE,  _T.LABEL_OPTIONAL),
-        ("active",        4,  _T.TYPE_BOOL,    _T.LABEL_OPTIONAL),
-        ("data",          5,  _T.TYPE_BYTES,   _T.LABEL_OPTIONAL),
-        ("timestamp_ns",  6,  _T.TYPE_FIXED64, _T.LABEL_OPTIONAL),
-        ("flags",         7,  _T.TYPE_FIXED32, _T.LABEL_OPTIONAL),
-        ("bucket_counts", 9,  _T.TYPE_UINT64,  _T.LABEL_REPEATED),
-        ("bounds",        10, _T.TYPE_DOUBLE,  _T.LABEL_REPEATED),
+        ("name", 1, _T.TYPE_STRING, _T.LABEL_OPTIONAL),
+        ("count", 2, _T.TYPE_UINT64, _T.LABEL_OPTIONAL),
+        ("value", 3, _T.TYPE_DOUBLE, _T.LABEL_OPTIONAL),
+        ("active", 4, _T.TYPE_BOOL, _T.LABEL_OPTIONAL),
+        ("data", 5, _T.TYPE_BYTES, _T.LABEL_OPTIONAL),
+        ("timestamp_ns", 6, _T.TYPE_FIXED64, _T.LABEL_OPTIONAL),
+        ("flags", 7, _T.TYPE_FIXED32, _T.LABEL_OPTIONAL),
+        ("bucket_counts", 9, _T.TYPE_UINT64, _T.LABEL_REPEATED),
+        ("bounds", 10, _T.TYPE_DOUBLE, _T.LABEL_REPEATED),
     ):
         f = rec.field.add()
-        f.name = name; f.number = number; f.type = tid; f.label = lbl
+        f.name = name
+        f.number = number
+        f.type = tid
+        f.label = lbl
 
     mf = rec.field.add()
-    mf.name = "inner"; mf.number = 8; mf.type = _T.TYPE_MESSAGE
-    mf.label = _T.LABEL_OPTIONAL; mf.type_name = "Inner"
+    mf.name = "inner"
+    mf.number = 8
+    mf.type = _T.TYPE_MESSAGE
+    mf.label = _T.LABEL_OPTIONAL
+    mf.type_name = "Inner"
 
     pool = descriptor_pool.DescriptorPool()
     pool.Add(fp)
@@ -89,28 +99,37 @@ def _build_field_msg_classes():
     fi = fp.message_type.add()
     fi.name = "FieldInner"
     f = fi.field.add()
-    f.name = "v"; f.number = 1; f.type = _T.TYPE_UINT64; f.label = _T.LABEL_OPTIONAL
+    f.name = "v"
+    f.number = 1
+    f.type = _T.TYPE_UINT64
+    f.label = _T.LABEL_OPTIONAL
 
     fm = fp.message_type.add()
     fm.name = "FieldMsg"
     for name, number, tid, lbl in (
-        ("f_uint64",     1,  _T.TYPE_UINT64,  _T.LABEL_OPTIONAL),
-        ("f_string",     2,  _T.TYPE_STRING,  _T.LABEL_OPTIONAL),
-        ("f_bytes",      3,  _T.TYPE_BYTES,   _T.LABEL_OPTIONAL),
-        ("f_double",     4,  _T.TYPE_DOUBLE,  _T.LABEL_OPTIONAL),
-        ("f_bool",       5,  _T.TYPE_BOOL,    _T.LABEL_OPTIONAL),
-        ("f_fixed64",    6,  _T.TYPE_FIXED64, _T.LABEL_OPTIONAL),
-        ("f_fixed32",    7,  _T.TYPE_FIXED32, _T.LABEL_OPTIONAL),
-        ("f_sint32",     8,  _T.TYPE_SINT32,  _T.LABEL_OPTIONAL),
-        ("f_packed_u64", 9,  _T.TYPE_UINT64,  _T.LABEL_REPEATED),
-        ("f_packed_dbl", 10, _T.TYPE_DOUBLE,  _T.LABEL_REPEATED),
+        ("f_uint64", 1, _T.TYPE_UINT64, _T.LABEL_OPTIONAL),
+        ("f_string", 2, _T.TYPE_STRING, _T.LABEL_OPTIONAL),
+        ("f_bytes", 3, _T.TYPE_BYTES, _T.LABEL_OPTIONAL),
+        ("f_double", 4, _T.TYPE_DOUBLE, _T.LABEL_OPTIONAL),
+        ("f_bool", 5, _T.TYPE_BOOL, _T.LABEL_OPTIONAL),
+        ("f_fixed64", 6, _T.TYPE_FIXED64, _T.LABEL_OPTIONAL),
+        ("f_fixed32", 7, _T.TYPE_FIXED32, _T.LABEL_OPTIONAL),
+        ("f_sint32", 8, _T.TYPE_SINT32, _T.LABEL_OPTIONAL),
+        ("f_packed_u64", 9, _T.TYPE_UINT64, _T.LABEL_REPEATED),
+        ("f_packed_dbl", 10, _T.TYPE_DOUBLE, _T.LABEL_REPEATED),
     ):
         f = fm.field.add()
-        f.name = name; f.number = number; f.type = tid; f.label = lbl
+        f.name = name
+        f.number = number
+        f.type = tid
+        f.label = lbl
 
     mf = fm.field.add()
-    mf.name = "f_msg"; mf.number = 11; mf.type = _T.TYPE_MESSAGE
-    mf.label = _T.LABEL_OPTIONAL; mf.type_name = "FieldInner"
+    mf.name = "f_msg"
+    mf.number = 11
+    mf.type = _T.TYPE_MESSAGE
+    mf.label = _T.LABEL_OPTIONAL
+    mf.type_name = "FieldInner"
 
     pool = descriptor_pool.DescriptorPool()
     pool.Add(fp)
@@ -134,13 +153,19 @@ def _build_repeated_msg_classes():
         ("value", 3, _T.TYPE_DOUBLE),
     ):
         f = item.field.add()
-        f.name = name; f.number = number; f.type = tid; f.label = _T.LABEL_OPTIONAL
+        f.name = name
+        f.number = number
+        f.type = tid
+        f.label = _T.LABEL_OPTIONAL
 
     container = fp.message_type.add()
     container.name = "Container"
     rf = container.field.add()
-    rf.name = "items"; rf.number = 1; rf.type = _T.TYPE_MESSAGE
-    rf.label = _T.LABEL_REPEATED; rf.type_name = "Item"
+    rf.name = "items"
+    rf.number = 1
+    rf.type = _T.TYPE_MESSAGE
+    rf.label = _T.LABEL_REPEATED
+    rf.type_name = "Item"
 
     pool = descriptor_pool.DescriptorPool()
     pool.Add(fp)
@@ -150,61 +175,65 @@ def _build_repeated_msg_classes():
     )
 
 
-_Inner,     _Record    = _build_full_record_classes()
-_FieldInner, _FieldMsg  = _build_field_msg_classes()
-_Item,       _Container = _build_repeated_msg_classes()
+_Inner, _Record = _build_full_record_classes()
+_FieldInner, _FieldMsg = _build_field_msg_classes()
+_Item, _Container = _build_repeated_msg_classes()
 
 
 # ── Shared benchmark data ──────────────────────────────────────────────────────
 
-_NAME          = "benchmark.record.example"
-_COUNT         = 9_876_543_210
-_VALUE         = 3.141592653589793
-_DATA          = b"\xde\xad\xbe\xef" * 8
-_TS            = 1_782_401_900_556_236_527
-_FLAGS         = 0xDEAD
-_INNER_LABEL   = "inner.label"
-_INNER_SEQ     = 42
+_NAME = "benchmark.record.example"
+_COUNT = 9_876_543_210
+_VALUE = 3.141592653589793
+_DATA = b"\xde\xad\xbe\xef" * 8
+_TS = 1_782_401_900_556_236_527
+_FLAGS = 0xDEAD
+_INNER_LABEL = "inner.label"
+_INNER_SEQ = 42
 _BUCKET_COUNTS = [0, 1, 4, 12, 35, 78, 120, 89, 42, 15, 4, 1, 0]
-_BOUNDS        = [0.0, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+_BOUNDS = [0.0, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
 
 _FIELD_INNER_BYTES = _FieldInner(v=42).SerializeToString()
 
 # Item data for repeated-message benchmarks: (label, count, value) tuples.
 # All values are non-default so every field is serialized.
 _REPEATED_SIZES = [1, 5, 20]
-_ITEM_DATA = [
-    (f"item.label.{i}", (i + 1) * 100, (i + 1) * 0.5)
-    for i in range(max(_REPEATED_SIZES))
-]
+_ITEM_DATA = [(f"item.label.{i}", (i + 1) * 100, (i + 1) * 0.5) for i in range(max(_REPEATED_SIZES))]
 
 # Pre-built google.protobuf objects — construction cost excluded from
 # serialization-only benchmarks in section 7.
 _PRE_BUILT_RECORD = _Record(
-    name=_NAME, count=_COUNT, value=_VALUE, active=True,
-    data=_DATA, timestamp_ns=_TS, flags=_FLAGS,
+    name=_NAME,
+    count=_COUNT,
+    value=_VALUE,
+    active=True,
+    data=_DATA,
+    timestamp_ns=_TS,
+    flags=_FLAGS,
     inner=_Inner(label=_INNER_LABEL, seq=_INNER_SEQ),
-    bucket_counts=_BUCKET_COUNTS, bounds=_BOUNDS,
+    bucket_counts=_BUCKET_COUNTS,
+    bounds=_BOUNDS,
 )
 
 _PRE_BUILT_FIELD_PB = {
-    "uint64":        _FieldMsg(f_uint64=_COUNT),
-    "string":        _FieldMsg(f_string=_NAME),
-    "bytes":         _FieldMsg(f_bytes=_DATA),
-    "double":        _FieldMsg(f_double=_VALUE),
-    "bool":          _FieldMsg(f_bool=True),
-    "fixed64":       _FieldMsg(f_fixed64=_TS),
-    "fixed32":       _FieldMsg(f_fixed32=_FLAGS),
-    "sint32":        _FieldMsg(f_sint32=-12345),
+    "uint64": _FieldMsg(f_uint64=_COUNT),
+    "string": _FieldMsg(f_string=_NAME),
+    "bytes": _FieldMsg(f_bytes=_DATA),
+    "double": _FieldMsg(f_double=_VALUE),
+    "bool": _FieldMsg(f_bool=True),
+    "fixed64": _FieldMsg(f_fixed64=_TS),
+    "fixed32": _FieldMsg(f_fixed32=_FLAGS),
+    "sint32": _FieldMsg(f_sint32=-12345),
     "packed_uint64": _FieldMsg(f_packed_u64=_BUCKET_COUNTS),
     "packed_double": _FieldMsg(f_packed_dbl=_BOUNDS),
-    "msg":           _FieldMsg(f_msg=_FieldInner(v=42)),
+    "msg": _FieldMsg(f_msg=_FieldInner(v=42)),
 }
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 1. Full-message benchmark
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def _pyproto_encode() -> bytes:
     inner = string(1, _INNER_LABEL) + u64(2, _INNER_SEQ)
@@ -261,28 +290,21 @@ def test_encode_protobuf(benchmark) -> None:
 # ══════════════════════════════════════════════════════════════════════════════
 
 _PER_FIELD = [
-    ("uint64",       lambda: u64(1, _COUNT),
-                     lambda: _FieldMsg(f_uint64=_COUNT).SerializeToString()),
-    ("string",       lambda: string(2, _NAME),
-                     lambda: _FieldMsg(f_string=_NAME).SerializeToString()),
-    ("bytes",        lambda: byt(3, _DATA),
-                     lambda: _FieldMsg(f_bytes=_DATA).SerializeToString()),
-    ("double",       lambda: dbl(4, _VALUE),
-                     lambda: _FieldMsg(f_double=_VALUE).SerializeToString()),
-    ("bool",         lambda: bool_field(5, True),
-                     lambda: _FieldMsg(f_bool=True).SerializeToString()),
-    ("fixed64",      lambda: fix64(6, _TS),
-                     lambda: _FieldMsg(f_fixed64=_TS).SerializeToString()),
-    ("fixed32",      lambda: fix32(7, _FLAGS),
-                     lambda: _FieldMsg(f_fixed32=_FLAGS).SerializeToString()),
-    ("sint32",       lambda: sint32(8, -12345),
-                     lambda: _FieldMsg(f_sint32=-12345).SerializeToString()),
-    ("packed_uint64",lambda: packed_uint64(9, _BUCKET_COUNTS),
-                     lambda: _FieldMsg(f_packed_u64=_BUCKET_COUNTS).SerializeToString()),
-    ("packed_double",lambda: packed_double(10, _BOUNDS),
-                     lambda: _FieldMsg(f_packed_dbl=_BOUNDS).SerializeToString()),
-    ("msg",          lambda: msg(11, _FIELD_INNER_BYTES),
-                     lambda: _FieldMsg(f_msg=_FieldInner(v=42)).SerializeToString()),
+    ("uint64", lambda: u64(1, _COUNT), lambda: _FieldMsg(f_uint64=_COUNT).SerializeToString()),
+    ("string", lambda: string(2, _NAME), lambda: _FieldMsg(f_string=_NAME).SerializeToString()),
+    ("bytes", lambda: byt(3, _DATA), lambda: _FieldMsg(f_bytes=_DATA).SerializeToString()),
+    ("double", lambda: dbl(4, _VALUE), lambda: _FieldMsg(f_double=_VALUE).SerializeToString()),
+    ("bool", lambda: bool_field(5, True), lambda: _FieldMsg(f_bool=True).SerializeToString()),
+    ("fixed64", lambda: fix64(6, _TS), lambda: _FieldMsg(f_fixed64=_TS).SerializeToString()),
+    ("fixed32", lambda: fix32(7, _FLAGS), lambda: _FieldMsg(f_fixed32=_FLAGS).SerializeToString()),
+    ("sint32", lambda: sint32(8, -12345), lambda: _FieldMsg(f_sint32=-12345).SerializeToString()),
+    (
+        "packed_uint64",
+        lambda: packed_uint64(9, _BUCKET_COUNTS),
+        lambda: _FieldMsg(f_packed_u64=_BUCKET_COUNTS).SerializeToString(),
+    ),
+    ("packed_double", lambda: packed_double(10, _BOUNDS), lambda: _FieldMsg(f_packed_dbl=_BOUNDS).SerializeToString()),
+    ("msg", lambda: msg(11, _FIELD_INNER_BYTES), lambda: _FieldMsg(f_msg=_FieldInner(v=42)).SerializeToString()),
 ]
 
 _FIELD_IDS = [name for name, _, _ in _PER_FIELD]
@@ -313,8 +335,8 @@ def test_field_protobuf(benchmark, fn) -> None:
 # Data is pre-built outside the benchmark loop; only the encoding is timed.
 # ══════════════════════════════════════════════════════════════════════════════
 
-_STR_SIZES    = [4, 256, 16_384]
-_BYTES_SIZES  = [4, 256, 16_384]
+_STR_SIZES = [4, 256, 16_384]
+_BYTES_SIZES = [4, 256, 16_384]
 _PACKED_SIZES = [10, 100, 1_000]
 
 
@@ -389,13 +411,13 @@ def test_scale_packed_double_protobuf(benchmark, n) -> None:
 # ══════════════════════════════════════════════════════════════════════════════
 
 _VARINT_CASES = [
-    ("1byte",  63),          # fits in 1 byte  (0x00–0x7f)
-    ("2byte",  300),         # requires 2 bytes (0x80–0x3fff)
-    ("3byte",  100_000),     # requires 3 bytes (0x4000–0x1fffff)
-    ("5byte",  2**32 - 1),   # requires 5 bytes (max uint32)
+    ("1byte", 63),  # fits in 1 byte  (0x00–0x7f)
+    ("2byte", 300),  # requires 2 bytes (0x80–0x3fff)
+    ("3byte", 100_000),  # requires 3 bytes (0x4000–0x1fffff)
+    ("5byte", 2**32 - 1),  # requires 5 bytes (max uint32)
 ]
 
-_VARINT_IDS    = [c[0] for c in _VARINT_CASES]
+_VARINT_IDS = [c[0] for c in _VARINT_CASES]
 _VARINT_VALUES = [c[1] for c in _VARINT_CASES]
 
 
@@ -421,20 +443,23 @@ def test_varint_protobuf(benchmark, v) -> None:
 # concatenation strategy.
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def _pyproto_encode_join() -> bytes:
     inner = b"".join([string(1, _INNER_LABEL), u64(2, _INNER_SEQ)])
-    return b"".join([
-        string(1, _NAME),
-        u64(2, _COUNT),
-        dbl(3, _VALUE),
-        bool_field(4, True),
-        byt(5, _DATA),
-        fix64(6, _TS),
-        fix32(7, _FLAGS),
-        msg(8, inner),
-        packed_uint64(9, _BUCKET_COUNTS),
-        packed_double(10, _BOUNDS),
-    ])
+    return b"".join(
+        [
+            string(1, _NAME),
+            u64(2, _COUNT),
+            dbl(3, _VALUE),
+            bool_field(4, True),
+            byt(5, _DATA),
+            fix64(6, _TS),
+            fix32(7, _FLAGS),
+            msg(8, inner),
+            packed_uint64(9, _BUCKET_COUNTS),
+            packed_double(10, _BOUNDS),
+        ]
+    )
 
 
 def test_concat_strategy_outputs_identical() -> None:
@@ -459,6 +484,7 @@ def test_encode_join_pyproto(benchmark) -> None:
 # This benchmark measures the minimum cost of SerializeToString() — calling
 # every helper in a message when none produce any output.
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def _pyproto_encode_all_defaults() -> bytes:
     # Embedded message field omitted: real SerializeToString() guards with
@@ -501,12 +527,19 @@ def test_all_defaults_protobuf(benchmark) -> None:
 #   test_encode_protobuf             — google.protobuf: construction + serialization
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def _pb_construct():
     return _Record(
-        name=_NAME, count=_COUNT, value=_VALUE, active=True,
-        data=_DATA, timestamp_ns=_TS, flags=_FLAGS,
+        name=_NAME,
+        count=_COUNT,
+        value=_VALUE,
+        active=True,
+        data=_DATA,
+        timestamp_ns=_TS,
+        flags=_FLAGS,
         inner=_Inner(label=_INNER_LABEL, seq=_INNER_SEQ),
-        bucket_counts=_BUCKET_COUNTS, bounds=_BOUNDS,
+        bucket_counts=_BUCKET_COUNTS,
+        bounds=_BOUNDS,
     )
 
 
@@ -539,19 +572,14 @@ def test_field_serialize_only_protobuf(benchmark, name) -> None:
 # protobuf side: _Container(items=[_Item(...), ...]).SerializeToString()
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def _pyproto_encode_repeated(n: int) -> bytes:
-    return b"".join(
-        msg(1, string(1, label) + u64(2, count) + dbl(3, value))
-        for label, count, value in _ITEM_DATA[:n]
-    )
+    return b"".join(msg(1, string(1, label) + u64(2, count) + dbl(3, value)) for label, count, value in _ITEM_DATA[:n])
 
 
 def _pb_encode_repeated(n: int) -> bytes:
     return _Container(
-        items=[
-            _Item(label=label, count=count, value=value)
-            for label, count, value in _ITEM_DATA[:n]
-        ]
+        items=[_Item(label=label, count=count, value=value) for label, count, value in _ITEM_DATA[:n]]
     ).SerializeToString()
 
 

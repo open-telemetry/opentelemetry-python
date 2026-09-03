@@ -1,14 +1,15 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from opentelemetry._proto.common.v1.common_pb2 import AnyValue, KeyValue
+from opentelemetry._proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.proto._test.common.v1.common_pb2 import (
     AnyValue as ProtoAnyValue,
+)
+from opentelemetry.proto._test.common.v1.common_pb2 import (
     KeyValue as ProtoKeyValue,
 )
 from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource as ProtoResource
-
-from opentelemetry._proto.common.v1.common_pb2 import AnyValue, KeyValue
-from opentelemetry._proto.resource.v1.resource_pb2 import Resource
 
 
 def test_resource_empty() -> None:

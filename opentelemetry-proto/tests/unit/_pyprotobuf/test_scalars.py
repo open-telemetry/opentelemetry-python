@@ -33,7 +33,6 @@ from opentelemetry._proto._pyprotobuf import (
     encode_varint,
 )
 
-
 # ── encode_uint32 ──────────────────────────────────────────────────────────────
 
 
@@ -241,9 +240,17 @@ def test_float_always_four_bytes() -> None:
 @mark.parametrize(
     "value",
     [
-        0.0, 1.0, -1.0, 0.5, -0.5, 0.25, 2.0, -2.0,
+        0.0,
+        1.0,
+        -1.0,
+        0.5,
+        -0.5,
+        0.25,
+        2.0,
+        -2.0,
         unpack("<f", b"\xff\x7f\x7f\x7f")[0],
-        inf, -inf,
+        inf,
+        -inf,
     ],
 )
 def test_float_matches_struct(value: float) -> None:
@@ -279,8 +286,20 @@ def test_double_always_eight_bytes() -> None:
 @mark.parametrize(
     "value",
     [
-        0.0, 1.0, -1.0, 0.5, -0.5, pi, e, tau,
-        1e100, -1e100, 5e-324, 1.7976931348623157e308, inf, -inf,
+        0.0,
+        1.0,
+        -1.0,
+        0.5,
+        -0.5,
+        pi,
+        e,
+        tau,
+        1e100,
+        -1e100,
+        5e-324,
+        1.7976931348623157e308,
+        inf,
+        -inf,
     ],
 )
 def test_double_matches_struct(value: float) -> None:
@@ -368,9 +387,7 @@ def test_fixed64_always_eight_bytes() -> None:
     assert len(encode_fixed64(2**64 - 1)) == 8
 
 
-@mark.parametrize(
-    "value", [0, 1, 255, 2**16 - 1, 2**32 - 1, 2**32, 2**48, 2**63, 2**64 - 1]
-)
+@mark.parametrize("value", [0, 1, 255, 2**16 - 1, 2**32 - 1, 2**32, 2**48, 2**63, 2**64 - 1])
 def test_fixed64_matches_struct(value: int) -> None:
     assert encode_fixed64(value) == pack("<Q", value)
 
@@ -441,7 +458,7 @@ def test_string_length_counts_bytes_not_chars() -> None:
     # "日本語" is 3 characters but 9 UTF-8 bytes.
     value = "日本語"
     result = encode_string(value)
-    assert result[0] == 9      # byte count, not char count
+    assert result[0] == 9  # byte count, not char count
     assert result[1:] == value.encode("utf-8")
 
 
@@ -454,7 +471,7 @@ def test_string_two_byte_length_prefix() -> None:
 
 @mark.parametrize(
     "value",
-    ["", "a", "hello", "café", "Ünïcödé", "日本語", "中文", "\U0001F600", "hello 世界"],
+    ["", "a", "hello", "café", "Ünïcödé", "日本語", "中文", "\U0001f600", "hello 世界"],
 )
 def test_string_length_prefix_matches_utf8_bytecount(value: str) -> None:
     utf8 = value.encode("utf-8")
@@ -518,26 +535,26 @@ def test_bytes_length_prefix_matches_payload_length(value: bytes) -> None:
 #   assert _ScalarMessage(**{field_name: value}).SerializeToString() == expected
 #
 # Field number assignments:
-_F_UINT32   = 1   # wt 0
-_F_UINT64   = 2   # wt 0
-_F_BOOL     = 3   # wt 0
-_F_INT32    = 4   # wt 0
-_F_INT64    = 5   # wt 0
-_F_SINT32   = 6   # wt 0
-_F_SINT64   = 7   # wt 0
-_F_FLOAT    = 8   # wt 5
-_F_DOUBLE   = 9   # wt 1
-_F_FIXED32  = 10  # wt 5
+_F_UINT32 = 1  # wt 0
+_F_UINT64 = 2  # wt 0
+_F_BOOL = 3  # wt 0
+_F_INT32 = 4  # wt 0
+_F_INT64 = 5  # wt 0
+_F_SINT32 = 6  # wt 0
+_F_SINT64 = 7  # wt 0
+_F_FLOAT = 8  # wt 5
+_F_DOUBLE = 9  # wt 1
+_F_FIXED32 = 10  # wt 5
 _F_SFIXED32 = 11  # wt 5
-_F_FIXED64  = 12  # wt 1
+_F_FIXED64 = 12  # wt 1
 _F_SFIXED64 = 13  # wt 1
-_F_STRING   = 14  # wt 2
-_F_BYTES    = 15  # wt 2
+_F_STRING = 14  # wt 2
+_F_BYTES = 15  # wt 2
 
 _WT_VARINT = 0
-_WT_64BIT  = 1
-_WT_LEN    = 2
-_WT_32BIT  = 5
+_WT_64BIT = 1
+_WT_LEN = 2
+_WT_32BIT = 5
 
 
 def _build_scalar_message_class():
@@ -556,21 +573,21 @@ def _build_scalar_message_class():
         f.type = type_id
         f.label = T.LABEL_OPTIONAL
 
-    _add("uint32_field",   _F_UINT32,   T.TYPE_UINT32)
-    _add("uint64_field",   _F_UINT64,   T.TYPE_UINT64)
-    _add("bool_field",     _F_BOOL,     T.TYPE_BOOL)
-    _add("int32_field",    _F_INT32,    T.TYPE_INT32)
-    _add("int64_field",    _F_INT64,    T.TYPE_INT64)
-    _add("sint32_field",   _F_SINT32,   T.TYPE_SINT32)
-    _add("sint64_field",   _F_SINT64,   T.TYPE_SINT64)
-    _add("float_field",    _F_FLOAT,    T.TYPE_FLOAT)
-    _add("double_field",   _F_DOUBLE,   T.TYPE_DOUBLE)
-    _add("fixed32_field",  _F_FIXED32,  T.TYPE_FIXED32)
+    _add("uint32_field", _F_UINT32, T.TYPE_UINT32)
+    _add("uint64_field", _F_UINT64, T.TYPE_UINT64)
+    _add("bool_field", _F_BOOL, T.TYPE_BOOL)
+    _add("int32_field", _F_INT32, T.TYPE_INT32)
+    _add("int64_field", _F_INT64, T.TYPE_INT64)
+    _add("sint32_field", _F_SINT32, T.TYPE_SINT32)
+    _add("sint64_field", _F_SINT64, T.TYPE_SINT64)
+    _add("float_field", _F_FLOAT, T.TYPE_FLOAT)
+    _add("double_field", _F_DOUBLE, T.TYPE_DOUBLE)
+    _add("fixed32_field", _F_FIXED32, T.TYPE_FIXED32)
     _add("sfixed32_field", _F_SFIXED32, T.TYPE_SFIXED32)
-    _add("fixed64_field",  _F_FIXED64,  T.TYPE_FIXED64)
+    _add("fixed64_field", _F_FIXED64, T.TYPE_FIXED64)
     _add("sfixed64_field", _F_SFIXED64, T.TYPE_SFIXED64)
-    _add("string_field",   _F_STRING,   T.TYPE_STRING)
-    _add("bytes_field",    _F_BYTES,    T.TYPE_BYTES)
+    _add("string_field", _F_STRING, T.TYPE_STRING)
+    _add("bytes_field", _F_BYTES, T.TYPE_BYTES)
 
     pool = descriptor_pool.DescriptorPool()
     pool.Add(file_proto)
@@ -586,12 +603,14 @@ def _s(field_name: str, value) -> bytes:
 
 # ── encode_uint32 oracle ───────────────────────────────────────────────────────
 
+
 @mark.parametrize("value", [0, 1, 127, 128, 255, 300, 2**16, 2**32 - 1])
 def test_encode_uint32_matches_protobuf(value: int) -> None:
     assert _s("uint32_field", value) == encode_tag(_F_UINT32, _WT_VARINT) + encode_uint32(value)
 
 
 # ── encode_uint64 oracle ───────────────────────────────────────────────────────
+
 
 @mark.parametrize("value", [0, 1, 127, 128, 2**32 - 1, 2**32, 2**63, 2**64 - 1])
 def test_encode_uint64_matches_protobuf(value: int) -> None:
@@ -600,12 +619,14 @@ def test_encode_uint64_matches_protobuf(value: int) -> None:
 
 # ── encode_bool oracle ─────────────────────────────────────────────────────────
 
+
 @mark.parametrize("value", [False, True])
 def test_encode_bool_matches_protobuf(value: bool) -> None:
     assert _s("bool_field", value) == encode_tag(_F_BOOL, _WT_VARINT) + encode_bool(value)
 
 
 # ── encode_int oracle (int32 / int64) ─────────────────────────────────────────
+
 
 @mark.parametrize("value", [0, 1, 127, 128, 2**31 - 1, -1, -2, -128, -(2**31)])
 def test_encode_int_int32_matches_protobuf(value: int) -> None:
@@ -619,12 +640,14 @@ def test_encode_int_int64_matches_protobuf(value: int) -> None:
 
 # ── encode_sint32 oracle ───────────────────────────────────────────────────────
 
+
 @mark.parametrize("value", [0, 1, -1, 2, -2, 150, -150, 2**31 - 1, -(2**31)])
 def test_encode_sint32_matches_protobuf(value: int) -> None:
     assert _s("sint32_field", value) == encode_tag(_F_SINT32, _WT_VARINT) + encode_sint32(value)
 
 
 # ── encode_sint64 oracle ───────────────────────────────────────────────────────
+
 
 @mark.parametrize("value", [0, 1, -1, 150, -150, 2**63 - 1, -(2**63)])
 def test_encode_sint64_matches_protobuf(value: int) -> None:
@@ -633,12 +656,14 @@ def test_encode_sint64_matches_protobuf(value: int) -> None:
 
 # ── encode_float oracle ────────────────────────────────────────────────────────
 
+
 @mark.parametrize("value", [0.0, 1.0, -1.0, 0.5, inf, -inf])
 def test_encode_float_matches_protobuf(value: float) -> None:
     assert _s("float_field", value) == encode_tag(_F_FLOAT, _WT_32BIT) + encode_float(value)
 
 
 # ── encode_double oracle ───────────────────────────────────────────────────────
+
 
 @mark.parametrize("value", [0.0, 1.0, -1.0, pi, 1e100, inf, -inf])
 def test_encode_double_matches_protobuf(value: float) -> None:
@@ -647,12 +672,14 @@ def test_encode_double_matches_protobuf(value: float) -> None:
 
 # ── encode_fixed32 oracle ──────────────────────────────────────────────────────
 
+
 @mark.parametrize("value", [0, 1, 255, 2**16, 2**32 - 1])
 def test_encode_fixed32_matches_protobuf(value: int) -> None:
     assert _s("fixed32_field", value) == encode_tag(_F_FIXED32, _WT_32BIT) + encode_fixed32(value)
 
 
 # ── encode_sfixed32 oracle ─────────────────────────────────────────────────────
+
 
 @mark.parametrize("value", [0, 1, -1, 2**31 - 1, -(2**31)])
 def test_encode_sfixed32_matches_protobuf(value: int) -> None:
@@ -661,12 +688,14 @@ def test_encode_sfixed32_matches_protobuf(value: int) -> None:
 
 # ── encode_fixed64 oracle ──────────────────────────────────────────────────────
 
+
 @mark.parametrize("value", [0, 1, 2**32, 2**64 - 1])
 def test_encode_fixed64_matches_protobuf(value: int) -> None:
     assert _s("fixed64_field", value) == encode_tag(_F_FIXED64, _WT_64BIT) + encode_fixed64(value)
 
 
 # ── encode_sfixed64 oracle ─────────────────────────────────────────────────────
+
 
 @mark.parametrize("value", [0, 1, -1, 2**63 - 1, -(2**63)])
 def test_encode_sfixed64_matches_protobuf(value: int) -> None:
@@ -675,12 +704,14 @@ def test_encode_sfixed64_matches_protobuf(value: int) -> None:
 
 # ── encode_string oracle ───────────────────────────────────────────────────────
 
-@mark.parametrize("value", ["", "a", "hello", "café", "日本語", "\U0001F600", "x" * 128])
+
+@mark.parametrize("value", ["", "a", "hello", "café", "日本語", "\U0001f600", "x" * 128])
 def test_encode_string_matches_protobuf(value: str) -> None:
     assert _s("string_field", value) == encode_tag(_F_STRING, _WT_LEN) + encode_string(value)
 
 
 # ── encode_bytes oracle ────────────────────────────────────────────────────────
+
 
 @mark.parametrize("value", [b"", b"\x00", b"\xff", b"hello", b"\x80\x81\x82", b"\xab" * 128])
 def test_encode_bytes_matches_protobuf(value: bytes) -> None:
