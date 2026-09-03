@@ -27,7 +27,16 @@ class SpanTest(trace.NonRecordingSpan):
     def is_recording(self):
         return not self.has_ended
 
-    def record_exception(self, exception, attributes=None, timestamp=None, escaped=False):
+    def record_exception(
+        self,
+        exception,
+        attributes=None,
+        timestamp=None,
+        escaped=False,
+        *,
+        event_name=None,
+        severity_number=None,
+    ):
         self.recorded_exception = exception
 
 
