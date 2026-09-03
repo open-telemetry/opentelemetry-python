@@ -18,21 +18,37 @@ from google.protobuf import descriptor_pb2 as descriptor
 _FD = descriptor.FieldDescriptorProto
 
 PROTO_TO_PYTHON: Final[dict[int, str]] = {
-    _FD.TYPE_DOUBLE: "builtins.float",
-    _FD.TYPE_FLOAT: "builtins.float",
-    _FD.TYPE_INT64: "builtins.int",
-    _FD.TYPE_UINT64: "builtins.int",
-    _FD.TYPE_INT32: "builtins.int",
-    _FD.TYPE_FIXED64: "builtins.int",
-    _FD.TYPE_FIXED32: "builtins.int",
-    _FD.TYPE_BOOL: "builtins.bool",
-    _FD.TYPE_STRING: "builtins.str",
-    _FD.TYPE_BYTES: "builtins.bytes",
-    _FD.TYPE_UINT32: "builtins.int",
-    _FD.TYPE_SFIXED32: "builtins.int",
-    _FD.TYPE_SFIXED64: "builtins.int",
-    _FD.TYPE_SINT32: "builtins.int",
-    _FD.TYPE_SINT64: "builtins.int",
+    _FD.TYPE_DOUBLE: "float",
+    _FD.TYPE_FLOAT: "float",
+    _FD.TYPE_INT64: "int",
+    _FD.TYPE_UINT64: "int",
+    _FD.TYPE_INT32: "int",
+    _FD.TYPE_FIXED64: "int",
+    _FD.TYPE_FIXED32: "int",
+    _FD.TYPE_BOOL: "bool",
+    _FD.TYPE_STRING: "str",
+    _FD.TYPE_BYTES: "bytes",
+    _FD.TYPE_UINT32: "int",
+    _FD.TYPE_SFIXED32: "int",
+    _FD.TYPE_SFIXED64: "int",
+    _FD.TYPE_SINT32: "int",
+    _FD.TYPE_SINT64: "int",
+}
+
+# Signed/unsigned integer bounds for oneof scalar setters. protobuf raises
+# ValueError when an assigned value does not fit the field's declared width, so
+# the generated setters reproduce that check.
+INT_BOUNDS: Final[dict[int, tuple[int, int]]] = {
+    _FD.TYPE_INT64: (-(2**63), 2**63),
+    _FD.TYPE_SINT64: (-(2**63), 2**63),
+    _FD.TYPE_SFIXED64: (-(2**63), 2**63),
+    _FD.TYPE_UINT64: (0, 2**64),
+    _FD.TYPE_FIXED64: (0, 2**64),
+    _FD.TYPE_INT32: (-(2**31), 2**31),
+    _FD.TYPE_SINT32: (-(2**31), 2**31),
+    _FD.TYPE_SFIXED32: (-(2**31), 2**31),
+    _FD.TYPE_UINT32: (0, 2**32),
+    _FD.TYPE_FIXED32: (0, 2**32),
 }
 
 PROTO_DEFAULTS: Final[dict[int, str]] = {

@@ -16,6 +16,7 @@ from google.protobuf.compiler import plugin_pb2 as plugin
 from opentelemetry.codegen.pyproto.types import (
     get_default_value,
     get_python_type,
+    INT_BOUNDS,
     PACKED_WIRE_HELPER,
     SINGULAR_WIRE_HELPER,
 )
@@ -76,6 +77,7 @@ class PyProtoGenerator:
         self._used_kernel: set[str] = set()
         self._used_wt: set[str] = set()
         self._need_pack: bool = False
+        self._need_intenum: bool = False
         self._cross_imports: set[tuple[str, str]] = set()
 
         for proto_file in request.proto_file:
@@ -163,6 +165,7 @@ class PyProtoGenerator:
         self._used_kernel = set()
         self._used_wt = set()
         self._need_pack = False
+        self._need_intenum = False
         self._cross_imports = set()
 
         proto_file = file_desc.name
@@ -176,6 +179,11 @@ class PyProtoGenerator:
             if i:
                 body.blank_line(2)
             self._generate_message_class(body, proto_file, message)
+
+        # protobuf lifts top-level enum values to module scope and exposes
+        # ``global___<Name>`` aliases for every top-level enum and message.
+        # Reproduce both so the public surface matches the generated code.
+        self._generate_module_aliases(body, file_desc)
 
         header = CodeWriter(indent_size=4)
         self._generate_header(header, proto_file)
@@ -200,8 +208,11 @@ class PyProtoGenerator:
         writer = CodeWriter(indent_size=4)
         writer.import_("__future__", "annotations")
         writer.blank_line()
+        if self._need_intenum:
+            writer.import_("enum", "IntEnum")
         if self._need_pack:
             writer.import_("struct", "pack")
+        if self._need_intenum or self._need_pack:
             writer.blank_line()
         if self._used_kernel:
             writer.import_(_RUNTIME_PKG, *sorted(self._used_kernel))
@@ -217,12 +228,26 @@ class PyProtoGenerator:
     def _generate_enum_class(
         self, writer: CodeWriter, enum_desc: descriptor.EnumDescriptorProto
     ) -> None:
-        with writer.enum(enum_desc.name, enum_type="enum.IntEnum"):
+        self._need_intenum = True
+        with writer.enum(enum_desc.name, enum_type="IntEnum"):
             if enum_desc.value:
                 for val_desc in enum_desc.value:
                     writer.enum_member(val_desc.name, val_desc.number)
             else:
                 writer.pass_()
+
+    def _generate_module_aliases(
+        self, writer: CodeWriter, file_desc: descriptor.FileDescriptorProto
+    ) -> None:
+        for enum_desc in file_desc.enum_type:
+            # Lift the top-level enum's values to module scope.
+            for val_desc in enum_desc.value:
+                writer.writeln(f"{val_desc.name} = {enum_desc.name}.{val_desc.name}")
+            writer.blank_line()
+            writer.writeln(f"global___{enum_desc.name} = {enum_desc.name}")
+            writer.blank_line()
+        for msg_desc in file_desc.message_type:
+            writer.writeln(f"global___{msg_desc.name} = {msg_desc.name}")
 
     # ---- messages --------------------------------------------------------
 
@@ -252,6 +277,7 @@ class PyProtoGenerator:
             self._generate_init(writer, proto_file, msg_desc, oneof_members)
             writer.blank_line()
             if oneof_members:
+                self._generate_oneof_accessors(writer, proto_file, msg_desc, oneof_members)
                 self._generate_which_oneof(writer, msg_desc, oneof_members)
                 writer.blank_line()
             self._generate_serialize(writer, proto_file, msg_desc, oneof_members)
@@ -290,22 +316,18 @@ class PyProtoGenerator:
                     continue
                 self._generate_init_assignment(writer, proto_file, field)
 
-            # Oneof groups.
+            # Oneof groups: initialise the backing fields, then assign any
+            # provided member through its property setter, which coerces a dict,
+            # applies the range check, and selects the member.
             for oneof_index in sorted(oneof_members):
                 oneof_name = msg_desc.oneof_decl[oneof_index].name
-                writer.assignment(f"self._which_{oneof_name}", "None")
                 members = oneof_members[oneof_index]
-                for i, field in enumerate(members):
-                    ctx = writer.elif_(f"{field.name} is not None") if i else writer.if_(
-                        f"{field.name} is not None"
-                    )
-                    with ctx:
-                        if field.type == _FD.TYPE_MESSAGE:
-                            msg_type = self._resolve_type(field.type_name, proto_file)
-                            with writer.if_(f"isinstance({field.name}, dict)"):
-                                writer.assignment(field.name, f"{msg_type}(**{field.name})")
+                for field in members:
+                    writer.assignment(f"self._{field.name}", "None")
+                writer.assignment(f"self._which_{oneof_name}", "None")
+                for field in members:
+                    with writer.if_(f"{field.name} is not None"):
                         writer.assignment(f"self.{field.name}", field.name)
-                        writer.assignment(f"self._which_{oneof_name}", f'"{field.name}"')
 
     def _generate_init_assignment(
         self,
@@ -324,6 +346,59 @@ class PyProtoGenerator:
             return
         writer.assignment(f"self.{field.name}", field.name)
 
+    def _generate_oneof_accessors(
+        self,
+        writer: CodeWriter,
+        proto_file: str,
+        msg_desc: descriptor.DescriptorProto,
+        oneof_members: dict[int, list[descriptor.FieldDescriptorProto]],
+    ) -> None:
+        for oneof_index in sorted(oneof_members):
+            oneof_name = msg_desc.oneof_decl[oneof_index].name
+            members = oneof_members[oneof_index]
+            names_tuple = ", ".join(f'"{f.name}"' for f in members)
+            with writer.method(f"_select_{oneof_name}", ["self", "name", "value"], return_type="None"):
+                with writer.for_("_f", f"({names_tuple},)"):
+                    writer.writeln('setattr(self, f"_{_f}", value if _f == name else None)')
+                writer.assignment(f"self._which_{oneof_name}", "name")
+            writer.blank_line()
+            for field in members:
+                self._generate_oneof_property(writer, proto_file, oneof_name, field)
+                writer.blank_line()
+
+    def _generate_oneof_property(
+        self,
+        writer: CodeWriter,
+        proto_file: str,
+        oneof_name: str,
+        field: descriptor.FieldDescriptorProto,
+    ) -> None:
+        name = field.name
+        writer.writeln("@property")
+        with writer.method(name, ["self"]):
+            if field.type == _FD.TYPE_MESSAGE:
+                msg_type = self._resolve_type(field.type_name, proto_file)
+                with writer.if_(f"self._{name} is None"):
+                    writer.writeln(f'self._select_{oneof_name}("{name}", {msg_type}())')
+            writer.return_(f"self._{name}")
+        writer.blank_line()
+        writer.writeln(f"@{name}.setter")
+        with writer.method(name, ["self", "value"], return_type="None"):
+            if field.type in INT_BOUNDS:
+                lo, hi = INT_BOUNDS[field.type]
+                with writer.if_(f"value is not None and not {lo} <= value < {hi}"):
+                    writer.writeln(f'raise ValueError("Value out of range for {name}: " + repr(value))')
+            with writer.if_("value is None"):
+                writer.assignment(f"self._{name}", "None")
+                with writer.if_(f'self._which_{oneof_name} == "{name}"'):
+                    writer.assignment(f"self._which_{oneof_name}", "None")
+            with writer.else_():
+                if field.type == _FD.TYPE_MESSAGE:
+                    msg_type = self._resolve_type(field.type_name, proto_file)
+                    with writer.if_("isinstance(value, dict)"):
+                        writer.assignment("value", f"{msg_type}(**value)")
+                writer.writeln(f'self._select_{oneof_name}("{name}", value)')
+
     def _generate_which_oneof(
         self,
         writer: CodeWriter,
@@ -331,7 +406,7 @@ class PyProtoGenerator:
         oneof_members: dict[int, list[descriptor.FieldDescriptorProto]],
     ) -> None:
         with writer.method(
-            "WhichOneof", ["self", "oneof_name: builtins.str"], return_type="builtins.str | None"
+            "WhichOneof", ["self", "oneof_name: str"], return_type="str | None"
         ):
             for oneof_index in sorted(oneof_members):
                 oneof_name = msg_desc.oneof_decl[oneof_index].name
@@ -352,7 +427,7 @@ class PyProtoGenerator:
             for field in members:
                 oneof_of_field[field.name] = oneof_name
 
-        with writer.method("SerializeToString", ["self"], return_type="builtins.bytes"):
+        with writer.method("SerializeToString", ["self"], return_type="bytes"):
             writer.assignment("result", 'b""')
             for field in sorted(msg_desc.field, key=lambda f: f.number):
                 if field.name in oneof_of_field:
@@ -426,12 +501,12 @@ class PyProtoGenerator:
         oneof_name: str,
     ) -> None:
         n = field.number
-        with writer.if_(f'self._which_{oneof_name} == "{field.name}"'):
+        with writer.if_(f"self._{field.name} is not None"):
             if field.type == _FD.TYPE_MESSAGE:
                 self._use_helper("msg")
-                writer.writeln(f"result += msg({n}, self.{field.name}.SerializeToString())")
+                writer.writeln(f"result += msg({n}, self._{field.name}.SerializeToString())")
             else:
-                self._emit_inline_scalar(writer, field, f"self.{field.name}")
+                self._emit_inline_scalar(writer, field, f"self._{field.name}")
 
     def _emit_inline_scalar(
         self,
@@ -487,7 +562,7 @@ class PyProtoGenerator:
         else:
             base = get_python_type(field.type)
         if field.label == _FD.LABEL_REPEATED:
-            return f"builtins.list[{base}] | None"
+            return f"list[{base}] | None"
         return f"{base} | None"
 
     def _param_default(self, field: descriptor.FieldDescriptorProto) -> str:
