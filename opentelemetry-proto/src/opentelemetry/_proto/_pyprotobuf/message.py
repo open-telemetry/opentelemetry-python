@@ -13,6 +13,15 @@ from __future__ import annotations
 
 
 class Message:
+    # The public method names below (SerializeToString, FromString, ...) match
+    # the protobuf message API on purpose, so downstream code can swap these in
+    # for the protobuf-generated classes without changes.
+    # pylint: disable=invalid-name
+
+    def SerializeToString(self) -> bytes:
+        # Each generated message subclass overrides this with its own encoder.
+        raise NotImplementedError
+
     def __eq__(self, other: object) -> bool:
         # Compare by wire bytes so equality matches protobuf semantics: proto3
         # omits default values, so a field left as None, "", 0 or b"" compares
