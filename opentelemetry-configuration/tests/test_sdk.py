@@ -5,11 +5,21 @@
 # pylint: disable=protected-access
 
 import logging
+import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
+import opentelemetry.configuration._config_provider as config_provider_module
+from opentelemetry.configuration._config_provider import (
+    ConfigProperties,
+    get_config_provider,
+)
 from opentelemetry.configuration._sdk import configure_sdk
+from opentelemetry.configuration.file import load_config_file
 from opentelemetry.configuration.models import (
+    ExperimentalGeneralInstrumentation,
+    ExperimentalInstrumentation,
     OpenTelemetryConfiguration,
     SeverityNumber,
 )
@@ -32,12 +42,25 @@ from opentelemetry.configuration.models import (
     TracerProvider as TracerProviderConfig,
 )
 from opentelemetry.sdk.trace import TracerProvider as SdkTracerProvider
+from opentelemetry.util._once import Once
 
 _MIN_CONFIG_KWARGS = {"file_format": "1.0"}
 
 
 def _config(**kwargs) -> OpenTelemetryConfiguration:
     return OpenTelemetryConfiguration(**{**_MIN_CONFIG_KWARGS, **kwargs})
+
+
+def _configure_from_yaml(yaml_text: str) -> ConfigProperties:
+    """Apply a configuration file and return the instrumentation view."""
+    with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as temp_file:
+        temp_file.write(yaml_text)
+        config_path = temp_file.name
+    try:
+        configure_sdk(load_config_file(config_path))
+    finally:
+        os.unlink(config_path)
+    return get_config_provider().get_instrumentation_config()
 
 
 class TestConfigureSdk(unittest.TestCase):
@@ -216,3 +239,68 @@ class TestConfigureSdkIntegration(unittest.TestCase):
 
         mock_set_tracer.assert_called_once()
         self.assertIsInstance(mock_set_tracer.call_args[0][0], SdkTracerProvider)
+
+
+class TestConfigureSdkConfigProvider(unittest.TestCase):
+    """The global ConfigProvider exposes the node as the file wrote it."""
+
+    def setUp(self):
+        config_provider_module._CONFIG_PROVIDER = None
+        config_provider_module._CONFIG_PROVIDER_SET_ONCE = Once()
+
+    def tearDown(self):
+        config_provider_module._CONFIG_PROVIDER = None
+        config_provider_module._CONFIG_PROVIDER_SET_ONCE = Once()
+
+    def test_view_holds_only_the_keys_the_file_wrote(self):
+        properties = _configure_from_yaml(
+            'file_format: "1.0"\ninstrumentation/development:\n  general:\n    stability_opt_in_list: http\n'
+        )
+
+        self.assertEqual(properties.keys(), {"general"})
+        # The typed model carries a field per language, so reading it would
+        # report keys this file never mentioned.
+        self.assertNotIn("cpp", properties)
+
+    def test_key_written_as_null_is_present(self):
+        properties = _configure_from_yaml(
+            'file_format: "1.0"\ninstrumentation/development:\n  general:\n    stability_opt_in_list:\n'
+        )
+
+        general = properties.get_config("general")
+        self.assertIn("stability_opt_in_list", general)
+        self.assertIsNone(general.get_string("stability_opt_in_list"))
+
+    def test_key_the_file_omitted_is_absent(self):
+        properties = _configure_from_yaml(
+            'file_format: "1.0"\n'
+            "instrumentation/development:\n"
+            "  general:\n"
+            "    http:\n"
+            "      semconv:\n"
+            "        experimental: true\n"
+        )
+
+        general = properties.get_config("general")
+        # Reading the typed model would report this key with a None value,
+        # which is what a file writing an explicit null looks like.
+        self.assertNotIn("stability_opt_in_list", general)
+
+    def test_absent_node_yields_empty_view(self):
+        properties = _configure_from_yaml('file_format: "1.0"\n')
+
+        self.assertEqual(properties.keys(), set())
+
+    def test_model_built_by_hand_falls_back_to_typed_node(self):
+        configure_sdk(
+            _config(
+                instrumentation_development=ExperimentalInstrumentation(
+                    general=ExperimentalGeneralInstrumentation(stability_opt_in_list="http")
+                )
+            )
+        )
+
+        properties = get_config_provider().get_instrumentation_config()
+        general = properties.get_config("general")
+        self.assertIsNotNone(general)
+        self.assertEqual(general.get_string("stability_opt_in_list"), "http")
