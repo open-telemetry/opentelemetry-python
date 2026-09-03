@@ -33,6 +33,10 @@ def _node_to_mapping(node: Any) -> dict[str, Any]:
     Dataclass nodes (the parsed model tree) are converted recursively via
     ``asdict``; mappings are copied as-is. Anything else yields an empty
     mapping so the getters uniformly return ``None``.
+
+    A dataclass node reports every field the schema defines, so it cannot show
+    which keys the configuration file wrote. Pass the mapping parsed from the
+    file when that difference matters.
     """
     if node is None:
         return {}
@@ -54,7 +58,11 @@ class ConfigProperties:
 
     A getter returns ``None`` both for an absent key and for a key that is
     present with a null value. Use ``name in properties`` or :meth:`keys` to
-    tell those two cases apart, as the spec requires.
+    tell those two cases apart, as the spec requires. That holds for a view
+    over a mapping parsed from the configuration file, which is what
+    ``configure_sdk`` installs. A view built from a typed model node cannot
+    make the distinction, because the model stores an omitted field and an
+    explicit null alike.
     """
 
     def __init__(self, properties: Mapping[str, Any] | None = None) -> None:
