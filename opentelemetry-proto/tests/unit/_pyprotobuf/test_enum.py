@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # tests/test__enum.py
 #
 # encode_enum encodes an integer enum value using the same wire format as

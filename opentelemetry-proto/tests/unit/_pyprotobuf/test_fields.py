@@ -1,3 +1,6 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
 # tests/_pyprotobuf/test_fields.py
 #
 # Tests for the proto3 field-level encoding helpers in fields.py.
