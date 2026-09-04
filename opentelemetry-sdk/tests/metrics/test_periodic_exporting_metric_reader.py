@@ -11,6 +11,7 @@ import weakref
 from logging import WARNING
 from time import sleep, time_ns
 from typing import cast
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import pytest
@@ -395,3 +396,64 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(name.startswith("periodic_metric_reader/"))
 
         mp.shutdown()
+
+
+class TestPeriodicExportingMetricReaderShutdownTimeout(TestCase):
+    """The reader must hand the remaining budget to the exporter.
+
+    Every MetricExporter.shutdown signature is
+    ``shutdown(self, timeout_millis=30_000, **kwargs)``, so passing the budget
+    under any other keyword silently lands in **kwargs and the exporter falls
+    back to its own 30s default.
+    """
+
+    class _RecordingExporter(MetricExporter):
+        def __init__(self):
+            super().__init__(
+                preferred_temporality={Counter: AggregationTemporality.CUMULATIVE},
+            )
+            self.shutdown_timeout_millis = None
+            self.shutdown_kwargs = None
+
+        def export(self, metrics_data, timeout_millis=10_000, **kwargs):
+            return MetricExportResult.SUCCESS
+
+        def force_flush(self, timeout_millis=10_000):
+            return True
+
+        def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+            self.shutdown_timeout_millis = timeout_millis
+            self.shutdown_kwargs = kwargs
+
+    def _shutdown_with(self, timeout_millis):
+        exporter = self._RecordingExporter()
+        reader = PeriodicExportingMetricReader(exporter, export_interval_millis=600_000)
+        MeterProvider(metric_readers=[reader]).shutdown(timeout_millis=timeout_millis)
+        return exporter
+
+    def test_exporter_receives_remaining_budget_as_timeout_millis(self):
+        exporter = self._shutdown_with(500)
+        self.assertIsNotNone(exporter.shutdown_timeout_millis)
+        # some of the budget is consumed joining the ticker thread
+        self.assertLessEqual(exporter.shutdown_timeout_millis, 500)
+        self.assertGreater(exporter.shutdown_timeout_millis, 0)
+
+    def test_exporter_does_not_receive_the_budget_as_an_unknown_kwarg(self):
+        exporter = self._shutdown_with(500)
+        self.assertEqual(exporter.shutdown_kwargs, {})
+
+    def test_exporter_does_not_fall_back_to_its_own_default(self):
+        exporter = self._shutdown_with(500)
+        self.assertNotEqual(exporter.shutdown_timeout_millis, 30_000)
+
+    def test_budget_is_never_negative(self):
+        """An already-exhausted budget must clamp, not go negative.
+
+        Driven through the reader directly: MeterProvider.shutdown enforces its
+        own deadline and would refuse to call the reader at all.
+        """
+        exporter = self._RecordingExporter()
+        reader = PeriodicExportingMetricReader(exporter, export_interval_millis=600_000)
+        MeterProvider(metric_readers=[reader])
+        reader.shutdown(timeout_millis=0)
+        self.assertGreaterEqual(exporter.shutdown_timeout_millis, 0)
