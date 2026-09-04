@@ -81,11 +81,11 @@ def _build_varint_message_class():
     file_proto.syntax = "proto2"
     msg_proto = file_proto.message_type.add()
     msg_proto.name = "VarintMessage"
-    f = msg_proto.field.add()
-    f.name = "uint64_field"
-    f.number = _FIELD
-    f.type = descriptor_pb2.FieldDescriptorProto.TYPE_UINT64
-    f.label = descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL
+    field_proto = msg_proto.field.add()
+    field_proto.name = "uint64_field"
+    field_proto.number = _FIELD
+    field_proto.type = descriptor_pb2.FieldDescriptorProto.TYPE_UINT64
+    field_proto.label = descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL
     pool = descriptor_pool.DescriptorPool()
     pool.Add(file_proto)
     return message_factory.GetMessageClass(pool.FindMessageTypeByName("VarintMessage"))

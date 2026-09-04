@@ -78,12 +78,12 @@ def _build_enum_message_class():
 
     msg_proto = file_proto.message_type.add()
     msg_proto.name = "EnumMessage"
-    f = msg_proto.field.add()
-    f.name = "color_field"
-    f.number = _FIELD
-    f.type = descriptor_pb2.FieldDescriptorProto.TYPE_ENUM
-    f.label = descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL
-    f.type_name = ".Color"
+    field_proto = msg_proto.field.add()
+    field_proto.name = "color_field"
+    field_proto.number = _FIELD
+    field_proto.type = descriptor_pb2.FieldDescriptorProto.TYPE_ENUM
+    field_proto.label = descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL
+    field_proto.type_name = ".Color"
 
     pool = descriptor_pool.DescriptorPool()
     pool.Add(file_proto)

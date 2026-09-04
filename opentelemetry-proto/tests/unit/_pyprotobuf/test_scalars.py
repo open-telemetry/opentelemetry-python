@@ -564,30 +564,30 @@ def _build_scalar_message_class():
     msg_proto = file_proto.message_type.add()
     msg_proto.name = "ScalarMessage"
 
-    T = descriptor_pb2.FieldDescriptorProto
+    field_descriptor = descriptor_pb2.FieldDescriptorProto
 
     def _add(name, number, type_id):
-        f = msg_proto.field.add()
-        f.name = name
-        f.number = number
-        f.type = type_id
-        f.label = T.LABEL_OPTIONAL
+        field_proto = msg_proto.field.add()
+        field_proto.name = name
+        field_proto.number = number
+        field_proto.type = type_id
+        field_proto.label = field_descriptor.LABEL_OPTIONAL
 
-    _add("uint32_field", _F_UINT32, T.TYPE_UINT32)
-    _add("uint64_field", _F_UINT64, T.TYPE_UINT64)
-    _add("bool_field", _F_BOOL, T.TYPE_BOOL)
-    _add("int32_field", _F_INT32, T.TYPE_INT32)
-    _add("int64_field", _F_INT64, T.TYPE_INT64)
-    _add("sint32_field", _F_SINT32, T.TYPE_SINT32)
-    _add("sint64_field", _F_SINT64, T.TYPE_SINT64)
-    _add("float_field", _F_FLOAT, T.TYPE_FLOAT)
-    _add("double_field", _F_DOUBLE, T.TYPE_DOUBLE)
-    _add("fixed32_field", _F_FIXED32, T.TYPE_FIXED32)
-    _add("sfixed32_field", _F_SFIXED32, T.TYPE_SFIXED32)
-    _add("fixed64_field", _F_FIXED64, T.TYPE_FIXED64)
-    _add("sfixed64_field", _F_SFIXED64, T.TYPE_SFIXED64)
-    _add("string_field", _F_STRING, T.TYPE_STRING)
-    _add("bytes_field", _F_BYTES, T.TYPE_BYTES)
+    _add("uint32_field", _F_UINT32, field_descriptor.TYPE_UINT32)
+    _add("uint64_field", _F_UINT64, field_descriptor.TYPE_UINT64)
+    _add("bool_field", _F_BOOL, field_descriptor.TYPE_BOOL)
+    _add("int32_field", _F_INT32, field_descriptor.TYPE_INT32)
+    _add("int64_field", _F_INT64, field_descriptor.TYPE_INT64)
+    _add("sint32_field", _F_SINT32, field_descriptor.TYPE_SINT32)
+    _add("sint64_field", _F_SINT64, field_descriptor.TYPE_SINT64)
+    _add("float_field", _F_FLOAT, field_descriptor.TYPE_FLOAT)
+    _add("double_field", _F_DOUBLE, field_descriptor.TYPE_DOUBLE)
+    _add("fixed32_field", _F_FIXED32, field_descriptor.TYPE_FIXED32)
+    _add("sfixed32_field", _F_SFIXED32, field_descriptor.TYPE_SFIXED32)
+    _add("fixed64_field", _F_FIXED64, field_descriptor.TYPE_FIXED64)
+    _add("sfixed64_field", _F_SFIXED64, field_descriptor.TYPE_SFIXED64)
+    _add("string_field", _F_STRING, field_descriptor.TYPE_STRING)
+    _add("bytes_field", _F_BYTES, field_descriptor.TYPE_BYTES)
 
     pool = descriptor_pool.DescriptorPool()
     pool.Add(file_proto)

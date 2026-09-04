@@ -50,11 +50,11 @@ def _build_full_record_classes():
     inner = fp.message_type.add()
     inner.name = "Inner"
     for name, number, tid in (("label", 1, _T.TYPE_STRING), ("seq", 2, _T.TYPE_UINT64)):
-        f = inner.field.add()
-        f.name = name
-        f.number = number
-        f.type = tid
-        f.label = _T.LABEL_OPTIONAL
+        field_proto = inner.field.add()
+        field_proto.name = name
+        field_proto.number = number
+        field_proto.type = tid
+        field_proto.label = _T.LABEL_OPTIONAL
 
     rec = fp.message_type.add()
     rec.name = "Record"
@@ -69,11 +69,11 @@ def _build_full_record_classes():
         ("bucket_counts", 9, _T.TYPE_UINT64, _T.LABEL_REPEATED),
         ("bounds", 10, _T.TYPE_DOUBLE, _T.LABEL_REPEATED),
     ):
-        f = rec.field.add()
-        f.name = name
-        f.number = number
-        f.type = tid
-        f.label = lbl
+        field_proto = rec.field.add()
+        field_proto.name = name
+        field_proto.number = number
+        field_proto.type = tid
+        field_proto.label = lbl
 
     mf = rec.field.add()
     mf.name = "inner"
@@ -98,11 +98,11 @@ def _build_field_msg_classes():
 
     fi = fp.message_type.add()
     fi.name = "FieldInner"
-    f = fi.field.add()
-    f.name = "v"
-    f.number = 1
-    f.type = _T.TYPE_UINT64
-    f.label = _T.LABEL_OPTIONAL
+    field_proto = fi.field.add()
+    field_proto.name = "v"
+    field_proto.number = 1
+    field_proto.type = _T.TYPE_UINT64
+    field_proto.label = _T.LABEL_OPTIONAL
 
     fm = fp.message_type.add()
     fm.name = "FieldMsg"
@@ -118,11 +118,11 @@ def _build_field_msg_classes():
         ("f_packed_u64", 9, _T.TYPE_UINT64, _T.LABEL_REPEATED),
         ("f_packed_dbl", 10, _T.TYPE_DOUBLE, _T.LABEL_REPEATED),
     ):
-        f = fm.field.add()
-        f.name = name
-        f.number = number
-        f.type = tid
-        f.label = lbl
+        field_proto = fm.field.add()
+        field_proto.name = name
+        field_proto.number = number
+        field_proto.type = tid
+        field_proto.label = lbl
 
     mf = fm.field.add()
     mf.name = "f_msg"
@@ -152,11 +152,11 @@ def _build_repeated_msg_classes():
         ("count", 2, _T.TYPE_UINT64),
         ("value", 3, _T.TYPE_DOUBLE),
     ):
-        f = item.field.add()
-        f.name = name
-        f.number = number
-        f.type = tid
-        f.label = _T.LABEL_OPTIONAL
+        field_proto = item.field.add()
+        field_proto.name = name
+        field_proto.number = number
+        field_proto.type = tid
+        field_proto.label = _T.LABEL_OPTIONAL
 
     container = fp.message_type.add()
     container.name = "Container"
@@ -342,15 +342,15 @@ _PACKED_SIZES = [10, 100, 1_000]
 
 @mark.parametrize("n", _STR_SIZES, ids=["4B", "256B", "16KB"])
 def test_scale_string_pyproto(benchmark, n) -> None:
-    s = "x" * n
-    result = benchmark(lambda: string(2, s))
+    text = "x" * n
+    result = benchmark(lambda: string(2, text))
     assert len(result) > 0
 
 
 @mark.parametrize("n", _STR_SIZES, ids=["4B", "256B", "16KB"])
 def test_scale_string_protobuf(benchmark, n) -> None:
-    s = "x" * n
-    result = benchmark(lambda: _FieldMsg(f_string=s).SerializeToString())
+    text = "x" * n
+    result = benchmark(lambda: _FieldMsg(f_string=text).SerializeToString())
     assert len(result) > 0
 
 

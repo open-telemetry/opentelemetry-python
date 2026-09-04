@@ -108,23 +108,23 @@ def _build_tag_message_class():
     msg_proto = file_proto.message_type.add()
     msg_proto.name = "TagMessage"
 
-    T = descriptor_pb2.FieldDescriptorProto
+    field_descriptor = descriptor_pb2.FieldDescriptorProto
 
     def _add(name, number, type_id):
-        f = msg_proto.field.add()
-        f.name = name
-        f.number = number
-        f.type = type_id
-        f.label = T.LABEL_OPTIONAL
+        field_proto = msg_proto.field.add()
+        field_proto.name = name
+        field_proto.number = number
+        field_proto.type = type_id
+        field_proto.label = field_descriptor.LABEL_OPTIONAL
 
-    _add("uint64_field", _F_UINT64, T.TYPE_UINT64)
-    _add("fixed64_field", _F_FIXED64, T.TYPE_FIXED64)
-    _add("string_field", _F_STRING, T.TYPE_STRING)
-    _add("fixed32_field", _F_FIXED32, T.TYPE_FIXED32)
-    _add("uint64_field_15", _F_UINT64_15, T.TYPE_UINT64)
-    _add("uint64_field_16", _F_UINT64_16, T.TYPE_UINT64)
-    _add("uint64_field_150", _F_UINT64_150, T.TYPE_UINT64)
-    _add("string_field_big", _F_STRING_BIG, T.TYPE_STRING)
+    _add("uint64_field", _F_UINT64, field_descriptor.TYPE_UINT64)
+    _add("fixed64_field", _F_FIXED64, field_descriptor.TYPE_FIXED64)
+    _add("string_field", _F_STRING, field_descriptor.TYPE_STRING)
+    _add("fixed32_field", _F_FIXED32, field_descriptor.TYPE_FIXED32)
+    _add("uint64_field_15", _F_UINT64_15, field_descriptor.TYPE_UINT64)
+    _add("uint64_field_16", _F_UINT64_16, field_descriptor.TYPE_UINT64)
+    _add("uint64_field_150", _F_UINT64_150, field_descriptor.TYPE_UINT64)
+    _add("string_field_big", _F_STRING_BIG, field_descriptor.TYPE_STRING)
 
     pool = descriptor_pool.DescriptorPool()
     pool.Add(file_proto)
