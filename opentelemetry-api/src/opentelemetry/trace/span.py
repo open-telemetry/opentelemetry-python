@@ -314,6 +314,14 @@ class TraceState(Mapping[str, str]):
         """Updates a key-value pair in tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
 
+        Note:
+            This method performs an "upsert": if ``key`` is not already present
+            it is added (when the tracestate is below the 32-entry limit),
+            otherwise its value is updated. This upsert behaviour is intentional
+            but goes beyond what the OpenTelemetry specification defines for
+            ``update`` (https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#tracestate),
+            and is kept for backwards compatibility with callers that rely on it.
+
         Args:
             key: A valid tracestate key to update
             value: A valid tracestate value to update for key
@@ -321,12 +329,22 @@ class TraceState(Mapping[str, str]):
         Returns:
             A new TraceState with the modifications applied.
 
-            If the provided key-value pair is invalid or results in tracestate
-            that violates tracecontext specification, they are discarded and
-            same tracestate will be returned.
+            If the provided pair is invalid, or adding a new key would exceed
+            the maximum of 32 key/value pairs, they are discarded and the same
+            tracestate is returned unchanged. Updating an existing key is always
+            allowed, even at the maximum.
         """
         if not _is_valid_pair(key, value):
             _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
+            return self
+        # Adding a new key at the maximum would push the tracestate over the
+        # limit and cause the constructor to drop every entry. Return unchanged
+        # instead of silently discarding existing state.
+        if (
+            key not in self._dict
+            and len(self._dict) >= _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS
+        ):
+            _logger.warning("There can't be more 32 key/value pairs.")
             return self
         prev_state = self._dict.copy()
         prev_state.pop(key, None)
