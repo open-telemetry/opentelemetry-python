@@ -4,7 +4,7 @@
 from collections.abc import Iterable, Iterator, Mapping
 from logging import getLogger
 from re import split
-from urllib.parse import quote_plus, unquote_plus
+from urllib.parse import quote, unquote
 
 from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
 from opentelemetry.context import get_current
@@ -115,8 +115,8 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 _logger.warning("Invalid baggage entry: `%s`", entry)
                 continue
 
-            name = unquote_plus(name).strip()
-            value = unquote_plus(value).strip()
+            name = unquote(name).strip()
+            value = unquote(value).strip()
 
             context = set_baggage(
                 name,
@@ -162,9 +162,14 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 def _encode_baggage_pairs(
     baggage_entries: Mapping[str, object],
 ) -> Iterator[str]:
-    """Yield URL-encoded 'key=value' pairs from baggage entries."""
+    """Yield percent-encoded 'key=value' pairs from baggage entries.
+
+    Percent-encoding (RFC 3986), not form encoding: the W3C Baggage grammar
+    lists "+" as an ordinary baggage-octet, so it must not be used to stand in
+    for a space. https://www.w3.org/TR/baggage/
+    """
     for key, value in baggage_entries.items():
-        yield quote_plus(str(key)) + "=" + quote_plus(str(value))
+        yield quote(str(key), safe="") + "=" + quote(str(value), safe="")
 
 
 def _extract_first_element(

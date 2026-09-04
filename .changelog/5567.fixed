@@ -1,0 +1,1 @@
+`opentelemetry-api`: percent-encode W3C Baggage instead of form-encoding it, so a literal `+` round trips and spaces are sent as `%20`
