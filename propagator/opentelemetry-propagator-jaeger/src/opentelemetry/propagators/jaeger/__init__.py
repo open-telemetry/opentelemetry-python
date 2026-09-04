@@ -118,7 +118,7 @@ class JaegerPropagator(TextMapPropagator):
         for key in candidates:
             value = _extract_first_element(getter.get(carrier, key))
             if value is not None:
-                pairs.append((key.replace(self.BAGGAGE_PREFIX, ""), value))
+                pairs.append((key.removeprefix(self.BAGGAGE_PREFIX), value))
 
         for baggage_key, value in _limit_baggage_bytes(
             pairs, self.MAX_BAGGAGE_ENTRY_BYTES, self.MAX_BAGGAGE_TOTAL_BYTES
