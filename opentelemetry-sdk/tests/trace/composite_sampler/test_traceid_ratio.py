@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import random
+
 import pytest
 
 from opentelemetry.sdk.trace._sampling_experimental import (
@@ -10,7 +12,6 @@ from opentelemetry.sdk.trace._sampling_experimental import (
 from opentelemetry.sdk.trace._sampling_experimental._trace_state import (
     OtelTraceState,
 )
-from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import Decision
 
 
@@ -48,11 +49,19 @@ def test_description(ratio: float, threshold: str):
 def test_sampling(ratio: float, threshold: int):
     sampler = composite_sampler(composable_traceid_ratio_based(ratio))
 
+    # The sampled-count assertion below has a fixed tolerance, so the trace
+    # IDs must be identical on every run. `RandomIdGenerator` intentionally
+    # ignores `random.seed()` (#4376), so seed a local generator here
+    # instead of relying on the conftest `random_seed` fixture.
+    # `random.Random(0)` matches the ID stream this test consumed when the
+    # generator still read the globally seeded `random` module.
+    id_rng = random.Random(0)
+
     num_sampled = 0
     for _ in range(10000):
         res = sampler.should_sample(
             None,
-            RandomIdGenerator().generate_trace_id(),
+            id_rng.getrandbits(128),
             "span",
             None,
             None,
