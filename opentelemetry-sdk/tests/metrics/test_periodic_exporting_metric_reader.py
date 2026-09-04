@@ -403,4 +403,5 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             self.assertTrue(name.startswith("periodic_metric_reader/"))
         finally:
             mp.shutdown()
-            pmr.shutdown()
+            if not pmr._shutdown:
+                pmr.shutdown()
