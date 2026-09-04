@@ -1,0 +1,1 @@
+`ci`: resolve the contrib repo commit SHA once per CI run instead of recomputing a branch-name reference in each workflow, avoiding non-hermetic mismatches between jobs
