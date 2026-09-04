@@ -170,11 +170,17 @@ class MetricReaderStorage:
                             data_points=data_points,
                             aggregation_temporality=aggregation_temporality,
                         )
+                    else:
+                        _logger.warning(
+                            "Unsupported aggregation %s for instrument %s",
+                            view_instrument_match._aggregation,
+                            instrument,
+                        )
+                        continue
 
                     metrics.append(
                         Metric(
                             # pylint: disable=protected-access
-                            # pylint: disable=possibly-used-before-assignment
                             name=view_instrument_match._name,
                             description=view_instrument_match._description,
                             unit=view_instrument_match._instrument.unit,

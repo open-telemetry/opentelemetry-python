@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: log a warning and skip unmapped aggregations in `MetricReaderStorage.collect` to prevent `UnboundLocalError`, and shut down periodic metric readers in tests to prevent background daemon thread leaks.
