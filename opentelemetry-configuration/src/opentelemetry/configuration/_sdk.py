@@ -10,8 +10,16 @@ entry point for "apply this config" on the declarative path.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING, getLogger
 
+from opentelemetry.configuration._common import _RAW_MAPPING_ATTRIBUTE
+from opentelemetry.configuration._config_provider import (
+    ConfigProperties,
+    ConfigProvider,
+    _node_to_mapping,
+    set_config_provider,
+)
 from opentelemetry.configuration._logger_provider import (
     configure_logger_provider,
 )
@@ -72,7 +80,11 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     logger provider, and text map propagator from their respective config
     sections. Sections absent from the config (``None``) leave the
     corresponding global untouched — matching the spec's "noop default"
-    behavior.
+    behavior. When not disabled, the global :class:`ConfigProvider` is set,
+    exposing the ``instrumentation/development`` config node as a read view
+    (empty when absent) for instrumentation libraries to consume. That view
+    holds the node as the file wrote it, so a caller can tell a key the file
+    omitted from a key the file set to null.
 
     Honors the top-level ``disabled`` flag: when true, the function returns
     early without setting any globals. The ``log_level`` field, when present
@@ -104,4 +116,15 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     configure_meter_provider(config.meter_provider, resource)
     configure_logger_provider(config.logger_provider, resource)
     configure_propagator(config.propagator)
+    # Read the instrumentation node from the mapping the file was parsed into,
+    # so the view holds only the keys the file wrote. The typed model reports a
+    # field for every language the schema defines, which would make a key the
+    # file never mentioned indistinguishable from one written as null. Fall
+    # back to the model when the caller built it by hand.
+    raw_mapping = getattr(config, _RAW_MAPPING_ATTRIBUTE, None)
+    if isinstance(raw_mapping, Mapping):
+        instrumentation_node = raw_mapping.get("instrumentation/development")
+    else:
+        instrumentation_node = config.instrumentation_development
+    set_config_provider(ConfigProvider(ConfigProperties(_node_to_mapping(instrumentation_node))))
     configure_instrumentation(config.instrumentation_development)
