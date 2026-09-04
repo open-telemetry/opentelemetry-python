@@ -191,6 +191,13 @@ nitpick_ignore = [
         "py:class",
         "opentelemetry._proto.collector.logs.v1.logs_service_pb2_grpc.LogsServiceStub",
     ),
+    # The OTLP encoders are defined under opentelemetry.exporter.otlp._proto.common
+    # and re-exported from opentelemetry.exporter.otlp.proto.common, so autodoc
+    # resolves this class to the _proto module path.
+    (
+        "py:class",
+        "opentelemetry.exporter.otlp._proto.common._internal.metrics_encoder.OTLPMetricExporterMixin",
+    ),
     (
         "py:class",
         "opentelemetry.sdk.metrics._internal.exemplar.exemplar_reservoir.FixedSizeExemplarReservoirABC",
