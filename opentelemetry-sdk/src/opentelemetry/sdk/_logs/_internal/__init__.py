@@ -654,15 +654,23 @@ class LoggingHandler(logging.Handler):
 
     def flush(self) -> None:
         """
-        Flushes the logging output. Skip flushing if logging_provider has no force_flush method.
+        Flushes the logging output. Skip flushing if logger_provider has no force_flush method.
+
+        Flushing is delegated to a separate thread to avoid potential deadlocks.
+        RuntimeError exceptions raised when starting the thread during interpreter shutdown
+        are safely ignored.
         """
         if hasattr(self._logger_provider, "force_flush") and callable(
             self._logger_provider.force_flush  # type: ignore[reportAttributeAccessIssue]
         ):
             # This is done in a separate thread to avoid a potential deadlock, for
             # details see https://github.com/open-telemetry/opentelemetry-python/pull/4636.
-            thread = threading.Thread(target=self._logger_provider.force_flush)  # type: ignore[reportAttributeAccessIssue]
-            thread.start()
+            # Catch RuntimeError if thread cannot be started during interpreter shutdown (see #4752).
+            try:
+                thread = threading.Thread(target=self._logger_provider.force_flush)  # type: ignore[reportAttributeAccessIssue]
+                thread.start()
+            except RuntimeError:
+                pass
 
 
 @dataclass
