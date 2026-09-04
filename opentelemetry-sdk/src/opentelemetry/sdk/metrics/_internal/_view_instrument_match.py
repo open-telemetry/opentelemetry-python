@@ -123,14 +123,22 @@ class _ViewInstrumentMatch:
 
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement, should_sample_exemplar: bool = True) -> None:
-        attributes = {}
-        if measurement.attributes:
-            # Make a shallow copy since the user can mutate the dict after the fact.
-            # The user can still modify mutable attribute values (lists/dicts)
-            # leading to unexpected behavior, but deep copying is expensive.
-            attributes = dict(measurement.attributes)
         if self._view._attribute_keys is not None:
-            attributes = {k: v for k, v in attributes.items() if k in self._view._attribute_keys}
+            attributes = {}
+
+            for key, value in (measurement.attributes or {}).items():
+                if key in self._view._attribute_keys:
+                    attributes[key] = value
+        elif self._view._exclude_attribute_keys:
+            attributes = {
+                key: value
+                for key, value in (measurement.attributes or {}).items()
+                if key not in self._view._exclude_attribute_keys
+            }
+        elif measurement.attributes is not None:
+            attributes = dict(measurement.attributes)
+        else:
+            attributes = {}
 
         aggr_key = _hash_attributes(attributes)
 
