@@ -63,6 +63,14 @@ class TestSimpleFixedSizeExemplarReservoir(TestCase):
         self.assertIn("key1", exemplars[0].filtered_attributes)
         self.assertNotIn("key2", exemplars[0].filtered_attributes)
 
+    def test_filter_attributes_with_no_point_attributes(self):
+        reservoir = SimpleFixedSizeExemplarReservoir(1)
+        reservoir.offer(1, time_ns(), {"key": "value"}, Context())
+
+        exemplars = reservoir.collect(None)
+
+        self.assertEqual(exemplars[0].filtered_attributes, {"key": "value"})
+
     def test_fills_every_bucket_before_sampling(self):
         # The first `size` measurements must each land in their own bucket,
         # otherwise the reservoir never reaches its configured capacity.

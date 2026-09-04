@@ -6,9 +6,6 @@ from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
 from random import randrange
 from threading import Lock
-from typing import (
-    Any,
-)
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -113,7 +110,9 @@ class ExemplarBucket:
         # See the specification for more details:
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exemplar
         filtered_attributes = (
-            {k: v for k, v in self.__attributes.items() if k not in point_attributes} if self.__attributes else None
+            {k: v for k, v in self.__attributes.items() if k not in (point_attributes or {})}
+            if self.__attributes
+            else None
         )
 
         exemplar = Exemplar(
@@ -288,4 +287,4 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
 # ExemplarReservoirBuilder: A callable that takes Aggregation parameters
 # (e.g. boundaries for _ExplicitBucketHistogramAggregation) and returns
 # an ExemplarReservoir instance.
-ExemplarReservoirBuilder = Callable[[dict[str, Any]], ExemplarReservoir]
+ExemplarReservoirBuilder = Callable[..., ExemplarReservoir]
