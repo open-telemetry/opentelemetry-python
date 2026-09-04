@@ -245,11 +245,14 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             },
         )
         pmr = PeriodicExportingMetricReader(exporter)
-        for key, value in pmr._instrument_class_temporality.items():
-            if key is not _Counter:
-                self.assertEqual(value, AggregationTemporality.CUMULATIVE)
-            else:
-                self.assertEqual(value, AggregationTemporality.DELTA)
+        try:
+            for key, value in pmr._instrument_class_temporality.items():
+                if key is not _Counter:
+                    self.assertEqual(value, AggregationTemporality.CUMULATIVE)
+                else:
+                    self.assertEqual(value, AggregationTemporality.DELTA)
+        finally:
+            pmr.shutdown()
 
     def test_exporter_aggregation_preference(self):
         exporter = FakeMetricsExporter(
@@ -258,11 +261,14 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             },
         )
         pmr = PeriodicExportingMetricReader(exporter)
-        for key, value in pmr._instrument_class_aggregation.items():
-            if key is not _Counter:
-                self.assertTrue(isinstance(value, DefaultAggregation))
-            else:
-                self.assertTrue(isinstance(value, LastValueAggregation))
+        try:
+            for key, value in pmr._instrument_class_aggregation.items():
+                if key is not _Counter:
+                    self.assertTrue(isinstance(value, DefaultAggregation))
+                else:
+                    self.assertTrue(isinstance(value, LastValueAggregation))
+        finally:
+            pmr.shutdown()
 
     def test_metric_timeout_does_not_kill_worker_thread(self):
         exporter = FakeMetricsExporter()
@@ -364,34 +370,38 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         exporter = FakeMetricsExporter()
         pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=100000)
         mp = MeterProvider(metric_readers=[pmr])
+        try:
+            counter = mp.get_meter("test").create_counter("test_counter")
+            counter.add(1)
 
-        counter = mp.get_meter("test").create_counter("test_counter")
-        counter.add(1)
+            mp.force_flush()
+            self.assertEqual(len(exporter.metrics), 1)
+            # Need a second collection to get the metric we recorded during first collection
+            exporter.metrics.clear()
+            mp.force_flush()
+            self.assertEqual(len(exporter.metrics), 1)
+            metric_data = exporter.metrics[0]
 
-        mp.force_flush()
-        self.assertEqual(len(exporter.metrics), 1)
-        # Need a second collection to get the metric we recorded during first collection
-        exporter.metrics.clear()
-        mp.force_flush()
-        self.assertEqual(len(exporter.metrics), 1)
-        metric_data = exporter.metrics[0]
+            scope_metrics = [
+                sm for sm in metric_data.resource_metrics[0].scope_metrics if sm.scope.name == "opentelemetry-sdk"
+            ]
+            self.assertEqual(len(scope_metrics), 1)
+            reader_metrics = [
+                m for m in scope_metrics[0].metrics if m.name == "otel.sdk.metric_reader.collection.duration"
+            ]
+            self.assertEqual(len(reader_metrics), 1)
+            metric = reader_metrics[0]
 
-        scope_metrics = [
-            sm for sm in metric_data.resource_metrics[0].scope_metrics if sm.scope.name == "opentelemetry-sdk"
-        ]
-        self.assertEqual(len(scope_metrics), 1)
-        reader_metrics = [m for m in scope_metrics[0].metrics if m.name == "otel.sdk.metric_reader.collection.duration"]
-        self.assertEqual(len(reader_metrics), 1)
-        metric = reader_metrics[0]
-
-        point = metric.data.data_points[0]
-        histogram = cast(HistogramDataPoint, point)
-        self.assertEqual(histogram.count, 1)
-        attrs = histogram.attributes
-        assert attrs is not None
-        self.assertEqual(attrs["otel.component.type"], "periodic_metric_reader")
-        name = attrs["otel.component.name"]
-        assert isinstance(name, str)
-        self.assertTrue(name.startswith("periodic_metric_reader/"))
-
-        mp.shutdown()
+            point = metric.data.data_points[0]
+            histogram = cast(HistogramDataPoint, point)
+            self.assertEqual(histogram.count, 1)
+            attrs = histogram.attributes
+            assert attrs is not None
+            self.assertEqual(attrs["otel.component.type"], "periodic_metric_reader")
+            name = attrs["otel.component.name"]
+            assert isinstance(name, str)
+            self.assertTrue(name.startswith("periodic_metric_reader/"))
+        finally:
+            mp.shutdown()
+            if not pmr._shutdown:
+                pmr.shutdown()
