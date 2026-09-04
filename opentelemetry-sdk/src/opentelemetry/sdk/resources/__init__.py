@@ -65,7 +65,6 @@ from collections.abc import Mapping, Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -191,12 +190,8 @@ class Resource:
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
-            process_executable_name = cast(
-                str | None,
-                resource.attributes.get(PROCESS_EXECUTABLE_NAME, None),
-            )
-            if process_executable_name:
-                default_service_name += ":" + process_executable_name
+            if sys.executable:
+                default_service_name += f":{os.path.basename(sys.executable)}"
             resource = resource.merge(Resource({SERVICE_NAME: default_service_name}, schema_url))
         return resource
 
