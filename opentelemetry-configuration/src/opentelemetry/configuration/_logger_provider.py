@@ -20,6 +20,12 @@ from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
 from opentelemetry.configuration.models import (
+    ExperimentalLoggerConfig as LoggerConfigConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalLoggerConfigurator as LoggerConfiguratorConfig,
+)
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
 )
 from opentelemetry.configuration.models import (
@@ -41,6 +47,10 @@ from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
 from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs._internal import (
+    _LoggerConfig,
+    _RuleBasedLoggerConfigurator,
+)
 from opentelemetry.sdk._logs._internal.export import (
     BatchLogRecordProcessor,
     ConsoleLogRecordExporter,
@@ -48,6 +58,7 @@ from opentelemetry.sdk._logs._internal.export import (
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
 _logger = logging.getLogger(__name__)
 
@@ -69,10 +80,10 @@ def _create_otlp_http_log_exporter(
     """Create an OTLP HTTP log exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.proto.http import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415  # type: ignore[import-untyped]
             Compression,
         )
-        from opentelemetry.exporter.otlp.proto.http._log_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.http._log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             OTLPLogExporter,
         )
     except ImportError as exc:
@@ -81,9 +92,7 @@ def _create_otlp_http_log_exporter(
             feature="otlp_http log exporter",
         ) from exc
 
-    compression = _map_compression(
-        config.compression, Compression, allow_deflate=True
-    )
+    compression = _map_compression(config.compression, Compression, allow_deflate=True)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
@@ -101,9 +110,9 @@ def _create_otlp_grpc_log_exporter(
     """Create an OTLP gRPC log exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        import grpc  # type: ignore[import-untyped]  # noqa: PLC0415
+        import grpc  # noqa: PLC0415  # type: ignore[import-untyped]
 
-        from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             OTLPLogExporter,
         )
     except ImportError as exc:
@@ -130,7 +139,7 @@ def _create_otlp_file_development_log_exporter(
     """Create an OTLP file (JSON Lines) log exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.json.file._log_exporter import (  # type: ignore[import-untyped]  # noqa: PLC0415
+        from opentelemetry.exporter.otlp.json.file._log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             FileLogExporter,
         )
     except ImportError as exc:
@@ -167,9 +176,7 @@ def _create_log_record_exporter(
             return factory(value)
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_logs_exporter", name)(
-            **(plugin_config or {})
-        )
+        return load_entry_point("opentelemetry_logs_exporter", name)(**(plugin_config or {}))
     raise ConfigurationError(
         "No exporter type specified in log record exporter config. "
         "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
@@ -184,25 +191,11 @@ def _create_batch_log_record_processor(
     Passes explicit defaults to suppress OTEL_BLRP_* env var reading.
     """
     exporter = _create_log_record_exporter(config.exporter)
-    schedule_delay = (
-        config.schedule_delay
-        if config.schedule_delay is not None
-        else _DEFAULT_SCHEDULE_DELAY_MILLIS
-    )
-    export_timeout = (
-        config.export_timeout
-        if config.export_timeout is not None
-        else _DEFAULT_EXPORT_TIMEOUT_MILLIS
-    )
-    max_queue_size = (
-        config.max_queue_size
-        if config.max_queue_size is not None
-        else _DEFAULT_MAX_QUEUE_SIZE
-    )
+    schedule_delay = config.schedule_delay if config.schedule_delay is not None else _DEFAULT_SCHEDULE_DELAY_MILLIS
+    export_timeout = config.export_timeout if config.export_timeout is not None else _DEFAULT_EXPORT_TIMEOUT_MILLIS
+    max_queue_size = config.max_queue_size if config.max_queue_size is not None else _DEFAULT_MAX_QUEUE_SIZE
     max_export_batch_size = (
-        config.max_export_batch_size
-        if config.max_export_batch_size is not None
-        else _DEFAULT_MAX_EXPORT_BATCH_SIZE
+        config.max_export_batch_size if config.max_export_batch_size is not None else _DEFAULT_MAX_EXPORT_BATCH_SIZE
     )
     return BatchLogRecordProcessor(
         exporter=exporter,
@@ -230,8 +223,52 @@ def _create_log_record_processor(
     if config.simple is not None:
         return _create_simple_log_record_processor(config.simple)
     raise ConfigurationError(
-        "No processor type specified in log record processor config. "
-        "Supported types: batch, simple."
+        "No processor type specified in log record processor config. Supported types: batch, simple."
+    )
+
+
+def _to_logger_config(config: LoggerConfigConfig | None) -> _LoggerConfig:
+    """Map an experimental per-logger config to an SDK ``_LoggerConfig``.
+
+    Only ``enabled`` is honored. ``minimum_severity`` and ``trace_based`` are
+    accepted by the config schema but not supported by the Python SDK
+    ``_LoggerConfig``; the ones that are set are ignored with a warning naming
+    them. An absent ``enabled`` leaves the logger enabled.
+    """
+    if config is None:
+        return _LoggerConfig.default()
+    unsupported_fields = [
+        field_name for field_name in ("minimum_severity", "trace_based") if getattr(config, field_name) is not None
+    ]
+    if unsupported_fields:
+        _logger.warning(
+            "Ignoring logger_configurator fields that are not supported by the Python SDK LoggerProvider: %s",
+            ", ".join(unsupported_fields),
+        )
+    if config.enabled is None:
+        return _LoggerConfig.default()
+    return _LoggerConfig(is_enabled=config.enabled)
+
+
+def _create_logger_configurator(
+    config: LoggerConfiguratorConfig,
+) -> _RuleBasedLoggerConfigurator:
+    """Build a rule-based logger configurator from experimental config.
+
+    Each entry in ``loggers`` maps an instrumentation-scope name glob to a
+    per-logger config; ``default_config`` applies to scopes matching no glob.
+    Rules are evaluated in order, so earlier entries take precedence.
+    """
+    rules = [
+        (
+            _scope_name_matches_glob(matcher.name),
+            _to_logger_config(matcher.config),
+        )
+        for matcher in (config.loggers or [])
+    ]
+    return _RuleBasedLoggerConfigurator(
+        rules=rules,
+        default_config=_to_logger_config(config.default_config),
     )
 
 
@@ -251,7 +288,13 @@ def create_logger_provider(
     Returns:
         A configured LoggerProvider.
     """
-    provider = LoggerProvider(resource=resource)
+    logger_configurator = (
+        _create_logger_configurator(config.logger_configurator_development)
+        if config is not None and config.logger_configurator_development is not None
+        else None
+    )
+
+    provider = LoggerProvider(resource=resource, _logger_configurator=logger_configurator)
 
     if config is None:
         return provider
@@ -263,9 +306,7 @@ def create_logger_provider(
         )
 
     for processor_config in config.processors:
-        provider.add_log_record_processor(
-            _create_log_record_processor(processor_config)
-        )
+        provider.add_log_record_processor(_create_log_record_processor(processor_config))
 
     return provider
 

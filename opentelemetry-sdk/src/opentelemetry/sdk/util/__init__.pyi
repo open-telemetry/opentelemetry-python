@@ -25,7 +25,7 @@ from typing import (
     overload,
 )
 
-from opentelemetry.util.types import AttributesAsKey, AttributeValue
+from opentelemetry.util.types import AnyValue, AttributesAsKey
 
 _T = TypeVar("_T")
 _KT = TypeVar("_KT")
@@ -33,7 +33,7 @@ _VT = TypeVar("_VT")
 
 def ns_to_iso_str(nanoseconds: int) -> str: ...
 def get_dict_as_key(
-    labels: Mapping[str, AttributeValue],
+    labels: Mapping[str, AnyValue],
 ) -> AttributesAsKey: ...
 
 # pylint: disable=no-self-use
@@ -56,9 +56,7 @@ class BoundedList(Sequence[_T]):
     def append(self, item: _T) -> None: ...
     def extend(self, seq: Sequence[_T]) -> None: ...
     @classmethod
-    def from_seq(
-        cls, maxlen: int | None, seq: Iterable[_T]
-    ) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
+    def from_seq(cls, maxlen: int | None, seq: Iterable[_T]) -> BoundedList[_T]: ...  # pylint: disable=undefined-variable
 
 class BoundedDict(MutableMapping[_KT, _VT]):
     """An ordered dict with a fixed max capacity.
@@ -75,6 +73,4 @@ class BoundedDict(MutableMapping[_KT, _VT]):
     def __iter__(self) -> Iterator[_KT]: ...
     def __len__(self) -> int: ...
     @classmethod
-    def from_map(
-        cls, maxlen: int, mapping: Mapping[_KT, _VT]
-    ) -> BoundedDict[_KT, _VT]: ...  # pylint: disable=undefined-variable
+    def from_map(cls, maxlen: int, mapping: Mapping[_KT, _VT]) -> BoundedDict[_KT, _VT]: ...  # pylint: disable=undefined-variable

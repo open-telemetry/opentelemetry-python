@@ -25,7 +25,7 @@ from opentelemetry.proto_json.resource.v1.resource import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import _ExtendedAttributes
+from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
 
@@ -63,16 +63,10 @@ def _encode_value(value: Any) -> JSONAnyValue:
     if isinstance(value, bytes):
         return JSONAnyValue(bytes_value=value)
     if isinstance(value, Sequence):
-        return JSONAnyValue(
-            array_value=JSONArrayValue(
-                values=[_encode_value(v) for v in value]
-            )
-        )
+        return JSONAnyValue(array_value=JSONArrayValue(values=[_encode_value(v) for v in value]))
     if isinstance(value, Mapping):
         return JSONAnyValue(
-            kvlist_value=JSONKeyValueList(
-                values=[_encode_key_value(str(k), v) for k, v in value.items()]
-            )
+            kvlist_value=JSONKeyValueList(values=[_encode_key_value(str(k), v) for k, v in value.items()])
         )
     raise TypeError(f"Invalid type {type(value)} of value {value}")
 
@@ -90,7 +84,7 @@ def _encode_trace_id(trace_id: int) -> bytes:
 
 
 def _encode_attributes(
-    attributes: _ExtendedAttributes | None,
+    attributes: Attributes,
 ) -> list[JSONKeyValue]:
     if not attributes:
         return []

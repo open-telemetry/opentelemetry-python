@@ -38,9 +38,7 @@ _KEY_PATTERN = re.compile(_KEY_FORMAT)
 # nblk-chr = %x21-2B / %x2D-3C / %x3E-7E
 # chr      = %x20 / nblk-chr
 
-_VALUE_FORMAT = (
-    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
-)
+_VALUE_FORMAT = r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
 _VALUE_PATTERN = re.compile(_VALUE_FORMAT)
 
 
@@ -84,9 +82,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_attributes(
-        self, attributes: Mapping[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         """Sets Attributes.
 
         Sets Attributes with the key and value passed as arguments dict.
@@ -98,7 +94,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AnyValue) -> None:
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
@@ -267,9 +263,7 @@ class TraceState(Mapping[str, str]):
                     continue
                 self._dict[key] = value
             else:
-                _logger.warning(
-                    "Invalid key/value pair (%s, %s) found.", key, value
-                )
+                _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
 
     def __contains__(self, item: object) -> bool:
         return item in self._dict
@@ -284,10 +278,7 @@ class TraceState(Mapping[str, str]):
         return len(self._dict)
 
     def __repr__(self) -> str:
-        pairs = [
-            f"{{key={key}, value={value}}}"
-            for key, value in self._dict.items()
-        ]
+        pairs = [f"{{key={key}, value={value}}}" for key, value in self._dict.items()]
         return str(pairs)
 
     def add(self, key: str, value: str) -> TraceState:
@@ -306,9 +297,7 @@ class TraceState(Mapping[str, str]):
             same tracestate will be returned.
         """
         if not _is_valid_pair(key, value):
-            _logger.warning(
-                "Invalid key/value pair (%s, %s) found.", key, value
-            )
+            _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
             return self
         # There can be a maximum of 32 pairs
         if len(self) >= _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
@@ -337,9 +326,7 @@ class TraceState(Mapping[str, str]):
             same tracestate will be returned.
         """
         if not _is_valid_pair(key, value):
-            _logger.warning(
-                "Invalid key/value pair (%s, %s) found.", key, value
-            )
+            _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
             return self
         prev_state = self._dict.copy()
         prev_state.pop(key, None)
@@ -462,8 +449,7 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
             trace_state = DEFAULT_TRACE_STATE
 
         is_valid = (
-            INVALID_TRACE_ID < trace_id <= _TRACE_ID_MAX_VALUE
-            and INVALID_SPAN_ID < span_id <= _SPAN_ID_MAX_VALUE
+            INVALID_TRACE_ID < trace_id <= _TRACE_ID_MAX_VALUE and INVALID_SPAN_ID < span_id <= _SPAN_ID_MAX_VALUE
         )
 
         return tuple.__new__(
@@ -507,9 +493,7 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
         return self[5]  # pylint: disable=unsubscriptable-object
 
     def __setattr__(self, *args: str) -> None:
-        _logger.debug(
-            "Immutable type, ignoring call to set attribute", stack_info=True
-        )
+        _logger.debug("Immutable type, ignoring call to set attribute", stack_info=True)
 
     def __delattr__(self, *args: str) -> None:
         _logger.debug(
@@ -539,12 +523,10 @@ class NonRecordingSpan(Span):
     def end(self, end_time: int | None = None) -> None:
         pass
 
-    def set_attributes(
-        self, attributes: Mapping[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         pass
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AnyValue) -> None:
         pass
 
     def add_event(
