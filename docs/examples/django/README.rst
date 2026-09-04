@@ -47,7 +47,8 @@ an ``opentelemetry.instrumentation.django.DjangoInstrumentor`` to instrument the
 Clone the ``opentelemetry-python`` repository and go to ``opentelemetry-python/docs/examples/django``.
 
 Once there, open the ``manage.py`` file. The call to ``DjangoInstrumentor().instrument()``
-in ``main`` is all that is needed to make the app be instrumented.
+in ``main`` is what instruments the app, and the ``TracerProvider`` configured with a
+``ConsoleSpanExporter`` right above it is what prints the generated spans to stdout.
 
 Run the Django app with ``python manage.py runserver --noreload``.
 The ``--noreload`` flag is needed to avoid Django from running ``main`` twice.
@@ -110,9 +111,13 @@ Django's instrumentation can be disabled by setting the following environment va
 Auto Instrumentation
 --------------------
 
-This same example can be run using auto instrumentation. Comment out the call
-to ``DjangoInstrumentor().instrument()`` in ``main``, then Run the django app
-with ``opentelemetry-instrument python manage.py runserver --noreload``.
+This same example can be run using auto instrumentation. Comment out the
+``TracerProvider`` setup and the call to ``DjangoInstrumentor().instrument()``
+in ``main``, then run the Django app with
+``opentelemetry-instrument --traces_exporter console python manage.py runserver --noreload``.
+The ``--traces_exporter console`` option makes ``opentelemetry-instrument``
+print spans to stdout, matching the manual setup above; without it the default
+OTLP exporter is used and nothing is shown in the console.
 Repeat the steps with the client, the result should be the same.
 
 Usage with Auto Instrumentation and uWSGI
@@ -126,7 +131,7 @@ first install uWSGI in the previous virtual environment:
 Once that is done, run the server with ``uwsgi`` from the directory that
 contains ``instrumentation_example``:
 
-``opentelemetry-instrument uwsgi --http :8000 --module instrumentation_example.wsgi``
+``opentelemetry-instrument --traces_exporter console uwsgi --http :8000 --module instrumentation_example.wsgi``
 
 This should start one uWSGI worker in your console. Open up a browser and point
 it to ``localhost:8000``. This request should display a span exported in the
