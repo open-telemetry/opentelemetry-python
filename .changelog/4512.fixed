@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: export the last value of a synchronous gauge on every cumulative collection even when no new measurements were recorded
