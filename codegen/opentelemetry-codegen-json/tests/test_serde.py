@@ -103,6 +103,17 @@ def test_generated_message_roundtrip(
     assert new_msg == msg
 
 
+def test_enum_field_accepts_name_and_int(test_v1_types: tuple[type[Any], type[Any]]) -> None:
+    TestMessage, _ = test_v1_types
+
+    from_name = TestMessage.from_dict({"enumValue": "SUCCESS"})
+    from_int = TestMessage.from_dict({"enumValue": 1})
+
+    assert from_name.enum_value == TestMessage.TestEnum.SUCCESS
+    assert from_int.enum_value == TestMessage.TestEnum.SUCCESS
+    assert from_name == from_int
+
+
 def test_cross_reference(common_v1_types: type[Any], trace_v1_types: type[Any]) -> None:
     InstrumentationScope = common_v1_types
     Span = trace_v1_types
@@ -252,6 +263,25 @@ def test_nested_enum_suite(complex_v1_types: tuple[type[Any], ...]) -> None:
     assert new_msg.repeated_nested == msg.repeated_nested
 
 
+def test_nested_enum_suite_accepts_names(
+    complex_v1_types: tuple[type[Any], ...],
+) -> None:
+    NestedEnumSuite = complex_v1_types[3]
+
+    msg = NestedEnumSuite.from_dict(
+        {
+            "nested": "NESTED_FOO",
+            "repeatedNested": ["NESTED_FOO", "NESTED_BAR"],
+        }
+    )
+
+    assert msg.nested == NestedEnumSuite.NestedEnum.NESTED_FOO
+    assert msg.repeated_nested == [
+        NestedEnumSuite.NestedEnum.NESTED_FOO,
+        NestedEnumSuite.NestedEnum.NESTED_BAR,
+    ]
+
+
 def test_deeply_nested(complex_v1_types: tuple[type[Any], ...]) -> None:
     DeeplyNested = complex_v1_types[4]
 
@@ -300,7 +330,8 @@ def test_defaults_and_none(
         ({"listStrings": "not a list"}, TypeError, "expected <class 'list'>"),
         ({"name": 123}, TypeError, "expected <class 'str'>"),
         ({"subMessage": "not a dict"}, TypeError, "expected <class 'dict'>"),
-        ({"enumValue": "SUCCESS"}, TypeError, "expected <class 'int'>"),
+        ({"enumValue": []}, TypeError, "expected"),
+        ({"enumValue": "NOT_A_NAME"}, KeyError, None),
         ({"listMessages": [None]}, TypeError, "expected <class 'dict'>"),
     ],
 )
