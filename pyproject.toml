@@ -161,7 +161,6 @@ include = [
 exclude = [
   "opentelemetry-sdk/tests",
   "opentelemetry-configuration/tests",
-  "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/__init__.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-http-transport/tests",
