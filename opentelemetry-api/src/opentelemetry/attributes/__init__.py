@@ -94,7 +94,10 @@ def _clean_attribute_value(
         type(value),
     )
     if _is_non_custom_str(value):
-        return str(value)
+        try:
+            return str(value)
+        except Exception:  # pylint: disable=broad-except
+            pass
     return None
 
 
