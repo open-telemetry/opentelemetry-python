@@ -1,9 +1,11 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Sequence
 from logging import getLogger
 from threading import RLock
 from time import time_ns
+from typing import cast
 
 from opentelemetry.metrics import (
     Asynchronous,
@@ -32,10 +34,13 @@ from opentelemetry.sdk.metrics._internal.instrument import (
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogram,
+    ExponentialHistogramDataPoint,
     Gauge,
     Histogram,
+    HistogramDataPoint,
     Metric,
     MetricsData,
+    NumberDataPoint,
     ResourceMetrics,
     ScopeMetrics,
     Sum,
@@ -161,7 +166,7 @@ class MetricReaderStorage:
                     ):
                         data = Sum(
                             aggregation_temporality=aggregation_temporality,
-                            data_points=data_points,
+                            data_points=cast(Sequence[NumberDataPoint], data_points),
                             is_monotonic=isinstance(instrument, (Counter, ObservableCounter)),
                         )
                     elif isinstance(
@@ -169,14 +174,14 @@ class MetricReaderStorage:
                         view_instrument_match._aggregation,
                         _LastValueAggregation,
                     ):
-                        data = Gauge(data_points=data_points)
+                        data = Gauge(data_points=cast(Sequence[NumberDataPoint], data_points))
                     elif isinstance(
                         # pylint: disable=protected-access
                         view_instrument_match._aggregation,
                         _ExplicitBucketHistogramAggregation,
                     ):
                         data = Histogram(
-                            data_points=data_points,
+                            data_points=cast(Sequence[HistogramDataPoint], data_points),
                             aggregation_temporality=aggregation_temporality,
                         )
                     elif isinstance(
@@ -192,14 +197,17 @@ class MetricReaderStorage:
                         _ExponentialBucketHistogramAggregation,
                     ):
                         data = ExponentialHistogram(
-                            data_points=data_points,
+                            data_points=cast(Sequence[ExponentialHistogramDataPoint], data_points),
                             aggregation_temporality=aggregation_temporality,
+                        )
+                    else:
+                        raise RuntimeError(
+                            f"Unsupported aggregation type {type(view_instrument_match._aggregation).__name__}"
                         )
 
                     metrics.append(
                         Metric(
                             # pylint: disable=protected-access
-                            # pylint: disable=possibly-used-before-assignment
                             name=view_instrument_match._name,
                             description=view_instrument_match._description,
                             unit=view_instrument_match._instrument.unit,
@@ -212,10 +220,15 @@ class MetricReaderStorage:
                         instrumentation_scope_scope_metrics[instrument.instrumentation_scope] = ScopeMetrics(
                             scope=instrument.instrumentation_scope,
                             metrics=metrics,
-                            schema_url=instrument.instrumentation_scope.schema_url,
+                            schema_url=instrument.instrumentation_scope.schema_url or "",
                         )
                     else:
-                        instrumentation_scope_scope_metrics[instrument.instrumentation_scope].metrics.extend(metrics)
+                        scope_metrics = instrumentation_scope_scope_metrics[instrument.instrumentation_scope]
+                        instrumentation_scope_scope_metrics[instrument.instrumentation_scope] = ScopeMetrics(
+                            scope=scope_metrics.scope,
+                            metrics=(*scope_metrics.metrics, *metrics),
+                            schema_url=scope_metrics.schema_url,
+                        )
 
             if instrumentation_scope_scope_metrics:
                 return MetricsData(

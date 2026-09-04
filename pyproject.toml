@@ -164,7 +164,6 @@ exclude = [
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/__init__.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/instrument.py",
-  "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/metric_reader_storage.py",
   "opentelemetry-sdk/benchmarks",
   "exporter/opentelemetry-exporter-http-transport/tests",
   "exporter/opentelemetry-exporter-otlp-proto-grpc/tests",
