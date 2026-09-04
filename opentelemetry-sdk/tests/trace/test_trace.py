@@ -51,6 +51,7 @@ from opentelemetry.sdk.trace.sampling import (
     Decision,
     ParentBased,
     StaticSampler,
+    TraceIdRatioBased,
 )
 from opentelemetry.sdk.util import BoundedDict, BoundedList, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import (
@@ -352,6 +353,68 @@ class TestTracerSampling(unittest.TestCase):
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
         self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "5.0",
+        },
+    )
+    def test_ratio_sampler_with_out_of_range_env_arg_does_not_raise(self):
+        # A syntactically valid but out-of-range OTEL_TRACES_SAMPLER_ARG
+        # (outside [0.0, 1.0]) must not crash TracerProvider() construction.
+        # It should degrade gracefully, the same way a non-numeric value
+        # already does.
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "-0.5",
+        },
+    )
+    def test_ratio_sampler_with_negative_env_arg_does_not_raise(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "0.0",
+        },
+    )
+    def test_ratio_sampler_with_env_arg_lower_boundary(self):
+        # 0.0 is a valid boundary value and must be used as-is, not
+        # treated as falsy/invalid and overridden by the fallback.
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 0.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "1.0",
+        },
+    )
+    def test_ratio_sampler_with_env_arg_upper_boundary(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
 
     def verify_default_sampler(self, tracer_provider):
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
