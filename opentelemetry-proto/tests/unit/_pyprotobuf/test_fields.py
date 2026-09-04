@@ -410,7 +410,7 @@ def test_opt_dbl_none_is_omitted() -> None:
     assert opt_dbl(1, None) == b""
 
 
-def test_opt_dbl_zero_is_NOT_omitted() -> None:
+def test_opt_dbl_zero_is_not_omitted() -> None:
     # This is the key difference from dbl: 0.0 is a valid measurement.
     result = opt_dbl(1, 0.0)
     assert result != b""
@@ -589,11 +589,11 @@ def test_packed_fix64_field_number_affects_tag() -> None:
 
 
 def test_packed_fix64_payload_length_always_multiple_of_8() -> None:
-    for n in [1, 2, 3, 5]:
-        result = packed_fix64(1, list(range(n)))
-        # payload length is n*8; varint(n*8) occupies 1 byte for n<=15
+    for count in [1, 2, 3, 5]:
+        result = packed_fix64(1, list(range(count)))
+        # payload length is count*8; varint(count*8) occupies 1 byte for count<=15
         payload_len = result[1]
-        assert payload_len == n * 8
+        assert payload_len == count * 8
 
 
 @mark.parametrize("values", [[0], [1, 2], [2**32 - 1, 2**64 - 1], [0, 0, 0]])
@@ -637,10 +637,10 @@ def test_packed_double_field_number_affects_tag() -> None:
 
 
 def test_packed_double_payload_length_always_multiple_of_8() -> None:
-    for n in [1, 2, 3]:
-        result = packed_double(1, [float(i) for i in range(n)])
+    for count in [1, 2, 3]:
+        result = packed_double(1, [float(i) for i in range(count)])
         payload_len = result[1]
-        assert payload_len == n * 8
+        assert payload_len == count * 8
 
 
 @mark.parametrize(
