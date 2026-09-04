@@ -27,21 +27,20 @@
 #   SERIALIZE-ONLY benchmarks     — SerializeToString() on a pre-built message,
 #                                   isolating raw encoding from construction.
 #
-# The real (google.protobuf) classes are only available when the upstream
-# ``opentelemetry-proto`` package owns the public ``opentelemetry.proto`` path
-# (installed *after* this package so it wins the namespace). When it does not,
-# ``opentelemetry.proto`` resolves to this package's pure-Python shim and the
-# comparison would be pyproto-vs-pyproto — so the whole module skips, exactly
-# like the equivalence suite's conftest guard.
+# The real (google.protobuf) classes come from the protobuf-backed reference
+# set under ``opentelemetry.proto._test`` (the ``[test]`` extra of
+# opentelemetry-proto), which wraps the upb/C backend. That set serializes to
+# the same wire bytes as the pure-Python classes (the equivalence suite proves
+# it), so the two can be compared field for field.
 #
-# Run (install order matters — real protobuf must win opentelemetry.proto):
-#   uv pip install . && uv pip install protobuf opentelemetry-proto pytest-benchmark
-#   uv run pytest tests/performance/test_benchmark_otlp.py \
+# Run:
+#   uv pip install '.[test]' pytest-benchmark
+#   uv run pytest benchmarks/test_benchmark_otlp.py \
 #       --benchmark-sort=fullname --benchmark-group-by=group
 
 from types import SimpleNamespace
 
-from pytest import mark, skip
+from pytest import mark
 
 from opentelemetry._proto.collector.logs.v1 import logs_service_pb2 as _py_coll_logs
 from opentelemetry._proto.collector.metrics.v1 import (
@@ -56,30 +55,20 @@ from opentelemetry._proto.metrics.v1 import metrics_pb2 as _py_metrics
 from opentelemetry._proto.resource.v1 import resource_pb2 as _py_resource
 from opentelemetry._proto.trace.v1 import trace_pb2 as _py_trace
 
-# Public path: the real opentelemetry-proto when installed, else this package's
-# pure-Python shim. Guard that it is the real package before benchmarking.
-from opentelemetry.proto.common.v1 import common_pb2 as _pb_common
-
-if "pyproto" in (_pb_common.__file__ or ""):
-    skip(
-        "opentelemetry.proto resolves to the pyproto shim "
-        f"({_pb_common.__file__}); install the real opentelemetry-proto "
-        "package (after this one, so it owns opentelemetry.proto) to compare "
-        "pure-Python pyproto against the real google.protobuf implementation.",
-        allow_module_level=True,
-    )
-
-from opentelemetry.proto.collector.logs.v1 import logs_service_pb2 as _pb_coll_logs
-from opentelemetry.proto.collector.metrics.v1 import (
+# Real side: the protobuf-backed reference set under opentelemetry.proto._test
+# (the [test] extra), which wraps the google.protobuf/upb implementation.
+from opentelemetry.proto._test.collector.logs.v1 import logs_service_pb2 as _pb_coll_logs
+from opentelemetry.proto._test.collector.metrics.v1 import (
     metrics_service_pb2 as _pb_coll_metrics,
 )
-from opentelemetry.proto.collector.trace.v1 import (
+from opentelemetry.proto._test.collector.trace.v1 import (
     trace_service_pb2 as _pb_coll_trace,
 )
-from opentelemetry.proto.logs.v1 import logs_pb2 as _pb_logs
-from opentelemetry.proto.metrics.v1 import metrics_pb2 as _pb_metrics
-from opentelemetry.proto.resource.v1 import resource_pb2 as _pb_resource
-from opentelemetry.proto.trace.v1 import trace_pb2 as _pb_trace
+from opentelemetry.proto._test.common.v1 import common_pb2 as _pb_common
+from opentelemetry.proto._test.logs.v1 import logs_pb2 as _pb_logs
+from opentelemetry.proto._test.metrics.v1 import metrics_pb2 as _pb_metrics
+from opentelemetry.proto._test.resource.v1 import resource_pb2 as _pb_resource
+from opentelemetry.proto._test.trace.v1 import trace_pb2 as _pb_trace
 
 # ── Class bundles ───────────────────────────────────────────────────────────
 #
@@ -151,35 +140,35 @@ def _span_id(i: int) -> bytes:
     return bytes(((i * 7 + b) % 256) for b in range(8))
 
 
-def _resource(M):
+def _resource(messages):
     """A resource with the attribute set a real service emits."""
-    return M.Resource(
+    return messages.Resource(
         attributes=[
-            M.KeyValue(key="service.name", value=M.AnyValue(string_value="checkout-service")),
-            M.KeyValue(key="service.version", value=M.AnyValue(string_value="1.24.0")),
-            M.KeyValue(key="service.instance.id", value=M.AnyValue(string_value="pod-7f9c-abc123")),
-            M.KeyValue(key="process.pid", value=M.AnyValue(int_value=42317)),
-            M.KeyValue(key="host.name", value=M.AnyValue(string_value="ip-10-0-12-34")),
-            M.KeyValue(key="telemetry.sdk.language", value=M.AnyValue(string_value="python")),
-            M.KeyValue(key="telemetry.sdk.version", value=M.AnyValue(string_value="1.30.0")),
+            messages.KeyValue(key="service.name", value=messages.AnyValue(string_value="checkout-service")),
+            messages.KeyValue(key="service.version", value=messages.AnyValue(string_value="1.24.0")),
+            messages.KeyValue(key="service.instance.id", value=messages.AnyValue(string_value="pod-7f9c-abc123")),
+            messages.KeyValue(key="process.pid", value=messages.AnyValue(int_value=42317)),
+            messages.KeyValue(key="host.name", value=messages.AnyValue(string_value="ip-10-0-12-34")),
+            messages.KeyValue(key="telemetry.sdk.language", value=messages.AnyValue(string_value="python")),
+            messages.KeyValue(key="telemetry.sdk.version", value=messages.AnyValue(string_value="1.30.0")),
         ]
     )
 
 
-def _span_attributes(M, i: int):
+def _span_attributes(messages, i: int):
     return [
-        M.KeyValue(key="http.request.method", value=M.AnyValue(string_value="GET")),
-        M.KeyValue(key="url.path", value=M.AnyValue(string_value=f"/api/orders/{i}")),
-        M.KeyValue(key="http.response.status_code", value=M.AnyValue(int_value=200)),
-        M.KeyValue(key="server.address", value=M.AnyValue(string_value="orders.internal")),
-        M.KeyValue(key="network.protocol.version", value=M.AnyValue(string_value="1.1")),
-        M.KeyValue(key="db.system", value=M.AnyValue(string_value="postgresql")),
+        messages.KeyValue(key="http.request.method", value=messages.AnyValue(string_value="GET")),
+        messages.KeyValue(key="url.path", value=messages.AnyValue(string_value=f"/api/orders/{i}")),
+        messages.KeyValue(key="http.response.status_code", value=messages.AnyValue(int_value=200)),
+        messages.KeyValue(key="server.address", value=messages.AnyValue(string_value="orders.internal")),
+        messages.KeyValue(key="network.protocol.version", value=messages.AnyValue(string_value="1.1")),
+        messages.KeyValue(key="db.system", value=messages.AnyValue(string_value="postgresql")),
     ]
 
 
-def _span(M, i: int):
+def _span(messages, i: int):
     base = 1_700_000_000_000_000_000 + i * 1_000_000
-    return M.Span(
+    return messages.Span(
         trace_id=_trace_id(i),
         span_id=_span_id(i),
         parent_span_id=_span_id(i + 1),
@@ -187,48 +176,48 @@ def _span(M, i: int):
         kind=2,  # SPAN_KIND_SERVER
         start_time_unix_nano=base,
         end_time_unix_nano=base + 4_200_000,
-        attributes=_span_attributes(M, i),
+        attributes=_span_attributes(messages, i),
         events=[
-            M.Span.Event(
+            messages.Span.Event(
                 time_unix_nano=base + 1_000_000,
                 name="cache.miss",
                 attributes=[
-                    M.KeyValue(key="cache.key", value=M.AnyValue(string_value=f"order:{i}")),
+                    messages.KeyValue(key="cache.key", value=messages.AnyValue(string_value=f"order:{i}")),
                 ],
             ),
-            M.Span.Event(
+            messages.Span.Event(
                 time_unix_nano=base + 2_500_000,
                 name="db.query",
                 attributes=[
-                    M.KeyValue(key="db.rows", value=M.AnyValue(int_value=17)),
+                    messages.KeyValue(key="db.rows", value=messages.AnyValue(int_value=17)),
                 ],
             ),
         ],
         links=[
-            M.Span.Link(
+            messages.Span.Link(
                 trace_id=_trace_id(i + 100),
                 span_id=_span_id(i + 100),
                 trace_state="vendor=abc",
             ),
         ],
-        status=M.Status(code=1, message=""),  # STATUS_CODE_OK
+        status=messages.Status(code=1, message=""),  # STATUS_CODE_OK
         flags=1,
     )
 
 
-def _log_record(M, i: int):
+def _log_record(messages, i: int):
     base = 1_700_000_000_000_000_000 + i * 1_000_000
-    return M.LogRecord(
+    return messages.LogRecord(
         time_unix_nano=base,
         observed_time_unix_nano=base + 1_000,
         severity_number=9,  # INFO
         severity_text="INFO",
-        body=M.AnyValue(string_value=f"request {i} completed in 4.2ms with status 200"),
+        body=messages.AnyValue(string_value=f"request {i} completed in 4.2ms with status 200"),
         attributes=[
-            M.KeyValue(key="log.source", value=M.AnyValue(string_value="access")),
-            M.KeyValue(key="http.route", value=M.AnyValue(string_value="/api/orders/{id}")),
-            M.KeyValue(key="http.response.status_code", value=M.AnyValue(int_value=200)),
-            M.KeyValue(key="thread.id", value=M.AnyValue(int_value=140_234_567)),
+            messages.KeyValue(key="log.source", value=messages.AnyValue(string_value="access")),
+            messages.KeyValue(key="http.route", value=messages.AnyValue(string_value="/api/orders/{id}")),
+            messages.KeyValue(key="http.response.status_code", value=messages.AnyValue(int_value=200)),
+            messages.KeyValue(key="thread.id", value=messages.AnyValue(int_value=140_234_567)),
         ],
         trace_id=_trace_id(i),
         span_id=_span_id(i),
@@ -236,19 +225,19 @@ def _log_record(M, i: int):
     )
 
 
-def _metric(M, i: int, n_dp: int):
+def _metric(messages, i: int, n_dp: int):
     base = 1_700_000_000_000_000_000 + i * 1_000_000
-    return M.Metric(
+    return messages.Metric(
         name=f"http.server.request.duration.{i}",
         description="Duration of HTTP server requests.",
         unit="s",
-        histogram=M.Histogram(
+        histogram=messages.Histogram(
             aggregation_temporality=2,  # CUMULATIVE
             data_points=[
-                M.HistogramDataPoint(
+                messages.HistogramDataPoint(
                     attributes=[
-                        M.KeyValue(key="http.request.method", value=M.AnyValue(string_value="GET")),
-                        M.KeyValue(key="http.response.status_code", value=M.AnyValue(int_value=200)),
+                        messages.KeyValue(key="http.request.method", value=messages.AnyValue(string_value="GET")),
+                        messages.KeyValue(key="http.response.status_code", value=messages.AnyValue(int_value=200)),
                     ],
                     start_time_unix_nano=base,
                     time_unix_nano=base + 60_000_000_000,
@@ -268,15 +257,17 @@ def _metric(M, i: int, n_dp: int):
 # ── Payload builders (batch of resources × scopes × items) ──────────────────
 
 
-def build_trace_request(M, n_res: int, n_scope: int, n_span: int):
-    return M.ExportTraceServiceRequest(
+def build_trace_request(messages, n_res: int, n_scope: int, n_span: int):
+    return messages.ExportTraceServiceRequest(
         resource_spans=[
-            M.ResourceSpans(
-                resource=_resource(M),
+            messages.ResourceSpans(
+                resource=_resource(messages),
                 scope_spans=[
-                    M.ScopeSpans(
-                        scope=M.InstrumentationScope(name="opentelemetry.instrumentation.flask", version="0.48b0"),
-                        spans=[_span(M, i) for i in range(n_span)],
+                    messages.ScopeSpans(
+                        scope=messages.InstrumentationScope(
+                            name="opentelemetry.instrumentation.flask", version="0.48b0"
+                        ),
+                        spans=[_span(messages, i) for i in range(n_span)],
                         schema_url=_SCHEMA_URL,
                     )
                     for _ in range(n_scope)
@@ -288,15 +279,15 @@ def build_trace_request(M, n_res: int, n_scope: int, n_span: int):
     )
 
 
-def build_logs_request(M, n_res: int, n_scope: int, n_log: int):
-    return M.ExportLogsServiceRequest(
+def build_logs_request(messages, n_res: int, n_scope: int, n_log: int):
+    return messages.ExportLogsServiceRequest(
         resource_logs=[
-            M.ResourceLogs(
-                resource=_resource(M),
+            messages.ResourceLogs(
+                resource=_resource(messages),
                 scope_logs=[
-                    M.ScopeLogs(
-                        scope=M.InstrumentationScope(name="opentelemetry.sdk._logs", version="1.30.0"),
-                        log_records=[_log_record(M, i) for i in range(n_log)],
+                    messages.ScopeLogs(
+                        scope=messages.InstrumentationScope(name="opentelemetry.sdk._logs", version="1.30.0"),
+                        log_records=[_log_record(messages, i) for i in range(n_log)],
                         schema_url=_SCHEMA_URL,
                     )
                     for _ in range(n_scope)
@@ -308,15 +299,15 @@ def build_logs_request(M, n_res: int, n_scope: int, n_log: int):
     )
 
 
-def build_metrics_request(M, n_res: int, n_metric: int, n_dp: int):
-    return M.ExportMetricsServiceRequest(
+def build_metrics_request(messages, n_res: int, n_metric: int, n_dp: int):
+    return messages.ExportMetricsServiceRequest(
         resource_metrics=[
-            M.ResourceMetrics(
-                resource=_resource(M),
+            messages.ResourceMetrics(
+                resource=_resource(messages),
                 scope_metrics=[
-                    M.ScopeMetrics(
-                        scope=M.InstrumentationScope(name="opentelemetry.sdk.metrics", version="1.30.0"),
-                        metrics=[_metric(M, i, n_dp) for i in range(n_metric)],
+                    messages.ScopeMetrics(
+                        scope=messages.InstrumentationScope(name="opentelemetry.sdk.metrics", version="1.30.0"),
+                        metrics=[_metric(messages, i, n_dp) for i in range(n_metric)],
                         schema_url=_SCHEMA_URL,
                     )
                 ],
