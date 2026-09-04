@@ -12,7 +12,7 @@ iniconfig==2.3.0
     # via
     #   -r opentelemetry-proto-json/test-requirements.in
     #   pytest
-packaging==26.0
+packaging==26.3
     # via
     #   -r opentelemetry-proto-json/test-requirements.in
     #   pytest
@@ -20,7 +20,7 @@ pluggy==1.6.0
     # via
     #   -r opentelemetry-proto-json/test-requirements.in
     #   pytest
-pygments==2.20.0
+pygments==2.21.0
     # via pytest
 pytest==9.0.3
     # via
@@ -28,5 +28,5 @@ pytest==9.0.3
     #   -r opentelemetry-proto-json/test-requirements.in
 tomli==2.4.1 ; python_full_version < '3.11'
     # via pytest
-typing-extensions==4.15.0 ; python_full_version < '3.11'
+typing-extensions==4.16.0 ; python_full_version < '3.11'
     # via exceptiongroup
