@@ -111,7 +111,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                     metric_reader_storage.consume_measurement(measurement, should_sample_exemplar)
 
                 if time_ns() >= deadline_ns:
-                    raise MetricsTimeoutError("Timed out while executing callback")
+                    raise MetricsTimeoutError(
+                        f"Timed out while executing callback for instrument {async_instrument.name}"
+                    )
 
             result = self._reader_storages[metric_reader].collect()
 
