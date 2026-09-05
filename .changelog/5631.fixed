@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: raise an error when a named `View` is defined without specifying `instrument_name`.
