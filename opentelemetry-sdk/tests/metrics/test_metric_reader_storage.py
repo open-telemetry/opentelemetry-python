@@ -246,7 +246,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
         MockViewInstrumentMatch.call_args_list.clear()
-        storage.consume_measurement(Measurement(1, time_ns(), instrument2, Context()))
+        with self.assertLogs(level=WARNING):
+            storage.consume_measurement(Measurement(1, time_ns(), instrument2, Context()))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
     def test_drop_aggregation(self):
@@ -721,3 +722,64 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             "will cause conflicting metrics",
             log.records[0].message,
         )
+
+    def test_view_instrument_match_conflict_default_view_order_independence(self):
+        # A conflict between a view-renamed instrument and a default-view
+        # fallback instrument is reported regardless of arrival order.
+
+        observable_counter_bar = _ObservableCounter(
+            "bar",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_foo = _ObservableCounter(
+            "foo",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+
+        def make_storage():
+            return MetricReaderStorage(
+                SdkConfiguration(
+                    exemplar_filter=Mock(),
+                    resource=Mock(),
+                    views=(
+                        View(instrument_name="bar", name="foo"),
+                    ),
+                ),
+                MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+                MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+            )
+
+        # Order 1: default-view instrument arrives first, view-renamed arrives second
+        storage_1 = make_storage()
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                storage_1.consume_measurement(Measurement(1, time_ns(), observable_counter_foo, Context()))
+
+        with self.assertLogs(level=WARNING) as log_1:
+            storage_1.consume_measurement(Measurement(1, time_ns(), observable_counter_bar, Context()))
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log_1.records[0].message,
+        )
+
+        # Order 2: view-renamed arrives first, default-view instrument arrives second
+        storage_2 = make_storage()
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                storage_2.consume_measurement(Measurement(1, time_ns(), observable_counter_bar, Context()))
+
+        with self.assertLogs(level=WARNING) as log_2:
+            storage_2.consume_measurement(Measurement(1, time_ns(), observable_counter_foo, Context()))
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log_2.records[0].message,
+        )
+
