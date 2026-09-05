@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: catch and log unhandled exceptions in MultiSpanProcessor
