@@ -976,10 +976,10 @@ class Span(trace_api.Span, ReadableSpan):
 
         # The span must remain mutable from this thread while the _on_ending
         # callbacks run; it becomes immutable once they have returned.
+        # pylint: disable=protected-access
         try:
             if self._record_end_metrics:
                 self._record_end_metrics()
-            # pylint: disable=protected-access
             self._span_processor._on_ending(self)
         finally:
             with self._lock:
