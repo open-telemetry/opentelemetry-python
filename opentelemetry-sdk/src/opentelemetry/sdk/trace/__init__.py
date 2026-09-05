@@ -177,21 +177,33 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         parent_context: context_api.Context | None = None,
     ) -> None:
         for sp in self._span_processors:
-            sp.on_start(span, parent_context=parent_context)
+            try:
+                sp.on_start(span, parent_context=parent_context)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling SpanProcessor.on_start.")
 
     def _on_ending(self, span: "Span") -> None:
         for sp in self._span_processors:
             # pylint: disable=protected-access
-            sp._on_ending(span)
+            try:
+                sp._on_ending(span)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling SpanProcessor._on_ending.")
 
     def on_end(self, span: "ReadableSpan") -> None:
         for sp in self._span_processors:
-            sp.on_end(span)
+            try:
+                sp.on_end(span)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling SpanProcessor.on_end.")
 
     def shutdown(self) -> None:
         """Sequentially shuts down all underlying span processors."""
         for sp in self._span_processors:
-            sp.shutdown()
+            try:
+                sp.shutdown()
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling SpanProcessor.shutdown.")
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Sequentially calls force_flush on all underlying
@@ -214,7 +226,11 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             if current_time_ns >= deadline_ns:
                 return False
 
-            if sp.force_flush((deadline_ns - current_time_ns) // 1000000) is False:
+            try:
+                if sp.force_flush((deadline_ns - current_time_ns) // 1000000) is False:
+                    all_flushed = False
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling SpanProcessor.force_flush.")
                 all_flushed = False
 
         return all_flushed
@@ -269,10 +285,16 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
     ):
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(func(sp), *args, **kwargs)
-            futures.append(future)
+            try:
+                future = self._executor.submit(func(sp), *args, **kwargs)
+                futures.append(future)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while submitting task to SpanProcessor executor.")
         for future in futures:
-            future.result()
+            try:
+                future.result()
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while executing SpanProcessor task.")
 
     def on_start(
         self,
@@ -305,19 +327,27 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         """
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(sp.force_flush, timeout_millis)
-            futures.append(future)
+            try:
+                future = self._executor.submit(sp.force_flush, timeout_millis)
+                futures.append(future)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while submitting task to SpanProcessor executor.")
 
         timeout_sec = timeout_millis / 1e3
         done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_sec)
         if not_done_futures:
             return False
 
+        all_flushed = True
         for future in done_futures:
-            if future.result() is False:
-                return False
+            try:
+                if future.result() is False:
+                    all_flushed = False
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while executing SpanProcessor force_flush.")
+                all_flushed = False
 
-        return True
+        return all_flushed
 
 
 class EventBase(abc.ABC):
