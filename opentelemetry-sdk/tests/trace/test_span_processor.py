@@ -8,7 +8,7 @@ import os
 import time
 import unittest
 import weakref
-from threading import Event
+from threading import Event, Thread
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -312,6 +312,96 @@ class TestSpanProcessor(unittest.TestCase):
         (exported,) = exporter.get_finished_spans()
         self.assertNotIn("late", exported.attributes)
 
+    def test_other_thread_cannot_mutate_during_on_ending(self):
+        exporter = InMemorySpanExporter()
+        inside_on_ending = Event()
+        other_thread_done = Event()
+
+        class BlockingSpanProcessor(trace.SpanProcessor):
+            def _on_ending(self, span: "trace.Span") -> None:
+                inside_on_ending.set()
+                other_thread_done.wait(5)
+
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(BlockingSpanProcessor())
+        tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
+        span = tracer_provider.get_tracer(__name__).start_span("foo")
+
+        def mutate_from_another_thread():
+            inside_on_ending.wait(5)
+            span.set_attribute("other.attribute", "value")
+            span.set_attributes({"other.attributes": "value"})
+            span.update_name("renamed")
+            span.add_event("event")
+            span.add_link(
+                trace_api.SpanContext(
+                    trace_id=0x1,
+                    span_id=0x2,
+                    is_remote=False,
+                )
+            )
+            span.set_status(trace_api.StatusCode.ERROR)
+            other_thread_done.set()
+
+        thread = Thread(target=mutate_from_another_thread)
+        thread.start()
+        span.end()
+        thread.join(5)
+
+        self.assertTrue(inside_on_ending.is_set())
+        self.assertTrue(other_thread_done.is_set())
+
+        (exported,) = exporter.get_finished_spans()
+        self.assertNotIn("other.attribute", exported.attributes)
+        self.assertNotIn("other.attributes", exported.attributes)
+        self.assertEqual(exported.name, "foo")
+        self.assertEqual(len(exported.events), 0)
+        self.assertEqual(len(exported.links), 0)
+        self.assertIs(exported.status.status_code, trace_api.StatusCode.UNSET)
+
+    def test_other_thread_does_not_see_span_recording_during_on_ending(self):
+        inside_on_ending = Event()
+        other_thread_done = Event()
+        recording_seen_by_other_thread = []
+
+        class BlockingSpanProcessor(trace.SpanProcessor):
+            def _on_ending(self, span: "trace.Span") -> None:
+                inside_on_ending.set()
+                other_thread_done.wait(5)
+
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(BlockingSpanProcessor())
+        span = tracer_provider.get_tracer(__name__).start_span("foo")
+
+        def observe_from_another_thread():
+            inside_on_ending.wait(5)
+            recording_seen_by_other_thread.append(span.is_recording())
+            other_thread_done.set()
+
+        thread = Thread(target=observe_from_another_thread)
+        thread.start()
+        span.end()
+        thread.join(5)
+
+        self.assertTrue(other_thread_done.is_set())
+        self.assertEqual(recording_seen_by_other_thread, [False])
+
+    def test_span_is_frozen_when_record_end_metrics_raises(self):
+        def record_end_metrics_that_raises():
+            raise RuntimeError("meter blew up")
+
+        tracer_provider = trace.TracerProvider()
+        span = tracer_provider.get_tracer(__name__).start_span("foo")
+        # pylint: disable=protected-access
+        span._record_end_metrics = record_end_metrics_that_raises
+
+        with self.assertRaises(RuntimeError):
+            span.end()
+
+        self.assertFalse(span.is_recording())
+        span.set_attribute("late", "value")
+        self.assertNotIn("late", span.attributes)
+
 
 class MultiSpanProcessorTestBase(abc.ABC):
     @abc.abstractmethod
@@ -431,6 +521,25 @@ class MultiSpanProcessorTestBase(abc.ABC):
 
         # pylint: disable=no-member
         self.assertListEqual(spans_calls_list, expected_list)
+
+    def test_span_mutable_during_on_ending(self):
+        multi_processor = self.create_multi_span_processor()
+        exporter = InMemorySpanExporter()
+
+        class MutatingSpanProcessor(trace.SpanProcessor):
+            def _on_ending(self, span: "trace.Span") -> None:
+                span.set_attribute("attribute", "value")
+
+        multi_processor.add_span_processor(MutatingSpanProcessor())
+        multi_processor.add_span_processor(SimpleSpanProcessor(exporter))
+        tracer_provider = trace.TracerProvider(active_span_processor=multi_processor)
+
+        tracer_provider.get_tracer(__name__).start_span("foo").end()
+
+        (span,) = exporter.get_finished_spans()
+        # pylint: disable=no-member
+        self.assertEqual(span.attributes["attribute"], "value")
+        multi_processor.shutdown()
 
 
 class TestSynchronousMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.TestCase):
