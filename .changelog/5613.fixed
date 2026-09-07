@@ -1,1 +1,1 @@
-`opentelemetry-sdk`: keep spans mutable during `on_ending` span processor callbacks
+`opentelemetry-sdk`: keep spans mutable during `on_ending` span processor callbacks. Only the thread that called `end()` may mutate the span while the callbacks run, so `ConcurrentMultiSpanProcessor` now invokes `_on_ending` synchronously on that thread instead of through its thread pool.
