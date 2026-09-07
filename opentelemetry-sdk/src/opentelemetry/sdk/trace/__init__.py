@@ -995,6 +995,10 @@ class Span(trace_api.Span, ReadableSpan):
         return self._end_time is None or self._ending_thread == threading.get_ident()
 
     def is_recording(self) -> bool:
+        # Unlike the mutators, this check is deliberately not taken under
+        # self._lock: it does not modify the span, and the answer can become
+        # stale as soon as it is returned anyway, since another thread may
+        # end the span right after this call.
         return self._is_mutable()
 
     @_check_span_ended
