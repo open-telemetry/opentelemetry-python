@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix `TracerProvider()` raising `ValueError` when `OTEL_TRACES_SAMPLER_ARG` is a syntactically valid number outside the `[0.0, 1.0]` range, instead of logging a warning and falling back like other invalid values
