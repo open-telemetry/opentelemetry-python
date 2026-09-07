@@ -434,6 +434,8 @@ class TestLogRecordLimits(unittest.TestCase):
         provider = create_logger_provider(None)
         self.assertEqual(provider._log_record_limits.max_attributes, 128)
         self.assertIsNone(provider._log_record_limits.max_attribute_length)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_log_record_attribute_length)
 
     def test_default_limits_do_not_read_env_vars(self):
         with patch.dict(
@@ -446,6 +448,8 @@ class TestLogRecordLimits(unittest.TestCase):
             provider = create_logger_provider(None)
         self.assertEqual(provider._log_record_limits.max_attributes, 128)
         self.assertIsNone(provider._log_record_limits.max_attribute_length)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_log_record_attribute_length)
 
     def test_limits_from_config(self):
         config = LoggerProviderConfig(
@@ -458,16 +462,6 @@ class TestLogRecordLimits(unittest.TestCase):
         provider = create_logger_provider(config)
         self.assertEqual(provider._log_record_limits.max_attributes, 64)
         self.assertEqual(provider._log_record_limits.max_attribute_length, 256)
-
-    def test_config_limits_are_set_on_the_enforced_log_record_fields(self):
-        config = LoggerProviderConfig(
-            processors=[],
-            limits=LogRecordLimitsConfig(
-                attribute_count_limit=64,
-                attribute_value_length_limit=256,
-            ),
-        )
-        provider = create_logger_provider(config)
         self.assertEqual(provider._log_record_limits.max_log_record_attributes, 64)
         self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 256)
 
@@ -502,12 +496,6 @@ class TestLogRecordLimits(unittest.TestCase):
         self.assertEqual(provider._log_record_limits.max_log_record_attributes, 128)
         self.assertIsNone(provider._log_record_limits.max_log_record_attribute_length)
 
-    def test_global_attribute_limits_are_set_on_the_enforced_log_record_fields(self):
-        global_limits = AttributeLimits(attribute_count_limit=42, attribute_value_length_limit=64)
-        provider = create_logger_provider(None, global_attribute_limits=global_limits)
-        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 42)
-        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 64)
-
     @staticmethod
     def test_no_limits_no_warning():
         config = LoggerProviderConfig(processors=[])
@@ -519,6 +507,7 @@ class TestLogRecordLimits(unittest.TestCase):
         global_limits = AttributeLimits(attribute_count_limit=42)
         provider = create_logger_provider(None, global_attribute_limits=global_limits)
         self.assertEqual(provider._log_record_limits.max_attributes, 42)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 42)
 
     def test_global_attribute_value_length_limit_used_when_no_per_signal_limits(
         self,
@@ -526,6 +515,7 @@ class TestLogRecordLimits(unittest.TestCase):
         global_limits = AttributeLimits(attribute_value_length_limit=64)
         provider = create_logger_provider(None, global_attribute_limits=global_limits)
         self.assertEqual(provider._log_record_limits.max_attribute_length, 64)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 64)
 
     def test_per_signal_limits_override_global(self):
         global_limits = AttributeLimits(attribute_count_limit=100, attribute_value_length_limit=200)
@@ -539,6 +529,8 @@ class TestLogRecordLimits(unittest.TestCase):
         provider = create_logger_provider(config, global_attribute_limits=global_limits)
         self.assertEqual(provider._log_record_limits.max_attributes, 7)
         self.assertEqual(provider._log_record_limits.max_attribute_length, 16)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 7)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 16)
 
 
 # Configurator tests access the SDK LoggerProvider private
