@@ -299,13 +299,21 @@ def _create_log_record_limits(
     if attribute_value_length_limit is None and global_limits is not None:
         attribute_value_length_limit = global_limits.attribute_value_length_limit
 
+    max_attributes = (
+        attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT
+    )
+    max_attribute_length = (
+        attribute_value_length_limit if attribute_value_length_limit is not None else LogRecordLimits.UNSET
+    )
+
+    # The log-record-specific fields are the ones the SDK enforces, so they are
+    # set explicitly too. Leaving them absent would let OTEL_LOGRECORD_ATTRIBUTE_*
+    # override the configured values.
     return LogRecordLimits(
-        max_attributes=(
-            attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT
-        ),
-        max_attribute_length=(
-            attribute_value_length_limit if attribute_value_length_limit is not None else LogRecordLimits.UNSET
-        ),
+        max_attributes=max_attributes,
+        max_attribute_length=max_attribute_length,
+        max_log_record_attributes=max_attributes,
+        max_log_record_attribute_length=max_attribute_length,
     )
 
 

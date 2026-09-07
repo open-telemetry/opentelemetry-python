@@ -459,6 +459,55 @@ class TestLogRecordLimits(unittest.TestCase):
         self.assertEqual(provider._log_record_limits.max_attributes, 64)
         self.assertEqual(provider._log_record_limits.max_attribute_length, 256)
 
+    def test_config_limits_are_set_on_the_enforced_log_record_fields(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            limits=LogRecordLimitsConfig(
+                attribute_count_limit=64,
+                attribute_value_length_limit=256,
+            ),
+        )
+        provider = create_logger_provider(config)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 64)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 256)
+
+    def test_config_limits_are_not_overridden_by_log_record_env_vars(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            limits=LogRecordLimitsConfig(
+                attribute_count_limit=64,
+                attribute_value_length_limit=256,
+            ),
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT": "5",
+                "OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT": "3",
+            },
+        ):
+            provider = create_logger_provider(config)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 64)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 256)
+
+    def test_default_limits_are_not_overridden_by_log_record_env_vars(self):
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT": "5",
+                "OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT": "3",
+            },
+        ):
+            provider = create_logger_provider(None)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_log_record_attribute_length)
+
+    def test_global_attribute_limits_are_set_on_the_enforced_log_record_fields(self):
+        global_limits = AttributeLimits(attribute_count_limit=42, attribute_value_length_limit=64)
+        provider = create_logger_provider(None, global_attribute_limits=global_limits)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 42)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 64)
+
     @staticmethod
     def test_no_limits_no_warning():
         config = LoggerProviderConfig(processors=[])
