@@ -89,14 +89,12 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
     @patch("opentelemetry.sdk.metrics._internal.metric_reader_storage._ViewInstrumentMatch")
     def test_forwards_calls_to_view_instrument_match(self, MockViewInstrumentMatch: Mock):
-        view_instrument_match1 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
-        view_instrument_match2 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
-        view_instrument_match3 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
-        MockViewInstrumentMatch.side_effect = [
-            view_instrument_match1,
-            view_instrument_match2,
-            view_instrument_match3,
-        ]
+        # Build a fresh mock per call rather than handing out a fixed list, so
+        # that a construction from elsewhere in the process cannot consume an
+        # entry this test is relying on.
+        MockViewInstrumentMatch.side_effect = lambda *args, **kwargs: Mock(
+            _aggregation=_LastValueAggregation({}, Mock())
+        )
 
         instrument1 = Mock(name="instrument1")
         instrument2 = Mock(name="instrument2")
@@ -117,13 +115,18 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # ViewInstrumentMatch objects created for that instrument
         measurement = Measurement(1, time_ns(), instrument1, Context())
         storage.consume_measurement(measurement)
+        (
+            view_instrument_match1,
+            view_instrument_match2,
+        ) = storage._instrument_view_instrument_matches[instrument1]
         view_instrument_match1.consume_measurement.assert_called_once_with(measurement, True)
         view_instrument_match2.consume_measurement.assert_called_once_with(measurement, True)
-        view_instrument_match3.consume_measurement.assert_not_called()
+        self.assertNotIn(instrument2, storage._instrument_view_instrument_matches)
 
         measurement = Measurement(1, time_ns(), instrument2, Context())
         with self.assertLogs(level=WARNING):
             storage.consume_measurement(measurement)
+        (view_instrument_match3,) = storage._instrument_view_instrument_matches[instrument2]
         view_instrument_match3.consume_measurement.assert_called_once_with(measurement, True)
 
         # collect() should call collect on all of its _ViewInstrumentMatch
