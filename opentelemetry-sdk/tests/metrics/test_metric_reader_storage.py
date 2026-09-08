@@ -236,17 +236,15 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
 
         storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
-        self.assertEqual(
-            len(MockViewInstrumentMatch.call_args_list),
-            1,
-            MockViewInstrumentMatch.mock_calls,
-        )
-        storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
-        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
+        matches = storage._instrument_view_instrument_matches[instrument1]
+        self.assertEqual(len(matches), 1, matches)
 
-        MockViewInstrumentMatch.call_args_list.clear()
+        storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
+        self.assertIs(storage._instrument_view_instrument_matches[instrument1], matches)
+        self.assertEqual(len(matches), 1, matches)
+
         storage.consume_measurement(Measurement(1, time_ns(), instrument2, Context()))
-        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
+        self.assertEqual(len(storage._instrument_view_instrument_matches[instrument2]), 1)
 
     def test_drop_aggregation(self):
         counter = _Counter("name", Mock(), Mock())
