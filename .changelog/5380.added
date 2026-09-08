@@ -1,0 +1,1 @@
+`opentelemetry-api`, `opentelemetry-sdk`: add `enabled()` support to the Logger API, SDK, and `LogRecordProcessor` to let instrumentation skip expensive work when logging is disabled
