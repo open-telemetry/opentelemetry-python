@@ -245,14 +245,12 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             },
         )
         pmr = PeriodicExportingMetricReader(exporter)
-        try:
-            for key, value in pmr._instrument_class_temporality.items():
-                if key is not _Counter:
-                    self.assertEqual(value, AggregationTemporality.CUMULATIVE)
-                else:
-                    self.assertEqual(value, AggregationTemporality.DELTA)
-        finally:
-            pmr.shutdown()
+        self.addCleanup(pmr.shutdown)
+        for key, value in pmr._instrument_class_temporality.items():
+            if key is not _Counter:
+                self.assertEqual(value, AggregationTemporality.CUMULATIVE)
+            else:
+                self.assertEqual(value, AggregationTemporality.DELTA)
 
     def test_exporter_aggregation_preference(self):
         exporter = FakeMetricsExporter(
@@ -261,14 +259,12 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             },
         )
         pmr = PeriodicExportingMetricReader(exporter)
-        try:
-            for key, value in pmr._instrument_class_aggregation.items():
-                if key is not _Counter:
-                    self.assertTrue(isinstance(value, DefaultAggregation))
-                else:
-                    self.assertTrue(isinstance(value, LastValueAggregation))
-        finally:
-            pmr.shutdown()
+        self.addCleanup(pmr.shutdown)
+        for key, value in pmr._instrument_class_aggregation.items():
+            if key is not _Counter:
+                self.assertTrue(isinstance(value, DefaultAggregation))
+            else:
+                self.assertTrue(isinstance(value, LastValueAggregation))
 
     def test_metric_timeout_does_not_kill_worker_thread(self):
         exporter = FakeMetricsExporter()

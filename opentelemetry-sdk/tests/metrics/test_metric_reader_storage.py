@@ -722,8 +722,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             log.records[0].message,
         )
 
-    @patch("opentelemetry.sdk.metrics._internal.metric_reader_storage._ViewInstrumentMatch")
-    def test_collect_skips_unsupported_aggregation(self, MockViewInstrumentMatch: Mock):
+    def test_collect_skips_unsupported_aggregation(self):
         unsupported_match = Mock(
             _aggregation=Mock(),
             _name="unsupported_metric",
@@ -741,24 +740,19 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
         valid_match.collect.return_value = [valid_point]
 
-        MockViewInstrumentMatch.side_effect = [unsupported_match, valid_match]
-
         instrument1 = Mock(name="instrument1")
         instrument2 = Mock(name="instrument2")
-        view1 = mock_view_matching("view1", instrument1)
-        view2 = mock_view_matching("view2", instrument2)
         storage = MetricReaderStorage(
             SdkConfiguration(
                 exemplar_filter=Mock(),
                 resource=Mock(),
-                views=(view1, view2),
+                views=(),
             ),
             MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
             MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
-
-        storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
-        storage.consume_measurement(Measurement(1, time_ns(), instrument2, Context()))
+        storage._instrument_view_instrument_matches[instrument1] = [unsupported_match]
+        storage._instrument_view_instrument_matches[instrument2] = [valid_match]
 
         with self.assertLogs(level=WARNING) as log:
             result = storage.collect()
@@ -766,4 +760,12 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertIsNotNone(result)
         self.assertEqual(len(result.resource_metrics[0].scope_metrics[0].metrics), 1)
         self.assertEqual(result.resource_metrics[0].scope_metrics[0].metrics[0].name, "valid_metric")
+        self.assertEqual(len(log.records), 1)
         self.assertIn("Unsupported aggregation", log.output[0])
+
+        with self.assertNoLogs(level=WARNING):
+            result2 = storage.collect()
+
+        self.assertIsNotNone(result2)
+        self.assertEqual(len(result2.resource_metrics[0].scope_metrics[0].metrics), 1)
+        self.assertEqual(result2.resource_metrics[0].scope_metrics[0].metrics[0].name, "valid_metric")
