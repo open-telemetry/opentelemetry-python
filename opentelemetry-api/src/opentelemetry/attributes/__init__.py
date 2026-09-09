@@ -146,6 +146,8 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
     ) -> None:
         if maxlen is not None and maxlen < 0:
             raise ValueError("maxlen must be valid int greater or equal to 0")
+        if max_value_len is not None and max_value_len < 0:
+            raise ValueError("max_value_len must be valid int greater or equal to 0")
         self._dict: dict[str, types.AnyValue] = {}
         self.maxlen = maxlen
         self.dropped = 0
