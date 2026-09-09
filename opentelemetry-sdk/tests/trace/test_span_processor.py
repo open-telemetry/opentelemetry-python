@@ -404,6 +404,23 @@ class MultiSpanProcessorTestBase(abc.ABC):
         self.assertEqual(str(ctx.exception), "application failed")
         multi_processor.shutdown()
 
+    def test_force_flush_exception_does_not_raise_and_returns_false(self):
+        multi_processor = self.create_multi_span_processor()
+        raising_proc = mock.Mock(spec=trace.SpanProcessor)
+        raising_proc.force_flush.side_effect = RuntimeError("processor failed")
+        normal_proc = mock.Mock(spec=trace.SpanProcessor)
+        normal_proc.force_flush.return_value = True
+
+        multi_processor.add_span_processor(raising_proc)
+        multi_processor.add_span_processor(normal_proc)
+
+        flushed = multi_processor.force_flush(1000)
+
+        self.assertFalse(flushed)
+        raising_proc.force_flush.assert_called_once()
+        normal_proc.force_flush.assert_called_once()
+        multi_processor.shutdown()
+
     def test_force_flush(self):
         multi_processor = self.create_multi_span_processor()
 
@@ -640,3 +657,24 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         with tracer.start_as_current_span("main process after fork span"):
             pass
         assert exporter.get_finished_spans()[-1].name == "main process after fork span"
+
+    def test_executor_submit_exception_does_not_raise(self):
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        # Shut down the executor so that subsequent submit calls raise RuntimeError
+        # pylint: disable=protected-access
+        multi_processor._executor.shutdown(wait=True)
+
+        mock_processor = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(mock_processor)
+
+        span = self.create_default_span()
+        # Verify that all callbacks handle executor submission failures gracefully
+        multi_processor.on_start(span)
+        # pylint: disable=protected-access
+        multi_processor._on_ending(span)
+        multi_processor.on_end(span)
+        multi_processor.shutdown()
+
+        # force_flush must return False when submission fails and not raise
+        flushed = multi_processor.force_flush(100)
+        self.assertFalse(flushed)
