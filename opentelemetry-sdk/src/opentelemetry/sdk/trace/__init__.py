@@ -325,6 +325,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             True if all span processors flushed their spans within the given
             timeout, False otherwise.
         """
+        all_flushed = True
         futures = []
         for sp in self._span_processors:
             try:
@@ -332,13 +333,13 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
                 futures.append(future)
             except Exception:  # pylint: disable=broad-exception-caught
                 logger.exception("Exception while submitting task to SpanProcessor executor.")
+                all_flushed = False
 
         timeout_sec = timeout_millis / 1e3
         done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_sec)
         if not_done_futures:
             return False
 
-        all_flushed = True
         for future in done_futures:
             try:
                 if future.result() is False:
