@@ -754,7 +754,10 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         storage._instrument_view_instrument_matches[instrument1] = [unsupported_match]
         storage._instrument_view_instrument_matches[instrument2] = [valid_match]
 
-        with self.assertLogs(level=WARNING) as log:
+        with self.assertLogs(
+            "opentelemetry.sdk.metrics._internal.metric_reader_storage",
+            level=WARNING,
+        ) as log:
             result = storage.collect()
 
         self.assertIsNotNone(result)
@@ -762,10 +765,34 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertEqual(result.resource_metrics[0].scope_metrics[0].metrics[0].name, "valid_metric")
         self.assertEqual(len(log.records), 1)
         self.assertIn("Unsupported aggregation", log.output[0])
+        self.assertIn(
+            (instrument1, type(unsupported_match._aggregation)),
+            storage._unsupported_aggregation_warned,
+        )
 
-        with self.assertNoLogs(level=WARNING):
+        with self.assertNoLogs(
+            "opentelemetry.sdk.metrics._internal.metric_reader_storage",
+            level=WARNING,
+        ):
             result2 = storage.collect()
 
         self.assertIsNotNone(result2)
         self.assertEqual(len(result2.resource_metrics[0].scope_metrics[0].metrics), 1)
         self.assertEqual(result2.resource_metrics[0].scope_metrics[0].metrics[0].name, "valid_metric")
+
+        # A different instrument with unsupported aggregation should still emit a warning once
+        instrument3 = Mock(name="instrument3")
+        storage._instrument_view_instrument_matches[instrument3] = [unsupported_match]
+        with self.assertLogs(
+            "opentelemetry.sdk.metrics._internal.metric_reader_storage",
+            level=WARNING,
+        ) as log3:
+            result3 = storage.collect()
+
+        self.assertIsNotNone(result3)
+        self.assertEqual(len(log3.records), 1)
+        self.assertIn("Unsupported aggregation", log3.output[0])
+        self.assertIn(
+            (instrument3, type(unsupported_match._aggregation)),
+            storage._unsupported_aggregation_warned,
+        )
