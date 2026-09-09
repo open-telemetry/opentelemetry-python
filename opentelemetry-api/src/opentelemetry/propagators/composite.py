@@ -55,14 +55,12 @@ class CompositePropagator(textmap.TextMapPropagator):
         for propagator in self._propagators:
             propagator.inject(carrier, context, setter=setter)
 
-    @property
+        @property
     def fields(self) -> set[str]:
-        """Returns a set with the fields set in `inject`.
-
-        See
-        `opentelemetry.propagators.textmap.TextMapPropagator.fields`
-        """
-        composite_fields = set()
+        if not self._propagators:
+            return set()
+            
+        return set.union(*(set(propagator.fields) for propagator in self._propagators))
 
         for propagator in self._propagators:
             for field in propagator.fields:
