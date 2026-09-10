@@ -8,10 +8,7 @@ from __future__ import annotations
 
 import builtins
 import dataclasses
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
@@ -19,7 +16,7 @@ import opentelemetry.proto_json.resource.v1.resource
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ProfilesDictionary(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ProfilesDictionary
@@ -90,7 +87,7 @@ class ProfilesDictionary(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ProfilesData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ProfilesData
@@ -136,7 +133,7 @@ class ProfilesData(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ResourceProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceProfiles
@@ -188,7 +185,7 @@ class ResourceProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ScopeProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeProfiles
@@ -240,7 +237,7 @@ class ScopeProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Profile
@@ -333,7 +330,7 @@ class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Link(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Link
@@ -379,7 +376,7 @@ class Link(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ValueType
@@ -427,7 +424,7 @@ class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Sample
@@ -490,7 +487,7 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Mapping
@@ -552,7 +549,7 @@ class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Stack(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Stack
@@ -593,7 +590,7 @@ class Stack(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Location(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Location
@@ -650,7 +647,7 @@ class Location(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Line(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Line
@@ -702,7 +699,7 @@ class Line(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Function(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Function
@@ -761,7 +758,7 @@ class Function(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class KeyValueAndUnit(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValueAndUnit
