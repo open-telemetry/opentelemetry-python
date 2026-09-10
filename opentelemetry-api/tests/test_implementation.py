@@ -56,6 +56,9 @@ class RecordingSpan(trace.Span):
         attributes=None,
         timestamp=None,
         escaped=False,
+        *,
+        event_name=None,
+        severity_number=None,
     ) -> None:
         pass
 

@@ -14,6 +14,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 
+if typing.TYPE_CHECKING:
+    # Only imported for typing: `opentelemetry._logs` imports this module.
+    from opentelemetry._logs import SeverityNumber
+
 # The key MUST begin with a lowercase letter or a digit,
 # and can only contain lowercase letters (a-z), digits (0-9),
 # underscores (_), dashes (-), asterisks (*), and forward slashes (/).
@@ -175,6 +179,9 @@ class Span(abc.ABC):
         attributes: types.Attributes = None,
         timestamp: int | None = None,
         escaped: bool = False,
+        *,
+        event_name: str | None = None,
+        severity_number: SeverityNumber | None = None,
     ) -> None:
         """Records an exception as a span event."""
 
@@ -560,6 +567,9 @@ class NonRecordingSpan(Span):
         attributes: types.Attributes = None,
         timestamp: int | None = None,
         escaped: bool = False,
+        *,
+        event_name: str | None = None,
+        severity_number: SeverityNumber | None = None,
     ) -> None:
         pass
 
