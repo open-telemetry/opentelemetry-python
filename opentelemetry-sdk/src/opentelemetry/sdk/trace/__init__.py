@@ -269,8 +269,15 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
     ):
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(func(sp), *args, **kwargs)
-            futures.append(future)
+            try:
+                future = self._executor.submit(func(sp), *args, **kwargs)
+            except RuntimeError:
+                # The interpreter is shutting down: concurrent.futures' own
+                # atexit hook has already run, so no new work can be scheduled.
+                # Run inline instead, otherwise shutdown and flush are lost.
+                func(sp)(*args, **kwargs)
+            else:
+                futures.append(future)
         for future in futures:
             future.result()
 
@@ -305,7 +312,12 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         """
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(sp.force_flush, timeout_millis)
+            try:
+                future = self._executor.submit(sp.force_flush, timeout_millis)
+            except RuntimeError:
+                if sp.force_flush(timeout_millis) is False:
+                    return False
+                continue
             futures.append(future)
 
         timeout_sec = timeout_millis / 1e3
