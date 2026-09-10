@@ -162,6 +162,42 @@ nitpick_ignore = [
         "py:class",
         "opentelemetry.proto.collector.logs.v1.logs_service_pb2.ExportLogsServiceRequest",
     ),
+    # The pure-Python message and service classes are defined under
+    # opentelemetry._proto and re-exported from opentelemetry.proto, so autodoc
+    # resolves annotations to the _proto module paths. Neither module set is
+    # documented, so ignore the same targets under the _proto paths too.
+    ("py:class", "opentelemetry._proto.resource.v1.resource_pb2.Resource"),
+    (
+        "py:class",
+        "opentelemetry._proto.collector.trace.v1.trace_service_pb2.ExportTraceServiceRequest",
+    ),
+    (
+        "py:class",
+        "opentelemetry._proto.collector.trace.v1.trace_service_pb2_grpc.TraceServiceStub",
+    ),
+    (
+        "py:class",
+        "opentelemetry._proto.collector.metrics.v1.metrics_service_pb2.ExportMetricsServiceRequest",
+    ),
+    (
+        "py:class",
+        "opentelemetry._proto.collector.metrics.v1.metrics_service_pb2_grpc.MetricsServiceStub",
+    ),
+    (
+        "py:class",
+        "opentelemetry._proto.collector.logs.v1.logs_service_pb2.ExportLogsServiceRequest",
+    ),
+    (
+        "py:class",
+        "opentelemetry._proto.collector.logs.v1.logs_service_pb2_grpc.LogsServiceStub",
+    ),
+    # The OTLP encoders are defined under opentelemetry.exporter.otlp._proto.common
+    # and re-exported from opentelemetry.exporter.otlp.proto.common, so autodoc
+    # resolves this class to the _proto module path.
+    (
+        "py:class",
+        "opentelemetry.exporter.otlp._proto.common._internal.metrics_encoder.OTLPMetricExporterMixin",
+    ),
     (
         "py:class",
         "opentelemetry.sdk.metrics._internal.exemplar.exemplar_reservoir.FixedSizeExemplarReservoirABC",

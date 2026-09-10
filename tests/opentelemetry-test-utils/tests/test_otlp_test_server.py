@@ -298,8 +298,14 @@ class TestOtlpProtoTestServer(unittest.TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_missing_proto_raises_import_error(self):
+        # The server needs the protobuf-backed reference set from the [test]
+        # extra to decode requests; null out one of its modules to simulate the
+        # extra not being installed.
         with (
-            unittest.mock.patch.dict("sys.modules", {"opentelemetry.proto": None}),
+            unittest.mock.patch.dict(
+                "sys.modules",
+                {"opentelemetry.proto._test.collector.trace.v1.trace_service_pb2": None},
+            ),
             self.assertRaises(ImportError) as cm,
         ):
             OtlpProtoTestServer()
