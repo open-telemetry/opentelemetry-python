@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pytest
-from prometheus_client import CollectorRegistry, start_http_server
+from prometheus_client import CollectorRegistry
 
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
 from opentelemetry.metrics import Meter
@@ -32,8 +32,6 @@ if TYPE_CHECKING:
         Metric,
         NumberDataPoint,
     )
-
-_PROMETHEUS_PORT = 9464
 
 _CUMULATIVE = AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
 
@@ -148,8 +146,8 @@ class TestPrometheusMetricsExporter:
         return request.param
 
     @pytest.fixture(scope="class")
-    def registry(self) -> CollectorRegistry:
-        return CollectorRegistry()
+    def registry(self, prometheus_registry: CollectorRegistry) -> CollectorRegistry:
+        return prometheus_registry
 
     @pytest.fixture(scope="class")
     def reader(
@@ -158,19 +156,6 @@ class TestPrometheusMetricsExporter:
         registry: CollectorRegistry,
     ) -> PrometheusMetricReader:
         return config.build(registry)
-
-    @pytest.fixture(scope="class")
-    def http_server(
-        self,
-        registry: CollectorRegistry,
-        reader: PrometheusMetricReader,
-    ) -> Iterator[None]:
-        httpd, _thread = start_http_server(port=_PROMETHEUS_PORT, addr="0.0.0.0", registry=registry)
-        try:
-            yield
-        finally:
-            httpd.shutdown()
-            httpd.server_close()
 
     @pytest.fixture(scope="class")
     def meter_provider(
@@ -191,11 +176,7 @@ class TestPrometheusMetricsExporter:
         return meter_provider.get_meter(__name__)
 
     @pytest.fixture(autouse=True)
-    def clear_server(
-        self,
-        server: OtlpProtoTestServer,
-        http_server: None,
-    ) -> None:
+    def clear_server(self, server: OtlpProtoTestServer) -> None:
         server.clear()
 
     def test_counter(
