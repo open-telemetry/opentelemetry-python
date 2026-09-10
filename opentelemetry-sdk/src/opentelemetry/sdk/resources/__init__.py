@@ -617,8 +617,9 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
     ``host.id`` is read from the non-privileged machine id of the host, as
     described by the `Host resource conventions
     <https://opentelemetry.io/docs/specs/semconv/resource/host/>`_. It is
-    omitted when the machine id cannot be determined, which never prevents
-    ``host.name`` and ``host.arch`` from being detected.
+    omitted when the machine id cannot be determined. By default, lookup
+    failures do not prevent ``host.name`` and ``host.arch`` from being detected.
+    When ``raise_on_error=True``, lookup exceptions are propagated instead.
     """
 
     def detect(self) -> "Resource":
