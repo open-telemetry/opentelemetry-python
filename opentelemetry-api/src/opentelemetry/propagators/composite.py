@@ -62,14 +62,12 @@ class CompositePropagator(textmap.TextMapPropagator):
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.fields`
         """
-        composite_fields = set()
+                if not self._propagators:
+            return set()
 
-        for propagator in self._propagators:
-            for field in propagator.fields:
-                composite_fields.add(field)
-
-        return composite_fields
-
+        return set.union(
+            *(set(propagator.fields) for propagator in self._propagators)
+        )
 
 @deprecated("You should use CompositePropagator. Deprecated since version 1.2.0.")
 class CompositeHTTPPropagator(CompositePropagator):
