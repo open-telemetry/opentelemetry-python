@@ -36,6 +36,23 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(len(new_state), 0)
         self.assertEqual(new_state.to_header(), "")
 
+    def test_tracestate_rejects_illegal_vendor_key(self):
+        # Per W3C, the vendor part of a key (after '@') MUST be <= 13 chars.
+        state = TraceState()
+        # 14-char vendor is illegal and must be discarded.
+        new_state = state.add("1@nrabcdefghijkl", "val")
+        self.assertEqual(len(new_state), 0)
+        self.assertIsNone(new_state.get("1@nrabcdefghijkl"))
+        # long tenant with 14-char vendor is also illegal.
+        new_state = state.add("12345678901234567890@nrabcdefghijkl", "val")
+        self.assertEqual(len(new_state), 0)
+        # a valid key (241-char tenant, 2-char vendor) is still accepted.
+        valid_state = state.add("12345678901234567890@nr", "val")
+        self.assertEqual(valid_state.get("12345678901234567890@nr"), "val")
+        # a non-vendor key starting with a digit (no '@') is illegal.
+        new_state = state.add("1acdfrgs", "val")
+        self.assertEqual(len(new_state), 0)
+
     def test_tracestate_update_valid(self):
         state = TraceState([("a", "1")])
         new_state = state.update("a", "2")
