@@ -495,8 +495,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         with self._lock:
             value = self._value
             sum_ = self._sum
-            min_ = self._min
-            max_ = self._max
+            min_ = self._min if self._record_min_max else None
+            max_ = self._max if self._record_min_max else None
 
             self._value = None
             self._sum = 0
@@ -539,8 +539,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         previous_value_element,
                     ) in zip(value, self._previous_value)
                 ]
-                self._previous_min = min(min_, self._previous_min)
-                self._previous_max = max(max_, self._previous_max)
+                self._previous_min = min(min_, self._previous_min) if self._record_min_max else None
+                self._previous_max = max(max_, self._previous_max) if self._record_min_max else None
                 self._previous_sum = sum_ + self._previous_sum
 
                 return HistogramDataPoint(
@@ -764,8 +764,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             value_positive = self._value_positive
             value_negative = self._value_negative
             sum_ = self._sum
-            min_ = self._min
-            max_ = self._max
+            min_ = self._min if self._record_min_max else None
+            max_ = self._max if self._record_min_max else None
             count = self._count
             zero_count = self._zero_count
             scale = self._scale
@@ -924,8 +924,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     collection_aggregation_temporality,
                 )
 
-                self._previous_min = min(min_, self._previous_min)
-                self._previous_max = max(max_, self._previous_max)
+                self._previous_min = min(min_, self._previous_min) if self._record_min_max else None
+                self._previous_max = max(max_, self._previous_max) if self._record_min_max else None
                 self._previous_sum = sum_ + self._previous_sum
                 self._previous_count = count + self._previous_count
                 self._previous_zero_count = zero_count + self._previous_zero_count
