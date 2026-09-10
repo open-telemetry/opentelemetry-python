@@ -265,8 +265,8 @@ class WeaverLiveCheck:
             f"--inactivity-timeout={inactivity_timeout}",
             f"--otlp-grpc-port={self._otlp_port}",
             f"--admin-port={self._admin_port}",
-            "--output=http",
             "--format=json",
+            "--no-stream",
         ]
 
         if policies_dir:
@@ -344,23 +344,59 @@ class WeaverLiveCheck:
         return f"http://localhost:{self._otlp_port}"
 
     def _do_stop(self, timeout: int) -> tuple["LiveCheckReport", int]:
-        """POST /stop, wait for the process to exit, return (report, exit_code).
+        """Signal weaver to stop, wait for the process to exit, return (report, exit_code).
 
-        Raises for infrastructure errors (HTTP failure, process communication).
+        Sends POST /stop to trigger an orderly shutdown.  If weaver has already
+        exited (race condition between inactivity timeout and our /stop call),
+        the connection error is silently ignored.  The JSON report is always
+        read from stdout after the process exits — weaver writes the complete
+        report to stdout on shutdown when ``--format=json --no-stream`` is used.
+
+        Raises for infrastructure errors (process communication).
         Never raises for semconv violations.
         """
         if not self._ready:
-            raise RuntimeError("WeaverLiveCheck process did not start successfully")
+            raise RuntimeError(
+                "WeaverLiveCheck process did not start successfully"
+            )
+        assert self._process is not None
         try:
-            response = post(f"http://localhost:{self._admin_port}/stop", timeout=5)
-            response.raise_for_status()
-            report = LiveCheckReport(response.json())
-            assert self._process is not None
+            post(f"http://localhost:{self._admin_port}/stop", timeout=5)
+        except Exception:  # pylint: disable=broad-except
+            # Weaver may have already exited (e.g. inactivity timeout fired
+            # before we could call /stop).  This is not an error — we will
+            # still read the report from stdout below.
+            pass
+        try:
             exit_code = self._process.wait(timeout=timeout)
-        except Exception as exc:  # pylint: disable=broad-except
+        except subprocess.TimeoutExpired as exc:
             logs = self._read_weaver_logs()
-            logger.error("Error communicating with weaver: %s, logs: %s", exc, logs)
+            logger.error(
+                "Weaver process did not exit in time: %s, logs: %s", exc, logs
+            )
             raise
+        stdout_content = ""
+        if self._stdout_path and os.path.exists(self._stdout_path):
+            with open(self._stdout_path, "rb") as fp:
+                stdout_content = fp.read().decode(errors="replace").strip()
+        if stdout_content:
+            try:
+                report = LiveCheckReport(json.loads(stdout_content))
+            except (json.JSONDecodeError, ValueError) as exc:
+                logs = self._read_weaver_logs()
+                logger.error(
+                    "Failed to parse weaver JSON report: %s, logs: %s",
+                    exc,
+                    logs,
+                )
+                raise RuntimeError(
+                    f"Failed to parse weaver JSON report: {exc}"
+                ) from exc
+        else:
+            logger.warning(
+                "Weaver process produced no output; returning empty report"
+            )
+            report = LiveCheckReport({})
         return report, exit_code
 
     def end(self, timeout: int = 30) -> "LiveCheckReport":
@@ -428,7 +464,8 @@ class WeaverLiveCheck:
                 with open(path, "rb") as fp:
                     return fp.read().decode(errors="replace")
 
-            return f"{_read(self._stdout_path)}\n{_read(self._stderr_path)}"
+            # stdout contains the JSON report; stderr contains human-readable logs
+            return _read(self._stderr_path)
         except Exception as exc:  # pylint: disable=broad-except
             logger.error("Could not get weaver logs: %s", exc)
             return None
