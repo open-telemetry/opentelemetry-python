@@ -1269,9 +1269,10 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         if self._boundaries is not None:
             boundaries = self._boundaries
         else:
-            # guard for usage with instruments without advisory
+            # guard for usage with instruments without advisory, and for
+            # instruments whose advisory is not histogram shaped
             advisory = getattr(instrument, "_advisory", None)
-            boundaries = advisory.explicit_bucket_boundaries if advisory is not None else None
+            boundaries = getattr(advisory, "explicit_bucket_boundaries", None)
 
         return _ExplicitBucketHistogramAggregation(
             attributes,
