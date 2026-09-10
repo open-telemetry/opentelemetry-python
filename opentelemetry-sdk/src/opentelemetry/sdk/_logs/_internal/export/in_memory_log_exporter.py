@@ -44,7 +44,7 @@ class InMemoryLogRecordExporter(LogRecordExporter):
     def shutdown(self) -> None:
         self._stopped = True
 
-    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
 
 
