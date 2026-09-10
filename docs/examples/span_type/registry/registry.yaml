@@ -1,0 +1,40 @@
+# Semantic conventions schema v2 registry with a single span definition.
+# The span is identified by `type`, which is what the example passes to
+# `start_as_current_span(span_type=...)`.
+file_format: definition/2
+
+attributes:
+  - key: otel.span.type
+    type: string
+    stability: development
+    brief: The semantic convention definition this span follows.
+    note: >
+      Only needed while span type travels as an attribute. Declared here so
+      live-check does not report it as an unknown attribute; once span type is a
+      top-level OTLP field no registry should define it.
+    examples: ["gen_ai.client.inference"]
+
+  - key: gen_ai.operation.name
+    type: string
+    stability: development
+    brief: The name of the GenAI operation being performed.
+    examples: ["chat"]
+  - key: gen_ai.request.model
+    type: string
+    stability: development
+    brief: The name of the GenAI model the request is made to.
+    examples: ["gpt-4o-mini"]
+
+spans:
+  - type: gen_ai.client.inference
+    kind: client
+    stability: development
+    requirement_level: recommended
+    brief: Describes a GenAI inference call.
+    name:
+      note: "{gen_ai.operation.name} {gen_ai.request.model}"
+    attributes:
+      - ref: gen_ai.operation.name
+        requirement_level: required
+      - ref: gen_ai.request.model
+        requirement_level: recommended

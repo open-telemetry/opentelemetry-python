@@ -91,6 +91,7 @@ from opentelemetry.sdk.trace._sampling_experimental._rule_based import (
     PredicateT,
     RulesT,
     SpanKindPredicate,
+    SpanTypePredicate,
 )
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
@@ -298,6 +299,8 @@ def _create_rule_based_sampler_rule_predicate(
         predicates.append(
             SpanKindPredicate([TraceSpanKind[span_kind.value.upper()] for span_kind in config.span_kinds])
         )
+    if config.span_types is not None:
+        predicates.append(SpanTypePredicate(config.span_types))
     if config.parent is not None:
         predicates.append(ParentPredicate([parent.value for parent in config.parent]))
     if not predicates:

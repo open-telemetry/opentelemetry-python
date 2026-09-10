@@ -8,7 +8,8 @@ import unittest.mock
 
 from opentelemetry import context as context_api
 from opentelemetry import trace
-from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider, sampling
 
 TO_DEFAULT = trace.TraceFlags(trace.TraceFlags.DEFAULT)
 TO_SAMPLED = trace.TraceFlags(trace.TraceFlags.SAMPLED)
@@ -520,7 +521,7 @@ class TestAlwaysRecordSampler(unittest.TestCase):
             decision=root_decision,
             trace_state=trace_state,
         )
-        self.mock_sampler.should_sample.return_value = root_result
+        self.mock_sampler.should_sample_span.return_value = root_result
 
         actual_result: sampling.SamplingResult = self.sampler.should_sample(
             parent_context=context_api.Context(),
@@ -534,3 +535,137 @@ class TestAlwaysRecordSampler(unittest.TestCase):
         self.assertEqual(actual_result.decision, expected_decision)
         self.assertEqual(actual_result.attributes, root_result.attributes)
         self.assertEqual(actual_result.trace_state, root_result.trace_state)
+
+
+class _LegacySampler(sampling.Sampler):
+    """A sampler written against the signature that predates should_sample_span."""
+
+    def __init__(self):
+        self.calls = []
+
+    def should_sample(
+        self,
+        parent_context,
+        trace_id,
+        name,
+        kind=None,
+        attributes=None,
+        links=None,
+        trace_state=None,
+    ):
+        self.calls.append(name)
+        return sampling.SamplingResult(sampling.Decision.RECORD_AND_SAMPLE, attributes, trace_state)
+
+    def get_description(self):
+        return "LegacySampler"
+
+
+class _SpanTypeSampler(sampling.Sampler):
+    """A sampler using the inputs that should_sample cannot carry."""
+
+    def __init__(self):
+        self.seen = []
+
+    def should_sample(self, *args, **kwargs):
+        return self.should_sample_span(*args, **kwargs)
+
+    def should_sample_span(
+        self,
+        parent_context,
+        trace_id,
+        name,
+        kind=None,
+        attributes=None,
+        links=None,
+        trace_state=None,
+        *,
+        span_type=None,
+        instrumentation_scope=None,
+        resource=None,
+        **kwargs,
+    ):
+        self.seen.append((span_type, instrumentation_scope, resource))
+        return sampling.SamplingResult(sampling.Decision.RECORD_AND_SAMPLE, attributes, trace_state)
+
+    def get_description(self):
+        return "SpanTypeSampler"
+
+
+class TestSamplerBackwardCompatibility(unittest.TestCase):
+    """Samplers implementing only the deprecated should_sample must keep working."""
+
+    @staticmethod
+    def _tracer(sampler, resource=None):
+        provider = TracerProvider(sampler=sampler, resource=resource or Resource.create({}))
+        return provider.get_tracer("test.scope", "1.2.3")
+
+    def test_legacy_sampler_is_called_by_the_sdk(self):
+        sampler = _LegacySampler()
+        span = self._tracer(sampler).start_span("span-without-type")
+        self.assertEqual(sampler.calls, ["span-without-type"])
+        self.assertTrue(span.is_recording())
+
+    def test_legacy_sampler_is_not_passed_the_new_inputs(self):
+        """The regression this guards: the SDK must not hand span_type to a
+        sampler whose signature predates it."""
+        sampler = _LegacySampler()
+        span = self._tracer(sampler).start_span("span-with-type", span_type="gen_ai.client.inference")
+        self.assertEqual(sampler.calls, ["span-with-type"])
+        self.assertTrue(span.is_recording())
+        self.assertEqual(span.span_type, "gen_ai.client.inference")
+
+    def test_legacy_sampler_behind_parent_based(self):
+        sampler = _LegacySampler()
+        span = self._tracer(sampling.ParentBased(sampler)).start_span("child", span_type="a.b.c")
+        self.assertEqual(sampler.calls, ["child"])
+        self.assertTrue(span.is_recording())
+
+    def test_legacy_sampler_behind_always_record(self):
+        sampler = _LegacySampler()
+        span = self._tracer(sampling.AlwaysRecordSampler(sampler)).start_span("wrapped", span_type="a.b.c")
+        self.assertEqual(sampler.calls, ["wrapped"])
+        self.assertTrue(span.is_recording())
+
+    def test_deprecated_method_still_works_on_new_style_samplers(self):
+        """Callers of should_sample must keep working against samplers that
+        only implement should_sample_span."""
+        for sampler in (
+            sampling.ALWAYS_ON,
+            sampling.TraceIdRatioBased(1.0),
+            sampling.ParentBased(_SpanTypeSampler()),
+            sampling.AlwaysRecordSampler(_SpanTypeSampler()),
+            _SpanTypeSampler(),
+        ):
+            with self.subTest(sampler=sampler.get_description()):
+                result = sampler.should_sample(None, 0, "name")
+                self.assertIs(result.decision, sampling.Decision.RECORD_AND_SAMPLE)
+
+    def test_new_style_sampler_receives_span_type_scope_and_resource(self):
+        sampler = _SpanTypeSampler()
+        resource = Resource.create({"service.name": "checkout"})
+        self._tracer(sampler, resource).start_span("s", span_type="gen_ai.client.inference")
+
+        span_type, scope, seen_resource = sampler.seen[0]
+        self.assertEqual(span_type, "gen_ai.client.inference")
+        self.assertEqual(scope.name, "test.scope")
+        self.assertEqual(scope.version, "1.2.3")
+        self.assertEqual(seen_resource.attributes["service.name"], "checkout")
+
+    def test_new_inputs_reach_a_delegate(self):
+        sampler = _SpanTypeSampler()
+        self._tracer(sampling.ParentBased(sampler)).start_span("s", span_type="a.b.c")
+        self.assertEqual(sampler.seen[0][0], "a.b.c")
+
+    def test_sampler_implementing_only_the_new_method_raises(self):
+        """should_sample stays required, so a sampler implementing only
+        should_sample_span is rejected by abc."""
+
+        class SpanOnly(sampling.Sampler):
+            def should_sample_span(self, *args, **kwargs):
+                return sampling.SamplingResult(sampling.Decision.RECORD_AND_SAMPLE)
+
+            def get_description(self):
+                return "SpanOnly"
+
+        with self.assertRaises(TypeError):
+            SpanOnly()

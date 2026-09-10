@@ -6,9 +6,11 @@ from __future__ import annotations
 import logging
 from collections.abc import Sequence
 from fnmatch import fnmatchcase
-from typing import Protocol
+from typing import Any, Protocol
 
 from opentelemetry.context import Context
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import (
     Link,
     SpanKind,
@@ -17,7 +19,12 @@ from opentelemetry.trace import (
 )
 from opentelemetry.util.types import AnyValue, Attributes
 
-from ._composable import ComposableSampler, SamplingIntent
+from ._composable import (
+    ComposableSampler,
+    SamplingIntent,
+    _accepts_keyword_inputs,
+    delegate_sampling_intent,
+)
 from ._util import INVALID_THRESHOLD
 
 
@@ -30,6 +37,11 @@ class PredicateT(Protocol):
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> bool: ...
 
     def __str__(self) -> str: ...
@@ -51,6 +63,11 @@ class AttributePredicate:
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> bool:
         if not attributes:
             return False
@@ -69,6 +86,11 @@ class AlwaysMatchPredicate:
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> bool:
         return True
 
@@ -88,15 +110,24 @@ class AllPredicate:
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> bool:
         return all(
-            predicate(
+            call_predicate(
+                predicate,
                 parent_ctx,
                 name,
                 span_kind,
                 attributes,
                 links,
                 trace_state,
+                span_type=span_type,
+                instrumentation_scope=instrumentation_scope,
+                resource=resource,
             )
             for predicate in self._predicates
         )
@@ -118,6 +149,11 @@ class AttributeValuesPredicate:
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> bool:
         if not attributes or self._key not in attributes:
             return False
@@ -147,6 +183,11 @@ class AttributePatternsPredicate:
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> bool:
         if not attributes or self._key not in attributes:
             return False
@@ -173,12 +214,42 @@ class SpanKindPredicate:
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> bool:
         return span_kind in self._span_kinds
 
     def __str__(self) -> str:
         kinds = ",".join(kind.name.lower() for kind in self._span_kinds)
         return f"span_kind in [{kinds}]"
+
+
+class SpanTypePredicate:
+    def __init__(self, span_types: Sequence[str]):
+        self._span_types = frozenset(span_types)
+
+    def __call__(
+        self,
+        parent_ctx: Context | None,
+        name: str,
+        span_kind: SpanKind | None,
+        attributes: Attributes,
+        links: Sequence[Link] | None,
+        trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
+    ) -> bool:
+        return span_type in self._span_types
+
+    def __str__(self) -> str:
+        span_types = ",".join(sorted(self._span_types))
+        return f"span_type in [{span_types}]"
 
 
 class ParentPredicate:
@@ -193,6 +264,11 @@ class ParentPredicate:
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> bool:
         parent_span_context = get_current_span(parent_ctx).get_span_context()
         if not parent_span_context.is_valid:
@@ -206,6 +282,37 @@ class ParentPredicate:
     def __str__(self) -> str:
         parents = ",".join(self._parents)
         return f"parent in [{parents}]"
+
+
+def call_predicate(
+    predicate: PredicateT,
+    parent_ctx: Context | None,
+    name: str,
+    span_kind: SpanKind | None,
+    attributes: Attributes,
+    links: Sequence[Link] | None,
+    trace_state: TraceState | None,
+    *,
+    span_type: str | None = None,
+    instrumentation_scope: InstrumentationScope | None = None,
+    resource: Resource | None = None,
+) -> bool:
+    """Calls a predicate, dropping the keyword-only inputs it was not written
+    to accept. Predicates are plain callables supplied by end users, so there
+    is no base class to carry a default implementation."""
+    if _accepts_keyword_inputs(predicate):
+        return predicate(
+            parent_ctx,
+            name,
+            span_kind,
+            attributes,
+            links,
+            trace_state,
+            span_type=span_type,
+            instrumentation_scope=instrumentation_scope,
+            resource=resource,
+        )
+    return predicate(parent_ctx, name, span_kind, attributes, links, trace_state)
 
 
 def _attribute_values(value):
@@ -232,23 +339,36 @@ class _ComposableRuleBased(ComposableSampler):
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None = None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingIntent:
         for predicate, sampler in self._rules:
-            if predicate(
-                parent_ctx=parent_ctx,
-                name=name,
-                span_kind=span_kind,
-                attributes=attributes,
-                links=links,
-                trace_state=trace_state,
+            if call_predicate(
+                predicate,
+                parent_ctx,
+                name,
+                span_kind,
+                attributes,
+                links,
+                trace_state,
+                span_type=span_type,
+                instrumentation_scope=instrumentation_scope,
+                resource=resource,
             ):
-                return sampler.sampling_intent(
-                    parent_ctx=parent_ctx,
-                    name=name,
-                    span_kind=span_kind,
-                    attributes=attributes,
-                    links=links,
-                    trace_state=trace_state,
+                return delegate_sampling_intent(
+                    sampler,
+                    parent_ctx,
+                    name,
+                    span_kind,
+                    attributes,
+                    links,
+                    trace_state,
+                    span_type=span_type,
+                    instrumentation_scope=instrumentation_scope,
+                    resource=resource,
                 )
         return _non_sampling_intent
 

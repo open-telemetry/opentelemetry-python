@@ -561,6 +561,14 @@
           },
           "description": "The span kinds to match. If the span's kind matches any of these, it matches.\nValues include:\n* client: client, a client span.\n* consumer: consumer, a consumer span.\n* internal: internal, an internal span.\n* producer: producer, a producer span.\n* server: server, a server span.\nIf omitted, ignore.\n"
         },
+        "span_types": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "The span types to match exactly. If the span's type matches any of these, it matches.\nIf omitted, ignore.\n"
+        },
         "parent": {
           "type": "array",
           "minItems": 1,

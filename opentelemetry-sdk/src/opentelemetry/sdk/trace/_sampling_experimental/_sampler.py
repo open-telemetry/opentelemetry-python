@@ -4,13 +4,20 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from opentelemetry.context import Context
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.sampling import Decision, Sampler, SamplingResult
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link, SpanKind, TraceState
 from opentelemetry.util.types import Attributes
 
-from ._composable import ComposableSampler, SamplingIntent
+from ._composable import (
+    ComposableSampler,
+    SamplingIntent,
+    delegate_sampling_intent,
+)
 from ._trace_state import OTEL_TRACE_STATE_KEY, OtelTraceState
 from ._util import INVALID_THRESHOLD, is_valid_random_value, is_valid_threshold
 
@@ -19,7 +26,10 @@ class _CompositeSampler(Sampler):
     def __init__(self, delegate: ComposableSampler):
         self._delegate = delegate
 
-    def should_sample(
+    def should_sample(self, *args: Any, **kwargs: Any) -> SamplingResult:
+        return self.should_sample_span(*args, **kwargs)
+
+    def should_sample_span(
         self,
         parent_context: Context | None,
         trace_id: int,
@@ -28,10 +38,26 @@ class _CompositeSampler(Sampler):
         attributes: Attributes = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingResult:
         ot_trace_state = OtelTraceState.parse(trace_state)
 
-        intent = self._delegate.sampling_intent(parent_context, name, kind, attributes, links, trace_state)
+        intent = delegate_sampling_intent(
+            self._delegate,
+            parent_context,
+            name,
+            kind,
+            attributes,
+            links,
+            trace_state,
+            span_type=span_type,
+            instrumentation_scope=instrumentation_scope,
+            resource=resource,
+        )
         threshold = intent.threshold
 
         if is_valid_threshold(threshold):

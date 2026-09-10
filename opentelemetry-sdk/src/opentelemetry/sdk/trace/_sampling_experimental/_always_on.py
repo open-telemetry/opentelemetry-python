@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from opentelemetry.context import Context
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link, SpanKind, TraceState
 from opentelemetry.util.types import Attributes
 
@@ -24,6 +27,11 @@ class _ComposableAlwaysOnSampler(ComposableSampler):
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None = None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingIntent:
         return _intent
 
