@@ -25,6 +25,8 @@ jobs:
         with:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
