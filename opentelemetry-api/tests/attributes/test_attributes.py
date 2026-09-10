@@ -257,3 +257,56 @@ class TestBoundedAttributes(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             bdict_copy["invalid"] = "invalid"
+
+
+class TestAttributeValueNestingDepth(unittest.TestCase):
+    """`AnyValue` allows arbitrarily nested Sequence/Mapping values.
+
+    Cleaning them recurses, so a self-referential or pathologically deep value
+    must be rejected rather than allowed to exhaust the interpreter stack.
+    Telemetry must never raise into the calling application.
+    """
+
+    @staticmethod
+    def _cyclic_list():
+        value = [1, 2]
+        value.append(value)
+        return value
+
+    @staticmethod
+    def _cyclic_dict():
+        value = {"a": 1}
+        value["self"] = value
+        return value
+
+    @staticmethod
+    def _deep_list(depth):
+        value = "x"
+        for _ in range(depth):
+            value = [value]
+        return value
+
+    def test_clean_attribute_value_handles_cyclic_sequence(self):
+        self.assertIsNone(_clean_attribute_value(self._cyclic_list(), None))
+
+    def test_clean_attribute_value_handles_cyclic_mapping(self):
+        self.assertIsNone(_clean_attribute_value(self._cyclic_dict(), None))
+
+    def test_clean_attribute_value_handles_excessive_depth(self):
+        self.assertIsNone(_clean_attribute_value(self._deep_list(5000), None))
+
+    def test_clean_attribute_value_keeps_reasonable_nesting(self):
+        """Nesting within the limit must still be cleaned normally."""
+        self.assertEqual(
+            _clean_attribute_value([[["a"]]], None),
+            ((("a",),),),
+        )
+
+    def test_bounded_attributes_accepts_cyclic_value(self):
+        attributes = BoundedAttributes(attributes={"k": self._cyclic_list()})
+        self.assertIn("k", attributes)
+
+    def test_bounded_attributes_setitem_accepts_cyclic_value(self):
+        attributes = BoundedAttributes(immutable=False)
+        attributes["k"] = self._cyclic_dict()
+        self.assertIn("k", attributes)
