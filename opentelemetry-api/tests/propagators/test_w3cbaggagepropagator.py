@@ -216,6 +216,23 @@ class TestW3CBaggagePropagator(TestCase):
         self.assertIn("key2=123", output)
         self.assertIn("key3=123.567", output)
 
+    def test_inject_raising_str_value_does_not_crash(self):
+        """A baggage value whose __str__ itself raises must not crash
+        inject() -- the offending entry should be dropped while other
+        valid entries are still injected."""
+
+        class BadValue:
+            def __str__(self):
+                raise RuntimeError("boom from baggage value __str__")
+
+        values = {
+            "good_key": "good_value",
+            "bad_key": BadValue(),
+        }
+        output = self._inject(values)
+        self.assertIn("good_key=good_value", output)
+        self.assertNotIn("bad_key", output)
+
     @patch("opentelemetry.baggage.propagation.get_all")
     def test_fields(self, mock_baggage):
         mock_baggage.return_value = {"key": "value"}
