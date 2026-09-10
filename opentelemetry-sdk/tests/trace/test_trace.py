@@ -8,6 +8,7 @@ import copy
 import dataclasses
 import json
 import os
+import random
 import shutil
 import subprocess
 import sys
@@ -2364,31 +2365,59 @@ class TestRandomIdGenerator(unittest.TestCase):
     _SPAN_ID_MAX_VALUE = 2**64 - 1
 
     @patch(
-        "random.getrandbits",
+        "opentelemetry.sdk.trace.id_generator.secrets.randbits",
         side_effect=[trace_api.INVALID_SPAN_ID, 0x00000000DEADBEF0],
     )
-    def test_generate_span_id_avoids_invalid(self, mock_getrandbits):
+    def test_generate_span_id_avoids_invalid(self, mock_randbits):
         generator = RandomIdGenerator()
         span_id = generator.generate_span_id()
 
         self.assertNotEqual(span_id, trace_api.INVALID_SPAN_ID)
-        mock_getrandbits.assert_any_call(64)
-        self.assertEqual(mock_getrandbits.call_count, 2)
+        self.assertEqual(
+            mock_randbits.call_args_list, [mock.call(64), mock.call(64)]
+        )
 
     @patch(
-        "random.getrandbits",
+        "opentelemetry.sdk.trace.id_generator.secrets.randbits",
         side_effect=[
             trace_api.INVALID_TRACE_ID,
             0x000000000000000000000000DEADBEEF,
         ],
     )
-    def test_generate_trace_id_avoids_invalid(self, mock_getrandbits):
+    def test_generate_trace_id_avoids_invalid(self, mock_randbits):
         generator = RandomIdGenerator()
         trace_id = generator.generate_trace_id()
 
         self.assertNotEqual(trace_id, trace_api.INVALID_TRACE_ID)
-        mock_getrandbits.assert_any_call(128)
-        self.assertEqual(mock_getrandbits.call_count, 2)
+        self.assertEqual(
+            mock_randbits.call_args_list, [mock.call(128), mock.call(128)]
+        )
+
+    def test_ids_unaffected_by_global_random_seed(self):
+        """Seeding the global `random` module must not repeat IDs.
+
+        Applications commonly call `random.seed()` for reproducibility.
+        The generator draws from operating-system entropy, so two runs
+        under the same seed must still produce distinct IDs. Regression
+        test for #4376.
+        """
+        generator = RandomIdGenerator()
+        random_state = random.getstate()
+        try:
+            random.seed(10)
+            first_ids = (
+                generator.generate_trace_id(),
+                generator.generate_span_id(),
+            )
+            random.seed(10)
+            second_ids = (
+                generator.generate_trace_id(),
+                generator.generate_span_id(),
+            )
+        finally:
+            random.setstate(random_state)
+
+        self.assertNotEqual(first_ids, second_ids)
 
     def test_is_trace_id_random_returns_true(self):
         generator = RandomIdGenerator()
