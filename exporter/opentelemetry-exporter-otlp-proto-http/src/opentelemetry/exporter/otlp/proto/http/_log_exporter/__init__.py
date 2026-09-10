@@ -120,7 +120,9 @@ class OTLPLogExporter(LogRecordExporter):
         """OTLP HTTP log exporter.
 
         Args:
-            endpoint: Target URL to which the exporter is going to send logs.
+            endpoint: Full URL of the OTLP/HTTP signal endpoint, including the signal
+                path. Example: ``http://collector:4318/v1/logs``. For a base URL without a
+                signal path, set the ``OTEL_EXPORTER_OTLP_ENDPOINT`` environment variable.
             certificate_file: Path to the CA certificate file for TLS.
             client_key_file: Path to the client key file for mTLS.
             client_certificate_file: Path to the client certificate file for mTLS.
