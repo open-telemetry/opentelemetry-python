@@ -149,7 +149,9 @@ def _load_propagators() -> textmap.TextMapPropagator:
     return composite.CompositePropagator(_propagators)
 
 
-_HTTP_TEXT_FORMAT: textmap.TextMapPropagator = _load_propagators()
+# Loaded on first get_global_textmap() so distros can set OTEL_PROPAGATORS in
+# configure() after this module is imported. set_global_textmap() still wins.
+_HTTP_TEXT_FORMAT: textmap.TextMapPropagator | None = None
 
 # Deprecated: propagators, environ_propagators and propagator names were never intendended to be part of the public API.
 propagators: list[textmap.TextMapPropagator] = []
@@ -161,6 +163,9 @@ for propagator in environ_propagators.split(","):  # type: ignore[assignment]
 
 
 def get_global_textmap() -> textmap.TextMapPropagator:
+    global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
+    if _HTTP_TEXT_FORMAT is None:
+        _HTTP_TEXT_FORMAT = _load_propagators()
     return _HTTP_TEXT_FORMAT
 
 

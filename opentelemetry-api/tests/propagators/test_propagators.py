@@ -35,6 +35,7 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
+        opentelemetry.propagate.get_global_textmap()
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "None"})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
@@ -54,6 +55,7 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
+        opentelemetry.propagate.get_global_textmap()
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "tracecontext, None"})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
@@ -73,6 +75,7 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
+        opentelemetry.propagate.get_global_textmap()
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
@@ -97,6 +100,7 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
+        opentelemetry.propagate.get_global_textmap()
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "tracecontext , unknown , baggage"})
     def test_composite_propagators_error(self):
@@ -105,11 +109,51 @@ class TestPropagators(TestCase):
             import opentelemetry.propagate  # noqa: PLC0415
 
             reload(opentelemetry.propagate)
+            opentelemetry.propagate.get_global_textmap()
 
         self.assertEqual(
             str(cm.exception),
             "Propagator unknown not found. It is either misspelled or not installed.",
         )
+
+
+class TestLazyGlobalTextMap(TestCase):
+    def tearDown(self):
+        environ.pop(OTEL_PROPAGATORS, None)
+        # pylint: disable=import-outside-toplevel
+        import opentelemetry.propagate  # noqa: PLC0415
+
+        reload(opentelemetry.propagate)
+
+    def test_otel_propagators_set_after_import_honored_on_first_get(self):
+        """Distros set OTEL_PROPAGATORS in configure() after the API is imported."""
+        # pylint: disable=import-outside-toplevel
+        import opentelemetry.propagate  # noqa: PLC0415
+
+        environ.pop(OTEL_PROPAGATORS, None)
+        reload(opentelemetry.propagate)
+
+        environ[OTEL_PROPAGATORS] = "baggage"
+        propagator = opentelemetry.propagate.get_global_textmap()
+        self.assertEqual(
+            [type(p) for p in propagator._propagators],  # pylint: disable=protected-access
+            [W3CBaggagePropagator],
+        )
+
+    def test_set_global_textmap_wins_over_env(self):
+        # pylint: disable=import-outside-toplevel
+        import opentelemetry.propagate  # noqa: PLC0415
+        from opentelemetry.propagators.composite import (  # noqa: PLC0415
+            CompositePropagator,
+        )
+
+        environ.pop(OTEL_PROPAGATORS, None)
+        reload(opentelemetry.propagate)
+
+        custom = CompositePropagator([])
+        opentelemetry.propagate.set_global_textmap(custom)
+        environ[OTEL_PROPAGATORS] = "baggage"
+        self.assertIs(opentelemetry.propagate.get_global_textmap(), custom)
 
 
 class TestTraceContextTextMapPropagator(TestCase):
