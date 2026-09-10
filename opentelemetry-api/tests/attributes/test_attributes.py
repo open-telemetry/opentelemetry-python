@@ -116,6 +116,10 @@ class TestBoundedAttributes(unittest.TestCase):
         with self.assertRaises(ValueError):
             BoundedAttributes(-1)
 
+    def test_negative_max_value_len_not_allowed(self):
+        with self.assertRaises(ValueError):
+            BoundedAttributes(1, {"first": "value"}, immutable=False, max_value_len=-1)
+
     def test_base_copy_isolated_and_len_works(self):
         dic_len = len(self.base)
         base_copy = self.base.copy()

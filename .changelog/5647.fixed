@@ -1,0 +1,1 @@
+`opentelemetry-api`: Added guard for negative value on max_value_len
