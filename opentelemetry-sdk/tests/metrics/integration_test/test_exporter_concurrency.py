@@ -79,6 +79,7 @@ class TestExporterConcurrency(ConcurrencyTestBase):
             export_interval_millis=100_000,
         )
         meter_provider = MeterProvider(metric_readers=[reader])
+        self.addCleanup(meter_provider.shutdown)
 
         counter_cb_counter = 0
 
