@@ -6,10 +6,12 @@
 from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, patch
-from urllib.parse import quote_plus
 
 from opentelemetry.baggage import get_all, set_baggage
-from opentelemetry.baggage.propagation import W3CBaggagePropagator
+from opentelemetry.baggage.propagation import (
+    W3CBaggagePropagator,
+    _encode_baggage_pairs,
+)
 from opentelemetry.context import get_current
 
 
@@ -186,7 +188,7 @@ class TestW3CBaggagePropagator(TestCase):
         self.assertEqual(None, output)
 
     def test_inject_space_entries(self):
-        self.assertEqual("key=val+ue", self._inject({"key": "val ue"}))
+        self.assertEqual("key=val%20ue", self._inject({"key": "val ue"}))
 
     def test_inject(self):
         values = {
@@ -232,13 +234,49 @@ class TestW3CBaggagePropagator(TestCase):
 
     def test_encode_baggage_pairs(self):
         def _format_baggage(entries):
-            return ",".join(quote_plus(str(k)) + "=" + quote_plus(str(v)) for k, v in entries.items())
+            return ",".join(_encode_baggage_pairs(entries))
 
-        self.assertEqual(_format_baggage({"key key": "value value"}), "key+key=value+value")
+        self.assertEqual(
+            _format_baggage({"key key": "value value"}),
+            "key%20key=value%20value",
+        )
         self.assertEqual(
             _format_baggage({"key/key": "value/value"}),
             "key%2Fkey=value%2Fvalue",
         )
+
+    # The W3C Baggage grammar defines
+    #   baggage-octet = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
+    # "+" is %x2B, an ordinary literal that must survive a round trip, and
+    # SP (%x20) is not a baggage-octet so it must be percent-encoded.
+    # https://www.w3.org/TR/baggage/
+
+    def test_extract_preserves_literal_plus(self):
+        """A "+" on the wire is a literal "+", never a space."""
+        self.assertEqual(self._extract("key=a+b"), {"key": "a+b"})
+
+    def test_extract_preserves_plus_only_value(self):
+        """A value that is only "+" must not decode to an empty string."""
+        self.assertEqual(self._extract("key=+"), {"key": "+"})
+
+    def test_extract_preserves_repeated_plus(self):
+        self.assertEqual(self._extract("key=c++"), {"key": "c++"})
+
+    def test_extract_preserves_plus_in_key(self):
+        self.assertEqual(self._extract("a+b=value"), {"a+b": "value"})
+
+    def test_extract_percent_encoded_space(self):
+        """%20 is the spec-correct wire form for a space."""
+        self.assertEqual(self._extract("key=a%20b"), {"key": "a b"})
+
+    def test_inject_percent_encodes_space(self):
+        self.assertEqual("key=a%20b", self._inject({"key": "a b"}))
+
+    def test_inject_extract_round_trips_plus(self):
+        self.assertEqual(self._extract(self._inject({"key": "a+b"})), {"key": "a+b"})
+
+    def test_inject_extract_round_trips_space(self):
+        self.assertEqual(self._extract(self._inject({"key": "a b"})), {"key": "a b"})
 
     def test_inject_too_many_entries(self):
         """Inject should drop entries exceeding _MAX_PAIRS."""
@@ -320,6 +358,6 @@ class TestW3CBaggagePropagator(TestCase):
 
         context = self.propagator.extract(carrier)
 
-        self.assertEqual(carrier, {"baggage": "transaction=string+with+spaces"})
+        self.assertEqual(carrier, {"baggage": "transaction=string%20with%20spaces"})
 
         self.assertEqual(context, {"abc": {"transaction": "string with spaces"}})
