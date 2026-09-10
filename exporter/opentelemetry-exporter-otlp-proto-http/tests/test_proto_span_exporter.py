@@ -39,7 +39,11 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
-from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+
+# Decoding OTLP bytes needs the protobuf-backed reference classes: the
+# runtime opentelemetry.proto classes only serialize. See
+# opentelemetry-proto[test].
+from opentelemetry.proto._test.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
 )
 from opentelemetry.sdk.environment_variables import (
@@ -272,7 +276,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(request.method, "POST")
         self.assertEqual(request.path, "/v1/traces")
         sent_data = mock_request.call_args.kwargs["data"]
-        self.assertEqual(_decode_body(sent_data), encode_spans(spans))
+        self.assertEqual(_decode_body(sent_data), _decode_body(encode_spans(spans).SerializeToString()))
 
     @mocketize
     def test_export_spans_different_resources(self):
@@ -295,7 +299,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(result, SpanExportResult.SUCCESS)
         sent_data = mock_request.call_args.kwargs["data"]
         body = _decode_body(sent_data)
-        self.assertEqual(body, encode_spans(spans))
+        self.assertEqual(body, _decode_body(encode_spans(spans).SerializeToString()))
         self.assertEqual(len(body.resource_spans), 2)
 
     @mocketize
@@ -519,7 +523,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
                     self.assertEqual(sent_headers["Content-Encoding"], expected_encoding)
                 sent_data = mock_request.call_args.kwargs["data"]
                 decompressed = decompress(sent_data)
-                self.assertEqual(_decode_body(decompressed), encode_spans(spans))
+                self.assertEqual(_decode_body(decompressed), _decode_body(encode_spans(spans).SerializeToString()))
 
     def test_export_retryable_status_codes(self):
         for status_code in (429, 502, 503, 504):
