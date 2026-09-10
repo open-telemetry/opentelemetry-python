@@ -774,7 +774,7 @@ class Span(trace_api.Span, ReadableSpan):
         context: trace_api.SpanContext,
         parent: trace_api.SpanContext | None = None,
         sampler: sampling.Sampler | None = None,
-        trace_config: None = None,  # TODO
+        trace_config: None = None,
         resource: Resource | None = None,
         attributes: types.Attributes = None,
         events: Sequence[Event] | None = None,
