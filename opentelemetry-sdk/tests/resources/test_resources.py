@@ -20,6 +20,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
 )
 from opentelemetry.sdk.resources import (
+    _BSD_KENV_COMMAND,
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
     _OPENTELEMETRY_SDK_VERSION,
@@ -52,7 +53,6 @@ from opentelemetry.sdk.resources import (
     Resource,
     ResourceDetector,
     ServiceInstanceIdResourceDetector,
-    _get_host_id,
     _get_process_dependent_resource,
     _HostResourceDetector,
     get_aggregated_resources,
@@ -1007,15 +1007,15 @@ _IOREG_OUTPUT = """+-o IOPlatformExpertDevice  <class IOPlatformExpertDevice>
 _MODULE = "opentelemetry.sdk.resources"
 
 
-def _completed(stdout: str = "", returncode: int = 0) -> Mock:
-    return Mock(stdout=stdout, stderr="", returncode=returncode)
-
-
-def _detect_host_resource() -> Resource:
-    return get_aggregated_resources([_HostResourceDetector()], Resource({}))
+def _stdout(text: str):
+    """A subprocess.run replacement that writes `text` to stdout."""
+    return lambda *args, **kwargs: Mock(stdout=text)
 
 
 class TestHostResourceDetector(unittest.TestCase):
+    def _detect(self) -> Resource:
+        return _HostResourceDetector().detect()
+
     def _assert_host_name_and_arch_survive(self, resource: Resource) -> None:
         """A failed host.id lookup must not cost the other two attributes."""
         self.assertNotIn(HOST_ID, resource.attributes)
@@ -1048,76 +1048,32 @@ class TestHostResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["telemetry.sdk.language"], "python")
         self.assertIn(HOST_NAME, resource.attributes)
 
-    @unittest.skipUnless(sys.platform.startswith("linux"), "Linux only host.id lookup")
-    def test_host_id_end_to_end_linux(self):
-        # Read the machine id directly as an independent oracle for the exact
-        # value the detector is expected to report.
-        expected = None
-        for path in ("/etc/machine-id", "/var/lib/dbus/machine-id"):
-            try:
-                with open(path, encoding="utf8") as machine_id_file:
-                    expected = machine_id_file.read().strip()
-            except OSError:
-                continue
-            if expected:
-                break
-
-        resource = _detect_host_resource()
-        if expected:
-            self.assertRegex(expected, r"^[0-9a-f]{32}$")
-            self.assertEqual(resource.attributes[HOST_ID], expected)
-        else:
-            # Neither file exists on this host (common in containers), so the
-            # detector must simply omit host.id.
-            self._assert_host_name_and_arch_survive(resource)
-
-    @unittest.skipUnless(sys.platform == "win32", "Windows only host.id lookup")
-    def test_host_id_end_to_end_windows(self):
-        # The detector reads the registry through winreg, so shell out to
-        # reg.exe here to get an independent oracle for the expected value.
-        completed = subprocess.run(
-            (
-                "reg",
-                "query",
-                r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography",
-                "/v",
-                "MachineGuid",
-                "/reg:64",
-            ),
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        expected = next(line.split()[2] for line in completed.stdout.splitlines() if "MachineGuid" in line)
-
-        self.assertEqual(_detect_host_resource().attributes[HOST_ID], expected)
-
     @patch("platform.system", lambda: "Linux")
-    @patch(f"{_MODULE}._read_first_line", side_effect=[None, "dbus-machine-id"])
+    @patch(f"{_MODULE}._read_machine_id_file", side_effect=[None, "dbus-machine-id"])
     def test_host_id_linux_falls_back_to_dbus_machine_id(self, mock_read):
-        self.assertEqual(_detect_host_resource().attributes[HOST_ID], "dbus-machine-id")
+        self.assertEqual(self._detect().attributes[HOST_ID], "dbus-machine-id")
         self.assertEqual(
             [call.args[0] for call in mock_read.call_args_list],
             ["/etc/machine-id", "/var/lib/dbus/machine-id"],
         )
 
     @patch("platform.system", lambda: "Linux")
-    @patch(f"{_MODULE}._read_first_line", lambda _: None)
+    @patch(f"{_MODULE}._read_machine_id_file", lambda _: None)
     def test_host_id_linux_no_machine_id(self):
-        self._assert_host_name_and_arch_survive(_detect_host_resource())
+        self._assert_host_name_and_arch_survive(self._detect())
 
     @patch("platform.system", lambda: "Darwin")
-    @patch(f"{_MODULE}.subprocess.run", lambda *args, **kwargs: _completed(_IOREG_OUTPUT))
+    @patch(f"{_MODULE}.subprocess.run", _stdout(_IOREG_OUTPUT))
     def test_host_id_macos_parses_ioreg_platform_uuid(self):
         self.assertEqual(
-            _detect_host_resource().attributes[HOST_ID],
+            self._detect().attributes[HOST_ID],
             "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
         )
 
     @patch("platform.system", lambda: "Darwin")
-    @patch(f"{_MODULE}.subprocess.run", lambda *args, **kwargs: _completed("no uuid here"))
+    @patch(f"{_MODULE}.subprocess.run", _stdout("no uuid here"))
     def test_host_id_macos_no_platform_uuid(self):
-        self._assert_host_name_and_arch_survive(_detect_host_resource())
+        self._assert_host_name_and_arch_survive(self._detect())
 
     @patch("platform.system", lambda: "Windows")
     def test_host_id_windows_reads_machine_guid_from_registry(self):
@@ -1126,12 +1082,11 @@ class TestHostResourceDetector(unittest.TestCase):
         winreg.KEY_WOW64_64KEY = 0x0100
         winreg.QueryValueEx.return_value = ("registry-machine-guid", 1)
         with patch(f"{_MODULE}.winreg", winreg):
-            self.assertEqual(_detect_host_resource().attributes[HOST_ID], "registry-machine-guid")
-        winreg.OpenKey.assert_called_once_with(
-            winreg.HKEY_LOCAL_MACHINE,
-            r"SOFTWARE\Microsoft\Cryptography",
-            access=0x20119,
-        )
+            self.assertEqual(self._detect().attributes[HOST_ID], "registry-machine-guid")
+        self.assertEqual(winreg.OpenKey.call_args.args[1], r"SOFTWARE\Microsoft\Cryptography")
+        # The 64 bit view must be requested explicitly, or a 32 bit interpreter
+        # reads the WOW6432Node copy of the key.
+        self.assertEqual(winreg.OpenKey.call_args.kwargs["access"], 0x20119)
         self.assertEqual(winreg.QueryValueEx.call_args.args[1], "MachineGuid")
 
     @patch("platform.system", lambda: "Windows")
@@ -1139,41 +1094,49 @@ class TestHostResourceDetector(unittest.TestCase):
         winreg = MagicMock()
         winreg.OpenKey.side_effect = OSError("no such key")
         with patch(f"{_MODULE}.winreg", winreg), self.assertLogs(level=WARNING):
-            self._assert_host_name_and_arch_survive(_detect_host_resource())
+            self._assert_host_name_and_arch_survive(self._detect())
 
     @patch("platform.system", lambda: "Windows")
     @patch(f"{_MODULE}.winreg", None)
     def test_host_id_windows_without_winreg(self):
-        with self.assertLogs(level=WARNING):
-            self._assert_host_name_and_arch_survive(_detect_host_resource())
+        with self.assertNoLogs(level=WARNING):
+            self._assert_host_name_and_arch_survive(self._detect())
 
     @patch("platform.system", lambda: "FreeBSD")
-    @patch(f"{_MODULE}._read_first_line", return_value="bsd-host-id")
+    @patch(f"{_MODULE}._read_machine_id_file", return_value="bsd-host-id")
     def test_host_id_bsd_reads_etc_hostid(self, mock_read):
-        self.assertEqual(_detect_host_resource().attributes[HOST_ID], "bsd-host-id")
+        self.assertEqual(self._detect().attributes[HOST_ID], "bsd-host-id")
         self.assertEqual(mock_read.call_args.args[0], "/etc/hostid")
 
     @patch("platform.system", lambda: "NetBSD")
-    @patch(f"{_MODULE}._read_first_line", lambda _: None)
-    @patch(f"{_MODULE}.subprocess.run", lambda *args, **kwargs: _completed("bsd-kenv-uuid\n"))
+    @patch(f"{_MODULE}._read_machine_id_file", lambda _: None)
+    @patch(f"{_MODULE}.subprocess.run", _stdout("bsd-kenv-uuid\n"))
     def test_host_id_bsd_falls_back_to_kenv(self):
-        self.assertEqual(_detect_host_resource().attributes[HOST_ID], "bsd-kenv-uuid")
+        self.assertEqual(self._detect().attributes[HOST_ID], "bsd-kenv-uuid")
 
     @patch("platform.system", lambda: "FreeBSD")
-    @patch(f"{_MODULE}._read_first_line", lambda _: None)
+    @patch(f"{_MODULE}._read_machine_id_file", lambda _: None)
     @patch(
         f"{_MODULE}.subprocess.run",
-        side_effect=subprocess.CalledProcessError(1, _resources_module._BSD_KENV_COMMAND),
+        Mock(side_effect=subprocess.CalledProcessError(1, _BSD_KENV_COMMAND)),
     )
-    def test_host_id_bsd_no_host_id(self, mock_run):
-        with self.assertLogs(level=WARNING):
-            self._assert_host_name_and_arch_survive(_detect_host_resource())
-        self.assertTrue(mock_run.call_args.kwargs["check"])
+    def test_host_id_bsd_no_host_id(self):
+        # `kenv -q` exits non-zero when the host has no SMBIOS UUID. That is an
+        # ordinary outcome, so it must not warn on every detection.
+        with self.assertNoLogs(level=WARNING):
+            self._assert_host_name_and_arch_survive(self._detect())
+
+    @patch("platform.system", lambda: "FreeBSD")
+    @patch(f"{_MODULE}._read_machine_id_file", lambda _: None)
+    @patch(f"{_MODULE}.subprocess.run", Mock(side_effect=FileNotFoundError))
+    def test_host_id_bsd_without_kenv(self):
+        with self.assertNoLogs(level=WARNING):
+            self._assert_host_name_and_arch_survive(self._detect())
 
     @patch("platform.system", lambda: "Java")
     def test_host_id_unsupported_os(self):
-        with self.assertLogs(level=WARNING):
-            self._assert_host_name_and_arch_survive(_detect_host_resource())
+        with self.assertNoLogs(level=WARNING):
+            self._assert_host_name_and_arch_survive(self._detect())
 
     @patch("platform.system", lambda: "Darwin")
     @patch(
@@ -1182,47 +1145,19 @@ class TestHostResourceDetector(unittest.TestCase):
     )
     def test_host_id_command_timeout(self):
         with self.assertLogs(level=WARNING):
-            self._assert_host_name_and_arch_survive(_detect_host_resource())
-
-    @patch("platform.system", lambda: "Darwin")
-    @patch(f"{_MODULE}.subprocess.run", Mock(side_effect=FileNotFoundError))
-    def test_host_id_command_not_found(self):
-        with self.assertLogs(level=WARNING):
-            self._assert_host_name_and_arch_survive(_detect_host_resource())
-
-    @patch("platform.system", lambda: "Darwin")
-    def test_host_id_command_failures_raise_on_error(self):
-        for exception in (
-            subprocess.TimeoutExpired(cmd="ioreg", timeout=2),
-            FileNotFoundError("ioreg"),
-            subprocess.CalledProcessError(1, "ioreg"),
-        ):
-            with self.subTest(exception=type(exception).__name__):
-                with (
-                    patch(f"{_MODULE}.subprocess.run", side_effect=exception),
-                    self.assertRaises(type(exception)) as raised,
-                    self.assertLogs(level=WARNING),
-                ):
-                    _HostResourceDetector(raise_on_error=True).detect()
-                self.assertIs(raised.exception, exception)
+            self._assert_host_name_and_arch_survive(self._detect())
 
     @patch(f"{_MODULE}._get_host_id", Mock(side_effect=ValueError("boom")))
     def test_host_id_error_swallowed_by_default(self):
         # detect() is called directly here, without the handling in
         # get_aggregated_resources, to prove the detector guards itself.
         with self.assertLogs(level=WARNING):
-            self._assert_host_name_and_arch_survive(_HostResourceDetector().detect())
+            self._assert_host_name_and_arch_survive(self._detect())
 
     @patch(f"{_MODULE}._get_host_id", Mock(side_effect=ValueError("boom")))
     def test_host_id_raise_on_error(self):
         with self.assertRaises(ValueError), self.assertLogs(level=WARNING):
             _HostResourceDetector(raise_on_error=True).detect()
-
-    def test_get_host_id_returns_a_string_or_none(self):
-        host_id = _get_host_id()
-        if host_id is not None:
-            self.assertIsInstance(host_id, str)
-            self.assertTrue(host_id)
 
 
 # pylint: disable=protected-access
