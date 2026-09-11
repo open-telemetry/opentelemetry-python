@@ -6,6 +6,7 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.view import View
 
 
@@ -107,3 +108,114 @@ class TestView(TestCase):
     def test_view_name(self):
         with self.assertRaises(Exception):
             View(name="name", instrument_name="instrument_name*")
+
+    def test_view_name_wildcard(self):
+        with self.assertRaisesRegex(
+            Exception,
+            r"View name declared with wildcard characters in instrument_name",
+        ):
+            View(name="name", instrument_name="instrument_name*")
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View name declared with wildcard characters in instrument_name",
+        ):
+            View(name="name", instrument_name="*")
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View name declared with wildcard characters in instrument_name",
+        ):
+            View(name="name", instrument_name="instrument?name")
+
+    def test_view_name_without_instrument_name(self):
+        with self.assertRaisesRegex(
+            Exception,
+            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
+        ):
+            View(name="custom_name", instrument_type=Mock)
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
+        ):
+            View(name="custom_name", meter_name="some_meter")
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
+        ):
+            View(name="custom_name", instrument_unit="ms")
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
+        ):
+            View(name="custom_name", meter_version="1.0.0")
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
+        ):
+            View(name="custom_name", meter_schema_url="https://opentelemetry.io/schemas/1.4.0")
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View name specifies a name but no instrument_name, which may select multiple instruments",
+        ):
+            View(name="name", instrument_type=Counter)
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
+        ):
+            View(
+                name="custom_name",
+                instrument_type=Counter,
+                meter_name="some_meter",
+                instrument_unit="ms",
+            )
+
+        with self.assertRaisesRegex(
+            Exception,
+            r"View name specifies a name but no instrument_name, which may select multiple instruments",
+        ):
+            MeterProvider(views=[View(name="name", instrument_type=Counter)])
+
+    def test_unnamed_view_without_instrument_name(self):
+        view = View(instrument_type=Counter)
+        self.assertIsNone(view._name)
+        self.assertIs(view._instrument_type, Counter)
+        self.assertIsNone(view._instrument_name)
+
+        meter_provider = MeterProvider(views=[view])
+        self.assertIsNotNone(meter_provider)
+
+    def test_view_name_with_concrete_instrument_name(self):
+        mock_instrument = Mock()
+        mock_instrument.configure_mock(name="my_counter")
+
+        view = View(name="custom_name", instrument_name="my_counter")
+        self.assertEqual(view._name, "custom_name")
+        self.assertEqual(view._instrument_name, "my_counter")
+        self.assertTrue(view._match(mock_instrument))
+
+        other_instrument = Mock()
+        other_instrument.configure_mock(name="other_counter")
+        self.assertFalse(view._match(other_instrument))
+
+        view_with_type = View(
+            name="custom_name",
+            instrument_name="my_counter",
+            instrument_type=Mock,
+        )
+        self.assertTrue(view_with_type._match(mock_instrument))
+
+        view_with_counter = View(
+            name="custom_name",
+            instrument_name="my_counter",
+            instrument_type=Counter,
+        )
+        self.assertEqual(view_with_counter._name, "custom_name")
+        self.assertEqual(view_with_counter._instrument_name, "my_counter")
+        self.assertIs(view_with_counter._instrument_type, Counter)
