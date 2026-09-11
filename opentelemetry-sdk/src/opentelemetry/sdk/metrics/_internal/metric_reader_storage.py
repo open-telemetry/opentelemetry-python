@@ -16,9 +16,12 @@ from opentelemetry.sdk.metrics._internal._view_instrument_match import (
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
+    DefaultAggregation,
+    DropAggregation,
     ExplicitBucketHistogramAggregation,
-    _Aggregation,
     ExponentialBucketHistogramAggregation,
+    LastValueAggregation,
+    SumAggregation,
     _DropAggregation,
     _ExplicitBucketHistogramAggregation,
     _ExponentialBucketHistogramAggregation,
@@ -62,7 +65,6 @@ class MetricReaderStorage:
         self._instrument_view_instrument_matches: dict[_Instrument, list[_ViewInstrumentMatch]] = {}
         self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
-        self._unsupported_aggregation_warned: set[tuple[_Instrument, type[_Aggregation]]] = set()
 
     def _get_or_init_view_instrument_match(self, instrument: _Instrument) -> list[_ViewInstrumentMatch]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
@@ -174,14 +176,6 @@ class MetricReaderStorage:
                             aggregation_temporality=aggregation_temporality,
                         )
                     else:
-                        warn_key = (instrument, type(view_instrument_match._aggregation))
-                        if warn_key not in self._unsupported_aggregation_warned:
-                            self._unsupported_aggregation_warned.add(warn_key)
-                            _logger.warning(
-                                "Unsupported aggregation %s for instrument %s",
-                                view_instrument_match._aggregation,
-                                instrument,
-                            )
                         continue
 
                     metrics.append(
@@ -256,9 +250,25 @@ class MetricReaderStorage:
         object should be created, `false` otherwise.
         """
 
-        result = True
-
         # pylint: disable=protected-access
+        if isinstance(view._aggregation, Aggregation) and not isinstance(
+            view._aggregation,
+            (
+                DefaultAggregation,
+                DropAggregation,
+                ExplicitBucketHistogramAggregation,
+                ExponentialBucketHistogramAggregation,
+                LastValueAggregation,
+                SumAggregation,
+            ),
+        ):
+            _logger.warning(
+                "Unsupported aggregation %s for instrument %s",
+                type(view._aggregation).__name__,
+                instrument.name,
+            )
+            return False
+
         if isinstance(instrument, Asynchronous) and isinstance(
             view._aggregation,
             (
@@ -271,6 +281,6 @@ class MetricReaderStorage:
                 view,
                 instrument,
             )
-            result = False
+            return False
 
-        return result
+        return True
