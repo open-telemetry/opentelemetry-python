@@ -340,10 +340,7 @@ class TraceState(Mapping[str, str]):
         # Adding a new key at the maximum would push the tracestate over the
         # limit and cause the constructor to drop every entry. Return unchanged
         # instead of silently discarding existing state.
-        if (
-            key not in self._dict
-            and len(self._dict) >= _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS
-        ):
+        if key not in self._dict and len(self._dict) >= _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
             _logger.warning("There can't be more 32 key/value pairs.")
             return self
         prev_state = self._dict.copy()
