@@ -16,8 +16,12 @@ from opentelemetry.sdk.metrics._internal._view_instrument_match import (
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
+    DefaultAggregation,
+    DropAggregation,
     ExplicitBucketHistogramAggregation,
     ExponentialBucketHistogramAggregation,
+    LastValueAggregation,
+    SumAggregation,
     _DropAggregation,
     _ExplicitBucketHistogramAggregation,
     _ExponentialBucketHistogramAggregation,
@@ -171,11 +175,12 @@ class MetricReaderStorage:
                             data_points=data_points,
                             aggregation_temporality=aggregation_temporality,
                         )
+                    else:
+                        continue
 
                     metrics.append(
                         Metric(
                             # pylint: disable=protected-access
-                            # pylint: disable=possibly-used-before-assignment
                             name=view_instrument_match._name,
                             description=view_instrument_match._description,
                             unit=view_instrument_match._instrument.unit,
@@ -245,9 +250,25 @@ class MetricReaderStorage:
         object should be created, `false` otherwise.
         """
 
-        result = True
-
         # pylint: disable=protected-access
+        if isinstance(view._aggregation, Aggregation) and not isinstance(
+            view._aggregation,
+            (
+                DefaultAggregation,
+                DropAggregation,
+                ExplicitBucketHistogramAggregation,
+                ExponentialBucketHistogramAggregation,
+                LastValueAggregation,
+                SumAggregation,
+            ),
+        ):
+            _logger.warning(
+                "Unsupported aggregation %s for instrument %s",
+                type(view._aggregation).__name__,
+                instrument.name,
+            )
+            return False
+
         if isinstance(instrument, Asynchronous) and isinstance(
             view._aggregation,
             (
@@ -260,6 +281,6 @@ class MetricReaderStorage:
                 view,
                 instrument,
             )
-            result = False
+            return False
 
-        return result
+        return True

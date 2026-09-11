@@ -28,6 +28,7 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 )
 from opentelemetry.sdk.metrics.export import AggregationTemporality
 from opentelemetry.sdk.metrics.view import (
+    Aggregation,
     DefaultAggregation,
     DropAggregation,
     ExplicitBucketHistogramAggregation,
@@ -752,4 +753,92 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertIn(
             "will cause conflicting metrics",
             log.records[0].message,
+        )
+
+    def test_collect_skips_unsupported_aggregation(self):
+        unsupported_match = Mock(
+            _aggregation=Mock(),
+            _name="unsupported_metric",
+            _description="description",
+            _instrument=Mock(unit="1"),
+        )
+        unsupported_match.collect.return_value = [Mock()]
+
+        valid_point = Mock()
+        valid_match = Mock(
+            _aggregation=_LastValueAggregation({}, Mock()),
+            _name="valid_metric",
+            _description="description",
+            _instrument=Mock(unit="1"),
+        )
+        valid_match.collect.return_value = [valid_point]
+
+        instrument1 = Mock(name="instrument1")
+        instrument2 = Mock(name="instrument2")
+        storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                views=(),
+            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+        storage._instrument_view_instrument_matches[instrument1] = [unsupported_match]
+        storage._instrument_view_instrument_matches[instrument2] = [valid_match]
+
+        result = storage.collect()
+
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.resource_metrics[0].scope_metrics[0].metrics), 1)
+        self.assertEqual(result.resource_metrics[0].scope_metrics[0].metrics[0].name, "valid_metric")
+
+    def test_unsupported_aggregation_view_not_applied(self):
+        counter = _ObservableCounter(
+            "test_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+
+        class CustomAggregation(Aggregation):
+            def _create_aggregation(
+                self,
+                instrument,
+                explicit_bucket_boundaries,
+                exemplar_reservoir_factory,
+                max_scale,
+            ):
+                return Mock()
+
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                views=(
+                    View(
+                        instrument_name="test_counter",
+                        aggregation=CustomAggregation(),
+                    ),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertLogs(
+            "opentelemetry.sdk.metrics._internal.metric_reader_storage",
+            level=WARNING,
+        ) as log:
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), counter, Context()))
+
+        self.assertEqual(len(log.records), 1)
+        self.assertIn(
+            "Unsupported aggregation CustomAggregation for instrument test_counter",
+            log.records[0].message,
+        )
+        self.assertIs(
+            metric_reader_storage._instrument_view_instrument_matches[counter][0]._view,
+            _DEFAULT_VIEW,
         )

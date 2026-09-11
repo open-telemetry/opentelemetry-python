@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: reject views with unsupported aggregations in `_check_view_instrument_compatibility` with a warning, and skip unmapped aggregations in `MetricReaderStorage.collect` to prevent `UnboundLocalError`.
