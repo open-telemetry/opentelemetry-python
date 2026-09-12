@@ -1101,23 +1101,23 @@ class TestHostResourceDetector(unittest.TestCase):
 
     @patch("platform.system", lambda: "Windows")
     def test_host_id_windows_reads_machine_guid_from_registry(self):
-        winreg = MagicMock()
-        winreg.KEY_READ = 0x20019
-        winreg.KEY_WOW64_64KEY = 0x0100
-        winreg.QueryValueEx.return_value = ("registry-machine-guid", 1)
-        with patch("opentelemetry.sdk.resources.winreg", winreg):
+        mock_winreg = MagicMock()
+        mock_winreg.KEY_READ = 0x20019
+        mock_winreg.KEY_WOW64_64KEY = 0x0100
+        mock_winreg.QueryValueEx.return_value = ("registry-machine-guid", 1)
+        with patch("opentelemetry.sdk.resources.winreg", mock_winreg):
             self.assertEqual(_detect().attributes[HOST_ID], "registry-machine-guid")
-        self.assertEqual(winreg.OpenKey.call_args.args[1], r"SOFTWARE\Microsoft\Cryptography")
+        self.assertEqual(mock_winreg.OpenKey.call_args.args[1], r"SOFTWARE\Microsoft\Cryptography")
         # The 64 bit view must be requested explicitly, or a 32 bit interpreter
         # reads the WOW6432Node copy of the key.
-        self.assertEqual(winreg.OpenKey.call_args.kwargs["access"], 0x20119)
-        self.assertEqual(winreg.QueryValueEx.call_args.args[1], "MachineGuid")
+        self.assertEqual(mock_winreg.OpenKey.call_args.kwargs["access"], 0x20119)
+        self.assertEqual(mock_winreg.QueryValueEx.call_args.args[1], "MachineGuid")
 
     @patch("platform.system", lambda: "Windows")
     def test_host_id_windows_registry_read_fails(self):
-        winreg = MagicMock()
-        winreg.OpenKey.side_effect = OSError("no such key")
-        with patch("opentelemetry.sdk.resources.winreg", winreg), self.assertLogs(level=WARNING):
+        mock_winreg = MagicMock()
+        mock_winreg.OpenKey.side_effect = OSError("no such key")
+        with patch("opentelemetry.sdk.resources.winreg", mock_winreg), self.assertLogs(level=WARNING):
             self._assert_host_name_and_arch_survive(_detect())
 
     @patch("platform.system", lambda: "Windows")
