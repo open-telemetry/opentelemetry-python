@@ -4,6 +4,7 @@
 # pylint: disable=too-many-lines
 
 import os
+import platform
 import subprocess
 import sys
 import time
@@ -12,7 +13,7 @@ import uuid
 from concurrent.futures import TimeoutError
 from logging import ERROR, WARNING
 from os import environ
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, call, mock_open, patch
 from urllib import parse
 
 import opentelemetry.sdk.resources as _resources_module
@@ -23,6 +24,7 @@ from opentelemetry.sdk.resources import (
     _BSD_KENV_COMMAND,
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
+    _LINUX_MACHINE_ID_PATHS,
     _OPENTELEMETRY_SDK_VERSION,
     HOST_ARCH,
     HOST_ID,
@@ -65,6 +67,11 @@ try:
     import psutil
 except ImportError:
     psutil = None
+
+try:
+    import winreg
+except ImportError:
+    winreg = None
 
 
 class DefaultResourceDetector(ResourceDetector):
@@ -1004,8 +1011,6 @@ _IOREG_OUTPUT = """+-o IOPlatformExpertDevice  <class IOPlatformExpertDevice>
     }
 """
 
-_MODULE = "opentelemetry.sdk.resources"
-
 
 def _stdout(text: str):
     """A subprocess.run replacement that writes `text` to stdout."""
@@ -1034,10 +1039,12 @@ class TestHostResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes[HOST_ARCH], "AMD64")
 
     @patch.dict(environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "host"}, clear=True)
+    @patch("opentelemetry.sdk.resources._get_host_id", lambda: "host-id")
     def test_resource_detector_entry_points_host(self):
         resource = Resource({}).create()
         self.assertIn(HOST_NAME, resource.attributes)
         self.assertIn(HOST_ARCH, resource.attributes)
+        self.assertEqual(resource.attributes[HOST_ID], "host-id")
 
     @patch.dict(
         environ,
@@ -1050,29 +1057,45 @@ class TestHostResourceDetector(unittest.TestCase):
         self.assertIn(HOST_NAME, resource.attributes)
 
     @patch("platform.system", lambda: "Linux")
-    @patch(f"{_MODULE}._read_machine_id_file", side_effect=[None, "dbus-machine-id"])
-    def test_host_id_linux_falls_back_to_dbus_machine_id(self, mock_read):
+    @patch("builtins.open", new_callable=mock_open, read_data="  primary-machine-id\n")
+    def test_host_id_linux_prefers_primary_machine_id(self, open_mock):
+        self.assertEqual(_detect().attributes[HOST_ID], "primary-machine-id")
+        open_mock.assert_called_once_with("/etc/machine-id", encoding="utf8")
+
+    @patch("platform.system", lambda: "Linux")
+    @patch("builtins.open")
+    def test_host_id_linux_falls_back_to_dbus_machine_id(self, open_mock):
+        open_mock.side_effect = [mock_open(read_data=" \n")(), mock_open(read_data="dbus-machine-id\n")()]
         self.assertEqual(_detect().attributes[HOST_ID], "dbus-machine-id")
         self.assertEqual(
-            [call.args[0] for call in mock_read.call_args_list],
-            ["/etc/machine-id", "/var/lib/dbus/machine-id"],
+            open_mock.call_args_list,
+            [call("/etc/machine-id", encoding="utf8"), call("/var/lib/dbus/machine-id", encoding="utf8")],
         )
 
     @patch("platform.system", lambda: "Linux")
-    @patch(f"{_MODULE}._read_machine_id_file", lambda _: None)
-    def test_host_id_linux_no_machine_id(self):
-        self._assert_host_name_and_arch_survive(_detect())
+    @patch("builtins.open")
+    def test_host_id_linux_no_machine_id(self, open_mock):
+        open_mock.side_effect = [PermissionError("access denied"), mock_open(read_data="")()]
+        with self.assertNoLogs(level=WARNING):
+            self._assert_host_name_and_arch_survive(_detect())
 
     @patch("platform.system", lambda: "Darwin")
-    @patch(f"{_MODULE}.subprocess.run", _stdout(_IOREG_OUTPUT))
-    def test_host_id_macos_parses_ioreg_platform_uuid(self):
+    @patch("opentelemetry.sdk.resources.subprocess.run", return_value=Mock(stdout=_IOREG_OUTPUT))
+    def test_host_id_macos_parses_ioreg_platform_uuid(self, run_mock):
         self.assertEqual(
             _detect().attributes[HOST_ID],
             "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
         )
+        run_mock.assert_called_once_with(
+            ("/usr/sbin/ioreg", "-rd1", "-c", "IOPlatformExpertDevice"),
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=True,
+        )
 
     @patch("platform.system", lambda: "Darwin")
-    @patch(f"{_MODULE}.subprocess.run", _stdout("no uuid here"))
+    @patch("opentelemetry.sdk.resources.subprocess.run", _stdout("no uuid here"))
     def test_host_id_macos_no_platform_uuid(self):
         self._assert_host_name_and_arch_survive(_detect())
 
@@ -1082,7 +1105,7 @@ class TestHostResourceDetector(unittest.TestCase):
         winreg.KEY_READ = 0x20019
         winreg.KEY_WOW64_64KEY = 0x0100
         winreg.QueryValueEx.return_value = ("registry-machine-guid", 1)
-        with patch(f"{_MODULE}.winreg", winreg):
+        with patch("opentelemetry.sdk.resources.winreg", winreg):
             self.assertEqual(_detect().attributes[HOST_ID], "registry-machine-guid")
         self.assertEqual(winreg.OpenKey.call_args.args[1], r"SOFTWARE\Microsoft\Cryptography")
         # The 64 bit view must be requested explicitly, or a 32 bit interpreter
@@ -1094,31 +1117,38 @@ class TestHostResourceDetector(unittest.TestCase):
     def test_host_id_windows_registry_read_fails(self):
         winreg = MagicMock()
         winreg.OpenKey.side_effect = OSError("no such key")
-        with patch(f"{_MODULE}.winreg", winreg), self.assertLogs(level=WARNING):
+        with patch("opentelemetry.sdk.resources.winreg", winreg), self.assertLogs(level=WARNING):
             self._assert_host_name_and_arch_survive(_detect())
 
     @patch("platform.system", lambda: "Windows")
-    @patch(f"{_MODULE}.winreg", None)
+    @patch("opentelemetry.sdk.resources.winreg", None)
     def test_host_id_windows_without_winreg(self):
         with self.assertNoLogs(level=WARNING):
             self._assert_host_name_and_arch_survive(_detect())
 
     @patch("platform.system", lambda: "FreeBSD")
-    @patch(f"{_MODULE}._read_machine_id_file", return_value="bsd-host-id")
+    @patch("opentelemetry.sdk.resources._read_machine_id_file", return_value="bsd-host-id")
     def test_host_id_bsd_reads_etc_hostid(self, mock_read):
         self.assertEqual(_detect().attributes[HOST_ID], "bsd-host-id")
         self.assertEqual(mock_read.call_args.args[0], "/etc/hostid")
 
     @patch("platform.system", lambda: "NetBSD")
-    @patch(f"{_MODULE}._read_machine_id_file", lambda _: None)
-    @patch(f"{_MODULE}.subprocess.run", _stdout("bsd-kenv-uuid\n"))
-    def test_host_id_bsd_falls_back_to_kenv(self):
+    @patch("opentelemetry.sdk.resources._read_machine_id_file", lambda _: None)
+    @patch("opentelemetry.sdk.resources.subprocess.run", return_value=Mock(stdout="bsd-kenv-uuid\n"))
+    def test_host_id_bsd_falls_back_to_kenv(self, run_mock):
         self.assertEqual(_detect().attributes[HOST_ID], "bsd-kenv-uuid")
+        run_mock.assert_called_once_with(
+            ("/bin/kenv", "-q", "smbios.system.uuid"),
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=True,
+        )
 
     @patch("platform.system", lambda: "FreeBSD")
-    @patch(f"{_MODULE}._read_machine_id_file", lambda _: None)
+    @patch("opentelemetry.sdk.resources._read_machine_id_file", lambda _: None)
     @patch(
-        f"{_MODULE}.subprocess.run",
+        "opentelemetry.sdk.resources.subprocess.run",
         Mock(side_effect=subprocess.CalledProcessError(1, _BSD_KENV_COMMAND)),
     )
     def test_host_id_bsd_no_host_id(self):
@@ -1128,8 +1158,8 @@ class TestHostResourceDetector(unittest.TestCase):
             self._assert_host_name_and_arch_survive(_detect())
 
     @patch("platform.system", lambda: "FreeBSD")
-    @patch(f"{_MODULE}._read_machine_id_file", lambda _: None)
-    @patch(f"{_MODULE}.subprocess.run", Mock(side_effect=FileNotFoundError))
+    @patch("opentelemetry.sdk.resources._read_machine_id_file", lambda _: None)
+    @patch("opentelemetry.sdk.resources.subprocess.run", Mock(side_effect=FileNotFoundError))
     def test_host_id_bsd_without_kenv(self):
         with self.assertNoLogs(level=WARNING):
             self._assert_host_name_and_arch_survive(_detect())
@@ -1141,24 +1171,59 @@ class TestHostResourceDetector(unittest.TestCase):
 
     @patch("platform.system", lambda: "Darwin")
     @patch(
-        f"{_MODULE}.subprocess.run",
+        "opentelemetry.sdk.resources.subprocess.run",
         Mock(side_effect=subprocess.TimeoutExpired(cmd="ioreg", timeout=2)),
     )
     def test_host_id_command_timeout(self):
         with self.assertLogs(level=WARNING):
             self._assert_host_name_and_arch_survive(_detect())
 
-    @patch(f"{_MODULE}._get_host_id", Mock(side_effect=ValueError("boom")))
+    @patch("opentelemetry.sdk.resources._get_host_id", Mock(side_effect=ValueError("boom")))
     def test_host_id_error_swallowed_by_default(self):
         # detect() is called directly here, without the handling in
         # get_aggregated_resources, to prove the detector guards itself.
         with self.assertLogs(level=WARNING):
             self._assert_host_name_and_arch_survive(_detect())
 
-    @patch(f"{_MODULE}._get_host_id", Mock(side_effect=ValueError("boom")))
+    @patch("opentelemetry.sdk.resources._get_host_id", Mock(side_effect=ValueError("boom")))
     def test_host_id_raise_on_error(self):
         with self.assertRaises(ValueError), self.assertLogs(level=WARNING):
             _HostResourceDetector(raise_on_error=True).detect()
+
+
+class TestHostResourceDetectorIntegration(unittest.TestCase):
+    @unittest.skipUnless(platform.system() == "Linux", "requires Linux machine-id files")
+    def test_host_id_matches_machine_id_file(self):
+        # Check the source independently so a detector regression cannot turn
+        # this test into a skip. Empty or unreadable files are valid on containers.
+        for path in _LINUX_MACHINE_ID_PATHS:
+            try:
+                with open(path, encoding="utf8") as machine_id_file:
+                    expected_id = machine_id_file.read().strip()
+            except OSError:
+                continue
+            if expected_id:
+                self.assertEqual(_detect().attributes[HOST_ID], expected_id)
+                return
+        self.skipTest("no readable, nonempty machine-id file on this host")
+
+    @unittest.skipUnless(winreg is not None, "requires the Windows registry")
+    def test_host_id_matches_windows_machine_guid(self):
+        if winreg is None:
+            self.skipTest("requires the Windows registry")
+        # Read the native source independently of the detector's helpers.
+        try:
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"SOFTWARE\Microsoft\Cryptography",
+                access=winreg.KEY_READ | winreg.KEY_WOW64_64KEY,
+            ) as key:
+                expected_id, _ = winreg.QueryValueEx(key, "MachineGuid")
+        except OSError as exception:
+            self.skipTest(f"MachineGuid is unavailable: {exception}")
+        if not expected_id:
+            self.skipTest("MachineGuid is empty")
+        self.assertEqual(_detect().attributes[HOST_ID], expected_id)
 
 
 # pylint: disable=protected-access

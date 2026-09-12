@@ -4,6 +4,10 @@ opentelemetry.sdk.resources package
 Host resource detection
 -----------------------
 
+The host resource detector populates the attributes defined by the
+`host resource semantic conventions
+<https://opentelemetry.io/docs/specs/semconv/resource/host/>`_.
+
 Enable the host resource detector by setting
 :envvar:`OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` before starting your application:
 
@@ -16,7 +20,9 @@ will then include ``host.name``, ``host.arch``, and, when available, ``host.id``
 If you already configure other detectors, add ``host`` to the comma-separated
 list.
 
-The detector obtains ``host.id`` using non-privileged operating system sources:
+The detector obtains ``host.id`` using the sources listed for a
+`non-privileged machine id lookup
+<https://opentelemetry.io/docs/specs/semconv/resource/host/#non-privileged-machine-id-lookup>`_:
 
 * Linux: ``/etc/machine-id``, falling back to ``/var/lib/dbus/machine-id``.
 * BSD: ``/etc/hostid``, falling back to ``/bin/kenv -q smbios.system.uuid``.
