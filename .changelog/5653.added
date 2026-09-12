@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add `host.id` to the host resource detector
