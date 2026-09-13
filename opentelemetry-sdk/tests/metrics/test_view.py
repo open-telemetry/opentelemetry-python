@@ -110,77 +110,48 @@ class TestView(TestCase):
             View(name="name", instrument_name="instrument_name*")
 
     def test_view_name_wildcard(self):
-        with self.assertRaisesRegex(
-            Exception,
-            r"View name declared with wildcard characters in instrument_name",
-        ):
-            View(name="name", instrument_name="instrument_name*")
-
-        with self.assertRaisesRegex(
-            Exception,
-            r"View name declared with wildcard characters in instrument_name",
-        ):
-            View(name="name", instrument_name="*")
-
-        with self.assertRaisesRegex(
-            Exception,
-            r"View name declared with wildcard characters in instrument_name",
-        ):
-            View(name="name", instrument_name="instrument?name")
+        for instrument_name in ("instrument_name*", "*", "instrument?name"):
+            with self.subTest(instrument_name=instrument_name):
+                with self.assertRaisesRegex(
+                    Exception,
+                    r"View name declared with wildcard characters in instrument_name",
+                ):
+                    View(name="name", instrument_name=instrument_name)
 
     def test_view_name_without_instrument_name(self):
-        with self.assertRaisesRegex(
-            Exception,
-            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
-        ):
-            View(name="custom_name", instrument_type=Mock)
+        cases = [
+            ("custom_name", {"instrument_type": Mock}),
+            ("custom_name", {"meter_name": "some_meter"}),
+            ("custom_name", {"instrument_unit": "ms"}),
+            ("custom_name", {"meter_version": "1.0.0"}),
+            (
+                "custom_name",
+                {"meter_schema_url": "https://opentelemetry.io/schemas/1.4.0"},
+            ),
+            ("name", {"instrument_type": Counter}),
+            (
+                "custom_name",
+                {
+                    "instrument_type": Counter,
+                    "meter_name": "some_meter",
+                    "instrument_unit": "ms",
+                },
+            ),
+        ]
+        for name, kwargs in cases:
+            with self.subTest(name=name, **kwargs):
+                with self.assertRaisesRegex(
+                    Exception,
+                    rf"View {name} specifies a name but no instrument_name, which may select multiple instruments",
+                ):
+                    View(name=name, **kwargs)
 
-        with self.assertRaisesRegex(
-            Exception,
-            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
-        ):
-            View(name="custom_name", meter_name="some_meter")
-
-        with self.assertRaisesRegex(
-            Exception,
-            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
-        ):
-            View(name="custom_name", instrument_unit="ms")
-
-        with self.assertRaisesRegex(
-            Exception,
-            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
-        ):
-            View(name="custom_name", meter_version="1.0.0")
-
-        with self.assertRaisesRegex(
-            Exception,
-            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
-        ):
-            View(name="custom_name", meter_schema_url="https://opentelemetry.io/schemas/1.4.0")
-
-        with self.assertRaisesRegex(
-            Exception,
-            r"View name specifies a name but no instrument_name, which may select multiple instruments",
-        ):
-            View(name="name", instrument_type=Counter)
-
-        with self.assertRaisesRegex(
-            Exception,
-            r"View custom_name specifies a name but no instrument_name, which may select multiple instruments",
-        ):
-            View(
-                name="custom_name",
-                instrument_type=Counter,
-                meter_name="some_meter",
-                instrument_unit="ms",
-            )
-
-        with self.assertRaisesRegex(
-            Exception,
-            r"View name specifies a name but no instrument_name, which may select multiple instruments",
-        ):
-            MeterProvider(views=[View(name="name", instrument_type=Counter)])
+        with self.subTest(case="meter_provider"):
+            with self.assertRaisesRegex(
+                Exception,
+                r"View name specifies a name but no instrument_name, which may select multiple instruments",
+            ):
+                MeterProvider(views=[View(name="name", instrument_type=Counter)])
 
     def test_unnamed_view_without_instrument_name(self):
         view = View(instrument_type=Counter)
