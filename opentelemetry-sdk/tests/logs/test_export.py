@@ -419,6 +419,16 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 # before the end of the test, otherwise the worker thread will continue
 # to run after the end of the test.
 class TestBatchLogRecordProcessor(unittest.TestCase):
+    def test_invalid_export_timeout_millis(self):
+        with self.assertRaises(ValueError):
+            BatchLogRecordProcessor(
+                InMemoryLogRecordExporter(), export_timeout_millis=0
+            )
+        with self.assertRaises(ValueError):
+            BatchLogRecordProcessor(
+                InMemoryLogRecordExporter(), export_timeout_millis=-500
+            )
+
     def test_emit_call_log_record(self):
         exporter = InMemoryLogRecordExporter()
         log_record_processor = Mock(wraps=BatchLogRecordProcessor(exporter))

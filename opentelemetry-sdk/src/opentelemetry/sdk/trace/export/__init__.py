@@ -180,7 +180,12 @@ class BatchSpanProcessor(SpanProcessor):
         if export_timeout_millis is None:
             export_timeout_millis = BatchSpanProcessor._default_export_timeout_millis()
 
-        BatchSpanProcessor._validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size)
+        BatchSpanProcessor._validate_arguments(
+            max_queue_size,
+            schedule_delay_millis,
+            max_export_batch_size,
+            export_timeout_millis,
+        )
 
         self._batch_processor = BatchProcessor(
             span_exporter,
@@ -274,7 +279,12 @@ class BatchSpanProcessor(SpanProcessor):
             return _DEFAULT_EXPORT_TIMEOUT_MILLIS
 
     @staticmethod
-    def _validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size):
+    def _validate_arguments(
+        max_queue_size,
+        schedule_delay_millis,
+        max_export_batch_size,
+        export_timeout_millis=None,
+    ):
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
 
@@ -286,6 +296,9 @@ class BatchSpanProcessor(SpanProcessor):
 
         if max_export_batch_size > max_queue_size:
             raise ValueError("max_export_batch_size must be less than or equal to max_queue_size.")
+
+        if export_timeout_millis is not None and export_timeout_millis <= 0:
+            raise ValueError("export_timeout_millis must be positive.")
 
 
 class ConsoleSpanExporter(SpanExporter):
