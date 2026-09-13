@@ -766,7 +766,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
         valid_point = Mock()
         valid_match = Mock(
-            _aggregation=_LastValueAggregation({}, Mock()),
+            _aggregation=_LastValueAggregation({}, Mock(), instrument_is_synchronous=False),
             _name="valid_metric",
             _description="description",
             _instrument=Mock(unit="1"),
