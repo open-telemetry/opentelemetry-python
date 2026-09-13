@@ -212,6 +212,26 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             export_interval_millis=-100,
         )
 
+    def test_timeout_value_exception_on_zero(self):
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock()
+        self.assertRaises(
+            ValueError,
+            PeriodicExportingMetricReader,
+            exporter,
+            export_timeout_millis=0,
+        )
+
+    def test_timeout_value_exception_on_negative(self):
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock()
+        self.assertRaises(
+            ValueError,
+            PeriodicExportingMetricReader,
+            exporter,
+            export_timeout_millis=-100,
+        )
+
     @pytest.mark.flaky(max_runs=3, min_passes=1)
     def test_ticker_collects_metrics(self):
         exporter = FakeMetricsExporter()
