@@ -283,7 +283,12 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         if export_timeout_millis is None:
             export_timeout_millis = BatchLogRecordProcessor._default_export_timeout_millis()
 
-        BatchLogRecordProcessor._validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size)
+        BatchLogRecordProcessor._validate_arguments(
+            max_queue_size,
+            schedule_delay_millis,
+            max_export_batch_size,
+            export_timeout_millis,
+        )
         # Initializes BatchProcessor
         self._batch_processor = BatchProcessor(
             exporter,
@@ -378,7 +383,12 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             return _DEFAULT_EXPORT_TIMEOUT_MILLIS
 
     @staticmethod
-    def _validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size):
+    def _validate_arguments(
+        max_queue_size,
+        schedule_delay_millis,
+        max_export_batch_size,
+        export_timeout_millis=None,
+    ):
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
 
@@ -390,3 +400,6 @@ class BatchLogRecordProcessor(LogRecordProcessor):
 
         if max_export_batch_size > max_queue_size:
             raise ValueError("max_export_batch_size must be less than or equal to max_queue_size.")
+
+        if export_timeout_millis is not None and export_timeout_millis <= 0:
+            raise ValueError("export_timeout_millis must be positive.")
