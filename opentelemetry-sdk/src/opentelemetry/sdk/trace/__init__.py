@@ -21,6 +21,7 @@ from collections.abc import (
 )
 from dataclasses import dataclass
 from os import environ
+from string import ascii_letters, digits
 from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
@@ -75,6 +76,23 @@ from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
+
+_SPAN_TYPE_ERROR_MESSAGE = "Dropping span type: expected ASCII string of maximum length 255 characters starting with a letter but got %s"
+
+# Span type syntax, same as the metrics instrument name syntax: an ASCII string
+# of at most 255 characters starting with a letter.
+_SPAN_TYPE_MAX_LENGTH = 255
+_SPAN_TYPE_CHARS = frozenset(ascii_letters + digits + "_./-")
+
+
+def _is_valid_span_type(span_type: str) -> bool:
+    """Checks the span type for compliance with the span type syntax."""
+    return (
+        0 < len(span_type) <= _SPAN_TYPE_MAX_LENGTH
+        and span_type[0] in ascii_letters
+        and all(char in _SPAN_TYPE_CHARS for char in span_type)
+    )
+
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
@@ -416,10 +434,12 @@ class ReadableSpan:
         start_time: int | None = None,
         end_time: int | None = None,
         instrumentation_scope: InstrumentationScope | None = None,
+        span_type: str | None = None,
     ) -> None:
         self._name = name
         self._context = context
         self._kind = kind
+        self._span_type = span_type
         self._instrumentation_info = instrumentation_info
         self._instrumentation_scope = instrumentation_scope
         self._parent = parent
@@ -466,6 +486,11 @@ class ReadableSpan:
     @property
     def kind(self) -> trace_api.SpanKind:
         return self._kind
+
+    @property
+    def span_type(self) -> str | None:
+        """Semantic convention definition this span follows, if any."""
+        return self._span_type
 
     @property
     def parent(self) -> trace_api.SpanContext | None:
@@ -540,6 +565,8 @@ class ReadableSpan:
             "links": self._format_links(self._links),
             "resource": json.loads(self.resource.to_json()),
         }
+        if self._span_type is not None:
+            f_span["span_type"] = self._span_type
 
         return json.dumps(f_span, indent=indent)
 
@@ -788,6 +815,7 @@ class Span(trace_api.Span, ReadableSpan):
         instrumentation_scope: InstrumentationScope | None = None,
         *,
         record_end_metrics: Callable[[], None] | None = None,
+        span_type: str | None = None,
     ) -> None:
         if resource is None:
             resource = Resource.create({})
@@ -796,6 +824,7 @@ class Span(trace_api.Span, ReadableSpan):
             context=context,
             parent=parent,
             kind=kind,
+            span_type=span_type,
             resource=resource,
             instrumentation_info=instrumentation_info,
             instrumentation_scope=instrumentation_scope,
@@ -933,6 +962,7 @@ class Span(trace_api.Span, ReadableSpan):
             events=self._events,
             links=self._links,
             kind=self.kind,
+            span_type=self._span_type,
             status=self._status,
             start_time=self._start_time,
             end_time=self._end_time,
@@ -1116,6 +1146,8 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        *,
+        span_type: str | None = None,
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(
             name=name,
@@ -1126,6 +1158,7 @@ class Tracer(trace_api.Tracer):
             start_time=start_time,
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
+            span_type=span_type,
         )
         with trace_api.use_span(
             span,
@@ -1145,8 +1178,16 @@ class Tracer(trace_api.Tracer):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        *,
+        span_type: str | None = None,
     ) -> trace_api.Span:
         links = links or ()
+        if span_type is not None and not _is_valid_span_type(span_type):
+            # unlike an instrument name, span type is optional: an invalid value
+            # is dropped and the span is still created
+            logger.debug(_SPAN_TYPE_ERROR_MESSAGE, span_type)
+            span_type = None
+
         parent_span_context = trace_api.get_current_span(context).get_span_context()
 
         if parent_span_context is not None and not isinstance(parent_span_context, trace_api.SpanContext):
@@ -1168,7 +1209,17 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         # The sampler may also modify the parent span context's tracestate
-        sampling_result = self.sampler.should_sample(context, trace_id, name, kind, attributes, links)
+        sampling_result = self.sampler.should_sample_span(
+            context,
+            trace_id,
+            name,
+            kind,
+            attributes,
+            links,
+            span_type=span_type,
+            instrumentation_scope=self._instrumentation_scope,
+            resource=self.resource,
+        )
 
         trace_flags = (
             trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED)
@@ -1206,6 +1257,7 @@ class Tracer(trace_api.Tracer):
                 attributes=sampling_result.attributes,
                 span_processor=self.span_processor,
                 kind=kind,
+                span_type=span_type,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
