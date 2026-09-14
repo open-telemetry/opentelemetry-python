@@ -33,7 +33,7 @@ Python SDK, see the [documentation](https://opentelemetry.io/docs/languages/pyth
 
 ## Python Version Support
 
-This project ensures compatibility with the current supported versions of the Python. As new Python versions are released, support for them is added and
+This project ensures compatibility with the current supported versions of Python. As new Python versions are released, support for them is added and
 as old Python versions reach their end of life, support for them is removed.
 
 We add support for new Python versions no later than 3 months after they become stable.
