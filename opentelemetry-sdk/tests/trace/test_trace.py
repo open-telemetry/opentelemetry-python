@@ -1350,6 +1350,34 @@ class TestSpan(unittest.TestCase):
         error_status_test(trace.TracerProvider().get_tracer(__name__).start_span("root"))
         error_status_test(trace.TracerProvider().get_tracer(__name__).start_as_current_span("root"))
 
+    def test_bare_status_does_not_drop_existing_description(self):
+        span = trace.TracerProvider().get_tracer(__name__).start_span("root")
+        span.set_status(trace_api.status.Status(StatusCode.ERROR, "connection refused to db-1"))
+        span.set_status(trace_api.status.Status(StatusCode.ERROR))
+        self.assertIs(span.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span.status.description, "connection refused to db-1")
+
+    def test_described_status_still_replaces_described_status(self):
+        span = trace.TracerProvider().get_tracer(__name__).start_span("root")
+        span.set_status(trace_api.status.Status(StatusCode.ERROR, "first"))
+        span.set_status(trace_api.status.Status(StatusCode.ERROR, "second"))
+        self.assertEqual(span.status.description, "second")
+
+    def test_bare_status_lands_when_there_is_no_description_to_keep(self):
+        span = trace.TracerProvider().get_tracer(__name__).start_span("root")
+        span.set_status(trace_api.status.Status(StatusCode.ERROR))
+        self.assertIs(span.status.status_code, StatusCode.ERROR)
+        self.assertIsNone(span.status.description)
+
+    def test_bare_status_of_a_different_code_still_lands(self):
+        # The guard is per status code: only a repeat of the same code with no
+        # description is declined, so an ERROR still overwrites a described UNSET.
+        span = trace.TracerProvider().get_tracer(__name__).start_span("root")
+        span._status = trace_api.status.Status(StatusCode.UNSET, "pending")
+        span.set_status(trace_api.status.Status(StatusCode.ERROR))
+        self.assertIs(span.status.status_code, StatusCode.ERROR)
+        self.assertIsNone(span.status.description)
+
     def test_record_exception_fqn(self):
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
         exception = DummyError("error")

@@ -993,6 +993,16 @@ class Span(trace_api.Span, ReadableSpan):
                     "Description %s ignored. Use either `Status` or `(StatusCode, Description)`",
                     description,
                 )
+            # Keep the description already recorded for this status code. A bare
+            # Status(ERROR) carries no new information, so letting it through
+            # would drop a specific message in favour of nothing.
+            if (
+                self._status is not None
+                and status.description is None
+                and self._status.description is not None
+                and status.status_code is self._status.status_code
+            ):
+                return
             self._status = status
         elif isinstance(status, StatusCode):
             if self._status and self._status.status_code is StatusCode.OK or status is StatusCode.UNSET:
