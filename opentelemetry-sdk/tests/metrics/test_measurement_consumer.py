@@ -120,10 +120,13 @@ class TestSynchronousMeasurementConsumer(TestCase):
             metric_readers=[reader_mock],
         )
 
-        def sleep_1(*args, **kwargs):
-            sleep(1)
+        def sleep_0_05(*args, **kwargs):
+            # A generator, like the real _Asynchronous.callback: calling it
+            # returns immediately and the body only runs during iteration.
+            sleep(0.05)
+            yield Mock()
 
-        consumer.register_asynchronous_instrument(Mock(**{"callback.side_effect": sleep_1}))
+        consumer.register_asynchronous_instrument(Mock(**{"callback.side_effect": sleep_0_05}))
 
         with self.assertRaises(Exception) as error:
             consumer.collect(reader_mock, timeout_millis=10)
