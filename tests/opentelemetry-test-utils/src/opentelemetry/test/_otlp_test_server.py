@@ -14,11 +14,14 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 if TYPE_CHECKING:
-    from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
-    from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord
-    from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric
-    from opentelemetry.proto.resource.v1.resource_pb2 import Resource
-    from opentelemetry.proto.trace.v1.trace_pb2 import Span
+    # The pure-Python opentelemetry.proto classes are encode-only, so this test
+    # server decodes incoming requests with the protobuf-backed reference set
+    # under opentelemetry.proto._test (the [test] extra of opentelemetry-proto).
+    from opentelemetry.proto._test.common.v1.common_pb2 import InstrumentationScope
+    from opentelemetry.proto._test.logs.v1.logs_pb2 import LogRecord
+    from opentelemetry.proto._test.metrics.v1.metrics_pb2 import Metric
+    from opentelemetry.proto._test.resource.v1.resource_pb2 import Resource
+    from opentelemetry.proto._test.trace.v1.trace_pb2 import Span
 
 
 @dataclass
@@ -51,15 +54,15 @@ def _make_handler(
     logs_path: str,
 ) -> type[BaseHTTPRequestHandler]:
     # pylint: disable=import-outside-toplevel,no-name-in-module
-    from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (  # noqa: PLC0415
+    from opentelemetry.proto._test.collector.logs.v1.logs_service_pb2 import (  # noqa: PLC0415
         ExportLogsServiceRequest,
         ExportLogsServiceResponse,
     )
-    from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: PLC0415
+    from opentelemetry.proto._test.collector.metrics.v1.metrics_service_pb2 import (  # noqa: PLC0415
         ExportMetricsServiceRequest,
         ExportMetricsServiceResponse,
     )
-    from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (  # noqa: PLC0415
+    from opentelemetry.proto._test.collector.trace.v1.trace_service_pb2 import (  # noqa: PLC0415
         ExportTraceServiceRequest,
         ExportTraceServiceResponse,
     )
@@ -145,12 +148,15 @@ def _make_handler(
 class OtlpProtoTestServer:
     def __init__(self, host: str = "127.0.0.1", port: int = 0, base_path: str = "") -> None:
         try:
+            # The server decodes requests with the protobuf-backed reference set,
+            # which ships in the [test] extra of opentelemetry-proto. Importing a
+            # generated module also confirms protobuf itself is installed.
             # pylint: disable-next=import-outside-toplevel,unused-import
-            import opentelemetry.proto  # noqa: PLC0415, F401
+            import opentelemetry.proto._test.collector.trace.v1.trace_service_pb2  # noqa: PLC0415, F401
         except ImportError:
             raise ImportError(
-                "opentelemetry-proto is required to use OtlpProtoTestServer. "
-                "Install it with: pip install opentelemetry-proto"
+                "opentelemetry-proto[test] is required to use OtlpProtoTestServer. "
+                "Install it with: pip install 'opentelemetry-proto[test]'"
             ) from None
         self._host = host
         self._port = port

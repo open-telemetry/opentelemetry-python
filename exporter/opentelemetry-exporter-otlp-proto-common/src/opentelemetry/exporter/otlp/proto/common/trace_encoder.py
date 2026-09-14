@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from opentelemetry.exporter.otlp.proto.common._internal.trace_encoder import (
+from opentelemetry.exporter.otlp._proto.common._internal.trace_encoder import (
     encode_spans,
 )
 
