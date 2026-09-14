@@ -638,6 +638,12 @@ def get_aggregated_resources(
             detected_resource: Resource = _EMPTY_RESOURCE
             try:
                 detected_resource = future.result(timeout=timeout)
+
+                if (
+                    isinstance(detector, ServiceInstanceIdResourceDetector)
+                    and SERVICE_INSTANCE_ID in detectors_merged_resource.attributes
+                ):
+                    continue
             except concurrent.futures.TimeoutError as ex:
                 if detector.raise_on_error:
                     raise ex
@@ -651,8 +657,7 @@ def get_aggregated_resources(
                 if detector.raise_on_error:
                     raise ex
                 logger.warning("Exception %s in detector %s, ignoring", ex, detector)
-            finally:
-                detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
+            detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
     finally:
         executor.shutdown(wait=False, cancel_futures=True)
 
