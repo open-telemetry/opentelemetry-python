@@ -1,0 +1,1 @@
+`opentelemetry-proto`: replace the protobuf dependency with a pure-Python wire-format implementation, so opentelemetry-proto and the OTLP exporters no longer require the protobuf package
