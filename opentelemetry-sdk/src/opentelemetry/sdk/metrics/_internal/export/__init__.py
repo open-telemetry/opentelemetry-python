@@ -538,7 +538,10 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown_event.set()
         if self._daemon_thread:
             self._daemon_thread.join(timeout=(deadline_ns - time_ns()) / 10**9)
-        self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
+        # `timeout_millis` is the parameter every MetricExporter.shutdown
+        # declares; anything else is swallowed by its **kwargs. Clamp, because
+        # joining the ticker thread above may already have spent the budget.
+        self._exporter.shutdown(timeout_millis=max(0, (deadline_ns - time_ns()) / 10**6))
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         super().force_flush(timeout_millis=timeout_millis)
