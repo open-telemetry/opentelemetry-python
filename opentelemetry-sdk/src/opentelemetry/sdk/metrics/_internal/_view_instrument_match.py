@@ -15,6 +15,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
     _Aggregation,
+    _DropAggregation,
     _SumAggregation,
 )
 from opentelemetry.sdk.metrics._internal.instrument import _Instrument
@@ -97,6 +98,10 @@ class _ViewInstrumentMatch:
 
     def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
         # pylint: disable=protected-access
+
+        # Dropped streams are never exported, so they cannot conflict.
+        if isinstance(self._aggregation, _DropAggregation) or isinstance(other._aggregation, _DropAggregation):
+            return False
 
         result = (
             self._name == other._name
