@@ -321,6 +321,106 @@ class MultiSpanProcessorTestBase(abc.ABC):
         for mock_processor in mocks:
             mock_processor.shutdown.assert_called_once_with()
 
+    def test_on_end_exception_does_not_raise(self):
+        multi_processor = self.create_multi_span_processor()
+        raising_proc = mock.Mock(spec=trace.SpanProcessor)
+        raising_proc.on_end.side_effect = RuntimeError("processor failed")
+        normal_proc = mock.Mock(spec=trace.SpanProcessor)
+
+        multi_processor.add_span_processor(raising_proc)
+        multi_processor.add_span_processor(normal_proc)
+
+        span = self.create_default_span()
+        multi_processor.on_end(span)
+
+        raising_proc.on_end.assert_called_once_with(span)
+        normal_proc.on_end.assert_called_once_with(span)
+        multi_processor.shutdown()
+
+    def test_on_start_exception_does_not_raise(self):
+        multi_processor = self.create_multi_span_processor()
+        raising_proc = mock.Mock(spec=trace.SpanProcessor)
+        raising_proc.on_start.side_effect = RuntimeError("processor failed")
+        normal_proc = mock.Mock(spec=trace.SpanProcessor)
+
+        multi_processor.add_span_processor(raising_proc)
+        multi_processor.add_span_processor(normal_proc)
+
+        span = self.create_default_span()
+        multi_processor.on_start(span)
+
+        raising_proc.on_start.assert_called_once_with(span, parent_context=None)
+        normal_proc.on_start.assert_called_once_with(span, parent_context=None)
+        multi_processor.shutdown()
+
+    def test_on_ending_exception_does_not_raise(self):
+        multi_processor = self.create_multi_span_processor()
+        raising_proc = mock.Mock(spec=trace.SpanProcessor)
+        # pylint: disable=protected-access
+        raising_proc._on_ending.side_effect = RuntimeError("processor failed")
+        normal_proc = mock.Mock(spec=trace.SpanProcessor)
+
+        multi_processor.add_span_processor(raising_proc)
+        multi_processor.add_span_processor(normal_proc)
+
+        span = self.create_default_span()
+        # pylint: disable=protected-access
+        multi_processor._on_ending(span)
+
+        # pylint: disable=protected-access
+        raising_proc._on_ending.assert_called_once_with(span)
+        normal_proc._on_ending.assert_called_once_with(span)
+        multi_processor.shutdown()
+
+    def test_shutdown_exception_does_not_raise(self):
+        multi_processor = self.create_multi_span_processor()
+        raising_proc = mock.Mock(spec=trace.SpanProcessor)
+        raising_proc.shutdown.side_effect = RuntimeError("processor failed")
+        normal_proc = mock.Mock(spec=trace.SpanProcessor)
+
+        multi_processor.add_span_processor(raising_proc)
+        multi_processor.add_span_processor(normal_proc)
+
+        multi_processor.shutdown()
+
+        raising_proc.shutdown.assert_called_once_with()
+        normal_proc.shutdown.assert_called_once_with()
+
+    def test_on_end_exception_does_not_replace_application_exception(self):
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
+
+        multi_processor = self.create_multi_span_processor()
+        raising_proc = mock.Mock(spec=trace.SpanProcessor)
+        raising_proc.on_end.side_effect = RuntimeError("processor failed")
+        multi_processor.add_span_processor(raising_proc)
+
+        tracer_provider.add_span_processor(multi_processor)
+
+        with self.assertRaises(ValueError) as ctx:
+            with tracer.start_as_current_span("app_span"):
+                raise ValueError("application failed")
+
+        self.assertEqual(str(ctx.exception), "application failed")
+        multi_processor.shutdown()
+
+    def test_force_flush_exception_does_not_raise_and_returns_false(self):
+        multi_processor = self.create_multi_span_processor()
+        raising_proc = mock.Mock(spec=trace.SpanProcessor)
+        raising_proc.force_flush.side_effect = RuntimeError("processor failed")
+        normal_proc = mock.Mock(spec=trace.SpanProcessor)
+        normal_proc.force_flush.return_value = True
+
+        multi_processor.add_span_processor(raising_proc)
+        multi_processor.add_span_processor(normal_proc)
+
+        flushed = multi_processor.force_flush(1000)
+
+        self.assertFalse(flushed)
+        raising_proc.force_flush.assert_called_once()
+        normal_proc.force_flush.assert_called_once()
+        multi_processor.shutdown()
+
     def test_force_flush(self):
         multi_processor = self.create_multi_span_processor()
 
@@ -557,3 +657,24 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         with tracer.start_as_current_span("main process after fork span"):
             pass
         assert exporter.get_finished_spans()[-1].name == "main process after fork span"
+
+    def test_executor_submit_exception_does_not_raise(self):
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        # Shut down the executor so that subsequent submit calls raise RuntimeError
+        # pylint: disable=protected-access
+        multi_processor._executor.shutdown(wait=True)
+
+        mock_processor = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(mock_processor)
+
+        span = self.create_default_span()
+        # Verify that all callbacks handle executor submission failures gracefully
+        multi_processor.on_start(span)
+        # pylint: disable=protected-access
+        multi_processor._on_ending(span)
+        multi_processor.on_end(span)
+        multi_processor.shutdown()
+
+        # force_flush must return False when submission fails and not raise
+        flushed = multi_processor.force_flush(100)
+        self.assertFalse(flushed)
