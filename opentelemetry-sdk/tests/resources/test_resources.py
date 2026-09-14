@@ -1036,6 +1036,56 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
     def test_is_process_dependent(self):
         self.assertTrue(ServiceInstanceIdResourceDetector().is_process_dependent())
 
+    def test_aggregation_preserves_instance_id_from_previous_detector(self):
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.return_value = Resource({SERVICE_INSTANCE_ID: "service-instance-id"})
+        subsequent_detector = Mock(spec=ResourceDetector)
+        subsequent_detector.detect.return_value = Resource({"key": "value"})
+
+        resource = get_aggregated_resources(
+            [
+                resource_detector,
+                ServiceInstanceIdResourceDetector(),
+                subsequent_detector,
+            ],
+            initial_resource=Resource.get_empty(),
+        )
+
+        self.assertEqual(
+            resource.attributes,
+            {SERVICE_INSTANCE_ID: "service-instance-id", "key": "value"},
+        )
+
+    def test_aggregation_preserves_instance_id_from_initial_resource(self):
+        resource = get_aggregated_resources(
+            [ServiceInstanceIdResourceDetector()],
+            initial_resource=Resource({SERVICE_INSTANCE_ID: "user-provided-instance-id"}),
+        )
+
+        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "user-provided-instance-id")
+
+    @patch.dict(
+        environ,
+        {OTEL_RESOURCE_ATTRIBUTES: "service.instance.id=environment-instance-id"},
+        clear=True,
+    )
+    def test_aggregation_preserves_instance_id_from_environment(self):
+        resource = get_aggregated_resources(
+            [OTELResourceDetector(), ServiceInstanceIdResourceDetector()],
+            initial_resource=Resource.get_empty(),
+        )
+
+        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "environment-instance-id")
+
+    def test_aggregation_generates_instance_id_when_missing(self):
+        resource = get_aggregated_resources(
+            [ServiceInstanceIdResourceDetector()],
+            initial_resource=Resource({"key": "value"}),
+        )
+
+        self.assertEqual(uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID]).version, 4)
+        self.assertEqual(resource.attributes["key"], "value")
+
     def test_detect_value_is_valid_uuid4(self):
         _resources_module._service_instance_id = None
         _resources_module._service_instance_id_pid = None
