@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import yaml
 
+from opentelemetry.configuration._common import _RAW_MAPPING_ATTRIBUTE
 from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
 )
@@ -65,6 +66,28 @@ class TestConfigLoader(unittest.TestCase):
 
         self.assertIsInstance(config, OpenTelemetryConfiguration)
         self.assertEqual(config.file_format, "1.0")
+
+    def test_load_retains_parsed_mapping(self):
+        """The parsed mapping is kept on the model, as written in the file."""
+        config_path = self.test_data_dir / "minimal_config.yaml"
+        config = load_config_file(str(config_path))
+
+        raw = getattr(config, _RAW_MAPPING_ATTRIBUTE)
+        self.assertIsInstance(raw, dict)
+        self.assertEqual(raw["file_format"], "1.0")
+        # Only what the file wrote, unlike the model, which carries a field
+        # for every key the schema defines.
+        self.assertNotIn("tracer_provider", raw)
+
+    def test_retained_mapping_has_env_vars_substituted(self):
+        """Substitution runs before the mapping is retained."""
+        config_path = self.test_data_dir / "config_with_env_vars.yaml"
+
+        with patch.dict(os.environ, {"SERVICE_NAME": "test-service"}):
+            config = load_config_file(str(config_path))
+
+        raw = getattr(config, _RAW_MAPPING_ATTRIBUTE)
+        self.assertNotIn("${SERVICE_NAME}", yaml.safe_dump(raw))
 
     def test_load_config_with_env_vars(self):
         """Test loading configuration with environment variable substitution."""
