@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: bound `get_aggregated_resources()` wait to the timeout

@@ -6,6 +6,7 @@
 import os
 import subprocess
 import sys
+import time
 import unittest
 import uuid
 from concurrent.futures import TimeoutError
@@ -461,6 +462,28 @@ class TestResources(unittest.TestCase):
         resource_detector.detect.side_effect = Exception()
         resource_detector.raise_on_error = True
         self.assertRaises(Exception, get_aggregated_resources, [resource_detector])
+
+    def test_aggregated_resources_timeout_bounds_wait(self):
+        # A detector that takes longer than the timeout must not hold up the
+        # call beyond the timeout: the skip warning fires, but the wait is bounded.
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.side_effect = lambda: time.sleep(2)
+        resource_detector.raise_on_error = False
+
+        start = time.time()
+        with self.assertLogs(level=WARNING) as log_entry:
+            self.assertEqual(
+                get_aggregated_resources(
+                    [resource_detector],
+                    initial_resource=_DEFAULT_RESOURCE,
+                    timeout=0.1,
+                ),
+                _DEFAULT_RESOURCE,
+            )
+        elapsed = time.time() - start
+
+        self.assertLess(elapsed, 1.0)
+        self.assertIn("took longer than", log_entry.output[0])
 
     def test_resource_detector_is_not_process_dependent_by_default(self):
         self.assertFalse(DefaultResourceDetector().is_process_dependent())
