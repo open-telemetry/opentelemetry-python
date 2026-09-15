@@ -43,7 +43,7 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _resolve_timeout,
 )
 from opentelemetry.metrics import MeterProvider
-from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (  # noqa: F401
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401

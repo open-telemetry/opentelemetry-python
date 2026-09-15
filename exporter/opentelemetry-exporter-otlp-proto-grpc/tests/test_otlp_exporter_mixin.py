@@ -26,7 +26,7 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
-from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     _RETRYABLE_ERROR_CODES,
     InvalidCompressionValueException,
     OTLPExporterMixin,
@@ -174,11 +174,9 @@ class TestOTLPExporterMixin(TestCase):
         self.span = _Span(
             "a",
             context=Mock(
-                **{
-                    "trace_state": {"a": "b", "c": "d"},
-                    "span_id": 10217189687419569865,
-                    "trace_id": 67545097771067222548457157018666467027,
-                }
+                trace_state={"a": "b", "c": "d"},
+                span_id=10217189687419569865,
+                trace_id=67545097771067222548457157018666467027,
             ),
         )
 

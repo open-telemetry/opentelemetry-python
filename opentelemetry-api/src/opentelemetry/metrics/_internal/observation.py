@@ -19,7 +19,7 @@ class Observation:
 
     def __init__(
         self,
-        value: int | float,
+        value: float,
         attributes: Attributes = None,
         context: Context | None = None,
     ) -> None:

@@ -41,6 +41,7 @@ from opentelemetry.sdk.metrics._internal import (
     _ProxyMeterConfig,
     _RuleBasedMeterConfigurator,
 )
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics.export import (
     InMemoryMetricReader,
     Metric,
@@ -813,6 +814,22 @@ class TestMeter(TestCase):
         predicate = _scope_name_matches_glob("no.match")
         self.assertFalse(predicate(InstrumentationScope("my.meter", "1.0")))
 
+    def test_scope_name_matches_glob_is_case_sensitive_on_every_platform(self):
+        # fnmatch normcases both operands, which lower-cases them on Windows.
+        # Scope name matching must stay case-sensitive everywhere.
+        exact = _scope_name_matches_glob("my.meter")
+        self.assertTrue(exact(InstrumentationScope("my.meter", "1.0")))
+        self.assertFalse(exact(InstrumentationScope("My.Meter", "1.0")))
+
+        wildcard = _scope_name_matches_glob("my.*")
+        self.assertTrue(wildcard(InstrumentationScope("my.meter", "1.0")))
+        self.assertFalse(wildcard(InstrumentationScope("MY.meter", "1.0")))
+
+    def test_scope_name_matches_glob_pattern_case_is_not_normalized(self):
+        predicate = _scope_name_matches_glob("MY.*")
+        self.assertTrue(predicate(InstrumentationScope("MY.meter", "1.0")))
+        self.assertFalse(predicate(InstrumentationScope("my.meter", "1.0")))
+
     @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")
     def test_disabled_meter_counter_skips_measurement(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
@@ -988,3 +1005,49 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         self.assertEqual(metric_1.unit, "unit")
         self.assertEqual(metric_1.description, "description")
         self.assertEqual(next(iter(metric_1.data.data_points)).value, 7)
+
+
+class TestMeasurement(TestCase):
+    def test_measurement_attributes_cleaned(self):
+        measurement = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes={"a": "b", 1: 2, "seq": [1, 2]},
+        )
+        self.assertEqual(
+            measurement.attributes,
+            {"a": "b", "1": 2, "seq": (1, 2)},
+        )
+
+    def test_measurement_attributes_invalid_type(self):
+        with self.assertLogs(level=WARNING) as logs:
+            measurement = Measurement(
+                value=10,
+                time_unix_nano=0,
+                instrument=Mock(),
+                context=Mock(),
+                attributes="invalid",
+            )
+        self.assertIsNone(measurement.attributes)
+        self.assertIn("Invalid type", logs.output[0])
+
+    def test_measurement_attributes_none_or_empty(self):
+        m1 = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes=None,
+        )
+        self.assertIsNone(m1.attributes)
+
+        m2 = Measurement(
+            value=10,
+            time_unix_nano=0,
+            instrument=Mock(),
+            context=Mock(),
+            attributes={},
+        )
+        self.assertEqual(m2.attributes, {})

@@ -18,15 +18,15 @@ from opentelemetry.sdk._logs._internal import (
 
 __all__ = [
     "ConcurrentMultiLogRecordProcessor",
+    "LogDroppedAttributesWarning",
+    "LogLimits",
+    "LogRecordDroppedAttributesWarning",
+    "LogRecordLimits",
+    "LogRecordProcessor",
     "Logger",
     "LoggerProvider",
     "LoggingHandler",
-    "LogLimits",
-    "LogRecordLimits",
-    "LogRecordProcessor",
-    "LogDroppedAttributesWarning",
-    "LogRecordDroppedAttributesWarning",
-    "ReadableLogRecord",
     "ReadWriteLogRecord",
+    "ReadableLogRecord",
     "SynchronousMultiLogRecordProcessor",
 ]
