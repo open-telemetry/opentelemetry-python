@@ -369,8 +369,10 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         self,
         attributes: Attributes,
         reservoir_builder: ExemplarReservoirBuilder,
+        instrument_is_synchronous: bool,
     ):
         super().__init__(attributes, reservoir_builder)
+        self._instrument_is_synchronous = instrument_is_synchronous
         self._value = None
 
     def aggregate(self, measurement: Measurement, should_sample_exemplar: bool = True):
@@ -391,7 +393,11 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
             if self._value is None:
                 return None
             value = self._value
-            self._value = None
+            if not (
+                self._instrument_is_synchronous
+                and collection_aggregation_temporality is AggregationTemporality.CUMULATIVE
+            ):
+                self._value = None
 
         exemplars = self._collect_exemplars()
 
@@ -1171,12 +1177,14 @@ class DefaultAggregation(Aggregation):
             return _LastValueAggregation(
                 attributes,
                 reservoir_builder=reservoir_factory(_LastValueAggregation),
+                instrument_is_synchronous=False,
             )
 
         if isinstance(instrument, _Gauge):
             return _LastValueAggregation(
                 attributes,
                 reservoir_builder=reservoir_factory(_LastValueAggregation),
+                instrument_is_synchronous=True,
             )
 
         # pylint: disable=broad-exception-raised
@@ -1329,6 +1337,7 @@ class LastValueAggregation(Aggregation):
         return _LastValueAggregation(
             attributes,
             reservoir_builder=reservoir_factory(_LastValueAggregation),
+            instrument_is_synchronous=isinstance(instrument, Synchronous),
         )
 
 
