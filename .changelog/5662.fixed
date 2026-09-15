@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: keep an existing status description when a bare `Status(ERROR)` is set on a span that already has one
