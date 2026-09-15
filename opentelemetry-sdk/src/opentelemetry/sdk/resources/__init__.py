@@ -58,6 +58,7 @@ import logging
 import os
 import platform
 import socket
+import subprocess
 import sys
 import threading
 import uuid
@@ -89,6 +90,16 @@ try:
 except ImportError:
     pass
 
+# Only available on Windows, where it is used to read the MachineGuid for host.id.
+winreg: ModuleType | None = None
+
+try:
+    import winreg as winreg_module
+
+    winreg = winreg_module
+except ImportError:
+    pass
+
 LabelValue = AnyValue
 Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
@@ -107,6 +118,7 @@ FAAS_VERSION = ResourceAttributes.FAAS_VERSION
 FAAS_INSTANCE = ResourceAttributes.FAAS_INSTANCE
 HOST_NAME = ResourceAttributes.HOST_NAME
 HOST_ARCH = ResourceAttributes.HOST_ARCH
+HOST_ID = ResourceAttributes.HOST_ID
 HOST_TYPE = ResourceAttributes.HOST_TYPE
 HOST_IMAGE_NAME = ResourceAttributes.HOST_IMAGE_NAME
 HOST_IMAGE_ID = ResourceAttributes.HOST_IMAGE_ID
@@ -498,18 +510,131 @@ class OsResourceDetector(ResourceDetector):
         )
 
 
+# Non-privileged machine id sources per the semantic conventions:
+# https://opentelemetry.io/docs/specs/semconv/resource/host/#non-privileged-machine-id-lookup
+_LINUX_MACHINE_ID_PATHS = ("/etc/machine-id", "/var/lib/dbus/machine-id")
+_BSD_HOSTID_PATH = "/etc/hostid"
+_BSD_KENV_COMMAND = ("/bin/kenv", "-q", "smbios.system.uuid")
+_MACOS_IOREG_COMMAND = ("/usr/sbin/ioreg", "-rd1", "-c", "IOPlatformExpertDevice")
+_WINDOWS_CRYPTOGRAPHY_KEY = r"SOFTWARE\Microsoft\Cryptography"
+_WINDOWS_MACHINE_GUID_VALUE = "MachineGuid"
+# Deliberately below get_aggregated_resources' per detector timeout so that a
+# hung command still leaves time for host.name and host.arch to be returned.
+_COMMAND_TIMEOUT_SECONDS = 2
+
+
+def _read_machine_id_file(path: str) -> str | None:
+    try:
+        with open(path, encoding="utf8") as machine_id_file:
+            return machine_id_file.read().strip() or None
+    except OSError as exception:
+        logger.debug("Failed to read %s: %s", path, exception)
+        return None
+
+
+def _run_command(command: tuple[str, ...]) -> str:
+    """Returns the command's stdout, or "" when the source is unavailable here.
+
+    A non-zero exit or a missing binary means this host has no machine id to
+    offer.
+    """
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=_COMMAND_TIMEOUT_SECONDS,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as exception:
+        logger.debug("Failed to run %s: %s", command[0], exception)
+        return ""
+    return completed.stdout
+
+
+def _get_linux_machine_id() -> str | None:
+    for path in _LINUX_MACHINE_ID_PATHS:
+        machine_id = _read_machine_id_file(path)
+        if machine_id:
+            return machine_id
+    return None
+
+
+def _get_bsd_machine_id() -> str | None:
+    return _read_machine_id_file(_BSD_HOSTID_PATH) or _run_command(_BSD_KENV_COMMAND).strip() or None
+
+
+def _get_macos_machine_id() -> str | None:
+    for line in _run_command(_MACOS_IOREG_COMMAND).splitlines():
+        # The line looks like: `    "IOPlatformUUID" = "AAAAAAAA-BBBB-..."`
+        key, separator, value = line.partition("=")
+        if not separator or key.strip().strip('"') != "IOPlatformUUID":
+            continue
+
+        machine_id = value.strip().strip('"')
+        if machine_id:
+            return machine_id
+    return None
+
+
+def _get_windows_machine_id() -> str | None:
+    if winreg is None:
+        logger.debug("winreg is unavailable, cannot detect %s", HOST_ID)
+        return None
+    with winreg.OpenKey(
+        winreg.HKEY_LOCAL_MACHINE,
+        _WINDOWS_CRYPTOGRAPHY_KEY,
+        access=winreg.KEY_READ | winreg.KEY_WOW64_64KEY,
+    ) as key:
+        machine_guid, _ = winreg.QueryValueEx(key, _WINDOWS_MACHINE_GUID_VALUE)
+    return str(machine_guid) if machine_guid else None
+
+
+def _get_host_id() -> str | None:
+    system = platform.system()
+    if system == "Linux":
+        return _get_linux_machine_id()
+    if system == "Darwin":
+        return _get_macos_machine_id()
+    if system == "Windows":
+        return _get_windows_machine_id()
+    if system == "DragonFly" or system.endswith("BSD"):
+        return _get_bsd_machine_id()
+    logger.debug("Unsupported OS type for %s detection: %s", HOST_ID, system)
+    return None
+
+
 class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass]
     """
-    The HostResourceDetector detects the hostname and architecture attributes.
+    The HostResourceDetector detects the hostname, architecture and host id
+    attributes.
+
+    ``host.id`` is the non-privileged machine id described by the `Host resource
+    conventions <https://opentelemetry.io/docs/specs/semconv/resource/host/>`_,
+    and is omitted when it cannot be determined. A failed lookup does not
+    prevent ``host.name`` and ``host.arch`` from being detected unless
+    ``raise_on_error=True``.
     """
 
     def detect(self) -> "Resource":
-        return Resource(
-            {
-                HOST_NAME: socket.gethostname(),
-                HOST_ARCH: platform.machine(),
-            }
-        )
+        resource_info: dict[str, AnyValue] = {
+            HOST_NAME: socket.gethostname(),
+            HOST_ARCH: platform.machine(),
+        }
+
+        # A failed host id lookup must not cost the caller the attributes above,
+        # so it is guarded here rather than relying on the handling in
+        # get_aggregated_resources: detect() is also called directly.
+        try:
+            if host_id := _get_host_id():
+                resource_info[HOST_ID] = host_id
+        # pylint: disable=broad-exception-caught
+        except Exception as exception:
+            logger.warning("Failed to detect %s: %s", HOST_ID, exception)
+            if self.raise_on_error:
+                raise
+
+        return Resource(resource_info)
 
 
 class ServiceInstanceIdResourceDetector(ResourceDetector):
