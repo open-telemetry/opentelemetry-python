@@ -91,9 +91,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
     @patch("opentelemetry.sdk.metrics._internal.metric_reader_storage._ViewInstrumentMatch")
     def test_forwards_calls_to_view_instrument_match(self, MockViewInstrumentMatch: Mock):
-        view_instrument_match1 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
-        view_instrument_match2 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
-        view_instrument_match3 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
+        view_instrument_match1 = Mock(_aggregation=_LastValueAggregation({}, Mock(), instrument_is_synchronous=True))
+        view_instrument_match2 = Mock(_aggregation=_LastValueAggregation({}, Mock(), instrument_is_synchronous=True))
+        view_instrument_match3 = Mock(_aggregation=_LastValueAggregation({}, Mock(), instrument_is_synchronous=True))
         MockViewInstrumentMatch.side_effect = [
             view_instrument_match1,
             view_instrument_match2,
