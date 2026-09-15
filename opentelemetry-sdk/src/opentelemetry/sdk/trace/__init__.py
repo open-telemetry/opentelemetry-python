@@ -76,6 +76,14 @@ from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
 
+# The specification orders the status codes ``Ok > Error > Unset``. The enum's
+# own values do not carry that order, so it is stated explicitly here.
+_STATUS_PRECEDENCE = {
+    StatusCode.UNSET: 0,
+    StatusCode.ERROR: 1,
+    StatusCode.OK: 2,
+}
+
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
@@ -983,31 +991,48 @@ class Span(trace_api.Span, ReadableSpan):
         status: Status | StatusCode,
         description: str | None = None,
     ) -> None:
-        # Ignore future calls if status is already set to OK
-        # Ignore calls to set to StatusCode.UNSET
         if isinstance(status, Status):
-            if self._status and self._status.status_code is StatusCode.OK or status.status_code is StatusCode.UNSET:
-                return
             if description is not None:
                 logger.warning(
                     "Description %s ignored. Use either `Status` or `(StatusCode, Description)`",
                     description,
                 )
-            # Keep the description already recorded for this status code. A bare
-            # Status(ERROR) carries no new information, so letting it through
-            # would drop a specific message in favour of nothing.
-            if (
-                self._status is not None
-                and status.description is None
-                and self._status.description is not None
-                and status.status_code is self._status.status_code
-            ):
-                return
-            self._status = status
+            new_status = status
         elif isinstance(status, StatusCode):
-            if self._status and self._status.status_code is StatusCode.OK or status is StatusCode.UNSET:
-                return
-            self._status = Status(status, description)
+            new_status = Status(status, description)
+        else:
+            return
+
+        if self._accepts_status(new_status):
+            self._status = new_status
+
+    def _accepts_status(self, new_status: Status) -> bool:
+        """Decide whether ``new_status`` may replace the status already recorded.
+
+        The specification gives the status codes a total order, ``Ok > Error >
+        Unset``, says an attempt to set ``Unset`` should be ignored, and says
+        the value of the last call is the one recorded. So a code that ranks
+        below the one already recorded is dropped, ``Ok`` is final, and within
+        the same code the later call wins.
+        """
+        if new_status.status_code is StatusCode.UNSET:
+            return False
+
+        current = self._status
+        if current is None:
+            return True
+        if current.status_code is StatusCode.OK:
+            return False
+
+        current_rank = _STATUS_PRECEDENCE[current.status_code]
+        new_rank = _STATUS_PRECEDENCE[new_status.status_code]
+        if new_rank != current_rank:
+            return new_rank > current_rank
+
+        # Same code, so the last call wins, with one exception: a bare status
+        # carries no new information, and letting it through would drop a
+        # description already recorded in favour of nothing.
+        return new_status.description is not None
 
     def __exit__(
         self,
