@@ -241,7 +241,7 @@ def validate_type(
         raise TypeError(f"Field '{field_name}' expected {expected_types}, got {type(value).__name__}")
 
 
-def decode_enum(value: typing.Any, enum_type: type[EnumT], field_name: str) -> EnumT:
+def decode_enum(value: int | str, enum_type: type[EnumT], field_name: str) -> EnumT:
     """
     Decode a JSON enum value into an enum member.
 

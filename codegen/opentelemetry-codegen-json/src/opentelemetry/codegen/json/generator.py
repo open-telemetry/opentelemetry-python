@@ -534,7 +534,7 @@ class OtlpJsonGenerator:
             "from_dict",
             ["cls", "data: builtins.dict[builtins.str, typing.Any]"],
             decorators=["builtins.classmethod"],
-            return_type=f'"{current_path}"',
+            return_type=f"{current_path}",
         ):
             writer.docstring(
                 [
