@@ -75,6 +75,14 @@ class OTLPSpanExporterForTesting(
     ],
 ):
     def __init__(self, **kwargs):
+        # Default to the explicit IPv4 loopback address rather than
+        # "localhost", which can resolve to the IPv6 loopback address
+        # ("::1") first depending on the OS/environment. The mock server
+        # used by these tests only binds to 127.0.0.1, so resolving
+        # "localhost" to ::1 would cause tests to try to connect to an
+        # unrelated service (if any) listening on ::1:4317 instead of the
+        # mock server, producing confusing, environment-dependent failures.
+        kwargs.setdefault("endpoint", "http://127.0.0.1:4317")
         super().__init__(
             TraceServiceStub,
             SpanExportResult,
@@ -275,7 +283,7 @@ class TestOTLPExporterMixin(TestCase):
         """No env or kwarg should be NoCompression"""
         OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317",
+            "127.0.0.1:4317",
             compression=Compression.NoCompression,
             options=(
                 (
@@ -337,7 +345,7 @@ class TestOTLPExporterMixin(TestCase):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
         OTLPSpanExporterForTesting(insecure=True)
         mock_insecure_channel.assert_called_once_with(
-            "localhost:4317",
+            "127.0.0.1:4317",
             compression=Compression.Gzip,
             options=(
                 (
@@ -527,7 +535,7 @@ class TestOTLPExporterMixin(TestCase):
                 )
             after = time.time()
             self.assertEqual(
-                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED, error details: Deadline Exceeded",
+                "Failed to export traces to 127.0.0.1:4317, error code: StatusCode.DEADLINE_EXCEEDED, error details: Deadline Exceeded",
                 warning.records[-1].message,
             )
             self.assertEqual(mock_trace_service.num_requests, 2)
@@ -563,7 +571,7 @@ class TestOTLPExporterMixin(TestCase):
             self.assertEqual(exporter.export([self.span]), SpanExportResult.FAILURE)
             self.assertEqual(
                 warning.records[-1].message,
-                "Failed to export traces to localhost:4317, error code: StatusCode.ALREADY_EXISTS, error details: This already exists.",
+                "Failed to export traces to 127.0.0.1:4317, error code: StatusCode.ALREADY_EXISTS, error details: This already exists.",
             )
 
         metrics_data = self.metric_reader.get_metrics_data()
@@ -681,5 +689,5 @@ class TestOTLPExporterMixin(TestCase):
     def assert_standard_metric_attrs(self, attributes):
         self.assertEqual(attributes["otel.component.type"], "otlp_grpc_span_exporter")
         self.assertTrue(attributes["otel.component.name"].startswith("otlp_grpc_span_exporter/"))
-        self.assertEqual(attributes["server.address"], "localhost")
+        self.assertEqual(attributes["server.address"], "127.0.0.1")
         self.assertEqual(attributes["server.port"], 4317)
