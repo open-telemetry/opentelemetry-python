@@ -90,10 +90,12 @@ def _encode_resource_spans(
     return pb2_resource_spans
 
 
-def _span_flags(parent_span_context: SpanContext | None) -> int:
+def _span_flags(span_context: SpanContext | None) -> int:
     flags = PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
-    if parent_span_context and parent_span_context.is_remote:
-        flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+    if span_context:
+        flags |= int(span_context.trace_flags) & PB2SpanFlags.SPAN_FLAGS_TRACE_FLAGS_MASK
+        if span_context.is_remote:
+            flags |= PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
     return flags
 
 
