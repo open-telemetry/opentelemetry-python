@@ -107,3 +107,7 @@ class TestView(TestCase):
     def test_view_name(self):
         with self.assertRaises(Exception):
             View(name="name", instrument_name="instrument_name*")
+        with self.assertRaises(Exception):
+            View(name="name", instrument_name="instrument_name?")
+        with self.assertRaises(Exception):
+            View(name="name", instrument_name="instrument_name[0-9]")

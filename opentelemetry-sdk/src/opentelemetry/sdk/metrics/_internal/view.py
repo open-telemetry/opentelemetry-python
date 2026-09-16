@@ -119,7 +119,7 @@ class View:
             # pylint: disable=broad-exception-raised
             raise Exception(f"Some instrument selection criteria must be provided for View {name}")
 
-        if name is not None and instrument_name is not None and ("*" in instrument_name or "?" in instrument_name):
+        if name is not None and instrument_name is not None and any(c in instrument_name for c in "*?["):
             # pylint: disable=broad-exception-raised
             raise Exception(f"View {name} declared with wildcard characters in instrument_name")
 
