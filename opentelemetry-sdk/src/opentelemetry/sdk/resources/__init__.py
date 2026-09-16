@@ -78,6 +78,7 @@ from opentelemetry.sdk.version import (
     __version__ as _OPENTELEMETRY_SDK_VERSION,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.util.types import AnyValue
 
 psutil: ModuleType | None = None
@@ -185,9 +186,18 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        resource = get_aggregated_resources(_build_resource_detectors(), _DEFAULT_RESOURCE).merge(
-            Resource(attributes, schema_url)
-        )
+        if schema_url:
+            # When user provides schema_url, use empty schema URL for detectors to avoid conflicts
+            # The user's schema_url will be set on the final resource
+            resource = get_aggregated_resources(_build_resource_detectors(), _DEFAULT_RESOURCE).merge(
+                Resource(attributes, "")
+            )
+            resource = Resource(resource.attributes, schema_url)
+        else:
+            # When user doesn't provide schema_url, let detectors use their normal schema URLs
+            resource = get_aggregated_resources(_build_resource_detectors(), _DEFAULT_RESOURCE).merge(
+                Resource(attributes, "")
+            )
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
@@ -411,7 +421,7 @@ class ProcessResourceDetector(ResourceDetector):
             username = process.username()
             resource_info[PROCESS_OWNER] = username
 
-        return Resource(resource_info)  # type: ignore
+        return Resource(resource_info, Schemas.V1_44_0.value)  # type: ignore
 
 
 class OsResourceDetector(ResourceDetector):
@@ -494,7 +504,8 @@ class OsResourceDetector(ResourceDetector):
             {
                 OS_TYPE: os_type,
                 OS_VERSION: os_version,
-            }
+            },
+            Schemas.V1_44_0.value,
         )
 
 
@@ -508,7 +519,8 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
             {
                 HOST_NAME: socket.gethostname(),
                 HOST_ARCH: platform.machine(),
-            }
+            },
+            Schemas.V1_44_0.value,
         )
 
 
@@ -541,7 +553,7 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
                 _service_instance_id = str(uuid.uuid4())
                 _service_instance_id_pid = current_pid
             instance_id = _service_instance_id
-        return Resource({SERVICE_INSTANCE_ID: instance_id})
+        return Resource({SERVICE_INSTANCE_ID: instance_id}, Schemas.V1_44_0.value)
 
 
 def _build_resource_detectors() -> list["ResourceDetector"]:

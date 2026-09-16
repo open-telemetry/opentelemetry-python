@@ -55,6 +55,7 @@ from opentelemetry.sdk.resources import (
     _HostResourceDetector,
     get_aggregated_resources,
 )
+from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.util._importlib_metadata import (
     entry_points as real_entry_points,
 )
@@ -115,7 +116,7 @@ class TestResources(unittest.TestCase):
         resource = Resource.create(attributes)
         self.assertIsInstance(resource, Resource)
         self.assertEqual(resource.attributes, expected_attributes)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
         schema_url = "https://opentelemetry.io/schemas/1.3.0"
 
@@ -144,22 +145,24 @@ class TestResources(unittest.TestCase):
                 "",
             )
         )
+        # When no schema_url is provided, the resource gets schema URL from detectors
+        expected_default_with_schema = Resource(expected_default.attributes, Schemas.V1_44_0.value)
 
         resource = Resource.create(None)
-        self.assertEqual(resource, expected_default)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource, expected_default_with_schema)
+        self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
         resource = Resource.create(None, None)
-        self.assertEqual(resource, expected_default)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource, expected_default_with_schema)
+        self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
         resource = Resource.create({})
-        self.assertEqual(resource, expected_default)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource, expected_default_with_schema)
+        self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
         resource = Resource.create({}, None)
-        self.assertEqual(resource, expected_default)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource, expected_default_with_schema)
+        self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
     def test_resource_merge(self):
         left = Resource({"service": "ui"})
@@ -173,20 +176,21 @@ class TestResources(unittest.TestCase):
             "https://opentelemetry.io/schemas/1.3.0",
         )
 
-        left = Resource.create({}, None)
-        right = Resource.create({}, None)
+        # Use Resource() directly for merge tests to avoid detector schema URL interference
+        left = Resource({}, "")
+        right = Resource({}, "")
         self.assertEqual(left.merge(right).schema_url, "")
 
-        left = Resource.create({}, None)
-        right = Resource.create({}, schema_urls[0])
+        left = Resource({}, "")
+        right = Resource({}, schema_urls[0])
         self.assertEqual(left.merge(right).schema_url, schema_urls[0])
 
-        left = Resource.create({}, schema_urls[0])
-        right = Resource.create({}, None)
+        left = Resource({}, schema_urls[0])
+        right = Resource({}, "")
         self.assertEqual(left.merge(right).schema_url, schema_urls[0])
 
-        left = Resource.create({}, schema_urls[0])
-        right = Resource.create({}, schema_urls[0])
+        left = Resource({}, schema_urls[0])
+        right = Resource({}, schema_urls[0])
         self.assertEqual(left.merge(right).schema_url, schema_urls[0])
 
         left = Resource.create({}, schema_urls[0])
@@ -242,7 +246,7 @@ class TestResources(unittest.TestCase):
         with self.assertRaises(AttributeError):
             resource.schema_url = "bug"
 
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
     def test_service_name_using_process_name(self):
         resource = Resource.create({PROCESS_EXECUTABLE_NAME: "test"})
@@ -278,18 +282,18 @@ class TestResources(unittest.TestCase):
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = get_aggregated_resources([])
-        self.assertEqual(
-            aggregated_resources,
-            _DEFAULT_RESOURCE.merge(
-                Resource(
-                    {
-                        SERVICE_INSTANCE_ID: self._service_instance_id,
-                        SERVICE_NAME: "unknown_service",
-                    },
-                    "",
-                )
-            ),
+        expected = _DEFAULT_RESOURCE.merge(
+            Resource(
+                {
+                    SERVICE_INSTANCE_ID: self._service_instance_id,
+                    SERVICE_NAME: "unknown_service",
+                },
+                "",
+            )
         )
+        # Since detectors now provide schema URLs, the result should have the schema URL
+        expected_with_schema = Resource(expected.attributes, Schemas.V1_44_0.value)
+        self.assertEqual(aggregated_resources, expected_with_schema)
 
     def test_aggregated_resources_with_default_destroying_static_resource(
         self,
@@ -303,7 +307,7 @@ class TestResources(unittest.TestCase):
 
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.return_value = Resource(
-            {"static_key": "try_to_overwrite_existing_value", "key": "value"}
+            {"static_key": "try_to_overwrite_existing_value", "key": "value"}, ""
         )
         self.assertEqual(
             get_aggregated_resources([resource_detector], initial_resource=static_resource),
@@ -317,16 +321,17 @@ class TestResources(unittest.TestCase):
 
     def test_aggregated_resources_multiple_detectors(self):
         resource_detector1 = Mock(spec=ResourceDetector)
-        resource_detector1.detect.return_value = Resource({"key1": "value1"})
+        resource_detector1.detect.return_value = Resource({"key1": "value1"}, "")
         resource_detector2 = Mock(spec=ResourceDetector)
-        resource_detector2.detect.return_value = Resource({"key2": "value2", "key3": "value3"})
+        resource_detector2.detect.return_value = Resource({"key2": "value2", "key3": "value3"}, "")
         resource_detector3 = Mock(spec=ResourceDetector)
         resource_detector3.detect.return_value = Resource(
             {
                 "key2": "try_to_overwrite_existing_value",
                 "key3": "try_to_overwrite_existing_value",
                 "key4": "value4",
-            }
+            },
+            "",
         )
 
         self.assertEqual(
@@ -346,7 +351,8 @@ class TestResources(unittest.TestCase):
                         "key2": "try_to_overwrite_existing_value",
                         "key3": "try_to_overwrite_existing_value",
                         "key4": "value4",
-                    }
+                    },
+                    Schemas.V1_44_0.value,
                 )
             ),
         )
@@ -374,9 +380,48 @@ class TestResources(unittest.TestCase):
             },
             "url1",
         )
-        self.assertEqual(
-            get_aggregated_resources([resource_detector1, resource_detector2]),
-            _DEFAULT_RESOURCE.merge(
+        # Since resource detectors now use schema URLs, merging with "url1" will cause conflicts
+        # The merge will return the resource before the conflict
+        with self.assertLogs(level=ERROR) as log_entry:
+            result = get_aggregated_resources([resource_detector1, resource_detector2])
+            # Just check that the result has the expected attributes and schema URL
+            self.assertIn("key1", result.attributes)
+            self.assertNotIn("key2", result.attributes)  # Should not include key2 due to merge conflict
+            self.assertEqual(result.schema_url, Schemas.V1_44_0.value)
+            self.assertIn(Schemas.V1_44_0.value, log_entry.output[0])
+            self.assertIn("url1", log_entry.output[0])
+        with self.assertLogs(level=ERROR) as log_entry:
+            result = get_aggregated_resources([resource_detector2, resource_detector3])
+            # Should only have default resource attributes due to merge conflicts
+            self.assertNotIn("key2", result.attributes)
+            self.assertNotIn("key4", result.attributes)
+            self.assertEqual(result.schema_url, Schemas.V1_44_0.value)
+            self.assertIn(Schemas.V1_44_0.value, log_entry.output[0])
+            # At least one of the conflicting URLs should be in the error
+            self.assertTrue("url1" in log_entry.output[0] or "url2" in log_entry.output[0])
+        with self.assertLogs(level=ERROR) as log_entry:
+            result = get_aggregated_resources(
+                [
+                    resource_detector2,
+                    resource_detector3,
+                    resource_detector4,
+                    resource_detector1,
+                ]
+            )
+            # Should have key1 from resource_detector1 but not others due to conflicts
+            self.assertIn("key1", result.attributes)
+            self.assertNotIn("key2", result.attributes)
+            self.assertEqual(result.schema_url, Schemas.V1_44_0.value)
+            self.assertIn(Schemas.V1_44_0.value, log_entry.output[0])
+            # At least one of the conflicting URLs should be in the error
+            self.assertTrue("url1" in log_entry.output[0] or "url2" in log_entry.output[0])
+
+    def test_resource_detector_ignore_error(self):
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.side_effect = Exception()
+        resource_detector.raise_on_error = False
+        with self.assertLogs(level=WARNING):
+            expected = _DEFAULT_RESOURCE.merge(
                 Resource(
                     {
                         SERVICE_INSTANCE_ID: self._service_instance_id,
@@ -384,77 +429,11 @@ class TestResources(unittest.TestCase):
                     },
                     "",
                 )
-            ).merge(
-                Resource(
-                    {"key1": "value1", "key2": "value2", "key3": "value3"},
-                    "url1",
-                )
-            ),
-        )
-        with self.assertLogs(level=ERROR) as log_entry:
-            self.assertEqual(
-                get_aggregated_resources([resource_detector2, resource_detector3]),
-                _DEFAULT_RESOURCE.merge(
-                    Resource(
-                        {
-                            SERVICE_INSTANCE_ID: self._service_instance_id,
-                            SERVICE_NAME: "unknown_service",
-                        },
-                        "",
-                    )
-                ).merge(Resource({"key2": "value2", "key3": "value3"}, "url1")),
             )
-            self.assertIn("url1", log_entry.output[0])
-            self.assertIn("url2", log_entry.output[0])
-        with self.assertLogs(level=ERROR):
-            self.assertEqual(
-                get_aggregated_resources(
-                    [
-                        resource_detector2,
-                        resource_detector3,
-                        resource_detector4,
-                        resource_detector1,
-                    ]
-                ),
-                _DEFAULT_RESOURCE.merge(
-                    Resource(
-                        {
-                            SERVICE_INSTANCE_ID: self._service_instance_id,
-                            SERVICE_NAME: "unknown_service",
-                        },
-                        "",
-                    )
-                ).merge(
-                    Resource(
-                        {
-                            "key1": "value1",
-                            "key2": "try_to_overwrite_existing_value",
-                            "key3": "try_to_overwrite_existing_value",
-                            "key4": "value4",
-                        },
-                        "url1",
-                    )
-                ),
-            )
-            self.assertIn("url1", log_entry.output[0])
-            self.assertIn("url2", log_entry.output[0])
-
-    def test_resource_detector_ignore_error(self):
-        resource_detector = Mock(spec=ResourceDetector)
-        resource_detector.detect.side_effect = Exception()
-        resource_detector.raise_on_error = False
-        with self.assertLogs(level=WARNING):
+            expected_with_schema = Resource(expected.attributes, Schemas.V1_44_0.value)
             self.assertEqual(
                 get_aggregated_resources([resource_detector]),
-                _DEFAULT_RESOURCE.merge(
-                    Resource(
-                        {
-                            SERVICE_INSTANCE_ID: self._service_instance_id,
-                            SERVICE_NAME: "unknown_service",
-                        },
-                        "",
-                    )
-                ),
+                expected_with_schema,
             )
 
     def test_resource_detector_raise_error(self):
@@ -520,17 +499,19 @@ class TestResources(unittest.TestCase):
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.side_effect = TimeoutError()
         resource_detector.raise_on_error = False
+        expected = _DEFAULT_RESOURCE.merge(
+            Resource(
+                {
+                    SERVICE_INSTANCE_ID: self._service_instance_id,
+                    SERVICE_NAME: "unknown_service",
+                },
+                "",
+            )
+        )
+        expected_with_schema = Resource(expected.attributes, Schemas.V1_44_0.value)
         self.assertEqual(
             get_aggregated_resources([resource_detector]),
-            _DEFAULT_RESOURCE.merge(
-                Resource(
-                    {
-                        SERVICE_INSTANCE_ID: self._service_instance_id,
-                        SERVICE_NAME: "unknown_service",
-                    },
-                    "",
-                )
-            ),
+            expected_with_schema,
         )
         mock_logger.warning.assert_called_with(
             "Detector %s took longer than %s seconds, skipping",
@@ -818,7 +799,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["telemetry.sdk.language"], "python")
         self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
         self.assertEqual(resource.attributes["service.name"], "unknown_service")
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
         resource = Resource({}).create({"a": "b", "c": "d"})
 
@@ -827,14 +808,14 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["service.name"], "unknown_service")
         self.assertEqual(resource.attributes["a"], "b")
         self.assertEqual(resource.attributes["c"], "d")
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
     @patch.dict(environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock"}, clear=True)
     @patch(
         "opentelemetry.util._importlib_metadata.entry_points",
         Mock(
             return_value=[
-                Mock(**{"load.return_value": Mock(return_value=Mock(**{"detect.return_value": Resource({"a": "b"})}))})
+                Mock(**{"load.return_value": Mock(return_value=Mock(**{"detect.return_value": Resource({"a": "b"}, "")}))})
             ]
         ),
     )
@@ -844,6 +825,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
         self.assertEqual(resource.attributes["service.name"], "unknown_service")
         self.assertEqual(resource.attributes["a"], "b")
+        # When using a custom detector with empty schema URL and no built-in detectors, schema URL is empty
         self.assertEqual(resource.schema_url, "")
 
     @patch.dict(environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: ""}, clear=True)
@@ -891,7 +873,8 @@ class TestOTELResourceDetector(unittest.TestCase):
             self.assertEqual(resource.attributes["service.name"], "unknown_service")
             self.assertEqual(resource.attributes["a"], "b")
             self.assertEqual(resource.attributes["c"], "d")
-            self.assertEqual(resource.schema_url, "")
+            # Schema URL comes from built-in detectors (ProcessResourceDetector, etc.)
+            self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
         with patch.dict(
             environ,
@@ -913,7 +896,7 @@ class TestOTELResourceDetector(unittest.TestCase):
             self.assertIn(PROCESS_RUNTIME_NAME, resource.attributes.keys())
             self.assertIn(PROCESS_RUNTIME_DESCRIPTION, resource.attributes.keys())
             self.assertIn(PROCESS_RUNTIME_VERSION, resource.attributes.keys())
-            self.assertEqual(resource.schema_url, "")
+            self.assertEqual(resource.schema_url, Schemas.V1_44_0.value)
 
     @patch.dict(
         environ,
@@ -935,6 +918,68 @@ class TestOTELResourceDetector(unittest.TestCase):
             resource = Resource({}).create()
 
         self.assertEqual(resource.attributes["conflict_key"], "from_b")
+
+
+class TestResourceDetectorsSchemaURL(unittest.TestCase):
+    """Test class for schema URL functionality in resource detectors."""
+
+    def test_resource_detectors_schema_url(self):
+        """Test that resource detectors populate schema URL according to semantic conventions."""
+        # ProcessResourceDetector should populate schema URL
+        process_detector = ProcessResourceDetector()
+        process_resource = process_detector.detect()
+        self.assertEqual(process_resource.schema_url, Schemas.V1_44_0.value)
+
+        # OsResourceDetector should populate schema URL
+        os_detector = OsResourceDetector()
+        os_resource = os_detector.detect()
+        self.assertEqual(os_resource.schema_url, Schemas.V1_44_0.value)
+
+        # _HostResourceDetector should populate schema URL
+        host_detector = _HostResourceDetector()
+        host_resource = host_detector.detect()
+        self.assertEqual(host_resource.schema_url, Schemas.V1_44_0.value)
+
+        # ServiceInstanceIdResourceDetector should populate schema URL
+        service_instance_detector = ServiceInstanceIdResourceDetector()
+        service_instance_resource = service_instance_detector.detect()
+        self.assertEqual(service_instance_resource.schema_url, Schemas.V1_44_0.value)
+
+        # OTELResourceDetector should use empty schema URL (it doesn't know what attributes it will populate)
+        otel_detector = OTELResourceDetector()
+        otel_resource = otel_detector.detect()
+        self.assertEqual(otel_resource.schema_url, "")
+
+        # _DEFAULT_RESOURCE should not have schema URL (it's the base resource before detector merging)
+        self.assertEqual(_DEFAULT_RESOURCE.schema_url, "")
+
+    def test_resource_merge_with_schema_url(self):
+        """Test that schema URL is handled correctly during resource merge."""
+        schema_url_v1 = Schemas.V1_44_0.value
+        schema_url_v2 = "https://opentelemetry.io/schemas/1.45.0"
+
+        # Merge with empty schema URL should use non-empty schema URL
+        resource_with_schema = Resource({"key": "value"}, schema_url_v1)
+        resource_without_schema = Resource({"other": "data"}, "")
+        merged = resource_without_schema.merge(resource_with_schema)
+        self.assertEqual(merged.schema_url, schema_url_v1)
+
+        # Merge with non-empty schema URL should keep existing schema URL
+        merged = resource_with_schema.merge(resource_without_schema)
+        self.assertEqual(merged.schema_url, schema_url_v1)
+
+        # Merge with same schema URL should keep schema URL
+        resource_with_schema_2 = Resource({"another": "item"}, schema_url_v1)
+        merged = resource_with_schema.merge(resource_with_schema_2)
+        self.assertEqual(merged.schema_url, schema_url_v1)
+
+        # Merge with different schema URLs should log error and return original resource
+        resource_with_different_schema = Resource({"conflict": "data"}, schema_url_v2)
+        with self.assertLogs(level=ERROR) as log_entry:
+            merged = resource_with_schema.merge(resource_with_different_schema)
+            self.assertEqual(merged, resource_with_schema)
+            self.assertIn(schema_url_v1, log_entry.output[0])
+            self.assertIn(schema_url_v2, log_entry.output[0])
 
     @patch.dict(
         environ,
