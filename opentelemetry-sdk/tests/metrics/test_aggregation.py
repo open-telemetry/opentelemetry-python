@@ -210,7 +210,11 @@ class TestLastValueAggregation(TestCase):
         temporality
         """
 
-        last_value_aggregation = _LastValueAggregation(Mock(), _default_reservoir_factory(_LastValueAggregation))
+        last_value_aggregation = _LastValueAggregation(
+            Mock(),
+            _default_reservoir_factory(_LastValueAggregation),
+            instrument_is_synchronous=True,
+        )
 
         last_value_aggregation.aggregate(measurement(1))
         self.assertEqual(last_value_aggregation._value, 1)
@@ -226,7 +230,11 @@ class TestLastValueAggregation(TestCase):
         `LastValueAggregation` collects number data points
         """
 
-        last_value_aggregation = _LastValueAggregation(Mock(), _default_reservoir_factory(_LastValueAggregation))
+        last_value_aggregation = _LastValueAggregation(
+            Mock(),
+            _default_reservoir_factory(_LastValueAggregation),
+            instrument_is_synchronous=True,
+        )
 
         self.assertIsNone(last_value_aggregation.collect(AggregationTemporality.CUMULATIVE, 1))
 
@@ -240,7 +248,7 @@ class TestLastValueAggregation(TestCase):
 
         self.assertIsNone(first_number_data_point.start_time_unix_nano)
 
-        last_value_aggregation.aggregate(measurement(1))
+        last_value_aggregation.aggregate(measurement(2))
 
         # CI fails the last assertion without this
         sleep(0.1)
@@ -249,7 +257,7 @@ class TestLastValueAggregation(TestCase):
         # collection process starts.
         second_number_data_point = last_value_aggregation.collect(AggregationTemporality.CUMULATIVE, 2)
 
-        self.assertEqual(second_number_data_point.value, 1)
+        self.assertEqual(second_number_data_point.value, 2)
 
         self.assertIsNone(second_number_data_point.start_time_unix_nano)
 
@@ -258,10 +266,44 @@ class TestLastValueAggregation(TestCase):
             first_number_data_point.time_unix_nano,
         )
 
-        # 3 is used here directly to simulate the instant the second
+        # 3 is used here directly to simulate the instant the third
         # collection process starts.
         third_number_data_point = last_value_aggregation.collect(AggregationTemporality.CUMULATIVE, 3)
-        self.assertIsNone(third_number_data_point)
+        self.assertIsInstance(third_number_data_point, NumberDataPoint)
+        self.assertEqual(third_number_data_point.value, 2)
+        self.assertIsNone(third_number_data_point.start_time_unix_nano)
+        self.assertGreater(
+            third_number_data_point.time_unix_nano,
+            second_number_data_point.time_unix_nano,
+        )
+
+    def test_collect_delta_resets_value(self):
+        last_value_aggregation = _LastValueAggregation(
+            Mock(),
+            _default_reservoir_factory(_LastValueAggregation),
+            instrument_is_synchronous=True,
+        )
+
+        last_value_aggregation.aggregate(measurement(1))
+
+        number_data_point = last_value_aggregation.collect(AggregationTemporality.DELTA, 1)
+        self.assertEqual(number_data_point.value, 1)
+
+        self.assertIsNone(last_value_aggregation.collect(AggregationTemporality.DELTA, 2))
+
+    def test_collect_asynchronous_resets_value(self):
+        last_value_aggregation = _LastValueAggregation(
+            Mock(),
+            _default_reservoir_factory(_LastValueAggregation),
+            instrument_is_synchronous=False,
+        )
+
+        last_value_aggregation.aggregate(measurement(1))
+
+        number_data_point = last_value_aggregation.collect(AggregationTemporality.CUMULATIVE, 1)
+        self.assertEqual(number_data_point.value, 1)
+
+        self.assertIsNone(last_value_aggregation.collect(AggregationTemporality.CUMULATIVE, 2))
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
