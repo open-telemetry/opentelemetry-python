@@ -262,7 +262,7 @@ def decode_enum(value: int | str, enum_type: type[EnumT], field_name: str) -> En
         try:
             return enum_type[value]
         except KeyError:
-            raise KeyError(f"Invalid enum name '{value}' for field '{field_name}'") from None
+            raise ValueError(f"Invalid enum name '{value}' for field '{field_name}'") from None
     try:
         return enum_type(value)
     except ValueError:

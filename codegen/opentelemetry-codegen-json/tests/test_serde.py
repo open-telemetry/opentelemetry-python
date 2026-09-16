@@ -331,7 +331,7 @@ def test_defaults_and_none(
         ({"name": 123}, TypeError, "expected <class 'str'>"),
         ({"subMessage": "not a dict"}, TypeError, "expected <class 'dict'>"),
         ({"enumValue": []}, TypeError, "expected"),
-        ({"enumValue": "NOT_A_NAME"}, KeyError, None),
+        ({"enumValue": "NOT_A_NAME"}, ValueError, None),
         ({"listMessages": [None]}, TypeError, "expected <class 'dict'>"),
     ],
 )
