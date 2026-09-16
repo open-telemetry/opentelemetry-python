@@ -9,10 +9,7 @@ from __future__ import annotations
 import builtins
 import dataclasses
 import enum
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
@@ -61,7 +58,7 @@ class LogRecordFlags(enum.IntEnum):
     LOG_RECORD_FLAGS_TRACE_FLAGS_MASK = 255
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class LogsData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message LogsData
@@ -102,7 +99,7 @@ class LogsData(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ResourceLogs(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceLogs
@@ -154,7 +151,7 @@ class ResourceLogs(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ScopeLogs(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeLogs
@@ -206,7 +203,7 @@ class ScopeLogs(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class LogRecord(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message LogRecord
@@ -275,8 +272,7 @@ class LogRecord(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("observedTimeUnixNano")) is not None:
             _args["observed_time_unix_nano"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "observed_time_unix_nano")
         if (_value := data.get("severityNumber")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "severity_number")
-            _args["severity_number"] = SeverityNumber(_value)
+            _args["severity_number"] = opentelemetry.proto_json._json_codec.decode_enum(_value, SeverityNumber, "severity_number")
         if (_value := data.get("severityText")) is not None:
             opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "severity_text")
             _args["severity_text"] = _value
