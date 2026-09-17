@@ -545,16 +545,16 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     Fast path: if no extra detectors are configured, returns only the two
     built-in detectors without scanning entry_points.
 
-    "service_instance" (ServiceInstanceIdResourceDetector) and "otel"
-    (OTELResourceDetector) are always appended as defaults. "otel" is last so
-    that OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge
-    priority, but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
+    "service_instance" (ServiceInstanceIdResourceDetector) is pre-pended. "otel"
+    (OTELResourceDetector) is last so that OTEL_RESOURCE_ATTRIBUTES and
+    OTEL_SERVICE_NAME take highest merge priority, but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
     is respected for either name.
     """
     detector_names: list[str] = list(
         dict.fromkeys(
-            [name.strip() for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",") if name.strip()]
-            + ["service_instance", "otel"]
+            ["service_instance"]
+            + [name.strip() for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",") if name.strip()]
+            + ["otel"]
         )
     )
 
@@ -633,12 +633,6 @@ def get_aggregated_resources(
             detected_resource: Resource = _EMPTY_RESOURCE
             try:
                 detected_resource = future.result(timeout=timeout)
-
-                if (
-                    isinstance(detector, ServiceInstanceIdResourceDetector)
-                    and SERVICE_INSTANCE_ID in detectors_merged_resource.attributes
-                ):
-                    continue
             except concurrent.futures.TimeoutError as ex:
                 if detector.raise_on_error:
                     raise ex
@@ -652,7 +646,8 @@ def get_aggregated_resources(
                 if detector.raise_on_error:
                     raise ex
                 logger.warning("Exception %s in detector %s, ignoring", ex, detector)
-            detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
+            finally:
+                detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
     finally:
         executor.shutdown(wait=False, cancel_futures=True)
 

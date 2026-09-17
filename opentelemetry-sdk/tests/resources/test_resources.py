@@ -1044,55 +1044,43 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
     def test_is_process_dependent(self):
         self.assertTrue(ServiceInstanceIdResourceDetector().is_process_dependent())
 
-    def test_aggregation_preserves_instance_id_from_previous_detector(self):
-        resource_detector = Mock(spec=ResourceDetector)
-        resource_detector.detect.return_value = Resource({SERVICE_INSTANCE_ID: "service-instance-id"})
-        subsequent_detector = Mock(spec=ResourceDetector)
-        subsequent_detector.detect.return_value = Resource({"key": "value"})
+    @patch.dict(environ, {}, clear=True)
+    def test_service_instance_detector_sets_id_without_custom_detector(self):
+        resource = Resource.create()
 
-        resource = get_aggregated_resources(
-            [
-                resource_detector,
-                ServiceInstanceIdResourceDetector(),
-                subsequent_detector,
-            ],
-            initial_resource=Resource.get_empty(),
-        )
-
-        self.assertEqual(
-            resource.attributes,
-            {SERVICE_INSTANCE_ID: "service-instance-id", "key": "value"},
-        )
-
-    def test_aggregation_preserves_instance_id_from_initial_resource(self):
-        resource = get_aggregated_resources(
-            [ServiceInstanceIdResourceDetector()],
-            initial_resource=Resource({SERVICE_INSTANCE_ID: "user-provided-instance-id"}),
-        )
-
-        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "user-provided-instance-id")
+        self.assertEqual(uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID]).version, 4)
 
     @patch.dict(
         environ,
-        {OTEL_RESOURCE_ATTRIBUTES: "service.instance.id=environment-instance-id"},
+        {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock"},
         clear=True,
     )
-    def test_aggregation_preserves_instance_id_from_environment(self):
-        resource = get_aggregated_resources(
-            [OTELResourceDetector(), ServiceInstanceIdResourceDetector()],
-            initial_resource=Resource.get_empty(),
+    def test_configured_detector_overrides_service_instance_id(self):
+        custom_detector = Mock(spec=ResourceDetector)
+        custom_detector.detect.return_value = Resource(
+            {
+                SERVICE_INSTANCE_ID: "configured-instance-id",
+                "custom.detector": "value",
+            }
+        )
+        entry_point = Mock(
+            **{"load.return_value": Mock(return_value=custom_detector)}
         )
 
-        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "environment-instance-id")
+        def side_effect(*args, **kwargs):
+            if kwargs.get("name") == "mock":
+                return [entry_point]
+            return real_entry_points(*args, **kwargs)
 
-    def test_aggregation_generates_instance_id_when_missing(self):
-        resource = get_aggregated_resources(
-            [ServiceInstanceIdResourceDetector()],
-            initial_resource=Resource({"key": "value"}),
-        )
+        with patch(
+            "opentelemetry.util._importlib_metadata.entry_points",
+            side_effect=side_effect,
+        ):
+            resource = Resource.create()
 
-        self.assertEqual(uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID]).version, 4)
-        self.assertEqual(resource.attributes["key"], "value")
+        custom_detector.detect.assert_called_once()
+        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "configured-instance-id")
+        self.assertEqual(resource.attributes["custom.detector"], "value")
 
     def test_detect_value_is_valid_uuid4(self):
         _resources_module._service_instance_id = None
