@@ -60,6 +60,7 @@ class ExporterMetricsT(Protocol):
 
 class NoOpExporterMetrics:
     @contextmanager
+    # pylint: disable-next=no-self-use
     def export_operation(self, num_items: int) -> Iterator[ExportResult]:
         yield ExportResult()
 
