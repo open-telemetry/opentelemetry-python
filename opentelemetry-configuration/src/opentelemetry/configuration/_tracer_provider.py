@@ -40,6 +40,7 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
+from opentelemetry.configuration.models import OtlpHttpEncoding
 from opentelemetry.configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
 )
@@ -119,30 +120,58 @@ def _create_otlp_http_span_exporter(
     config: OtlpHttpExporterConfig,
 ) -> SpanExporter:
     """Create an OTLP HTTP span exporter from config."""
-    try:
-        # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415  # type: ignore[import-untyped]
-            Compression,
-        )
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
-            OTLPSpanExporter,
-        )
-    except ImportError as exc:
-        raise MissingDependencyError(
-            package="opentelemetry-exporter-otlp-proto-http",
-            feature="otlp_http span exporter",
-        ) from exc
-
-    compression = _map_compression(config.compression, Compression, allow_deflate=True)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
-    return OTLPSpanExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
-        headers=headers,
-        timeout=timeout,
-        compression=compression,  # type: ignore[arg-type]
-    )
+    match config.encoding:
+        case None | OtlpHttpEncoding.protobuf:
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415
+                    Compression,
+                )
+                from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # noqa: PLC0415
+                    OTLPSpanExporter,
+                )
+            except ImportError as exc:
+                raise MissingDependencyError(
+                    package="opentelemetry-exporter-otlp-proto-http",
+                    feature="otlp_http span exporter",
+                ) from exc
+
+            compression = _map_compression(config.compression, Compression, allow_deflate=True)
+            return OTLPSpanExporter(
+                endpoint=config.endpoint,
+                headers=headers,
+                timeout=timeout,
+                compression=compression,
+            )
+        case OtlpHttpEncoding.json:
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.exporter.otlp.common.http import (  # noqa: PLC0415
+                    Compression as JsonCompression,
+                )
+                from opentelemetry.exporter.otlp.json.http.trace_exporter import (  # noqa: PLC0415
+                    OTLPSpanExporter as JsonOTLPSpanExporter,
+                )
+            except ImportError as exc:
+                raise MissingDependencyError(
+                    package="opentelemetry-exporter-otlp-json-http",
+                    feature="otlp_http JSON span exporter",
+                ) from exc
+
+            compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
+            return JsonOTLPSpanExporter(
+                endpoint=config.endpoint,
+                headers=headers,
+                timeout=timeout,
+                compression=compression,
+            )
+        case _:
+            raise ConfigurationError(
+                f"Unsupported OTLP HTTP encoding '{config.encoding}'. Supported values: protobuf, json."
+            )
 
 
 def _create_otlp_grpc_span_exporter(
@@ -193,14 +222,6 @@ def _create_otlp_file_development_span_exporter(
     return FileSpanExporter(path) if path is not None else FileSpanExporter()
 
 
-_SPAN_EXPORTER_REGISTRY: dict = {
-    "otlp_http": _create_otlp_http_span_exporter,
-    "otlp_grpc": _create_otlp_grpc_span_exporter,
-    "console": lambda _: ConsoleSpanExporter(),
-    "otlp_file_development": _create_otlp_file_development_span_exporter,
-}
-
-
 def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
     """Create a span exporter from config.
 
@@ -209,17 +230,23 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_traces_exporter`` entry point group.
     """
-    for name, factory in _SPAN_EXPORTER_REGISTRY.items():
-        value = getattr(config, name, None)
-        if value is not None:
-            return factory(value)
-    if config.additional_properties:
-        name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_traces_exporter", name)(**(plugin_config or {}))
-    raise ConfigurationError(
-        "No exporter type specified in span exporter config. "
-        "Supported types: otlp_http, otlp_grpc, console, otlp_file_development."
-    )
+    match config:
+        case SpanExporterConfig(otlp_http=exporter_config) if exporter_config is not None:
+            return _create_otlp_http_span_exporter(exporter_config)
+        case SpanExporterConfig(otlp_grpc=exporter_config) if exporter_config is not None:
+            return _create_otlp_grpc_span_exporter(exporter_config)
+        case SpanExporterConfig(console=exporter_config) if exporter_config is not None:
+            return ConsoleSpanExporter()
+        case SpanExporterConfig(otlp_file_development=exporter_config) if exporter_config is not None:
+            return _create_otlp_file_development_span_exporter(exporter_config)
+        case SpanExporterConfig(additional_properties=additional_properties) if additional_properties:
+            name, plugin_config = next(iter(additional_properties.items()))
+            return load_entry_point("opentelemetry_traces_exporter", name)(**(plugin_config or {}))
+        case _:
+            raise ConfigurationError(
+                "No exporter type specified in span exporter config. "
+                "Supported types: otlp_http, otlp_grpc, console, otlp_file_development."
+            )
 
 
 def _create_span_processor(
