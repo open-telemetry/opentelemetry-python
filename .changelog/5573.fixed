@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: keep metric attribute values that Python considers equal but the data model does not, such as `True`, `1` and `1.0`, in separate metric streams

@@ -38,7 +38,7 @@ class ExemplarReservoir(ABC):
     @abstractmethod
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -80,7 +80,7 @@ class ExemplarBucket:
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -172,7 +172,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -197,7 +197,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     @abstractmethod
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -242,15 +242,16 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
     ) -> int:
-        self._measurements_seen += 1
         if self._measurements_seen < self._size:
+            self._measurements_seen += 1
             return self._measurements_seen - 1
 
+        self._measurements_seen += 1
         index = randrange(0, self._measurements_seen)
         if index < self._size:
             return index
@@ -273,7 +274,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,

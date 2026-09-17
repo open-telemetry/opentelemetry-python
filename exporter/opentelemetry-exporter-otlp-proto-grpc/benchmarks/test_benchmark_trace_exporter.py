@@ -30,7 +30,7 @@ class MockTraceServiceStub:
 
 
 @patch(
-    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._stub",
+    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.TraceServiceStub",
     new=MockTraceServiceStub,
 )
 def test_simple_span_processor(benchmark):
@@ -51,7 +51,7 @@ def test_simple_span_processor(benchmark):
 
 
 @patch(
-    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._stub",
+    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.TraceServiceStub",
     new=MockTraceServiceStub,
 )
 def test_batch_span_processor(benchmark):

@@ -513,7 +513,6 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
         Returns a string that describes the overall exporter, to be used in
         warning messages.
         """
-        pass
 
     def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
         self._metrics = create_exporter_metrics(

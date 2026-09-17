@@ -103,24 +103,28 @@ class TestLoadEntryPoint(unittest.TestCase):
         self.assertIs(result, mock_class)
 
     def test_raises_when_not_found(self):
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                load_entry_point("some_group", "missing")
+            load_entry_point("some_group", "missing")
         self.assertIn("missing", str(ctx.exception))
         self.assertIn("some_group", str(ctx.exception))
 
     def test_wraps_load_exception_in_configuration_error(self):
         mock_ep = MagicMock()
         mock_ep.load.side_effect = ImportError("bad import")
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[mock_ep],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[mock_ep],
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                load_entry_point("some_group", "some_name")
+            load_entry_point("some_group", "some_name")
         self.assertIn("bad import", str(ctx.exception))
 
     def test_instantiation_error_not_wrapped(self):

@@ -12,13 +12,16 @@ import os
 import threading
 import traceback
 import warnings
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from os import environ
 from threading import Lock
 from time import time_ns
+from types import NoneType
 from typing import (  # noqa
     Any,
+    Tuple,
+    Union,
     cast,
     overload,
 )
@@ -35,7 +38,7 @@ from opentelemetry._logs import (
     get_logger,
     get_logger_provider,
 )
-from opentelemetry.attributes import _VALID_ANY_VALUE_TYPES, BoundedAttributes
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
@@ -76,7 +79,7 @@ from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 # pylint: disable=too-many-lines
 
@@ -359,6 +362,21 @@ class LogRecordProcessor(abc.ABC):
         on error handling expectations.
         """
 
+    def enabled(  # pylint: disable=no-self-use,unused-argument
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        """Returns whether this processor would emit a record for the given arguments.
+
+        Processors that support filtering MAY override this method. The default
+        implementation returns ``True``.
+        """
+        return True
+
     @abc.abstractmethod
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
@@ -401,6 +419,25 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         for lp in self._log_record_processors:
             lp.on_emit(log_record)
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        processors = self._log_record_processors
+        return any(
+            lp.enabled(
+                context=context,
+                instrumentation_scope=instrumentation_scope,
+                severity_number=severity_number,
+                event_name=event_name,
+            )
+            for lp in processors
+        )
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -471,6 +508,25 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        processors = self._log_record_processors
+        return any(
+            lp.enabled(
+                context=context,
+                instrumentation_scope=instrumentation_scope,
+                severity_number=severity_number,
+                event_name=event_name,
+            )
+            for lp in processors
+        )
 
     def shutdown(self) -> None:
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -556,7 +612,7 @@ class LoggingHandler(logging.Handler):
         )
 
     @staticmethod
-    def _get_attributes(record: logging.LogRecord) -> _ExtendedAttributes:
+    def _get_attributes(record: logging.LogRecord) -> Attributes:
         attributes = {k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS}
 
         # Add standard code attributes for logs.
@@ -598,7 +654,21 @@ class LoggingHandler(logging.Handler):
             # For more background, see: https://github.com/open-telemetry/opentelemetry-python/pull/4216
             if not record.args and not isinstance(record.msg, str):
                 #  if record.msg is not a value we can export, cast it to string
-                if not isinstance(record.msg, _VALID_ANY_VALUE_TYPES):
+                # TODO: https://github.com/open-telemetry/opentelemetry-python/issues/5304 - do something better
+                # than just casting to a string.
+                if not isinstance(
+                    record.msg,
+                    (
+                        NoneType,
+                        bool,
+                        bytes,
+                        int,
+                        float,
+                        str,
+                        Sequence,
+                        Mapping,
+                    ),
+                ):
                     body = str(record.msg)
                 else:
                     body = record.msg
@@ -682,6 +752,22 @@ class Logger(APILogger):
     def _is_enabled(self) -> bool:
         return self._logger_config.is_enabled
 
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        if not self._is_enabled():
+            return False
+        return self._multi_log_record_processor.enabled(
+            context=context,
+            instrumentation_scope=self._instrumentation_scope,
+            severity_number=severity_number,
+            event_name=event_name,
+        )
+
     def _set_logger_config(self, logger_config: _LoggerConfig) -> None:
         self._logger_config = logger_config
 
@@ -707,7 +793,7 @@ class Logger(APILogger):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -831,7 +917,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         scope = InstrumentationScope(name, version, schema_url, attributes)
 
@@ -862,7 +948,7 @@ class LoggerProvider(APILoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> APILogger:
         if self._disabled:
             return NoOpLogger(
