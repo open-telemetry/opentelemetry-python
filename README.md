@@ -105,18 +105,19 @@ The meeting is open for all to join. We invite everyone to join our meeting, reg
 ### Maintainers
 
 - [Aaron Abbott](https://github.com/aabmass), Google
+- [Emídio Neto](https://github.com/emdneto), Independent
 - [Leighton Chen](https://github.com/lzchen), Microsoft
+- [Lukas Hering](https://github.com/herin049), Oracle
 - [Riccardo Magliocchetti](https://github.com/xrmx), Elastic
 
 For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).
 
 ### Approvers
 
+- [Diego Hurtado](https://github.com/ocelotl), Dash0
 - [Dylan Russell](https://github.com/dylanrussell), Google
-- [Emídio Neto](https://github.com/emdneto), Independent
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Liudmila Molkova](https://github.com/lmolkova), Google
-- [Lukas Hering](https://github.com/herin049), Oracle
 - [Mike Goldsmith](https://github.com/MikeGoldsmith), Honeycomb
 - [Pablo Collins](https://github.com/pmcollins), Splunk
 - [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
@@ -131,7 +132,6 @@ For more information about the approver role, see the [community repository](htt
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), Approver
 - [Chris Kleinknecht](https://github.com/c24t), Maintainer
 - [Christian Neumüller](https://github.com/Oberon00), Approver
-- [Diego Hurtado](https://github.com/ocelotl), Maintainer
 - [Jeremy Voss](https://github.com/jeremydvoss), Approver
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Approver
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), Approver
