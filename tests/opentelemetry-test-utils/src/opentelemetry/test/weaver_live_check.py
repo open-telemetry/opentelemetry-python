@@ -47,9 +47,9 @@ def _extract_violations(report: dict) -> list:
             result: list[dict] = []
             lcr = obj.get("live_check_result")
             if isinstance(lcr, dict):
-                advices = lcr.get("all_advice")
-                if isinstance(advices, list):
-                    result.extend(a for a in advices if a.get("level") == "violation")
+                advice_list = lcr.get("all_advice")
+                if isinstance(advice_list, list):
+                    result.extend(a for a in advice_list if a.get("level") == "violation")
             for value in obj.values():
                 result.extend(_collect(value))
             return result

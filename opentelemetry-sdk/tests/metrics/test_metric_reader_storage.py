@@ -31,6 +31,7 @@ from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     DropAggregation,
     ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
     SumAggregation,
     View,
 )
@@ -90,9 +91,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
     @patch("opentelemetry.sdk.metrics._internal.metric_reader_storage._ViewInstrumentMatch")
     def test_forwards_calls_to_view_instrument_match(self, MockViewInstrumentMatch: Mock):
-        view_instrument_match1 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
-        view_instrument_match2 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
-        view_instrument_match3 = Mock(_aggregation=_LastValueAggregation({}, Mock()))
+        view_instrument_match1 = Mock(_aggregation=_LastValueAggregation({}, Mock(), instrument_is_synchronous=True))
+        view_instrument_match2 = Mock(_aggregation=_LastValueAggregation({}, Mock(), instrument_is_synchronous=True))
+        view_instrument_match3 = Mock(_aggregation=_LastValueAggregation({}, Mock(), instrument_is_synchronous=True))
         MockViewInstrumentMatch.side_effect = [
             view_instrument_match1,
             view_instrument_match2,
@@ -304,6 +305,37 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(
                         instrument_name="observable_counter",
                         aggregation=ExplicitBucketHistogramAggregation(),
+                    ),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertLogs(level=WARNING):
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
+
+        self.assertIs(
+            metric_reader_storage._instrument_view_instrument_matches[observable_counter][0]._view,
+            _DEFAULT_VIEW,
+        )
+
+    def test_conflicting_view_configuration_exponential_histogram(self):
+        observable_counter = _ObservableCounter(
+            "observable_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                views=(
+                    View(
+                        instrument_name="observable_counter",
+                        aggregation=ExponentialBucketHistogramAggregation(),
                     ),
                 ),
             ),
