@@ -545,7 +545,7 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     Fast path: if no extra detectors are configured, returns only the two
     built-in detectors without scanning entry_points.
 
-    "service_instance" (ServiceInstanceIdResourceDetector) is pre-pended. "otel"
+    "service_instance" (ServiceInstanceIdResourceDetector) is prepended. "otel"
     (OTELResourceDetector) is last so that OTEL_RESOURCE_ATTRIBUTES and
     OTEL_SERVICE_NAME take highest merge priority, but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
     is respected for either name.
@@ -553,7 +553,11 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     detector_names: list[str] = list(
         dict.fromkeys(
             ["service_instance"]
-            + [name.strip() for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",") if name.strip()]
+            + [
+                name.strip()
+                for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",")
+                if name.strip()
+            ]
             + ["otel"]
         )
     )
