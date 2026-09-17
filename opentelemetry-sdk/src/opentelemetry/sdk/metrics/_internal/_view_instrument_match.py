@@ -25,7 +25,20 @@ from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
 
-_HashedAttributes = str | bool | int | float | bytes | None | tuple["_HashedAttributes", ...]
+# Every branch is tagged so that values Python considers equal but the OTel
+# data model does not -- True/1/1.0, or a sequence of pairs and the mapping
+# it resembles -- produce different aggregation keys.
+_HashedAttributes = tuple[
+    str,
+    str
+    | bool
+    | int
+    | float
+    | bytes
+    | None
+    | tuple["_HashedAttributes", ...]
+    | tuple[tuple[str, "_HashedAttributes"], ...],
+]
 
 
 # pylint: disable=inconsistent-return-statements
@@ -33,16 +46,21 @@ def _hash_attributes(value: Attributes | AnyValue) -> _HashedAttributes:
     # Attributes have been cleaned and validated when Measurement was instantiated,
     # so value is guaranteed to match one of the branches below at runtime.
     if isinstance(value, (NoneType, str, int, float, bool, bytes)):
-        return value
+        # bool is a subclass of int and 1 == 1.0, so the value alone is not
+        # enough to tell these apart.
+        return (type(value).__name__, value)
     if isinstance(value, Sequence):
-        return tuple(_hash_attributes(v) for v in value)
+        return ("sequence", tuple(_hash_attributes(v) for v in value))
     if isinstance(value, Mapping):
-        return tuple(
-            (k, _hash_attributes(value[k]))
-            for k in sorted(
-                value,
-                key=lambda item: item if isinstance(item, str) else str(item),
-            )
+        return (
+            "mapping",
+            tuple(
+                (k, _hash_attributes(value[k]))
+                for k in sorted(
+                    value,
+                    key=lambda item: item if isinstance(item, str) else str(item),
+                )
+            ),
         )
     if TYPE_CHECKING:
         assert_never(value)

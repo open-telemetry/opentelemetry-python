@@ -1,0 +1,8 @@
+`opentelemetry-configuration`: wire the experimental
+`tracer_configurator/development`, `meter_configurator/development` and
+`logger_configurator/development` fields into `create_tracer_provider`,
+`create_meter_provider` and `create_logger_provider`, so per-instrumentation-scope
+`enabled` overrides declared in the config file are applied to the provider
+(previously these fields were parsed but silently discarded). The logger
+`minimum_severity`/`trace_based` fields are not supported by the Python SDK and
+are ignored with a warning.
