@@ -1,11 +1,16 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace._sampling_experimental import (
     composable_always_off,
     composable_always_on,
     composable_rule_based,
     composite_sampler,
+)
+from opentelemetry.sdk.trace._sampling_experimental._composable import (
+    SamplingIntent,
 )
 from opentelemetry.sdk.trace._sampling_experimental._rule_based import (
     AllPredicate,
@@ -15,6 +20,8 @@ from opentelemetry.sdk.trace._sampling_experimental._rule_based import (
     AttributeValuesPredicate,
     ParentPredicate,
     SpanKindPredicate,
+    SpanTypePredicate,
+    call_predicate,
 )
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import Decision
@@ -52,14 +59,21 @@ def _predicate_result(
     parent_ctx=None,
     span_kind=None,
     attributes=None,
+    span_type=None,
+    instrumentation_scope=None,
+    resource=None,
 ):
-    return predicate(
-        parent_ctx=parent_ctx,
-        name="span",
-        span_kind=span_kind,
-        attributes=attributes,
-        links=None,
-        trace_state=None,
+    return call_predicate(
+        predicate,
+        parent_ctx,
+        "span",
+        span_kind,
+        attributes,
+        None,
+        None,
+        span_type=span_type,
+        instrumentation_scope=instrumentation_scope,
+        resource=resource,
     )
 
 
@@ -336,3 +350,112 @@ def test_attribute_predicate_match():
         composable_rule_based(rules=rules).sampling_intent(None, "span", None, {"foo": "bar"}, None, None).threshold
         == 0
     )
+
+
+def test_span_type_predicate():
+    predicate = SpanTypePredicate(["http.server.request", "db.client.call"])
+
+    assert _predicate_result(predicate, span_type="http.server.request") is True
+    assert _predicate_result(predicate, span_type="db.client.call") is True
+    assert _predicate_result(predicate, span_type="messaging.producer.send") is False
+    assert _predicate_result(predicate) is False
+    assert str(predicate) == "span_type in [db.client.call,http.server.request]"
+
+
+def test_span_type_predicate_is_anded_with_other_conditions():
+    predicate = AllPredicate(
+        [
+            SpanTypePredicate(["http.server.request"]),
+            SpanKindPredicate([SpanKind.SERVER]),
+        ]
+    )
+
+    assert _predicate_result(predicate, span_kind=SpanKind.SERVER, span_type="http.server.request") is True
+    assert _predicate_result(predicate, span_kind=SpanKind.CLIENT, span_type="http.server.request") is False
+
+
+def test_rule_based_samples_on_span_type():
+    sampler = composite_sampler(
+        composable_rule_based(
+            [
+                (SpanTypePredicate(["http.server.request"]), composable_always_on()),
+                (AlwaysMatchPredicate(), composable_always_off()),
+            ]
+        )
+    )
+
+    matched = sampler.should_sample_span(
+        None, RandomIdGenerator().generate_trace_id(), "GET /users", span_type="http.server.request"
+    )
+    unmatched = sampler.should_sample_span(
+        None, RandomIdGenerator().generate_trace_id(), "GET /users", span_type="db.client.call"
+    )
+
+    assert matched.decision == Decision.RECORD_AND_SAMPLE
+    assert unmatched.decision == Decision.DROP
+
+
+class _LegacyComposableSampler:
+    """Written against the protocol before span type existed."""
+
+    def sampling_intent(self, parent_ctx, name, span_kind, attributes, links, trace_state):
+        return SamplingIntent(threshold=0)
+
+    def get_description(self):
+        return "Legacy"
+
+
+def test_predicate_and_sampler_without_span_type_keep_working():
+    # NameIsFooPredicate also predates span type
+    sampler = composite_sampler(composable_rule_based([(NameIsFooPredicate(), _LegacyComposableSampler())]))
+
+    result = sampler.should_sample_span(
+        None, RandomIdGenerator().generate_trace_id(), "foo", span_type="http.server.request"
+    )
+
+    assert result.decision == Decision.RECORD_AND_SAMPLE
+
+
+class _RecordingPredicate:
+    """Captures the keyword-only inputs the sampler was called with."""
+
+    def __init__(self):
+        self.calls = []
+
+    def __call__(
+        self,
+        parent_ctx,
+        name,
+        span_kind,
+        attributes,
+        links,
+        trace_state,
+        *,
+        span_type=None,
+        instrumentation_scope=None,
+        resource=None,
+        **kwargs,
+    ):
+        self.calls.append((span_type, instrumentation_scope, resource))
+        return True
+
+    def __str__(self):
+        return "Recording"
+
+
+def test_scope_and_resource_reach_predicates_and_samplers():
+    predicate = _RecordingPredicate()
+    resource = Resource.create({"service.name": "test"})
+    provider = TracerProvider(
+        sampler=composite_sampler(composable_rule_based([(predicate, composable_always_on())])),
+        resource=resource,
+    )
+
+    provider.get_tracer("my.library", "1.0").start_span("GET /users", span_type="http.server.request").end()
+
+    assert len(predicate.calls) == 1
+    span_type, scope, seen_resource = predicate.calls[0]
+    assert span_type == "http.server.request"
+    assert scope.name == "my.library"
+    assert scope.version == "1.0"
+    assert seen_resource is resource

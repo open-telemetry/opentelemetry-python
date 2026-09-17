@@ -4,12 +4,19 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from opentelemetry.context import Context
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import Link, SpanKind, TraceState, get_current_span
 from opentelemetry.util.types import Attributes
 
-from ._composable import ComposableSampler, SamplingIntent
+from ._composable import (
+    ComposableSampler,
+    SamplingIntent,
+    delegate_sampling_intent,
+)
 from ._trace_state import OtelTraceState
 from ._util import (
     INVALID_THRESHOLD,
@@ -31,12 +38,28 @@ class _ComposableParentThreshold(ComposableSampler):
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None = None,
+        *,
+        span_type: str | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        resource: Resource | None = None,
+        **kwargs: Any,
     ) -> SamplingIntent:
         parent_span = get_current_span(parent_ctx)
         parent_span_ctx = parent_span.get_span_context()
         is_root = not parent_span_ctx.is_valid
         if is_root:
-            return self._root_sampler.sampling_intent(parent_ctx, name, span_kind, attributes, links, trace_state)
+            return delegate_sampling_intent(
+                self._root_sampler,
+                parent_ctx,
+                name,
+                span_kind,
+                attributes,
+                links,
+                trace_state,
+                span_type=span_type,
+                instrumentation_scope=instrumentation_scope,
+                resource=resource,
+            )
 
         ot_trace_state = OtelTraceState.parse(trace_state)
 
