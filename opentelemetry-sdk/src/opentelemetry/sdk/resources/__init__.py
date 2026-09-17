@@ -249,7 +249,7 @@ class Resource:
             else:
                 conflict = True
                 logger.warning(
-                    "Could not find a common schema URL between %s and %s; clearing schema_url",
+                    "Could not find a common schema URL between %s and %s, clearing schema_url",
                     self.schema_url,
                     other.schema_url,
                 )
