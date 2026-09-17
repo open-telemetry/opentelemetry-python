@@ -11,7 +11,6 @@ from typing import (  # noqa: F401
     Optional,
     overload,
 )
-from urllib.parse import urlparse
 
 from typing_extensions import deprecated
 
@@ -20,7 +19,7 @@ from opentelemetry.exporter.otlp.common._aggregation import (
     _get_aggregation,
     _get_temporality,
 )
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
     create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -224,7 +223,7 @@ class OTLPMetricExporter(MetricExporter):
         self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
-            urlparse(self._endpoint),
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
@@ -302,7 +301,7 @@ class OTLPMetricExporter(MetricExporter):
         self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
-            urlparse(self._endpoint),
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )

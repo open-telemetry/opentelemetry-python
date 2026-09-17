@@ -7,10 +7,9 @@ import logging
 import os
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, overload
-from urllib.parse import urlparse
 
 from opentelemetry.exporter.otlp.common import http as _http
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
     create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
@@ -167,7 +166,7 @@ class OTLPLogExporter(LogRecordExporter):
         self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_LOG_EXPORTER,
             "logs",
-            urlparse(self._endpoint),
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
