@@ -10,7 +10,7 @@ import time
 import unittest
 import uuid
 from concurrent.futures import TimeoutError
-from logging import ERROR, WARNING
+from logging import WARNING
 from os import environ
 from unittest.mock import Mock, patch
 from urllib import parse

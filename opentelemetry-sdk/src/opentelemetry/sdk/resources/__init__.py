@@ -237,6 +237,7 @@ class Resource:
         merged_attributes = dict(self.attributes)
         merged_attributes.update(other.attributes)
 
+        # pylint: disable-next=protected-access
         conflict = self._schema_url_conflict or other._schema_url_conflict
         schema_url = ""
         if not conflict:
@@ -255,6 +256,7 @@ class Resource:
                 )
 
         merged_resource = Resource(merged_attributes, schema_url)
+        # pylint: disable-next=protected-access
         merged_resource._schema_url_conflict = conflict
         return merged_resource
 
