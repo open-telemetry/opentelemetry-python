@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: leave histogram `min`/`max` unset when `record_min_max` is disabled, instead of exporting the `+Inf`/`-Inf` sentinels
