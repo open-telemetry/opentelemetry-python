@@ -33,7 +33,7 @@ asgiref==3.7.2
     # via
     #   -c dev-requirements.txt
     #   opentelemetry-test-utils
-certifi==2017.4.17
+certifi==2023.5.7
     # via requests
 charset-normalizer==2.0.0
     # via requests
@@ -76,7 +76,7 @@ pytest==9.0.3
     # via
     #   -c dev-requirements.txt
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
-requests==2.32.3
+requests==2.33.0
     # via
     #   -c dev-requirements.txt
     #   opentelemetry-test-utils
@@ -96,5 +96,5 @@ typing-extensions==4.12.0 ; python_full_version >= '3.14'
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-urllib3==1.21.1
+urllib3==1.26.0
     # via requests
