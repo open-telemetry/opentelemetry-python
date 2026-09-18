@@ -82,7 +82,7 @@ class LogsData(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "LogsData":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> LogsData:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -129,7 +129,7 @@ class ResourceLogs(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceLogs":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ResourceLogs:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -181,7 +181,7 @@ class ScopeLogs(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeLogs":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ScopeLogs:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -257,7 +257,7 @@ class LogRecord(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "LogRecord":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> LogRecord:
         """
         Create from a dictionary with lowerCamelCase keys.
 

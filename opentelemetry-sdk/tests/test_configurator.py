@@ -1326,7 +1326,7 @@ class TestImportExporters(TestCase):
 class TestImportConfigComponents(TestCase):
     @patch(
         "opentelemetry.sdk._configuration.entry_points",
-        **{"side_effect": KeyError},
+        side_effect=KeyError,
     )
     def test__import_config_components_missing_entry_point(self, mock_entry_points):
         with raises(RuntimeError) as error:
@@ -1335,7 +1335,7 @@ class TestImportConfigComponents(TestCase):
 
     @patch(
         "opentelemetry.sdk._configuration.entry_points",
-        **{"side_effect": StopIteration},
+        side_effect=StopIteration,
     )
     def test__import_config_components_missing_component(self, mock_entry_points):
         with raises(RuntimeError) as error:
@@ -1361,6 +1361,21 @@ class TestConfigurator(TestCase):
             "sampler": "TEST_SAMPLER",
         }
         mock_init_comp.assert_called_once_with(**kwargs)
+
+    def test_custom_configurator_with_init_args(self):
+        class ConfiguratorWithArgs(_OTelSDKConfigurator):
+            def __init__(self, name, strict=False):
+                super().__init__()
+                self.name = name
+                self.strict = strict
+
+            def _configure(self, **kwargs):
+                pass
+
+        configurator = ConfiguratorWithArgs("TEST_NAME", strict=True)
+        self.assertEqual(configurator.name, "TEST_NAME")
+        self.assertTrue(configurator.strict)
+        self.assertIs(configurator, ConfiguratorWithArgs("TEST_NAME", strict=True))
 
 
 # Any test that calls _init_logging with setup_logging_handler=True

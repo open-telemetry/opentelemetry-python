@@ -89,9 +89,7 @@ when the method is recognized by the framework or library.
 When the method is not recognized, for example, when the server receives
 a request for a method that is not predefined on the server, or when
 instrumentation is not able to reliably detect if the method is predefined,
-the attribute MUST be set to `_OTHER`. In such cases, tracing
-instrumentations MUST also set `rpc.method_original` attribute to
-the original method value.
+the attribute MUST be set to `_OTHER`.
 
 If the RPC instrumentation could end up converting valid RPC methods to
 `_OTHER`, then it SHOULD provide a way to configure the list of recognized

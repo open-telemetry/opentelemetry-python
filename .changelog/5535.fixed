@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix values for `process.executable.name` and `process.executable.path` to match semantic conventions.

@@ -5,13 +5,7 @@
 from collections.abc import Callable, Generator, Iterable, Sequence
 from typing import Final
 
-from opentelemetry.metrics import (
-    CallbackOptions,
-    Meter,
-    ObservableGauge,
-    Observation,
-    UpDownCounter,
-)
+from opentelemetry.metrics import CallbackOptions, Meter, ObservableGauge, Observation, UpDownCounter
 
 # pylint: disable=invalid-name
 CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]

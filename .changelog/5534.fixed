@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: add missing process executable name to default service name when available in resource attributes

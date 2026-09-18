@@ -15,6 +15,20 @@ Installation
 
      pip install opentelemetry-exporter-otlp-proto-http
 
+By default, exports are sent over ``urllib3``. To use ``requests`` instead, install the
+``requests`` extra and explicitly pass a ``requests.Session`` to the exporter:
+
+::
+
+     pip install opentelemetry-exporter-otlp-proto-http[requests]
+
+.. code-block:: python
+
+     import requests
+     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
+     exporter = OTLPSpanExporter(session=requests.Session())
+
 
 References
 ----------

@@ -46,7 +46,7 @@ class OsTypeValues(Enum):
     DRAGONFLYBSD = "dragonflybsd"
     """DragonFly BSD."""
     HPUX = "hpux"
-    """HP-UX (Hewlett Packard Unix)."""
+    """HP-UX (Hewlett Packard UNIX)."""
     AIX = "aix"
     """AIX (Advanced Interactive eXecutive)."""
     SOLARIS = "solaris"

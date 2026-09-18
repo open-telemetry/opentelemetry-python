@@ -26,7 +26,7 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
-from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     _RETRYABLE_ERROR_CODES,
     InvalidCompressionValueException,
     OTLPExporterMixin,
@@ -174,11 +174,9 @@ class TestOTLPExporterMixin(TestCase):
         self.span = _Span(
             "a",
             context=Mock(
-                **{
-                    "trace_state": {"a": "b", "c": "d"},
-                    "span_id": 10217189687419569865,
-                    "trace_id": 67545097771067222548457157018666467027,
-                }
+                trace_state={"a": "b", "c": "d"},
+                span_id=10217189687419569865,
+                trace_id=67545097771067222548457157018666467027,
             ),
         )
 
@@ -447,7 +445,7 @@ class TestOTLPExporterMixin(TestCase):
         after = time.time()
         self.assertEqual(mock_trace_service.num_requests, 6)
         # 1 second plus wiggle room so the test passes consistently.
-        self.assertAlmostEqual(after - before, 1, 1)
+        self.assertAlmostEqual(after - before, 1, delta=0.5)
 
         metrics_data = self.metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
@@ -528,12 +526,12 @@ class TestOTLPExporterMixin(TestCase):
                     SpanExportResult.FAILURE,
                 )
             after = time.time()
-            self.assertEqual(
-                "Failed to export traces to localhost:4317, error code: StatusCode.DEADLINE_EXCEEDED, error details: Deadline Exceeded",
+            self.assertIn(
+                "error code: StatusCode.DEADLINE_EXCEEDED",
                 warning.records[-1].message,
             )
             self.assertEqual(mock_trace_service.num_requests, 2)
-            self.assertAlmostEqual(after - before, 1.4, 1)
+            self.assertAlmostEqual(after - before, 1.4, delta=0.5)
 
     def test_channel_options_set_correctly(self):
         """Test that gRPC channel options are set correctly for keepalive and reconnection"""

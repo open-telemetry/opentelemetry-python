@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: keep `Resource` hashable and serialisable when an attribute value is `bytes`, instead of raising `TypeError` from every OTLP encoder

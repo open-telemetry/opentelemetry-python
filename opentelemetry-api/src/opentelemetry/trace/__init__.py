@@ -184,7 +184,7 @@ class TracerProvider(ABC):
         instrumenting_module_name: str,
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
-        attributes: types.Attributes | None = None,
+        attributes: types.Attributes = None,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -227,7 +227,7 @@ class NoOpTracerProvider(TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
-        attributes: types.Attributes | None = None,
+        attributes: types.Attributes = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
         return NoOpTracer()
@@ -247,7 +247,7 @@ class ProxyTracerProvider(TracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
-        attributes: types.Attributes | None = None,
+        attributes: types.Attributes = None,
     ) -> "Tracer":
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
@@ -408,7 +408,7 @@ class ProxyTracer(Tracer):
         instrumenting_module_name: str,
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
-        attributes: types.Attributes | None = None,
+        attributes: types.Attributes = None,
     ):
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
@@ -522,7 +522,7 @@ def get_tracer(
     instrumenting_library_version: str | None = None,
     tracer_provider: TracerProvider | None = None,
     schema_url: str | None = None,
-    attributes: types.Attributes | None = None,
+    attributes: types.Attributes = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -639,23 +639,23 @@ __all__ = [
     "INVALID_SPAN_CONTEXT",
     "INVALID_SPAN_ID",
     "INVALID_TRACE_ID",
-    "NonRecordingSpan",
     "Link",
+    "NonRecordingSpan",
     "Span",
     "SpanContext",
     "SpanKind",
+    "Status",
+    "StatusCode",
     "TraceFlags",
     "TraceState",
-    "TracerProvider",
     "Tracer",
+    "TracerProvider",
     "format_span_id",
     "format_trace_id",
     "get_current_span",
     "get_tracer",
     "get_tracer_provider",
-    "set_tracer_provider",
     "set_span_in_context",
+    "set_tracer_provider",
     "use_span",
-    "Status",
-    "StatusCode",
 ]

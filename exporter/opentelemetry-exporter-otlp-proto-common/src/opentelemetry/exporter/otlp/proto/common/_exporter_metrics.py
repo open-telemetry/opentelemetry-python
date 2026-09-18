@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from typing import Literal
     from urllib.parse import ParseResult as UrlParseResult
 
-    from opentelemetry.util.types import Attributes, AttributeValue
+    from opentelemetry.util.types import AnyValue, Attributes
 
 _component_counter = Counter()
 
@@ -84,7 +84,7 @@ class ExporterMetrics:
         component_type_value = component_type.value if component_type else "unknown_otlp_exporter"
         count = _component_counter[component_type_value]
         _component_counter[component_type_value] = count + 1
-        self._standard_attrs: dict[str, AttributeValue] = {
+        self._standard_attrs: dict[str, AnyValue] = {
             OTEL_COMPONENT_TYPE: component_type_value,
             OTEL_COMPONENT_NAME: f"{component_type_value}/{count}",
         }

@@ -109,7 +109,7 @@ class TestConfigureSdk(unittest.TestCase):
     @patch("opentelemetry.configuration._sdk.create_resource")
     def test_absent_sections_pass_none(
         self,
-        mock_create_resource,  # noqa: ARG002
+        mock_create_resource,
         mock_tracer,
         mock_meter,
         mock_logger,

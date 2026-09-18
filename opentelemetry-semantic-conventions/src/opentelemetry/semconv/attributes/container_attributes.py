@@ -15,7 +15,7 @@ Name of the image the container was built on.
 
 CONTAINER_IMAGE_REPO_DIGESTS: Final = "container.image.repo_digests"
 """
-Repo digests of the container image as provided by the container runtime.
+Repository digests of the container image as provided by the container runtime.
 Note: [Docker](https://docs.docker.com/reference/api/engine/version/v1.52/#tag/Image/operation/ImageInspect) and [CRI](https://github.com/kubernetes/cri-api/blob/c75ef5b473bbe2d0a4fc92f82235efd665ea8e9f/pkg/apis/runtime/v1/api.proto#L1237-L1238) report those under the `RepoDigests` field.
 """
 

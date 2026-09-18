@@ -25,7 +25,7 @@ from typing import (
     overload,
 )
 
-from opentelemetry.util.types import AttributesAsKey, AttributeValue
+from opentelemetry.util.types import AnyValue, AttributesAsKey
 
 _T = TypeVar("_T")
 _KT = TypeVar("_KT")
@@ -33,7 +33,7 @@ _VT = TypeVar("_VT")
 
 def ns_to_iso_str(nanoseconds: int) -> str: ...
 def get_dict_as_key(
-    labels: Mapping[str, AttributeValue],
+    labels: Mapping[str, AnyValue],
 ) -> AttributesAsKey: ...
 
 # pylint: disable=no-self-use

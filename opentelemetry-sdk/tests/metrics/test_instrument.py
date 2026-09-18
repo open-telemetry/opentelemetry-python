@@ -559,3 +559,17 @@ class TestHistogram(TestCase):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
             Histogram("name", Mock(), Mock())
+
+
+class TestInstrumentValidationMessages(TestCase):
+    def test_invalid_name_error_message(self):
+        with self.assertRaises(Exception) as ctx:
+            _Counter("1-invalid-name", Mock(), Mock())
+        self.assertIn("maximum length 255", str(ctx.exception))
+        self.assertNotIn("63", str(ctx.exception))
+
+    def test_invalid_unit_error_message(self):
+        with self.assertRaises(Exception) as ctx:
+            _Counter("name", Mock(), Mock(), unit="u" * 64)
+        self.assertIn("maximum length 63", str(ctx.exception))
+        self.assertNotIn("255", str(ctx.exception))

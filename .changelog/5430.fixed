@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix `View` instrument-name matching so a view configured with an instrument's real (mixed-case) name is applied; matching is now case-insensitive and platform-independent instead of relying on `fnmatch`'s OS-dependent case handling

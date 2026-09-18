@@ -31,7 +31,8 @@ dependencies = [
   "opentelemetry-proto == 1.45.0.dev",
   "opentelemetry-sdk ~= 1.45.0.dev",
   "opentelemetry-exporter-otlp-proto-common == 1.45.0.dev",
-  "requests ~= 2.7",
+  "opentelemetry-exporter-otlp-common == 0.66b0.dev",
+  "opentelemetry-exporter-http-transport[urllib3] == 0.66b0.dev",
   "typing-extensions >= 4.5.0",
 ]
 
@@ -51,6 +52,10 @@ Repository = "https://github.com/open-telemetry/opentelemetry-python"
 [project.optional-dependencies]
 gcp-auth = [
   "opentelemetry-exporter-credential-provider-gcp >= 0.59b0",
+]
+requests = [
+  "requests ~= 2.7",
+  "opentelemetry-exporter-http-transport[requests] == 0.66b0.dev",
 ]
 
 [tool.hatch.version]

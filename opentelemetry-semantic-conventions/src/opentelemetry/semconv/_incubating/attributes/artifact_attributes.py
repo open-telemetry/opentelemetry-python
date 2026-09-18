@@ -15,13 +15,13 @@ The full [hash value (see glossary)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST
 
 ARTIFACT_ATTESTATION_ID: Final = "artifact.attestation.id"
 """
-The id of the build [software attestation](https://slsa.dev/attestation-model).
+The ID of the build [software attestation](https://slsa.dev/attestation-model).
 """
 
 ARTIFACT_FILENAME: Final = "artifact.filename"
 """
-The human readable file name of the artifact, typically generated during build and release processes. Often includes the package name and version in the file name.
-Note: This file name can also act as the [Package Name](https://slsa.dev/spec/v1.0/terminology#package-model)
+The human readable filename of the artifact, typically generated during build and release processes. Often includes the package name and version in the filename.
+Note: This filename can also act as the [Package Name](https://slsa.dev/spec/v1.0/terminology#package-model)
 in cases where the package ecosystem maps accordingly.
 Additionally, the artifact [can be published](https://slsa.dev/spec/v1.0/terminology#software-supply-chain)
 for others, but that is not a guarantee.

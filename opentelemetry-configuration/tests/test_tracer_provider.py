@@ -3,6 +3,7 @@
 
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access
+# pylint: disable=too-many-lines
 
 import os
 import sys
@@ -42,6 +43,15 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     ExperimentalSpanParent as SpanParentConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTracerConfig as TracerConfigConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTracerConfigurator as TracerConfiguratorConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalTracerMatcherAndConfig as TracerMatcherAndConfig,
 )
 from opentelemetry.configuration.models import (
     IdGenerator as IdGeneratorConfig,
@@ -95,6 +105,7 @@ from opentelemetry.sdk.trace.sampling import (
     Sampler,
     TraceIdRatioBased,
 )
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import SpanContext, TraceFlags
 from opentelemetry.trace import SpanKind as TraceSpanKind
 
@@ -273,13 +284,15 @@ class TestCreateSampler(unittest.TestCase):
         self.assertIs(provider.sampler, mock_sampler)
 
     def test_user_defined_sampler_not_found_raises_configuration_error(self):
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                # pylint: disable=unexpected-keyword-arg
-                self._make_provider(SamplerConfig(no_such_sampler={}))
+            # pylint: disable=unexpected-keyword-arg
+            self._make_provider(SamplerConfig(no_such_sampler={}))
 
 
 class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
@@ -540,15 +553,17 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_otlp_http_missing_package_raises(self):
         config = self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig()))
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
-                "opentelemetry.exporter.otlp.proto.http": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
+            create_tracer_provider(config)
         self.assertIn("otlp-proto-http", str(ctx.exception))
 
     def test_otlp_http_created_with_endpoint(self):
@@ -626,14 +641,16 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_otlp_file_development_missing_package_raises(self):
         config = self._make_batch_config(SpanExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig()))
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.json.file.trace_exporter": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.json.file.trace_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
+            create_tracer_provider(config)
         self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
@@ -697,15 +714,17 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_batch_config(SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig()))
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": None,
-                "grpc": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": None,
+                    "grpc": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_tracer_provider(config)
+            create_tracer_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
     def test_no_processor_type_raises(self):
@@ -818,15 +837,92 @@ class TestCreateIdGenerator(unittest.TestCase):
 
     def test_unknown_id_generator_raises_configuration_error(self):
         """Unknown id_generator name with no matching entry point raises ConfigurationError."""
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError),
         ):
-            with self.assertRaises(ConfigurationError):
-                # pylint: disable=unexpected-keyword-arg
-                self._make_provider(IdGeneratorConfig(no_such_generator={}))
+            # pylint: disable=unexpected-keyword-arg
+            self._make_provider(IdGeneratorConfig(no_such_generator={}))
 
     def test_empty_id_generator_raises_configuration_error(self):
         """Empty IdGenerator config (no type specified) raises ConfigurationError."""
         with self.assertRaises(ConfigurationError):
             self._make_provider(IdGeneratorConfig())
+
+
+# Configurator tests access the SDK TracerProvider private
+# _apply_tracer_configurator to assert the wired config takes effect.
+class TestTracerConfigurator(unittest.TestCase):
+    @staticmethod
+    def _enabled(provider, name):
+        return provider._apply_tracer_configurator(InstrumentationScope(name)).is_enabled
+
+    def test_no_configurator_leaves_tracers_enabled(self):
+        provider = create_tracer_provider(TracerProviderConfig(processors=[]))
+        self.assertTrue(self._enabled(provider, "any.scope"))
+
+    def test_matching_glob_disables_tracer(self):
+        config = TracerProviderConfig(
+            processors=[],
+            tracer_configurator_development=TracerConfiguratorConfig(
+                default_config=TracerConfigConfig(enabled=True),
+                tracers=[
+                    TracerMatcherAndConfig(
+                        name="noisy.*",
+                        config=TracerConfigConfig(enabled=False),
+                    )
+                ],
+            ),
+        )
+        provider = create_tracer_provider(config)
+        self.assertFalse(self._enabled(provider, "noisy.http"))
+        self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_default_config_applies_to_unmatched_scopes(self):
+        config = TracerProviderConfig(
+            processors=[],
+            tracer_configurator_development=TracerConfiguratorConfig(
+                default_config=TracerConfigConfig(enabled=False),
+                tracers=[
+                    TracerMatcherAndConfig(
+                        name="keep.*",
+                        config=TracerConfigConfig(enabled=True),
+                    )
+                ],
+            ),
+        )
+        provider = create_tracer_provider(config)
+        self.assertTrue(self._enabled(provider, "keep.me"))
+        self.assertFalse(self._enabled(provider, "other"))
+
+    def test_first_matching_rule_wins(self):
+        config = TracerProviderConfig(
+            processors=[],
+            tracer_configurator_development=TracerConfiguratorConfig(
+                tracers=[
+                    TracerMatcherAndConfig(
+                        name="a.*",
+                        config=TracerConfigConfig(enabled=False),
+                    ),
+                    TracerMatcherAndConfig(
+                        name="a.b",
+                        config=TracerConfigConfig(enabled=True),
+                    ),
+                ],
+            ),
+        )
+        provider = create_tracer_provider(config)
+        self.assertFalse(self._enabled(provider, "a.b"))
+
+    def test_absent_enabled_defaults_to_enabled(self):
+        config = TracerProviderConfig(
+            processors=[],
+            tracer_configurator_development=TracerConfiguratorConfig(
+                default_config=TracerConfigConfig(),
+            ),
+        )
+        provider = create_tracer_provider(config)
+        self.assertTrue(self._enabled(provider, "any.scope"))

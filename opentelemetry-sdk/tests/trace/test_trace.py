@@ -51,6 +51,7 @@ from opentelemetry.sdk.trace.sampling import (
     Decision,
     ParentBased,
     StaticSampler,
+    TraceIdRatioBased,
 )
 from opentelemetry.sdk.util import BoundedDict, BoundedList, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import (
@@ -352,6 +353,68 @@ class TestTracerSampling(unittest.TestCase):
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
         self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "5.0",
+        },
+    )
+    def test_ratio_sampler_with_out_of_range_env_arg_does_not_raise(self):
+        # A syntactically valid but out-of-range OTEL_TRACES_SAMPLER_ARG
+        # (outside [0.0, 1.0]) must not crash TracerProvider() construction.
+        # It should degrade gracefully, the same way a non-numeric value
+        # already does.
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "-0.5",
+        },
+    )
+    def test_ratio_sampler_with_negative_env_arg_does_not_raise(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "0.0",
+        },
+    )
+    def test_ratio_sampler_with_env_arg_lower_boundary(self):
+        # 0.0 is a valid boundary value and must be used as-is, not
+        # treated as falsy/invalid and overridden by the fallback.
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 0.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "1.0",
+        },
+    )
+    def test_ratio_sampler_with_env_arg_upper_boundary(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
 
     def verify_default_sampler(self, tracer_provider):
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
@@ -681,6 +744,7 @@ class TestSpanCreation(unittest.TestCase):
         new_span = updated_tracer.start_span("new")
         self.assertIs(new_span.resource, tracer_provider.resource)
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_default_span_resource(self):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
@@ -689,7 +753,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsInstance(span.resource, resources.Resource)
         self.assertEqual(
             span.resource.attributes.get(resources.SERVICE_NAME),
-            "unknown_service",
+            "unknown_service:python3",
         )
         self.assertEqual(
             span.resource.attributes.get(resources.TELEMETRY_SDK_LANGUAGE),
@@ -718,7 +782,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_links(self):
         # pylint: disable=protected-access
         max_links = trace.SpanLimits().max_links
-        links = [trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False)) for idx in range(0, 16 + max_links)]
+        links = [trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False)) for idx in range(16 + max_links)]
         tracer = new_tracer()
         with tracer.start_as_current_span("span", links=links) as root:
             self.assertEqual(len(root.links), max_links)
@@ -726,7 +790,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_attributes(self):
         # pylint: disable=protected-access
         max_attrs = trace.SpanLimits().max_span_attributes
-        attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
+        attributes = {str(idx): idx for idx in range(16 + max_attrs)}
         tracer = new_tracer()
         with tracer.start_as_current_span("span", attributes=attributes) as root:
             self.assertEqual(len(root.attributes), max_attrs)
@@ -857,7 +921,12 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("http.response.status_code", 200)
             root.set_attribute("http.status_text", "OK")
             root.set_attribute("misc.pi", 3.14)
-
+            root.set_attribute("mapping-key", {"key": "value"})
+            root.set_attribute("array-key", [1, 2, 3])
+            root.set_attribute(
+                "complex-key",
+                [{"key1": "value1"}, {"key2": 42}, "key3", [1, 2, 3]],
+            )
             # Setting an attribute with the same key as an existing attribute
             # SHOULD overwrite the existing attribute's value.
             root.set_attribute("attr-key", "attr-value1")
@@ -869,7 +938,7 @@ class TestSpan(unittest.TestCase):
             list_of_numerics = [123, 314, 0]
             root.set_attribute("list-of-numerics", list_of_numerics)
 
-            self.assertEqual(len(root.attributes), 9)
+            self.assertEqual(len(root.attributes), 12)
             self.assertEqual(root.attributes["http.request.method"], "GET")
             self.assertEqual(
                 root.attributes["url.full"],
@@ -899,46 +968,29 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-in-both"], "span-attr")
 
     def test_invalid_attribute_values(self):
+        # This class has no __str__ or __repr__ method, so BoundedAttributes does
+        # not attempt to convert it to a string and defaults to returning None.
+        class NoStrNoRepr:
+            def __init__(self):
+                pass
+
         with self.tracer.start_as_current_span("root") as root:
             with self.assertLogs(level=WARNING):
-                root.set_attributes({"correct-value": "foo", "non-primitive-data-type": {}})
-
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("non-primitive-data-type", {})
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "list-of-mixed-data-types-numeric-first",
-                    [123, False, "string"],
+                root.set_attributes(
+                    {
+                        "correct-value": "foo",
+                        "bad-type": NoStrNoRepr(),
+                    }
                 )
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "list-of-mixed-data-types-non-numeric-first",
-                    [False, 123, "string"],
-                )
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("list-with-non-primitive-data-type", [{}, 123])
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("list-with-numeric-and-bool", [1, True])
 
-            with self.assertLogs(level=WARNING):
-                root.set_attribute("", 123)
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(None, 123)
-
-            self.assertEqual(len(root.attributes), 1)
+            self.assertEqual(len(root.attributes), 2)
             self.assertEqual(root.attributes["correct-value"], "foo")
+            self.assertIsNone(root.attributes["bad-type"])
 
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:
-            with self.assertLogs(level=WARNING):
-                root.set_attribute(
-                    "invalid-byte-type-attribute",
-                    b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
-                )
-                self.assertFalse("invalid-byte-type-attribute" in root.attributes)
-
             root.set_attribute("valid-byte-type-attribute", b"valid byte")
-            self.assertTrue(isinstance(root.attributes["valid-byte-type-attribute"], str))
+            self.assertTrue(isinstance(root.attributes["valid-byte-type-attribute"], bytes))
 
     def test_sampling_attributes(self):
         sampling_attributes = {
@@ -1014,24 +1066,23 @@ class TestSpan(unittest.TestCase):
             with self.assertRaises(TypeError):
                 event.attributes["name"] = "hello"
 
-    def test_invalid_event_attributes(self):
+    def test_setting_event_attributes(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         with self.tracer.start_as_current_span("root") as root:
-            with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
-            with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": {}})
-            with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": [[True]]})
-            with self.assertLogs(level=WARNING):
-                root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
+            root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
+            root.add_event("event0", {"attr1": {}})
+            root.add_event("event0", {"attr1": [[True]]})
+            root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
 
             self.assertEqual(len(root.events), 4)
-            self.assertEqual(root.events[0].attributes, {"attr1": True})
-            self.assertEqual(root.events[1].attributes, {})
-            self.assertEqual(root.events[2].attributes, {})
-            self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
+            self.assertEqual(
+                root.events[0].attributes,
+                {"attr1": True, "attr2": ("hi", False)},
+            )
+            self.assertEqual(root.events[1].attributes, {"attr1": {}})
+            self.assertEqual(root.events[2].attributes, {"attr1": ((True,),)})
+            self.assertEqual(root.events[3].attributes, {"attr2": (1, 2), "attr1": ({},)})
 
     def test_links(self):
         id_generator = RandomIdGenerator()
@@ -2093,15 +2144,17 @@ class TestParentChildSpanException(unittest.TestCase):
 
         child_span = None
         try:
-            with tracer.start_as_current_span(
-                "parent",
-            ) as parent_span:
-                with tracer.start_as_current_span(
+            with (
+                tracer.start_as_current_span(
+                    "parent",
+                ) as parent_span,
+                tracer.start_as_current_span(
                     "child",
                     record_exception=False,
                     set_status_on_exception=False,
-                ) as child_span:
-                    raise exception
+                ) as child_span,
+            ):
+                raise exception
 
         except Exception:  # pylint: disable=broad-exception-caught
             pass

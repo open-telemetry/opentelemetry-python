@@ -20,7 +20,7 @@ env:
        contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
        'main'
     ) || 'main' }}
-  WEAVER_VERSION: "v0.22.1"
+  WEAVER_VERSION: "v0.25.1"
   PIP_EXISTS_ACTION: w
   CONTRIB_REPO_UTIL_HTTP: ${{ github.workspace }}/opentelemetry-python-contrib/util/opentelemetry-util-http
   CONTRIB_REPO_INSTRUMENTATION: ${{ github.workspace }}/opentelemetry-python-contrib/opentelemetry-instrumentation

@@ -6,7 +6,7 @@ from typing import Final
 
 NETWORK_LOCAL_ADDRESS: Final = "network.local.address"
 """
-Local address of the network connection - IP address or Unix domain socket name.
+Local address of the network connection - IP address or UNIX domain socket name.
 """
 
 NETWORK_LOCAL_PORT: Final = "network.local.port"
@@ -16,7 +16,7 @@ Local port number of the network connection.
 
 NETWORK_PEER_ADDRESS: Final = "network.peer.address"
 """
-Peer address of the network connection - IP address or Unix domain socket name.
+Peer address of the network connection - IP address or UNIX domain socket name.
 """
 
 NETWORK_PEER_PORT: Final = "network.peer.port"
@@ -61,7 +61,7 @@ class NetworkTransportValues(Enum):
     PIPE = "pipe"
     """Named or anonymous pipe."""
     UNIX = "unix"
-    """Unix domain socket."""
+    """UNIX domain socket."""
     QUIC = "quic"
     """QUIC."""
 
