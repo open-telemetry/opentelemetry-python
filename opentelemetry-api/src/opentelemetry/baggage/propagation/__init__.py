@@ -164,7 +164,17 @@ def _encode_baggage_pairs(
 ) -> Iterator[str]:
     """Yield URL-encoded 'key=value' pairs from baggage entries."""
     for key, value in baggage_entries.items():
-        yield quote_plus(str(key)) + "=" + quote_plus(str(value))
+        try:
+            encoded_key = quote_plus(str(key))
+            encoded_value = quote_plus(str(value))
+        except Exception:  # pylint: disable=broad-exception-caught
+            _logger.warning(
+                "Failed to stringify baggage key/value of type `%s`/`%s`. Dropping entry.",
+                type(key),
+                type(value),
+            )
+            continue
+        yield encoded_key + "=" + encoded_value
 
 
 def _extract_first_element(

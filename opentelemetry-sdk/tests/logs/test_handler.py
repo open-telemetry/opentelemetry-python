@@ -280,6 +280,41 @@ class TestLoggingHandler(unittest.TestCase):
 
         logger.removeHandler(handler)
 
+    def test_log_record_exception_with_raising_arg_does_not_crash(self):
+        """Exception logging (e.g. logger.exception(...)) must not crash
+        when the raised exception's first arg has a __str__ that itself
+        raises -- the exception message attribute should fall back to a
+        placeholder instead of propagating the failure into the caller's
+        logging call."""
+        processor, logger, handler = set_up_test_logging(logging.ERROR)
+
+        class BadArg:
+            def __str__(self):
+                raise RuntimeError("BadArg.__str__ blew up")
+
+        class BadException(Exception):
+            pass
+
+        try:
+            raise BadException(BadArg())
+        except BadException:
+            with self.assertLogs(level=logging.ERROR):
+                logger.exception("something failed")
+
+        record = processor.get_log_record(0)
+
+        self.assertIsNotNone(record)
+        self.assertEqual(
+            record.log_record.attributes[exception_attributes.EXCEPTION_TYPE],
+            BadException.__name__,
+        )
+        self.assertEqual(
+            record.log_record.attributes[exception_attributes.EXCEPTION_MESSAGE],
+            "<unprintable exception message>",
+        )
+
+        logger.removeHandler(handler)
+
     def test_log_record_trace_correlation(self):
         processor, logger, handler = set_up_test_logging(logging.WARNING)
 
