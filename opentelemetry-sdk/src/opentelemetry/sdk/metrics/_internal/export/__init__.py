@@ -37,6 +37,8 @@ from opentelemetry.sdk.environment_variables._internal import (
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
+    ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
 )
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
@@ -64,6 +66,19 @@ from opentelemetry.util._once import Once
 from ._metric_reader_metrics import create_metric_reader_metrics
 
 _logger = getLogger(__name__)
+
+# Histogram aggregations only implement the DELTA instrument temporality path,
+# so asynchronous instruments (always CUMULATIVE) would silently produce no
+# data points. `MetricReaderStorage` applies the same check to views.
+_ASYNCHRONOUS_INSTRUMENT_CLASSES = (
+    ObservableCounter,
+    ObservableUpDownCounter,
+    ObservableGauge,
+)
+_ASYNCHRONOUS_INCOMPATIBLE_AGGREGATIONS = (
+    ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
+)
 
 
 class MetricExportResult(Enum):
@@ -270,6 +285,16 @@ class MetricReader(ABC):
 
         if preferred_aggregation is not None:
             for typ, aggregation in preferred_aggregation.items():
+                if typ in _ASYNCHRONOUS_INSTRUMENT_CLASSES and isinstance(
+                    aggregation, _ASYNCHRONOUS_INCOMPATIBLE_AGGREGATIONS
+                ):
+                    _logger.warning(
+                        "Instrument class %s and aggregation %s will produce semantic errors when matched, "
+                        "the preferred aggregation has not been applied.",
+                        typ.__name__,
+                        type(aggregation).__name__,
+                    )
+                    continue
                 if typ is Counter:
                     self._instrument_class_aggregation[_Counter] = aggregation
                 elif typ is UpDownCounter:
