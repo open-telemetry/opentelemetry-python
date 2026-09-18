@@ -1044,6 +1044,42 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
     def test_is_process_dependent(self):
         self.assertTrue(ServiceInstanceIdResourceDetector().is_process_dependent())
 
+    @patch.dict(environ, {}, clear=True)
+    def test_service_instance_detector_sets_id_without_custom_detector(self):
+        resource = Resource.create()
+
+        self.assertEqual(uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID]).version, 4)
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock"},
+        clear=True,
+    )
+    def test_configured_detector_overrides_service_instance_id(self):
+        custom_detector = Mock(spec=ResourceDetector)
+        custom_detector.detect.return_value = Resource(
+            {
+                SERVICE_INSTANCE_ID: "configured-instance-id",
+                "custom.detector": "value",
+            }
+        )
+        entry_point = Mock(**{"load.return_value": Mock(return_value=custom_detector)})
+
+        def side_effect(*args, **kwargs):
+            if kwargs.get("name") == "mock":
+                return [entry_point]
+            return real_entry_points(*args, **kwargs)
+
+        with patch(
+            "opentelemetry.util._importlib_metadata.entry_points",
+            side_effect=side_effect,
+        ):
+            resource = Resource.create()
+
+        custom_detector.detect.assert_called_once()
+        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "configured-instance-id")
+        self.assertEqual(resource.attributes["custom.detector"], "value")
+
     def test_detect_value_is_valid_uuid4(self):
         _resources_module._service_instance_id = None
         _resources_module._service_instance_id_pid = None
