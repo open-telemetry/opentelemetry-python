@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`: Add warning when endpoint path is silently dropped by gRPC exporter

@@ -683,3 +683,35 @@ class TestOTLPExporterMixin(TestCase):
         self.assertTrue(attributes["otel.component.name"].startswith("otlp_grpc_span_exporter/"))
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4317)
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.warning")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_endpoint_path_warning(self, mock_insecure, mock_warning):
+        """Test that a warning is logged when endpoint has a path that will be ignored"""
+        OTLPSpanExporterForTesting(endpoint="https://otlp.example.com:4317/v1/traces", insecure=True)
+        mock_warning.assert_called_once()
+        args = mock_warning.call_args[0]
+        self.assertIn("path", args[0].lower())
+        self.assertIn("/v1/traces", args)
+        self.assertIn("otlp.example.com:4317", args)
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.warning")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_endpoint_no_warning_for_scheme_less(self, mock_insecure, mock_warning):
+        """Test that no warning is logged for scheme-less host:port"""
+        OTLPSpanExporterForTesting(endpoint="otlp.example.com:4317", insecure=True)
+        mock_warning.assert_not_called()
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.warning")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_endpoint_no_warning_for_trailing_slash(self, mock_insecure, mock_warning):
+        """Test that no warning is logged for trailing slash only"""
+        OTLPSpanExporterForTesting(endpoint="https://otlp.example.com/", insecure=True)
+        mock_warning.assert_not_called()
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.warning")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_endpoint_no_warning_for_no_path(self, mock_insecure, mock_warning):
+        """Test that no warning is logged when endpoint has no path"""
+        OTLPSpanExporterForTesting(endpoint="https://otlp.example.com", insecure=True)
+        mock_warning.assert_not_called()
