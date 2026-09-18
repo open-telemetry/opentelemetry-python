@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: reject character set wildcards (`[`, `]`) in `View.instrument_name` when a custom `name` is provided
