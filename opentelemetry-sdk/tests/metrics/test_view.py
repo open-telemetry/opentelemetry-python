@@ -50,11 +50,17 @@ class TestView(TestCase):
         self.assertFalse(View(instrument_unit="by")._match(mock_instrument))
 
     def test_meter_name(self):
-        self.assertTrue(View(meter_name="meter_name")._match(Mock(**{"instrumentation_scope.name": "meter_name"})))
+        self.assertTrue(
+            View(meter_name="meter_name")._match(
+                Mock(**{"instrumentation_scope.name": "meter_name"})
+            )
+        )
 
     def test_meter_version(self):
         self.assertTrue(
-            View(meter_version="meter_version")._match(Mock(**{"instrumentation_scope.version": "meter_version"}))
+            View(meter_version="meter_version")._match(
+                Mock(**{"instrumentation_scope.version": "meter_version"})
+            )
         )
 
     def test_meter_schema_url(self):
@@ -105,5 +111,21 @@ class TestView(TestCase):
         )
 
     def test_view_name(self):
-        with self.assertRaises(Exception):
-            View(name="name", instrument_name="instrument_name*")
+        for wildcard_name in (
+            "instrument_name*",
+            "*instrument_name",
+            "instrument?name",
+            "instrument_[0-9]",
+            "instrument_[!a-z]",
+            "instrument_[abc]",
+            "instrument_[",
+            "instrument_]",
+        ):
+            with self.subTest(wildcard_name=wildcard_name):
+                with self.assertRaises(Exception):
+                    View(name="name", instrument_name=wildcard_name)
+
+        # Non-wildcard instrument name should succeed
+        view = View(name="name", instrument_name="instrument_name")
+        self.assertEqual(view._name, "name")
+        self.assertEqual(view._instrument_name, "instrument_name")
