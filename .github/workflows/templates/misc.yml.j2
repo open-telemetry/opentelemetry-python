@@ -53,19 +53,20 @@ jobs:
     steps:
       - name: Checkout repo @ SHA - ${% raw %}{{ github.sha }}{% endraw %}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false{% if job_data == "public-symbols-check" %}
+          fetch-depth: 0{% endif %}
       {%- if job_data == "tracecontext" %}
 
       - name: Checkout contrib repo @ ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           repository: open-telemetry/opentelemetry-python-contrib
           ref: ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
           path: opentelemetry-python-contrib
       {%- endif %}
       {%- if job_data == "public-symbols-check" %}
-        with:
-          fetch-depth: 0
-
       - name: Checkout main
         run: git checkout main
 
