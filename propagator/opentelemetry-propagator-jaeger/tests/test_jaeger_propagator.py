@@ -137,6 +137,14 @@ class TestJaegerPropagator(TestCase):
         context = FORMAT.extract(old_carrier)
         self.assertDictEqual({"key3": "value3"}, context[_BAGGAGE_KEY])
 
+    def test_extract_strips_only_the_leading_baggage_prefix(self):
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-a-uberctx-b": "value",
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"a-uberctx-b": "value"}, context[_BAGGAGE_KEY])
+
     def test_extract_enforces_max_baggage_entries(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
         for index in range(200):
