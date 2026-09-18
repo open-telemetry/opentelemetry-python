@@ -25,6 +25,11 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
+from opentelemetry.metrics._internal.instrument import (
+    _MetricsAdvisory,
+    _validate_attributes_advisory,
+    _validate_explicit_bucket_boundaries_advisory,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_METRICS_EXEMPLAR_FILTER,
     OTEL_SDK_DISABLED,
@@ -116,9 +121,18 @@ class Meter(APIMeter):
     def _set_meter_config(self, meter_config: _MeterConfig) -> None:
         self._meter_config.update(meter_config)
 
-    def create_counter(self, name, unit="", description="") -> APICounter:
+    def create_counter(
+        self,
+        name,
+        unit="",
+        description="",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
+    ) -> APICounter:
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+
         with self._instrument_registration_lock:
-            status = self._register_instrument(name, _Counter, unit, description)
+            status = self._register_instrument(name, _Counter, unit, description, advisory)
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _Counter(
                     name,
@@ -126,6 +140,7 @@ class Meter(APIMeter):
                     self._measurement_consumer,
                     unit,
                     description,
+                    _advisory=advisory,
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -143,9 +158,18 @@ class Meter(APIMeter):
             )
         return instrument
 
-    def create_up_down_counter(self, name, unit="", description="") -> APIUpDownCounter:
+    def create_up_down_counter(
+        self,
+        name,
+        unit="",
+        description="",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
+    ) -> APIUpDownCounter:
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+
         with self._instrument_registration_lock:
-            status = self._register_instrument(name, _UpDownCounter, unit, description)
+            status = self._register_instrument(name, _UpDownCounter, unit, description, advisory)
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _UpDownCounter(
                     name,
@@ -153,6 +177,7 @@ class Meter(APIMeter):
                     self._measurement_consumer,
                     unit,
                     description,
+                    _advisory=advisory,
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -176,9 +201,13 @@ class Meter(APIMeter):
         callbacks=None,
         unit="",
         description="",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> APIObservableCounter:
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+
         with self._instrument_registration_lock:
-            status = self._register_instrument(name, _ObservableCounter, unit, description)
+            status = self._register_instrument(name, _ObservableCounter, unit, description, advisory)
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _ObservableCounter(
                     name,
@@ -187,6 +216,7 @@ class Meter(APIMeter):
                     callbacks,
                     unit,
                     description,
+                    _advisory=advisory,
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -214,22 +244,14 @@ class Meter(APIMeter):
         description: str = "",
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> APIHistogram:
-        if explicit_bucket_boundaries_advisory is not None:
-            invalid_advisory = False
-            if isinstance(explicit_bucket_boundaries_advisory, Sequence):
-                try:
-                    invalid_advisory = not (
-                        all(isinstance(e, (float, int)) for e in explicit_bucket_boundaries_advisory)
-                    )
-                except (KeyError, TypeError):
-                    invalid_advisory = True
-            else:
-                invalid_advisory = True
-
-            if invalid_advisory:
-                explicit_bucket_boundaries_advisory = None
-                _logger.warning("explicit_bucket_boundaries_advisory must be a sequence of numbers")
+        advisory = _MetricsAdvisory(
+            attributes=_validate_attributes_advisory(_attributes_advisory),
+            explicit_bucket_boundaries=_validate_explicit_bucket_boundaries_advisory(
+                explicit_bucket_boundaries_advisory
+            ),
+        )
 
         with self._instrument_registration_lock:
             status = self._register_instrument(
@@ -237,7 +259,7 @@ class Meter(APIMeter):
                 _Histogram,
                 unit,
                 description,
-                explicit_bucket_boundaries_advisory,
+                advisory,
             )
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _Histogram(
@@ -246,7 +268,7 @@ class Meter(APIMeter):
                     self._measurement_consumer,
                     unit,
                     description,
-                    explicit_bucket_boundaries_advisory,
+                    _advisory=advisory,
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -264,9 +286,18 @@ class Meter(APIMeter):
             )
         return instrument
 
-    def create_gauge(self, name, unit="", description="") -> APIGauge:
+    def create_gauge(
+        self,
+        name,
+        unit="",
+        description="",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
+    ) -> APIGauge:
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+
         with self._instrument_registration_lock:
-            status = self._register_instrument(name, _Gauge, unit, description)
+            status = self._register_instrument(name, _Gauge, unit, description, advisory)
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _Gauge(
                     name,
@@ -274,6 +305,7 @@ class Meter(APIMeter):
                     self._measurement_consumer,
                     unit,
                     description,
+                    _advisory=advisory,
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -291,9 +323,19 @@ class Meter(APIMeter):
             )
         return instrument
 
-    def create_observable_gauge(self, name, callbacks=None, unit="", description="") -> APIObservableGauge:
+    def create_observable_gauge(
+        self,
+        name,
+        callbacks=None,
+        unit="",
+        description="",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
+    ) -> APIObservableGauge:
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+
         with self._instrument_registration_lock:
-            status = self._register_instrument(name, _ObservableGauge, unit, description)
+            status = self._register_instrument(name, _ObservableGauge, unit, description, advisory)
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _ObservableGauge(
                     name,
@@ -302,6 +344,7 @@ class Meter(APIMeter):
                     callbacks,
                     unit,
                     description,
+                    _advisory=advisory,
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
@@ -323,10 +366,18 @@ class Meter(APIMeter):
         return instrument
 
     def create_observable_up_down_counter(
-        self, name, callbacks=None, unit="", description=""
+        self,
+        name,
+        callbacks=None,
+        unit="",
+        description="",
+        *,
+        _attributes_advisory: Sequence[str] | None = None,
     ) -> APIObservableUpDownCounter:
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+
         with self._instrument_registration_lock:
-            status = self._register_instrument(name, _ObservableUpDownCounter, unit, description)
+            status = self._register_instrument(name, _ObservableUpDownCounter, unit, description, advisory)
             if not status.already_registered:
                 self._instrument_id_instrument[status.instrument_id] = _ObservableUpDownCounter(
                     name,
@@ -335,6 +386,7 @@ class Meter(APIMeter):
                     callbacks,
                     unit,
                     description,
+                    _advisory=advisory,
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
