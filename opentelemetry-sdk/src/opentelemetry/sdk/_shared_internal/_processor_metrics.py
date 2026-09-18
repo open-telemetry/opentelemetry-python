@@ -14,12 +14,12 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
 from opentelemetry.semconv._incubating.metrics.otel_metrics import (
+    OTEL_SDK_PROCESSOR_LOG_QUEUE_CAPACITY,
     OTEL_SDK_PROCESSOR_LOG_QUEUE_SIZE,
+    OTEL_SDK_PROCESSOR_SPAN_QUEUE_CAPACITY,
     OTEL_SDK_PROCESSOR_SPAN_QUEUE_SIZE,
     create_otel_sdk_processor_log_processed,
-    create_otel_sdk_processor_log_queue_capacity,
     create_otel_sdk_processor_span_processed,
-    create_otel_sdk_processor_span_queue_capacity,
 )
 from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
 
@@ -78,16 +78,32 @@ class ProcessorMetrics:
 
         if signal == "traces":
             create_processed = create_otel_sdk_processor_span_processed
-            create_queue_capacity = create_otel_sdk_processor_span_queue_capacity
+            queue_capacity_name = OTEL_SDK_PROCESSOR_SPAN_QUEUE_CAPACITY
+            queue_capacity_description = (
+                "The maximum number of spans the queue of a given instance of an SDK span processor can hold."
+            )
+            queue_capacity_unit = "{span}"
         else:
             create_processed = create_otel_sdk_processor_log_processed
-            create_queue_capacity = create_otel_sdk_processor_log_queue_capacity
+            queue_capacity_name = OTEL_SDK_PROCESSOR_LOG_QUEUE_CAPACITY
+            queue_capacity_description = "The maximum number of log records the queue of a given instance of an SDK Log Record processor can hold."
+            queue_capacity_unit = "{log_record}"
 
         self._processed = create_processed(meter)
 
         if capacity is not None:
-            self._queue_capacity = create_queue_capacity(meter)
-            self._queue_capacity.add(capacity, self._standard_attrs)
+
+            def record_queue_capacity(
+                _options: CallbackOptions,
+            ) -> tuple[Observation]:
+                return (Observation(capacity, self._standard_attrs),)
+
+            self._queue_capacity = self._meter.create_observable_up_down_counter(
+                queue_capacity_name,
+                callbacks=(record_queue_capacity,),
+                description=queue_capacity_description,
+                unit=queue_capacity_unit,
+            )
 
     def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
         def record_queue_size(
