@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`: warn and fall back to the default instead of raising `ValueError` when a timeout environment variable holds an invalid value, and stop discarding an explicit `timeout=0`.
