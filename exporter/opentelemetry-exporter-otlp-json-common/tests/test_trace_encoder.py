@@ -31,7 +31,7 @@ from opentelemetry.proto_json.trace.v1.trace import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event, SpanContext
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import Link, SpanKind
+from opentelemetry.trace import Link, SpanKind, TraceFlags
 from opentelemetry.trace.span import TraceState
 from opentelemetry.trace.status import Status, StatusCode
 from tests import (
@@ -246,24 +246,44 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                 self.assertEqual(_SPAN_KIND_MAP[sdk_kind], json_kind)
 
     def test_span_flags(self):
+        has_remote = int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK)
+        is_remote = int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK)
+        sampled = int(TraceFlags.SAMPLED)
         cases = [
             (
-                "remote_parent",
+                "remote_parent_unsampled",
                 SpanContext(TRACE_ID, 0x1111, is_remote=True),
-                int(
-                    JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
-                    | JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
-                ),
+                has_remote | is_remote,
             ),
             (
-                "local_parent",
+                "remote_parent_sampled",
+                SpanContext(
+                    TRACE_ID,
+                    0x1111,
+                    is_remote=True,
+                    trace_flags=TraceFlags(TraceFlags.SAMPLED),
+                ),
+                has_remote | is_remote | sampled,
+            ),
+            (
+                "local_parent_unsampled",
                 SpanContext(TRACE_ID, 0x2222, is_remote=False),
-                int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK),
+                has_remote,
+            ),
+            (
+                "local_parent_sampled",
+                SpanContext(
+                    TRACE_ID,
+                    0x2222,
+                    is_remote=False,
+                    trace_flags=TraceFlags(TraceFlags.SAMPLED),
+                ),
+                has_remote | sampled,
             ),
             (
                 "no_parent",
                 None,
-                int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK),
+                has_remote,
             ),
         ]
         for name, context, expected_flags in cases:
