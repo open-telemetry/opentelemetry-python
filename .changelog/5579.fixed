@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: pass the parent span's `trace_state` to `Sampler.should_sample`, forward it through `ParentBased`, and stop the composite sampler discarding vendor tracestate entries
