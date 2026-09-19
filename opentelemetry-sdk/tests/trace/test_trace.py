@@ -1352,91 +1352,121 @@ class TestSpan(unittest.TestCase):
         error_status_test(trace.TracerProvider().get_tracer(__name__).start_as_current_span("root"))
 
     # --- status precedence -------------------------------------------------
-    # The spec orders the codes Ok > Error > Unset, says an attempt to set
-    # Unset should be ignored, and says the last call is the one recorded.
+    # The spec orders the codes Ok > Error > Unset and says an attempt to set
+    # Unset should be ignored. A repeat of a code already recorded may only
+    # fill in a description that is missing, never replace or drop one.
+
+    # (name, calls as (code, description), expected code, expected description)
+    _PRECEDENCE_CASES = [
+        (
+            "unset on its own is ignored",
+            [(StatusCode.UNSET, None)],
+            StatusCode.UNSET,
+            None,
+        ),
+        (
+            "unset is ignored over error",
+            [(StatusCode.ERROR, "boom"), (StatusCode.UNSET, None)],
+            StatusCode.ERROR,
+            "boom",
+        ),
+        (
+            "unset is ignored over ok",
+            [(StatusCode.OK, None), (StatusCode.UNSET, None)],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "error overrides unset",
+            [(StatusCode.ERROR, "boom")],
+            StatusCode.ERROR,
+            "boom",
+        ),
+        (
+            "ok overrides unset",
+            [(StatusCode.OK, None)],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "ok overrides error",
+            [(StatusCode.ERROR, "boom"), (StatusCode.OK, None)],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "error does not override ok",
+            [(StatusCode.OK, None), (StatusCode.ERROR, "boom")],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "ok does not override ok",
+            [(StatusCode.OK, None), (StatusCode.OK, None)],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "a bare error does not drop a description",
+            [
+                (StatusCode.ERROR, "connection refused to db-1"),
+                (StatusCode.ERROR, None),
+            ],
+            StatusCode.ERROR,
+            "connection refused to db-1",
+        ),
+        (
+            "a described error does not replace a description",
+            [(StatusCode.ERROR, "first"), (StatusCode.ERROR, "second")],
+            StatusCode.ERROR,
+            "first",
+        ),
+        (
+            "a description fills in where none was recorded",
+            [(StatusCode.ERROR, None), (StatusCode.ERROR, "boom")],
+            StatusCode.ERROR,
+            "boom",
+        ),
+        (
+            "a bare error lands when there is nothing to keep",
+            [(StatusCode.ERROR, None)],
+            StatusCode.ERROR,
+            None,
+        ),
+        (
+            "ok stays final over a longer run",
+            [
+                (StatusCode.ERROR, "boom"),
+                (StatusCode.UNSET, None),
+                (StatusCode.OK, None),
+                (StatusCode.ERROR, "late"),
+            ],
+            StatusCode.OK,
+            None,
+        ),
+    ]
 
     @staticmethod
     def _span():
         return trace.TracerProvider().get_tracer(__name__).start_span("root")
 
-    def test_unset_is_ignored_from_unset(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.UNSET, None))
-        self.assertIs(span.status.status_code, StatusCode.UNSET)
+    def test_status_precedence_with_a_status_instance(self):
+        for name, calls, code, description in self._PRECEDENCE_CASES:
+            with self.subTest(name):
+                span = self._span()
+                for call_code, call_description in calls:
+                    span.set_status(trace_api.status.Status(call_code, call_description))
+                self.assertIs(span.status.status_code, code)
+                self.assertEqual(span.status.description, description)
 
-    def test_unset_is_ignored_over_error(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.ERROR, "boom"))
-        span.set_status(trace_api.status.Status(StatusCode.UNSET))
-        self.assertIs(span.status.status_code, StatusCode.ERROR)
-        self.assertEqual(span.status.description, "boom")
-
-    def test_unset_is_ignored_over_ok(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.OK))
-        span.set_status(trace_api.status.Status(StatusCode.UNSET))
-        self.assertIs(span.status.status_code, StatusCode.OK)
-
-    def test_error_overrides_unset(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.ERROR, "boom"))
-        self.assertIs(span.status.status_code, StatusCode.ERROR)
-        self.assertEqual(span.status.description, "boom")
-
-    def test_ok_overrides_unset(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.OK))
-        self.assertIs(span.status.status_code, StatusCode.OK)
-
-    def test_ok_overrides_error(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.ERROR, "boom"))
-        span.set_status(trace_api.status.Status(StatusCode.OK))
-        self.assertIs(span.status.status_code, StatusCode.OK)
-        self.assertIsNone(span.status.description)
-
-    def test_error_does_not_override_ok(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.OK))
-        span.set_status(trace_api.status.Status(StatusCode.ERROR, "boom"))
-        self.assertIs(span.status.status_code, StatusCode.OK)
-        self.assertIsNone(span.status.description)
-
-    def test_ok_does_not_override_ok(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.OK))
-        span.set_status(trace_api.status.Status(StatusCode.OK))
-        self.assertIs(span.status.status_code, StatusCode.OK)
-
-    def test_bare_status_does_not_drop_existing_description(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.ERROR, "connection refused to db-1"))
-        span.set_status(trace_api.status.Status(StatusCode.ERROR))
-        self.assertIs(span.status.status_code, StatusCode.ERROR)
-        self.assertEqual(span.status.description, "connection refused to db-1")
-
-    def test_described_status_still_replaces_described_status(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.ERROR, "first"))
-        span.set_status(trace_api.status.Status(StatusCode.ERROR, "second"))
-        self.assertEqual(span.status.description, "second")
-
-    def test_bare_status_lands_when_there_is_no_description_to_keep(self):
-        span = self._span()
-        span.set_status(trace_api.status.Status(StatusCode.ERROR))
-        self.assertIs(span.status.status_code, StatusCode.ERROR)
-        self.assertIsNone(span.status.description)
-
-    def test_precedence_holds_for_the_statuscode_overload(self):
-        span = self._span()
-        span.set_status(StatusCode.ERROR, "boom")
-        span.set_status(StatusCode.UNSET)
-        self.assertIs(span.status.status_code, StatusCode.ERROR)
-        self.assertEqual(span.status.description, "boom")
-        span.set_status(StatusCode.OK)
-        self.assertIs(span.status.status_code, StatusCode.OK)
-        span.set_status(StatusCode.ERROR, "late")
-        self.assertIs(span.status.status_code, StatusCode.OK)
+    def test_status_precedence_with_the_statuscode_overload(self):
+        for name, calls, code, description in self._PRECEDENCE_CASES:
+            with self.subTest(name):
+                span = self._span()
+                for call_code, call_description in calls:
+                    span.set_status(call_code, call_description)
+                self.assertIs(span.status.status_code, code)
+                self.assertEqual(span.status.description, description)
 
     def test_record_exception_fqn(self):
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))

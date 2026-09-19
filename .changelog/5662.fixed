@@ -1,1 +1,1 @@
-`opentelemetry-sdk`: apply the specified status precedence in `Span.set_status` so `Ok > Error > Unset` is enforced explicitly, a `Unset` status is always ignored, and a bare `Status(ERROR)` no longer drops a description already recorded
+`opentelemetry-sdk`: apply the specified status precedence in `Span.set_status` so `Ok > Error > Unset` is enforced explicitly, a `Unset` status is always ignored, and a status that repeats the code already recorded no longer replaces or drops the description recorded with it

@@ -76,13 +76,24 @@ from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
 
-# The specification orders the status codes ``Ok > Error > Unset``. The enum's
-# own values do not carry that order, so it is stated explicitly here.
-_STATUS_PRECEDENCE = {
-    StatusCode.UNSET: 0,
-    StatusCode.ERROR: 1,
-    StatusCode.OK: 2,
-}
+
+def _status_precedence(status_code: StatusCode) -> int:
+    """Rank ``status_code`` by the order the specification gives, ``Ok > Error > Unset``.
+
+    The enum's own values do not carry that order, so it is stated here. A
+    code with no rank of its own sorts below ``Unset``, so a status the
+    ordering has not been taught about cannot displace one already recorded.
+    """
+    match status_code:
+        case StatusCode.UNSET:
+            return 0
+        case StatusCode.ERROR:
+            return 1
+        case StatusCode.OK:
+            return 2
+        case _:
+            return -1
+
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
@@ -1010,10 +1021,11 @@ class Span(trace_api.Span, ReadableSpan):
         """Decide whether ``new_status`` may replace the status already recorded.
 
         The specification gives the status codes a total order, ``Ok > Error >
-        Unset``, says an attempt to set ``Unset`` should be ignored, and says
-        the value of the last call is the one recorded. So a code that ranks
-        below the one already recorded is dropped, ``Ok`` is final, and within
-        the same code the later call wins.
+        Unset``, and says an attempt to set ``Unset`` should be ignored. So a
+        code that does not rank above the one already recorded is dropped and
+        ``Ok`` is final. A repeat of the same code is allowed through only
+        when it fills in a description that is still missing, which keeps a
+        message already recorded from being replaced or dropped.
         """
         if new_status.status_code is StatusCode.UNSET:
             return False
@@ -1024,15 +1036,15 @@ class Span(trace_api.Span, ReadableSpan):
         if current.status_code is StatusCode.OK:
             return False
 
-        current_rank = _STATUS_PRECEDENCE[current.status_code]
-        new_rank = _STATUS_PRECEDENCE[new_status.status_code]
+        current_rank = _status_precedence(current.status_code)
+        new_rank = _status_precedence(new_status.status_code)
         if new_rank != current_rank:
             return new_rank > current_rank
 
-        # Same code, so the last call wins, with one exception: a bare status
-        # carries no new information, and letting it through would drop a
-        # description already recorded in favour of nothing.
-        return new_status.description is not None
+        # Same code, so the ordering has nothing more to say. The only call
+        # left that carries new information is one that supplies a
+        # description where none was recorded.
+        return current.description is None and new_status.description is not None
 
     def __exit__(
         self,
