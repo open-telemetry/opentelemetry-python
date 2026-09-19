@@ -258,10 +258,17 @@ class Resource:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return self._attributes == other._attributes and self._schema_url == other._schema_url
+        return (
+            self._attributes == other._attributes
+            and self._schema_url == other._schema_url
+            and self._schema_url_conflict == other._schema_url_conflict
+        )
 
     def __hash__(self) -> int:
-        return hash(f"{dumps(self._attributes.copy(), sort_keys=True, default=_json_default)}|{self._schema_url}")
+        return hash(
+            f"{dumps(self._attributes.copy(), sort_keys=True, default=_json_default)}"
+            f"|{self._schema_url}|{self._schema_url_conflict}"
+        )
 
     def to_json(self, indent: int | None = 4) -> str:
         return dumps(
