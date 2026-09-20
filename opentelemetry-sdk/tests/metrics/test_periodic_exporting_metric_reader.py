@@ -195,9 +195,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_ticker_value_exception_on_zero(self):
         exporter = FakeMetricsExporter()
         exporter.export = Mock()
-        with self.assertRaisesRegex(
-            ValueError, r"interval value 0.* is invalid and needs to be larger than zero\."
-        ):
+        with self.assertRaisesRegex(ValueError, r"interval value 0.* is invalid and needs to be larger than zero\."):
             PeriodicExportingMetricReader(
                 exporter,
                 export_interval_millis=0,
@@ -206,9 +204,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_ticker_value_exception_on_negative(self):
         exporter = FakeMetricsExporter()
         exporter.export = Mock()
-        with self.assertRaisesRegex(
-            ValueError, r"interval value -100.* is invalid and needs to be larger than zero\."
-        ):
+        with self.assertRaisesRegex(ValueError, r"interval value -100.* is invalid and needs to be larger than zero\."):
             PeriodicExportingMetricReader(
                 exporter,
                 export_interval_millis=-100,
@@ -217,9 +213,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_timeout_value_exception_on_zero(self):
         exporter = FakeMetricsExporter()
         exporter.export = Mock()
-        with self.assertRaisesRegex(
-            ValueError, r"timeout value 0.* is invalid and needs to be larger than zero\."
-        ):
+        with self.assertRaisesRegex(ValueError, r"timeout value 0.* is invalid and needs to be larger than zero\."):
             PeriodicExportingMetricReader(
                 exporter,
                 export_timeout_millis=0,
@@ -228,9 +222,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_timeout_value_exception_on_negative(self):
         exporter = FakeMetricsExporter()
         exporter.export = Mock()
-        with self.assertRaisesRegex(
-            ValueError, r"timeout value -100.* is invalid and needs to be larger than zero\."
-        ):
+        with self.assertRaisesRegex(ValueError, r"timeout value -100.* is invalid and needs to be larger than zero\."):
             PeriodicExportingMetricReader(
                 exporter,
                 export_timeout_millis=-100,

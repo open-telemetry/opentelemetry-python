@@ -462,13 +462,11 @@ class PeriodicExportingMetricReader(MetricReader):
         self._daemon_thread = None
         if self._export_interval_millis <= 0:
             raise ValueError(
-                f"interval value {self._export_interval_millis} is invalid "
-                "and needs to be larger than zero."
+                f"interval value {self._export_interval_millis} is invalid and needs to be larger than zero."
             )
         if self._export_timeout_millis <= 0:
             raise ValueError(
-                f"timeout value {self._export_timeout_millis} is invalid "
-                "and needs to be larger than zero."
+                f"timeout value {self._export_timeout_millis} is invalid and needs to be larger than zero."
             )
 
         if self._export_interval_millis < math.inf:
