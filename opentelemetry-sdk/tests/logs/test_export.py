@@ -95,6 +95,74 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         finally:
             root_logger.removeHandler(handler)
 
+
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    @mark.skipif(
+        (3, 13, 0) <= sys.version_info <= (3, 13, 5),
+        reason="This will fail on 3.13.5 due to https://github.com/python/cpython/pull/131812 which prevents the recursion from being detected.",
+    )
+    def test_metrics_recursive_loop(self):
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+
+        class Exporter(LogRecordExporter):
+            def shutdown(self):
+                pass
+
+            def force_flush(self, timeout_millis: int = 10_000) -> bool:
+                return True
+
+            def export(self, batch: Sequence[ReadableLogRecord]):
+                logger = logging.getLogger("any logger..")
+                logger.warning("Something happened.")
+
+        exporter = Exporter()
+        logger_provider = LoggerProvider()
+        logger_provider.add_log_record_processor(
+            SimpleLogRecordProcessor(exporter, meter_provider=meter_provider)
+        )
+        root_logger = logging.getLogger()
+        handler = LoggingHandler(
+            level=logging.DEBUG, logger_provider=logger_provider
+        )
+        root_logger.addHandler(handler)
+        propagate_false_logger = logging.getLogger(
+            "opentelemetry.sdk._logs._internal.export.propagate.false"
+        )
+        try:
+            with self.assertLogs(propagate_false_logger) as cm:
+                root_logger.warning("hello!")
+            assert (
+                "SimpleLogRecordProcessor.on_emit has entered a recursive loop"
+                in cm.output[0]
+            )
+        finally:
+            root_logger.removeHandler(handler)
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        metrics = scope_metrics.metrics
+        self.assertEqual(len(metrics), 1)
+        self.assertEqual(metrics[0].name, "otel.sdk.processor.log.processed")
+        data_points = sorted(
+            metrics[0].data.data_points,
+            key=lambda dp: dp.attributes.get("error.type", ""),
+        )
+        # The record the recursion guard discards is counted as processed with
+        # error.type=recursion, so the total stays reconcilable with the number
+        # of records the processor accepted.
+        recursion_points = [
+            dp
+            for dp in data_points
+            if dp.attributes.get("error.type") == "recursion"
+        ]
+        self.assertEqual(
+            len(recursion_points),
+            1,
+            "the log dropped by the recursion guard was not counted",
+        )
+        self.assertEqual(recursion_points[0].value, 1)
+
     def test_simple_log_record_processor_default_level(self):
         exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
