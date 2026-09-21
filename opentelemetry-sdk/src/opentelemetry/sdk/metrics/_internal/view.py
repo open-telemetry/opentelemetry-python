@@ -104,9 +104,7 @@ class View:
         description: str | None = None,
         attribute_keys: set[str] | None = None,
         aggregation: Aggregation | None = None,
-        exemplar_reservoir_factory: (
-            Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None
-        ) = None,
+        exemplar_reservoir_factory: (Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None) = None,
         instrument_unit: str | None = None,
     ):
         if (
@@ -119,19 +117,11 @@ class View:
             is None
         ):
             # pylint: disable=broad-exception-raised
-            raise Exception(
-                f"Some instrument selection criteria must be provided for View {name}"
-            )
+            raise Exception(f"Some instrument selection criteria must be provided for View {name}")
 
-        if (
-            name is not None
-            and instrument_name is not None
-            and any(c in instrument_name for c in "*?[]")
-        ):
+        if name is not None and instrument_name is not None and any(c in instrument_name for c in "*?[]"):
             # pylint: disable=broad-exception-raised
-            raise Exception(
-                f"View {name} declared with wildcard characters in instrument_name"
-            )
+            raise Exception(f"View {name} declared with wildcard characters in instrument_name")
 
         # _name, _description, _aggregation, _exemplar_reservoir_factory and
         # _attribute_keys will be accessed when instantiating a _ViewInstrumentMatch.
@@ -146,9 +136,7 @@ class View:
         self._description = description
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
-        self._exemplar_reservoir_factory = (
-            exemplar_reservoir_factory or _default_reservoir_factory
-        )
+        self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

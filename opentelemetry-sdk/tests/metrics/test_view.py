@@ -50,17 +50,11 @@ class TestView(TestCase):
         self.assertFalse(View(instrument_unit="by")._match(mock_instrument))
 
     def test_meter_name(self):
-        self.assertTrue(
-            View(meter_name="meter_name")._match(
-                Mock(**{"instrumentation_scope.name": "meter_name"})
-            )
-        )
+        self.assertTrue(View(meter_name="meter_name")._match(Mock(**{"instrumentation_scope.name": "meter_name"})))
 
     def test_meter_version(self):
         self.assertTrue(
-            View(meter_version="meter_version")._match(
-                Mock(**{"instrumentation_scope.version": "meter_version"})
-            )
+            View(meter_version="meter_version")._match(Mock(**{"instrumentation_scope.version": "meter_version"}))
         )
 
     def test_meter_schema_url(self):
