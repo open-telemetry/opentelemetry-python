@@ -1,0 +1,1 @@
+`opentelemetry-api`: update W3CBaggagePropagator to properly handle whitespace
