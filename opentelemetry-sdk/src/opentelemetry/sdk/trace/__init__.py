@@ -77,24 +77,6 @@ from opentelemetry.util._decorator import _agnosticcontextmanager
 logger = logging.getLogger(__name__)
 
 
-def _status_precedence(status_code: StatusCode) -> int:
-    """Rank ``status_code`` by the order the specification gives, ``Ok > Error > Unset``.
-
-    The enum's own values do not carry that order, so it is stated here. A
-    code with no rank of its own sorts below ``Unset``, so a status the
-    ordering has not been taught about cannot displace one already recorded.
-    """
-    match status_code:
-        case StatusCode.UNSET:
-            return 0
-        case StatusCode.ERROR:
-            return 1
-        case StatusCode.OK:
-            return 2
-        case _:
-            return -1
-
-
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
@@ -1020,12 +1002,10 @@ class Span(trace_api.Span, ReadableSpan):
     def _accepts_status(self, new_status: Status) -> bool:
         """Decide whether ``new_status`` may replace the status already recorded.
 
-        The specification gives the status codes a total order, ``Ok > Error >
-        Unset``, and says an attempt to set ``Unset`` should be ignored. So a
-        code that does not rank above the one already recorded is dropped and
-        ``Ok`` is final. A repeat of the same code is allowed through only
-        when it fills in a description that is still missing, which keeps a
-        message already recorded from being replaced or dropped.
+        The codes are totally ordered, ``Ok > Error > Unset``, an attempt to set
+        ``Unset`` is ignored, and ``Ok`` is final. Once those two are handled, a
+        differing code always outranks the one recorded. A repeat of the same code
+        gets through only when it fills in a description that is still missing.
         """
         if new_status.status_code is StatusCode.UNSET:
             return False
@@ -1036,15 +1016,9 @@ class Span(trace_api.Span, ReadableSpan):
         if current.status_code is StatusCode.OK:
             return False
 
-        current_rank = _status_precedence(current.status_code)
-        new_rank = _status_precedence(new_status.status_code)
-        if new_rank != current_rank:
-            return new_rank > current_rank
-
-        # Same code, so the ordering has nothing more to say. The only call
-        # left that carries new information is one that supplies a
-        # description where none was recorded.
-        return current.description is None and new_status.description is not None
+        return current.status_code is not new_status.status_code or (
+            current.description is None and new_status.description is not None
+        )
 
     def __exit__(
         self,
