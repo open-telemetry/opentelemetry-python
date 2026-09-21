@@ -1076,9 +1076,7 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
                         "custom.detector": "value",
                     }
                 )
-                entry_point = Mock(
-                    **{"load.return_value": Mock(return_value=custom_detector)}
-                )
+                entry_point = Mock(**{"load.return_value": Mock(return_value=custom_detector)})
 
                 def side_effect(*args, **kwargs):
                     if kwargs.get("name") == "mock":
