@@ -132,9 +132,7 @@ class View:
         attribute_keys = set(attribute_keys) if attribute_keys is not None else None
         exclude_attribute_keys = set(exclude_attribute_keys) if exclude_attribute_keys is not None else None
         if attribute_keys is not None and exclude_attribute_keys is not None:
-            overlap = attribute_keys.intersection(exclude_attribute_keys)
-
-            if overlap:
+            if overlap := attribute_keys.intersection(exclude_attribute_keys):
                 # pylint: disable=broad-exception-raised
                 raise Exception(
                     f"attribute_keys and exclude_attribute_keys must be disjoint. Overlapping keys: {sorted(overlap)}"
