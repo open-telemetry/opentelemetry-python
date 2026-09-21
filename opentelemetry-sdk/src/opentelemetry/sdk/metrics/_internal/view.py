@@ -104,7 +104,7 @@ class View:
         description: str | None = None,
         attribute_keys: set[str] | None = None,
         aggregation: Aggregation | None = None,
-        exemplar_reservoir_factory: (Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None) = None,
+        exemplar_reservoir_factory: Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None = None,
         instrument_unit: str | None = None,
     ):
         if (
