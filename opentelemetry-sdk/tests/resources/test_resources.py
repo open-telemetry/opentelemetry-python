@@ -10,6 +10,7 @@ import time
 import unittest
 import uuid
 from concurrent.futures import TimeoutError
+from functools import partial
 from logging import ERROR, WARNING
 from os import environ
 from unittest.mock import Mock, patch
@@ -1067,6 +1068,11 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
             ("mock,service_instance", True, True),
         )
 
+        def entry_points_side_effect(entry_point, *args, **kwargs):
+            if kwargs.get("name") == "mock":
+                return [entry_point]
+            return real_entry_points(*args, **kwargs)
+
         for detector_names, includes_custom_detector, expects_generated_id in test_cases:
             with self.subTest(detector_names=detector_names):
                 custom_detector = Mock(spec=ResourceDetector)
@@ -1078,11 +1084,6 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
                 )
                 entry_point = Mock(**{"load.return_value": Mock(return_value=custom_detector)})
 
-                def side_effect(*args, **kwargs):
-                    if kwargs.get("name") == "mock":
-                        return [entry_point]
-                    return real_entry_points(*args, **kwargs)
-
                 with patch.dict(
                     environ,
                     {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: detector_names},
@@ -1091,7 +1092,7 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
                     if includes_custom_detector:
                         with patch(
                             "opentelemetry.util._importlib_metadata.entry_points",
-                            side_effect=side_effect,
+                            side_effect=partial(entry_points_side_effect, entry_point),
                         ):
                             resource = Resource.create()
                         custom_detector.detect.assert_called_once()
