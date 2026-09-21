@@ -1050,6 +1050,22 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
 
         self.assertEqual(uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID]).version, 4)
 
+    @patch.dict(environ, {}, clear=True)
+    def test_resource_attributes_override_service_instance_id(self):
+        resource = Resource.create({SERVICE_INSTANCE_ID: "resource-instance-id"})
+
+        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "resource-instance-id")
+
+    @patch.dict(
+        environ,
+        {OTEL_RESOURCE_ATTRIBUTES: "service.instance.id=environment-instance-id"},
+        clear=True,
+    )
+    def test_environment_resource_attributes_override_service_instance_id(self):
+        resource = Resource.create()
+
+        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "environment-instance-id")
+
     @patch.dict(
         environ,
         {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock"},
@@ -1079,6 +1095,30 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
         custom_detector.detect.assert_called_once()
         self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "configured-instance-id")
         self.assertEqual(resource.attributes["custom.detector"], "value")
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock,service_instance"},
+        clear=True,
+    )
+    def test_explicit_service_instance_detector_position_is_respected(self):
+        custom_detector = Mock(spec=ResourceDetector)
+        custom_detector.detect.return_value = Resource({SERVICE_INSTANCE_ID: "configured-instance-id"})
+        entry_point = Mock(**{"load.return_value": Mock(return_value=custom_detector)})
+
+        def side_effect(*args, **kwargs):
+            if kwargs.get("name") == "mock":
+                return [entry_point]
+            return real_entry_points(*args, **kwargs)
+
+        with patch(
+            "opentelemetry.util._importlib_metadata.entry_points",
+            side_effect=side_effect,
+        ):
+            resource = Resource.create()
+
+        custom_detector.detect.assert_called_once()
+        self.assertEqual(uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID]).version, 4)
 
     def test_detect_value_is_valid_uuid4(self):
         _resources_module._service_instance_id = None
