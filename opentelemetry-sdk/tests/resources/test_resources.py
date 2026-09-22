@@ -10,7 +10,7 @@ import time
 import unittest
 import uuid
 from concurrent.futures import TimeoutError
-from logging import ERROR, WARNING
+from logging import WARNING
 from os import environ
 from unittest.mock import Mock, patch
 from urllib import parse
@@ -190,12 +190,45 @@ class TestResources(unittest.TestCase):
         right = Resource.create({}, schema_urls[0])
         self.assertEqual(left.merge(right).schema_url, schema_urls[0])
 
-        left = Resource.create({}, schema_urls[0])
-        right = Resource.create({}, schema_urls[1])
-        with self.assertLogs(level=ERROR) as log_entry:
-            self.assertEqual(left.merge(right), left)
+        left = Resource({"a": "left", "shared": "left"}, schema_urls[0])
+        right = Resource({"b": "right", "shared": "right"}, schema_urls[1])
+        with self.assertLogs(level=WARNING) as log_entry:
+            merged = left.merge(right)
+            self.assertEqual(
+                merged.attributes,
+                {"a": "left", "b": "right", "shared": "right"},
+            )
+            self.assertEqual(merged.schema_url, "")
             self.assertIn(schema_urls[0], log_entry.output[0])
             self.assertIn(schema_urls[1], log_entry.output[0])
+
+        # The conflict persists through further merges, even if a later
+        # schema_url happens to match one of the originally conflicting ones.
+        third = Resource.create({}, schema_urls[0])
+        self.assertEqual(merged.merge(third).schema_url, "")
+
+        fourth = Resource.create({}, None)
+        self.assertEqual(merged.merge(fourth).schema_url, "")
+
+    def test_conflict_eq_hash(self):
+        left = Resource({"a": "1"}, "https://opentelemetry.io/schemas/1.2.0")
+        right = Resource({"a": "1"}, "https://opentelemetry.io/schemas/1.3.0")
+        with self.assertLogs(level=WARNING):
+            cleared = left.merge(right)
+            cleared_again = left.merge(right)
+
+        cases = (
+            ("cleared vs plain", cleared, Resource({"a": "1"}), False),
+            ("cleared vs cleared", cleared, cleared_again, True),
+        )
+        for name, first, second, expected in cases:
+            with self.subTest(name):
+                for check, actual in (
+                    ("eq", first == second),
+                    ("hash", hash(first) == hash(second)),
+                ):
+                    with self.subTest(check):
+                        self.assertEqual(actual, expected)
 
     def test_resource_merge_empty_string(self):
         """Verify Resource.merge behavior with the empty string.
@@ -389,7 +422,7 @@ class TestResources(unittest.TestCase):
                 )
             ),
         )
-        with self.assertLogs(level=ERROR) as log_entry:
+        with self.assertLogs(level=WARNING) as log_entry:
             self.assertEqual(
                 get_aggregated_resources([resource_detector2, resource_detector3]),
                 _DEFAULT_RESOURCE.merge(
@@ -400,11 +433,22 @@ class TestResources(unittest.TestCase):
                         },
                         "",
                     )
-                ).merge(Resource({"key2": "value2", "key3": "value3"}, "url1")),
+                )
+                .merge(Resource({"key2": "value2", "key3": "value3"}, "url1"))
+                .merge(
+                    Resource(
+                        {
+                            "key2": "try_to_overwrite_existing_value",
+                            "key3": "try_to_overwrite_existing_value",
+                            "key4": "value4",
+                        },
+                        "url2",
+                    )
+                ),
             )
             self.assertIn("url1", log_entry.output[0])
             self.assertIn("url2", log_entry.output[0])
-        with self.assertLogs(level=ERROR):
+        with self.assertLogs(level=WARNING):
             self.assertEqual(
                 get_aggregated_resources(
                     [
@@ -422,17 +466,29 @@ class TestResources(unittest.TestCase):
                         },
                         "",
                     )
-                ).merge(
+                )
+                .merge(Resource({"key2": "value2", "key3": "value3"}, "url1"))
+                .merge(
                     Resource(
                         {
-                            "key1": "value1",
+                            "key2": "try_to_overwrite_existing_value",
+                            "key3": "try_to_overwrite_existing_value",
+                            "key4": "value4",
+                        },
+                        "url2",
+                    )
+                )
+                .merge(
+                    Resource(
+                        {
                             "key2": "try_to_overwrite_existing_value",
                             "key3": "try_to_overwrite_existing_value",
                             "key4": "value4",
                         },
                         "url1",
                     )
-                ),
+                )
+                .merge(Resource({"key1": "value1"}, "")),
             )
             self.assertIn("url1", log_entry.output[0])
             self.assertIn("url2", log_entry.output[0])

@@ -156,6 +156,7 @@ class Resource:
 
     _attributes: BoundedAttributes
     _schema_url: str
+    _schema_url_conflict: bool
 
     def __init__(self, attributes: Attributes, schema_url: str | None = None):
         # Immutable set to true so attributes cannot be added or removed after creation.
@@ -163,6 +164,7 @@ class Resource:
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
+        self._schema_url_conflict = False
 
     @staticmethod
     def create(
@@ -211,12 +213,15 @@ class Resource:
         """Merges this resource and an updating resource into a new `Resource`.
 
         If a key exists on both the old and updating resource, the value of the
-        updating resource will override the old resource value.
+        updating resource will override the old resource value. Attributes are
+        always merged, regardless of `schema_url`.
 
         The updating resource's `schema_url` will be used only if the old
-        `schema_url` is empty. Attempting to merge two resources with
-        different, non-empty values for `schema_url` will result in an error
-        and return the old resource.
+        `schema_url` is empty. If both resources have a non-empty
+        `schema_url` and they differ, no common schema URL can be
+        established: the merged resource's `schema_url` is cleared (set to
+        the empty string). Once a resource's `schema_url` has been cleared
+        this way, it stays cleared through any further merges.
 
         Args:
             other: The other resource to be merged.
@@ -227,28 +232,43 @@ class Resource:
         merged_attributes = dict(self.attributes)
         merged_attributes.update(other.attributes)
 
-        if self.schema_url == "":
-            schema_url = other.schema_url
-        elif other.schema_url == "":
-            schema_url = self.schema_url
-        elif self.schema_url == other.schema_url:
-            schema_url = other.schema_url
-        else:
-            logger.error(
-                "Failed to merge resources: The two schemas %s and %s are incompatible",
-                self.schema_url,
-                other.schema_url,
-            )
-            return self
-        return Resource(merged_attributes, schema_url)
+        # pylint: disable-next=protected-access
+        conflict = self._schema_url_conflict or other._schema_url_conflict
+        schema_url = ""
+        if not conflict:
+            if self.schema_url == "":
+                schema_url = other.schema_url
+            elif other.schema_url == "":
+                schema_url = self.schema_url
+            elif self.schema_url == other.schema_url:
+                schema_url = other.schema_url
+            else:
+                conflict = True
+                logger.warning(
+                    "Could not find a common schema URL between %s and %s, clearing schema_url",
+                    self.schema_url,
+                    other.schema_url,
+                )
+
+        merged_resource = Resource(merged_attributes, schema_url)
+        # pylint: disable-next=protected-access
+        merged_resource._schema_url_conflict = conflict
+        return merged_resource
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return self._attributes == other._attributes and self._schema_url == other._schema_url
+        return (
+            self._attributes == other._attributes
+            and self._schema_url == other._schema_url
+            and self._schema_url_conflict == other._schema_url_conflict
+        )
 
     def __hash__(self) -> int:
-        return hash(f"{dumps(self._attributes.copy(), sort_keys=True, default=_json_default)}|{self._schema_url}")
+        return hash(
+            f"{dumps(self._attributes.copy(), sort_keys=True, default=_json_default)}"
+            f"|{self._schema_url}|{self._schema_url_conflict}"
+        )
 
     def to_json(self, indent: int | None = 4) -> str:
         return dumps(
