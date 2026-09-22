@@ -22,6 +22,7 @@ wrapt==1.15.0
 -e opentelemetry-semantic-conventions
 -e opentelemetry-proto
 -e exporter/opentelemetry-exporter-otlp-proto-common
+-e exporter/opentelemetry-exporter-otlp-common
 -e exporter/opentelemetry-exporter-otlp-proto-grpc
 -e opentelemetry-api
 -e opentelemetry-sdk
