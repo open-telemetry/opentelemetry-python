@@ -129,12 +129,11 @@ class View:
         if name is not None and instrument_name is not None and ("*" in instrument_name or "?" in instrument_name):
             # pylint: disable=broad-exception-raised
             raise Exception(f"View {name} declared with wildcard characters in instrument_name")
-        attribute_keys = set(attribute_keys) if attribute_keys is not None else None
-        exclude_attribute_keys = set(exclude_attribute_keys) if exclude_attribute_keys is not None else None
+        attribute_keys = frozenset(attribute_keys) if attribute_keys is not None else None
+        exclude_attribute_keys = frozenset(exclude_attribute_keys) if exclude_attribute_keys is not None else None
         if attribute_keys is not None and exclude_attribute_keys is not None:
             if overlap := attribute_keys.intersection(exclude_attribute_keys):
-                # pylint: disable=broad-exception-raised
-                raise Exception(
+                raise ValueError(
                     f"attribute_keys and exclude_attribute_keys must be disjoint. Overlapping keys: {sorted(overlap)}"
                 )
         # _name, _description, _aggregation, _exemplar_reservoir_factory and
@@ -148,10 +147,10 @@ class View:
         self._meter_schema_url = meter_schema_url
 
         self._description = description
-        self._attribute_keys = frozenset(attribute_keys) if attribute_keys is not None else None
+        self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
-        self._exclude_attribute_keys = frozenset(exclude_attribute_keys) if exclude_attribute_keys is not None else None
+        self._exclude_attribute_keys = exclude_attribute_keys
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

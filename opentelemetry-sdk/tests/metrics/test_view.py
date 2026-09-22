@@ -109,7 +109,7 @@ class TestView(TestCase):
             View(name="name", instrument_name="instrument_name*")
 
     def test_attribute_keys_and_exclude_attribute_keys_overlap(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             View(
                 instrument_name="instrument_name",
                 attribute_keys=("method", "status_code"),
