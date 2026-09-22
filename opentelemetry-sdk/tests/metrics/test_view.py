@@ -110,7 +110,7 @@ class TestView(TestCase):
             View(name="name", instrument_name="instrument_name*")
 
     def test_view_name_wildcard(self):
-        for instrument_name in ("instrument_name*", "*", "instrument?name"):
+        for instrument_name in ("instrument_name*", "*", "instrument?name", "[ab]"):
             with self.subTest(instrument_name=instrument_name):
                 with self.assertRaisesRegex(
                     Exception,
