@@ -1,0 +1,1 @@
+`opentelemetry-test-utils`: add `CapturingSampler` to record what samplers receive in instrumentation tests
