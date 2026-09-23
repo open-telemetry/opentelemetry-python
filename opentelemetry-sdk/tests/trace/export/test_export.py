@@ -243,13 +243,9 @@ class TestBatchSpanProcessor(unittest.TestCase):
 
     def test_invalid_export_timeout_millis(self):
         with self.assertRaises(ValueError):
-            export.BatchSpanProcessor(
-                MySpanExporter(destination=[]), export_timeout_millis=0
-            )
+            export.BatchSpanProcessor(MySpanExporter(destination=[]), export_timeout_millis=0)
         with self.assertRaises(ValueError):
-            export.BatchSpanProcessor(
-                MySpanExporter(destination=[]), export_timeout_millis=-500
-            )
+            export.BatchSpanProcessor(MySpanExporter(destination=[]), export_timeout_millis=-500)
 
     def test_args_env_var_defaults(self):
         batch_span_processor = export.BatchSpanProcessor(MySpanExporter(destination=[]))
