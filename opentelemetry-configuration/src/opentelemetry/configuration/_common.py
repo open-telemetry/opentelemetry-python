@@ -7,13 +7,15 @@ import dataclasses
 import inspect
 import logging
 from collections.abc import Callable
-from typing import Any, Protocol
+from typing import Any, Protocol, TypeVar
 from urllib.parse import urlparse
 
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.util._importlib_metadata import entry_points
 
 _logger = logging.getLogger(__name__)
+
+_CompressionT = TypeVar("_CompressionT")
 
 
 def _additional_properties(cls):
@@ -165,23 +167,27 @@ def _parse_headers(
 
 def _map_compression(
     value: str | None,
-    compression_enum: type,
+    compression_enum: type[_CompressionT],
     *,
     allow_deflate: bool = False,
-) -> object | None:
+) -> _CompressionT | None:
     """Map a compression string to the given Compression enum value."""
     if value is None:
         return None
 
     value_lower = value.lower()
-    supports_deflate = hasattr(compression_enum, "Deflate")
+    supports_deflate = hasattr(compression_enum, "Deflate") or hasattr(compression_enum, "DEFLATE")
 
     if value_lower == "none":
         return None
     if value_lower == "gzip":
-        return compression_enum.Gzip  # type: ignore[attr-defined]
+        for member_name in ("Gzip", "GZIP"):
+            if member := getattr(compression_enum, member_name, None):
+                return member
     if value_lower == "deflate" and allow_deflate and supports_deflate:
-        return compression_enum.Deflate  # type: ignore[attr-defined]
+        for member_name in ("Deflate", "DEFLATE"):
+            if member := getattr(compression_enum, member_name, None):
+                return member
 
     supported_values = ["'gzip'", "'none'"]
     if allow_deflate and supports_deflate:
