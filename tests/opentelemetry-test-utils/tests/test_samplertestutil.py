@@ -75,6 +75,18 @@ class TestCapturingSampler(TestCase):
         self.assertEqual(dict(result.attributes), attributes)
         self.assertEqual(sampler.attributes, attributes)
 
+    def test_required_attribute_expected_to_be_none_must_be_present(self):
+        sampler = CapturingSampler(required_attributes={"tenant": None})
+
+        result = sampler.should_sample(None, 0x1, "request", SpanKind.SERVER, {"other": "value"})
+
+        self.assertEqual(result.decision, Decision.DROP)
+        self.assertEqual(dict(result.attributes), {})
+
+        result = sampler.should_sample(None, 0x1, "request", SpanKind.SERVER, {"tenant": None})
+
+        self.assertEqual(result.decision, Decision.RECORD_AND_SAMPLE)
+
     def test_keeps_parent_trace_state(self):
         sampler = CapturingSampler()
         trace_state = TraceState([("vendor", "value")])

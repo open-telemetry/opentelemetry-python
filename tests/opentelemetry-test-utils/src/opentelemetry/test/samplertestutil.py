@@ -49,7 +49,10 @@ class CapturingSampler(Sampler):
         self.attributes = dict(attributes or {})
 
         decision = Decision.RECORD_AND_SAMPLE
-        if any(self.attributes.get(key) != value for key, value in self.required_attributes.items()):
+        if any(
+            key not in self.attributes or self.attributes[key] != value
+            for key, value in self.required_attributes.items()
+        ):
             decision = Decision.DROP
             attributes = None
 
