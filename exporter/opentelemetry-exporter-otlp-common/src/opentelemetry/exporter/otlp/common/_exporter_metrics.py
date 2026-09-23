@@ -9,6 +9,7 @@ from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from time import perf_counter
 from typing import TYPE_CHECKING, Protocol
+from urllib.parse import urlparse
 
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -33,11 +34,18 @@ from opentelemetry.semconv.attributes.server_attributes import (
 
 if TYPE_CHECKING:
     from typing import Literal
-    from urllib.parse import ParseResult as UrlParseResult
 
     from opentelemetry.util.types import AnyValue, Attributes
 
 _component_counter = Counter()
+
+_GRPC_COMPONENT_TYPES = frozenset(
+    {
+        OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER,
+        OtelComponentTypeValues.OTLP_GRPC_LOG_EXPORTER,
+        OtelComponentTypeValues.OTLP_GRPC_METRIC_EXPORTER,
+    }
+)
 
 
 @dataclass
@@ -52,6 +60,7 @@ class ExporterMetricsT(Protocol):
 
 class NoOpExporterMetrics:
     @contextmanager
+    # pylint: disable-next=no-self-use
     def export_operation(self, num_items: int) -> Iterator[ExportResult]:
         yield ExportResult()
 
@@ -61,7 +70,7 @@ class ExporterMetrics:
         self,
         component_type: OtelComponentTypeValues | None,
         signal: Literal["traces", "metrics", "logs"],
-        endpoint: UrlParseResult,
+        endpoint: str,
         meter_provider: MeterProvider | None,
     ) -> None:
         if signal == "traces":
@@ -74,11 +83,15 @@ class ExporterMetrics:
             create_exported = create_otel_sdk_exporter_metric_data_point_exported
             create_inflight = create_otel_sdk_exporter_metric_data_point_inflight
 
-        port = endpoint.port
+        if not endpoint.startswith("//") and "://" not in endpoint:
+            endpoint = f"//{endpoint}"
+        parsed_endpoint = urlparse(endpoint)
+
+        port = parsed_endpoint.port
         if port is None:
-            if endpoint.scheme == "https":
+            if component_type in _GRPC_COMPONENT_TYPES or parsed_endpoint.scheme == "https":
                 port = 443
-            elif endpoint.scheme == "http":
+            elif parsed_endpoint.scheme == "http":
                 port = 80
 
         component_type_value = component_type.value if component_type else "unknown_otlp_exporter"
@@ -88,8 +101,8 @@ class ExporterMetrics:
             OTEL_COMPONENT_TYPE: component_type_value,
             OTEL_COMPONENT_NAME: f"{component_type_value}/{count}",
         }
-        if endpoint.hostname:
-            self._standard_attrs[SERVER_ADDRESS] = endpoint.hostname
+        if parsed_endpoint.hostname:
+            self._standard_attrs[SERVER_ADDRESS] = parsed_endpoint.hostname
         if port is not None:
             self._standard_attrs[SERVER_PORT] = port
 
@@ -124,7 +137,7 @@ class ExporterMetrics:
 def create_exporter_metrics(
     component_type: OtelComponentTypeValues | None,
     signal: Literal["traces", "metrics", "logs"],
-    endpoint: UrlParseResult,
+    endpoint: str,
     meter_provider: MeterProvider | None,
     enabled: bool,
 ) -> ExporterMetricsT:
