@@ -421,13 +421,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 class TestBatchLogRecordProcessor(unittest.TestCase):
     def test_invalid_export_timeout_millis(self):
         with self.assertRaises(ValueError):
-            BatchLogRecordProcessor(
-                InMemoryLogRecordExporter(), export_timeout_millis=0
-            )
+            BatchLogRecordProcessor(InMemoryLogRecordExporter(), export_timeout_millis=0)
         with self.assertRaises(ValueError):
-            BatchLogRecordProcessor(
-                InMemoryLogRecordExporter(), export_timeout_millis=-500
-            )
+            BatchLogRecordProcessor(InMemoryLogRecordExporter(), export_timeout_millis=-500)
 
     def test_emit_call_log_record(self):
         exporter = InMemoryLogRecordExporter()
