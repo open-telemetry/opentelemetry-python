@@ -1428,6 +1428,18 @@ class TestSpan(unittest.TestCase):
             "boom",
         ),
         (
+            "an empty description counts as missing",
+            [(StatusCode.ERROR, ""), (StatusCode.ERROR, "useful detail")],
+            StatusCode.ERROR,
+            "useful detail",
+        ),
+        (
+            "an empty description does not replace one",
+            [(StatusCode.ERROR, "boom"), (StatusCode.ERROR, "")],
+            StatusCode.ERROR,
+            "boom",
+        ),
+        (
             "a bare error lands when there is nothing to keep",
             [(StatusCode.ERROR, None)],
             StatusCode.ERROR,

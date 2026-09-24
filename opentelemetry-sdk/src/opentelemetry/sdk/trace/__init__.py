@@ -1005,7 +1005,8 @@ class Span(trace_api.Span, ReadableSpan):
         The codes are totally ordered, ``Ok > Error > Unset``, an attempt to set
         ``Unset`` is ignored, and ``Ok`` is final. Once those two are handled, a
         differing code always outranks the one recorded. A repeat of the same code
-        gets through only when it fills in a description that is still missing.
+        gets through only when it fills in a description that is still missing,
+        and an empty description counts as missing.
         """
         if new_status.status_code is StatusCode.UNSET:
             return False
@@ -1016,8 +1017,9 @@ class Span(trace_api.Span, ReadableSpan):
         if current.status_code is StatusCode.OK:
             return False
 
+        # An empty description is equivalent to an absent one.
         return current.status_code is not new_status.status_code or (
-            current.description is None and new_status.description is not None
+            not current.description and bool(new_status.description)
         )
 
     def __exit__(
