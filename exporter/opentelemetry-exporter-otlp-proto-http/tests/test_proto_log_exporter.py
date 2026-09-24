@@ -36,7 +36,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
-from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+from opentelemetry.proto._test.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
 from opentelemetry.sdk._logs import ReadWriteLogRecord
@@ -240,7 +240,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(request.method, "POST")
         self.assertEqual(request.path, "/v1/logs")
         sent_data = mock_request.call_args.kwargs["data"]
-        self.assertEqual(_decode_body(sent_data), encode_logs(logs))
+        self.assertEqual(_decode_body(sent_data), _decode_body(encode_logs(logs).SerializeToString()))
 
     @mocketize
     def test_default_endpoint_and_headers(self):
@@ -460,7 +460,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                     self.assertEqual(sent_headers["Content-Encoding"], expected_encoding)
                 sent_data = mock_request.call_args.kwargs["data"]
                 decompressed = decompress(sent_data)
-                self.assertEqual(_decode_body(decompressed), encode_logs(logs))
+                self.assertEqual(_decode_body(decompressed), _decode_body(encode_logs(logs).SerializeToString()))
 
     def test_export_retryable_status_codes(self):
         for status_code in (429, 502, 503, 504):

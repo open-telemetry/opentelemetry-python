@@ -38,6 +38,13 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     _split_metrics_data,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
+
+# _split_metrics_data builds pure-Python messages, so the tests above compare
+# against pure-Python classes. Decoding raw OTLP bytes instead needs the
+# protobuf-backed reference class (see opentelemetry-proto[test]).
+from opentelemetry.proto._test.collector.metrics.v1.metrics_service_pb2 import (
+    ExportMetricsServiceRequest as _RealExportMetricsServiceRequest,
+)
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -104,8 +111,8 @@ _BASE_HEADERS = {
 }
 
 
-def _decode_body(body: bytes) -> ExportMetricsServiceRequest:
-    return ExportMetricsServiceRequest.FromString(body)
+def _decode_body(body: bytes) -> _RealExportMetricsServiceRequest:
+    return _RealExportMetricsServiceRequest.FromString(body)
 
 
 # pylint: disable=protected-access,too-many-public-methods
@@ -484,7 +491,7 @@ class TestOTLPMetricExporter(TestCase):
 
         serialized_data = encode_metrics(self.metrics["sum_int"])
         sent_data = mock_request.call_args.kwargs["data"]
-        self.assertEqual(_decode_body(sent_data), serialized_data)
+        self.assertEqual(_decode_body(sent_data), _decode_body(serialized_data.SerializeToString()))
 
     @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: " true "})
     @mocketize
