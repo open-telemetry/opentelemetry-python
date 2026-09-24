@@ -46,9 +46,36 @@ class TestW3CBaggagePropagator(TestCase):
         expected = {"key1": "val1", "key2": "val2"}
         self.assertEqual(self._extract(header), expected)
 
-    def test_invalid_header_with_space(self):
-        header = "key1 =   val1,  key2 =val2   "
-        self.assertEqual(self._extract(header), {})
+    def test_valid_header_with_whitespace(self):
+        for header, expected in (
+            (
+                "key1 =   val1,  key2 =val2   ",
+                {"key1": "val1", "key2": "val2"},
+            ),
+            ("some_name = some_value", {"some_name": "some_value"}),
+            ("key1\t=\tval1", {"key1": "val1"}),
+            ("key1 = val1;prop=1", {"key1": "val1;prop=1"}),
+            (
+                "key1 = val1 ; prop1 = 1 ; prop2 ;prop3= 2",
+                {"key1": "val1 ; prop1 = 1 ; prop2 ;prop3= 2"},
+            ),
+            (
+                "key1=val1, key2 = val2;prop = 1;prop2",
+                {"key1": "val1", "key2": "val2;prop = 1;prop2"},
+            ),
+        ):
+            with self.subTest(header=header):
+                self.assertEqual(self._extract(header), expected)
+
+    def test_invalid_header_with_inner_whitespace(self):
+        for header in (
+            "key 1=val1",
+            "key1=val 1",
+            "key1=val1;pr op=1",
+            " = ",
+        ):
+            with self.subTest(header=header):
+                self.assertEqual(self._extract(header), {})
 
     def test_valid_header_with_properties(self):
         header = "key1=val1,key2=val2;prop=1;prop2;prop3=2"
