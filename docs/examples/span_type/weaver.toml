@@ -1,0 +1,4 @@
+# The registry only defines the span under test, so drop findings for the
+# resource attributes the SDK sets by default.
+[[live-check.finding_filters]]
+exclude_samples = ["service.*", "telemetry.sdk.*"]
