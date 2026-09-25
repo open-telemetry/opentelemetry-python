@@ -105,9 +105,19 @@ class TestView(TestCase):
         )
 
     def test_view_name(self):
-        with self.assertRaises(Exception):
-            View(name="name", instrument_name="instrument_name*")
-        with self.assertRaises(Exception):
-            View(name="name", instrument_name="instrument_name?")
-        with self.assertRaises(Exception):
-            View(name="name", instrument_name="instrument_name[0-9]")
+        for wildcard_name in (
+            "instrument_name*",
+            "*instrument_name",
+            "instrument?name",
+            "instrument_[0-9]",
+            "instrument_[!a-z]",
+            "instrument_[abc]",
+            "instrument_[",
+        ):
+            with self.subTest(wildcard_name=wildcard_name):
+                with self.assertRaises(Exception):
+                    View(name="name", instrument_name=wildcard_name)
+
+        view = View(name="name", instrument_name="instrument_name_1")
+        self.assertEqual(view._name, "name")
+        self.assertEqual(view._instrument_name, "instrument_name_1")
