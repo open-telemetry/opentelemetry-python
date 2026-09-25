@@ -1049,3 +1049,58 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 """
             ),
         )
+
+    def test_metrics_with_same_name_and_different_label_keys(self):
+        first = ScopeMetrics(
+            scope=InstrumentationScope(name="scope.first"),
+            metrics=[
+                _generate_sum(
+                    "request.count",
+                    1,
+                    attributes={"method": "GET", "status": "200"},
+                    description="Request count.",
+                    unit="",
+                )
+            ],
+            schema_url="",
+        )
+        second = ScopeMetrics(
+            scope=InstrumentationScope(name="scope.second"),
+            metrics=[
+                _generate_sum(
+                    "request.count",
+                    2,
+                    attributes={"host": "example.com", "method": "POST", "status": "500"},
+                    description="Request count.",
+                    unit="",
+                )
+            ],
+            schema_url="",
+        )
+        first_series = 'request_count_total{host="",method="GET",otel_scope_name="scope.first",otel_scope_schema_url="",otel_scope_version="",status="200"} 1.0'
+        second_series = 'request_count_total{host="example.com",method="POST",otel_scope_name="scope.second",otel_scope_schema_url="",otel_scope_version="",status="500"} 2.0'
+
+        for scope_metrics, series in (
+            ([first, second], [first_series, second_series]),
+            ([second, first], [second_series, first_series]),
+        ):
+            collector = _CustomCollector(disable_target_info=True)
+            collector.add_metrics_data(
+                MetricsData(
+                    resource_metrics=[
+                        ResourceMetrics(
+                            resource=Resource({}),
+                            scope_metrics=scope_metrics,
+                            schema_url="",
+                        )
+                    ]
+                )
+            )
+            self.assertEqual(
+                generate_latest(collector).decode("utf-8").splitlines(),
+                [
+                    "# HELP request_count_total Request count.",
+                    "# TYPE request_count_total counter",
+                    *series,
+                ],
+            )
