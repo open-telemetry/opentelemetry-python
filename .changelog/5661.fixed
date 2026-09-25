@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: preserve an existing error status description when setting a bare error status

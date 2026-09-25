@@ -1264,6 +1264,12 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(span5.status.status_code, StatusCode.ERROR)
         self.assertEqual(span5.status.description, "desc")
 
+        span6 = self.tracer.start_span("span6")
+        span6.set_status(Status(StatusCode.ERROR, "specific error"))
+        span6.set_status(Status(StatusCode.ERROR))
+        self.assertEqual(span6.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span6.status.description, "specific error")
+
     def test_ended_span(self):
         """Events, attributes are not allowed after span is ended"""
 

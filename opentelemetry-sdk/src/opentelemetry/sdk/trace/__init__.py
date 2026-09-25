@@ -988,6 +988,13 @@ class Span(trace_api.Span, ReadableSpan):
         if isinstance(status, Status):
             if self._status and self._status.status_code is StatusCode.OK or status.status_code is StatusCode.UNSET:
                 return
+            if (
+                self._status
+                and self._status.status_code is status.status_code
+                and self._status.description
+                and not status.description
+            ):
+                return
             if description is not None:
                 logger.warning(
                     "Description %s ignored. Use either `Status` or `(StatusCode, Description)`",
