@@ -99,6 +99,46 @@ class TestLoggingHandler(unittest.TestCase):
 
         logger.removeHandler(handler)
 
+    def test_log_flush(self):
+        logger_provider_mock = Mock()
+        logger_provider_mock.force_flush = Mock()
+
+        logger = logging.getLogger("foo")
+        handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider_mock)
+        logger.addHandler(handler)
+
+        with patch("opentelemetry.sdk._logs._internal.threading.Thread") as thread_mock:
+            logger.handlers[0].flush()
+            thread_mock.assert_called_once_with(target=logger_provider_mock.force_flush)
+            thread_mock.return_value.start.assert_called_once()
+
+        logger.removeHandler(handler)
+
+    def test_log_flush_thread_start_runtime_error_ignored(self):
+        logger_provider_mock = Mock()
+        logger_provider_mock.force_flush = Mock()
+
+        logger = logging.getLogger("foo")
+        handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider_mock)
+        logger.addHandler(handler)
+
+        with patch("opentelemetry.sdk._logs._internal.threading.Thread") as thread_mock:
+            thread_mock.return_value.start.side_effect = RuntimeError("can't create new thread at interpreter shutdown")
+            logger.handlers[0].flush()
+
+        logger.removeHandler(handler)
+
+    def test_log_flush_when_logger_provider_none(self):
+        logger = logging.getLogger("foo")
+        handler = LoggingHandler(level=logging.NOTSET, logger_provider=None)
+        logger.addHandler(handler)
+
+        with patch("opentelemetry.sdk._logs._internal.threading.Thread") as thread_mock:
+            logger.handlers[0].flush()
+            thread_mock.assert_not_called()
+
+        logger.removeHandler(handler)
+
     def test_log_record_no_span_context(self):
         processor, logger, handler = set_up_test_logging(logging.WARNING)
 
