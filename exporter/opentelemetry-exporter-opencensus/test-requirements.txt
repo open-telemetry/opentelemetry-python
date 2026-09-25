@@ -1,4 +1,4 @@
-asgiref==3.7.2
+asgiref==3.12.1
 grpcio==1.75.1
 iniconfig==2.0.0
 opencensus-proto==0.1.0
