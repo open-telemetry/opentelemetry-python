@@ -58,6 +58,7 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
 from opentelemetry.test.mock_test_classes import IterEntryPoint
+from opentelemetry.trace import TraceFlags
 
 logger = getLogger(__name__)
 
@@ -177,6 +178,7 @@ class TestOTLPExporterMixin(TestCase):
                 trace_state={"a": "b", "c": "d"},
                 span_id=10217189687419569865,
                 trace_id=67545097771067222548457157018666467027,
+                trace_flags=TraceFlags.DEFAULT,
             ),
         )
 
