@@ -9,10 +9,7 @@ from __future__ import annotations
 import builtins
 import dataclasses
 import enum
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
@@ -39,7 +36,7 @@ class DataPointFlags(enum.IntEnum):
     DATA_POINT_FLAGS_NO_RECORDED_VALUE_MASK = 1
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class MetricsData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message MetricsData
@@ -80,7 +77,7 @@ class MetricsData(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ResourceMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceMetrics
@@ -132,7 +129,7 @@ class ResourceMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ScopeMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeMetrics
@@ -184,7 +181,7 @@ class ScopeMetrics(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Metric(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Metric
@@ -268,7 +265,7 @@ class Metric(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Gauge(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Gauge
@@ -309,7 +306,7 @@ class Gauge(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Sum(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Sum
@@ -352,8 +349,7 @@ class Sum(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("dataPoints")) is not None:
             _args["data_points"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: NumberDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "aggregation_temporality")
-            _args["aggregation_temporality"] = AggregationTemporality(_value)
+            _args["aggregation_temporality"] = opentelemetry.proto_json._json_codec.decode_enum(_value, AggregationTemporality, "aggregation_temporality")
         if (_value := data.get("isMonotonic")) is not None:
             opentelemetry.proto_json._json_codec.validate_type(_value, builtins.bool, "is_monotonic")
             _args["is_monotonic"] = _value
@@ -362,7 +358,7 @@ class Sum(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Histogram(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Histogram
@@ -402,14 +398,13 @@ class Histogram(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("dataPoints")) is not None:
             _args["data_points"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: HistogramDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "aggregation_temporality")
-            _args["aggregation_temporality"] = AggregationTemporality(_value)
+            _args["aggregation_temporality"] = opentelemetry.proto_json._json_codec.decode_enum(_value, AggregationTemporality, "aggregation_temporality")
 
         return cls(**_args)
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExponentialHistogram(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExponentialHistogram
@@ -449,14 +444,13 @@ class ExponentialHistogram(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("dataPoints")) is not None:
             _args["data_points"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: ExponentialHistogramDataPoint.from_dict(_v), "data_points")
         if (_value := data.get("aggregationTemporality")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "aggregation_temporality")
-            _args["aggregation_temporality"] = AggregationTemporality(_value)
+            _args["aggregation_temporality"] = opentelemetry.proto_json._json_codec.decode_enum(_value, AggregationTemporality, "aggregation_temporality")
 
         return cls(**_args)
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Summary(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Summary
@@ -497,7 +491,7 @@ class Summary(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class NumberDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message NumberDataPoint
@@ -569,7 +563,7 @@ class NumberDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class HistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message HistogramDataPoint
@@ -661,14 +655,14 @@ class HistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExponentialHistogramDataPoint
     """
 
     @typing.final
-    @_dataclass
+    @dataclasses.dataclass(slots=True)
     class Buckets(opentelemetry.proto_json._json_codec.JsonMessage):
         """
         Generated from protobuf message Buckets
@@ -815,14 +809,14 @@ class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMes
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class SummaryDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message SummaryDataPoint
     """
 
     @typing.final
-    @_dataclass
+    @dataclasses.dataclass(slots=True)
     class ValueAtQuantile(opentelemetry.proto_json._json_codec.JsonMessage):
         """
         Generated from protobuf message ValueAtQuantile
@@ -932,7 +926,7 @@ class SummaryDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Exemplar(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Exemplar
