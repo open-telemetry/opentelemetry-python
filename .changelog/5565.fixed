@@ -1,0 +1,1 @@
+`opentelemetry-api`: replace an attribute value nested more than 100 levels deep, including a self-referential one, with `None` instead of raising `RecursionError` into the caller

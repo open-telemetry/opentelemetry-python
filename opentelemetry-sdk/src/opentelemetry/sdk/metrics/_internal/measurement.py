@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from opentelemetry.attributes import _clean_attribute_value
+from opentelemetry.attributes import _clean_attributes
 from opentelemetry.context import Context
 from opentelemetry.util.types import Attributes
 
@@ -44,7 +44,7 @@ class Measurement:
                 object.__setattr__(
                     self,
                     "attributes",
-                    _clean_attribute_value(self.attributes, None),
+                    _clean_attributes(self.attributes, None),
                 )
             else:
                 _logger.warning(
