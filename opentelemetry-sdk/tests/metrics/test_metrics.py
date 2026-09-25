@@ -101,7 +101,9 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         mock_exporter._preferred_temporality = None
         mock_exporter._preferred_aggregation = None
         metric_reader_0 = PeriodicExportingMetricReader(mock_exporter)
+        self.addCleanup(metric_reader_0.shutdown)
         metric_reader_1 = PeriodicExportingMetricReader(mock_exporter)
+        self.addCleanup(metric_reader_1.shutdown)
 
         with self.assertNotRaises(Exception):
             MeterProvider(metric_readers=(metric_reader_0,))
