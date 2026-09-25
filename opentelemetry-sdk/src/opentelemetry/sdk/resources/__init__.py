@@ -670,18 +670,17 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     Fast path: if no extra detectors are configured, returns only the two
     built-in detectors without scanning entry_points.
 
-    "service_instance" (ServiceInstanceIdResourceDetector) and "otel"
-    (OTELResourceDetector) are always appended as defaults. "otel" is last so
+    "service_instance" (ServiceInstanceIdResourceDetector) is prepended unless
+    it is explicitly configured. "otel" (OTELResourceDetector) is last so
     that OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge
-    priority, but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
-    is respected for either name.
+    priority, but an explicit position in
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS is respected for either name.
     """
-    detector_names: list[str] = list(
-        dict.fromkeys(
-            [name.strip() for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",") if name.strip()]
-            + ["service_instance", "otel"]
-        )
-    )
+    configured_detector_names = [
+        name.strip() for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",") if name.strip()
+    ]
+    default_detector_names = [] if "service_instance" in configured_detector_names else ["service_instance"]
+    detector_names: list[str] = list(dict.fromkeys(default_detector_names + configured_detector_names + ["otel"]))
 
     # Fast path: only the two built-in detectors — no entry_points scan needed.
     if detector_names == ["service_instance", "otel"]:
