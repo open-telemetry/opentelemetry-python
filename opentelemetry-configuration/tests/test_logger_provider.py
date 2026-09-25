@@ -4,6 +4,7 @@
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access
 
+import os
 import sys
 import unittest
 from unittest.mock import MagicMock, patch
@@ -22,6 +23,11 @@ from opentelemetry.configuration._logger_provider import (
     create_logger_provider,
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
+from opentelemetry.configuration.models import (
+    AttributeLimits,
+    NameStringValuePair,
+    SeverityNumber,
+)
 from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
@@ -48,10 +54,6 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
-)
-from opentelemetry.configuration.models import (
-    NameStringValuePair,
-    SeverityNumber,
 )
 from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
@@ -428,20 +430,71 @@ class TestCreateLogRecordExporters(unittest.TestCase):
 
 
 class TestLogRecordLimits(unittest.TestCase):
-    def test_limits_logs_warning(self):
+    def test_default_limits(self):
+        provider = create_logger_provider(None)
+        self.assertEqual(provider._log_record_limits.max_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_attribute_length)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_log_record_attribute_length)
+
+    def test_default_limits_do_not_read_env_vars(self):
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_ATTRIBUTE_COUNT_LIMIT": "1",
+                "OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT": "2",
+            },
+        ):
+            provider = create_logger_provider(None)
+        self.assertEqual(provider._log_record_limits.max_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_attribute_length)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_log_record_attribute_length)
+
+    def test_limits_from_config(self):
         config = LoggerProviderConfig(
             processors=[],
-            limits=LogRecordLimitsConfig(attribute_count_limit=64),
+            limits=LogRecordLimitsConfig(
+                attribute_count_limit=64,
+                attribute_value_length_limit=256,
+            ),
         )
-        with self.assertLogs(
-            "opentelemetry.configuration._logger_provider",
-            level="WARNING",
-        ) as cm:
-            create_logger_provider(config)
-        self.assertTrue(
-            any("limits" in msg for msg in cm.output),
-            "Expected warning about unsupported limits",
+        provider = create_logger_provider(config)
+        self.assertEqual(provider._log_record_limits.max_attributes, 64)
+        self.assertEqual(provider._log_record_limits.max_attribute_length, 256)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 64)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 256)
+
+    def test_config_limits_are_not_overridden_by_log_record_env_vars(self):
+        config = LoggerProviderConfig(
+            processors=[],
+            limits=LogRecordLimitsConfig(
+                attribute_count_limit=64,
+                attribute_value_length_limit=256,
+            ),
         )
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT": "5",
+                "OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT": "3",
+            },
+        ):
+            provider = create_logger_provider(config)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 64)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 256)
+
+    def test_default_limits_are_not_overridden_by_log_record_env_vars(self):
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT": "5",
+                "OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT": "3",
+            },
+        ):
+            provider = create_logger_provider(None)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 128)
+        self.assertIsNone(provider._log_record_limits.max_log_record_attribute_length)
 
     @staticmethod
     def test_no_limits_no_warning():
@@ -449,6 +502,35 @@ class TestLogRecordLimits(unittest.TestCase):
         with patch("opentelemetry.configuration._logger_provider._logger") as mock_logger:
             create_logger_provider(config)
             mock_logger.warning.assert_not_called()
+
+    def test_global_attribute_count_limit_used_when_no_per_signal_limits(self):
+        global_limits = AttributeLimits(attribute_count_limit=42)
+        provider = create_logger_provider(None, global_attribute_limits=global_limits)
+        self.assertEqual(provider._log_record_limits.max_attributes, 42)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 42)
+
+    def test_global_attribute_value_length_limit_used_when_no_per_signal_limits(
+        self,
+    ):
+        global_limits = AttributeLimits(attribute_value_length_limit=64)
+        provider = create_logger_provider(None, global_attribute_limits=global_limits)
+        self.assertEqual(provider._log_record_limits.max_attribute_length, 64)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 64)
+
+    def test_per_signal_limits_override_global(self):
+        global_limits = AttributeLimits(attribute_count_limit=100, attribute_value_length_limit=200)
+        config = LoggerProviderConfig(
+            processors=[],
+            limits=LogRecordLimitsConfig(
+                attribute_count_limit=7,
+                attribute_value_length_limit=16,
+            ),
+        )
+        provider = create_logger_provider(config, global_attribute_limits=global_limits)
+        self.assertEqual(provider._log_record_limits.max_attributes, 7)
+        self.assertEqual(provider._log_record_limits.max_attribute_length, 16)
+        self.assertEqual(provider._log_record_limits.max_log_record_attributes, 7)
+        self.assertEqual(provider._log_record_limits.max_log_record_attribute_length, 16)
 
 
 # Configurator tests access the SDK LoggerProvider private

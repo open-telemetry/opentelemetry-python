@@ -11,6 +11,7 @@ import time
 import unittest
 import uuid
 from concurrent.futures import TimeoutError
+from functools import partial
 from logging import ERROR, WARNING
 from os import environ
 from unittest.mock import MagicMock, Mock, call, mock_open, patch
@@ -1246,6 +1247,72 @@ class TestServiceInstanceIdResourceDetector(unittest.TestCase):
 
     def test_is_process_dependent(self):
         self.assertTrue(ServiceInstanceIdResourceDetector().is_process_dependent())
+
+    @patch.dict(environ, {}, clear=True)
+    def test_resource_attributes_override_service_instance_id(self):
+        resource = Resource.create({SERVICE_INSTANCE_ID: "resource-instance-id"})
+
+        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "resource-instance-id")
+
+    @patch.dict(
+        environ,
+        {OTEL_RESOURCE_ATTRIBUTES: "service.instance.id=environment-instance-id"},
+        clear=True,
+    )
+    def test_environment_resource_attributes_override_service_instance_id(self):
+        resource = Resource.create()
+
+        self.assertEqual(resource.attributes[SERVICE_INSTANCE_ID], "environment-instance-id")
+
+    def test_service_instance_detector_ordering(self):
+        test_cases = (
+            ("", False, True),
+            ("mock", True, False),
+            ("mock,service_instance", True, True),
+        )
+
+        def entry_points_side_effect(entry_point, *args, **kwargs):
+            if kwargs.get("name") == "mock":
+                return [entry_point]
+            return real_entry_points(*args, **kwargs)
+
+        for detector_names, includes_custom_detector, expects_generated_id in test_cases:
+            with self.subTest(detector_names=detector_names):
+                custom_detector = Mock(spec=ResourceDetector)
+                custom_detector.detect.return_value = Resource(
+                    {
+                        SERVICE_INSTANCE_ID: "configured-instance-id",
+                        "custom.detector": "value",
+                    }
+                )
+                entry_point = Mock(**{"load.return_value": Mock(return_value=custom_detector)})
+
+                with patch.dict(
+                    environ,
+                    {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: detector_names},
+                    clear=True,
+                ):
+                    if includes_custom_detector:
+                        with patch(
+                            "opentelemetry.util._importlib_metadata.entry_points",
+                            side_effect=partial(entry_points_side_effect, entry_point),
+                        ):
+                            resource = Resource.create()
+                        custom_detector.detect.assert_called_once()
+                        self.assertEqual(resource.attributes["custom.detector"], "value")
+                    else:
+                        resource = Resource.create()
+
+                if expects_generated_id:
+                    self.assertEqual(
+                        uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID]).version,
+                        4,
+                    )
+                else:
+                    self.assertEqual(
+                        resource.attributes[SERVICE_INSTANCE_ID],
+                        "configured-instance-id",
+                    )
 
     def test_detect_value_is_valid_uuid4(self):
         _resources_module._service_instance_id = None
