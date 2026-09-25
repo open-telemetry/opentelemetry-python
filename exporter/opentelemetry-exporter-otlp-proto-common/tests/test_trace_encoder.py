@@ -250,7 +250,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                         code=SDKStatusCode.ERROR.value,
                                         message="Example description",
                                     ),
-                                    flags=0x300,
+                                    flags=0x301,
                                 )
                             ],
                         ),
@@ -428,46 +428,45 @@ class TestOTLPTraceEncoder(unittest.TestCase):
 
     def test_span_flags(self):
         trace_id = 0x3E0C63257DE34C926F9EFCD03927272E
-        has_remote = PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
-        is_remote = PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
-        sampled = SDKTraceFlags.SAMPLED
         cases = [
             (
-                "remote_parent_unsampled",
-                SDKSpanContext(trace_id, 0x1111, is_remote=True),
-                has_remote | is_remote,
-            ),
-            (
-                "remote_parent_sampled",
+                "sampled_remote_parent",
                 SDKSpanContext(
                     trace_id,
-                    0x1111,
-                    is_remote=True,
-                    trace_flags=SDKTraceFlags(SDKTraceFlags.SAMPLED),
-                ),
-                has_remote | is_remote | sampled,
-            ),
-            (
-                "local_parent_unsampled",
-                SDKSpanContext(trace_id, 0x2222, is_remote=False),
-                has_remote,
-            ),
-            (
-                "local_parent_sampled",
-                SDKSpanContext(
-                    trace_id,
-                    0x2222,
+                    0x1110,
                     is_remote=False,
-                    trace_flags=SDKTraceFlags(SDKTraceFlags.SAMPLED),
+                    trace_flags=SDKTraceFlags.SAMPLED,
                 ),
-                has_remote | sampled,
+                SDKSpanContext(trace_id, 0x1111, is_remote=True),
+                (
+                    PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+                    | PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+                    | SDKTraceFlags.SAMPLED
+                ),
+            ),
+            (
+                "unsampled_local_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x2220,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.DEFAULT,
+                ),
+                SDKSpanContext(trace_id, 0x2222, is_remote=False),
+                PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK,
             ),
             (
                 "no_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x3330,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.SAMPLED,
+                ),
                 None,
-                has_remote,
+                (PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | SDKTraceFlags.SAMPLED),
             ),
         ]
-        for name, context, expected_flags in cases:
+        for name, span_context, parent_context, expected_flags in cases:
             with self.subTest(name=name):
-                self.assertEqual(_span_flags(context), expected_flags)
+                self.assertEqual(_span_flags(span_context, parent_context), expected_flags)
