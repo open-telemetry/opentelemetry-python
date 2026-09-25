@@ -323,6 +323,22 @@ class _CustomCollector:
         """Add metrics to Prometheus data"""
         self._metrics_datas.append(metrics_data)
 
+    def _get_family_label_keys(self, metrics_datas: Sequence[MetricsData]) -> dict[str, set[str]]:
+        family_label_keys: dict[str, set[str]] = {}
+        for metrics_data in metrics_datas:
+            for resource_metrics in metrics_data.resource_metrics:
+                resource_attrs = self._build_resource_attrs(resource_metrics.resource)
+                for scope_metrics in resource_metrics.scope_metrics:
+                    scope_attrs = self._build_scope_attrs(scope_metrics.scope)
+                    for metric in scope_metrics.metrics:
+                        metric_name = self._resolve_metric_name(metric.name)
+                        description = metric.description or ""
+                        unit = map_unit(metric.unit or "")
+                        label_keys, _, _ = self._collect_data_points(metric.data, scope_attrs, resource_attrs)
+                        family_id = "|".join((metric_name, description, unit))
+                        family_label_keys.setdefault(family_id, set()).update(label_keys)
+        return family_label_keys
+
     def collect(self) -> Iterable[PrometheusMetric]:
         """Collect fetches the metrics from OpenTelemetry
         and delivers them as Prometheus Metrics.
@@ -334,11 +350,16 @@ class _CustomCollector:
 
         metric_family_id_metric_family = {}
 
-        if len(self._metrics_datas):
+        metrics_datas = list(self._metrics_datas)
+        self._metrics_datas.clear()
+
+        family_label_keys = self._get_family_label_keys(metrics_datas)
+
+        if metrics_datas:
             if not self._disable_target_info:
                 if self._target_info is None:
                     attributes: Attributes = {}
-                    for res in self._metrics_datas[0].resource_metrics:
+                    for res in metrics_datas[0].resource_metrics:
                         attributes = {**attributes, **res.resource.attributes}
 
                     self._target_info = self._create_info_metric(
@@ -346,16 +367,17 @@ class _CustomCollector:
                     )
                 metric_family_id_metric_family[_TARGET_INFO_NAME] = self._target_info
 
-        while self._metrics_datas:
-            self._translate_to_prometheus(self._metrics_datas.popleft(), metric_family_id_metric_family)
+        for metrics_data in metrics_datas:
+            self._translate_to_prometheus(metrics_data, metric_family_id_metric_family, family_label_keys)
 
-            if metric_family_id_metric_family:
-                yield from metric_family_id_metric_family.values()
+        if metric_family_id_metric_family:
+            yield from metric_family_id_metric_family.values()
 
     def _translate_to_prometheus(
         self,
         metrics_data: MetricsData,
         metric_family_id_metric_family: dict[str, PrometheusMetric],
+        family_label_keys: dict[str, set[str]],
     ):
         for rm in metrics_data.resource_metrics:
             resource_attrs = self._build_resource_attrs(rm.resource)
@@ -367,6 +389,7 @@ class _CustomCollector:
                         scope_attrs=scope_attrs,
                         resource_attrs=resource_attrs,
                         metric_family_id_metric_family=metric_family_id_metric_family,
+                        family_label_keys=family_label_keys,
                     )
 
     def _translate_metric(
@@ -375,12 +398,18 @@ class _CustomCollector:
         scope_attrs: dict[str, AnyValue],
         resource_attrs: dict[str, AnyValue],
         metric_family_id_metric_family: dict[str, PrometheusMetric],
+        family_label_keys: dict[str, set[str]],
     ) -> None:
         metric_name = self._resolve_metric_name(metric.name)
         description = metric.description or ""
         unit = map_unit(metric.unit or "")
-        label_keys, label_rows, values = self._collect_data_points(metric.data, scope_attrs, resource_attrs)
         per_metric_family_id = "|".join((metric_name, description, unit))
+        label_keys, label_rows, values = self._collect_data_points(
+            metric.data,
+            scope_attrs,
+            resource_attrs,
+            family_label_keys[per_metric_family_id],
+        )
 
         convert_sum_to_gauge = _should_convert_sum_to_gauge(metric)
 
@@ -447,6 +476,7 @@ class _CustomCollector:
         metric_data: DataT,
         scope_attrs: dict[str, AnyValue],
         resource_attrs: dict[str, AnyValue],
+        family_label_keys: set[str] | None = None,
     ) -> tuple[list[str], list[list[str]], list[float | dict[str, Any]]]:
         keys: set[str] = set()
         rows: list[dict[str, str]] = []
@@ -475,6 +505,8 @@ class _CustomCollector:
             else:
                 values.append(point.value)
 
+        if family_label_keys is not None:
+            keys.update(family_label_keys)
         label_keys = sorted(keys)
         # Backfill missing labels with "" so every data point exposes the
         # full label set expected by the Prometheus family.

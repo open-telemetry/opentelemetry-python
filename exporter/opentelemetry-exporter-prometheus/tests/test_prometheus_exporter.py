@@ -1049,3 +1049,54 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 """
             ),
         )
+
+    def test_metrics_with_same_family_and_different_label_sets(self):
+        first_metric = _generate_gauge(
+            "request_duration",
+            1,
+            attributes={"method": "GET", "status": "200"},
+            description="Duration.",
+            unit="ms",
+        )
+        second_metric = _generate_gauge(
+            "request_duration",
+            1,
+            attributes={"host": "example.com", "method": "POST", "status": "500"},
+            description="Duration.",
+            unit="ms",
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=InstrumentationScope(name="scope.first"),
+                            metrics=[first_metric],
+                            schema_url="schema_url",
+                        ),
+                        ScopeMetrics(
+                            scope=InstrumentationScope(name="scope.second"),
+                            metrics=[second_metric],
+                            schema_url="schema_url",
+                        ),
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+
+        collector = _CustomCollector(disable_target_info=True, scope_info_enabled=False)
+        collector.add_metrics_data(metrics_data)
+        result = generate_latest(collector).decode("utf-8")
+
+        self.assertEqual(result.count("# HELP request_duration_milliseconds Duration.\n"), 1)
+        self.assertEqual(result.count("# TYPE request_duration_milliseconds gauge\n"), 1)
+        self.assertIn(
+            'request_duration_milliseconds{host="",method="GET",status="200"} 1.0\n',
+            result,
+        )
+        self.assertIn(
+            'request_duration_milliseconds{host="example.com",method="POST",status="500"} 1.0\n',
+            result,
+        )

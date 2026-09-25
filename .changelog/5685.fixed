@@ -1,0 +1,1 @@
+`opentelemetry-exporter-prometheus`: preserve label names across instruments sharing a metric family
