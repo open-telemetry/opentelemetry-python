@@ -29,7 +29,7 @@ Stability
 ---------
 
 This package follows `Semantic Versioning <https://semver.org/>`_ for its
-**public** modules only (i.e. portions of the Semantic Conventions which have
+**public** modules only (i.e. portions of the semantic conventions which have
 been marked as **stable**).
 
 Stable modules
@@ -80,6 +80,10 @@ and this package will follow those changes without a major version bump.
 The ``_incubating`` modules also contain copies of the stable conventions, marked as
 deprecated in favor of the stable module. When a convention is available in a stable
 module, import it from there.
+
+Library authors that wish to depend on incubating semantic conventions without having
+to pin `opentelemetry-semantic-conventions` can consider vendoring incubating conventions
+directly into their package.
 
 Other caveats
 ~~~~~~~~~~~~~
