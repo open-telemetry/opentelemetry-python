@@ -92,4 +92,34 @@ jobs:
       - name: Check github workflows are up to date
         run: git diff --exit-code || (echo 'Generated workflows are out of date, run "tox -e generate-workflows" and commit the changes in this PR.' && exit 1)
       {%- endif %}
+      {%- if job_data == "docs" %}
+
+  docs-rtd:
+    name: docs-rtd
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${% raw %}{{ github.sha }}{% endraw %}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade --no-cache-dir pip setuptools
+          python -m pip install --upgrade --no-cache-dir sphinx
+          python -m pip install --exists-action=w --no-cache-dir -r docs-requirements.txt
+
+      - name: Build documentation
+        working-directory: docs
+        env:
+          READTHEDOCS: "True"
+          READTHEDOCS_VERSION: latest
+        run: python -m sphinx -T -b html -d _build/doctrees -D language=en . _build/html
+      {%- endif %}
   {%- endfor %}
