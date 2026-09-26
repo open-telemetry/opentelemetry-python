@@ -208,6 +208,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             _propagate_false_logger.warning(
                 "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
             )
+            self._metrics.drop_items(1, "recursion")
             return
         token = attach(
             set_value(
