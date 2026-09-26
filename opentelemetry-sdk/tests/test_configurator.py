@@ -23,6 +23,7 @@ from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
     _EXPORTER_OTLP_PROTO_GRPC,
     _EXPORTER_OTLP_PROTO_HTTP,
+    _apply_python_extensions,
     _get_exporter_names,
     _get_id_generator,
     _get_logger_configurator,
@@ -1407,7 +1408,7 @@ class TestConfigurator(TestCase):
             patch.object(tracer_provider, "_set_tracer_configurator") as set_tracer_configurator,
             patch("opentelemetry.sdk._configuration._initialize_components") as initialize_components,
         ):
-            _OTelSDKConfigurator()._apply_python_extensions(config)
+            _apply_python_extensions(config)
 
         set_logger_configurator.assert_called_once_with(logger_configurator=logger_configurator)
         set_meter_configurator.assert_called_once_with(meter_configurator=meter_configurator)
@@ -1448,7 +1449,7 @@ class TestConfigurator(TestCase):
             patch("opentelemetry.sdk._configuration.get_meter_provider") as get_meter_provider,
             patch("opentelemetry.sdk._configuration.get_tracer_provider") as get_tracer_provider,
         ):
-            _OTelSDKConfigurator()._apply_python_extensions(config)
+            _apply_python_extensions(config)
 
         get_logger_provider.assert_not_called()
         get_meter_provider.assert_not_called()
@@ -1494,7 +1495,7 @@ class TestConfigurator(TestCase):
             patch.object(meter_provider, "_set_meter_configurator") as set_meter_configurator,
             patch.object(tracer_provider, "_set_tracer_configurator") as set_tracer_configurator,
         ):
-            _OTelSDKConfigurator()._apply_python_extensions(config)
+            _apply_python_extensions(config)
 
         set_logger_configurator.assert_not_called()
         set_meter_configurator.assert_not_called()

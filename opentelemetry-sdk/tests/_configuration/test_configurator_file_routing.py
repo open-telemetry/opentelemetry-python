@@ -72,9 +72,8 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         fake.configure_sdk.side_effect = lambda config: call_order.append(("configure_sdk", config))
         configurator = _OTelSDKConfigurator()
 
-        with patch.object(
-            configurator,
-            "_apply_python_extensions",
+        with patch(
+            "opentelemetry.sdk._configuration._apply_python_extensions",
             side_effect=lambda config: call_order.append(("python_extensions", config)),
         ) as apply_python_extensions:
             with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
