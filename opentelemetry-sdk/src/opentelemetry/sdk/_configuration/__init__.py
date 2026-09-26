@@ -603,6 +603,7 @@ def _initialize_components(
     if _init_opamp is not None:
         _init_opamp(resource)
 
+
 def _apply_python_extensions(config: Any) -> None:
     """Apply Python-specific environment extensions to configured providers."""
     if config.disabled:
@@ -641,7 +642,6 @@ def _apply_python_extensions(config: Any) -> None:
         if isinstance(tracer_provider, TracerProvider):
             # pylint: disable-next=protected-access
             tracer_provider._set_tracer_configurator(tracer_configurator=tracer_configurator)
-
 
 
 class _BaseConfigurator(ABC):
