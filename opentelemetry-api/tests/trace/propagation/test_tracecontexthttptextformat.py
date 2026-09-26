@@ -277,3 +277,19 @@ class TestTraceContextFormat(unittest.TestCase):
 
                 ctx = FORMAT.extract(carrier)
                 self.assertDictEqual(Context(), ctx)
+
+    def test_inject_invalid_span_context(self):
+        """Do not inject when SpanContext is invalid even if not equal to INVALID_SPAN_CONTEXT."""
+        invalid_contexts = [
+            trace.SpanContext(trace_id=0, span_id=0, is_remote=True),
+            trace.SpanContext(trace_id=0, span_id=123, is_remote=False),
+            trace.SpanContext(trace_id=123, span_id=0, is_remote=False),
+            trace.SpanContext(trace_id=0, span_id=0, is_remote=True, trace_flags=trace.TraceFlags(1)),
+        ]
+        for span_context in invalid_contexts:
+            with self.subTest(span_context=span_context):
+                carrier: dict[str, str] = {}
+                span = trace.NonRecordingSpan(span_context)
+                ctx = trace.set_span_in_context(span)
+                FORMAT.inject(carrier, context=ctx)
+                self.assertEqual(carrier, {})

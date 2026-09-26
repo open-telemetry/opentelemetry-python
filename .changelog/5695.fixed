@@ -1,0 +1,1 @@
+opentelemetry-api, opentelemetry-propagator-b3, opentelemetry-propagator-jaeger: update propagators to check `span_context.is_valid` during inject instead of identity with `INVALID_SPAN_CONTEXT` (#5695)
