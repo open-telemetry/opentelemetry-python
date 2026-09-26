@@ -81,7 +81,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         """
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if not span_context.is_valid:
             return
         traceparent_string = f"00-{format_trace_id(span_context.trace_id)}-{format_span_id(span_context.span_id)}-{span_context.trace_flags:02x}"
         setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
