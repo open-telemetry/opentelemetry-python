@@ -10,6 +10,7 @@ import logging.config
 from collections.abc import Iterable, Sequence
 from logging import WARNING, getLogger
 from os import environ
+from types import SimpleNamespace
 from unittest import TestCase, mock
 from unittest.mock import Mock, patch
 
@@ -22,6 +23,7 @@ from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
     _EXPORTER_OTLP_PROTO_GRPC,
     _EXPORTER_OTLP_PROTO_HTTP,
+    _apply_python_extensions,
     _get_exporter_names,
     _get_id_generator,
     _get_logger_configurator,
@@ -41,7 +43,7 @@ from opentelemetry.sdk._configuration import (
     _initialize_components,
     _OTelSDKConfigurator,
 )
-from opentelemetry.sdk._logs import LoggingHandler, LogRecordProcessor
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler, LogRecordProcessor
 from opentelemetry.sdk._logs._internal import _RuleBasedLoggerConfigurator
 from opentelemetry.sdk._logs._internal.export import LogRecordExporter
 from opentelemetry.sdk._logs.export import (
@@ -68,7 +70,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import SpanProcessor, _RuleBasedTracerConfigurator
+from opentelemetry.sdk.trace import SpanProcessor, TracerProvider, _RuleBasedTracerConfigurator
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleSpanProcessor,
@@ -1361,6 +1363,143 @@ class TestConfigurator(TestCase):
             "sampler": "TEST_SAMPLER",
         }
         mock_init_comp.assert_called_once_with(**kwargs)
+
+    def test_python_configurators_are_applied_to_configured_global_providers(self):
+        config = SimpleNamespace(
+            disabled=False,
+            logger_provider=object(),
+            meter_provider=object(),
+            tracer_provider=object(),
+        )
+        logger_configurator = Mock()
+        meter_configurator = Mock()
+        tracer_configurator = Mock()
+        logger_provider = LoggerProvider(shutdown_on_exit=False)
+        meter_provider = MeterProvider(shutdown_on_exit=False)
+        tracer_provider = TracerProvider(shutdown_on_exit=False)
+
+        with (
+            patch.dict(
+                environ,
+                {
+                    "OTEL_PYTHON_LOGGER_CONFIGURATOR": "logger_configurator",
+                    "OTEL_PYTHON_METER_CONFIGURATOR": "meter_configurator",
+                    "OTEL_PYTHON_TRACER_CONFIGURATOR": "tracer_configurator",
+                },
+                clear=True,
+            ),
+            patch("opentelemetry.sdk._configuration.get_logger_provider", return_value=logger_provider),
+            patch("opentelemetry.sdk._configuration.get_meter_provider", return_value=meter_provider),
+            patch("opentelemetry.sdk._configuration.get_tracer_provider", return_value=tracer_provider),
+            patch(
+                "opentelemetry.sdk._configuration._import_logger_configurator",
+                return_value=logger_configurator,
+            ),
+            patch(
+                "opentelemetry.sdk._configuration._import_meter_configurator",
+                return_value=meter_configurator,
+            ),
+            patch(
+                "opentelemetry.sdk._configuration._import_tracer_configurator",
+                return_value=tracer_configurator,
+            ),
+            patch.object(logger_provider, "_set_logger_configurator") as set_logger_configurator,
+            patch.object(meter_provider, "_set_meter_configurator") as set_meter_configurator,
+            patch.object(tracer_provider, "_set_tracer_configurator") as set_tracer_configurator,
+            patch("opentelemetry.sdk._configuration._initialize_components") as initialize_components,
+        ):
+            _apply_python_extensions(config)
+
+        set_logger_configurator.assert_called_once_with(logger_configurator=logger_configurator)
+        set_meter_configurator.assert_called_once_with(meter_configurator=meter_configurator)
+        set_tracer_configurator.assert_called_once_with(tracer_configurator=tracer_configurator)
+        initialize_components.assert_not_called()
+
+    def test_python_configurators_are_not_applied_when_provider_sections_are_omitted(self):
+        config = SimpleNamespace(
+            disabled=False,
+            logger_provider=None,
+            meter_provider=None,
+            tracer_provider=None,
+        )
+
+        with (
+            patch.dict(
+                environ,
+                {
+                    "OTEL_PYTHON_LOGGER_CONFIGURATOR": "logger_configurator",
+                    "OTEL_PYTHON_METER_CONFIGURATOR": "meter_configurator",
+                    "OTEL_PYTHON_TRACER_CONFIGURATOR": "tracer_configurator",
+                },
+                clear=True,
+            ),
+            patch(
+                "opentelemetry.sdk._configuration._import_logger_configurator",
+                return_value=Mock(),
+            ),
+            patch(
+                "opentelemetry.sdk._configuration._import_meter_configurator",
+                return_value=Mock(),
+            ),
+            patch(
+                "opentelemetry.sdk._configuration._import_tracer_configurator",
+                return_value=Mock(),
+            ),
+            patch("opentelemetry.sdk._configuration.get_logger_provider") as get_logger_provider,
+            patch("opentelemetry.sdk._configuration.get_meter_provider") as get_meter_provider,
+            patch("opentelemetry.sdk._configuration.get_tracer_provider") as get_tracer_provider,
+        ):
+            _apply_python_extensions(config)
+
+        get_logger_provider.assert_not_called()
+        get_meter_provider.assert_not_called()
+        get_tracer_provider.assert_not_called()
+
+    def test_python_configurators_are_not_applied_when_config_is_disabled(self):
+        config = SimpleNamespace(
+            disabled=True,
+            logger_provider=object(),
+            meter_provider=object(),
+            tracer_provider=object(),
+        )
+        logger_provider = LoggerProvider(shutdown_on_exit=False)
+        meter_provider = MeterProvider(shutdown_on_exit=False)
+        tracer_provider = TracerProvider(shutdown_on_exit=False)
+
+        with (
+            patch.dict(
+                environ,
+                {
+                    "OTEL_PYTHON_LOGGER_CONFIGURATOR": "logger_configurator",
+                    "OTEL_PYTHON_METER_CONFIGURATOR": "meter_configurator",
+                    "OTEL_PYTHON_TRACER_CONFIGURATOR": "tracer_configurator",
+                },
+                clear=True,
+            ),
+            patch("opentelemetry.sdk._configuration.get_logger_provider", return_value=logger_provider),
+            patch("opentelemetry.sdk._configuration.get_meter_provider", return_value=meter_provider),
+            patch("opentelemetry.sdk._configuration.get_tracer_provider", return_value=tracer_provider),
+            patch(
+                "opentelemetry.sdk._configuration._import_logger_configurator",
+                return_value=Mock(),
+            ),
+            patch(
+                "opentelemetry.sdk._configuration._import_meter_configurator",
+                return_value=Mock(),
+            ),
+            patch(
+                "opentelemetry.sdk._configuration._import_tracer_configurator",
+                return_value=Mock(),
+            ),
+            patch.object(logger_provider, "_set_logger_configurator") as set_logger_configurator,
+            patch.object(meter_provider, "_set_meter_configurator") as set_meter_configurator,
+            patch.object(tracer_provider, "_set_tracer_configurator") as set_tracer_configurator,
+        ):
+            _apply_python_extensions(config)
+
+        set_logger_configurator.assert_not_called()
+        set_meter_configurator.assert_not_called()
+        set_tracer_configurator.assert_not_called()
 
     def test_custom_configurator_with_init_args(self):
         class ConfiguratorWithArgs(_OTelSDKConfigurator):

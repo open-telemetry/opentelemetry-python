@@ -6,6 +6,7 @@
 
 import types
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
@@ -48,7 +49,9 @@ class TestConfiguratorFileRouting(unittest.TestCase):
     @patch("opentelemetry.sdk._configuration._initialize_components")
     def test_env_var_set_routes_to_declarative_path(self, mock_init_components):
         fake = _FakeConfigurationModule()
-        sentinel_config = object()
+        sentinel_config = SimpleNamespace(
+            disabled=False, logger_provider=None, meter_provider=None, tracer_provider=None
+        )
         fake.load_config_file.return_value = sentinel_config
 
         with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
@@ -57,6 +60,30 @@ class TestConfiguratorFileRouting(unittest.TestCase):
         fake.load_config_file.assert_called_once_with("/tmp/otel.yaml")
         fake.configure_sdk.assert_called_once_with(sentinel_config)
         mock_init_components.assert_not_called()
+
+    @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
+    def test_python_extensions_run_after_declarative_configuration(self):
+        fake = _FakeConfigurationModule()
+        sentinel_config = SimpleNamespace(
+            disabled=False, logger_provider=None, meter_provider=None, tracer_provider=None
+        )
+        fake.load_config_file.return_value = sentinel_config
+        call_order = []
+        fake.configure_sdk.side_effect = lambda config: call_order.append(("configure_sdk", config))
+        configurator = _OTelSDKConfigurator()
+
+        with patch(
+            "opentelemetry.sdk._configuration._apply_python_extensions",
+            side_effect=lambda config: call_order.append(("python_extensions", config)),
+        ) as apply_python_extensions:
+            with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
+                configurator._configure()
+
+        self.assertEqual(
+            call_order,
+            [("configure_sdk", sentinel_config), ("python_extensions", sentinel_config)],
+        )
+        apply_python_extensions.assert_called_once_with(sentinel_config)
 
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
     @patch.dict("sys.modules", {"opentelemetry.configuration": None}, clear=False)
@@ -73,7 +100,12 @@ class TestConfiguratorFileRouting(unittest.TestCase):
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
     def test_env_var_set_with_kwargs_warns_and_ignores(self):
         fake = _FakeConfigurationModule()
-        fake.load_config_file.return_value = object()
+        fake.load_config_file.return_value = SimpleNamespace(
+            disabled=False,
+            logger_provider=None,
+            meter_provider=None,
+            tracer_provider=None,
+        )
 
         with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
             with self.assertLogs("opentelemetry.sdk._configuration", level="WARNING") as captured:
