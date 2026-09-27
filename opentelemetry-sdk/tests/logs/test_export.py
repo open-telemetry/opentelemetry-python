@@ -95,7 +95,6 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         finally:
             root_logger.removeHandler(handler)
 
-
     @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     @mark.skipif(
         (3, 13, 0) <= sys.version_info <= (3, 13, 5),
@@ -118,24 +117,15 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         exporter = Exporter()
         logger_provider = LoggerProvider()
-        logger_provider.add_log_record_processor(
-            SimpleLogRecordProcessor(exporter, meter_provider=meter_provider)
-        )
+        logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter, meter_provider=meter_provider))
         root_logger = logging.getLogger()
-        handler = LoggingHandler(
-            level=logging.DEBUG, logger_provider=logger_provider
-        )
+        handler = LoggingHandler(level=logging.DEBUG, logger_provider=logger_provider)
         root_logger.addHandler(handler)
-        propagate_false_logger = logging.getLogger(
-            "opentelemetry.sdk._logs._internal.export.propagate.false"
-        )
+        propagate_false_logger = logging.getLogger("opentelemetry.sdk._logs._internal.export.propagate.false")
         try:
             with self.assertLogs(propagate_false_logger) as cm:
                 root_logger.warning("hello!")
-            assert (
-                "SimpleLogRecordProcessor.on_emit has entered a recursive loop"
-                in cm.output[0]
-            )
+            assert "SimpleLogRecordProcessor.on_emit has entered a recursive loop" in cm.output[0]
         finally:
             root_logger.removeHandler(handler)
 
@@ -151,11 +141,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         # The record the recursion guard discards is counted as processed with
         # error.type=recursion, so the total stays reconcilable with the number
         # of records the processor accepted.
-        recursion_points = [
-            dp
-            for dp in data_points
-            if dp.attributes.get("error.type") == "recursion"
-        ]
+        recursion_points = [dp for dp in data_points if dp.attributes.get("error.type") == "recursion"]
         self.assertEqual(
             len(recursion_points),
             1,
