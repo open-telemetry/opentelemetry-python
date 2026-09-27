@@ -78,6 +78,7 @@ from opentelemetry.sdk.version import (
     __version__ as _OPENTELEMETRY_SDK_VERSION,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.semconv.schemas import Schemas
 from opentelemetry.util.types import AnyValue
 
 psutil: ModuleType | None = None
@@ -205,6 +206,13 @@ class Resource:
             if sys.executable:
                 default_service_name += f":{os.path.basename(sys.executable)}"
             resource = resource.merge(Resource({SERVICE_NAME: default_service_name}, schema_url))
+
+        # If user explicitly provided a schema_url, it should take precedence
+        # over detector schema URLs. This follows the specification guidance
+        # that user-provided resource information has higher priority.
+        if schema_url:
+            resource = Resource(resource.attributes, schema_url)
+
         return resource
 
     @staticmethod
@@ -418,7 +426,7 @@ class ProcessResourceDetector(ResourceDetector):
             username = process.username()
             resource_info[PROCESS_OWNER] = username
 
-        return Resource(resource_info)  # type: ignore
+        return Resource(resource_info, Schemas.V1_44_0.value)  # type: ignore
 
 
 class OsResourceDetector(ResourceDetector):
@@ -501,7 +509,8 @@ class OsResourceDetector(ResourceDetector):
             {
                 OS_TYPE: os_type,
                 OS_VERSION: os_version,
-            }
+            },
+            Schemas.V1_44_0.value,
         )
 
 
@@ -629,7 +638,7 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
             if self.raise_on_error:
                 raise
 
-        return Resource(resource_info)
+        return Resource(resource_info, Schemas.V1_44_0.value)
 
 
 class ServiceInstanceIdResourceDetector(ResourceDetector):
@@ -661,7 +670,7 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
                 _service_instance_id = str(uuid.uuid4())
                 _service_instance_id_pid = current_pid
             instance_id = _service_instance_id
-        return Resource({SERVICE_INSTANCE_ID: instance_id})
+        return Resource({SERVICE_INSTANCE_ID: instance_id}, Schemas.V1_44_0.value)
 
 
 def _build_resource_detectors() -> list["ResourceDetector"]:
