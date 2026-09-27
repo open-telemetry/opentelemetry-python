@@ -38,6 +38,12 @@ from opentelemetry.sdk.util.instrumentation import (
     _scope_name_matches_glob,
 )
 from opentelemetry.semconv.attributes import exception_attributes
+from opentelemetry.trace import (
+    NonRecordingSpan,
+    SpanContext,
+    TraceFlags,
+    set_span_in_context,
+)
 
 
 class TestLoggerProvider(unittest.TestCase):
@@ -502,6 +508,70 @@ class TestLogger(unittest.TestCase):
         provider.add_log_record_processor(Mock())
         logger = provider.get_logger("test")
         self.assertFalse(logger.enabled())
+
+    def test_enabled_below_minimum_severity_returns_false(self):
+        logger, processor = self._get_logger()
+        logger._set_logger_config(_LoggerConfig(minimum_severity=SeverityNumber.WARN))
+
+        self.assertFalse(logger.enabled(severity_number=SeverityNumber.INFO4))
+        processor.enabled.assert_not_called()
+
+    def test_enabled_at_or_above_minimum_severity_returns_true(self):
+        logger, processor = self._get_logger()
+        logger._set_logger_config(_LoggerConfig(minimum_severity=SeverityNumber.WARN))
+        processor.enabled.return_value = True
+
+        self.assertTrue(logger.enabled(severity_number=SeverityNumber.WARN))
+        self.assertTrue(logger.enabled(severity_number=SeverityNumber.ERROR))
+
+    def test_enabled_unspecified_severity_bypasses_minimum_severity(self):
+        logger, processor = self._get_logger()
+        logger._set_logger_config(_LoggerConfig(minimum_severity=SeverityNumber.WARN))
+        processor.enabled.return_value = True
+
+        self.assertTrue(logger.enabled())
+        self.assertTrue(logger.enabled(severity_number=SeverityNumber.UNSPECIFIED))
+
+    def test_enabled_trace_based_unsampled_trace_returns_false(self):
+        logger, processor = self._get_logger()
+        logger._set_logger_config(_LoggerConfig(trace_based=True))
+        context = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    trace_id=1,
+                    span_id=1,
+                    is_remote=False,
+                    trace_flags=TraceFlags.get_default(),
+                )
+            )
+        )
+
+        self.assertFalse(logger.enabled(context=context))
+        processor.enabled.assert_not_called()
+
+    def test_enabled_trace_based_sampled_trace_returns_true(self):
+        logger, processor = self._get_logger()
+        logger._set_logger_config(_LoggerConfig(trace_based=True))
+        processor.enabled.return_value = True
+        context = set_span_in_context(
+            NonRecordingSpan(
+                SpanContext(
+                    trace_id=1,
+                    span_id=1,
+                    is_remote=False,
+                    trace_flags=TraceFlags(TraceFlags.SAMPLED),
+                )
+            )
+        )
+
+        self.assertTrue(logger.enabled(context=context))
+
+    def test_enabled_trace_based_without_trace_returns_true(self):
+        logger, processor = self._get_logger()
+        logger._set_logger_config(_LoggerConfig(trace_based=True))
+        processor.enabled.return_value = True
+
+        self.assertTrue(logger.enabled(context=get_current()))
 
     def test_enabled_passes_args_to_processor(self):  # pylint: disable=no-self-use
         provider = LoggerProvider()
