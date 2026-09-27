@@ -9,6 +9,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+from opentelemetry._logs import SeverityNumber as SDKSeverityNumber
 from opentelemetry._logs import get_logger_provider
 from opentelemetry.configuration._logger_provider import (
     _DEFAULT_EXPORT_TIMEOUT_MILLIS,
@@ -608,7 +609,7 @@ class TestLoggerConfigurator(unittest.TestCase):
         provider = create_logger_provider(config)
         self.assertTrue(self._enabled(provider, "any.scope"))
 
-    def test_unsupported_minimum_severity_logs_warning(self):
+    def test_minimum_severity_is_applied(self):
         config = LoggerProviderConfig(
             processors=[],
             logger_configurator_development=LoggerConfiguratorConfig(
@@ -618,21 +619,14 @@ class TestLoggerConfigurator(unittest.TestCase):
                 ),
             ),
         )
-        with self.assertLogs(
-            "opentelemetry.configuration._logger_provider",
-            level="WARNING",
-        ) as cm:
-            create_logger_provider(config)
-        self.assertTrue(
-            any("minimum_severity" in msg for msg in cm.output),
-            "Expected warning about unsupported minimum_severity",
-        )
-        self.assertFalse(
-            any("trace_based" in msg for msg in cm.output),
-            "Warning must not name trace_based when it is not set",
+        provider = create_logger_provider(config)
+
+        self.assertEqual(
+            provider._apply_logger_configurator(InstrumentationScope("any.scope")).minimum_severity,
+            SDKSeverityNumber.WARN,
         )
 
-    def test_unsupported_trace_based_logs_warning(self):
+    def test_trace_based_is_applied(self):
         config = LoggerProviderConfig(
             processors=[],
             logger_configurator_development=LoggerConfiguratorConfig(
@@ -642,19 +636,9 @@ class TestLoggerConfigurator(unittest.TestCase):
                 ),
             ),
         )
-        with self.assertLogs(
-            "opentelemetry.configuration._logger_provider",
-            level="WARNING",
-        ) as cm:
-            create_logger_provider(config)
-        self.assertTrue(
-            any("trace_based" in msg for msg in cm.output),
-            "Expected warning about unsupported trace_based",
-        )
-        self.assertFalse(
-            any("minimum_severity" in msg for msg in cm.output),
-            "Warning must not name minimum_severity when it is not set",
-        )
+        provider = create_logger_provider(config)
+
+        self.assertTrue(provider._apply_logger_configurator(InstrumentationScope("any.scope")).trace_based)
 
 
 if __name__ == "__main__":
