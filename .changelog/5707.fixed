@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`: reconstruct client on first `DEADLINE_EXCEEDED` error
