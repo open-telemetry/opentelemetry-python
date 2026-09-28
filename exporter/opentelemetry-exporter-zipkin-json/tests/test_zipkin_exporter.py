@@ -63,6 +63,25 @@ class TestZipkinExporter(unittest.TestCase):
         self.assertEqual(exporter.local_node.port, None)
         self.assertEqual(exporter.timeout, 15)
 
+    def test_constructor_invalid_timeout_env_var_falls_back(self):
+        os.environ[OTEL_EXPORTER_ZIPKIN_TIMEOUT] = "10s"
+
+        with self.assertLogs("opentelemetry.exporter.zipkin.json", level="WARNING") as cm:
+            exporter = ZipkinExporter()
+
+        self.assertEqual(exporter.timeout, 10)
+        self.assertTrue(
+            any("Invalid value" in message for message in cm.output),
+            cm.output,
+        )
+
+    def test_constructor_empty_timeout_env_var_falls_back(self):
+        os.environ[OTEL_EXPORTER_ZIPKIN_TIMEOUT] = ""
+
+        exporter = ZipkinExporter()
+
+        self.assertEqual(exporter.timeout, 10)
+
     def test_constructor_protocol_endpoint(self):
         """Test the constructor for the common usage of providing the
         protocol and endpoint arguments."""

@@ -78,8 +78,33 @@ from opentelemetry.trace import Span
 
 DEFAULT_ENDPOINT = "http://localhost:9411/api/v2/spans"
 REQUESTS_SUCCESS_STATUS_CODES = (200, 202)
+_DEFAULT_TIMEOUT = 10
 
 logger = logging.getLogger(__name__)
+
+
+def _timeout_from_env() -> int:
+    """Return ``OTEL_EXPORTER_ZIPKIN_TIMEOUT`` as an int, defaulting to
+    ``_DEFAULT_TIMEOUT`` when the variable is unset, empty, or not an integer.
+
+    An invalid value is logged and ignored instead of raising, mirroring the
+    OTLP exporters so a malformed environment variable cannot take SDK startup
+    down.
+    """
+    raw = environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT)
+    if raw is None or not raw.strip():
+        return _DEFAULT_TIMEOUT
+    try:
+        return int(raw)
+    except ValueError:
+        logger.warning(
+            "Invalid value %r for %s, using default of %s seconds",
+            raw,
+            OTEL_EXPORTER_ZIPKIN_TIMEOUT,
+            _DEFAULT_TIMEOUT,
+        )
+        return _DEFAULT_TIMEOUT
+
 
 
 class ZipkinExporter(SpanExporter):
@@ -121,7 +146,7 @@ class ZipkinExporter(SpanExporter):
         self.session = session or requests.Session()
         self.session.headers.update({"Content-Type": self.encoder.content_type()})
         self._closed = False
-        self.timeout = timeout or int(environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10))
+        self.timeout = timeout or _timeout_from_env()
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
