@@ -1,1 +1,0 @@
-`opentelemetry-exporter-otlp-proto-grpc`: Fix incorrect default port for OTLP gRPC exporter self-metrics
