@@ -19,13 +19,13 @@ concurrency:
 
 jobs:
   misc:
-    uses: ./.github/workflows/misc.yml
+    uses: $/.github/workflows/misc.yml
   lint:
-    uses: ./.github/workflows/lint.yml
+    uses: $/.github/workflows/lint.yml
   tests:
-    uses: ./.github/workflows/test.yml
+    uses: $/.github/workflows/test.yml
   contrib:
-    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@main
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@94a9acc9b4d2943079eea2076289777e5e0dbc7a
     with:
       CORE_REPO_SHA: ${{ github.sha }}
       CONTRIB_REPO_SHA: ${{ github.event_name == 'pull_request' && (

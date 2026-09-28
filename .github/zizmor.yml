@@ -1,0 +1,14 @@
+rules:
+  adhoc-packages:
+    ignore:
+      # This isolated link-check job pins the CLI to v3.12.2.
+      - check-links.yml:56
+  dangerous-triggers:
+    ignore:
+      # The project-board job uses PR metadata but never checks out or runs PR code.
+      - add-to-project.yml:3
+  use-trusted-publishing:
+    ignore:
+      # TestPyPI and PyPI publishing use existing tokens until trusted publishers are configured.
+      - release.yml:97
+      - release.yml:104
