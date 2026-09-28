@@ -112,6 +112,32 @@ _logger = getLogger(__name__)
 _TARGET_INFO_NAME = "target"
 _TARGET_INFO_DESCRIPTION = "Target metadata"
 
+_DEFAULT_PORT = 9464
+
+
+def _port_from_env() -> int:
+    """Return ``OTEL_EXPORTER_PROMETHEUS_PORT`` as an int, defaulting to
+    ``_DEFAULT_PORT`` when the variable is unset, empty, or not an integer.
+
+    An invalid value is logged and ignored instead of raising, mirroring the
+    OTLP/Zipkin exporters so a malformed environment variable cannot take
+    auto-instrumentation startup down.
+    """
+    raw = environ.get(OTEL_EXPORTER_PROMETHEUS_PORT)
+    if raw is None or not raw.strip():
+        return _DEFAULT_PORT
+    try:
+        return int(raw)
+    except ValueError:
+        _logger.warning(
+            "Invalid value %r for %s, using default port %s",
+            raw,
+            OTEL_EXPORTER_PROMETHEUS_PORT,
+            _DEFAULT_PORT,
+        )
+        return _DEFAULT_PORT
+
+
 _OTEL_SCOPE_NAME_LABEL = "otel_scope_name"
 _OTEL_SCOPE_VERSION_LABEL = "otel_scope_version"
 _OTEL_SCOPE_SCHEMA_URL_LABEL = "otel_scope_schema_url"
@@ -510,6 +536,6 @@ class _AutoPrometheusMetricReader(PrometheusMetricReader):
         # Default values are specified in
         # https://github.com/open-telemetry/opentelemetry-specification/blob/v1.24.0/specification/configuration/sdk-environment-variables.md#prometheus-exporter
         start_http_server(
-            port=int(environ.get(OTEL_EXPORTER_PROMETHEUS_PORT, "9464")),
+            port=_port_from_env(),
             addr=environ.get(OTEL_EXPORTER_PROMETHEUS_HOST, "localhost"),
         )
