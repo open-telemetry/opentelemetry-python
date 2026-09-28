@@ -439,11 +439,17 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                         retry_info.ParseFromString(retry_info_bin)
                         backoff_seconds = retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
 
-                    # For UNAVAILABLE errors, reinitialize the channel to force reconnection
-                    if error.code() == StatusCode.UNAVAILABLE and retry_num == 0:  # type: ignore
+                    # For UNAVAILABLE and DEADLINE_EXCEEDED errors, reinitialize the channel
+                    # to force reconnection. A DEADLINE_EXCEEDED can indicate a stalled stream
+                    # on an otherwise healthy connection, which keepalive cannot detect.
+                    if (
+                        error.code() in (StatusCode.UNAVAILABLE, StatusCode.DEADLINE_EXCEEDED)  # type: ignore
+                        and retry_num == 0
+                    ):
                         logger.debug(
-                            "Reinitializing gRPC channel for %s exporter due to UNAVAILABLE error",
+                            "Reinitializing gRPC channel for %s exporter due to %s error",
                             self._exporting,
+                            error.code(),  # type: ignore [reportAttributeAccessIssue]
                         )
                         try:
                             if self._channel:
