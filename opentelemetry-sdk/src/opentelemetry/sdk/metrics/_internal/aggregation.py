@@ -52,15 +52,15 @@ from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
     HistogramDataPoint,
     NumberDataPoint,
-    Sum,
-)
-from opentelemetry.sdk.metrics._internal.point import Gauge as GaugePoint
-from opentelemetry.sdk.metrics._internal.point import (
-    Histogram as HistogramPoint,
 )
 from opentelemetry.util.types import Attributes
 
-_DataPointVarT = TypeVar("_DataPointVarT", NumberDataPoint, HistogramDataPoint)
+_DataPointVarT = TypeVar(
+    "_DataPointVarT",
+    NumberDataPoint,
+    HistogramDataPoint,
+    ExponentialHistogramDataPoint,
+)
 
 _logger = getLogger(__name__)
 
@@ -143,7 +143,7 @@ class _DropAggregation(_Aggregation):
         pass
 
 
-class _SumAggregation(_Aggregation[Sum]):
+class _SumAggregation(_Aggregation[NumberDataPoint]):
     def __init__(
         self,
         attributes: Attributes,
@@ -365,7 +365,7 @@ class _SumAggregation(_Aggregation[Sum]):
             )
 
 
-class _LastValueAggregation(_Aggregation[GaugePoint]):
+class _LastValueAggregation(_Aggregation[NumberDataPoint]):
     def __init__(
         self,
         attributes: Attributes,
@@ -386,7 +386,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> _DataPointVarT | None:
+    ) -> NumberDataPoint | None:
         """
         Atomically return a point for the current value of the metric.
         """
@@ -440,7 +440,7 @@ def _explicit_bucket_boundaries_from_advisory(
     return advisory.explicit_bucket_boundaries if isinstance(advisory, _HistogramAdvisory) else None
 
 
-class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
+class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramDataPoint]):
     def __init__(
         self,
         attributes: Attributes,
@@ -504,7 +504,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> _DataPointVarT | None:
+    ) -> HistogramDataPoint | None:
         """
         Atomically return a point for the current value of the metric.
         """
@@ -577,7 +577,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
 
 # pylint: disable=protected-access
-class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
+class _ExponentialBucketHistogramAggregation(_Aggregation[ExponentialHistogramDataPoint]):
     # _min_max_size and _max_max_size are the smallest and largest values
     # the max_size parameter may have, respectively.
 
@@ -771,7 +771,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self,
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
-    ) -> _DataPointVarT | None:
+    ) -> ExponentialHistogramDataPoint | None:
         """
         Atomically return a point for the current value of the metric.
         """
@@ -803,9 +803,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     previous_collection_start_nano = self._previous_collection_start_nano
                     self._previous_collection_start_nano = collection_start_nano
 
-                    if value_positive is None and value_negative is None:
+                    if value_positive is None or value_negative is None:
                         return None
 
+                    assert scale is not None
                     return ExponentialHistogramDataPoint(
                         attributes=self._attributes,
                         exemplars=self._collect_exemplars(),
@@ -889,6 +890,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 # here self._previous_value_negative and self._previous_value_positive are not Optional anymore
                 self._previous_value_negative = cast(Buckets, self._previous_value_negative)
                 self._previous_value_positive = cast(Buckets, self._previous_value_positive)
+                value_negative = cast(Buckets, value_negative)
+                value_positive = cast(Buckets, value_positive)
+                scale = cast(int, scale)
+                self._previous_scale = cast(int, self._previous_scale)
 
                 min_scale = min(self._previous_scale, scale)
 
