@@ -32,6 +32,7 @@ def _get_connection_error_types() -> tuple[type[Exception], ...]:
         urllib3.exceptions.ConnectTimeoutError,
         urllib3.exceptions.MaxRetryError,
         urllib3.exceptions.ProtocolError,
+        urllib3.exceptions.ReadTimeoutError,
     ]
 
     # NameResolutionError was added in urllib3 2.0
@@ -75,6 +76,8 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
 
         pool_kwargs: dict[str, object] = {
             "retries": urllib3.Retry(0, redirect=False),
+            # Match the connection pool size of requests
+            "maxsize": 10,
         }
         if verify is False:
             pool_kwargs["cert_reqs"] = "CERT_NONE"
@@ -82,6 +85,16 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
             pool_kwargs["cert_reqs"] = "CERT_REQUIRED"
             if isinstance(verify, str):
                 pool_kwargs["ca_certs"] = verify
+            else:
+                # Prefer certifi's CA bundle, as requests does, falling back
+                # to the system trust store when certifi is not installed.
+                try:
+                    # pylint: disable-next=import-outside-toplevel
+                    import certifi  # noqa: PLC0415
+                except ImportError:
+                    pass
+                else:
+                    pool_kwargs["ca_certs"] = certifi.where()
         if isinstance(cert, tuple):
             pool_kwargs["cert_file"] = cert[0]
             pool_kwargs["key_file"] = cert[1]

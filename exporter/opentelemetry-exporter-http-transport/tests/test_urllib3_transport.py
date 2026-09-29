@@ -1,10 +1,12 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import sys
 import unittest
 from json import JSONDecodeError
 from unittest.mock import MagicMock, patch
 
+import certifi
 import urllib3
 import urllib3.exceptions
 from mocket import Mocket, Mocketizer, mocketize
@@ -200,7 +202,7 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
             (urllib3.exceptions.HTTPError("error"), False),
             (
                 urllib3.exceptions.ReadTimeoutError(None, "http://x", "timeout"),
-                False,
+                True,
             ),
             (RuntimeError("error"), False),
             (ValueError("error"), False),
@@ -234,7 +236,7 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
 
     def test_verify_sets_pool_manager_kwargs(self):
         cases = [
-            (True, "CERT_REQUIRED", None),
+            (True, "CERT_REQUIRED", certifi.where()),
             (False, "CERT_NONE", None),
             ("/path/to/ca.pem", "CERT_REQUIRED", "/path/to/ca.pem"),
         ]
@@ -248,6 +250,17 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
                     self.assertEqual(kwargs["ca_certs"], expected_ca_certs)
                 else:
                     self.assertNotIn("ca_certs", kwargs)
+
+    @patch.dict(sys.modules, {"certifi": None})
+    def test_verify_true_without_certifi_uses_system_trust_store(self):
+        with patch("urllib3.PoolManager") as mock_pm:
+            Urllib3HTTPTransport(verify=True)
+        self.assertNotIn("ca_certs", mock_pm.call_args.kwargs)
+
+    def test_pool_maxsize(self):
+        with patch("urllib3.PoolManager") as mock_pm:
+            Urllib3HTTPTransport()
+        self.assertEqual(mock_pm.call_args.kwargs["maxsize"], 10)
 
     def test_cert_none_does_not_set_cert_file(self):
         with patch("urllib3.PoolManager") as mock_pm:
