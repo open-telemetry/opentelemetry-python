@@ -367,6 +367,34 @@ class TestBuildTransport(unittest.TestCase):
         # pylint: disable-next=protected-access
         self.assertIs(result._session, session)
 
+    @patch.dict(os.environ, {"HTTPS_PROXY": "http://proxy:3128"}, clear=True)
+    def test_requests_env_var_selects_requests_transport(self):
+        result = _build_transport(
+            None,
+            None,
+            None,
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            session=None,
+        )
+        self.assertIsInstance(result, RequestsHTTPTransport)
+
+    @patch.dict(os.environ, {"HTTPS_PROXY": "http://proxy:3128"}, clear=True)
+    @patch.dict(sys.modules, {"requests": None})
+    def test_requests_env_var_without_requests_falls_back_to_urllib3(self):
+        with self.assertLogs(level=WARNING):
+            result = _build_transport(
+                None,
+                None,
+                None,
+                OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+                session=None,
+            )
+        self.assertIsInstance(result, Urllib3HTTPTransport)
+
     def test_build_transport_verify_and_cert(self):
         cases = [
             (
@@ -454,7 +482,10 @@ class TestBuildTransport(unittest.TestCase):
             expected_cert,
         ) in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
-                with patch("opentelemetry.exporter.otlp.proto.http._common.Urllib3HTTPTransport") as mock_transport:
+                with patch(
+                    "opentelemetry.exporter.otlp.proto.http._common._get_default_http_transport_factory"
+                ) as mock_get_factory:
+                    mock_transport = mock_get_factory.return_value
                     result = _build_transport(
                         certificate_file,
                         client_key_file,

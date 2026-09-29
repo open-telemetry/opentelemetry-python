@@ -26,6 +26,16 @@ With the ``urllib3`` backend::
 
     pip install opentelemetry-exporter-http-transport[urllib3]
 
+Proxies and CA bundles
+----------------------
+
+The ``urllib3`` transport is the default. It ignores the ``HTTP_PROXY``,
+``HTTPS_PROXY``, ``ALL_PROXY``, ``NO_PROXY``, ``REQUESTS_CA_BUNDLE`` and
+``CURL_CA_BUNDLE`` environment variables, which only ``requests`` honors. If
+any of them is set, exporters use the ``requests`` transport instead. If
+``requests`` is not installed, a warning is logged and the ``urllib3``
+transport is used.
+
 
 References
 ----------

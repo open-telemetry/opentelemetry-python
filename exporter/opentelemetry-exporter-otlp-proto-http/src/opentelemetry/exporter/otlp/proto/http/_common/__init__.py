@@ -9,11 +9,11 @@ from collections.abc import Mapping
 from os import environ
 from typing import TYPE_CHECKING, Literal
 
+from opentelemetry.exporter.http.transport import (
+    _get_default_http_transport_factory,
+)
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
-)
-from opentelemetry.exporter.http.transport._urllib3 import (
-    Urllib3HTTPTransport,
 )
 from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.proto.http import (
@@ -212,8 +212,6 @@ def _build_transport(
         else client_certificate_file
     )
 
-    return (
-        RequestsHTTPTransport(verify=verify, cert=cert, session=session)
-        if session
-        else Urllib3HTTPTransport(verify=verify, cert=cert)
-    )
+    if session:
+        return RequestsHTTPTransport(verify=verify, cert=cert, session=session)
+    return _get_default_http_transport_factory()(verify=verify, cert=cert)

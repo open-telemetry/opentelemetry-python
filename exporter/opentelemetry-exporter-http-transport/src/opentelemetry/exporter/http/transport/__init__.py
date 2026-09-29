@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import logging
+import os
 from typing import TYPE_CHECKING, cast
 
 # pylint: disable-next=import-error
@@ -30,10 +32,25 @@ if TYPE_CHECKING:
         ) -> BaseHTTPTransport: ...
 
 
+_logger = logging.getLogger(__name__)
+
 _KNOWN_TRANSPORTS: dict[str, BaseHTTPTransportFactory] = {
     "requests": _RequestsHTTPTransport,
     "urllib3": _Urllib3HTTPTransport,
 }
+
+# Environment variables honored by ``requests`` but ignored by
+# ``urllib3`` transport. Matched case-insensitively.
+_REQUESTS_ENV_VARS = frozenset(
+    {
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "ALL_PROXY",
+        "NO_PROXY",
+        "REQUESTS_CA_BUNDLE",
+        "CURL_CA_BUNDLE",
+    }
+)
 
 
 def _load_http_transport_factory(name: str) -> BaseHTTPTransportFactory:
@@ -71,3 +88,30 @@ def _load_http_transport_factory(name: str) -> BaseHTTPTransportFactory:
     if not callable(factory):
         raise TypeError(f"Transport {name!r} loaded from entry point is not callable (got {factory!r}).")
     return cast("BaseHTTPTransportFactory", factory)
+
+
+def _get_default_http_transport_factory() -> BaseHTTPTransportFactory:
+    """Return the transport factory to use when none is configured.
+
+    Defaults to the ``urllib3`` transport. If any environment variable that
+    only ``requests`` honors (proxy settings or CA bundle) is set, the
+    ``requests`` transport is returned instead so those settings keep working.
+    If ``requests`` is not installed, a warning is logged and the ``urllib3``
+    transport is returned.
+    """
+    detected = sorted(name for name, value in os.environ.items() if value and name.upper() in _REQUESTS_ENV_VARS)
+    if not detected:
+        return _Urllib3HTTPTransport
+    try:
+        # pylint: disable-next=import-outside-toplevel,unused-import
+        import requests  # noqa: F401, PLC0415
+    except ImportError:
+        _logger.warning(
+            "Environment variables %s are only honored by the 'requests' HTTP "
+            "transport, but 'requests' is not installed; falling back to the "
+            "'urllib3' transport, which ignores them. Install 'requests' to "
+            "use them.",
+            ", ".join(detected),
+        )
+        return _Urllib3HTTPTransport
+    return _RequestsHTTPTransport

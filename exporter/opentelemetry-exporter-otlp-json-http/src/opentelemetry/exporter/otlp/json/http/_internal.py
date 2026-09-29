@@ -8,7 +8,7 @@ import os
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal
 
-from opentelemetry.exporter.http.transport._urllib3 import Urllib3HTTPTransport
+from opentelemetry.exporter.http.transport import _get_default_http_transport_factory
 from opentelemetry.exporter.otlp.common.http import Compression
 from opentelemetry.exporter.otlp.json.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
@@ -105,7 +105,7 @@ def _build_transport(
     certificate_env_var: str,
     client_key_env_var: str,
     client_certificate_env_var: str,
-    transport_factory: BaseHTTPTransportFactory = Urllib3HTTPTransport,
+    transport_factory: BaseHTTPTransportFactory | None = None,
 ) -> BaseHTTPTransport:
     verify: bool | str = (
         certificate_file
@@ -129,6 +129,8 @@ def _build_transport(
         )
         or os.environ.get(OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE)
     )
+    if transport_factory is None:
+        transport_factory = _get_default_http_transport_factory()
     return transport_factory(
         verify=verify,
         cert=(client_certificate_file, client_key_file)

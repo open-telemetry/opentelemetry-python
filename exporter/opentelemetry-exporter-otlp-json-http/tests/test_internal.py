@@ -4,6 +4,7 @@
 # pylint: disable=protected-access
 
 import os
+import sys
 import unittest
 from logging import WARNING
 from unittest.mock import MagicMock, patch
@@ -298,6 +299,36 @@ class TestResolveInternal(unittest.TestCase):
 class TestBuildTransport(unittest.TestCase):
     def test_default_transport_factory_is_urllib3(self):
         with patch.dict(os.environ, {}, clear=True):
+            result = _build_transport(
+                None,
+                None,
+                None,
+                OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            )
+        self.assertIsInstance(result, Urllib3HTTPTransport)
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_default_transport_factory_is_resolved_per_call(self):
+        with patch(
+            "opentelemetry.exporter.otlp.json.http._internal._get_default_http_transport_factory"
+        ) as mock_get_factory:
+            result = _build_transport(
+                None,
+                None,
+                None,
+                OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+                OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            )
+        mock_get_factory.return_value.assert_called_once_with(verify=True, cert=None)
+        self.assertIs(result, mock_get_factory.return_value.return_value)
+
+    @patch.dict(os.environ, {"HTTPS_PROXY": "http://proxy:3128"}, clear=True)
+    @patch.dict(sys.modules, {"requests": None})
+    def test_requests_env_var_without_requests_falls_back_to_urllib3(self):
+        with self.assertLogs(level=WARNING):
             result = _build_transport(
                 None,
                 None,
