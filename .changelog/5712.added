@@ -1,0 +1,1 @@
+`opentelemetry-exporter-http-transport`: update urllib3 transport to use certifi when available
