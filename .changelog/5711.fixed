@@ -1,0 +1,1 @@
+`opentelemetry-exporter-http-transport`: default to urllib3 transport only when requests-specific env vars are absent
