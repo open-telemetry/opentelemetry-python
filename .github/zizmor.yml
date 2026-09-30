@@ -7,6 +7,12 @@ rules:
     ignore:
       # The project-board job uses PR metadata but never checks out or runs PR code.
       - add-to-project.yml:3
+  unpinned-uses:
+    config:
+      policies:
+        "*": hash-pin
+        # Contrib integration tests intentionally follow the current workflow on main.
+        "open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml": ref-pin
   use-trusted-publishing:
     ignore:
       # TestPyPI and PyPI publishing use existing tokens until trusted publishers are configured.
