@@ -43,11 +43,14 @@ jobs:
       {%- endif %}
       - name: Checkout repo @ SHA - ${% raw %}{{ github.sha }}{% endraw %}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       {%- if "getting-started" in job_data.tox_env %}
 
       - name: Checkout contrib repo @ ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           repository: open-telemetry/opentelemetry-python-contrib
           ref: ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
           path: opentelemetry-python-contrib
