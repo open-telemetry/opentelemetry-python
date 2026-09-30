@@ -181,8 +181,11 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
 
     def _on_ending(self, span: "Span") -> None:
         for sp in self._span_processors:
-            # pylint: disable=protected-access
-            sp._on_ending(span)
+            try:
+                # pylint: disable=protected-access
+                sp._on_ending(span)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling _on_ending on %s.", sp)
 
     def on_end(self, span: "ReadableSpan") -> None:
         for sp in self._span_processors:
@@ -288,8 +291,11 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         # thread that ends the span: that is the only thread allowed to
         # mutate the span while it is ending.
         for sp in self._span_processors:
-            # pylint: disable=protected-access
-            sp._on_ending(span)
+            try:
+                # pylint: disable=protected-access
+                sp._on_ending(span)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling _on_ending on %s.", sp)
 
     def on_end(self, span: "ReadableSpan") -> None:
         self._submit_and_await(lambda sp: sp.on_end, span)

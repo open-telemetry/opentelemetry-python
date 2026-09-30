@@ -541,6 +541,34 @@ class MultiSpanProcessorTestBase(abc.ABC):
         self.assertEqual(span.attributes["attribute"], "value")
         multi_processor.shutdown()
 
+    def test_on_ending_exception_does_not_stop_other_processors(self):
+        multi_processor = self.create_multi_span_processor()
+        exporter = InMemorySpanExporter()
+
+        class FailingSpanProcessor(trace.SpanProcessor):
+            def _on_ending(self, span: "trace.Span") -> None:
+                raise RuntimeError("_on_ending failed")
+
+        class MutatingSpanProcessor(trace.SpanProcessor):
+            def _on_ending(self, span: "trace.Span") -> None:
+                span.set_attribute("attribute", "value")
+
+        multi_processor.add_span_processor(FailingSpanProcessor())
+        multi_processor.add_span_processor(MutatingSpanProcessor())
+        multi_processor.add_span_processor(SimpleSpanProcessor(exporter))
+        tracer_provider = trace.TracerProvider(active_span_processor=multi_processor)
+
+        # pylint: disable=no-member
+        with self.assertLogs("opentelemetry.sdk.trace", level="ERROR"):
+            tracer_provider.get_tracer(__name__).start_span("foo").end()
+
+        # The processor registered after the failing one still ran its
+        # _on_ending, and on_end still exported the span.
+        (span,) = exporter.get_finished_spans()
+        # pylint: disable=no-member
+        self.assertEqual(span.attributes["attribute"], "value")
+        multi_processor.shutdown()
+
 
 class TestSynchronousMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.TestCase):
     def create_multi_span_processor(
