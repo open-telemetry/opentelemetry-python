@@ -44,7 +44,7 @@ from grpc import (
     secure_channel,
     ssl_channel_credentials,
 )
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
     create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -358,11 +358,10 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
 
         self._component_type = component_type
         self._signal: Literal["traces", "metrics", "logs"] = signal
-        self._parsed_url = parsed_url
         self._metrics = create_exporter_metrics(
             self._component_type,
             signal,
-            parsed_url,
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
@@ -518,7 +517,7 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
         self._metrics = create_exporter_metrics(
             self._component_type,
             self._signal,
-            self._parsed_url,
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
