@@ -360,7 +360,9 @@ class TestBuildTransport(unittest.TestCase):
             session=None,
         )
         # pylint: disable-next=protected-access
-        settings = result._session.merge_environment_settings("https://collector.invalid/v1/traces", {}, None, None, None)
+        settings = result._session.merge_environment_settings(
+            "https://collector.invalid/v1/traces", {}, None, None, None
+        )
         self.assertEqual(settings["proxies"]["https"], "http://proxy.invalid:3129")
 
     @patch.dict(os.environ, {}, clear=True)
