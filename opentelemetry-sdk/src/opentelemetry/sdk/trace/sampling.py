@@ -361,6 +361,7 @@ class ParentBased(Sampler):
             kind=kind,
             attributes=attributes,
             links=links,
+            trace_state=trace_state,
         )
 
     def get_description(self):

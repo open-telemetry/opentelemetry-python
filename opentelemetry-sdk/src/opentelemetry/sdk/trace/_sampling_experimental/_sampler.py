@@ -68,11 +68,14 @@ def _update_trace_state(
     intent: SamplingIntent,
 ) -> TraceState | None:
     otts = ot_trace_state.serialize()
-    if not trace_state:
+    # Apply the sampler's own update even when there is no incoming tracestate,
+    # otherwise a composable sampler that stamps tracestate is silently skipped
+    # for every root span.
+    new_trace_state = intent.update_trace_state(trace_state or TraceState())
+    if not new_trace_state:
         if otts:
             return TraceState(((OTEL_TRACE_STATE_KEY, otts),))
         return None
-    new_trace_state = intent.update_trace_state(trace_state)
     if otts:
         return new_trace_state.update(OTEL_TRACE_STATE_KEY, otts)
     return new_trace_state
