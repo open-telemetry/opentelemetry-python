@@ -144,12 +144,13 @@ Behavior notes
   components the file enables (for example resource detectors) and via
   ``${env:VAR}`` substitution.
 * Python-implementation extensions (``OTEL_PYTHON_*`` variables such as
-  ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
-  ``OTEL_PYTHON_TRACER_CONFIGURATOR``) are **not** applied when
-  ``OTEL_CONFIG_FILE`` is set: the env-var initialisation path is skipped
-  entirely. If your app currently relies on one of these and you are
-  migrating to a config file, plan to capture the equivalent behaviour in
-  the file (or in code) instead.
+  ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` and
+  ``OTEL_PYTHON_TRACER_CONFIGURATOR``) are applied after the configured
+  providers are created. The logging variable adds the SDK logging handler;
+  tracer, meter, and logger configurators replace the corresponding
+  provider's default configurator when that provider section is present.
+  Extensions are skipped when ``disabled: true``. Configurator variables do
+  not create providers for signal sections omitted from the file.
 * Sections omitted from the file leave the corresponding global provider
   unset (a no-op provider), per the specification.
 * Setting ``disabled: true`` at the top level turns the SDK into a no-op.
