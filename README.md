@@ -98,7 +98,7 @@ For information about contributing to OpenTelemetry Python, see [CONTRIBUTING.md
 
 New to CNCF Slack? [Create an account](https://slack.cncf.io/) first, then join
 us in
-[`#otel-python`](https://cloud-native.slack.com/archives/C01PD4HUVBL).
+[`#otel-python`](https://app.slack.com/client/T08PSQ7BQ/C01PD4HUVBL).
 
 We meet weekly on Thursdays at 9AM PST. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=c_2bf73e3b6b530da4babd444e72b76a6ad893a5c3f43cf40467abc7a9a897f977%40group.calendar.google.com) for specific dates and Zoom meeting links.
 
