@@ -18,21 +18,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  misc:
-    uses: ./.github/workflows/misc.yml
-  lint:
-    uses: ./.github/workflows/lint.yml
-  tests:
-    uses: ./.github/workflows/test.yml
-  contrib:
-    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@main
-    with:
-      CORE_REPO_SHA: ${{ github.sha }}
-      CONTRIB_REPO_SHA: ${{ github.event_name == 'pull_request' && (
+  resolve-contrib-sha:
+    name: Resolve contrib repo SHA
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+    env:
+      # Set the ref to the branch name if the PR has a label 'prepare-release' or 'backport' otherwise, set it to 'main'
+      # For PRs you can change the inner fallback ('main')
+      # For pushes you change the outer fallback ('main')
+      # The logic below is used during releases and depends on having an equivalent branch name in the contrib repo.
+      CONTRIB_REPO_REF: ${{ github.event_name == 'pull_request' && (
           contains(github.event.pull_request.labels.*.name, 'prepare-release') && github.event.pull_request.head.ref ||
           contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
           'main'
         ) || 'main' }}
+    steps:
+      - name: Resolve ${{ env.CONTRIB_REPO_REF }} to a commit SHA
+        id: resolve
+        run: |
+          SHA="$(git ls-remote https://github.com/open-telemetry/opentelemetry-python-contrib "refs/heads/${CONTRIB_REPO_REF}" | cut -f1)"
+          if [ -z "$SHA" ]; then
+            echo "::error::Could not resolve contrib branch '${CONTRIB_REPO_REF}' to a commit SHA"
+            exit 1
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+  misc:
+    needs: resolve-contrib-sha
+    uses: ./.github/workflows/misc.yml
+    with:
+      contrib-repo-sha: ${{ needs.resolve-contrib-sha.outputs.sha }}
+  lint:
+    uses: ./.github/workflows/lint.yml
+  tests:
+    needs: resolve-contrib-sha
+    uses: ./.github/workflows/test.yml
+    with:
+      contrib-repo-sha: ${{ needs.resolve-contrib-sha.outputs.sha }}
+  contrib:
+    needs: resolve-contrib-sha
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@main
+    with:
+      CORE_REPO_SHA: ${{ github.sha }}
+      CONTRIB_REPO_SHA: ${{ needs.resolve-contrib-sha.outputs.sha }}
 
   check:
     if: always()
