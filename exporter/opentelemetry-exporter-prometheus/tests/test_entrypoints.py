@@ -52,3 +52,25 @@ class TestEntrypoints(TestCase):
     def test_starts_http_server_port_envvar(self, mock_start_http_server: Mock) -> None:
         _AutoPrometheusMetricReader()
         mock_start_http_server.assert_called_once_with(port=9999, addr=ANY)
+
+    @patch("opentelemetry.exporter.prometheus.start_http_server")
+    @patch.dict(os.environ, {OTEL_EXPORTER_PROMETHEUS_PORT: "9464abc"}, clear=False)
+    def test_starts_http_server_invalid_port_envvar_falls_back(
+        self, mock_start_http_server: Mock
+    ) -> None:
+        with self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING") as cm:
+            _AutoPrometheusMetricReader()
+
+        mock_start_http_server.assert_called_once_with(port=9464, addr=ANY)
+        self.assertTrue(
+            any("Invalid value" in message for message in cm.output),
+            cm.output,
+        )
+
+    @patch("opentelemetry.exporter.prometheus.start_http_server")
+    @patch.dict(os.environ, {OTEL_EXPORTER_PROMETHEUS_PORT: ""}, clear=False)
+    def test_starts_http_server_empty_port_envvar_falls_back(
+        self, mock_start_http_server: Mock
+    ) -> None:
+        _AutoPrometheusMetricReader()
+        mock_start_http_server.assert_called_once_with(port=9464, addr=ANY)
