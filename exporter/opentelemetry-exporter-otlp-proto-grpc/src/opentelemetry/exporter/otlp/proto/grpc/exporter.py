@@ -323,7 +323,7 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
         else:
             self._channel_options = tuple(_OTLP_GRPC_CHANNEL_OPTIONS)
 
-        self._timeout = timeout if timeout is not None else _timeout_from_env(OTEL_EXPORTER_OTLP_TIMEOUT, default=10)
+        self._timeout = timeout or _timeout_from_env(OTEL_EXPORTER_OTLP_TIMEOUT, default=10)
         self._collector_kwargs = None
 
         self._compression = (

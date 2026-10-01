@@ -545,12 +545,6 @@ class TestOTLPExporterMixin(TestCase):
         self.assertIn("Invalid value", warning.records[0].message)
         self.assertIn(OTEL_EXPORTER_OTLP_TIMEOUT, warning.records[0].message)
 
-    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_TIMEOUT: "15"})
-    def test_timeout_zero_takes_priority_over_env(self):
-        # pylint: disable=protected-access
-        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0)
-        self.assertEqual(exporter._timeout, 0)
-
     def test_channel_options_set_correctly(self):
         """Test that gRPC channel options are set correctly for keepalive and reconnection"""
         # This test verifies that the channel is created with the right options

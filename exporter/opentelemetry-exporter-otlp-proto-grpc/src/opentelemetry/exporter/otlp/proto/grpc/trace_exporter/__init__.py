@@ -119,7 +119,7 @@ class OTLPSpanExporter(
             insecure=insecure,
             credentials=credentials,
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
-            timeout=timeout if timeout is not None else environ_timeout,
+            timeout=timeout or environ_timeout,
             compression=compression,
             channel_options=channel_options,
             retryable_error_codes=retryable_error_codes,
