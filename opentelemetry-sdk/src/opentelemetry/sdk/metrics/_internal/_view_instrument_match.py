@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, cast
 
 from typing_extensions import assert_never
 
+from opentelemetry.metrics._internal.instrument import _MetricsAdvisory
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
@@ -80,6 +81,14 @@ class _ViewInstrumentMatch:
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
         self._description = self._view._description or self._instrument.description
+        # A view that specifies attribute keys takes precedence over the
+        # instrument's attributes advisory. The advisory only applies when no
+        # view configures this aspect of the stream
+        self._attribute_keys = self._view._attribute_keys
+        if self._attribute_keys is None:
+            advisory = getattr(self._instrument, "_advisory", None)
+            if isinstance(advisory, _MetricsAdvisory):
+                self._attribute_keys = advisory.attributes
         if not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation = self._view._aggregation._create_aggregation(
                 self._instrument,
@@ -129,8 +138,8 @@ class _ViewInstrumentMatch:
             # The user can still modify mutable attribute values (lists/dicts)
             # leading to unexpected behavior, but deep copying is expensive.
             attributes = dict(measurement.attributes)
-        if self._view._attribute_keys is not None:
-            attributes = {k: v for k, v in attributes.items() if k in self._view._attribute_keys}
+        if self._attribute_keys is not None:
+            attributes = {k: v for k, v in attributes.items() if k in self._attribute_keys}
 
         aggr_key = _hash_attributes(attributes)
 
