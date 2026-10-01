@@ -76,6 +76,7 @@ from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
 
+
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
@@ -983,21 +984,43 @@ class Span(trace_api.Span, ReadableSpan):
         status: Status | StatusCode,
         description: str | None = None,
     ) -> None:
-        # Ignore future calls if status is already set to OK
-        # Ignore calls to set to StatusCode.UNSET
         if isinstance(status, Status):
-            if self._status and self._status.status_code is StatusCode.OK or status.status_code is StatusCode.UNSET:
-                return
             if description is not None:
                 logger.warning(
                     "Description %s ignored. Use either `Status` or `(StatusCode, Description)`",
                     description,
                 )
-            self._status = status
+            new_status = status
         elif isinstance(status, StatusCode):
-            if self._status and self._status.status_code is StatusCode.OK or status is StatusCode.UNSET:
-                return
-            self._status = Status(status, description)
+            new_status = Status(status, description)
+        else:
+            return
+
+        if self._accepts_status(new_status):
+            self._status = new_status
+
+    def _accepts_status(self, new_status: Status) -> bool:
+        """Decide whether ``new_status`` may replace the status already recorded.
+
+        The codes are totally ordered, ``Ok > Error > Unset``, an attempt to set
+        ``Unset`` is ignored, and ``Ok`` is final. Once those two are handled, a
+        differing code always outranks the one recorded. A repeat of the same code
+        gets through only when it fills in a description that is still missing,
+        and an empty description counts as missing.
+        """
+        if new_status.status_code is StatusCode.UNSET:
+            return False
+
+        current = self._status
+        if current is None:
+            return True
+        if current.status_code is StatusCode.OK:
+            return False
+
+        # An empty description is equivalent to an absent one.
+        return current.status_code is not new_status.status_code or (
+            not current.description and bool(new_status.description)
+        )
 
     def __exit__(
         self,
