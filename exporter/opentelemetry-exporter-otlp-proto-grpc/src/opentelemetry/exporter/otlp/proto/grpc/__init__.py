@@ -59,10 +59,46 @@ API
 ---
 """
 
+from logging import getLogger
+from os import environ
+from typing import overload
+
 from .version import __version__
+
+_logger = getLogger(__name__)
 
 _USER_AGENT_HEADER_VALUE = "OTel-OTLP-Exporter-Python/" + __version__
 _OTLP_GRPC_CHANNEL_OPTIONS = [
     # this will appear in the http User-Agent header
     ("grpc.primary_user_agent", _USER_AGENT_HEADER_VALUE)
 ]
+
+
+@overload
+def _timeout_from_env(*environ_keys: str, default: float) -> float: ...
+
+
+@overload
+def _timeout_from_env(*environ_keys: str, default: None = None) -> float | None: ...
+
+
+def _timeout_from_env(*environ_keys: str, default: float | None = None) -> float | None:
+    """Return the first environment variable in ``environ_keys`` holding a
+    valid float, or ``default`` if none does.
+
+    Unset or empty variables are skipped silently; variables with a
+    non-numeric value are skipped with a warning.
+    """
+    for environ_key in environ_keys:
+        value = environ.get(environ_key)
+        if value is None or not value.strip():
+            continue
+        try:
+            return float(value)
+        except ValueError:
+            _logger.warning(
+                "Invalid value %r for environment variable %s, ignoring it.",
+                value,
+                environ_key,
+            )
+    return default
