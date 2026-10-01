@@ -340,3 +340,19 @@ class TestJaegerPropagator(TestCase):
         with trace_api.use_span(span, end_on_exit=True):
             with self.assertNotRaises(Exception):
                 FORMAT.inject({}, setter=mock_setter)
+
+    def test_inject_invalid_span_context(self):
+        """Do not inject when SpanContext is invalid even if not equal to INVALID_SPAN_CONTEXT."""
+        invalid_contexts = [
+            trace_api.SpanContext(trace_id=0, span_id=0, is_remote=True),
+            trace_api.SpanContext(trace_id=0, span_id=123, is_remote=False),
+            trace_api.SpanContext(trace_id=123, span_id=0, is_remote=False),
+            trace_api.SpanContext(trace_id=0, span_id=0, is_remote=True, trace_flags=trace_api.TraceFlags(1)),
+        ]
+        for span_context in invalid_contexts:
+            with self.subTest(span_context=span_context):
+                carrier: dict[str, str] = {}
+                span = trace_api.NonRecordingSpan(span_context)
+                ctx = trace_api.set_span_in_context(span)
+                FORMAT.inject(carrier, context=ctx)
+                self.assertEqual(carrier, {})
