@@ -27,6 +27,7 @@ from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    _CHANNEL_RECONNECT_ERROR_THRESHOLD,
     _RETRYABLE_ERROR_CODES,
     InvalidCompressionValueException,
     OTLPExporterMixin,
@@ -599,28 +600,70 @@ class TestOTLPExporterMixin(TestCase):
             metrics[2].data.data_points[0].attributes,
         )
 
-    def test_unavailable_reconnects(self):
-        """Test that the exporter reconnects on UNAVAILABLE error"""
+    def test_reconnects_on_transient_error(self):
+        """Test that the exporter reconnects after consecutive UNAVAILABLE and DEADLINE_EXCEEDED errors"""
+        mock_trace_service = TraceServiceServicerWithExportParams(StatusCode.OK)
         add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(StatusCode.UNAVAILABLE),
+            mock_trace_service,
             self.server,
         )
+        cases = [
+            # The server returns UNAVAILABLE immediately.
+            (StatusCode.UNAVAILABLE, None),
+            # The server stalls past the exporter timeout, so the client-side
+            # deadline expires
+            (StatusCode.OK, 1.0),
+        ]
+        for export_result, export_sleep in cases:
+            with self.subTest(export_result=export_result, export_sleep=export_sleep):
+                mock_trace_service.export_result = export_result
+                mock_trace_service.optional_export_sleep = export_sleep
+                # The timeout is shorter than the first backoff, so only a
+                # single attempt is made per export.
+                exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.5)
 
-        # Spy on grpc.insecure_channel to verify it's called for reconnection
+                # Spy on grpc.insecure_channel to verify it's called for reconnection.
+                with patch(
+                    "opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel",
+                    side_effect=grpc.insecure_channel,
+                ) as mock_insecure_channel:
+                    for _ in range(_CHANNEL_RECONNECT_ERROR_THRESHOLD - 1):
+                        self.assertEqual(
+                            exporter.export([self.span]),
+                            SpanExportResult.FAILURE,
+                        )
+                    mock_insecure_channel.assert_not_called()
+
+                    self.assertEqual(
+                        exporter.export([self.span]),
+                        SpanExportResult.FAILURE,
+                    )
+                    mock_insecure_channel.assert_called_once()
+
+    def test_reconnect_error_count_resets_on_success(self):
+        """Test that a successful export resets the consecutive reconnect error count"""
+        mock_trace_service = TraceServiceServicerWithExportParams(StatusCode.UNAVAILABLE)
+        add_TraceServiceServicer_to_server(
+            mock_trace_service,
+            self.server,
+        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=0.5)
+
         with patch(
             "opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel",
             side_effect=grpc.insecure_channel,
         ) as mock_insecure_channel:
-            # Mock sleep to avoid waiting
-            with patch("time.sleep"):
-                # We expect FAILURE because the server keeps returning UNAVAILABLE
-                # but we want to verify reconnection attempts happened
-                self.exporter.export([self.span])
+            for _ in range(_CHANNEL_RECONNECT_ERROR_THRESHOLD - 1):
+                self.assertEqual(exporter.export([self.span]), SpanExportResult.FAILURE)
 
-        # Verify that we attempted to reinitialize the channel (called insecure_channel)
-        # Since the initial channel was created in setUp (unpatched), this call
-        # must be from the reconnection logic.
-        self.assertTrue(mock_insecure_channel.called)
+            mock_trace_service.export_result = StatusCode.OK
+            self.assertEqual(exporter.export([self.span]), SpanExportResult.SUCCESS)
+
+            mock_trace_service.export_result = StatusCode.UNAVAILABLE
+            for _ in range(_CHANNEL_RECONNECT_ERROR_THRESHOLD - 1):
+                self.assertEqual(exporter.export([self.span]), SpanExportResult.FAILURE)
+
+        mock_insecure_channel.assert_not_called()
 
     def test_retryable_error_codes_initialization(self):
         # pylint: disable=protected-access

@@ -119,6 +119,8 @@ _RETRYABLE_ERROR_CODES = frozenset(
     ]
 )
 _MAX_RETRYS = 6
+_CHANNEL_RECONNECT_ERROR_CODES = frozenset([StatusCode.UNAVAILABLE, StatusCode.DEADLINE_EXCEEDED])
+_CHANNEL_RECONNECT_ERROR_THRESHOLD = 3
 logger = getLogger(__name__)
 # This prevents logs generated when a log fails to be written to generate another log which fails to be written etc. etc.
 logger.addFilter(DuplicateFilter())
@@ -350,6 +352,7 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
 
         self._channel = None
         self._client = None
+        self._consecutive_reconnect_errors = 0
 
         self._shutdown_in_progress = threading.Event()
         self._shutdown = False
@@ -434,6 +437,7 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                         metadata=self._headers,
                         timeout=deadline_sec - time(),
                     )
+                    self._consecutive_reconnect_errors = 0
                     return self._result.SUCCESS  # type: ignore [reportReturnType]
                 except RpcError as error:
                     retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
@@ -446,11 +450,18 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                         retry_info.ParseFromString(retry_info_bin)
                         backoff_seconds = retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
 
-                    # For UNAVAILABLE errors, reinitialize the channel to force reconnection
-                    if error.code() == StatusCode.UNAVAILABLE and retry_num == 0:  # type: ignore
+                    # After consecutive UNAVAILABLE or DEADLINE_EXCEEDED errors, reinitialize
+                    # the channel to force reconnection.
+                    if error.code() in _CHANNEL_RECONNECT_ERROR_CODES:  # type: ignore [reportAttributeAccessIssue]
+                        self._consecutive_reconnect_errors += 1
+                    else:
+                        self._consecutive_reconnect_errors = 0
+                    if self._consecutive_reconnect_errors >= _CHANNEL_RECONNECT_ERROR_THRESHOLD:
+                        self._consecutive_reconnect_errors = 0
                         logger.debug(
-                            "Reinitializing gRPC channel for %s exporter due to UNAVAILABLE error",
+                            "Reinitializing gRPC channel for %s exporter due to %s error",
                             self._exporting,
+                            error.code(),  # type: ignore [reportAttributeAccessIssue]
                         )
                         try:
                             if self._channel:

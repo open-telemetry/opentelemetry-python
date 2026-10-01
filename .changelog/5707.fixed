@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`: reconstruct gRPC channel after 3 consecutive `UNAVAILABLE` or `DEADLINE_EXCEEDED` errors
