@@ -9,7 +9,7 @@ from contextvars import Token
 from uuid import uuid4
 
 # pylint: disable=wrong-import-position
-from opentelemetry.context.context import Context, _RuntimeContext  # noqa
+from opentelemetry.context.context import Context, _RuntimeContext
 from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 

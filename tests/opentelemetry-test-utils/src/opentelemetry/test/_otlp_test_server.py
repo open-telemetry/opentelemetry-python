@@ -146,7 +146,7 @@ class OtlpProtoTestServer:
     def __init__(self, host: str = "127.0.0.1", port: int = 0, base_path: str = "") -> None:
         try:
             # pylint: disable-next=import-outside-toplevel,unused-import
-            import opentelemetry.proto  # noqa: F401, PLC0415
+            import opentelemetry.proto  # noqa: PLC0415, F401
         except ImportError:
             raise ImportError(
                 "opentelemetry-proto is required to use OtlpProtoTestServer. "

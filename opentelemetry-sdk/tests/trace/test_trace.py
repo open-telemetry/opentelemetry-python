@@ -51,6 +51,7 @@ from opentelemetry.sdk.trace.sampling import (
     Decision,
     ParentBased,
     StaticSampler,
+    TraceIdRatioBased,
 )
 from opentelemetry.sdk.util import BoundedDict, BoundedList, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import (
@@ -352,6 +353,68 @@ class TestTracerSampling(unittest.TestCase):
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
         self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "5.0",
+        },
+    )
+    def test_ratio_sampler_with_out_of_range_env_arg_does_not_raise(self):
+        # A syntactically valid but out-of-range OTEL_TRACES_SAMPLER_ARG
+        # (outside [0.0, 1.0]) must not crash TracerProvider() construction.
+        # It should degrade gracefully, the same way a non-numeric value
+        # already does.
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "-0.5",
+        },
+    )
+    def test_ratio_sampler_with_negative_env_arg_does_not_raise(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "0.0",
+        },
+    )
+    def test_ratio_sampler_with_env_arg_lower_boundary(self):
+        # 0.0 is a valid boundary value and must be used as-is, not
+        # treated as falsy/invalid and overridden by the fallback.
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 0.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "1.0",
+        },
+    )
+    def test_ratio_sampler_with_env_arg_upper_boundary(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
 
     def verify_default_sampler(self, tracer_provider):
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
@@ -681,6 +744,7 @@ class TestSpanCreation(unittest.TestCase):
         new_span = updated_tracer.start_span("new")
         self.assertIs(new_span.resource, tracer_provider.resource)
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_default_span_resource(self):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
@@ -689,7 +753,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsInstance(span.resource, resources.Resource)
         self.assertEqual(
             span.resource.attributes.get(resources.SERVICE_NAME),
-            "unknown_service",
+            "unknown_service:python3",
         )
         self.assertEqual(
             span.resource.attributes.get(resources.TELEMETRY_SDK_LANGUAGE),
@@ -718,7 +782,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_links(self):
         # pylint: disable=protected-access
         max_links = trace.SpanLimits().max_links
-        links = [trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False)) for idx in range(0, 16 + max_links)]
+        links = [trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False)) for idx in range(16 + max_links)]
         tracer = new_tracer()
         with tracer.start_as_current_span("span", links=links) as root:
             self.assertEqual(len(root.links), max_links)
@@ -726,7 +790,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_attributes(self):
         # pylint: disable=protected-access
         max_attrs = trace.SpanLimits().max_span_attributes
-        attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
+        attributes = {str(idx): idx for idx in range(16 + max_attrs)}
         tracer = new_tracer()
         with tracer.start_as_current_span("span", attributes=attributes) as root:
             self.assertEqual(len(root.attributes), max_attrs)
@@ -2080,15 +2144,17 @@ class TestParentChildSpanException(unittest.TestCase):
 
         child_span = None
         try:
-            with tracer.start_as_current_span(
-                "parent",
-            ) as parent_span:
-                with tracer.start_as_current_span(
+            with (
+                tracer.start_as_current_span(
+                    "parent",
+                ) as parent_span,
+                tracer.start_as_current_span(
                     "child",
                     record_exception=False,
                     set_status_on_exception=False,
-                ) as child_span:
-                    raise exception
+                ) as child_span,
+            ):
+                raise exception
 
         except Exception:  # pylint: disable=broad-exception-caught
             pass

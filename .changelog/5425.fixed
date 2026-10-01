@@ -1,1 +1,0 @@
-'scripts/build.sh`: add `opentelemetry-configuration` and `opentelemetry-proto-json` to the package to release

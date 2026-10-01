@@ -44,7 +44,7 @@ from grpc import (
     secure_channel,
     ssl_channel_credentials,
 )
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
     create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -299,6 +299,13 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
 
         if parsed_url.netloc:
             self._endpoint = parsed_url.netloc
+            if parsed_url.path and parsed_url.path.strip("/"):
+                logger.warning(
+                    "Endpoint path '%s' will be ignored. gRPC exporter uses '%s' without path. "
+                    "If you intended to use HTTP, import from opentelemetry.exporter.otlp.proto.http instead.",
+                    parsed_url.path,
+                    self._endpoint,
+                )
 
         self._insecure = insecure
         self._credentials = credentials
@@ -359,11 +366,10 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
 
         self._component_type = component_type
         self._signal: Literal["traces", "metrics", "logs"] = signal
-        self._parsed_url = parsed_url
         self._metrics = create_exporter_metrics(
             self._component_type,
             signal,
-            parsed_url,
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
@@ -514,13 +520,12 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
         Returns a string that describes the overall exporter, to be used in
         warning messages.
         """
-        pass
 
     def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
         self._metrics = create_exporter_metrics(
             self._component_type,
             self._signal,
-            self._parsed_url,
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )

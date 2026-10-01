@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
-import fnmatch
 from collections.abc import Callable
+from fnmatch import fnmatchcase
 from json import dumps
 
 from typing_extensions import deprecated
@@ -78,7 +78,12 @@ class InstrumentationScope:
     properties.
     """
 
-    __slots__ = ("_name", "_version", "_schema_url", "_attributes")
+    __slots__ = (
+        "_name",
+        "_version",
+        "_schema_url",
+        "_attributes",
+    )
 
     def __init__(
         self,
@@ -166,6 +171,9 @@ def _scope_name_matches_glob(
     glob_pattern: str,
 ) -> _InstrumentationScopePredicateT:
     def inner(scope: InstrumentationScope) -> bool:
-        return fnmatch.fnmatch(scope.name, glob_pattern)
+        # Scope name matching is case-sensitive. fnmatchcase is used instead of
+        # fnmatch so it does not rely on the host platform's filename case
+        # sensitivity (normcase), which lower-cases both operands on Windows.
+        return fnmatchcase(scope.name, glob_pattern)
 
     return inner

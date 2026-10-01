@@ -16,13 +16,13 @@ from .exemplar_reservoir import (
 )
 
 __all__ = [
-    "Exemplar",
-    "ExemplarFilter",
+    "AlignedHistogramBucketExemplarReservoir",
     "AlwaysOffExemplarFilter",
     "AlwaysOnExemplarFilter",
-    "TraceBasedExemplarFilter",
-    "AlignedHistogramBucketExemplarReservoir",
+    "Exemplar",
+    "ExemplarFilter",
     "ExemplarReservoir",
     "ExemplarReservoirBuilder",
     "SimpleFixedSizeExemplarReservoir",
+    "TraceBasedExemplarFilter",
 ]

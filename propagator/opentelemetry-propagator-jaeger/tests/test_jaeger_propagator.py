@@ -10,6 +10,7 @@ from opentelemetry.context import Context
 from opentelemetry.propagators import (  # pylint: disable=no-name-in-module
     jaeger,
 )
+from opentelemetry.propagators.textmap import DefaultGetter
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import id_generator
 from opentelemetry.test import TestCase
@@ -46,6 +47,8 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
 
 
 class TestJaegerPropagator(TestCase):
+    # pylint: disable=too-many-public-methods
+
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()
@@ -133,6 +136,116 @@ class TestJaegerPropagator(TestCase):
         }
         context = FORMAT.extract(old_carrier)
         self.assertDictEqual({"key3": "value3"}, context[_BAGGAGE_KEY])
+
+    def test_extract_enforces_max_baggage_entries(self):
+        old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
+        for index in range(200):
+            old_carrier[f"uberctx-k{index}"] = f"v{index}"
+        extracted = FORMAT.extract(old_carrier)[_BAGGAGE_KEY]
+        self.assertEqual(FORMAT.MAX_BAGGAGE_ENTRIES, len(extracted))
+        self.assertIn("k0", extracted)
+        self.assertNotIn("k180", extracted)
+
+    def test_extract_drops_oversized_baggage_entry(self):
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-ok": "value",
+            "uberctx-big": "x" * 5000,
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"ok": "value"}, context[_BAGGAGE_KEY])
+
+    def test_extract_measures_entry_limit_in_bytes(self):
+        # 2100 multibyte characters is 4200 bytes: under the character limit,
+        # over the byte limit, so the entry must be dropped.
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-ok": "value",
+            "uberctx-u": "é" * 2100,
+        }
+        context = FORMAT.extract(old_carrier)
+        self.assertDictEqual({"ok": "value"}, context[_BAGGAGE_KEY])
+
+    def test_extract_enforces_max_baggage_total_bytes(self):
+        old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
+        for index in range(100):
+            old_carrier[f"uberctx-k{index}"] = "y" * 200
+        extracted = FORMAT.extract(old_carrier)[_BAGGAGE_KEY]
+        self.assertLess(len(extracted), 100)
+        self.assertIn("k0", extracted)
+        self.assertNotIn("k99", extracted)
+
+    def test_extract_counts_the_key_value_separator_byte(self):
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-fits": "x" * (FORMAT.MAX_BAGGAGE_ENTRY_BYTES - len("fits") - 1),
+            "uberctx-over": "x" * (FORMAT.MAX_BAGGAGE_ENTRY_BYTES - len("over")),
+        }
+        extracted = FORMAT.extract(old_carrier)[_BAGGAGE_KEY]
+        self.assertIn("fits", extracted)
+        self.assertNotIn("over", extracted)
+
+    def test_extract_charges_a_separator_byte_between_accepted_entries(self):
+        small_entry_bytes = len("small") + 1  # empty value
+        filler_a_entry_bytes = FORMAT.MAX_BAGGAGE_ENTRY_BYTES
+        filler_a_value_len = filler_a_entry_bytes - len("filler_a") - 1
+        target_total_after_fillers = FORMAT.MAX_BAGGAGE_TOTAL_BYTES - small_entry_bytes
+        filler_b_entry_bytes = target_total_after_fillers - filler_a_entry_bytes - 1
+        filler_b_value_len = filler_b_entry_bytes - len("filler_b") - 1
+        old_carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id,
+            "uberctx-filler_a": "x" * filler_a_value_len,
+            "uberctx-filler_b": "x" * filler_b_value_len,
+            "uberctx-small": "",
+        }
+        extracted = FORMAT.extract(old_carrier)[_BAGGAGE_KEY]
+        self.assertIn("filler_a", extracted)
+        self.assertIn("filler_b", extracted)
+        self.assertNotIn("small", extracted)
+
+    def test_extract_stops_inspecting_after_the_candidate_limit(self):
+        old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
+        for index in range(1000):
+            old_carrier[f"uberctx-k{index}"] = "x" * 5000
+
+        class CountingGetter(DefaultGetter):
+            def __init__(self):
+                self.reads = 0
+
+            def get(self, carrier, key):
+                self.reads += 1
+                return super().get(carrier, key)
+
+        getter = CountingGetter()
+        FORMAT.extract(old_carrier, getter=getter)
+        self.assertLessEqual(getter.reads, FORMAT.MAX_BAGGAGE_ENTRIES + 1)
+
+    def test_inject_enforces_max_baggage_entries(self):
+        span = trace_api.NonRecordingSpan(trace_api.SpanContext(1, 1, True))
+        ctx = trace_api.set_span_in_context(span)
+        for index in range(200):
+            ctx = baggage.set_baggage(f"k{index}", f"v{index}", ctx)
+
+        carrier = {}
+        FORMAT.inject(carrier, context=ctx)
+
+        self.assertEqual(FORMAT.MAX_BAGGAGE_ENTRIES, sum(1 for key in carrier if key.startswith(FORMAT.BAGGAGE_PREFIX)))
+        self.assertIn(FORMAT.BAGGAGE_PREFIX + "k0", carrier)
+        self.assertNotIn(FORMAT.BAGGAGE_PREFIX + "k180", carrier)
+
+    def test_inject_enforces_max_baggage_total_bytes(self):
+        span = trace_api.NonRecordingSpan(trace_api.SpanContext(1, 1, True))
+        ctx = trace_api.set_span_in_context(span)
+        for index in range(100):
+            ctx = baggage.set_baggage(f"k{index}", "y" * 200, ctx)
+
+        carrier = {}
+        FORMAT.inject(carrier, context=ctx)
+
+        injected = [key for key in carrier if key.startswith(FORMAT.BAGGAGE_PREFIX)]
+        self.assertLess(len(injected), 100)
+        self.assertIn(FORMAT.BAGGAGE_PREFIX + "k0", carrier)
+        self.assertNotIn(FORMAT.BAGGAGE_PREFIX + "k99", carrier)
 
     def test_extract_invalid_uber_trace_id(self):
         old_carrier = {

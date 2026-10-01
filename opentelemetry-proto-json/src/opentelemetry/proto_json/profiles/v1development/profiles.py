@@ -58,7 +58,7 @@ class ProfilesDictionary(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ProfilesDictionary":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ProfilesDictionary:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -114,7 +114,7 @@ class ProfilesData(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ProfilesData":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ProfilesData:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -163,7 +163,7 @@ class ResourceProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceProfiles":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ResourceProfiles:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -215,7 +215,7 @@ class ScopeProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeProfiles":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ScopeProfiles:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -291,7 +291,7 @@ class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Profile":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Profile:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -357,7 +357,7 @@ class Link(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Link":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Link:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -403,7 +403,7 @@ class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ValueType":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ValueType:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -460,7 +460,7 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Sample":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Sample:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -523,7 +523,7 @@ class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Mapping":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Mapping:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -573,7 +573,7 @@ class Stack(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Stack":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Stack:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -623,7 +623,7 @@ class Location(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Location":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Location:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -677,7 +677,7 @@ class Line(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Line":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Line:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -732,7 +732,7 @@ class Function(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Function":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Function:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -788,7 +788,7 @@ class KeyValueAndUnit(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "KeyValueAndUnit":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> KeyValueAndUnit:
         """
         Create from a dictionary with lowerCamelCase keys.
 

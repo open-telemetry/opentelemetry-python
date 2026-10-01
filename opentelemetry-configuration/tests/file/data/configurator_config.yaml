@@ -1,0 +1,37 @@
+file_format: "1.0"
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          console: {}
+  tracer_configurator/development:
+    default_config:
+      enabled: true
+    tracers:
+      - name: "noisy.*"
+        config:
+          enabled: false
+meter_provider:
+  readers:
+    - periodic:
+        exporter:
+          console: {}
+  meter_configurator/development:
+    default_config:
+      enabled: false
+    meters:
+      - name: "keep.*"
+        config:
+          enabled: true
+logger_provider:
+  processors:
+    - batch:
+        exporter:
+          console: {}
+  logger_configurator/development:
+    default_config:
+      enabled: true
+    loggers:
+      - name: "noisy.*"
+        config:
+          enabled: false

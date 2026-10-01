@@ -54,7 +54,7 @@ pygments==2.20.0
     # via pytest
 pytest==9.0.3
     # via -r exporter/opentelemetry-exporter-otlp-common/test-requirements.in
-requests==2.32.3
+requests==2.33.0
     # via opentelemetry-exporter-http-transport
 tomli==2.4.1 ; python_full_version < '3.11'
     # via pytest

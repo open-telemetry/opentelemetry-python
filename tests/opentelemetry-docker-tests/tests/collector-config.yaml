@@ -17,6 +17,13 @@ receivers:
     include: [/otlp-file-data/logs/*.jsonl]
     start_at: beginning
     include_file_name: false
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: otel-python-e2e
+          scrape_interval: 1s
+          static_configs:
+            - targets: ['host.docker.internal:9464']
 
 exporters:
   otlphttp:
@@ -29,6 +36,9 @@ service:
       exporters: [otlphttp]
     metrics:
       receivers: [otlp, otlp_json_file/metrics]
+      exporters: [otlphttp]
+    metrics/prometheus:
+      receivers: [prometheus]
       exporters: [otlphttp]
     logs:
       receivers: [otlp, otlp_json_file/logs]
