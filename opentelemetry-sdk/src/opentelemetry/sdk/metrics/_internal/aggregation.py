@@ -795,6 +795,13 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     if value_positive is None and value_negative is None:
                         return None
 
+                    # A delta point covers only its own interval, so the
+                    # scale mapping must not leak into the next one: reset it
+                    # to the maximum (the next interval downscales as needed).
+                    # Otherwise a single wide interval would pin every later
+                    # point to its lowest scale (issue #5716).
+                    self._mapping = self._new_mapping(self._max_scale)
+
                     return ExponentialHistogramDataPoint(
                         attributes=self._attributes,
                         exemplars=self._collect_exemplars(),
