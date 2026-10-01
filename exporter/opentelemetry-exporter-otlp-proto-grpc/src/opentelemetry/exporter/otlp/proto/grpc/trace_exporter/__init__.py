@@ -9,12 +9,10 @@ from collections.abc import Sequence as TypingSequence
 from os import environ
 
 from grpc import ChannelCredentials, Compression, StatusCode
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _timeout_from_env,
-)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
+from opentelemetry.exporter.otlp.proto.grpc import _timeout_from_env
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     OTLPExporterMixin,
     _get_credentials,

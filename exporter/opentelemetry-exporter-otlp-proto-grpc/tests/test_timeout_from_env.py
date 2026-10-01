@@ -6,9 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _timeout_from_env,
-)
+from opentelemetry.exporter.otlp.proto.grpc import _timeout_from_env
 
 
 @pytest.mark.parametrize(

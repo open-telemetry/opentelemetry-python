@@ -49,10 +49,10 @@ from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
-    _timeout_from_env,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
+    _timeout_from_env,
 )
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (

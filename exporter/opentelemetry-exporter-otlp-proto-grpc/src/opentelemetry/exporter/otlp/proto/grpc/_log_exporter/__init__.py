@@ -7,10 +7,8 @@ from os import environ
 from typing import Literal
 
 from grpc import ChannelCredentials, Compression, StatusCode
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _timeout_from_env,
-)
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.proto.grpc import _timeout_from_env
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
     _get_credentials,

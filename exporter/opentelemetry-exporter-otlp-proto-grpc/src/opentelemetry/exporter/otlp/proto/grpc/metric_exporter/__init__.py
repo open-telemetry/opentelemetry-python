@@ -10,15 +10,13 @@ from logging import getLogger
 from os import environ
 
 from grpc import ChannelCredentials, Compression, StatusCode
-from opentelemetry.exporter.otlp.proto.common._internal import (
-    _timeout_from_env,
-)
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
     OTLPMetricExporterMixin,
 )
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
+from opentelemetry.exporter.otlp.proto.grpc import _timeout_from_env
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     OTLPExporterMixin,
     _get_credentials,
