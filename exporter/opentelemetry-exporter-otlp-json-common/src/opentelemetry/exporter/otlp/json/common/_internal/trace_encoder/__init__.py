@@ -84,8 +84,12 @@ def _encode_resource_spans(
     return json_resource_spans
 
 
-def _span_flags(parent_span_context: SpanContext | None) -> int:
-    flags = JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+def _span_flags(
+    span_context: SpanContext | None,
+    parent_span_context: SpanContext | None,
+) -> int:
+    flags = int(span_context.trace_flags) if span_context else 0
+    flags |= JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
     if parent_span_context and parent_span_context.is_remote:
         flags |= JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
     return int(flags)
@@ -109,7 +113,7 @@ def _encode_span(sdk_span: ReadableSpan) -> JSONSpan:
         dropped_attributes_count=sdk_span.dropped_attributes,
         dropped_events_count=sdk_span.dropped_events,
         dropped_links_count=sdk_span.dropped_links,
-        flags=_span_flags(sdk_span.parent),
+        flags=_span_flags(span_context, sdk_span.parent),
     )
 
 
@@ -134,7 +138,7 @@ def _encode_links(links: Collection[Link]) -> list[JSONSpan.Link]:
             span_id=_encode_span_id(link.context.span_id),
             attributes=_encode_attributes(link.attributes),
             dropped_attributes_count=link.dropped_attributes,
-            flags=_span_flags(link.context),
+            flags=_span_flags(link.context, link.context),
         )
         for link in links
     ]

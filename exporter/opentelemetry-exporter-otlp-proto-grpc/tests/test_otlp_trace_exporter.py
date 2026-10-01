@@ -59,6 +59,7 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
+from opentelemetry.trace import TraceFlags
 
 THIS_DIR = os.path.dirname(__file__)
 
@@ -85,6 +86,7 @@ class TestOTLPSpanExporter(TestCase):
                 trace_state={"a": "b", "c": "d"},
                 span_id=10217189687419569865,
                 trace_id=67545097771067222548457157018666467027,
+                trace_flags=TraceFlags.DEFAULT,
             ),
             resource=SDKResource({"a": 1, "b": False}),
             parent=Mock(span_id=12345),
@@ -95,6 +97,7 @@ class TestOTLPSpanExporter(TestCase):
                     **{
                         "context.trace_id": 1,
                         "context.span_id": 2,
+                        "context.trace_flags": TraceFlags.DEFAULT,
                         "attributes": BoundedAttributes(attributes={"a": 1, "b": False}),
                         "dropped_attributes": 0,
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
@@ -110,6 +113,7 @@ class TestOTLPSpanExporter(TestCase):
                 trace_state={"a": "b", "c": "d"},
                 span_id=10217189687419569865,
                 trace_id=67545097771067222548457157018666467027,
+                trace_flags=TraceFlags.DEFAULT,
             ),
             resource=SDKResource({"a": 2, "b": False}),
             parent=Mock(span_id=12345),
@@ -122,6 +126,7 @@ class TestOTLPSpanExporter(TestCase):
                 trace_state={"a": "b", "c": "d"},
                 span_id=10217189687419569865,
                 trace_id=67545097771067222548457157018666467027,
+                trace_flags=TraceFlags.DEFAULT,
             ),
             resource=SDKResource({"a": 1, "b": False}),
             parent=Mock(span_id=12345),
@@ -664,6 +669,7 @@ def _create_span_with_status(status: SDKStatus):
             trace_state={"a": "b", "c": "d"},
             span_id=10217189687419569865,
             trace_id=67545097771067222548457157018666467027,
+            trace_flags=TraceFlags.DEFAULT,
         ),
         parent=Mock(span_id=12345),
         instrumentation_scope=InstrumentationScope(name="name", version="version"),
