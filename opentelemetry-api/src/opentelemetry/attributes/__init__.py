@@ -203,9 +203,10 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
         if key in self._dict:
             del self._dict[key]
         if self.maxlen is not None and len(self._dict) >= self.maxlen:
-            _logger.warning(
-                "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
-            )
+            if self.dropped == 0:
+                _logger.warning(
+                    "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
+                )
             # Dictionaries are insertion ordered in Python, this is the recommended way to get the oldest value.
             del self._dict[next(iter(self._dict.keys()))]
             self.dropped += 1
