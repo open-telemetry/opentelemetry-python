@@ -70,17 +70,45 @@ class TestZipkinExporter(unittest.TestCase):
             exporter = ZipkinExporter()
 
         self.assertEqual(exporter.timeout, 10)
+        self.assertEqual(len(cm.records), 1)
         self.assertTrue(
             any("Invalid value" in message for message in cm.output),
             cm.output,
         )
 
     def test_constructor_empty_timeout_env_var_falls_back(self):
-        os.environ[OTEL_EXPORTER_ZIPKIN_TIMEOUT] = ""
+        for value in ("", " ", "\t\n"):
+            with self.subTest(value=value), patch.dict(os.environ, {OTEL_EXPORTER_ZIPKIN_TIMEOUT: value}):
+                with self.assertNoLogs("opentelemetry.exporter.zipkin.json", level="WARNING"):
+                    exporter = ZipkinExporter()
+                self.assertEqual(exporter.timeout, 10)
 
-        exporter = ZipkinExporter()
+    def test_constructor_unset_timeout_env_var_uses_default(self):
+        with patch.dict(os.environ):
+            os.environ.pop(OTEL_EXPORTER_ZIPKIN_TIMEOUT, None)
+            with self.assertNoLogs("opentelemetry.exporter.zipkin.json", level="WARNING"):
+                exporter = ZipkinExporter()
+            self.assertEqual(exporter.timeout, 10)
 
-        self.assertEqual(exporter.timeout, 10)
+    def test_constructor_numeric_timeout_env_var_preserves_values(self):
+        for value, expected in (("15", 15), (" 15 ", 15), ("0", 0), ("-1", -1)):
+            with self.subTest(value=value), patch.dict(os.environ, {OTEL_EXPORTER_ZIPKIN_TIMEOUT: value}):
+                with self.assertNoLogs("opentelemetry.exporter.zipkin.json", level="WARNING"):
+                    exporter = ZipkinExporter()
+                self.assertEqual(exporter.timeout, expected)
+
+    def test_constructor_explicit_timeout_ignores_invalid_env_var(self):
+        for value in ("10s", "", "\t\n"):
+            with self.subTest(value=value), patch.dict(os.environ, {OTEL_EXPORTER_ZIPKIN_TIMEOUT: value}):
+                with self.assertNoLogs("opentelemetry.exporter.zipkin.json", level="WARNING"):
+                    exporter = ZipkinExporter(timeout=7)
+                self.assertEqual(exporter.timeout, 7)
+
+    def test_constructor_explicit_timeout_preserves_truthiness(self):
+        with patch.dict(os.environ, {OTEL_EXPORTER_ZIPKIN_TIMEOUT: "15"}):
+            with self.assertNoLogs("opentelemetry.exporter.zipkin.json", level="WARNING"):
+                self.assertEqual(ZipkinExporter(timeout=0).timeout, 15)
+                self.assertEqual(ZipkinExporter(timeout=-1).timeout, -1)
 
     def test_constructor_protocol_endpoint(self):
         """Test the constructor for the common usage of providing the

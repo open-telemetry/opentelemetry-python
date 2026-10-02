@@ -83,6 +83,22 @@ _DEFAULT_TIMEOUT = 10
 logger = logging.getLogger(__name__)
 
 
+def _timeout_from_env() -> int:
+    value = environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT)
+    if value is None or not value.strip():
+        return _DEFAULT_TIMEOUT
+    try:
+        return int(value)
+    except ValueError:
+        logger.warning(
+            "Invalid value %r for %s, using default of %s seconds",
+            value,
+            OTEL_EXPORTER_ZIPKIN_TIMEOUT,
+            _DEFAULT_TIMEOUT,
+        )
+        return _DEFAULT_TIMEOUT
+
+
 class ZipkinExporter(SpanExporter):
     def __init__(
         self,
@@ -122,17 +138,7 @@ class ZipkinExporter(SpanExporter):
         self.session = session or requests.Session()
         self.session.headers.update({"Content-Type": self.encoder.content_type()})
         self._closed = False
-        # A malformed OTEL_EXPORTER_ZIPKIN_TIMEOUT must not break SDK startup.
-        try:
-            self.timeout = timeout or int(environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10))
-        except ValueError:
-            logger.warning(
-                "Invalid value %r for %s, using default of %s seconds",
-                environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT),
-                OTEL_EXPORTER_ZIPKIN_TIMEOUT,
-                _DEFAULT_TIMEOUT,
-            )
-            self.timeout = _DEFAULT_TIMEOUT
+        self.timeout = timeout or _timeout_from_env()
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
