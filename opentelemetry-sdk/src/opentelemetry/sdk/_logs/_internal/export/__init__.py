@@ -148,17 +148,17 @@ class ConsoleLogRecordExporter(LogRecordExporter):
         self,
         out: IO = sys.stdout,
         formatter: Callable[[ReadableLogRecord], str] = lambda record: record.to_json() + linesep,
-    ):
+    ) -> None:
         self.out = out
         self.formatter = formatter
 
-    def export(self, batch: Sequence[ReadableLogRecord]):
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:
         for log_record in batch:
             self.out.write(self.formatter(log_record))
         self.out.flush()
         return LogRecordExportResult.SUCCESS
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         pass
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
