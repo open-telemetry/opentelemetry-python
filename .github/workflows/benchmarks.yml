@@ -13,7 +13,7 @@ jobs:
       contents: write # required for pushing to gh-pages
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
     container:
-      image: python:3.14-slim@sha256:caaf356f40667c496d405780745b9ac25771c189a51dfcc42430d531ea09f8a2
+      image: python:3.14-slim@sha256:0741d101873c12ab927e6f8653feb8862b9bd58771177acb1b885b95141f91b4
     steps:
     - name: Install Git # since Git isn't available in the container image used above
       run: |
