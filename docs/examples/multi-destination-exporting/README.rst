@@ -62,6 +62,6 @@ Useful links
 - OpenTelemetry_
 - :doc:`../../api/trace`
 - :doc:`../../api/metrics`
-- :doc:`../../api/_logs`
+- :doc:`../../api/logs`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/

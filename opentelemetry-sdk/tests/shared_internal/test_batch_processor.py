@@ -17,7 +17,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from opentelemetry._logs import (
+from opentelemetry.logs import (
     LogRecord,
 )
 from opentelemetry.sdk._logs import (

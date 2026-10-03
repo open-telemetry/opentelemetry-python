@@ -3,7 +3,6 @@
 
 import unittest
 
-from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_attributes,
     _encode_span_id,
@@ -11,6 +10,7 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_value,
 )
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
