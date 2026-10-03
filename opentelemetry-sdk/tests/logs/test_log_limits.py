@@ -4,15 +4,15 @@
 import unittest
 from unittest.mock import patch
 
-from opentelemetry.sdk._logs import LogRecordLimits
-from opentelemetry.sdk._logs._internal import (
-    _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
-)
 from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_LOGRECORD_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+)
+from opentelemetry.sdk.logs import LogRecordLimits
+from opentelemetry.sdk.logs._internal import (
+    _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
 )
 
 

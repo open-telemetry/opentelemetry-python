@@ -14,8 +14,8 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor
+from opentelemetry.sdk.logs import LoggerProvider
+from opentelemetry.sdk.logs.export import SimpleLogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource

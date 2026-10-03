@@ -19,8 +19,8 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
 # this is available in the opentelemetry-instrumentation-logging package
 from opentelemetry.instrumentation.logging.handler import LoggingHandler
 from opentelemetry.logs import set_logger_provider
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import (
+from opentelemetry.sdk.logs import LoggerProvider
+from opentelemetry.sdk.logs.export import (
     BatchLogRecordProcessor,
     ConsoleLogRecordExporter,
 )

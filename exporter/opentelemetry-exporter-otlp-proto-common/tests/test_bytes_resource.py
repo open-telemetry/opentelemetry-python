@@ -12,9 +12,9 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import encode_spans
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import (
-    InMemoryLogExporter,
+from opentelemetry.sdk.logs import LoggerProvider
+from opentelemetry.sdk.logs.export import (
+    InMemoryLogRecordExporter,
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.metrics import MeterProvider
@@ -52,7 +52,7 @@ class TestBytesResourceExports(unittest.TestCase):
         provider.shutdown()
 
     def test_encode_logs(self):
-        exporter = InMemoryLogExporter()
+        exporter = InMemoryLogRecordExporter()
         provider = LoggerProvider(resource=self.resource, shutdown_on_exit=False)
         provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
         provider.get_logger(__name__).emit(body="body")
