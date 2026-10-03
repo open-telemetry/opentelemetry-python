@@ -9,7 +9,6 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
-from opentelemetry._logs import get_logger_provider
 from opentelemetry.configuration._logger_provider import (
     _DEFAULT_EXPORT_TIMEOUT_MILLIS,
     _DEFAULT_MAX_EXPORT_BATCH_SIZE,
@@ -64,6 +63,7 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
+from opentelemetry.logs import get_logger_provider
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs._internal.export import (
     BatchLogRecordProcessor,

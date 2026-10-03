@@ -15,7 +15,7 @@ with the calling module name and the version of your package.
 
 The following code shows how to obtain a logger using the global :class:`.LoggerProvider`::
 
-    from opentelemetry._logs import get_logger
+    from opentelemetry.logs import get_logger
 
     logger = get_logger("example-logger")
 
@@ -32,10 +32,10 @@ from typing import cast, overload
 
 from typing_extensions import deprecated
 
-from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
+from opentelemetry.environment_variables import OTEL_PYTHON_LOGGER_PROVIDER
+from opentelemetry.logs.severity import SeverityNumber
 from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
@@ -428,11 +428,11 @@ def get_logger_provider() -> LoggerProvider:
     """Gets the current global :class:`~.LoggerProvider` object."""
     global _LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _LOGGER_PROVIDER is None:
-        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ:
+        if OTEL_PYTHON_LOGGER_PROVIDER not in environ:
             return _PROXY_LOGGER_PROVIDER
 
         logger_provider: LoggerProvider = _load_provider(  # type: ignore
-            _OTEL_PYTHON_LOGGER_PROVIDER, "logger_provider"
+            OTEL_PYTHON_LOGGER_PROVIDER, "logger_provider"
         )
         _set_logger_provider(logger_provider, log=False)
 

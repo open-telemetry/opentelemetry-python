@@ -8,7 +8,7 @@ import unittest.mock
 
 import requests
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry.logs import SeverityNumber
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
