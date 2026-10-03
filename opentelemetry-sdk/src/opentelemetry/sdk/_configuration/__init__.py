@@ -9,9 +9,7 @@ OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 from __future__ import annotations
 
 import logging
-import logging.config
 import os
-import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from os import environ
@@ -25,18 +23,7 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.logs import set_logger_provider
 from opentelemetry.metrics import set_meter_provider
-from opentelemetry.sdk._logs import (
-    LoggerProvider,
-    LoggingHandler,
-    LogRecordProcessor,
-)
-from opentelemetry.sdk._logs._internal import _LoggerConfiguratorT
-from opentelemetry.sdk._logs.export import (
-    BatchLogRecordProcessor,
-    LogRecordExporter,
-)
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
     OTEL_CONFIG_FILE,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
@@ -47,6 +34,15 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_TRACER_CONFIGURATOR,
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
+)
+from opentelemetry.sdk.logs import (
+    LoggerProvider,
+    LogRecordProcessor,
+)
+from opentelemetry.sdk.logs._internal import _LoggerConfiguratorT
+from opentelemetry.sdk.logs.export import (
+    BatchLogRecordProcessor,
+    LogRecordExporter,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal import _MeterConfiguratorT
@@ -259,7 +255,6 @@ def _init_metrics(
 def _init_logging(
     exporters: dict[str, type[LogRecordExporter]],
     resource: Resource | None = None,
-    setup_logging_handler: bool = True,
     exporter_args_map: ExporterArgsMap | None = None,
     log_record_processors: Sequence[LogRecordProcessor] | None = None,
     export_log_record_processor: _ConfigurationExporterLogRecordProcessorT | None = None,
@@ -278,44 +273,6 @@ def _init_logging(
     for _, exporter_class in exporters.items():
         exporter_args = exporter_args_map.get(exporter_class, {})
         provider.add_log_record_processor(export_processor(exporter_class(**exporter_args)))
-
-    if setup_logging_handler:
-        warnings.warn(
-            "The `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment variable "
-            "and the `LoggingHandler` in `opentelemetry-sdk` that it controls are deprecated."
-            "Install `opentelemetry-instrumentation-logging` package instead.",
-            DeprecationWarning,
-        )
-
-        # Add OTel handler
-        handler = LoggingHandler(level=logging.NOTSET, logger_provider=provider)
-        logging.getLogger().addHandler(handler)
-        _overwrite_logging_config_fns(handler)
-
-
-def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
-    root = logging.getLogger()
-
-    def wrapper(config_fn: Callable) -> Callable:
-        def overwritten_config_fn(*args, **kwargs):
-            removed_handler = False
-            # We don't want the OTLP handler to be modified or deleted by the logging config functions.
-            # So we remove it and then add it back after the function call.
-            if handler in root.handlers:
-                removed_handler = True
-                root.handlers.remove(handler)
-            try:
-                config_fn(*args, **kwargs)
-            finally:
-                # Ensure handler is added back if logging function throws exception.
-                if removed_handler:
-                    root.addHandler(handler)
-
-        return overwritten_config_fn
-
-    logging.config.fileConfig = wrapper(logging.config.fileConfig)
-    logging.config.dictConfig = wrapper(logging.config.dictConfig)
-    logging.basicConfig = wrapper(logging.basicConfig)
 
 
 def _import_logger_configurator(
@@ -509,7 +466,6 @@ def _initialize_components(
     sampler: Sampler | None = None,
     resource_attributes: Attributes | None = None,
     id_generator: IdGenerator | None = None,
-    setup_logging_handler: bool | None = None,
     exporter_args_map: ExporterArgsMap | None = None,
     span_processors: Sequence[SpanProcessor] | None = None,
     export_span_processor: _ConfigurationExporterSpanProcessorT | None = None,
@@ -585,14 +541,9 @@ def _initialize_components(
         exporter_args_map=exporter_args_map,
         meter_configurator=meter_configurator,
     )
-    if setup_logging_handler is None:
-        setup_logging_handler = (
-            os.getenv(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false").strip().lower() == "true"
-        )
     _init_logging(
         log_exporters,
         resource,
-        setup_logging_handler,
         exporter_args_map=exporter_args_map,
         log_record_processors=log_record_processors,
         export_log_record_processor=export_log_record_processor,

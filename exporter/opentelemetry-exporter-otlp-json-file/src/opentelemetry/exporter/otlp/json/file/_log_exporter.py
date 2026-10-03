@@ -8,12 +8,12 @@ from typing import IO, Any, overload
 
 from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.json.file._internal import _FileExporter
-from opentelemetry.sdk._logs import ReadableLogRecord
-from opentelemetry.sdk._logs.export import (
+from opentelemetry.sdk._shared_internal import DuplicateFilter
+from opentelemetry.sdk.logs import ReadableLogRecord
+from opentelemetry.sdk.logs.export import (
     LogRecordExporter,
     LogRecordExportResult,
 )
-from opentelemetry.sdk._shared_internal import DuplicateFilter
 
 _logger = logging.getLogger(__name__)
 _logger.addFilter(DuplicateFilter())

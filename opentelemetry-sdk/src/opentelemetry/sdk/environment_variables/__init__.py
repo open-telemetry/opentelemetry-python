@@ -21,8 +21,7 @@ components the file enables (e.g. resource detectors) and via
 ``${env:VAR}`` substitution inside the file.
 
 Python-implementation extensions outside the spec (``OTEL_PYTHON_*``
-variables such as ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
-:envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR`) are also bypassed when
+variables such as :envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR`) are also bypassed when
 :envvar:`OTEL_CONFIG_FILE` is set, because the env-var initialisation path
 is skipped entirely in favour of the declarative file. Honouring these
 alongside a config file is tracked separately.
@@ -716,22 +715,6 @@ If both are set, :envvar:`OTEL_SERVICE_NAME` takes precedence.
 """
 
 
-_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED = "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
-"""
-.. envvar:: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-
-The :envvar:`OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment variable allows users to
-enable/disable the auto instrumentation for the python logging module.
-Default: False
-
-Note: Logs SDK and its related settings are experimental.
-
-.. warning::
-
-    This option is deprecated, instead you should install `opentelemetry-instrumentation-logging`.
-"""
-
-
 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
@@ -847,7 +830,7 @@ OTEL_PYTHON_LOGGER_CONFIGURATOR = "OTEL_PYTHON_LOGGER_CONFIGURATOR"
 
 The :envvar:`OTEL_PYTHON_LOGGER_CONFIGURATOR` environment variable allows users to set a
 custom Logger Configurator function.
-Default: opentelemetry.sdk._logs._internal._default_logger_configurator
+Default: opentelemetry.sdk.logs._internal._default_logger_configurator
 
 This is an experimental environment variable and the name of this variable and its behavior can
 change in a non-backwards compatible way.

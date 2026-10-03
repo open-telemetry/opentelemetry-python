@@ -4,8 +4,8 @@
 import pytest
 
 from opentelemetry.logs import SeverityNumber
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import (
+from opentelemetry.sdk.logs import LoggerProvider
+from opentelemetry.sdk.logs.export import (
     BatchLogRecordProcessor,
     InMemoryLogRecordExporter,
     SimpleLogRecordProcessor,

@@ -19,7 +19,7 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs,
     ScopeLogs,
 )
-from opentelemetry.sdk._logs import ReadableLogRecord
+from opentelemetry.sdk.logs import ReadableLogRecord
 
 
 def encode_logs(

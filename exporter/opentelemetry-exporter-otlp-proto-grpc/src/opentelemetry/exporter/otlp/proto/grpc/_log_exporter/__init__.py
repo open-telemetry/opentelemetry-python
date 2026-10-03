@@ -20,11 +20,6 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
-from opentelemetry.sdk._logs import ReadableLogRecord
-from opentelemetry.sdk._logs.export import (
-    LogRecordExporter,
-    LogRecordExportResult,
-)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
@@ -35,6 +30,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_INSECURE,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+)
+from opentelemetry.sdk.logs import ReadableLogRecord
+from opentelemetry.sdk.logs.export import (
+    LogRecordExporter,
+    LogRecordExportResult,
 )
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
