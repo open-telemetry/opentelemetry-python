@@ -23,13 +23,13 @@ from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
 from opentelemetry.exporter.otlp.common import http as _http
-from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.proto.common.log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._common import (
     _DEFAULT_TIMEOUT,
     _build_transport,
 )
-from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+from opentelemetry.exporter.otlp.proto.http.log_exporter import (
     DEFAULT_ENDPOINT,
     DEFAULT_LOGS_EXPORT_PATH,
     OTLPLogExporter,
@@ -65,7 +65,7 @@ from opentelemetry.test.mock_test_classes import IterEntryPoint
 from . import _mock_clock
 
 _TEST_ENDPOINT = "http://localhost:4318/v1/logs"
-_LOGGER_NAME = "opentelemetry.exporter.otlp.proto.http._log_exporter"
+_LOGGER_NAME = "opentelemetry.exporter.otlp.proto.http.log_exporter"
 _USER_AGENT = "OTel-OTLP-Exporter-Python/" + __version__
 _BASE_HEADERS = {
     "content-type": "application/x-protobuf",
@@ -392,7 +392,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 self.assertEqual(exporter._client._timeout, expected["timeout"])
 
     @mocketize
-    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter._build_transport")
+    @patch("opentelemetry.exporter.otlp.proto.http.log_exporter._build_transport")
     def test_custom_transport(self, mock_build_transport):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
         custom_transport = Urllib3HTTPTransport()
@@ -407,7 +407,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
     @mocketize
     @patch(
-        "opentelemetry.exporter.otlp.proto.http._log_exporter._build_transport",
+        "opentelemetry.exporter.otlp.proto.http.log_exporter._build_transport",
         wraps=_build_transport,
     )
     def test_certificate_args(self, mock_build_transport):
@@ -612,7 +612,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
     @mocketize
     @patch(
-        "opentelemetry.exporter.otlp.proto.http._log_exporter.encode_logs",
+        "opentelemetry.exporter.otlp.proto.http.log_exporter.encode_logs",
         side_effect=ValueError("boom"),
     )
     def test_export_encoding_failure(self, mock_encode_logs):
