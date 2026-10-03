@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import traceback
 
-from opentelemetry._logs import LogRecord
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.logs import LogRecord
 from opentelemetry.semconv.attributes import exception_attributes
 from opentelemetry.util.types import AnyValue, Attributes
 
