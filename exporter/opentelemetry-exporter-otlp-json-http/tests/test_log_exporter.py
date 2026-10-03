@@ -21,9 +21,10 @@ from opentelemetry.exporter.http.transport._urllib3 import (
     Urllib3HTTPTransport,
 )
 from opentelemetry.exporter.otlp.common.http import Compression
-from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.json import http as otlp_json_http
+from opentelemetry.exporter.otlp.json.common.log_encoder import encode_logs
 from opentelemetry.exporter.otlp.json.http._internal import _build_transport
-from opentelemetry.exporter.otlp.json.http._log_exporter import (
+from opentelemetry.exporter.otlp.json.http.log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.logs import LogRecord, SeverityNumber
@@ -55,7 +56,7 @@ from opentelemetry.trace import (
 from . import _mock_clock
 
 _TEST_ENDPOINT = "http://localhost:4318/v1/logs"
-_LOGGER_NAME = "opentelemetry.exporter.otlp.json.http._log_exporter"
+_LOGGER_NAME = "opentelemetry.exporter.otlp.json.http.log_exporter"
 
 
 class TestOTLPLogExporter(unittest.TestCase):
@@ -81,6 +82,10 @@ class TestOTLPLogExporter(unittest.TestCase):
         shutdown_event = Mock(spec=threading.Event)
         shutdown_event.is_set.return_value = False
         return shutdown_event
+
+    def test_exported_at_package_level(self):
+        self.assertIs(otlp_json_http.OTLPLogExporter, OTLPLogExporter)
+        self.assertIn("OTLPLogExporter", otlp_json_http.__all__)
 
     @mocketize
     def test_export_single_log(self):
@@ -252,7 +257,7 @@ class TestOTLPLogExporter(unittest.TestCase):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
         custom_transport = Urllib3HTTPTransport()
 
-        with patch("opentelemetry.exporter.otlp.json.http._log_exporter._build_transport") as mock_build_transport:
+        with patch("opentelemetry.exporter.otlp.json.http.log_exporter._build_transport") as mock_build_transport:
             exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT, _transport=custom_transport)
 
         mock_build_transport.assert_not_called()
@@ -298,7 +303,7 @@ class TestOTLPLogExporter(unittest.TestCase):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
 
         with patch(
-            "opentelemetry.exporter.otlp.json.http._log_exporter._build_transport",
+            "opentelemetry.exporter.otlp.json.http.log_exporter._build_transport",
             wraps=_build_transport,
         ) as mock_build_transport:
             exporter = OTLPLogExporter(
@@ -503,7 +508,7 @@ class TestOTLPLogExporter(unittest.TestCase):
 
         with (
             patch(
-                "opentelemetry.exporter.otlp.json.http._log_exporter.encode_logs",
+                "opentelemetry.exporter.otlp.json.http.log_exporter.encode_logs",
                 side_effect=ValueError("boom"),
             ),
             self.assertLogs(_LOGGER_NAME, level="ERROR"),

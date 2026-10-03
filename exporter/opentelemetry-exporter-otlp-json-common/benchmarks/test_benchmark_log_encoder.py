@@ -3,7 +3,7 @@
 
 import pytest
 
-from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.json.common.log_encoder import encode_logs
 from opentelemetry.logs import SeverityNumber
 from tests import TIME, make_log, make_log_context
 

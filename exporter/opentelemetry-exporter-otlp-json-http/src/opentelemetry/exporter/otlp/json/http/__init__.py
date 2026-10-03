@@ -16,7 +16,7 @@ Three exporters are provided:
 
 - :class:`~opentelemetry.exporter.otlp.json.http.trace_exporter.OTLPSpanExporter` - traces
 - :class:`~opentelemetry.exporter.otlp.json.http.metric_exporter.OTLPMetricExporter` - metrics
-- :class:`~opentelemetry.exporter.otlp.json.http._log_exporter.OTLPLogExporter` - logs
+- :class:`~opentelemetry.exporter.otlp.json.http.log_exporter.OTLPLogExporter` - logs
 
 You can configure each exporter with the following environment variables,
 using the appropriate per-signal prefix (``TRACES``, ``METRICS``, or
@@ -66,6 +66,9 @@ API
 ---
 """
 
+from opentelemetry.exporter.otlp.json.http.log_exporter import (
+    OTLPLogExporter,
+)
 from opentelemetry.exporter.otlp.json.http.metric_exporter import (
     OTLPMetricExporter,
 )
@@ -74,6 +77,7 @@ from opentelemetry.exporter.otlp.json.http.trace_exporter import (
 )
 
 __all__ = [
+    "OTLPLogExporter",
     "OTLPMetricExporter",
     "OTLPSpanExporter",
 ]

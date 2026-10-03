@@ -40,7 +40,7 @@ otlp_json_http = "opentelemetry.exporter.otlp.json.http.trace_exporter:OTLPSpanE
 otlp_json_http = "opentelemetry.exporter.otlp.json.http.metric_exporter:OTLPMetricExporter"
 
 [project.entry-points.opentelemetry_logs_exporter]
-otlp_json_http = "opentelemetry.exporter.otlp.json.http._log_exporter:OTLPLogExporter"
+otlp_json_http = "opentelemetry.exporter.otlp.json.http.log_exporter:OTLPLogExporter"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-json-http"

@@ -27,7 +27,7 @@ try:
     # pylint: disable-next=unused-import
     import opentelemetry.proto  # noqa: F401
     from opentelemetry.exporter.otlp.proto.http import Compression
-    from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+    from opentelemetry.exporter.otlp.proto.http.log_exporter import (
         OTLPLogExporter,
     )
     from opentelemetry.exporter.otlp.proto.http.metric_exporter import (

@@ -92,7 +92,7 @@ def _create_otlp_http_log_exporter(
         from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415  # type: ignore[import-untyped]
             Compression,
         )
-        from opentelemetry.exporter.otlp.proto.http._log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
+        from opentelemetry.exporter.otlp.proto.http.log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             OTLPLogExporter,
         )
     except ImportError as exc:
@@ -121,7 +121,7 @@ def _create_otlp_grpc_log_exporter(
         # pylint: disable=import-outside-toplevel,no-name-in-module
         import grpc  # noqa: PLC0415  # type: ignore[import-untyped]
 
-        from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
+        from opentelemetry.exporter.otlp.proto.grpc.log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             OTLPLogExporter,
         )
     except ImportError as exc:
@@ -148,7 +148,7 @@ def _create_otlp_file_development_log_exporter(
     """Create an OTLP file (JSON Lines) log exporter from config."""
     try:
         # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.json.file._log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
+        from opentelemetry.exporter.otlp.json.file.log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
             FileLogExporter,
         )
     except ImportError as exc:
