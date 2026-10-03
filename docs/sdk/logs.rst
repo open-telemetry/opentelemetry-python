@@ -1,17 +1,17 @@
-opentelemetry.sdk._logs package
-===============================
+opentelemetry.sdk.logs package
+==============================
 
 Submodules
 ----------
 
 .. toctree::
 
-   _logs.export
+   logs.export
 
 Module contents
 ---------------
 
-.. automodule:: opentelemetry.sdk._logs
+.. automodule:: opentelemetry.sdk.logs
     :members:
     :undoc-members:
     :show-inheritance:

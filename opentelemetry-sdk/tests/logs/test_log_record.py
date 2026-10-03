@@ -8,7 +8,7 @@ import warnings
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.logs import LogRecord, SeverityNumber
-from opentelemetry.sdk._logs import (
+from opentelemetry.sdk.logs import (
     LogRecordDroppedAttributesWarning,
     LogRecordLimits,
     ReadableLogRecord,

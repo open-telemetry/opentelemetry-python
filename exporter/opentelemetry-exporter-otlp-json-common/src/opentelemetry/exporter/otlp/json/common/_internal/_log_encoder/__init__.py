@@ -27,7 +27,7 @@ from opentelemetry.proto_json.logs.v1.logs import (
 from opentelemetry.proto_json.logs.v1.logs import (
     ScopeLogs as JSONScopeLogs,
 )
-from opentelemetry.sdk._logs import ReadableLogRecord
+from opentelemetry.sdk.logs import ReadableLogRecord
 from opentelemetry.util.types import Attributes
 
 

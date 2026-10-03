@@ -52,13 +52,13 @@ from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
 from opentelemetry.logs import set_logger_provider
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs._internal import (
+from opentelemetry.sdk.logs import LoggerProvider
+from opentelemetry.sdk.logs._internal import (
     LogRecordLimits,
     _LoggerConfig,
     _RuleBasedLoggerConfigurator,
 )
-from opentelemetry.sdk._logs._internal.export import (
+from opentelemetry.sdk.logs._internal.export import (
     BatchLogRecordProcessor,
     ConsoleLogRecordExporter,
     LogRecordExporter,
