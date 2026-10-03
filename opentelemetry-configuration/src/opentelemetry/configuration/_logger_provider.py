@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 
-from opentelemetry._logs import set_logger_provider
 from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
@@ -52,6 +51,7 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
+from opentelemetry.logs import set_logger_provider
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs._internal import (
     LogRecordLimits,

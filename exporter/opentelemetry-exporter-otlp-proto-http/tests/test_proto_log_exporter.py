@@ -16,7 +16,6 @@ import urllib3.exceptions
 from mocket import Mocket, Mocketizer, mocketize
 from mocket.mocks.mockhttp import Entry, Response
 
-from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
 )
@@ -36,6 +35,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
