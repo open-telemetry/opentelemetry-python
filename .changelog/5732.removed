@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: remove deprecated `LoggingHandler` and `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`

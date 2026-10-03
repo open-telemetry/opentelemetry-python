@@ -4,10 +4,10 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
+from opentelemetry.sdk.logs import LoggerProvider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 

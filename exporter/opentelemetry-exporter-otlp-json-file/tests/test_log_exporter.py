@@ -17,11 +17,11 @@ from opentelemetry.exporter.otlp.json.file._log_exporter import (
 )
 from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.proto_json.logs.v1.logs import LogsData
-from opentelemetry.sdk._logs import (
+from opentelemetry.sdk.logs import (
     LoggerProvider,
     ReadableLogRecord,
 )
-from opentelemetry.sdk._logs.export import (
+from opentelemetry.sdk.logs.export import (
     InMemoryLogRecordExporter,
     LogRecordExportResult,
     SimpleLogRecordProcessor,

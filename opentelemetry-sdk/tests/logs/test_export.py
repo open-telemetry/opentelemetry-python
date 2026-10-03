@@ -4,7 +4,6 @@
 # pylint: disable=protected-access,too-many-lines
 import logging
 import os
-import sys
 import threading
 import time
 import unittest
@@ -15,32 +14,29 @@ from concurrent.futures import (  # pylint: disable=no-name-in-module
 from unittest import mock
 from unittest.mock import Mock, patch
 
-from pytest import mark
-
 from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk import trace
-from opentelemetry.sdk._logs import (
-    LoggerProvider,
-    LoggingHandler,
-    ReadableLogRecord,
-    ReadWriteLogRecord,
-)
-from opentelemetry.sdk._logs._internal.export import _logger
-from opentelemetry.sdk._logs.export import (
-    BatchLogRecordProcessor,
-    ConsoleLogRecordExporter,
-    InMemoryLogRecordExporter,
-    LogRecordExporter,
-    LogRecordExportResult,
-    SimpleLogRecordProcessor,
-)
 from opentelemetry.sdk.environment_variables import (
     OTEL_BLRP_EXPORT_TIMEOUT,
     OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BLRP_MAX_QUEUE_SIZE,
     OTEL_BLRP_SCHEDULE_DELAY,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.logs import (
+    LoggerProvider,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
+)
+from opentelemetry.sdk.logs._internal.export import _logger
+from opentelemetry.sdk.logs.export import (
+    BatchLogRecordProcessor,
+    ConsoleLogRecordExporter,
+    InMemoryLogRecordExporter,
+    LogRecordExporter,
+    LogRecordExportResult,
+    SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
@@ -61,11 +57,9 @@ EMPTY_LOG = ReadWriteLogRecord(
 
 
 class TestSimpleLogRecordProcessor(unittest.TestCase):
-    @mark.skipif(
-        (3, 13, 0) <= sys.version_info <= (3, 13, 5),
-        reason="This will fail on 3.13.5 due to https://github.com/python/cpython/pull/131812 which prevents recursive log messages but was rolled back in 3.13.6.",
-    )
     def test_simple_log_record_processor_doesnt_enter_recursive_loop(self):
+        logger_provider = LoggerProvider()
+
         class Exporter(LogRecordExporter):
             def shutdown(self):
                 pass
@@ -74,36 +68,25 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
                 return True
 
             def export(self, batch: Sequence[ReadableLogRecord]):
-                logger = logging.getLogger("any logger..")
-                logger.warning("Something happened.")
+                # Emitting from within the exporter sends the record back to
+                # SimpleLogRecordProcessor.on_emit.
+                logger_provider.get_logger("any logger..").emit(body="Something happened.")
 
         exporter = Exporter()
-        logger_provider = LoggerProvider()
         logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
-        root_logger = logging.getLogger()
-        # Add the OTLP handler to the root logger like is done in auto instrumentation.
-        # This causes logs generated from within SimpleLogRecordProcessor.on_emit (such as the above log in export)
-        # to be sent back to SimpleLogRecordProcessor.on_emit
-        handler = LoggingHandler(level=logging.DEBUG, logger_provider=logger_provider)
-        root_logger.addHandler(handler)
-        propagate_false_logger = logging.getLogger("opentelemetry.sdk._logs._internal.export.propagate.false")
+        propagate_false_logger = logging.getLogger("opentelemetry.sdk.logs._internal.export.propagate.false")
         # This would cause a max recursion depth exceeded error..
-        try:
-            with self.assertLogs(propagate_false_logger) as cm:
-                root_logger.warning("hello!")
-            assert "SimpleLogRecordProcessor.on_emit has entered a recursive loop" in cm.output[0]
-        finally:
-            root_logger.removeHandler(handler)
+        with self.assertLogs(propagate_false_logger) as cm:
+            logger_provider.get_logger("root").emit(body="hello!")
+        assert "SimpleLogRecordProcessor.on_emit has entered a recursive loop" in cm.output[0]
 
     @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
-    @mark.skipif(
-        (3, 13, 0) <= sys.version_info <= (3, 13, 5),
-        reason="This will fail on 3.13.5 due to https://github.com/python/cpython/pull/131812 which prevents the recursion from being detected.",
-    )
     def test_metrics_recursive_loop(self):
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
 
+        logger_provider = LoggerProvider()
+
         class Exporter(LogRecordExporter):
             def shutdown(self):
                 pass
@@ -112,22 +95,14 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
                 return True
 
             def export(self, batch: Sequence[ReadableLogRecord]):
-                logger = logging.getLogger("any logger..")
-                logger.warning("Something happened.")
+                logger_provider.get_logger("any logger..").emit(body="Something happened.")
 
         exporter = Exporter()
-        logger_provider = LoggerProvider()
         logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter, meter_provider=meter_provider))
-        root_logger = logging.getLogger()
-        handler = LoggingHandler(level=logging.DEBUG, logger_provider=logger_provider)
-        root_logger.addHandler(handler)
-        propagate_false_logger = logging.getLogger("opentelemetry.sdk._logs._internal.export.propagate.false")
-        try:
-            with self.assertLogs(propagate_false_logger) as cm:
-                root_logger.warning("hello!")
-            assert "SimpleLogRecordProcessor.on_emit has entered a recursive loop" in cm.output[0]
-        finally:
-            root_logger.removeHandler(handler)
+        propagate_false_logger = logging.getLogger("opentelemetry.sdk.logs._internal.export.propagate.false")
+        with self.assertLogs(propagate_false_logger) as cm:
+            logger_provider.get_logger("root").emit(body="hello!")
+        assert "SimpleLogRecordProcessor.on_emit has entered a recursive loop" in cm.output[0]
 
         metrics_data = metric_reader.get_metrics_data()
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
@@ -155,11 +130,13 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
 
-        logger = logging.getLogger("default_level")
-        logger.propagate = False
-        logger.addHandler(LoggingHandler(logger_provider=logger_provider))
+        logger = logger_provider.get_logger("default_level")
 
-        logger.warning("Something is wrong")
+        logger.emit(
+            body="Something is wrong",
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+        )
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
         warning_log_record = finished_logs[0]
@@ -168,49 +145,19 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(warning_log_record.log_record.severity_number, SeverityNumber.WARN)
         self.assertEqual(finished_logs[0].instrumentation_scope.name, "default_level")
 
-    def test_simple_log_record_processor_custom_level(self):
-        exporter = InMemoryLogRecordExporter()
-        logger_provider = LoggerProvider()
-
-        logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
-
-        logger = logging.getLogger("custom_level")
-        logger.propagate = False
-        logger.setLevel(logging.ERROR)
-        logger.addHandler(LoggingHandler(logger_provider=logger_provider))
-
-        logger.warning("Warning message")
-        logger.debug("Debug message")
-        logger.error("Error message")
-        logger.critical("Critical message")
-        finished_logs = exporter.get_finished_logs()
-        # Make sure only level >= logging.CRITICAL logs are recorded
-        self.assertEqual(len(finished_logs), 2)
-        critical_log_record = finished_logs[0]
-        fatal_log_record = finished_logs[1]
-        self.assertEqual(critical_log_record.log_record.body, "Error message")
-        self.assertEqual(critical_log_record.log_record.severity_text, "ERROR")
-        self.assertEqual(
-            critical_log_record.log_record.severity_number,
-            SeverityNumber.ERROR,
-        )
-        self.assertEqual(fatal_log_record.log_record.body, "Critical message")
-        self.assertEqual(fatal_log_record.log_record.severity_text, "FATAL")
-        self.assertEqual(fatal_log_record.log_record.severity_number, SeverityNumber.FATAL)
-        self.assertEqual(finished_logs[0].instrumentation_scope.name, "custom_level")
-        self.assertEqual(finished_logs[1].instrumentation_scope.name, "custom_level")
-
     def test_simple_log_record_processor_trace_correlation(self):
         exporter = InMemoryLogRecordExporter()
         logger_provider = LoggerProvider()
 
         logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
 
-        logger = logging.getLogger("trace_correlation")
-        logger.propagate = False
-        logger.addHandler(LoggingHandler(logger_provider=logger_provider))
+        logger = logger_provider.get_logger("trace_correlation")
 
-        logger.warning("Warning message")
+        logger.emit(
+            body="Warning message",
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+        )
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
         sdk_record = finished_logs[0]
@@ -225,7 +172,11 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_as_current_span("test") as span:
-            logger.critical("Critical message within span")
+            logger.emit(
+                body="Critical message within span",
+                severity_text="FATAL",
+                severity_number=SeverityNumber.FATAL,
+            )
 
             finished_logs = exporter.get_finished_logs()
             sdk_record = finished_logs[0]
@@ -247,11 +198,13 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 
         logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
 
-        logger = logging.getLogger("shutdown")
-        logger.propagate = False
-        logger.addHandler(LoggingHandler(logger_provider=logger_provider))
+        logger = logger_provider.get_logger("shutdown")
 
-        logger.warning("Something is wrong")
+        logger.emit(
+            body="Something is wrong",
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+        )
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 1)
         warning_log_record = finished_logs[0]
@@ -261,132 +214,9 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         self.assertEqual(finished_logs[0].instrumentation_scope.name, "shutdown")
         exporter.clear()
         logger_provider.shutdown()
-        logger.warning("Log after shutdown")
+        logger.emit(body="Log after shutdown", severity_number=SeverityNumber.WARN)
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 0)
-
-    def test_simple_log_record_processor_different_msg_types(self):
-        exporter = InMemoryLogRecordExporter()
-        log_record_processor = BatchLogRecordProcessor(exporter)
-
-        provider = LoggerProvider()
-        provider.add_log_record_processor(log_record_processor)
-
-        logger = logging.getLogger("different_msg_types")
-        logger.addHandler(LoggingHandler(logger_provider=provider))
-
-        logger.warning("warning message: %s", "possible upcoming heatwave")
-        logger.error("Very high rise in temperatures across the globe")
-        logger.critical("Temperature hits high 420 C in Hyderabad")
-        logger.warning(["list", "of", "strings"])
-        logger.error({"key": "value"})
-        log_record_processor.shutdown()
-
-        finished_logs = exporter.get_finished_logs()
-        expected = [
-            ("warning message: possible upcoming heatwave", "WARN"),
-            ("Very high rise in temperatures across the globe", "ERROR"),
-            (
-                "Temperature hits high 420 C in Hyderabad",
-                "FATAL",
-            ),
-            (["list", "of", "strings"], "WARN"),
-            ({"key": "value"}, "ERROR"),
-        ]
-        emitted = [(item.log_record.body, item.log_record.severity_text) for item in finished_logs]
-        self.assertEqual(expected, emitted)
-        for item in finished_logs:
-            self.assertEqual(item.instrumentation_scope.name, "different_msg_types")
-
-    def test_simple_log_record_processor_custom_single_obj(self):
-        """
-        Tests that special-case handling for logging a single non-string object
-        is correctly applied.
-        """
-        exporter = InMemoryLogRecordExporter()
-        log_record_processor = BatchLogRecordProcessor(exporter)
-
-        provider = LoggerProvider()
-        provider.add_log_record_processor(log_record_processor)
-
-        logger = logging.getLogger("single_obj")
-        logger.addHandler(LoggingHandler(logger_provider=provider))
-
-        # NOTE: the behaviour of `record.getMessage` is detailed in the
-        # `logging.Logger.debug` documentation:
-        # > The msg is the message format string, and the args are the arguments
-        # > which are merged into msg using the string formatting operator. [...]
-        # > No % formatting operation is performed on msg when no args are supplied.
-
-        # This test uses the presence of '%s' in the first arg to determine if
-        # formatting was applied
-
-        # string msg with no args - getMessage bypasses formatting and sets the string directly
-        logger.warning("a string with a percent-s: %s")  # pylint: disable=logging-too-few-args
-        # string msg with args - getMessage formats args into the msg
-        logger.warning("a string with a percent-s: %s", "and arg")
-        # non-string msg with args - getMessage stringifies msg and formats args into it
-        logger.warning(["a non-string with a percent-s", "%s"], "and arg")
-        # non-string msg with no args:
-        #  - normally getMessage would stringify the object and bypass formatting
-        #  - SPECIAL CASE: bypass stringification as well to keep the raw object
-        logger.warning(["a non-string with a percent-s", "%s"])
-        log_record_processor.shutdown()
-
-        finished_logs = exporter.get_finished_logs()
-        expected = [
-            ("a string with a percent-s: %s"),
-            ("a string with a percent-s: and arg"),
-            ("['a non-string with a percent-s', 'and arg']"),
-            (["a non-string with a percent-s", "%s"]),
-        ]
-        for emitted, expected in zip(finished_logs, expected):
-            self.assertEqual(emitted.log_record.body, expected)
-            self.assertEqual(emitted.instrumentation_scope.name, "single_obj")
-
-    def test_simple_log_record_processor_different_msg_types_with_formatter(
-        self,
-    ):
-        exporter = InMemoryLogRecordExporter()
-        log_record_processor = BatchLogRecordProcessor(exporter)
-
-        provider = LoggerProvider()
-        provider.add_log_record_processor(log_record_processor)
-
-        logger = logging.getLogger("different_msg_types")
-        handler = LoggingHandler(logger_provider=provider)
-        handler.setFormatter(logging.Formatter("%(name)s - %(levelname)s - %(message)s"))
-        logger.addHandler(handler)
-
-        logger.warning("warning message: %s", "possible upcoming heatwave")
-        logger.error("Very high rise in temperatures across the globe")
-        logger.critical("Temperature hits high 420 C in Hyderabad")
-        logger.warning(["list", "of", "strings"])
-        logger.error({"key": "value"})
-        log_record_processor.shutdown()
-
-        finished_logs = exporter.get_finished_logs()
-        expected = [
-            (
-                "different_msg_types - WARNING - warning message: possible upcoming heatwave",
-                "WARN",
-            ),
-            (
-                "different_msg_types - ERROR - Very high rise in temperatures across the globe",
-                "ERROR",
-            ),
-            (
-                "different_msg_types - CRITICAL - Temperature hits high 420 C in Hyderabad",
-                "FATAL",
-            ),
-            (
-                "different_msg_types - WARNING - ['list', 'of', 'strings']",
-                "WARN",
-            ),
-            ("different_msg_types - ERROR - {'key': 'value'}", "ERROR"),
-        ]
-        emitted = [(item.log_record.body, item.log_record.severity_text) for item in finished_logs]
-        self.assertEqual(expected, emitted)
 
     @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics(self):  # pylint: disable=too-many-locals
@@ -479,11 +309,9 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         provider = LoggerProvider()
         provider.add_log_record_processor(log_record_processor)
 
-        logger = logging.getLogger("emit_call")
-        logger.propagate = False
-        logger.addHandler(LoggingHandler(logger_provider=provider))
+        logger = provider.get_logger("emit_call")
 
-        logger.error("error")
+        logger.emit(body="error", severity_number=SeverityNumber.ERROR)
         self.assertEqual(log_record_processor.on_emit.call_count, 1)
         log_record_processor.shutdown()
 
