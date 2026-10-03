@@ -5,7 +5,7 @@ import os
 import time
 
 from opentelemetry import logs, metrics, trace
-from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+from opentelemetry.exporter.otlp.proto.http.log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (

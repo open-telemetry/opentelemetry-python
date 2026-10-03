@@ -66,3 +66,10 @@ Purely for illustration purposes, not intended to represent actual releases:
   - Contains the experimental public API for logging plus other unstable features. There are no stability guarantees.
 - `opentelemetry-sdk` 1.x.yrc1
   - Contains the experimental public SDK for logging plus other unstable features. There are no stability guarantees.
+
+#### V1.46.0 Release (with logs)
+
+- `opentelemetry-api` 1.46.0
+  - Contains APIs for tracing, baggage, propagators, context, metrics, and logs
+- `opentelemetry-sdk` 1.46.0
+  - Contains SDK components for tracing, baggage, propagators, context, metrics, and logs

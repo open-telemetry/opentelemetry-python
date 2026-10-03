@@ -7,7 +7,7 @@ a Resource carrying a bytes attribute must survive the whole export path.
 
 import unittest
 
-from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.proto.common.log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
