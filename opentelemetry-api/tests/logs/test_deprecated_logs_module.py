@@ -60,7 +60,8 @@ class TestDeprecatedLogsModule(unittest.TestCase):
         with self.subTest(statement="from opentelemetry._logs.severity import ..."):
             _unload_deprecated_modules()
             with self.assertWarns(DeprecationWarning) as context:
-                from opentelemetry._logs.severity import (  # noqa: F401, PLC0415
+                # opentelemetry._logs.severity only exists as a sys.modules alias at runtime.
+                from opentelemetry._logs.severity import (  # noqa: F401, PLC0415  # pyright: ignore[reportMissingImports]
                     SeverityNumber,
                 )
             self.assertEqual(context.filename, __file__)
