@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`, `opentelemetry-exporter-otlp-proto-http`, `opentelemetry-exporter-otlp-json-http`, `opentelemetry-exporter-otlp-json-file`: deprecate the `_log_exporter` module in favor of `log_exporter`
