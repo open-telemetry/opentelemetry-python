@@ -1,0 +1,12 @@
+description: >
+  `tracer_configurator/development` disables tracers whose name matches a glob.
+until:
+  - exited: {}
+expect:
+  - spans:
+      name: enabled-span
+      scope: {name: enabled.lib}
+      count: 1
+  - spans:
+      name: disabled-span
+      count: 0

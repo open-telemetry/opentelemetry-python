@@ -1,0 +1,38 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-metric-views-aggregations
+meter_provider:
+  readers:
+    - periodic:
+        interval: 500
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/metrics
+  views:
+    - selector: {instrument_name: dropped}
+      stream:
+        aggregation:
+          drop:
+    - selector: {instrument_name: summed}
+      stream:
+        aggregation:
+          sum:
+    - selector: {instrument_name: last}
+      stream:
+        aggregation:
+          last_value:
+    - selector: {instrument_name: bucketed}
+      stream:
+        aggregation:
+          explicit_bucket_histogram:
+            boundaries: [10, 100]
+            record_min_max: false
+    - selector: {instrument_name: exponential}
+      stream:
+        aggregation:
+          base2_exponential_bucket_histogram:
+            max_size: 4
+            max_scale: 2
+            record_min_max: true

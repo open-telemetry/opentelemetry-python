@@ -1,0 +1,22 @@
+description: >
+  Exports log records over OTLP/HTTP through a batch processor with every batch setting,
+  correlated with the active span.
+until:
+  - logs:
+      min_count: 2
+expect:
+  - logs:
+      body: user logged in
+      severity_number: WARN
+      severity_text: WARN
+      event_name: user.login
+      trace_context: true
+      span: {name: handler}
+      scope: {name: __main__}
+      attributes: {values: {user.id: u-1}, strict: true}
+      count: 1
+  - logs:
+      body: {kvlist: {kind: structured, count: 2}}
+      severity_number: INFO
+      trace_context: false
+      count: 1

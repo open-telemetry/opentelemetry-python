@@ -1,0 +1,11 @@
+description: >
+  `resource.schema_url` is exported with the resource.
+until:
+  - spans:
+      name: schema-span
+expect:
+  - resource:
+      schema_url: https://opentelemetry.io/schemas/1.26.0
+      attributes:
+        values:
+          service.name: declconfig-resource-schema-url

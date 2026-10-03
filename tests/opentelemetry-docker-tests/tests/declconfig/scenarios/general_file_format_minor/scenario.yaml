@@ -1,0 +1,12 @@
+description: >
+  A newer minor `file_format` version is accepted with a warning.
+until:
+  - spans:
+      name: minor-span
+expect:
+  - spans:
+      name: minor-span
+      count: 1
+  - output:
+      stream: stderr
+      pattern: "1\\.99"

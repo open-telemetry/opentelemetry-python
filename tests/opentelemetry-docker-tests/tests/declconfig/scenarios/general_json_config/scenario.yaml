@@ -1,0 +1,13 @@
+description: >
+  A JSON config file (`otel-config.json`) configures the SDK like a YAML one.
+until:
+  - spans:
+      name: json-span
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-general-json-config
+  - spans:
+      name: json-span
+      count: 1

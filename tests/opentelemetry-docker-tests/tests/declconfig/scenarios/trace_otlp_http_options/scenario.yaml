@@ -1,0 +1,9 @@
+description: >
+  The OTLP/HTTP exporter accepts gzip compression, headers, headers_list and a timeout.
+until:
+  - spans:
+      name: options-span
+expect:
+  - spans:
+      name: options-span
+      count: 1

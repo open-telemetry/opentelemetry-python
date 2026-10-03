@@ -1,0 +1,13 @@
+description: >
+  Without a `resource` section, the resource has the SDK attributes and a default service name.
+until:
+  - spans:
+      name: default-span
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: {pattern: "^unknown_service"}
+          telemetry.sdk.language: python
+          telemetry.sdk.name: opentelemetry
+          telemetry.sdk.version: {exists: true}
