@@ -9,14 +9,13 @@ import shutil
 import socket
 import subprocess
 import tempfile
+import time
 from collections import defaultdict
 from collections.abc import Sequence
 from itertools import chain
 from typing import Any
 
-from requests import Session, post
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+from requests import RequestException, get, post
 
 from opentelemetry.semconv.schemas import Schemas
 
@@ -184,7 +183,7 @@ class WeaverLiveCheck:
         This class is experimental and its API is subject to change without notice.
 
 
-    Requires the ``weaver`` binary on PATH:
+    Requires Weaver 0.27 or later on PATH:
     https://github.com/open-telemetry/weaver/releases
 
     Typical use as a context manager::
@@ -236,6 +235,7 @@ class WeaverLiveCheck:
         otlp_port: int = 0,
         admin_port: int = 0,
         extra_args: Sequence[str] | None = None,
+        startup_timeout: float = 30,
     ):
         """Build the ``weaver registry live-check`` command.
 
@@ -243,7 +243,13 @@ class WeaverLiveCheck:
         managed flags (``--registry``, ``--otlp-grpc-port``, etc.) and lets
         callers pass additional weaver options — for example ``["--quiet"]``
         or ``["--skip-policies"]`` — without subclassing.
+
+        ``startup_timeout`` controls how long to wait for the health endpoint,
+        in seconds. It defaults to 30 seconds.
         """
+        if startup_timeout <= 0:
+            raise ValueError("startup_timeout must be positive")
+        self._startup_timeout = startup_timeout
         weaver_bin = shutil.which("weaver")
         if not weaver_bin:
             raise RuntimeError(
@@ -254,6 +260,7 @@ class WeaverLiveCheck:
         self._admin_port = admin_port or _find_free_port()
         self._ready = False
         self._stopped = False
+        self._result: tuple[LiveCheckReport, int] | None = None
         self._process: subprocess.Popen[bytes] | None = None
         self._stdout_path: str | None = None
         self._stderr_path: str | None = None
@@ -319,32 +326,36 @@ class WeaverLiveCheck:
         return self
 
     def _wait_for_ready(self) -> None:
-        retry = Retry(
-            total=10,
-            backoff_factor=1,
-            backoff_max=1,
-            # Any non-2xx response from /health means weaver isn't ready yet.
-            status_forcelist=list(range(300, 600)),
-            raise_on_status=True,
-            allowed_methods=["GET"],
-        )
-        session = Session()
-        session.mount("http://", HTTPAdapter(max_retries=retry))
-        try:
-            session.get(f"http://localhost:{self._admin_port}/health", timeout=5)
-        except Exception as exc:  # pylint: disable=broad-except
+        deadline = time.monotonic() + self._startup_timeout
+        last_error: RequestException | None = None
+        while True:
             if self._process is not None and self._process.poll() is not None:
                 raise RuntimeError(
                     f"WeaverLiveCheck process exited unexpectedly (code {self._process.returncode})"
-                ) from exc
-            raise TimeoutError("WeaverLiveCheck did not become ready in time") from exc
+                ) from last_error
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError(
+                    f"WeaverLiveCheck did not become ready within {self._startup_timeout} seconds"
+                ) from last_error
+            try:
+                response = get(
+                    f"http://localhost:{self._admin_port}/health",
+                    timeout=min(5, remaining),
+                    allow_redirects=False,
+                )
+                if 200 <= response.status_code < 300:
+                    return
+            except RequestException as exc:
+                last_error = exc
+            time.sleep(min(0.25, max(0, deadline - time.monotonic())))
 
     @property
     def otlp_endpoint(self) -> str:
         return f"http://localhost:{self._otlp_port}"
 
     def _do_stop(self, timeout: int) -> tuple["LiveCheckReport", int]:
-        """POST /stop, wait for the process to exit, return (report, exit_code).
+        """Stop collection, read the report, shut down, and return (report, exit_code).
 
         Raises for infrastructure errors (HTTP failure, process communication).
         Never raises for semconv violations.
@@ -352,16 +363,38 @@ class WeaverLiveCheck:
         if not self._ready:
             raise RuntimeError("WeaverLiveCheck process did not start successfully")
         try:
-            response = post(f"http://localhost:{self._admin_port}/stop", timeout=5)
-            response.raise_for_status()
-            report = LiveCheckReport(response.json())
-            assert self._process is not None
-            exit_code = self._process.wait(timeout=timeout)
+            try:
+                response = post(f"http://localhost:{self._admin_port}/stop", timeout=timeout)
+                response.raise_for_status()
+                response = get(f"http://localhost:{self._admin_port}/report", timeout=timeout)
+                response.raise_for_status()
+                report = LiveCheckReport(response.json())
+            except Exception:  # pylint: disable=broad-except
+                try:
+                    self._shutdown(timeout)
+                except Exception as exc:  # pylint: disable=broad-except
+                    logger.debug("Error shutting down weaver after report failure: %s", exc)
+                raise
+            exit_code = self._shutdown(timeout)
         except Exception as exc:  # pylint: disable=broad-except
             logs = self._read_weaver_logs()
             logger.error("Error communicating with weaver: %s, logs: %s", exc, logs)
             raise
         return report, exit_code
+
+    def _shutdown(self, timeout: int) -> int:
+        response = post(f"http://localhost:{self._admin_port}/shutdown", timeout=timeout)
+        response.raise_for_status()
+        assert self._process is not None
+        return self._process.wait(timeout=timeout)
+
+    def _end(self, timeout: int) -> tuple[LiveCheckReport, int]:
+        if not self._stopped:
+            self._stopped = True
+            self._result = self._do_stop(timeout)
+        if self._result is None:
+            raise RuntimeError("WeaverLiveCheck stopped without a completed report request")
+        return self._result
 
     def end(self, timeout: int = 30) -> "LiveCheckReport":
         """Signal weaver to stop and return the full :class:`LiveCheckReport`.
@@ -370,17 +403,17 @@ class WeaverLiveCheck:
         your own assertions against :attr:`LiveCheckReport.violations` or the
         raw report data.
 
+        Repeated calls return the cached report, including after :meth:`close`.
+        Raises :exc:`RuntimeError` if closed without requesting a report or if
+        an earlier report request or shutdown failed.
+
         Raises :exc:`RuntimeError` for infrastructure problems (weaver failed
         to start, HTTP communication error, etc.).
 
         See https://github.com/open-telemetry/weaver/tree/main/crates/weaver_live_check#output
         for the report structure.
         """
-        if self._stopped:
-            logger.warning("end() called after weaver already stopped; returning empty report")
-            return LiveCheckReport({})
-        self._stopped = True
-        report, _ = self._do_stop(timeout)
+        report, _ = self._end(timeout)
         return report
 
     def end_and_check(self, timeout: int = 30) -> "LiveCheckReport":
@@ -395,14 +428,14 @@ class WeaverLiveCheck:
         attached as :attr:`LiveCheckError.report`.
         Use :meth:`end` if you need the report regardless of violations.
 
+        Repeated calls check the cached result and raise again for violations.
+        Raises :exc:`RuntimeError` if closed without requesting a report or if
+        an earlier report request or shutdown failed.
+
         Raises :exc:`RuntimeError` for infrastructure problems (weaver failed
         to start, HTTP communication error, etc.).
         """
-        if self._stopped:
-            logger.warning("end_and_check() called after weaver already stopped; returning empty report")
-            return LiveCheckReport({})
-        self._stopped = True
-        report, exit_code = self._do_stop(timeout)
+        report, exit_code = self._end(timeout)
         if exit_code == 0:
             # Success — no violations found, no errors communicating with weaver
             return report
@@ -436,8 +469,8 @@ class WeaverLiveCheck:
     def close(self) -> None:
         """Stop weaver and clean up the process.
 
-        If weaver has not been stopped yet, sends the ``/stop`` signal and
-        waits for the process to exit.  Never raises for semconv violations.
+        If weaver has not been stopped yet, collects the report and requests
+        shutdown before waiting for exit. Never raises for semconv violations.
         Idempotent — safe to call multiple times or after :meth:`end` /
         :meth:`end_and_check` has already been called.
         """
