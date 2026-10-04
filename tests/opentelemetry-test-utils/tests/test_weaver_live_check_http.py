@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# pylint: disable=protected-access
+
 import subprocess
 import unittest
 from contextlib import ExitStack
@@ -208,7 +210,7 @@ class TestWeaverReadiness(unittest.TestCase):
             self.weaver._wait_for_ready()
         self.get.assert_called_once()
 
-    def test_startup_timeout_must_be_positive(self):
-        for timeout in (0, -1):
-            with self.subTest(timeout=timeout), self.assertRaisesRegex(ValueError, "must be positive"):
+    def test_startup_timeout_must_be_positive_and_finite(self):
+        for timeout in (0, -1, float("nan"), float("inf"), float("-inf")):
+            with self.subTest(timeout=timeout), self.assertRaisesRegex(ValueError, "must be positive and finite"):
                 WeaverLiveCheck(startup_timeout=timeout)

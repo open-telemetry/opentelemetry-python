@@ -13,6 +13,7 @@ import time
 from collections import defaultdict
 from collections.abc import Sequence
 from itertools import chain
+from math import isfinite
 from typing import Any
 
 from requests import RequestException, get, post
@@ -247,8 +248,8 @@ class WeaverLiveCheck:
         ``startup_timeout`` controls how long to wait for the health endpoint,
         in seconds. It defaults to 30 seconds.
         """
-        if startup_timeout <= 0:
-            raise ValueError("startup_timeout must be positive")
+        if not isfinite(startup_timeout) or startup_timeout <= 0:
+            raise ValueError("startup_timeout must be positive and finite")
         self._startup_timeout = startup_timeout
         weaver_bin = shutil.which("weaver")
         if not weaver_bin:
