@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 from collections import defaultdict
 from collections.abc import Sequence
+from copy import deepcopy
 from itertools import chain
 from typing import Any
 
@@ -108,6 +109,9 @@ def _format_violations(violations: list) -> str:
 class LiveCheckError(AssertionError):
     """Raised by :meth:`WeaverLiveCheck.end_and_check` when semconv violations are found.
 
+    Captured process output is available as :attr:`stdout` and :attr:`stderr`,
+    including after the live-check context has closed.
+
     The full :class:`LiveCheckReport` is attached as :attr:`report` for
     structured inspection beyond the human-readable message::
 
@@ -121,9 +125,11 @@ class LiveCheckError(AssertionError):
         )
     """
 
-    def __init__(self, message: str, report: "LiveCheckReport") -> None:
+    def __init__(self, message: str, report: "LiveCheckReport", stdout: str = "", stderr: str = "") -> None:
         super().__init__(message)
         self.report = report
+        self.stdout = stdout
+        self.stderr = stderr
 
 
 class LiveCheckReport:
@@ -150,6 +156,20 @@ class LiveCheckReport:
 
     def __init__(self, report: dict[str, Any]) -> None:
         self._report = report
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a deep copy of the full report for inspection or JSON serialization."""
+        return deepcopy(self._report)
+
+    @property
+    def samples(self) -> list[dict[str, Any]]:
+        """Return a deep copy of the samples, or an empty list if absent."""
+        return deepcopy(self._report.get("samples", []))
+
+    @property
+    def statistics(self) -> dict[str, Any]:
+        """Return a deep copy of the statistics, or an empty dict if absent."""
+        return deepcopy(self._report.get("statistics", {}))
 
     @functools.cached_property
     def violations(self) -> list[dict[str, Any]]:
@@ -236,6 +256,8 @@ class WeaverLiveCheck:
         otlp_port: int = 0,
         admin_port: int = 0,
         extra_args: Sequence[str] | None = None,
+        config: str | None = None,
+        advice_data: str | None = None,
     ):
         """Build the ``weaver registry live-check`` command.
 
@@ -243,6 +265,11 @@ class WeaverLiveCheck:
         managed flags (``--registry``, ``--otlp-grpc-port``, etc.) and lets
         callers pass additional weaver options — for example ``["--quiet"]``
         or ``["--skip-policies"]`` — without subclassing.
+
+        ``config`` selects a Weaver TOML configuration file. Managed command
+        flags take precedence over values in that file.
+        ``advice_data`` is passed unchanged to Weaver's ``--advice-data`` option
+        to load JSON/YAML data for advice policies.
         """
         weaver_bin = shutil.which("weaver")
         if not weaver_bin:
@@ -257,6 +284,8 @@ class WeaverLiveCheck:
         self._process: subprocess.Popen[bytes] | None = None
         self._stdout_path: str | None = None
         self._stderr_path: str | None = None
+        self._stdout = ""
+        self._stderr = ""
 
         command = [
             weaver_bin,
@@ -271,6 +300,11 @@ class WeaverLiveCheck:
 
         if policies_dir:
             command += ["--advice-policies", os.path.abspath(policies_dir)]
+
+        if config is not None:
+            command += ["--config", os.path.abspath(config)]
+        if advice_data is not None:
+            command += ["--advice-data", advice_data]
 
         if registry is None:
             if schema_version is None:
@@ -409,7 +443,32 @@ class WeaverLiveCheck:
         raise LiveCheckError(
             f"Semconv violations found:\n{_format_violations(report.violations)}",
             report,
+            stdout=self.stdout,
+            stderr=self.stderr,
         )
+
+    @staticmethod
+    def _read_output(path: str | None, cached: str) -> str:
+        if path is None:
+            return cached
+        try:
+            with open(path, "rb") as fp:
+                return fp.read().decode(errors="replace")
+        except OSError as exc:
+            logger.debug("Could not read weaver output from %s: %s", path, exc)
+            return cached
+
+    @property
+    def stdout(self) -> str:
+        """Captured stdout so far, retained after close. Reading does not stop Weaver."""
+        self._stdout = self._read_output(self._stdout_path, self._stdout)
+        return self._stdout
+
+    @property
+    def stderr(self) -> str:
+        """Captured stderr so far, retained after close. Reading does not stop Weaver."""
+        self._stderr = self._read_output(self._stderr_path, self._stderr)
+        return self._stderr
 
     def _read_weaver_logs(self) -> str | None:
         if self._process is None:
@@ -422,13 +481,7 @@ class WeaverLiveCheck:
             except subprocess.TimeoutExpired:
                 pass
 
-            def _read(path: str | None) -> str:
-                if path is None or not os.path.exists(path):
-                    return ""
-                with open(path, "rb") as fp:
-                    return fp.read().decode(errors="replace")
-
-            return f"{_read(self._stdout_path)}\n{_read(self._stderr_path)}"
+            return f"{self.stdout}\n{self.stderr}"
         except Exception as exc:  # pylint: disable=broad-except
             logger.error("Could not get weaver logs: %s", exc)
             return None
@@ -454,6 +507,9 @@ class WeaverLiveCheck:
                 self._process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 self._process.kill()
+                self._process.wait(timeout=5)
+        self._stdout = self.stdout
+        self._stderr = self.stderr
         for path in (self._stdout_path, self._stderr_path):
             if path is not None:
                 try:
