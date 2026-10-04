@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# pylint: disable=protected-access
+
 import json
 import os
 import subprocess
@@ -67,7 +69,7 @@ class TestWeaverOutput(unittest.TestCase):
         self.stdout_path = directory / "stdout.log"
         self.stderr_path = directory / "stderr.log"
         self.stdout_path.write_bytes(b"output\xff\n")
-        self.stderr_path.write_text("diagnostic\n", encoding="utf-8")
+        self.stderr_path.write_bytes(b"diagnostic\n")
         self.weaver = WeaverLiveCheck(registry="registry", otlp_port=4317, admin_port=4320)
         self.weaver._stdout_path = str(self.stdout_path)
         self.weaver._stderr_path = str(self.stderr_path)
@@ -81,7 +83,7 @@ class TestWeaverOutput(unittest.TestCase):
         self.assertEqual(self.weaver.stderr, "diagnostic\n")
         self.process.assert_not_called()
         self.assertEqual(self.process.mock_calls, [])
-        self.stderr_path.write_text("more diagnostics\n", encoding="utf-8")
+        self.stderr_path.write_bytes(b"more diagnostics\n")
         self.assertEqual(self.weaver.stderr, "more diagnostics\n")
 
     def test_close_retains_output_and_deletes_files(self):
@@ -98,6 +100,25 @@ class TestWeaverOutput(unittest.TestCase):
         self.weaver.close()
         self.process.kill.assert_called_once_with()
         self.assertEqual(self.process.wait.call_count, 2)
+        self.assertEqual(self.weaver.stderr, "diagnostic\n")
+
+    def test_output_preserves_windows_line_endings(self):
+        self.stderr_path.write_bytes(b"diagnostic\r\n")
+        self.weaver.close()
+        self.assertEqual(self.weaver.stderr, "diagnostic\r\n")
+
+    def test_post_kill_timeout_preserves_original_error_and_output(self):
+        self.process.wait.side_effect = subprocess.TimeoutExpired("weaver", 5)
+        self.process.poll.side_effect = [None, 0]
+        with patch.object(self.weaver, "start", return_value=self.weaver):
+            with self.assertRaisesRegex(RuntimeError, "original failure"):
+                with self.weaver:
+                    raise RuntimeError("original failure")
+        self.process.kill.assert_called_once_with()
+        self.assertEqual(self.process.wait.call_count, 2)
+        self.assertFalse(self.stdout_path.exists())
+        self.assertFalse(self.stderr_path.exists())
+        self.assertEqual(self.weaver.stdout, "output\ufffd\n")
         self.assertEqual(self.weaver.stderr, "diagnostic\n")
 
     def test_error_keeps_output_after_close(self):

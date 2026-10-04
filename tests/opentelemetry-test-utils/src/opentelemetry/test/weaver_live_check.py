@@ -507,7 +507,10 @@ class WeaverLiveCheck:
                 self._process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 self._process.kill()
-                self._process.wait(timeout=5)
+                try:
+                    self._process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    logger.debug("Weaver did not exit after kill; continuing output cleanup")
         self._stdout = self.stdout
         self._stderr = self.stderr
         for path in (self._stdout_path, self._stderr_path):
