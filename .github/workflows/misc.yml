@@ -23,6 +23,7 @@ env:
   PIP_EXISTS_ACTION: w
   CONTRIB_REPO_UTIL_HTTP: ${{ github.workspace }}/opentelemetry-python-contrib/util/opentelemetry-util-http
   CONTRIB_REPO_INSTRUMENTATION: ${{ github.workspace }}/opentelemetry-python-contrib/opentelemetry-instrumentation
+  CONTRIB_REPO_DISTRO: ${{ github.workspace }}/opentelemetry-python-contrib/opentelemetry-distro
   CONTRIB_REPO_INSTRUMENTATION_REQUESTS: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-requests
   CONTRIB_REPO_INSTRUMENTATION_WSGI: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-wsgi
   CONTRIB_REPO_INSTRUMENTATION_FLASK: ${{ github.workspace }}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-flask
@@ -225,6 +226,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Checkout contrib repo @ ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+          path: opentelemetry-python-contrib
 
       - name: Set up Python 3.11
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
