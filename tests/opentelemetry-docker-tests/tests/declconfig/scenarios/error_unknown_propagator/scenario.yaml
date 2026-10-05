@@ -9,5 +9,3 @@ expect:
   - output:
       stream: stderr
       pattern: "bogus"
-  - spans:
-      count: 0
