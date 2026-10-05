@@ -3,6 +3,7 @@
 
 # pylint: disable=protected-access
 
+from json import loads
 from math import inf
 from time import sleep, time_ns
 from unittest import TestCase
@@ -381,6 +382,33 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         self.assertEqual(explicit_bucket_histogram_aggregation._min, inf)
         self.assertEqual(explicit_bucket_histogram_aggregation._max, -inf)
+
+    def test_collect_without_min_max(self):
+        """
+        With `record_min_max=False`, collected points leave min and max unset
+        """
+
+        for collection_temporality in AggregationTemporality.DELTA, AggregationTemporality.CUMULATIVE:
+            with self.subTest(collection_temporality=collection_temporality):
+                explicit_bucket_histogram_aggregation = _ExplicitBucketHistogramAggregation(
+                    {},
+                    AggregationTemporality.DELTA,
+                    0,
+                    _default_reservoir_factory(_ExplicitBucketHistogramAggregation),
+                    record_min_max=False,
+                )
+
+                explicit_bucket_histogram_aggregation.aggregate(measurement(5))
+                explicit_bucket_histogram_aggregation.aggregate(measurement(50))
+
+                histo = explicit_bucket_histogram_aggregation.collect(collection_temporality, 1)
+
+                self.assertIsNone(histo.min)
+                self.assertIsNone(histo.max)
+
+                point_json = loads(histo.to_json(), parse_constant=self.fail)
+                self.assertIsNone(point_json["min"])
+                self.assertIsNone(point_json["max"])
 
     def test_collect(self):
         """
