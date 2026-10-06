@@ -588,9 +588,9 @@ class ReadableSpan:
 
 
 class SpanLimits:
-    """The limits that should be enforce on recorded data such as events, links, attributes etc.
+    """The limits that should be enforced on recorded data such as events, links, attributes etc.
 
-    This class does not enforce any limits itself. It only provides an a way read limits from env,
+    This class does not enforce any limits itself. It only provides a way to read limits from env,
     default values and from user provided arguments.
 
     All limit arguments must be either a non-negative integer, ``None`` or ``SpanLimits.UNSET``.
@@ -774,7 +774,7 @@ class Span(trace_api.Span, ReadableSpan):
         context: trace_api.SpanContext,
         parent: trace_api.SpanContext | None = None,
         sampler: sampling.Sampler | None = None,
-        trace_config: None = None,  # TODO
+        trace_config: None = None,
         resource: Resource | None = None,
         attributes: types.Attributes = None,
         events: Sequence[Event] | None = None,
