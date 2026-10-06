@@ -69,4 +69,11 @@ class TestBaggageManager(TestCase):
         self.assertEqual(get_all(context=ctx), {})
 
     def test__is_valid_value(self):
-        self.assertTrue(_is_valid_value("GET%20%2Fapi%2F%2Freport"))
+        for value, expected in (
+            ("GET%20%2Fapi%2F%2Freport", True),
+            ("val1 ;prop=1", True),
+            ("val1\t; p1 = 1 ; p2", True),
+            ("val 1;prop", False),
+        ):
+            with self.subTest(value=value):
+                self.assertEqual(_is_valid_value(value), expected)

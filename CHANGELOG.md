@@ -20,6 +20,231 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog start -->
 
+## Version 1.45.0/0.66b0 (2026-09-25)
+
+### Added
+
+- `opentelemetry-exporter-prometheus`: add support to configure Resource
+  attributes as metric labels
+  ([#5122](https://github.com/open-telemetry/opentelemetry-python/pull/5122))
+- infra: add renovate
+  ([#5202](https://github.com/open-telemetry/opentelemetry-python/pull/5202))
+- `opentelemetry-api`, `opentelemetry-sdk`: add support for extended attribute
+  values everywhere.
+  ([#5266](https://github.com/open-telemetry/opentelemetry-python/pull/5266))
+- `opentelemetry-sdk`: wire the top-level `log_level` field in declarative
+  configuration — when set, maps the OTel `SeverityNumber` value to a Python
+  logging level and applies it to the `opentelemetry` logger so SDK internal
+  diagnostics respect the configured severity.
+  ([#5351](https://github.com/open-telemetry/opentelemetry-python/pull/5351))
+- `opentelemetry-sdk`: add the new stable `AlwaysRecordSampler`
+  ([#5354](https://github.com/open-telemetry/opentelemetry-python/pull/5354))
+- `opentelemetry-configuration`, `opentelemetry-sdk`: wire top-level
+  `attribute_limits` into per-signal providers via declarative config; add
+  `log_record_limits` support to `LoggerProvider`
+  ([#5365](https://github.com/open-telemetry/opentelemetry-python/pull/5365))
+- `opentelemetry-exporter-otlp-json-http`: add OTLP JSON HTTP exporter package
+  ([#5374](https://github.com/open-telemetry/opentelemetry-python/pull/5374))
+- `opentelemetry-api`, `opentelemetry-sdk`: add `enabled()` support to the
+  Logger API, SDK, and `LogRecordProcessor` to let instrumentation skip
+  expensive work when logging is disabled
+  ([#5380](https://github.com/open-telemetry/opentelemetry-python/pull/5380))
+- `opentelemetry-exporter-otlp-json-file`: add OTLP JSON file Docker tests
+  ([#5412](https://github.com/open-telemetry/opentelemetry-python/pull/5412))
+- `opentelemetry-configuration`: wire the experimental
+  `tracer_configurator/development`, `meter_configurator/development` and
+  `logger_configurator/development` fields into `create_tracer_provider`,
+  `create_meter_provider` and `create_logger_provider`, so
+  per-instrumentation-scope
+  `enabled` overrides declared in the config file are applied to the provider
+  (previously these fields were parsed but silently discarded). The logger
+  `minimum_severity`/`trace_based` fields are not supported by the Python SDK
+  and
+  are ignored with a warning.
+  ([#5418](https://github.com/open-telemetry/opentelemetry-python/pull/5418))
+- `docs/examples`: add example on how to manually setup the SDK to get SDK
+  metrics
+  ([#5449](https://github.com/open-telemetry/opentelemetry-python/pull/5449))
+- `opentelemetry-docker-tests`: add Prometheus exporter docker tests
+  ([#5457](https://github.com/open-telemetry/opentelemetry-python/pull/5457))
+- `opentelemetry-sdk`: count records dropped after shutdown on
+  `otel.sdk.processor.{span,log}.processed` with `error.type=already_shutdown`
+  (batch span/log and simple log processors), which the semantic conventions
+  define as a valid value for this metric.
+  ([#5509](https://github.com/open-telemetry/opentelemetry-python/pull/5509))
+- `opentelemetry-semantic-conventions`: update semantic conventions to v1.44.0
+  ([#5511](https://github.com/open-telemetry/opentelemetry-python/pull/5511))
+- `opentelemetry-sdk`: add `host.id` to the host resource detector
+  ([#5653](https://github.com/open-telemetry/opentelemetry-python/pull/5653))
+- `opentelemetry-test-utils`: add `CapturingSampler` to record what samplers
+  receive in instrumentation tests
+  ([#5681](https://github.com/open-telemetry/opentelemetry-python/pull/5681))
+
+### Changed
+
+- Enable `PIE` (flake8-pie) ruff rule and fix all violations
+  ([#5150](https://github.com/open-telemetry/opentelemetry-python/pull/5150))
+- The public `opentelemetry.util.types.AttributeValue` type in package
+  `opentelemetry-api` is being expanded to include `None`, heterogeneous
+  sequences of primitive types (and nested sequences) as opposed to only
+  homogeneous primitive sequences, and Mappings of strings to any primitive
+  types or sequences/mappings (which themselves must only contain primitive
+  types or sequences/mappings validated the same way).
+  If a `bytes` type is set as an attribute value in the SDK, it will no longer
+  be utf-8 decoded to a string, instead it will be passed along as is in
+  accordance with the OTEL spec, since `bytes` is a valid type in the OTLP
+  proto.
+  ([#5266](https://github.com/open-telemetry/opentelemetry-python/pull/5266))
+- `opentelemetry-exporter-otlp-proto-http`: add a `max_request_size` argument
+  to the OTLP HTTP exporters (traces, logs, metrics); serialized requests
+  larger than the limit are dropped before sending, measured before
+  compression. Defaults to 64 MiB (enabled); set to 0 to disable. Mirrors
+  opentelemetry-go#8157.
+  ([#5369](https://github.com/open-telemetry/opentelemetry-python/pull/5369))
+- [BREAKING] `opentelemetry-api`: subclasses of `Logger` need to implement the
+  `enabled` method
+  ([#5380](https://github.com/open-telemetry/opentelemetry-python/pull/5380))
+- `opentelemetry-exporter-otlp-proto-http`: refactor to use shared
+  opentelemetry-exporter-otlp-common and opentelemetry-exporter-http-transport
+  packages and switch default HTTP backend to urllib3
+  ([#5389](https://github.com/open-telemetry/opentelemetry-python/pull/5389))
+- `opentelemetry-sdk`: unify logging force_flush timeout defaults to 30000ms
+  ([#5438](https://github.com/open-telemetry/opentelemetry-python/pull/5438))
+- `opentelemetry-python`: enable Ruff default ruleset and fix auto-fixable lint
+  issues
+  ([#5491](https://github.com/open-telemetry/opentelemetry-python/pull/5491))
+- `opentelemetry-sdk`: `SimpleSpanProcessor` now drops spans ended after
+  `shutdown()` instead of passing them to the exporter, and counts them on
+  `otel.sdk.processor.span.processed` with `error.type=already_shutdown`.
+  ([#5512](https://github.com/open-telemetry/opentelemetry-python/pull/5512))
+- Bump pytest to 9.0.3
+  ([#5518](https://github.com/open-telemetry/opentelemetry-python/pull/5518))
+- `opentelemetry-exporter-otlp-proto-http`: clarify that the `endpoint=` kwarg
+  requires the full signal path
+  ([#5633](https://github.com/open-telemetry/opentelemetry-python/pull/5633))
+- `opentelemetry-sdk`: fix typos in SpanLimits docstring
+  ([#5658](https://github.com/open-telemetry/opentelemetry-python/pull/5658))
+
+### Fixed
+
+- `opentelemetry-configuration`: perform environment variable substitution on
+  scalar values after parsing the configuration file, so `${VAR}` references
+  inside comments and mapping keys are no longer substituted and undefined
+  references in comments no longer abort loading
+  ([#5407](https://github.com/open-telemetry/opentelemetry-python/pull/5407))
+- `opentelemetry-configuration`: declarative config environment variable
+  substitution now replaces an unset variable that has no default with an empty
+  value instead of raising an error, per the configuration spec.
+  Resource attributes whose value resolves to null (an unset `${VAR}` with no
+  default) are skipped with a warning instead of being inserted as a null
+  value.
+  ([#5408](https://github.com/open-telemetry/opentelemetry-python/pull/5408))
+- 'scripts/build.sh`: add `opentelemetry-configuration` and
+  `opentelemetry-proto-json` to the package to release
+  ([#5425](https://github.com/open-telemetry/opentelemetry-python/pull/5425))
+- `opentelemetry-sdk`: fix `View` instrument-name matching so a view configured
+  with an instrument's real (mixed-case) name is applied; matching is now
+  case-insensitive and platform-independent instead of relying on `fnmatch`'s
+  OS-dependent case handling
+  ([#5430](https://github.com/open-telemetry/opentelemetry-python/pull/5430))
+- `opentelemetry-sdk`: fix missing f-prefix in exponential histogram error
+  messages
+  ([#5434](https://github.com/open-telemetry/opentelemetry-python/pull/5434))
+- `opentelemetry-configuration`: resolve false-positive warning logs for newer
+  schema minor version
+  ([#5436](https://github.com/open-telemetry/opentelemetry-python/pull/5436))
+- `opentelemetry-sdk`: make methods on `FixedSizeExemplarReservoirABC` thread
+  safe
+  ([#5437](https://github.com/open-telemetry/opentelemetry-python/pull/5437))
+- `opentelemetry-propagator-jaeger`: fix typing issues and enable pyright
+  typechecking for the package
+  `opentelemetry-propagator-jaeger`: skip `uberctx-` baggage headers with an
+  empty value on extraction instead of raising `TypeError`
+  ([#5440](https://github.com/open-telemetry/opentelemetry-python/pull/5440))
+- `opentelemetry-sdk`: fix `TypeError` when instantiating a `_BaseConfigurator`
+  subclass whose `__init__` takes arguments
+  ([#5441](https://github.com/open-telemetry/opentelemetry-python/pull/5441))
+- `opentelemetry-sdk`: fix `TypeError` in `os.fork()` when a `BatchProcessor`
+  or `PeriodicExportingMetricReader` is garbage collected
+  ([#5453](https://github.com/open-telemetry/opentelemetry-python/pull/5453))
+- `opentelemetry-configuration`: a declarative config key present with an empty
+  (null) value on an object-typed node (e.g. `always_on:`, a `- service:`
+  detector, or a metric `console:` exporter) is now treated the same as an
+  explicit empty config (`always_on: {}`) instead of failing type dispatch or
+  silently skipping the node. Both `dict`-typed nodes and dataclasses
+  constructible with no arguments are covered.
+  ([#5454](https://github.com/open-telemetry/opentelemetry-python/pull/5454))
+- `opentelemetry-api`: fix copy-pasted log message in `SpanContext.__delattr__`
+  ([#5455](https://github.com/open-telemetry/opentelemetry-python/pull/5455))
+- `opentelemetry-sdk`: reject views with
+  `ExponentialBucketHistogramAggregation` for asynchronous instruments instead
+  of silently producing no data
+  ([#5461](https://github.com/open-telemetry/opentelemetry-python/pull/5461))
+- `opentelemetry-sdk`: fill every bucket of `SimpleFixedSizeExemplarReservoir`
+  before random sampling
+  ([#5462](https://github.com/open-telemetry/opentelemetry-python/pull/5462))
+- `opentelemetry-sdk`: Import code_attributes from stable semconv package
+  ([#5465](https://github.com/open-telemetry/opentelemetry-python/pull/5465))
+- `opentelemetry-sdk`: for both the simple and batch span/log processors, count
+  `otel.sdk.processor.{span,log}.processed` when the processor submits records
+  to the exporter instead of after export completes, and stop stamping exporter
+  failures onto this metric as `error.type`
+  ([#5472](https://github.com/open-telemetry/opentelemetry-python/pull/5472))
+- `opentelemetry-sdk`: fix misleading instrument name validation error message
+  (name max length is 255, not 63).
+  ([#5513](https://github.com/open-telemetry/opentelemetry-python/pull/5513))
+- `opentelemetry-configuration`: add missing process executable name to default
+  service name when available in resource attributes
+  ([#5534](https://github.com/open-telemetry/opentelemetry-python/pull/5534))
+- `opentelemetry-sdk`: fix values for `process.executable.name` and
+  `process.executable.path` to match semantic conventions.
+  ([#5535](https://github.com/open-telemetry/opentelemetry-python/pull/5535))
+- `opentelemetry-api`: fix `TraceState.update` dropping all entries when adding
+  a new key at the 32-key limit
+  ([#5543](https://github.com/open-telemetry/opentelemetry-python/pull/5543))
+- `opentelemetry-sdk`: bound `get_aggregated_resources()` wait to the timeout
+  ([#5545](https://github.com/open-telemetry/opentelemetry-python/pull/5545))
+- `opentelemetry-sdk`: don't read `process.executable.name` resource attribute
+  when building default `service.name`
+  ([#5547](https://github.com/open-telemetry/opentelemetry-python/pull/5547))
+- `opentelemetry-propagator-jaeger`: enforce baggage limits on both `uberctx-`
+  extract and inject, borrowing the same limits (180 entries, 4096 bytes per
+  entry, 8192 bytes total) the package's core `W3CBaggagePropagator` already
+  uses, so neither an inbound carrier nor an in-process baggage map can produce
+  unbounded work or headers.
+  ([#5556](https://github.com/open-telemetry/opentelemetry-python/pull/5556))
+- `opentelemetry-sdk`: keep metric attribute values that Python considers equal
+  but the data model does not, such as `True`, `1` and `1.0`, in separate
+  metric streams
+  ([#5573](https://github.com/open-telemetry/opentelemetry-python/pull/5573))
+- `opentelemetry-sdk`: keep `Resource` hashable and serialisable when an
+  attribute value is `bytes`, instead of raising `TypeError` from every OTLP
+  encoder
+  ([#5577](https://github.com/open-telemetry/opentelemetry-python/pull/5577))
+- `opentelemetry-sdk`: fix instrumentation scope name matching in the tracer,
+  meter and logger configurators so it is case-sensitive on every platform
+  instead of relying on `fnmatch`'s OS-dependent case handling
+  ([#5584](https://github.com/open-telemetry/opentelemetry-python/pull/5584))
+- `opentelemetry-sdk`: fix `TracerProvider()` raising `ValueError` when
+  `OTEL_TRACES_SAMPLER_ARG` is a syntactically valid number outside the `[0.0,
+  1.0]` range, instead of logging a warning and falling back like other invalid
+  values
+  ([#5594](https://github.com/open-telemetry/opentelemetry-python/pull/5594))
+- `opentelemetry-sdk`: retain values from synchronous instruments using
+  last-value aggregation across cumulative collections
+  ([#5637](https://github.com/open-telemetry/opentelemetry-python/pull/5637))
+- `opentelemetry-api`: Added guard for negative value on max_value_len
+  ([#5647](https://github.com/open-telemetry/opentelemetry-python/pull/5647))
+- `opentelemetry-sdk`: fix overriding of the service.instance.id which has been
+  populated from the user provided values through the resource detectors
+  ([#5660](https://github.com/open-telemetry/opentelemetry-python/pull/5660))
+- `opentelemetry-exporter-otlp-proto-grpc`: Fix incorrect default port for OTLP
+  gRPC exporter self-metrics
+  ([#5668](https://github.com/open-telemetry/opentelemetry-python/pull/5668))
+- `opentelemetry-api`: update W3CBaggagePropagator to properly handle
+  whitespace
+  ([#5680](https://github.com/open-telemetry/opentelemetry-python/pull/5680))
+
 ## Version 1.44.0/0.65b0 (2026-07-16)
 
 ### Added

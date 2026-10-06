@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`: restore `requests` as the default HTTP transport so proxy environment variables such as `HTTPS_PROXY` are honored again

@@ -1,1 +1,0 @@
-`opentelemetry-api`: fix copy-pasted log message in `SpanContext.__delattr__`
