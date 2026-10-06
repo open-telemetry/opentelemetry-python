@@ -398,7 +398,7 @@ class TraceState(Mapping[str, str]):
         pairs = {}  # type: dict[str, str]
         for header in header_list:
             for member in header.split(","):
-                # optional whitespace may surround each member
+                # remove optional whitespace (RFC 9110, section 5.6.3)
                 member = member.strip(" \t")
                 # empty members are valid, but no need to process further.
                 if not member:
