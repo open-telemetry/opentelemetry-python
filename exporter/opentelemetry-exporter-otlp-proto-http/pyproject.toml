@@ -32,7 +32,8 @@ dependencies = [
   "opentelemetry-sdk ~= 1.45.0",
   "opentelemetry-exporter-otlp-proto-common == 1.45.0",
   "opentelemetry-exporter-otlp-common == 0.66b0",
-  "opentelemetry-exporter-http-transport[urllib3] == 0.66b0",
+  "opentelemetry-exporter-http-transport[requests] == 0.66b0",
+  "requests ~= 2.7",
   "typing-extensions >= 4.5.0",
 ]
 
