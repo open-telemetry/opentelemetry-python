@@ -27,12 +27,6 @@ from opentelemetry.exporter.otlp.json.http._log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.logs import LogRecord, SeverityNumber
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import (
-    InMemoryLogRecordExporter,
-    LogRecordExportResult,
-    SimpleLogRecordProcessor,
-)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
@@ -43,6 +37,12 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+)
+from opentelemetry.sdk.logs import LoggerProvider
+from opentelemetry.sdk.logs.export import (
+    InMemoryLogRecordExporter,
+    LogRecordExportResult,
+    SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace import (

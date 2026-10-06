@@ -14,23 +14,23 @@ from unittest.mock import Mock, patch
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.logs import LogRecord, SeverityNumber
-from opentelemetry.sdk._logs import (
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+    OTEL_SDK_DISABLED,
+)
+from opentelemetry.sdk.logs import (
     Logger,
     LoggerProvider,
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
-from opentelemetry.sdk._logs._internal import (
+from opentelemetry.sdk.logs._internal import (
     NoOpLogger,
     SynchronousMultiLogRecordProcessor,
     _disable_logger_configurator,
     _LoggerConfig,
     _RuleBasedLoggerConfigurator,
     create_logger_metrics,
-)
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
-    OTEL_SDK_DISABLED,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (

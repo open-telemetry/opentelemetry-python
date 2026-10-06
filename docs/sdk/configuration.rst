@@ -144,7 +144,6 @@ Behavior notes
   components the file enables (for example resource detectors) and via
   ``${env:VAR}`` substitution.
 * Python-implementation extensions (``OTEL_PYTHON_*`` variables such as
-  ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
   ``OTEL_PYTHON_TRACER_CONFIGURATOR``) are **not** applied when
   ``OTEL_CONFIG_FILE`` is set: the env-var initialisation path is skipped
   entirely. If your app currently relies on one of these and you are

@@ -20,7 +20,7 @@ or reader per destination:
   ``metric_readers`` parameter.
 
 * **Logs**: Use one ``BatchLogRecordProcessor`` per destination, each
-  wrapping its own ``LogExporter``. Add each processor to the
+  wrapping its own ``LogRecordExporter``. Add each processor to the
   ``LoggerProvider`` via ``add_log_record_processor()``.
 
 .. note::

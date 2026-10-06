@@ -470,7 +470,7 @@ def get_logger(
     """Returns a `Logger` for use within a python process.
 
     This function is a convenience wrapper for
-    opentelemetry.sdk._logs.LoggerProvider.get_logger.
+    opentelemetry.sdk.logs.LoggerProvider.get_logger.
 
     If logger_provider param is omitted the current configured one is used.
     """

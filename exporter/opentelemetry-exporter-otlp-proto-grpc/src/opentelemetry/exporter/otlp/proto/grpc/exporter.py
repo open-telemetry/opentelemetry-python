@@ -78,8 +78,6 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     KeyValue,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
-from opentelemetry.sdk._logs import ReadableLogRecord
-from opentelemetry.sdk._logs.export import LogRecordExportResult
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
@@ -94,6 +92,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
+from opentelemetry.sdk.logs import ReadableLogRecord
+from opentelemetry.sdk.logs.export import LogRecordExportResult
 from opentelemetry.sdk.metrics.export import MetricExportResult, MetricsData
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import ReadableSpan
