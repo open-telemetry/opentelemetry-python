@@ -235,7 +235,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 sys.modules,
                 {
                     "opentelemetry.exporter.otlp.proto.http": None,
-                    "opentelemetry.exporter.otlp.proto.http._log_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http.log_exporter": None,
                 },
             ),
             self.assertRaises(ConfigurationError),
@@ -249,7 +249,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 sys.modules,
                 {
                     "grpc": None,
-                    "opentelemetry.exporter.otlp.proto.grpc._log_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.grpc.log_exporter": None,
                 },
             ),
             self.assertRaises(ConfigurationError),
@@ -262,7 +262,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             patch.dict(
                 sys.modules,
                 {
-                    "opentelemetry.exporter.otlp.json.file._log_exporter": None,
+                    "opentelemetry.exporter.otlp.json.file.log_exporter": None,
                 },
             ),
             self.assertRaises(ConfigurationError) as ctx,
@@ -278,7 +278,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         with patch.dict(
             sys.modules,
             {
-                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+                "opentelemetry.exporter.otlp.json.file.log_exporter": mock_module,
             },
         ):
             config = LogRecordExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig())
@@ -296,7 +296,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         with patch.dict(
             sys.modules,
             {
-                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+                "opentelemetry.exporter.otlp.json.file.log_exporter": mock_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -315,7 +315,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         with patch.dict(
             sys.modules,
             {
-                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+                "opentelemetry.exporter.otlp.json.file.log_exporter": mock_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -340,7 +340,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             sys.modules,
             {
                 "opentelemetry.exporter.otlp.proto.http": mock_module,
-                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+                "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_log_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -368,7 +368,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             sys.modules,
             {
                 "opentelemetry.exporter.otlp.proto.http": mock_module,
-                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+                "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_log_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -392,7 +392,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             sys.modules,
             {
                 "opentelemetry.exporter.otlp.proto.http": mock_module,
-                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+                "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_log_module,
             },
         ):
             config = LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(compression="deflate"))
@@ -412,7 +412,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             sys.modules,
             {
                 "grpc": mock_grpc,
-                "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_grpc_log_module,
+                "opentelemetry.exporter.otlp.proto.grpc.log_exporter": mock_grpc_log_module,
             },
         ):
             config = LogRecordExporterConfig(
