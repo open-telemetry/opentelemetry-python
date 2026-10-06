@@ -10,12 +10,12 @@ import tempfile
 import unittest
 from unittest.mock import Mock
 
-from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.json.file._internal import _format_line
 from opentelemetry.exporter.otlp.json.file._log_exporter import (
     FileLogExporter,
 )
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.proto_json.logs.v1.logs import LogsData
 from opentelemetry.sdk._logs import (
     LoggerProvider,
