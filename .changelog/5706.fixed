@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: fix thread leak bug in resource initialization logic for long running resource detectors
