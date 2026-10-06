@@ -743,12 +743,10 @@ def get_aggregated_resources(
     """
     detectors_merged_resource = initial_resource or Resource.create()
 
-    # The executor is not used as a context manager: exiting it would call
-    # `shutdown(wait=True)` and join still-running workers, so a detector that
-    # blocks longer than `timeout` would hold up the whole call regardless of
-    # `future.result(timeout=...)`. Shut down without waiting instead so the
-    # timeout actually bounds this call. A detector that outlives the timeout
-    # continues in its worker thread until detect() returns.
+    # A detector that exceeds `timeout` is skipped, but shutdown still joins
+    # its worker so no threads outlive this call. A detector that blocks
+    # indefinitely therefore blocks this call. `cancel_futures=True` drops
+    # detectors that have not started yet if a `raise_on_error` detector raises.
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
     try:
         futures = [executor.submit(detector.detect) for detector in detectors]
@@ -773,6 +771,6 @@ def get_aggregated_resources(
             finally:
                 detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
     finally:
-        executor.shutdown(wait=False, cancel_futures=True)
+        executor.shutdown(wait=True, cancel_futures=True)
 
     return detectors_merged_resource
