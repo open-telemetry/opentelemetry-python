@@ -298,6 +298,13 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
 
         if parsed_url.netloc:
             self._endpoint = parsed_url.netloc
+            if parsed_url.path and parsed_url.path.strip("/"):
+                logger.warning(
+                    "Endpoint path '%s' will be ignored. gRPC exporter uses '%s' without path. "
+                    "If you intended to use HTTP, import from opentelemetry.exporter.otlp.proto.http instead.",
+                    parsed_url.path,
+                    self._endpoint,
+                )
 
         self._insecure = insecure
         self._credentials = credentials
