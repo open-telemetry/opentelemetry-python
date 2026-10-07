@@ -10,10 +10,7 @@ from opentelemetry.sdk.resources import PROCESS_PID
 
 
 def _resource_pids(metrics_data) -> list[int]:
-    return [
-        resource_metric.resource.attributes[PROCESS_PID]
-        for resource_metric in metrics_data.resource_metrics
-    ]
+    return [resource_metric.resource.attributes[PROCESS_PID] for resource_metric in metrics_data.resource_metrics]
 
 
 def _metric_names(metrics_data) -> list[str]:
@@ -28,16 +25,12 @@ def _metric_names(metrics_data) -> list[str]:
 # pylint: disable-next=too-many-locals
 def main() -> None:
     reader = InMemoryMetricReader()
-    meter_provider = MeterProvider(
-        metric_readers=[reader], shutdown_on_exit=False
-    )
+    meter_provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
     meter = meter_provider.get_meter("cached")
     counter = meter.create_counter("cached_counter")
     parent_pid = os.getpid()
     # pylint: disable-next=protected-access
-    parent_resource_pid = meter_provider._sdk_config.resource.attributes[
-        PROCESS_PID
-    ]
+    parent_resource_pid = meter_provider._sdk_config.resource.attributes[PROCESS_PID]
 
     pid = os.fork()
     if not pid:
@@ -52,9 +45,7 @@ def main() -> None:
                 {
                     "child_pid": child_pid,
                     # pylint: disable-next=protected-access
-                    "provider_pid": meter_provider._sdk_config.resource.attributes[
-                        PROCESS_PID
-                    ],
+                    "provider_pid": meter_provider._sdk_config.resource.attributes[PROCESS_PID],
                     "exported_resource_pids": _resource_pids(metrics_data),
                     "metric_names": _metric_names(metrics_data),
                 }
@@ -71,9 +62,7 @@ def main() -> None:
                 "parent_pid": parent_pid,
                 "parent_resource_pid": parent_resource_pid,
                 # pylint: disable-next=protected-access
-                "parent_resource_pid_after_fork": meter_provider._sdk_config.resource.attributes[
-                    PROCESS_PID
-                ],
+                "parent_resource_pid_after_fork": meter_provider._sdk_config.resource.attributes[PROCESS_PID],
             }
         ),
         flush=True,

@@ -55,11 +55,7 @@ class FileSpanExporter(SpanExporter):
         )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
-        return (
-            SpanExportResult.SUCCESS
-            if self._exporter.export(spans)
-            else SpanExportResult.FAILURE
-        )
+        return SpanExportResult.SUCCESS if self._exporter.export(spans) else SpanExportResult.FAILURE
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._exporter.shutdown()

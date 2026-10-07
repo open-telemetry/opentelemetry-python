@@ -35,13 +35,13 @@ from opentelemetry._logs._internal import (
 from opentelemetry._logs.severity import SeverityNumber
 
 __all__ = [
+    "LogRecord",
     "Logger",
     "LoggerProvider",
-    "LogRecord",
     "NoOpLogger",
     "NoOpLoggerProvider",
+    "SeverityNumber",
     "get_logger",
     "get_logger_provider",
     "set_logger_provider",
-    "SeverityNumber",
 ]

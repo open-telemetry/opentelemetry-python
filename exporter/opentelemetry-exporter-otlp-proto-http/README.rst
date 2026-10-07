@@ -15,6 +15,15 @@ Installation
 
      pip install opentelemetry-exporter-otlp-proto-http
 
+To use a custom ``requests.Session`` (for example to configure authentication), pass it to the exporter:
+
+.. code-block:: python
+
+     import requests
+     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
+     exporter = OTLPSpanExporter(session=requests.Session())
+
 
 References
 ----------

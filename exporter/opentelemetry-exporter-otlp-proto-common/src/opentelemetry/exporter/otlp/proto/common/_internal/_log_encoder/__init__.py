@@ -30,9 +30,7 @@ def encode_logs(
 
 def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
     span_id = (
-        None
-        if readable_log_record.log_record.span_id == 0
-        else _encode_span_id(readable_log_record.log_record.span_id)
+        None if readable_log_record.log_record.span_id == 0 else _encode_span_id(readable_log_record.log_record.span_id)
     )
     trace_id = (
         None
@@ -47,13 +45,9 @@ def _encode_log(readable_log_record: ReadableLogRecord) -> PB2LogRecord:
         flags=int(readable_log_record.log_record.trace_flags),
         body=_encode_value(readable_log_record.log_record.body),
         severity_text=readable_log_record.log_record.severity_text,
-        attributes=_encode_attributes(
-            readable_log_record.log_record.attributes
-        ),
+        attributes=_encode_attributes(readable_log_record.log_record.attributes),
         dropped_attributes_count=readable_log_record.dropped_attributes,
-        severity_number=getattr(
-            readable_log_record.log_record.severity_number, "value", None
-        ),
+        severity_number=getattr(readable_log_record.log_record.severity_number, "value", None),
         event_name=readable_log_record.log_record.event_name,
     )
 
@@ -79,9 +73,7 @@ def _encode_resource_logs(
                 ScopeLogs(
                     scope=(_encode_instrumentation_scope(sdk_instrumentation)),
                     log_records=pb2_logs,
-                    schema_url=sdk_instrumentation.schema_url
-                    if sdk_instrumentation
-                    else None,
+                    schema_url=sdk_instrumentation.schema_url if sdk_instrumentation else None,
                 )
             )
         pb2_resource_logs.append(

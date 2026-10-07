@@ -75,9 +75,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
 
         attr_dict = {kv.key: kv.value for kv in encoded.attributes}
         self.assertEqual(attr_dict["key_bool"], JSONAnyValue(bool_value=False))
-        self.assertEqual(
-            attr_dict["key_str"], JSONAnyValue(string_value="hello")
-        )
+        self.assertEqual(attr_dict["key_str"], JSONAnyValue(string_value="hello"))
 
     def test_encode_span_events(self):
         event = Event(
@@ -91,9 +89,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
 
         self.assertEqual(len(encoded.events), 1)
         self.assertEqual(encoded.events[0].name, "my-event")
-        self.assertEqual(
-            encoded.events[0].time_unix_nano, BASE_TIME + 10 * 10**6
-        )
+        self.assertEqual(encoded.events[0].time_unix_nano, BASE_TIME + 10 * 10**6)
         self.assertEqual(encoded.events[0].attributes[0].key, "event_key")
 
     def test_encode_span_links(self):
@@ -145,10 +141,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         )
         self.assertEqual(
             encoded.flags,
-            int(
-                JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
-                | JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
-            ),
+            int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK),
         )
 
     def test_encode_span_no_parent(self):
@@ -203,9 +196,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         scope_spans = result.resource_spans[0].scope_spans
         self.assertEqual(len(scope_spans), 2)
 
-        groups = {
-            ss.scope.name: [s.name for s in ss.spans] for ss in scope_spans
-        }
+        groups = {ss.scope.name: [s.name for s in ss.spans] for ss in scope_spans}
         self.assertEqual(groups["lib1"], ["s1"])
         self.assertEqual(groups["lib2"], ["s2"])
         self.assertEqual(scope_spans[0].scope.version, "1.0")
@@ -221,9 +212,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         span = make_span(resource=resource, instrumentation_scope=scope)
         result = encode_spans([span])
 
-        self.assertEqual(
-            result.resource_spans[0].schema_url, "resource_schema"
-        )
+        self.assertEqual(result.resource_spans[0].schema_url, "resource_schema")
         self.assertEqual(
             result.resource_spans[0].scope_spans[0].schema_url,
             "scope_schema",
@@ -346,14 +335,10 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                 name="span2",
                 span_id=0xBBBB,
                 resource=Resource({"r": "v"}),
-                instrumentation_scope=InstrumentationScope(
-                    "lib", "1.0", attributes={"sk": 1}
-                ),
+                instrumentation_scope=InstrumentationScope("lib", "1.0", attributes={"sk": 1}),
             ),
         ]
         result = encode_spans(spans)
         json_str = result.to_json()
-        roundtripped = JSONExportTraceServiceRequest.from_dict(
-            json.loads(json_str)
-        )
+        roundtripped = JSONExportTraceServiceRequest.from_dict(json.loads(json_str))
         assert_proto_json_equal(self, result, roundtripped)

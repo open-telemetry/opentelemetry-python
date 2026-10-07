@@ -16,6 +16,7 @@ from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
+from opentelemetry.exporter.otlp.proto.grpc import _timeout_from_env
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     OTLPExporterMixin,
     _get_credentials,
@@ -94,14 +95,10 @@ class OTLPMetricExporter(
         endpoint: str | None = None,
         insecure: bool | None = None,
         credentials: ChannelCredentials | None = None,
-        headers: TypingSequence[tuple[str, str]]
-        | dict[str, str]
-        | str
-        | None = None,
+        headers: TypingSequence[tuple[str, str]] | dict[str, str] | str | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
-        preferred_temporality: dict[type, AggregationTemporality]
-        | None = None,
+        preferred_temporality: dict[type, AggregationTemporality] | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
         max_export_batch_size: int | None = None,
         channel_options: tuple[tuple[str, str]] | None = None,
@@ -113,10 +110,7 @@ class OTLPMetricExporter(
         if insecure is None and insecure_metrics is not None:
             insecure = insecure_metrics.lower() == "true"
 
-        if (
-            not insecure
-            and environ.get(OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE) is not None
-        ):
+        if not insecure and environ.get(OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE) is not None:
             credentials = _get_credentials(
                 credentials,
                 _OTEL_PYTHON_EXPORTER_OTLP_GRPC_METRICS_CREDENTIAL_PROVIDER,
@@ -125,27 +119,19 @@ class OTLPMetricExporter(
                 OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
             )
 
-        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
-        environ_timeout = (
-            float(environ_timeout) if environ_timeout is not None else None
-        )
+        environ_timeout = _timeout_from_env(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT)
 
         compression = (
-            environ_to_compression(OTEL_EXPORTER_OTLP_METRICS_COMPRESSION)
-            if compression is None
-            else compression
+            environ_to_compression(OTEL_EXPORTER_OTLP_METRICS_COMPRESSION) if compression is None else compression
         )
 
-        self._common_configuration(
-            preferred_temporality, preferred_aggregation
-        )
+        self._common_configuration(preferred_temporality, preferred_aggregation)
 
         OTLPExporterMixin.__init__(
             self,
             stub=MetricsServiceStub,
             result=MetricExportResult,
-            endpoint=endpoint
-            or environ.get(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT),
+            endpoint=endpoint or environ.get(OTEL_EXPORTER_OTLP_METRICS_ENDPOINT),
             insecure=insecure,
             credentials=credentials,
             headers=headers or environ.get(OTEL_EXPORTER_OTLP_METRICS_HEADERS),
@@ -235,9 +221,7 @@ class OTLPMetricExporter(
                         batch_size += 1
 
                         if batch_size >= self._max_export_batch_size:
-                            yield MetricsData(
-                                resource_metrics=split_resource_metrics
-                            )
+                            yield MetricsData(resource_metrics=split_resource_metrics)
                             # Reset all the variables
                             batch_size = 0
                             split_data_points = []

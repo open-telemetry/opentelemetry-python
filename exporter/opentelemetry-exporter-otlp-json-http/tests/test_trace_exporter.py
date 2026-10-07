@@ -91,9 +91,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         request = Mocket.last_request()
         self.assertEqual(request.method, "POST")
         self.assertEqual(request.path, "/v1/traces")
-        self.assertEqual(
-            json.loads(request.body), encode_spans(spans).to_dict()
-        )
+        self.assertEqual(json.loads(request.body), encode_spans(spans).to_dict())
 
     @mocketize
     def test_export_multiple_spans_same_resource(self):
@@ -111,11 +109,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(len(Mocket.request_list()), 1)
         body = json.loads(Mocket.last_request().body)
         self.assertEqual(body, encode_spans(spans).to_dict())
-        total_spans = sum(
-            len(ss["spans"])
-            for rs in body["resourceSpans"]
-            for ss in rs["scopeSpans"]
-        )
+        total_spans = sum(len(ss["spans"]) for rs in body["resourceSpans"] for ss in rs["scopeSpans"])
         self.assertEqual(total_spans, 2)
 
     @mocketize
@@ -183,9 +177,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     @mocketize
     def test_default_endpoint_and_headers(self):
-        Entry.single_register(
-            Entry.POST, "http://localhost:4318/v1/traces", status=200
-        )
+        Entry.single_register(Entry.POST, "http://localhost:4318/v1/traces", status=200)
         exporter = OTLPSpanExporter()
 
         result = exporter.export(self._make_span())
@@ -193,9 +185,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(result, SpanExportResult.SUCCESS)
         headers = Mocket.last_request().headers
         self.assertEqual(headers["content-type"], "application/json")
-        self.assertTrue(
-            headers["user-agent"].startswith("OTel-OTLP-JSON-Exporter-Python/")
-        )
+        self.assertTrue(headers["user-agent"].startswith("OTel-OTLP-JSON-Exporter-Python/"))
 
     def test_custom_endpoint(self):
         url = "http://custom.example:9999/v1/traces"
@@ -255,23 +245,15 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 headers = Mocket.last_request().headers
                 self.assertEqual(headers["x-api-key"], "secret")
                 self.assertEqual(headers["content-type"], "application/json")
-                self.assertTrue(
-                    headers["user-agent"].startswith(
-                        "OTel-OTLP-JSON-Exporter-Python/"
-                    )
-                )
+                self.assertTrue(headers["user-agent"].startswith("OTel-OTLP-JSON-Exporter-Python/"))
 
     @mocketize
     def test_custom_transport(self):
         Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
         custom_transport = Urllib3HTTPTransport()
 
-        with patch(
-            "opentelemetry.exporter.otlp.json.http.trace_exporter._build_transport"
-        ) as mock_build_transport:
-            exporter = OTLPSpanExporter(
-                endpoint=_TEST_ENDPOINT, _transport=custom_transport
-            )
+        with patch("opentelemetry.exporter.otlp.json.http.trace_exporter._build_transport") as mock_build_transport:
+            exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT, _transport=custom_transport)
 
         mock_build_transport.assert_not_called()
         self.assertIs(exporter._client._transport, custom_transport)
@@ -309,9 +291,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
                     result = exporter.export(self._make_span())
 
                 self.assertEqual(result, SpanExportResult.SUCCESS)
-                self.assertAlmostEqual(
-                    mock_request.call_args.kwargs["timeout"], 7.5, delta=0.5
-                )
+                self.assertAlmostEqual(mock_request.call_args.kwargs["timeout"], 7.5, delta=0.5)
 
     @mocketize
     def test_certificate_args(self):
@@ -350,16 +330,12 @@ class TestOTLPSpanExporter(unittest.TestCase):
         for compression, expected_encoding, decompress in cases:
             with self.subTest(compression=compression), Mocketizer():
                 Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
-                exporter = OTLPSpanExporter(
-                    endpoint=_TEST_ENDPOINT, compression=compression
-                )
+                exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT, compression=compression)
                 transport = exporter._client._transport
                 self._in_memory.clear()
                 spans = self._make_span()
 
-                with patch.object(
-                    transport, "request", wraps=transport.request
-                ) as mock_request:
+                with patch.object(transport, "request", wraps=transport.request) as mock_request:
                     result = exporter.export(spans)
 
                 self.assertEqual(result, SpanExportResult.SUCCESS)
@@ -367,14 +343,10 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 if expected_encoding is None:
                     self.assertNotIn("Content-Encoding", sent_headers)
                 else:
-                    self.assertEqual(
-                        sent_headers["Content-Encoding"], expected_encoding
-                    )
+                    self.assertEqual(sent_headers["Content-Encoding"], expected_encoding)
                 sent_data = mock_request.call_args.kwargs["data"]
                 decompressed = decompress(sent_data)
-                self.assertEqual(
-                    json.loads(decompressed), encode_spans(spans).to_dict()
-                )
+                self.assertEqual(json.loads(decompressed), encode_spans(spans).to_dict())
 
     def test_export_retryable_status_codes(self):
         for status_code in (429, 502, 503, 504):
@@ -385,9 +357,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
                     Response(status=status_code),
                     Response(status=200),
                 )
-                exporter = OTLPSpanExporter(
-                    endpoint=_TEST_ENDPOINT, timeout=30.0
-                )
+                exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT, timeout=30.0)
                 shutdown_event = self._mocked_shutdown_event()
                 exporter._client._shutdown_event = shutdown_event
                 self._in_memory.clear()
@@ -405,9 +375,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
     def test_export_non_retryable_status_codes(self):
         for status_code in (400, 401, 403, 404, 408, 500, 501):
             with self.subTest(status_code=status_code), Mocketizer():
-                Entry.single_register(
-                    Entry.POST, _TEST_ENDPOINT, status=status_code
-                )
+                Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=status_code)
                 exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
                 self._in_memory.clear()
 
@@ -456,9 +424,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
     @mocketize
     def test_export_retry_after_header_http_date(self):
         base = 1_700_000_000.0
-        retry_at = format_datetime(
-            datetime.fromtimestamp(base + 30, timezone.utc), usegmt=True
-        )
+        retry_at = format_datetime(datetime.fromtimestamp(base + 30, timezone.utc), usegmt=True)
         Entry.register(
             Entry.POST,
             _TEST_ENDPOINT,

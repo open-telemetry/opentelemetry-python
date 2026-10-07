@@ -16,9 +16,7 @@ class ContextVarsRuntimeContext(_RuntimeContext):
     _CONTEXT_KEY = "current_context"
 
     def __init__(self) -> None:
-        self._current_context = ContextVar(
-            self._CONTEXT_KEY, default=Context()
-        )
+        self._current_context = ContextVar(self._CONTEXT_KEY, default=Context())
 
     def attach(self, context: Context) -> Token[Context]:
         """Sets the current `Context` object. Returns a

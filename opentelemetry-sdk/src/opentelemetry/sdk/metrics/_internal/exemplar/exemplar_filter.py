@@ -23,7 +23,7 @@ class ExemplarFilter(ABC):
     @abstractmethod
     def should_sample(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -36,9 +36,7 @@ class ExemplarFilter(ABC):
             attributes: The complete set of measurement attributes
             context: The Context of the measurement
         """
-        raise NotImplementedError(
-            "ExemplarFilter.should_sample is not implemented"
-        )
+        raise NotImplementedError("ExemplarFilter.should_sample is not implemented")
 
 
 class AlwaysOnExemplarFilter(ExemplarFilter):
@@ -50,7 +48,7 @@ class AlwaysOnExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -77,7 +75,7 @@ class AlwaysOffExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -103,7 +101,7 @@ class TraceBasedExemplarFilter(ExemplarFilter):
 
     def should_sample(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,

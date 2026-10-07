@@ -38,17 +38,20 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Get changed markdown files
         id: changed-files
-        uses: tj-actions/changed-files@v46
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         with:
           files: |
             **/*.md
             **/*.rst
+          json: true
+          escape_json: false
 
       - name: Install markdown-link-check
         if: steps.changed-files.outputs.any_changed == 'true'
@@ -56,22 +59,28 @@ jobs:
 
       - name: Check links on push to main
         if: steps.changed-files.outputs.any_changed == 'true' && github.event_name == 'push'
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
+          mapfile -t changed_files < <(jq -r '.[]' <<< "$CHANGED_FILES")
           markdown-link-check \
             --verbose \
             --config .github/workflows/check_links_config.json \
-            ${{ steps.changed-files.outputs.all_changed_files }} \
+            "${changed_files[@]}" \
             || { echo "Check that anchor links are lowercase"; exit 1; }
 
       - name: Check new links only on pull requests and merge groups
         if: steps.changed-files.outputs.any_changed == 'true' && (github.event_name == 'pull_request' || github.event_name == 'merge_group')
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
+          mapfile -t changed_files < <(jq -r '.[]' <<< "$CHANGED_FILES")
           # Extract URLs only from added lines in the diff to avoid
           # rate limiting when checking all links in large files like
           # CHANGELOG.md. Only new/changed links are checked on PRs;
           # pushes to main still check all links in changed files.
           git diff "$DIFF_RANGE" -- \
-            ${{ steps.changed-files.outputs.all_changed_files }} \
+            "${changed_files[@]}" \
             | grep '^+' | grep -v '^+++' \
             | grep -oP 'https?://[^\s\)\]\"'"'"'`>]+' \
             | sort -u > /tmp/new_links.txt

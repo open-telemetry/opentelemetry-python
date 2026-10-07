@@ -14,9 +14,7 @@ Provider = TypeVar("Provider", "TracerProvider", "MeterProvider")
 logger = getLogger(__name__)
 
 
-def _load_provider(
-    provider_environment_variable: str, provider: str
-) -> Provider:  # type: ignore[type-var]
+def _load_provider(provider_environment_variable: str, provider: str) -> Provider:  # type: ignore[type-var]
     # pylint: disable=import-outside-toplevel,no-name-in-module
     from opentelemetry.util._importlib_metadata import (  # noqa: PLC0415
         entry_points,

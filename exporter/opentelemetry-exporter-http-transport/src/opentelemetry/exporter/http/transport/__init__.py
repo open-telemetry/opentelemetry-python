@@ -69,8 +69,5 @@ def _load_http_transport_factory(name: str) -> BaseHTTPTransportFactory:
         )
     factory = ep.load()
     if not callable(factory):
-        raise TypeError(
-            f"Transport {name!r} loaded from entry point is not callable "
-            f"(got {factory!r})."
-        )
+        raise TypeError(f"Transport {name!r} loaded from entry point is not callable (got {factory!r}).")
     return cast("BaseHTTPTransportFactory", factory)

@@ -22,9 +22,7 @@ def monkeysession():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def generate_code(
-    tmp_path_factory: pytest.TempPathFactory, monkeysession: MonkeyPatch
-) -> None:
+def generate_code(tmp_path_factory: pytest.TempPathFactory, monkeysession: MonkeyPatch) -> None:
     gen_path = tmp_path_factory.mktemp("generated")
 
     protos = list(PROTO_PATH.glob("**/*.proto"))

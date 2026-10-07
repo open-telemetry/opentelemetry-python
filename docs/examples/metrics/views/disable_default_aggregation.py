@@ -17,9 +17,7 @@ from opentelemetry.sdk.metrics.view import (
 )
 
 # disable_default_aggregation.
-disable_default_aggregation = View(
-    instrument_name="*", aggregation=DropAggregation()
-)
+disable_default_aggregation = View(instrument_name="*", aggregation=DropAggregation())
 
 exporter = ConsoleMetricExporter()
 
@@ -35,9 +33,7 @@ provider = MeterProvider(
 )
 set_meter_provider(provider)
 
-meter = get_meter_provider().get_meter(
-    "view-disable-default-aggregation", "0.1.2"
-)
+meter = get_meter_provider().get_meter("view-disable-default-aggregation", "0.1.2")
 # Create a view to configure aggregation specific for this counter.
 my_counter = meter.create_counter("mycounter")
 

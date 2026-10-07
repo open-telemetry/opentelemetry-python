@@ -50,9 +50,7 @@ class _FileExporter(Generic[T]):
             encoded = self._encode(data)
             with self._lock:
                 if self._stream.closed:
-                    self._logger.warning(
-                        "Stream is closed, ignoring %s export call", self._kind
-                    )
+                    self._logger.warning("Stream is closed, ignoring %s export call", self._kind)
                     return False
                 if encoded is not None:
                     self._stream.write(_format_line(encoded))

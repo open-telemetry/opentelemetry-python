@@ -31,9 +31,7 @@ DB_CASSANDRA_PAGE_SIZE: Final = "db.cassandra.page_size"
 Deprecated: Replaced by `cassandra.page.size`.
 """
 
-DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = (
-    "db.cassandra.speculative_execution_count"
-)
+DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT: Final = "db.cassandra.speculative_execution_count"
 """
 Deprecated: Replaced by `cassandra.speculative_execution.count`.
 """
@@ -108,9 +106,7 @@ DB_COSMOSDB_REQUEST_CHARGE: Final = "db.cosmosdb.request_charge"
 Deprecated: Replaced by `azure.cosmosdb.operation.request_charge`.
 """
 
-DB_COSMOSDB_REQUEST_CONTENT_LENGTH: Final = (
-    "db.cosmosdb.request_content_length"
-)
+DB_COSMOSDB_REQUEST_CONTENT_LENGTH: Final = "db.cosmosdb.request_content_length"
 """
 Deprecated: Replaced by `azure.cosmosdb.request.body.size`.
 """
@@ -205,7 +201,12 @@ then `<key>` SHOULD be the 0-based index.
 up with the parameterized placeholders present in `db.query.text`.
 
 It is RECOMMENDED to capture the value as provided by the application
-without attempting to do any case normalization.
+without attempting to do any case normalization or sanitization.
+
+Instrumentations SHOULD NOT capture `db.query.parameter.<key>` by default
+since values may contain PII or sensitive details.
+Application operators are expected to enable specific keys depending
+on their privacy and security considerations.
 
 `db.query.parameter.<key>` SHOULD NOT be captured on batch operations.
 
@@ -230,7 +231,7 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.db_att
 
 DB_REDIS_DATABASE_INDEX: Final = "db.redis.database_index"
 """
-Deprecated: Uncategorized.
+Deprecated: Replaced by `db.namespace` (string).
 """
 
 DB_RESPONSE_RETURNED_ROWS: Final = "db.response.returned_rows"
@@ -274,9 +275,7 @@ Deprecated: Removed, no replacement at this time.
 """
 
 
-@deprecated(
-    "The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`"
-)
+@deprecated("The attribute db.cassandra.consistency_level is deprecated - Replaced by `cassandra.consistency.level`")
 class DbCassandraConsistencyLevelValues(Enum):
     ALL = "all"
     """all."""
@@ -309,9 +308,7 @@ class DbClientConnectionStateValues(Enum):
     """used."""
 
 
-@deprecated(
-    "The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`"
-)
+@deprecated("The attribute db.client.connections.state is deprecated - Replaced by `db.client.connection.state`")
 class DbClientConnectionsStateValues(Enum):
     IDLE = "idle"
     """idle."""
@@ -319,9 +316,7 @@ class DbClientConnectionsStateValues(Enum):
     """used."""
 
 
-@deprecated(
-    "The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`"
-)
+@deprecated("The attribute db.cosmosdb.connection_mode is deprecated - Replaced by `azure.cosmosdb.connection.mode`")
 class DbCosmosdbConnectionModeValues(Enum):
     GATEWAY = "gateway"
     """Gateway (HTTP) connection."""
@@ -345,9 +340,7 @@ class DbCosmosdbConsistencyLevelValues(Enum):
     """consistent_prefix."""
 
 
-@deprecated(
-    "The attribute db.cosmosdb.operation_type is deprecated - Removed, no replacement at this time"
-)
+@deprecated("The attribute db.cosmosdb.operation_type is deprecated - Removed, no replacement at this time")
 class DbCosmosdbOperationTypeValues(Enum):
     BATCH = "batch"
     """batch."""
@@ -381,9 +374,7 @@ class DbCosmosdbOperationTypeValues(Enum):
     """upsert."""
 
 
-@deprecated(
-    "The attribute db.system is deprecated - Replaced by `db.system.name`"
-)
+@deprecated("The attribute db.system is deprecated - Replaced by `db.system.name`")
 class DbSystemValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only. See notes."""

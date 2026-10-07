@@ -181,33 +181,15 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                 if not line.startswith("cpu"):
                     break
                 cpu, *states = line.split()
-                yield Observation(
-                    int(states[0]) / 100, {"cpu": cpu, "state": "user"}
-                )
-                yield Observation(
-                    int(states[1]) / 100, {"cpu": cpu, "state": "nice"}
-                )
-                yield Observation(
-                    int(states[2]) / 100, {"cpu": cpu, "state": "system"}
-                )
-                yield Observation(
-                    int(states[3]) / 100, {"cpu": cpu, "state": "idle"}
-                )
-                yield Observation(
-                    int(states[4]) / 100, {"cpu": cpu, "state": "iowait"}
-                )
-                yield Observation(
-                    int(states[5]) / 100, {"cpu": cpu, "state": "irq"}
-                )
-                yield Observation(
-                    int(states[6]) / 100, {"cpu": cpu, "state": "softirq"}
-                )
-                yield Observation(
-                    int(states[7]) / 100, {"cpu": cpu, "state": "guest"}
-                )
-                yield Observation(
-                    int(states[8]) / 100, {"cpu": cpu, "state": "guest_nice"}
-                )
+                yield Observation(int(states[0]) / 100, {"cpu": cpu, "state": "user"})
+                yield Observation(int(states[1]) / 100, {"cpu": cpu, "state": "nice"})
+                yield Observation(int(states[2]) / 100, {"cpu": cpu, "state": "system"})
+                yield Observation(int(states[3]) / 100, {"cpu": cpu, "state": "idle"})
+                yield Observation(int(states[4]) / 100, {"cpu": cpu, "state": "iowait"})
+                yield Observation(int(states[5]) / 100, {"cpu": cpu, "state": "irq"})
+                yield Observation(int(states[6]) / 100, {"cpu": cpu, "state": "softirq"})
+                yield Observation(int(states[7]) / 100, {"cpu": cpu, "state": "guest"})
+                yield Observation(int(states[8]) / 100, {"cpu": cpu, "state": "guest_nice"})
 
         meter = MeterProvider().get_meter("name")
         observable_counter = meter.create_observable_counter(
@@ -217,14 +199,10 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
             description="CPU time",
         )
         measurements = list(observable_counter.callback(CallbackOptions()))
-        self.assertEqual(
-            measurements, self.create_measurements_expected(observable_counter)
-        )
+        self.assertEqual(measurements, self.create_measurements_expected(observable_counter))
 
     def test_cpu_time_generator(self):
-        def cpu_time_generator() -> Generator[
-            Iterable[Observation], None, None
-        ]:
+        def cpu_time_generator() -> Generator[Iterable[Observation], None, None]:
             options = yield
             while True:
                 self.assertIsInstance(options, CallbackOptions)
@@ -265,11 +243,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                             {"cpu": cpu, "state": "iowait"},
                         )
                     )
-                    measurements.append(
-                        Observation(
-                            int(states[5]) / 100, {"cpu": cpu, "state": "irq"}
-                        )
-                    )
+                    measurements.append(Observation(int(states[5]) / 100, {"cpu": cpu, "state": "irq"}))
                     measurements.append(
                         Observation(
                             int(states[6]) / 100,
@@ -298,8 +272,6 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
             description="CPU time",
         )
         measurements = list(observable_counter.callback(CallbackOptions()))
-        self.assertEqual(
-            measurements, self.create_measurements_expected(observable_counter)
-        )
+        self.assertEqual(measurements, self.create_measurements_expected(observable_counter))
 
     maxDiff = None

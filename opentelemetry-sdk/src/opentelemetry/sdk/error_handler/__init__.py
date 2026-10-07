@@ -74,7 +74,6 @@ class _DefaultErrorHandler(ErrorHandler):
     # pylint: disable=useless-return
     def _handle(self, error: Exception, *args, **kwargs):
         logger.exception("Error handled by default error handler: ")
-        return None
 
 
 class GlobalErrorHandler:
@@ -104,9 +103,7 @@ class GlobalErrorHandler:
 
         plugin_handled = False
 
-        error_handler_entry_points = entry_points(
-            group="opentelemetry_error_handler"
-        )
+        error_handler_entry_points = entry_points(group="opentelemetry_error_handler")
 
         for error_handler_entry_point in error_handler_entry_points:
             error_handler_class = error_handler_entry_point.load()

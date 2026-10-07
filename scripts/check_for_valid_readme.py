@@ -18,12 +18,8 @@ def is_valid_rst(path):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Checks README.rst file in path for syntax errors."
-    )
-    parser.add_argument(
-        "paths", nargs="+", help="paths containing a README.rst to test"
-    )
+    parser = argparse.ArgumentParser(description="Checks README.rst file in path for syntax errors.")
+    parser.add_argument("paths", nargs="+", help="paths containing a README.rst to test")
     parser.add_argument("-v", "--verbose", action="store_true")
     return parser.parse_args()
 

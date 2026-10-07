@@ -60,19 +60,14 @@ class TestParseHeaders(unittest.TestCase):
             with self.subTest(headers=headers):
                 if warn:
                     with self.assertLogs(level="WARNING") as cm:
-                        self.assertEqual(
-                            parse_env_headers(headers), dict(expected)
-                        )
+                        self.assertEqual(parse_env_headers(headers), dict(expected))
                         self.assertTrue(
                             "Header format invalid! Header values in environment "
                             "variables must be URL encoded per the OpenTelemetry "
-                            "Protocol Exporter specification:"
-                            in cm.records[0].message,
+                            "Protocol Exporter specification:" in cm.records[0].message,
                         )
                 else:
-                    self.assertEqual(
-                        parse_env_headers(headers), dict(expected)
-                    )
+                    self.assertEqual(parse_env_headers(headers), dict(expected))
 
     def test_parse_env_headers_liberal(self):
         inp = self._common_test_cases() + [
@@ -97,8 +92,7 @@ class TestParseHeaders(unittest.TestCase):
                             "Header format invalid! Header values in environment "
                             "variables must be URL encoded per the OpenTelemetry "
                             "Protocol Exporter specification or a comma separated "
-                            "list of name=value occurrences:"
-                            in cm.records[0].message,
+                            "list of name=value occurrences:" in cm.records[0].message,
                         )
                 else:
                     self.assertEqual(

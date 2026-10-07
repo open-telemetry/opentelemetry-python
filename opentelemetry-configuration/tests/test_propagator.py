@@ -39,9 +39,7 @@ class TestCreatePropagator(unittest.TestCase):
         self.assertEqual(result._propagators, [])  # type: ignore[attr-defined]
 
     def test_tracecontext_only(self):
-        config = PropagatorConfig(
-            composite=[TextMapPropagatorConfig(tracecontext={})]
-        )
+        config = PropagatorConfig(composite=[TextMapPropagatorConfig(tracecontext={})])
         result = create_propagator(config)
         self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
         self.assertIsInstance(
@@ -50,9 +48,7 @@ class TestCreatePropagator(unittest.TestCase):
         )
 
     def test_baggage_only(self):
-        config = PropagatorConfig(
-            composite=[TextMapPropagatorConfig(baggage={})]
-        )
+        config = PropagatorConfig(composite=[TextMapPropagatorConfig(baggage={})])
         result = create_propagator(config)
         self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
         self.assertIsInstance(result._propagators[0], W3CBaggagePropagator)  # type: ignore[attr-defined]
@@ -81,9 +77,7 @@ class TestCreatePropagator(unittest.TestCase):
             "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
-            config = PropagatorConfig(
-                composite=[TextMapPropagatorConfig(b3={})]
-            )
+            config = PropagatorConfig(composite=[TextMapPropagatorConfig(b3={})])
             result = create_propagator(config)
 
         self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
@@ -98,9 +92,7 @@ class TestCreatePropagator(unittest.TestCase):
             "opentelemetry.configuration._common.entry_points",
             return_value=[mock_ep],
         ):
-            config = PropagatorConfig(
-                composite=[TextMapPropagatorConfig(b3multi={})]
-            )
+            config = PropagatorConfig(composite=[TextMapPropagatorConfig(b3multi={})])
             result = create_propagator(config)
 
         self.assertEqual(len(result._propagators), 1)  # type: ignore[attr-defined]
@@ -110,9 +102,7 @@ class TestCreatePropagator(unittest.TestCase):
             "opentelemetry.configuration._common.entry_points",
             return_value=[],
         ):
-            config = PropagatorConfig(
-                composite=[TextMapPropagatorConfig(b3={})]
-            )
+            config = PropagatorConfig(composite=[TextMapPropagatorConfig(b3={})])
             with self.assertRaises(ConfigurationError) as ctx:
                 create_propagator(config)
         self.assertIn("b3", str(ctx.exception))
@@ -262,21 +252,15 @@ class TestCreatePropagator(unittest.TestCase):
 
 class TestConfigurePropagator(unittest.TestCase):
     def test_configure_propagator_calls_set_global_textmap(self):
-        with patch(
-            "opentelemetry.configuration._propagator.set_global_textmap"
-        ) as mock_set:
+        with patch("opentelemetry.configuration._propagator.set_global_textmap") as mock_set:
             configure_propagator(None)
             mock_set.assert_called_once()
             arg = mock_set.call_args[0][0]
             self.assertIsInstance(arg, CompositePropagator)
 
     def test_configure_propagator_with_config(self):
-        config = PropagatorConfig(
-            composite=[TextMapPropagatorConfig(tracecontext={})]
-        )
-        with patch(
-            "opentelemetry.configuration._propagator.set_global_textmap"
-        ) as mock_set:
+        config = PropagatorConfig(composite=[TextMapPropagatorConfig(tracecontext={})])
+        with patch("opentelemetry.configuration._propagator.set_global_textmap") as mock_set:
             configure_propagator(config)
             mock_set.assert_called_once()
             propagator = mock_set.call_args[0][0]
@@ -286,12 +270,8 @@ class TestConfigurePropagator(unittest.TestCase):
     @patch.dict(environ, {OTEL_PROPAGATORS: "baggage"})
     def test_otel_propagators_env_var_ignored(self):
         """OTEL_PROPAGATORS env var must not influence configure_propagator output."""
-        config = PropagatorConfig(
-            composite=[TextMapPropagatorConfig(tracecontext={})]
-        )
-        with patch(
-            "opentelemetry.configuration._propagator.set_global_textmap"
-        ) as mock_set:
+        config = PropagatorConfig(composite=[TextMapPropagatorConfig(tracecontext={})])
+        with patch("opentelemetry.configuration._propagator.set_global_textmap") as mock_set:
             configure_propagator(config)
             propagator = mock_set.call_args[0][0]
             self.assertEqual(len(propagator._propagators), 1)  # type: ignore[attr-defined]

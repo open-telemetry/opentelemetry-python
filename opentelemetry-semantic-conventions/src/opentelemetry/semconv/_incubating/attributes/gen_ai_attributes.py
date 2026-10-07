@@ -71,9 +71,7 @@ GEN_AI_INPUT_MESSAGES: Final = "gen_ai.input.messages"
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-GEN_AI_OPENAI_REQUEST_RESPONSE_FORMAT: Final = (
-    "gen_ai.openai.request.response_format"
-)
+GEN_AI_OPENAI_REQUEST_RESPONSE_FORMAT: Final = "gen_ai.openai.request.response_format"
 """
 Deprecated: Replaced by `gen_ai.output.type`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
@@ -83,23 +81,17 @@ GEN_AI_OPENAI_REQUEST_SEED: Final = "gen_ai.openai.request.seed"
 Deprecated: Replaced by `gen_ai.request.seed`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-GEN_AI_OPENAI_REQUEST_SERVICE_TIER: Final = (
-    "gen_ai.openai.request.service_tier"
-)
+GEN_AI_OPENAI_REQUEST_SERVICE_TIER: Final = "gen_ai.openai.request.service_tier"
 """
 Deprecated: Replaced by `openai.request.service_tier`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-GEN_AI_OPENAI_RESPONSE_SERVICE_TIER: Final = (
-    "gen_ai.openai.response.service_tier"
-)
+GEN_AI_OPENAI_RESPONSE_SERVICE_TIER: Final = "gen_ai.openai.response.service_tier"
 """
 Deprecated: Replaced by `openai.response.service_tier`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-GEN_AI_OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = (
-    "gen_ai.openai.response.system_fingerprint"
-)
+GEN_AI_OPENAI_RESPONSE_SYSTEM_FINGERPRINT: Final = "gen_ai.openai.response.system_fingerprint"
 """
 Deprecated: Replaced by `openai.response.system_fingerprint`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
@@ -209,9 +201,7 @@ GEN_AI_RESPONSE_MODEL: Final = "gen_ai.response.model"
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-GEN_AI_RESPONSE_TIME_TO_FIRST_CHUNK: Final = (
-    "gen_ai.response.time_to_first_chunk"
-)
+GEN_AI_RESPONSE_TIME_TO_FIRST_CHUNK: Final = "gen_ai.response.time_to_first_chunk"
 """
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
@@ -276,16 +266,12 @@ GEN_AI_TOOL_TYPE: Final = "gen_ai.tool.type"
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS: Final = (
-    "gen_ai.usage.cache_creation.input_tokens"
-)
+GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS: Final = "gen_ai.usage.cache_creation.input_tokens"
 """
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: Final = (
-    "gen_ai.usage.cache_read.input_tokens"
-)
+GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: Final = "gen_ai.usage.cache_read.input_tokens"
 """
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
@@ -310,9 +296,7 @@ GEN_AI_USAGE_PROMPT_TOKENS: Final = "gen_ai.usage.prompt_tokens"
 Deprecated: Replaced by `gen_ai.usage.input_tokens`, which has moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """
 
-GEN_AI_USAGE_REASONING_OUTPUT_TOKENS: Final = (
-    "gen_ai.usage.reasoning.output_tokens"
-)
+GEN_AI_USAGE_REASONING_OUTPUT_TOKENS: Final = "gen_ai.usage.reasoning.output_tokens"
 """
 Deprecated: Moved to the [OpenTelemetry GenAI semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-genai).
 """

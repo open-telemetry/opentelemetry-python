@@ -38,8 +38,8 @@ Note: This value MAY be added when processing a Log Record which was originally 
 LOG_RECORD_UID: Final = "log.record.uid"
 """
 A unique identifier for the Log Record.
-Note: If an id is provided, other log records with the same id will be considered duplicates and can be removed safely. This means, that two distinguishable log records MUST have different values.
-The id MAY be an [Universally Unique Lexicographically Sortable Identifier (ULID)](https://github.com/ulid/spec), but other identifiers (e.g. UUID) may be used as needed.
+Note: If an ID is provided, other log records with the same ID will be considered duplicates and can be removed safely. This means, that two distinguishable log records MUST have different values.
+The ID MAY be an [Universally Unique Lexicographically Sortable Identifier (ULID)](https://github.com/ulid/spec), but other identifiers (e.g. UUID) may be used as needed.
 """
 
 

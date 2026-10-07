@@ -52,6 +52,4 @@ class TestContextManager(unittest.TestCase):
 
         res = asyncio.run(async_func("a"))
         self.assertEqual(res, "aa")
-        self.assertEqual(
-            events, ["start_async_func", "finish_sleep", "cm_done"]
-        )
+        self.assertEqual(events, ["start_async_func", "finish_sleep", "cm_done"])

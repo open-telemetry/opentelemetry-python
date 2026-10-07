@@ -41,9 +41,7 @@ _logger = logging.getLogger(__name__)
 def encode_spans(
     sdk_spans: Sequence[ReadableSpan],
 ) -> PB2ExportTraceServiceRequest:
-    return PB2ExportTraceServiceRequest(
-        resource_spans=_encode_resource_spans(sdk_spans)
-    )
+    return PB2ExportTraceServiceRequest(resource_spans=_encode_resource_spans(sdk_spans))
 
 
 def _encode_resource_spans(
@@ -78,9 +76,7 @@ def _encode_resource_spans(
                 PB2ScopeSpans(
                     scope=(_encode_instrumentation_scope(sdk_instrumentation)),
                     spans=pb2_spans,
-                    schema_url=sdk_instrumentation.schema_url
-                    if sdk_instrumentation
-                    else None,
+                    schema_url=sdk_instrumentation.schema_url if sdk_instrumentation else None,
                 )
             )
         pb2_resource_spans.append(
@@ -169,9 +165,7 @@ def _encode_status(status: Status) -> PB2Status | None:
 def _encode_trace_state(trace_state: TraceState) -> str | None:
     pb2_trace_state = None
     if trace_state is not None:
-        pb2_trace_state = ",".join(
-            [f"{key}={value}" for key, value in (trace_state.items())]
-        )
+        pb2_trace_state = ",".join([f"{key}={value}" for key, value in (trace_state.items())])
     return pb2_trace_state
 
 

@@ -45,9 +45,7 @@ counter = meter.create_counter("counter")
 counter.add(1)
 
 # Async Counter
-observable_counter = meter.create_observable_counter(
-    "observable_counter", [observable_counter_func]
-)
+observable_counter = meter.create_observable_counter("observable_counter", [observable_counter_func])
 
 # UpDownCounter
 updown_counter = meter.create_up_down_counter("updown_counter")
@@ -64,9 +62,7 @@ histogram = meter.create_histogram("histogram")
 histogram.record(99.9)
 
 # Async Gauge
-observable_gauge = meter.create_observable_gauge(
-    "observable_gauge", [observable_gauge_func]
-)
+observable_gauge = meter.create_observable_gauge("observable_gauge", [observable_gauge_func])
 
 # Sync Gauge
 gauge = meter.create_gauge("gauge")

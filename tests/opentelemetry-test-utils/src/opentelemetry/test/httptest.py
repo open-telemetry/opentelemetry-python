@@ -39,9 +39,7 @@ class HttpTestBase(unittest.TestCase):
     @classmethod
     def run_server(cls):
         httpd = cls.create_server()
-        worker = Thread(
-            target=httpd.serve_forever, daemon=True, name="Test server worker"
-        )
+        worker = Thread(target=httpd.serve_forever, daemon=True, name="Test server worker")
         worker.start()
         return worker, httpd
 

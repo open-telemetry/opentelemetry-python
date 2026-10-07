@@ -56,13 +56,9 @@ class TestLogLimits(unittest.TestCase):
         limits = LogRecordLimits()
 
         self.assertEqual(7, limits.max_log_record_attributes)
-        self.assertEqual(
-            _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT, limits.max_attributes
-        )
+        self.assertEqual(_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT, limits.max_attributes)
 
-    @patch.dict(
-        "os.environ", {OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT: "20"}
-    )
+    @patch.dict("os.environ", {OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT: "20"})
     def test_logrecord_length_env_var(self):
         limits = LogRecordLimits()
 
@@ -102,9 +98,7 @@ class TestLogLimits(unittest.TestCase):
         self.assertEqual(42, limits.max_attributes)
         self.assertEqual(42, limits.max_log_record_attributes)
 
-    @patch.dict(
-        "os.environ", {OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT: "60"}, clear=True
-    )
+    @patch.dict("os.environ", {OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT: "60"}, clear=True)
     def test_global_length_env_applies_as_fallback(self):
         limits = LogRecordLimits()
 
@@ -120,11 +114,7 @@ class TestLogLimits(unittest.TestCase):
         ]
 
         bad_values = ["bad", "-1"]
-        test_cases = {
-            env_var: bad_value
-            for env_var in env_vars
-            for bad_value in bad_values
-        }
+        test_cases = {env_var: bad_value for env_var in env_vars for bad_value in bad_values}
 
         for env_var, bad_value in test_cases.items():
             with self.subTest(f"Testing {env_var}={bad_value}"):

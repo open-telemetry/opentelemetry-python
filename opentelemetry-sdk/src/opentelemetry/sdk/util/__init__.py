@@ -12,9 +12,7 @@ from typing_extensions import deprecated
 
 def ns_to_iso_str(nanoseconds):
     """Get an ISO 8601 string from time_ns value."""
-    ts = datetime.datetime.fromtimestamp(
-        nanoseconds / 1e9, tz=datetime.timezone.utc
-    )
+    ts = datetime.datetime.fromtimestamp(nanoseconds / 1e9, tz=datetime.timezone.utc)
     return ts.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
@@ -23,9 +21,7 @@ def get_dict_as_key(labels):
     return tuple(
         sorted(
             map(
-                lambda kv: (
-                    (kv[0], tuple(kv[1])) if isinstance(kv[1], list) else kv
-                ),
+                lambda kv: (kv[0], tuple(kv[1])) if isinstance(kv[1], list) else kv,
                 labels.items(),
             )
         )
@@ -67,10 +63,7 @@ class BoundedList(Sequence):
 
     def append(self, item):
         with self._lock:
-            if (
-                self._dq.maxlen is not None
-                and len(self._dq) == self._dq.maxlen
-            ):
+            if self._dq.maxlen is not None and len(self._dq) == self._dq.maxlen:
                 self.dropped += 1
             self._dq.append(item)
 
@@ -110,9 +103,7 @@ class BoundedDict(MutableMapping):
         self._lock = threading.Lock()  # type: threading.Lock
 
     def __repr__(self):
-        return (
-            f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
-        )
+        return f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
 
     def __getitem__(self, key):
         return self._dict[key]

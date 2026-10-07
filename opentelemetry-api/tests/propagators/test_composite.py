@@ -61,9 +61,7 @@ class TestCompositePropagator(unittest.TestCase):
         propagator.inject(new_carrier)
         self.assertEqual(new_carrier, {})
 
-        context = propagator.extract(
-            carrier=new_carrier, context={}, getter=get_as_list
-        )
+        context = propagator.extract(carrier=new_carrier, context={}, getter=get_as_list)
         self.assertEqual(context, {})
 
     def test_single_propagator(self):
@@ -73,39 +71,29 @@ class TestCompositePropagator(unittest.TestCase):
         propagator.inject(new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data"})
 
-        context = propagator.extract(
-            carrier=new_carrier, context={}, getter=get_as_list
-        )
+        context = propagator.extract(carrier=new_carrier, context={}, getter=get_as_list)
         self.assertEqual(context, {"mock-0": "context"})
 
     def test_multiple_propagators(self):
-        propagator = CompositePropagator(
-            [self.mock_propagator_0, self.mock_propagator_1]
-        )
+        propagator = CompositePropagator([self.mock_propagator_0, self.mock_propagator_1])
 
         new_carrier = {}
         propagator.inject(new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data", "mock-1": "data"})
 
-        context = propagator.extract(
-            carrier=new_carrier, context={}, getter=get_as_list
-        )
+        context = propagator.extract(carrier=new_carrier, context={}, getter=get_as_list)
         self.assertEqual(context, {"mock-0": "context", "mock-1": "context"})
 
     def test_multiple_propagators_same_key(self):
         # test that when multiple propagators extract/inject the same
         # key, the later propagator values are extracted/injected
-        propagator = CompositePropagator(
-            [self.mock_propagator_0, self.mock_propagator_2]
-        )
+        propagator = CompositePropagator([self.mock_propagator_0, self.mock_propagator_2])
 
         new_carrier = {}
         propagator.inject(new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data2"})
 
-        context = propagator.extract(
-            carrier=new_carrier, context={}, getter=get_as_list
-        )
+        context = propagator.extract(carrier=new_carrier, context={}, getter=get_as_list)
         self.assertEqual(context, {"mock-0": "context2"})
 
     def test_fields(self):

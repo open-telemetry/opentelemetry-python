@@ -18,9 +18,7 @@ class TestParseBooleanEnvironmentVariable(TestCase):
             with self.subTest(default=default):
                 with patch.dict("os.environ", {}, clear=True):
                     self.assertEqual(
-                        parse_boolean_environment_variable(
-                            "TEST_BOOL", default=default
-                        ),
+                        parse_boolean_environment_variable("TEST_BOOL", default=default),
                         expected,
                     )
 
@@ -50,9 +48,7 @@ class TestParseBooleanEnvironmentVariable(TestCase):
                         level="WARNING",
                     ) as logs:
                         self.assertEqual(
-                            parse_boolean_environment_variable(
-                                "TEST_BOOL", default=default
-                            ),
+                            parse_boolean_environment_variable("TEST_BOOL", default=default),
                             expected,
                         )
 

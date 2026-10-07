@@ -138,9 +138,7 @@ class MultiLogRecordProcessorTestBase(ABC):
             self.assertEqual(1, mock_processor.force_flush.call_count)
 
 
-class TestSynchronousMultiLogRecordProcessor(
-    MultiLogRecordProcessorTestBase, unittest.TestCase
-):
+class TestSynchronousMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, unittest.TestCase):
     def _get_multi_log_record_processor(self):
         return SynchronousMultiLogRecordProcessor()
 
@@ -192,9 +190,7 @@ class TestSynchronousMultiLogRecordProcessor(
         self.assertEqual(mock_processor2.force_flush.call_count, 1)
 
 
-class TestConcurrentMultiLogRecordProcessor(
-    MultiLogRecordProcessorTestBase, unittest.TestCase
-):
+class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, unittest.TestCase):
     def _get_multi_log_record_processor(self):
         return ConcurrentMultiLogRecordProcessor()
 

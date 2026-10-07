@@ -12,9 +12,7 @@ _probability_threshold_scale = float.fromhex("0x1p56")
 
 
 def calculate_threshold(sampling_probability: float) -> int:
-    return MAX_THRESHOLD - round(
-        sampling_probability * _probability_threshold_scale
-    )
+    return MAX_THRESHOLD - round(sampling_probability * _probability_threshold_scale)
 
 
 def is_valid_threshold(threshold: int) -> bool:

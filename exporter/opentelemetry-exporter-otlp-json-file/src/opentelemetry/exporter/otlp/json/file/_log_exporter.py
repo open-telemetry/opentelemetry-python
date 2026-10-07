@@ -51,24 +51,16 @@ class FileLogExporter(LogRecordExporter):
         *,
         stream: IO[str] | None = None,
     ) -> None:
-        self._exporter: _FileExporter[Sequence[ReadableLogRecord]] = (
-            _FileExporter(
-                encode=_encode_logs_to_dict,
-                kind="logs",
-                logger=_logger,
-                path=path,
-                stream=stream,
-            )
+        self._exporter: _FileExporter[Sequence[ReadableLogRecord]] = _FileExporter(
+            encode=_encode_logs_to_dict,
+            kind="logs",
+            logger=_logger,
+            path=path,
+            stream=stream,
         )
 
-    def export(
-        self, batch: Sequence[ReadableLogRecord]
-    ) -> LogRecordExportResult:
-        return (
-            LogRecordExportResult.SUCCESS
-            if self._exporter.export(batch)
-            else LogRecordExportResult.FAILURE
-        )
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:
+        return LogRecordExportResult.SUCCESS if self._exporter.export(batch) else LogRecordExportResult.FAILURE
 
     def shutdown(self) -> None:
         self._exporter.shutdown()

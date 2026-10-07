@@ -43,9 +43,7 @@ class MaxCountExporter(MetricExporter):
         time.sleep(0)
 
         with self._lock:
-            self.max_count_in_export = max(
-                self.max_count_in_export, self.count_in_export
-            )
+            self.max_count_in_export = max(self.max_count_in_export, self.count_in_export)
             self.count_in_export -= 1
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
@@ -89,9 +87,7 @@ class TestExporterConcurrency(ConcurrencyTestBase):
             counter_cb_counter += 1
             yield Observation(2)
 
-        meter_provider.get_meter(__name__).create_observable_counter(
-            "testcounter", callbacks=[counter_cb]
-        )
+        meter_provider.get_meter(__name__).create_observable_counter("testcounter", callbacks=[counter_cb])
 
         # call collect from a bunch of threads to try and enter export() concurrently
         def test_many_threads():

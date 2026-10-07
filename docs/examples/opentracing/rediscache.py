@@ -40,15 +40,11 @@ class RedisCache:
                 pval = self.client.get(key)
                 if pval is not None:
                     val = pickle.loads(pval)
-                    scope1.span.log_kv(
-                        {"msg": "Found cached value", "val": val}
-                    )
+                    scope1.span.log_kv({"msg": "Found cached value", "val": val})
                     return val
 
                 scope1.span.log_kv({"msg": "Cache miss, calling function"})
-                with self.tracer.start_active_span(
-                    f'Call "{func.__name__}"'
-                ) as scope2:
+                with self.tracer.start_active_span(f'Call "{func.__name__}"') as scope2:
                     scope2.span.set_tag("func", func.__name__)
                     scope2.span.set_tag("args", str(args))
                     scope2.span.set_tag("kwargs", str(kwargs))

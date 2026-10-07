@@ -203,9 +203,7 @@ class VcsRefTypeValues(Enum):
     """[tag](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddeftagatag)."""
 
 
-@deprecated(
-    "The attribute vcs.repository.ref.type is deprecated - Replaced by `vcs.ref.head.type`"
-)
+@deprecated("The attribute vcs.repository.ref.type is deprecated - Replaced by `vcs.ref.head.type`")
 class VcsRepositoryRefTypeValues(Enum):
     BRANCH = "branch"
     """[branch](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefbranchabranch)."""

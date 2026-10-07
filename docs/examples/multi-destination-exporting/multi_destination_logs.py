@@ -29,23 +29,15 @@ logger_provider = LoggerProvider()
 set_logger_provider(logger_provider)
 
 # Destination 1: OTLP over gRPC
-grpc_exporter = GrpcLogExporter(
-    endpoint="http://localhost:4317", insecure=True
-)
-logger_provider.add_log_record_processor(
-    BatchLogRecordProcessor(grpc_exporter)
-)
+grpc_exporter = GrpcLogExporter(endpoint="http://localhost:4317", insecure=True)
+logger_provider.add_log_record_processor(BatchLogRecordProcessor(grpc_exporter))
 
 # Destination 2: OTLP over HTTP
 http_exporter = HttpLogExporter(endpoint="http://localhost:4318/v1/logs")
-logger_provider.add_log_record_processor(
-    BatchLogRecordProcessor(http_exporter)
-)
+logger_provider.add_log_record_processor(BatchLogRecordProcessor(http_exporter))
 
 # Destination 3: Console (for debugging)
-logger_provider.add_log_record_processor(
-    BatchLogRecordProcessor(ConsoleLogRecordExporter())
-)
+logger_provider.add_log_record_processor(BatchLogRecordProcessor(ConsoleLogRecordExporter()))
 
 # Bridge Python's logging to OpenTelemetry
 handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)

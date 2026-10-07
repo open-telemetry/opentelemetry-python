@@ -27,9 +27,7 @@ Deprecated: Deprecated, no replacement at this time.
 """
 
 
-@deprecated(
-    "The attribute message.type is deprecated - Deprecated, no replacement at this time"
-)
+@deprecated("The attribute message.type is deprecated - Deprecated, no replacement at this time")
 class MessageTypeValues(Enum):
     SENT = "SENT"
     """sent."""

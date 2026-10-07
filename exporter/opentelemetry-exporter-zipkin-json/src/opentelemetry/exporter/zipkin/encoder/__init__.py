@@ -55,9 +55,7 @@ class Encoder(abc.ABC):
           list string, max_tag_value_length is honored at the element boundary.
     """
 
-    def __init__(
-        self, max_tag_value_length: int = DEFAULT_MAX_TAG_VALUE_LENGTH
-    ):
+    def __init__(self, max_tag_value_length: int = DEFAULT_MAX_TAG_VALUE_LENGTH):
         self.max_tag_value_length = max_tag_value_length
 
     @staticmethod
@@ -66,15 +64,11 @@ class Encoder(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def serialize(
-        self, spans: Sequence[Span], local_endpoint: NodeEndpoint
-    ) -> str:
+    def serialize(self, spans: Sequence[Span], local_endpoint: NodeEndpoint) -> str:
         pass
 
     @abc.abstractmethod
-    def _encode_span(
-        self, span: Span, encoded_local_endpoint: EncodedLocalEndpointT
-    ) -> Any:
+    def _encode_span(self, span: Span, encoded_local_endpoint: EncodedLocalEndpointT) -> Any:
         """
         Per spec Zipkin fields that can be absent SHOULD be omitted from the
         payload when they are empty in the OpenTelemetry Span.
@@ -113,9 +107,7 @@ class Encoder(abc.ABC):
             parent_id = None
         return parent_id
 
-    def _extract_tags_from_dict(
-        self, tags_dict: dict | None
-    ) -> dict[str, str]:
+    def _extract_tags_from_dict(self, tags_dict: dict | None) -> dict[str, str]:
         tags = {}
         if not tags_dict:
             return tags
@@ -125,9 +117,7 @@ class Encoder(abc.ABC):
             elif isinstance(attribute_value, (int, float, str)):
                 value = str(attribute_value)
             elif isinstance(attribute_value, Sequence):
-                value = self._extract_tag_value_string_from_sequence(
-                    attribute_value
-                )
+                value = self._extract_tag_value_string_from_sequence(attribute_value)
                 if not value:
                     logger.warning("Could not serialize tag %s", attribute_key)
                     continue
@@ -135,10 +125,7 @@ class Encoder(abc.ABC):
                 logger.warning("Could not serialize tag %s", attribute_key)
                 continue
 
-            if (
-                self.max_tag_value_length is not None
-                and self.max_tag_value_length > 0
-            ):
+            if self.max_tag_value_length is not None and self.max_tag_value_length > 0:
                 value = value[: self.max_tag_value_length]
             tags[attribute_key] = value
         return tags
@@ -148,13 +135,8 @@ class Encoder(abc.ABC):
             return None
 
         tag_value_elements = []
-        running_string_length = (
-            2  # accounts for array brackets in output string
-        )
-        defined_max_tag_value_length = (
-            self.max_tag_value_length is not None
-            and self.max_tag_value_length > 0
-        )
+        running_string_length = 2  # accounts for array brackets in output string
+        defined_max_tag_value_length = self.max_tag_value_length is not None and self.max_tag_value_length > 0
 
         for element in sequence:
             if isinstance(element, bool):
@@ -203,23 +185,17 @@ class Encoder(abc.ABC):
                 tags.update({"error": span.status.description or ""})
 
         if span.dropped_attributes:
-            tags.update(
-                {"otel.dropped_attributes_count": str(span.dropped_attributes)}
-            )
+            tags.update({"otel.dropped_attributes_count": str(span.dropped_attributes)})
 
         if span.dropped_events:
-            tags.update(
-                {"otel.dropped_events_count": str(span.dropped_events)}
-            )
+            tags.update({"otel.dropped_events_count": str(span.dropped_events)})
 
         if span.dropped_links:
             tags.update({"otel.dropped_links_count": str(span.dropped_links)})
 
         return tags
 
-    def _extract_annotations_from_events(
-        self, events: list[Event] | None
-    ) -> list[dict] | None:
+    def _extract_annotations_from_events(self, events: list[Event] | None) -> list[dict] | None:
         if not events:
             return None
 
@@ -227,11 +203,7 @@ class Encoder(abc.ABC):
         for event in events:
             attrs = {}
             for key, value in event.attributes.items():
-                if (
-                    isinstance(value, str)
-                    and self.max_tag_value_length is not None
-                    and self.max_tag_value_length > 0
-                ):
+                if isinstance(value, str) and self.max_tag_value_length is not None and self.max_tag_value_length > 0:
                     value = value[: self.max_tag_value_length]
                 attrs[key] = value
 
@@ -258,15 +230,11 @@ class JsonEncoder(Encoder):
     def content_type():
         return "application/json"
 
-    def serialize(
-        self, spans: Sequence[Span], local_endpoint: NodeEndpoint
-    ) -> str:
+    def serialize(self, spans: Sequence[Span], local_endpoint: NodeEndpoint) -> str:
         encoded_local_endpoint = self._encode_local_endpoint(local_endpoint)
         encoded_spans = []
         for span in spans:
-            encoded_spans.append(
-                self._encode_span(span, encoded_local_endpoint)
-            )
+            encoded_spans.append(self._encode_span(span, encoded_local_endpoint))
         return json.dumps(encoded_spans)
 
     @staticmethod

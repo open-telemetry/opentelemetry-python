@@ -7,22 +7,16 @@ import traceback
 from opentelemetry._logs import LogRecord
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.semconv.attributes import exception_attributes
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 
 def _get_exception_attributes(
     exception: BaseException,
 ) -> dict[str, AnyValue]:
-    stacktrace = "".join(
-        traceback.format_exception(
-            type(exception), value=exception, tb=exception.__traceback__
-        )
-    )
+    stacktrace = "".join(traceback.format_exception(type(exception), value=exception, tb=exception.__traceback__))
     module = type(exception).__module__
     qualname = type(exception).__qualname__
-    exception_type = (
-        f"{module}.{qualname}" if module and module != "builtins" else qualname
-    )
+    exception_type = f"{module}.{qualname}" if module and module != "builtins" else qualname
     return {
         exception_attributes.EXCEPTION_TYPE: exception_type,
         exception_attributes.EXCEPTION_MESSAGE: str(exception),
@@ -31,15 +25,15 @@ def _get_exception_attributes(
 
 
 def _get_attributes_with_exception(
-    attributes: _ExtendedAttributes | None,
+    attributes: Attributes,
     exception: BaseException | None,
-) -> _ExtendedAttributes | None:
+) -> Attributes:
     if exception is None:
         return attributes
 
     exception_attributes_map = _get_exception_attributes(exception)
     if attributes is None:
-        attributes_map: _ExtendedAttributes = {}
+        attributes_map: Attributes = {}
     else:
         attributes_map = attributes
 
@@ -50,7 +44,6 @@ def _get_attributes_with_exception(
             attributes=bounded_attributes,
             immutable=False,
             max_value_len=bounded_attributes.max_value_len,
-            extended_attributes=bounded_attributes._extended_attributes,  # pylint: disable=protected-access
         )
         merged.dropped = bounded_attributes.dropped
         for key, value in exception_attributes_map.items():
@@ -63,7 +56,7 @@ def _get_attributes_with_exception(
 
 def _copy_log_record(
     record: LogRecord,
-    attributes: _ExtendedAttributes | None,
+    attributes: Attributes,
 ) -> LogRecord:
     copied_record = LogRecord(
         timestamp=record.timestamp,
@@ -104,7 +97,7 @@ def _create_log_record_with_exception(
     severity_number=None,
     severity_text: str | None = None,
     body: AnyValue | None = None,
-    attributes: _ExtendedAttributes | None = None,
+    attributes: Attributes = None,
     event_name: str | None = None,
     exception: BaseException | None = None,
 ) -> LogRecord:

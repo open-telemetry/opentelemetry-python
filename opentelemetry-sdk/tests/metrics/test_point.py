@@ -35,7 +35,9 @@ class TestToJson(TestCase):
             "g": [1, 2],
             "h": [1.1, 2.2],
         }
-        cls.attributes_0_str = '{"a": "b", "b": true, "c": 1, "d": 1.1, "e": ["a", "b"], "f": [true, false], "g": [1, 2], "h": [1.1, 2.2]}'
+        cls.attributes_0_str = (
+            '{"a": "b", "b": true, "c": 1, "d": 1.1, "e": ["a", "b"], "f": [true, false], "g": [1, 2], "h": [1.1, 2.2]}'
+        )
 
         cls.attributes_1 = {
             "i": "a",
@@ -134,7 +136,9 @@ class TestToJson(TestCase):
             ],
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
         )
-        cls.exp_histogram_0_str = f'{{"data_points": [{cls.exp_histogram_data_point_0_str}], "aggregation_temporality": 2}}'
+        cls.exp_histogram_0_str = (
+            f'{{"data_points": [{cls.exp_histogram_data_point_0_str}], "aggregation_temporality": 2}}'
+        )
 
         cls.metric_0 = Metric(
             name="metric_0",
@@ -142,11 +146,11 @@ class TestToJson(TestCase):
             unit="unit_0",
             data=cls.sum_0,
         )
-        cls.metric_0_str = f'{{"name": "metric_0", "description": "description_0", "unit": "unit_0", "data": {cls.sum_0_str}}}'
-
-        cls.metric_1 = Metric(
-            name="metric_1", description=None, unit="unit_1", data=cls.gauge_0
+        cls.metric_0_str = (
+            f'{{"name": "metric_0", "description": "description_0", "unit": "unit_0", "data": {cls.sum_0_str}}}'
         )
+
+        cls.metric_1 = Metric(name="metric_1", description=None, unit="unit_1", data=cls.gauge_0)
         cls.metric_1_str = f'{{"name": "metric_1", "description": "", "unit": "unit_1", "data": {cls.gauge_0_str}}}'
 
         cls.metric_2 = Metric(
@@ -155,7 +159,9 @@ class TestToJson(TestCase):
             unit=None,
             data=cls.histogram_0,
         )
-        cls.metric_2_str = f'{{"name": "metric_2", "description": "description_2", "unit": "", "data": {cls.histogram_0_str}}}'
+        cls.metric_2_str = (
+            f'{{"name": "metric_2", "description": "description_2", "unit": "", "data": {cls.histogram_0_str}}}'
+        )
 
         cls.scope_metrics_0 = ScopeMetrics(
             scope=InstrumentationScope(
@@ -180,26 +186,20 @@ class TestToJson(TestCase):
         cls.scope_metrics_1_str = f'{{"scope": {{"name": "name_1", "version": "version_1", "schema_url": "schema_url_1", "attributes": null}}, "metrics": [{cls.metric_0_str}, {cls.metric_1_str}, {cls.metric_2_str}], "schema_url": "schema_url_1"}}'
 
         cls.resource_metrics_0 = ResourceMetrics(
-            resource=Resource(
-                attributes=cls.attributes_0, schema_url="schema_url_0"
-            ),
+            resource=Resource(attributes=cls.attributes_0, schema_url="schema_url_0"),
             scope_metrics=[cls.scope_metrics_0, cls.scope_metrics_1],
             schema_url="schema_url_0",
         )
         cls.resource_metrics_0_str = f'{{"resource": {{"attributes": {cls.attributes_0_str}, "schema_url": "schema_url_0"}}, "scope_metrics": [{cls.scope_metrics_0_str}, {cls.scope_metrics_1_str}], "schema_url": "schema_url_0"}}'
 
         cls.resource_metrics_1 = ResourceMetrics(
-            resource=Resource(
-                attributes=cls.attributes_1, schema_url="schema_url_1"
-            ),
+            resource=Resource(attributes=cls.attributes_1, schema_url="schema_url_1"),
             scope_metrics=[cls.scope_metrics_0, cls.scope_metrics_1],
             schema_url="schema_url_1",
         )
         cls.resource_metrics_1_str = f'{{"resource": {{"attributes": {cls.attributes_1_str}, "schema_url": "schema_url_1"}}, "scope_metrics": [{cls.scope_metrics_0_str}, {cls.scope_metrics_1_str}], "schema_url": "schema_url_1"}}'
 
-        cls.metrics_data_0 = MetricsData(
-            resource_metrics=[cls.resource_metrics_0, cls.resource_metrics_1]
-        )
+        cls.metrics_data_0 = MetricsData(resource_metrics=[cls.resource_metrics_0, cls.resource_metrics_1])
         cls.metrics_data_0_str = f'{{"resource_metrics": [{cls.resource_metrics_0_str}, {cls.resource_metrics_1_str}]}}'
 
     def test_number_data_point(self):
@@ -235,14 +235,10 @@ class TestToJson(TestCase):
         self.assertEqual(self.gauge_0.to_json(indent=None), self.gauge_0_str)
 
     def test_histogram(self):
-        self.assertEqual(
-            self.histogram_0.to_json(indent=None), self.histogram_0_str
-        )
+        self.assertEqual(self.histogram_0.to_json(indent=None), self.histogram_0_str)
 
     def test_exp_histogram(self):
-        self.assertEqual(
-            self.exp_histogram_0.to_json(indent=None), self.exp_histogram_0_str
-        )
+        self.assertEqual(self.exp_histogram_0.to_json(indent=None), self.exp_histogram_0_str)
 
     def test_metric(self):
         self.assertEqual(self.metric_0.to_json(indent=None), self.metric_0_str)
@@ -252,12 +248,8 @@ class TestToJson(TestCase):
         self.assertEqual(self.metric_2.to_json(indent=None), self.metric_2_str)
 
     def test_scope_metrics(self):
-        self.assertEqual(
-            self.scope_metrics_0.to_json(indent=None), self.scope_metrics_0_str
-        )
-        self.assertEqual(
-            self.scope_metrics_1.to_json(indent=None), self.scope_metrics_1_str
-        )
+        self.assertEqual(self.scope_metrics_0.to_json(indent=None), self.scope_metrics_0_str)
+        self.assertEqual(self.scope_metrics_1.to_json(indent=None), self.scope_metrics_1_str)
 
     def test_resource_metrics(self):
         self.assertEqual(
@@ -270,6 +262,4 @@ class TestToJson(TestCase):
         )
 
     def test_metrics_data(self):
-        self.assertEqual(
-            self.metrics_data_0.to_json(indent=None), self.metrics_data_0_str
-        )
+        self.assertEqual(self.metrics_data_0.to_json(indent=None), self.metrics_data_0_str)

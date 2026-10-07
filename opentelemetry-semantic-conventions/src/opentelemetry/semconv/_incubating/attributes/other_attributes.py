@@ -12,9 +12,7 @@ Deprecated: Replaced by `db.client.connection.state`.
 """
 
 
-@deprecated(
-    "The attribute state is deprecated - Replaced by `db.client.connection.state`"
-)
+@deprecated("The attribute state is deprecated - Replaced by `db.client.connection.state`")
 class StateValues(Enum):
     IDLE = "idle"
     """idle."""

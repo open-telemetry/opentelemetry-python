@@ -33,11 +33,7 @@ class MockResponse:
 class TestZipkinExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        trace.set_tracer_provider(
-            TracerProvider(
-                resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
-            )
-        )
+        trace.set_tracer_provider(TracerProvider(resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})))
 
     def tearDown(self):
         os.environ.pop(OTEL_EXPORTER_ZIPKIN_ENDPOINT, None)
@@ -114,12 +110,8 @@ class TestZipkinExporter(unittest.TestCase):
         self.assertIsInstance(exporter.session, requests.Session)
         self.assertEqual(exporter.endpoint, constructor_param_endpoint)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
-        self.assertEqual(
-            exporter.local_node.ipv4, ipaddress.IPv4Address(local_node_ipv4)
-        )
-        self.assertEqual(
-            exporter.local_node.ipv6, ipaddress.IPv6Address(local_node_ipv6)
-        )
+        self.assertEqual(exporter.local_node.ipv4, ipaddress.IPv4Address(local_node_ipv4))
+        self.assertEqual(exporter.local_node.ipv6, ipaddress.IPv6Address(local_node_ipv6))
         self.assertEqual(exporter.local_node.port, local_node_port)
         # Assert timeout passed in constructor is prioritized over env
         # when both are set.
@@ -177,9 +169,7 @@ class TestZipkinExporter(unittest.TestCase):
         exporter = ZipkinExporter(timeout=2)
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.SUCCESS, status)
-        mock_post.assert_called_with(
-            url="http://localhost:9411/api/v2/spans", data="[]", timeout=2
-        )
+        mock_post.assert_called_with(url="http://localhost:9411/api/v2/spans", data="[]", timeout=2)
 
 
 class TestZipkinNodeEndpoint(unittest.TestCase):

@@ -24,9 +24,7 @@ provider = TracerProvider()
 trace.set_tracer_provider(provider)
 
 # Destination 1: OTLP over gRPC
-grpc_exporter = GrpcSpanExporter(
-    endpoint="http://localhost:4317", insecure=True
-)
+grpc_exporter = GrpcSpanExporter(endpoint="http://localhost:4317", insecure=True)
 provider.add_span_processor(BatchSpanProcessor(grpc_exporter))
 
 # Destination 2: OTLP over HTTP

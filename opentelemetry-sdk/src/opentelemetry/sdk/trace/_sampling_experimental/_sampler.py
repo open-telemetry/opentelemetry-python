@@ -25,15 +25,13 @@ class _CompositeSampler(Sampler):
         trace_id: int,
         name: str,
         kind: SpanKind | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
         ot_trace_state = OtelTraceState.parse(trace_state)
 
-        intent = self._delegate.sampling_intent(
-            parent_context, name, kind, attributes, links, trace_state
-        )
+        intent = self._delegate.sampling_intent(parent_context, name, kind, attributes, links, trace_state)
         threshold = intent.threshold
 
         if is_valid_threshold(threshold):

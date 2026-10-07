@@ -27,9 +27,7 @@ class ComposableTraceIDRatioBased(ComposableSampler):
         if threshold != MAX_THRESHOLD:
             intent = SamplingIntent(threshold=threshold)
         else:
-            intent = SamplingIntent(
-                threshold=INVALID_THRESHOLD, threshold_reliable=False
-            )
+            intent = SamplingIntent(threshold=INVALID_THRESHOLD, threshold_reliable=False)
         self._intent = intent
         self._description = f"ComposableTraceIDRatioBased{{threshold={threshold_str}, ratio={ratio}}}"
 

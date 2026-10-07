@@ -127,9 +127,7 @@ class TestRequestsHTTPTransport(unittest.TestCase):
         for status_code, reason in cases:
             with self.subTest(status_code=status_code):
                 with Mocketizer():
-                    Entry.single_register(
-                        Entry.POST, _TEST_URL, status=status_code
-                    )
+                    Entry.single_register(Entry.POST, _TEST_URL, status=status_code)
                     transport = RequestsHTTPTransport()
                     result = transport.request("POST", _TEST_URL)
                     self.assertEqual(result.status_code, status_code)
@@ -166,14 +164,10 @@ class TestRequestsHTTPTransport(unittest.TestCase):
         for timeout in cases:
             with self.subTest(timeout=timeout):
                 mock_session = MagicMock(spec=requests.Session)
-                mock_session.request.return_value = MagicMock(
-                    status_code=200, reason="OK"
-                )
+                mock_session.request.return_value = MagicMock(status_code=200, reason="OK")
                 transport = RequestsHTTPTransport(session=mock_session)
                 transport.request("POST", _TEST_URL, timeout=timeout)
-                timeout_kwarg = mock_session.request.call_args.kwargs[
-                    "timeout"
-                ]
+                timeout_kwarg = mock_session.request.call_args.kwargs["timeout"]
                 self.assertEqual(timeout_kwarg, timeout)
 
     def test_request_catches_exception(self):
@@ -208,14 +202,10 @@ class TestRequestsHTTPTransport(unittest.TestCase):
             (ValueError("error"), False),
             (None, False),
         ]
-        transport = RequestsHTTPTransport(
-            session=MagicMock(spec=requests.Session)
-        )
+        transport = RequestsHTTPTransport(session=MagicMock(spec=requests.Session))
         for exception, expected in cases:
             with self.subTest(error_type=type(exception).__name__):
-                self.assertEqual(
-                    transport.is_connection_error(exception), expected
-                )
+                self.assertEqual(transport.is_connection_error(exception), expected)
 
     def test_verify_sets_session_verify(self):
         cases = [
@@ -247,9 +237,7 @@ class TestRequestsHTTPTransport(unittest.TestCase):
 
     def test_custom_session_is_used(self):
         mock_session = MagicMock(spec=requests.Session)
-        mock_session.request.return_value = MagicMock(
-            status_code=200, reason="OK"
-        )
+        mock_session.request.return_value = MagicMock(status_code=200, reason="OK")
         transport = RequestsHTTPTransport(session=mock_session)
         result = transport.request("POST", _TEST_URL)
         mock_session.request.assert_called_once()

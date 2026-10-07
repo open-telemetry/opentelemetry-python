@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
 from opentelemetry.test.globals_test import LoggingGlobalsTest
-from opentelemetry.util.types import _ExtendedAttributes
+from opentelemetry.util.types import Attributes
 
 
 class TestProvider(_logs.NoOpLoggerProvider):
@@ -17,7 +17,7 @@ class TestProvider(_logs.NoOpLoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> _logs.Logger:
         return LoggerTest(name)
 
@@ -57,9 +57,7 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         self.assertIsInstance(_logs.get_logger_provider(), TestProvider)
 
         # logger provider now returns real instance
-        self.assertIsInstance(
-            _logs.get_logger_provider().get_logger("fresh"), LoggerTest
-        )
+        self.assertIsInstance(_logs.get_logger_provider().get_logger("fresh"), LoggerTest)
 
         # references to the old provider still work but return real logger now
         real_logger = provider.get_logger("proxy-test")
@@ -74,3 +72,27 @@ class TestProxy(LoggingGlobalsTest, unittest.TestCase):
         logger.emit(record)
 
         logger._real_logger.emit.assert_called_once_with(record)
+
+    def test_proxy_logger_enabled_delegates_to_real_logger(self):
+        logger = _logs_internal.ProxyLogger("proxy-test")
+        real_logger = Mock(spec=LoggerTest("proxy-test"))
+        real_logger.enabled.return_value = True
+        logger._real_logger = real_logger
+
+        result = logger.enabled(severity_number=_logs.SeverityNumber.INFO, event_name="test")
+
+        self.assertTrue(result)
+        real_logger.enabled.assert_called_once_with(
+            context=None,
+            severity_number=_logs.SeverityNumber.INFO,
+            event_name="test",
+        )
+
+    def test_proxy_logger_enabled_falls_back_to_noop(self):
+        logger = _logs_internal.ProxyLogger("proxy-test")
+        self.assertFalse(logger.enabled())
+
+    def test_noop_logger_enabled_returns_false(self):
+        logger = _logs.NoOpLogger("noop-test")
+        self.assertFalse(logger.enabled())
+        self.assertFalse(logger.enabled(severity_number=_logs.SeverityNumber.ERROR, event_name="e"))

@@ -33,14 +33,10 @@ class TestHistogramAdvisory(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
-        self.assertEqual(
-            metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
-        )
+        self.assertEqual(metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0))
 
     def test_empty_buckets(self):
         reader = InMemoryMetricReader()
@@ -59,9 +55,7 @@ class TestHistogramAdvisory(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
         self.assertEqual(metric.data.data_points[0].explicit_bounds, ())
@@ -85,22 +79,16 @@ class TestHistogramAdvisory(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
-        self.assertEqual(
-            metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
-        )
+        self.assertEqual(metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0))
 
     def test_view_overrides_buckets(self):
         reader = InMemoryMetricReader()
         view = View(
             instrument_name="testhistogram",
-            aggregation=ExplicitBucketHistogramAggregation(
-                boundaries=[10.0, 100.0, 1000.0]
-            ),
+            aggregation=ExplicitBucketHistogramAggregation(boundaries=[10.0, 100.0, 1000.0]),
         )
         meter_provider = MeterProvider(
             metric_readers=[reader],
@@ -118,21 +106,13 @@ class TestHistogramAdvisory(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
-        self.assertEqual(
-            metric.data.data_points[0].explicit_bounds, (10.0, 100.0, 1000.0)
-        )
+        self.assertEqual(metric.data.data_points[0].explicit_bounds, (10.0, 100.0, 1000.0))
 
     def test_explicit_aggregation(self):
-        reader = InMemoryMetricReader(
-            preferred_aggregation={
-                Histogram: ExplicitBucketHistogramAggregation()
-            }
-        )
+        reader = InMemoryMetricReader(preferred_aggregation={Histogram: ExplicitBucketHistogramAggregation()})
         meter_provider = MeterProvider(
             metric_readers=[reader],
         )
@@ -148,21 +128,13 @@ class TestHistogramAdvisory(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
-        self.assertEqual(
-            metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
-        )
+        self.assertEqual(metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0))
 
     def test_explicit_aggregation_multiple_histograms(self):
-        reader = InMemoryMetricReader(
-            preferred_aggregation={
-                Histogram: ExplicitBucketHistogramAggregation()
-            }
-        )
+        reader = InMemoryMetricReader(preferred_aggregation={Histogram: ExplicitBucketHistogramAggregation()})
         meter_provider = MeterProvider(
             metric_readers=[reader],
         )
@@ -187,26 +159,16 @@ class TestHistogramAdvisory(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 2
-        )
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 2)
         metric1 = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric1.name, "testhistogram1")
-        self.assertEqual(
-            metric1.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0)
-        )
+        self.assertEqual(metric1.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0))
         metric2 = metrics.resource_metrics[0].scope_metrics[0].metrics[1]
         self.assertEqual(metric2.name, "testhistogram2")
-        self.assertEqual(
-            metric2.data.data_points[0].explicit_bounds, (4.0, 5.0, 6.0)
-        )
+        self.assertEqual(metric2.data.data_points[0].explicit_bounds, (4.0, 5.0, 6.0))
 
     def test_explicit_aggregation_default_boundaries(self):
-        reader = InMemoryMetricReader(
-            preferred_aggregation={
-                Histogram: ExplicitBucketHistogramAggregation()
-            }
-        )
+        reader = InMemoryMetricReader(preferred_aggregation={Histogram: ExplicitBucketHistogramAggregation()})
         meter_provider = MeterProvider(
             metric_readers=[reader],
         )
@@ -222,9 +184,7 @@ class TestHistogramAdvisory(TestCase):
         metrics = reader.get_metrics_data()
         self.assertEqual(len(metrics.resource_metrics), 1)
         self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
         metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
         self.assertEqual(metric.name, "testhistogram")
         self.assertEqual(

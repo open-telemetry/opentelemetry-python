@@ -70,20 +70,14 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
 
-        result = ReadWriteLogRecord(
-            LogRecord(timestamp=0, body="a log line", attributes=attr)
-        )
+        result = ReadWriteLogRecord(LogRecord(timestamp=0, body="a log line", attributes=attr))
 
-        self.assertTrue(
-            isinstance(result.log_record.attributes, BoundedAttributes)
-        )
+        self.assertTrue(isinstance(result.log_record.attributes, BoundedAttributes))
 
     def test_log_record_dropped_attributes_empty_limits(self):
         attr = {"key": "value"}
 
-        result = ReadWriteLogRecord(
-            LogRecord(timestamp=0, body="a log line", attributes=attr)
-        )
+        result = ReadWriteLogRecord(LogRecord(timestamp=0, body="a log line", attributes=attr))
 
         self.assertTrue(result.dropped_attributes == 0)
 
@@ -157,11 +151,7 @@ class TestLogRecord(unittest.TestCase):
                 )
 
         # Check that at least one LogRecordDroppedAttributesWarning was emitted
-        dropped_attributes_warnings = [
-            w
-            for w in cw
-            if isinstance(w.message, LogRecordDroppedAttributesWarning)
-        ]
+        dropped_attributes_warnings = [w for w in cw if isinstance(w.message, LogRecordDroppedAttributesWarning)]
         self.assertEqual(
             len(dropped_attributes_warnings),
             1,
@@ -204,9 +194,7 @@ class TestLogRecord(unittest.TestCase):
         )
 
         resource = Resource.create({})
-        record = ReadWriteLogRecord._from_api_log_record(
-            record=api_log_record, resource=resource
-        )
+        record = ReadWriteLogRecord._from_api_log_record(record=api_log_record, resource=resource)
 
         self.assertEqual(record.log_record.timestamp, 1)
         self.assertEqual(record.log_record.observed_timestamp, 2)
@@ -216,9 +204,7 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(record.log_record.span_id, 0)
         self.assertEqual(record.log_record.trace_flags, TraceFlags(0x00))
         self.assertEqual(record.log_record.severity_text, "WARN")
-        self.assertEqual(
-            record.log_record.severity_number, SeverityNumber.WARN
-        )
+        self.assertEqual(record.log_record.severity_number, SeverityNumber.WARN)
         self.assertEqual(record.log_record.body, "a log line")
         self.assertEqual(record.log_record.attributes, {"a": "b"})
         self.assertEqual(record.log_record.event_name, "an.event")

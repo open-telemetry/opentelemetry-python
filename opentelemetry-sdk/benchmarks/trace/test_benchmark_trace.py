@@ -68,9 +68,7 @@ def test_start_span_with_attributes(benchmark, num_attrs):
 
 
 # pylint: disable=protected-access,redefined-outer-name
-def test_simple_start_span_with_tracer_configurator_rules(
-    benchmark, num_tracer_configurator_rules
-):
+def test_simple_start_span_with_tracer_configurator_rules(benchmark, num_tracer_configurator_rules):
     def benchmark_start_span():
         span = tracer.start_span(
             "benchmarkedSpan",
@@ -93,13 +91,9 @@ def test_simple_start_span_with_tracer_configurator_rules(
             default_config=_TracerConfig(is_enabled=True),
         )(tracer_scope)
 
-    tracer_provider._set_tracer_configurator(
-        tracer_configurator=tracer_configurator
-    )
+    tracer_provider._set_tracer_configurator(tracer_configurator=tracer_configurator)
     benchmark(benchmark_start_span)
-    tracer_provider._set_tracer_configurator(
-        tracer_configurator=_default_tracer_configurator
-    )
+    tracer_provider._set_tracer_configurator(tracer_configurator=_default_tracer_configurator)
 
 
 @pytest.mark.parametrize("num_attrs", [1, 10, 50, 128])
@@ -228,9 +222,7 @@ def test_read_links(benchmark, num_links):
 
 @pytest.mark.parametrize("num_attrs", [1, 10, 50, 128])
 def test_bounded_attribute_iterator(benchmark, num_attrs):
-    attrs = BoundedAttributes(
-        attributes={f"key{i}": f"value{i}" for i in range(num_attrs)}
-    )
+    attrs = BoundedAttributes(attributes={f"key{i}": f"value{i}" for i in range(num_attrs)})
 
     peaks = []
     for _ in range(200):
@@ -279,9 +271,7 @@ def test_gil_contention_batch_processor(benchmark, num_threads):
     provider = TracerProvider(sampler=sampling.DEFAULT_ON)
     # max_export_batch_size=16 ensures the export threshold is crossed
     # during the benchmark so _worker_awaken.set() contention is exercised.
-    provider.add_span_processor(
-        BatchSpanProcessor(exporter, max_export_batch_size=16)
-    )
+    provider.add_span_processor(BatchSpanProcessor(exporter, max_export_batch_size=16))
     tracer = provider.get_tracer("bench")
     spans_per_thread = _TOTAL_SPANS // num_threads
 

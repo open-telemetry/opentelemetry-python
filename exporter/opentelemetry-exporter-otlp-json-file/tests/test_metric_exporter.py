@@ -51,9 +51,7 @@ class _CapturingMetricExporter(FileMetricExporter):
         **kwargs,
     ) -> MetricExportResult:
         self.last_metrics_data = metrics_data
-        return super().export(
-            metrics_data, timeout_millis=timeout_millis, **kwargs
-        )
+        return super().export(metrics_data, timeout_millis=timeout_millis, **kwargs)
 
 
 def _make_metrics_data() -> MetricsData:
@@ -195,9 +193,7 @@ class TestFileMetricExporterRoundTrip(unittest.TestCase):
         self._exporter = _CapturingMetricExporter(stream=self._stream)
         self._provider = MeterProvider(
             metric_readers=[
-                PeriodicExportingMetricReader(
-                    self._exporter, export_interval_millis=100_000
-                ),
+                PeriodicExportingMetricReader(self._exporter, export_interval_millis=100_000),
             ]
         )
         self._meter = self._provider.get_meter(__name__)
@@ -219,14 +215,8 @@ class TestFileMetricExporterRoundTrip(unittest.TestCase):
         self.assertEqual(self._stream.getvalue(), self._expected())
 
     def test_observable_instruments_match_in_memory(self):
-        self._meter.create_observable_counter(
-            "obs.req.count", callbacks=[lambda _: [Observation(20)]]
-        )
-        self._meter.create_observable_up_down_counter(
-            "obs.queue.depth", callbacks=[lambda _: [Observation(-7)]]
-        )
-        self._meter.create_observable_gauge(
-            "obs.cpu.temp", callbacks=[lambda _: [Observation(55.5)]]
-        )
+        self._meter.create_observable_counter("obs.req.count", callbacks=[lambda _: [Observation(20)]])
+        self._meter.create_observable_up_down_counter("obs.queue.depth", callbacks=[lambda _: [Observation(-7)]])
+        self._meter.create_observable_gauge("obs.cpu.temp", callbacks=[lambda _: [Observation(55.5)]])
         self._provider.force_flush()
         self.assertEqual(self._stream.getvalue(), self._expected())

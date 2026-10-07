@@ -69,18 +69,14 @@ class MetricInstruments:
     Unit: By
     """
 
-    PROCESS_RUNTIME_JVM_SYSTEM_CPU_UTILIZATION = (
-        "process.runtime.jvm.system.cpu.utilization"
-    )
+    PROCESS_RUNTIME_JVM_SYSTEM_CPU_UTILIZATION = "process.runtime.jvm.system.cpu.utilization"
     """
     Recent CPU utilization for the whole system as reported by the JVM
     Instrument: gauge
     Unit: 1
     """
 
-    PROCESS_RUNTIME_JVM_SYSTEM_CPU_LOAD_1M = (
-        "process.runtime.jvm.system.cpu.load_1m"
-    )
+    PROCESS_RUNTIME_JVM_SYSTEM_CPU_LOAD_1M = "process.runtime.jvm.system.cpu.load_1m"
     """
     Average CPU load of the whole system for the last minute as reported by the JVM
     Instrument: gauge
@@ -115,9 +111,7 @@ class MetricInstruments:
     Unit: By
     """
 
-    PROCESS_RUNTIME_JVM_MEMORY_COMMITTED = (
-        "process.runtime.jvm.memory.committed"
-    )
+    PROCESS_RUNTIME_JVM_MEMORY_COMMITTED = "process.runtime.jvm.memory.committed"
     """
     Measure of memory committed
     Instrument: updowncounter
@@ -131,9 +125,7 @@ class MetricInstruments:
     Unit: By
     """
 
-    PROCESS_RUNTIME_JVM_MEMORY_USAGE_AFTER_LAST_GC = (
-        "process.runtime.jvm.memory.usage_after_last_gc"
-    )
+    PROCESS_RUNTIME_JVM_MEMORY_USAGE_AFTER_LAST_GC = "process.runtime.jvm.memory.usage_after_last_gc"
     """
     Measure of memory used, as measured after the most recent garbage collection event on this pool
     Instrument: updowncounter
@@ -161,18 +153,14 @@ class MetricInstruments:
     Unit: {class}
     """
 
-    PROCESS_RUNTIME_JVM_CLASSES_UNLOADED = (
-        "process.runtime.jvm.classes.unloaded"
-    )
+    PROCESS_RUNTIME_JVM_CLASSES_UNLOADED = "process.runtime.jvm.classes.unloaded"
     """
     Number of classes unloaded since JVM start
     Instrument: counter
     Unit: {class}
     """
 
-    PROCESS_RUNTIME_JVM_CLASSES_CURRENT_LOADED = (
-        "process.runtime.jvm.classes.current_loaded"
-    )
+    PROCESS_RUNTIME_JVM_CLASSES_CURRENT_LOADED = "process.runtime.jvm.classes.current_loaded"
     """
     Number of classes currently loaded
     Instrument: updowncounter
@@ -186,9 +174,7 @@ class MetricInstruments:
     Unit: s
     """
 
-    PROCESS_RUNTIME_JVM_CPU_RECENT_UTILIZATION = (
-        "process.runtime.jvm.cpu.recent_utilization"
-    )
+    PROCESS_RUNTIME_JVM_CPU_RECENT_UTILIZATION = "process.runtime.jvm.cpu.recent_utilization"
     """
     Recent CPU utilization for the process as reported by the JVM
     Instrument: gauge

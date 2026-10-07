@@ -72,9 +72,7 @@ class LogarithmMapping(Mapping):
         # with this index covers the range
         # (MIN_NORMAL_VALUE, MIN_NORMAL_VALUE * base]. One less than this index
         # corresponds with the bucket containing values <= MIN_NORMAL_VALUE.
-        self._min_normal_lower_boundary_index = (
-            MIN_NORMAL_EXPONENT << self._scale
-        )
+        self._min_normal_lower_boundary_index = MIN_NORMAL_EXPONENT << self._scale
 
         # self._max_normal_lower_boundary_index is the index such that
         # base ** index equals the greatest representable lower boundary. An
@@ -84,9 +82,7 @@ class LogarithmMapping(Mapping):
         # This bucket is incomplete, since the upper boundary cannot be
         # represented. One greater than this index corresponds with the bucket
         # containing values > 2 ** 1024.
-        self._max_normal_lower_boundary_index = (
-            (MAX_NORMAL_EXPONENT + 1) << self._scale
-        ) - 1
+        self._max_normal_lower_boundary_index = ((MAX_NORMAL_EXPONENT + 1) << self._scale) - 1
 
     def map_to_index(self, value: float) -> int:
         """
@@ -110,18 +106,14 @@ class LogarithmMapping(Mapping):
     def get_lower_boundary(self, index: int) -> float:
         if index >= self._max_normal_lower_boundary_index:
             if index == self._max_normal_lower_boundary_index:
-                return 2 * exp(
-                    (index - (1 << self._scale)) / self._scale_factor
-                )
+                return 2 * exp((index - (1 << self._scale)) / self._scale_factor)
             raise MappingOverflowError()
 
         if index <= self._min_normal_lower_boundary_index:
             if index == self._min_normal_lower_boundary_index:
                 return MIN_NORMAL_VALUE
             if index == self._min_normal_lower_boundary_index - 1:
-                return (
-                    exp((index + (1 << self._scale)) / self._scale_factor) / 2
-                )
+                return exp((index + (1 << self._scale)) / self._scale_factor) / 2
             raise MappingUnderflowError()
 
         return exp(index / self._scale_factor)

@@ -51,9 +51,7 @@ class TestSpanContext(unittest.TestCase):
         sc = trace.SpanContext(-1, span_id, is_remote=False)
         self.assertFalse(sc.is_valid)
 
-        sc = trace.SpanContext(
-            trace_id_max_value + 1, span_id, is_remote=False
-        )
+        sc = trace.SpanContext(trace_id_max_value + 1, span_id, is_remote=False)
         self.assertFalse(sc.is_valid)
 
     def test_span_id_validity(self):

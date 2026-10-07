@@ -51,14 +51,11 @@ def configure_instrumentation(
             cls = load_entry_point("opentelemetry_instrumentor", name)
             configuration_cls = getattr(cls, "configuration", None)
             if isclass(configuration_cls) and is_dataclass(configuration_cls):
-                configuration_obj = _dict_to_dataclass(
-                    options, configuration_cls
-                )
+                configuration_obj = _dict_to_dataclass(options, configuration_cls)
                 options = {
                     f.name: value
                     for f in fields(configuration_obj)
-                    if (value := getattr(configuration_obj, f.name))
-                    is not None
+                    if (value := getattr(configuration_obj, f.name)) is not None
                 }
             instance = cls()
             if getattr(instance, "is_instrumented_by_opentelemetry", False):
@@ -73,6 +70,4 @@ def configure_instrumentation(
                 exc,
             )
         except Exception:  # pylint: disable=broad-except
-            _logger.exception(
-                "Failed to instrument '%s' via declarative config", name
-            )
+            _logger.exception("Failed to instrument '%s' via declarative config", name)

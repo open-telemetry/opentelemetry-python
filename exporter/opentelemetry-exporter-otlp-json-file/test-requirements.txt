@@ -4,7 +4,7 @@ iniconfig==2.0.0
 packaging==24.0
 pluggy==1.6.0
 py-cpuinfo==9.0.0
-pytest==7.4.4
+pytest==9.0.3
 tomli==2.0.1
 typing_extensions==4.10.0
 wrapt==1.16.0

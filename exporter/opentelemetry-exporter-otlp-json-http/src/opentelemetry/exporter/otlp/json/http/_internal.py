@@ -39,9 +39,7 @@ def _resolve_endpoint(
     if endpoint := os.environ.get(endpoint_env_var):
         return endpoint
 
-    base_endpoint = (
-        os.environ.get(OTEL_EXPORTER_OTLP_ENDPOINT) or _DEFAULT_ENDPOINT
-    )
+    base_endpoint = os.environ.get(OTEL_EXPORTER_OTLP_ENDPOINT) or _DEFAULT_ENDPOINT
 
     return f"{base_endpoint.removesuffix('/')}/{default_path}"
 
@@ -55,8 +53,7 @@ def _resolve_headers(
         "user-agent": "OTel-OTLP-JSON-Exporter-Python/" + __version__,
     }
     env_headers = parse_env_headers(
-        os.environ.get(headers_env_var)
-        or os.environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
+        os.environ.get(headers_env_var) or os.environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         liberal=True,
     )
     headers_.update(env_headers)
@@ -68,11 +65,7 @@ def _resolve_headers(
 def _resolve_timeout(
     timeout_env_var: str,
 ) -> float:
-    raw = (
-        os.environ.get(timeout_env_var)
-        or os.environ.get(OTEL_EXPORTER_OTLP_TIMEOUT)
-        or _DEFAULT_TIMEOUT
-    )
+    raw = os.environ.get(timeout_env_var) or os.environ.get(OTEL_EXPORTER_OTLP_TIMEOUT) or _DEFAULT_TIMEOUT
 
     try:
         return float(raw)

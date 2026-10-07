@@ -42,9 +42,7 @@ class Status:
                 logger.warning("Invalid status description type, expected str")
                 return
             if status_code is not StatusCode.ERROR:
-                logger.warning(
-                    "description should only be set when status_code is set to StatusCode.ERROR"
-                )
+                logger.warning("description should only be set when status_code is set to StatusCode.ERROR")
                 return
 
         self._description = description

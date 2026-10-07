@@ -54,9 +54,7 @@ class TestSDKInitLiveCheck(unittest.TestCase):
         """end_and_check() returns a LiveCheckReport with no violations on conformant telemetry."""
         with WeaverLiveCheck(registry=_REGISTRY_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
-            with provider.get_tracer("test-tracer").start_as_current_span(
-                "test-span"
-            ):
+            with provider.get_tracer("test-tracer").start_as_current_span("test-span"):
                 pass
             provider.force_flush()
             report = weaver.end_and_check()
@@ -66,13 +64,9 @@ class TestSDKInitLiveCheck(unittest.TestCase):
 
     def test_end_and_check_raises_on_violations(self):
         """end_and_check() raises LiveCheckError with the report attached."""
-        with WeaverLiveCheck(
-            registry=_REGISTRY_DIR, policies_dir=_TESTDATA_DIR
-        ) as weaver:
+        with WeaverLiveCheck(registry=_REGISTRY_DIR, policies_dir=_TESTDATA_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
-            with provider.get_tracer("test-tracer").start_as_current_span(
-                "test-span"
-            ) as span:
+            with provider.get_tracer("test-tracer").start_as_current_span("test-span") as span:
                 span.set_attribute("never.use.this.attribute", "bad value")
 
             provider.force_flush()
@@ -88,9 +82,7 @@ class TestSDKInitLiveCheck(unittest.TestCase):
         # Structured report is attached for programmatic inspection
         self.assertTrue(
             any(
-                v["id"] == "test_check"
-                and v["context"].get("attribute_name")
-                == "never.use.this.attribute"
+                v["id"] == "test_check" and v["context"].get("attribute_name") == "never.use.this.attribute"
                 for v in cm.exception.report.violations
             )
         )
@@ -99,9 +91,7 @@ class TestSDKInitLiveCheck(unittest.TestCase):
         """end() returns a LiveCheckReport with no violations on conformant telemetry."""
         with WeaverLiveCheck(registry=_REGISTRY_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
-            with provider.get_tracer("test-tracer").start_as_current_span(
-                "test-span"
-            ):
+            with provider.get_tracer("test-tracer").start_as_current_span("test-span"):
                 pass
             provider.force_flush()
             report = weaver.end()
@@ -115,13 +105,9 @@ class TestSDKInitLiveCheck(unittest.TestCase):
 
     def test_end_with_violations(self):
         """end() returns a LiveCheckReport with violations without raising."""
-        with WeaverLiveCheck(
-            registry=_REGISTRY_DIR, policies_dir=_TESTDATA_DIR
-        ) as weaver:
+        with WeaverLiveCheck(registry=_REGISTRY_DIR, policies_dir=_TESTDATA_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
-            with provider.get_tracer("test-tracer").start_as_current_span(
-                "test-span"
-            ) as span:
+            with provider.get_tracer("test-tracer").start_as_current_span("test-span") as span:
                 span.set_attribute("never.use.this.attribute", "bad value")
 
             provider.force_flush()
@@ -129,15 +115,11 @@ class TestSDKInitLiveCheck(unittest.TestCase):
 
         self.assertIsInstance(report, LiveCheckReport)
         # Check the violation id (maps to advice_type in the rego policy)
-        self.assertTrue(
-            any(v["id"] == "test_check" for v in report.violations)
-        )
+        self.assertTrue(any(v["id"] == "test_check" for v in report.violations))
         # Check the structured context identifies the offending attribute by name
         self.assertTrue(
             any(
-                isinstance(v["context"], dict)
-                and v["context"].get("attribute_name")
-                == "never.use.this.attribute"
+                isinstance(v["context"], dict) and v["context"].get("attribute_name") == "never.use.this.attribute"
                 for v in report.violations
             )
         )
@@ -146,18 +128,14 @@ class TestSDKInitLiveCheck(unittest.TestCase):
         """The full report exposes span counts and individual span samples."""
         with WeaverLiveCheck(registry=_REGISTRY_DIR) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
-            with provider.get_tracer("test-tracer").start_as_current_span(
-                "test-span"
-            ):
+            with provider.get_tracer("test-tracer").start_as_current_span("test-span"):
                 pass
             provider.force_flush()
             report = weaver.end()
 
         # Individual spans are accessible in report["samples"], each entry
         # with a "span" key containing the span data.
-        span_samples = [
-            s["span"] for s in report.get("samples", []) if "span" in s
-        ]
+        span_samples = [s["span"] for s in report.get("samples", []) if "span" in s]
         self.assertTrue(
             any(s["name"] == "test-span" for s in span_samples),
             f"Expected 'test-span' in samples, got: {[s['name'] for s in span_samples]}",
@@ -179,13 +157,9 @@ class TestOutputCapture(unittest.TestCase):
     def test_does_not_deadlock_on_large_diagnostic_output(self):
         """`--debug --debug` makes weaver dump trace logs that exceed the 64KB
         PIPE buffer; with tempfile capture the subprocess still exits cleanly."""
-        with WeaverLiveCheck(
-            registry=_REGISTRY_DIR, extra_args=["--debug", "--debug"]
-        ) as weaver:
+        with WeaverLiveCheck(registry=_REGISTRY_DIR, extra_args=["--debug", "--debug"]) as weaver:
             provider = _make_provider(weaver.otlp_endpoint)
-            with provider.get_tracer("test-tracer").start_as_current_span(
-                "test-span"
-            ):
+            with provider.get_tracer("test-tracer").start_as_current_span("test-span"):
                 pass
             provider.force_flush()
             report = weaver.end()

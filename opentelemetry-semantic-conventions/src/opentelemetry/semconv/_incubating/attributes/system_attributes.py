@@ -41,9 +41,7 @@ SYSTEM_FILESYSTEM_TYPE: Final = "system.filesystem.type"
 The filesystem type.
 """
 
-SYSTEM_MEMORY_LINUX_HUGEPAGES_STATE: Final = (
-    "system.memory.linux.hugepages.state"
-)
+SYSTEM_MEMORY_LINUX_HUGEPAGES_STATE: Final = "system.memory.linux.hugepages.state"
 """
 The Linux HugePages memory state.
 """
@@ -94,9 +92,7 @@ Deprecated: Replaced by `process.state`.
 """
 
 
-@deprecated(
-    "The attribute system.cpu.state is deprecated - Replaced by `cpu.mode`"
-)
+@deprecated("The attribute system.cpu.state is deprecated - Replaced by `cpu.mode`")
 class SystemCpuStateValues(Enum):
     USER = "user"
     """user."""
@@ -165,9 +161,7 @@ class SystemMemoryStateValues(Enum):
     """cached."""
 
 
-@deprecated(
-    "The attribute system.network.state is deprecated - Replaced by `network.connection.state`"
-)
+@deprecated("The attribute system.network.state is deprecated - Replaced by `network.connection.state`")
 class SystemNetworkStateValues(Enum):
     CLOSE = "close"
     """close."""
@@ -216,9 +210,7 @@ class SystemPagingStateValues(Enum):
     """free."""
 
 
-@deprecated(
-    "The attribute system.paging.type is deprecated - Replaced by `system.paging.fault.type`"
-)
+@deprecated("The attribute system.paging.type is deprecated - Replaced by `system.paging.fault.type`")
 class SystemPagingTypeValues(Enum):
     MAJOR = "major"
     """major."""
@@ -226,9 +218,7 @@ class SystemPagingTypeValues(Enum):
     """minor."""
 
 
-@deprecated(
-    "The attribute system.process.status is deprecated - Replaced by `process.state`"
-)
+@deprecated("The attribute system.process.status is deprecated - Replaced by `process.state`")
 class SystemProcessStatusValues(Enum):
     RUNNING = "running"
     """running."""
@@ -240,9 +230,7 @@ class SystemProcessStatusValues(Enum):
     """defunct."""
 
 
-@deprecated(
-    "The attribute system.processes.status is deprecated - Replaced by `process.state`"
-)
+@deprecated("The attribute system.processes.status is deprecated - Replaced by `process.state`")
 class SystemProcessesStatusValues(Enum):
     RUNNING = "running"
     """running."""

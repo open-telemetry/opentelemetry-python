@@ -21,28 +21,20 @@ from opentelemetry.sdk.metrics.export import (
 )
 
 # Destination 1: OTLP over gRPC
-grpc_reader = PeriodicExportingMetricReader(
-    GrpcMetricExporter(endpoint="http://localhost:4317", insecure=True)
-)
+grpc_reader = PeriodicExportingMetricReader(GrpcMetricExporter(endpoint="http://localhost:4317", insecure=True))
 
 # Destination 2: OTLP over HTTP
-http_reader = PeriodicExportingMetricReader(
-    HttpMetricExporter(endpoint="http://localhost:4318/v1/metrics")
-)
+http_reader = PeriodicExportingMetricReader(HttpMetricExporter(endpoint="http://localhost:4318/v1/metrics"))
 
 # Destination 3: Console (for debugging)
 console_reader = PeriodicExportingMetricReader(ConsoleMetricExporter())
 
 # Pass all readers to the MeterProvider
-provider = MeterProvider(
-    metric_readers=[grpc_reader, http_reader, console_reader]
-)
+provider = MeterProvider(metric_readers=[grpc_reader, http_reader, console_reader])
 metrics.set_meter_provider(provider)
 
 meter = metrics.get_meter(__name__)
-counter = meter.create_counter(
-    "request.count", description="Number of requests"
-)
+counter = meter.create_counter("request.count", description="Number of requests")
 
 counter.add(1, {"endpoint": "/api/users"})
 counter.add(1, {"endpoint": "/api/orders"})

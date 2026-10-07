@@ -23,9 +23,7 @@ otlp_exporter = OTLPSpanExporter(
     insecure=True,
 )
 # Add the exporter to the tracer provider
-trace.get_tracer_provider().add_span_processor(
-    BatchSpanProcessor(otlp_exporter)
-)
+trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
 
 # Create an OpenTracing shim. This implements the OpenTracing tracer API, but
 # forwards calls to the underlying OpenTelemetry tracer.

@@ -38,7 +38,7 @@ class ExemplarReservoir(ABC):
     @abstractmethod
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -66,9 +66,7 @@ class ExemplarReservoir(ABC):
             exemplars contain the attributes that were filtered out by the aggregator,
             but recorded alongside the original measurement.
         """
-        raise NotImplementedError(
-            "ExemplarReservoir.collect is not implemented"
-        )
+        raise NotImplementedError("ExemplarReservoir.collect is not implemented")
 
 
 class ExemplarBucket:
@@ -82,7 +80,7 @@ class ExemplarBucket:
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -115,13 +113,7 @@ class ExemplarBucket:
         # See the specification for more details:
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exemplar
         filtered_attributes = (
-            {
-                k: v
-                for k, v in self.__attributes.items()
-                if k not in point_attributes
-            }
-            if self.__attributes
-            else None
+            {k: v for k, v in self.__attributes.items() if k not in point_attributes} if self.__attributes else None
         )
 
         exemplar = Exemplar(
@@ -154,9 +146,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     def __init__(self, size: int, **kwargs) -> None:
         super().__init__(**kwargs)
         self._size: int = size
-        self._reservoir_storage: Mapping[int, ExemplarBucket] = defaultdict(
-            ExemplarBucket
-        )
+        self._reservoir_storage: Mapping[int, ExemplarBucket] = defaultdict(ExemplarBucket)
         self._lock = Lock()
 
     def collect(self, point_attributes: Attributes) -> list[Exemplar]:
@@ -174,10 +164,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         with self._lock:
             exemplars = [
                 e
-                for e in (
-                    bucket.collect(point_attributes)
-                    for _, bucket in sorted(self._reservoir_storage.items())
-                )
+                for e in (bucket.collect(point_attributes) for _, bucket in sorted(self._reservoir_storage.items()))
                 if e is not None
             ]
             self._reset()
@@ -185,7 +172,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
 
     def offer(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -200,13 +187,9 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         """
         with self._lock:
             try:
-                index = self._find_bucket_index(
-                    value, time_unix_nano, attributes, context
-                )
+                index = self._find_bucket_index(value, time_unix_nano, attributes, context)
 
-                self._reservoir_storage[index].offer(
-                    value, time_unix_nano, attributes, context
-                )
+                self._reservoir_storage[index].offer(value, time_unix_nano, attributes, context)
             except BucketIndexError:
                 # Ignore invalid bucket index
                 pass
@@ -214,7 +197,7 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
     @abstractmethod
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
@@ -259,15 +242,16 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,
     ) -> int:
-        self._measurements_seen += 1
         if self._measurements_seen < self._size:
+            self._measurements_seen += 1
             return self._measurements_seen - 1
 
+        self._measurements_seen += 1
         index = randrange(0, self._measurements_seen)
         if index < self._size:
             return index
@@ -290,7 +274,7 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
 
     def _find_bucket_index(
         self,
-        value: int | float,
+        value: float,
         time_unix_nano: int,
         attributes: Attributes,
         context: Context,

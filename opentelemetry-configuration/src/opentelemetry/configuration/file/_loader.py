@@ -7,6 +7,7 @@ import importlib.resources
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -53,17 +54,164 @@ _schema_cache: list[dict] = []
 
 def _get_schema() -> dict:
     if not _schema_cache:
-        schema_path = (
-            importlib.resources.files("opentelemetry.configuration")
-            / "schema.json"
-        )
-        _schema_cache.append(
-            json.loads(schema_path.read_text(encoding="utf-8"))
-        )
+        schema_path = importlib.resources.files("opentelemetry.configuration") / "schema.json"
+        _schema_cache.append(json.loads(schema_path.read_text(encoding="utf-8")))
     return _schema_cache[0]
 
 
 _logger = logging.getLogger(__name__)
+
+_YAML_STR_TAG = "tag:yaml.org,2002:str"
+
+# A configuration value whose entire content is a single ``${VAR}`` /
+# ``${VAR:-default}`` reference. Only such standalone references (when
+# unquoted) have their type re-interpreted after substitution; embedded or
+# multiple references resolve to a string per the configuration spec. A
+# leading ``$$`` escape does not match, so ``$${VAR}`` is treated as an
+# embedded (string) value.
+_STANDALONE_ENV_REF = re.compile(r"\A\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}\Z")
+
+
+def _substitute_env_in_yaml_node(
+    node: yaml.Node,
+    loader: yaml.SafeLoader,
+    visited: set[int] | None = None,
+):
+    """Apply env-var substitution to string configuration values in a node tree.
+
+    Substitution runs after parsing on configuration values only, so comments
+    and mapping keys are never candidates (per the configuration spec). For an
+    unquoted standalone ``${VAR}`` reference the node's type tag is re-resolved
+    from the substituted value so YAML type coercion still applies (e.g.
+    ``${LIMIT}`` -> int); quoted or embedded references stay strings.
+
+    Args:
+        node: Root of the node tree to walk. Substitution happens in place.
+        loader: The loader that composed ``node``; used to re-resolve tags.
+        visited: Ids of nodes already processed in this traversal. Callers pass
+            nothing; the walker creates and threads one set through the whole
+            tree.
+    """
+    # Every anchor/alias pair shares one composed node, so the same node is
+    # reached once per reference to it. Each node must be substituted exactly
+    # once for two reasons:
+    #
+    #   1. Substituting twice re-reads the output of the first pass. An
+    #      anchored ``$${TOKEN}`` becomes the escaped literal ``${TOKEN}`` on
+    #      the first visit, which the second visit then resolves as a real
+    #      variable -- silently defeating the ``$$`` escape.
+    #   2. A cyclic alias (``a: &anchor {self: *anchor}``) makes the node tree
+    #      a graph with a loop, so an unguarded walk recurses until it raises
+    #      ``RecursionError``.
+    #
+    # Tracking ``id(node)`` is safe here because ``root_node`` keeps every node
+    # in the tree alive for the whole traversal, so no id can be reused.
+    if visited is None:
+        visited = set()
+    if id(node) in visited:
+        return
+    visited.add(id(node))
+    # Worked example: a node value that makes all three checks below true.
+    #
+    # YAML (with environment LIMIT=100):
+    #     attribute_limits:
+    #       attribute_count_limit: ${LIMIT}
+    #
+    # The parser hands this function the value node of attribute_count_limit,
+    # which has value="${LIMIT}", tag=str, style=None (plain/unquoted). Then:
+    #
+    #   1. isinstance(node, yaml.ScalarNode) -> True: it is a leaf value.
+    #   2. node.tag == _YAML_STR_TAG -> True: "${LIMIT}" is not a number or
+    #      bool, so the parser tagged it str. We substitute in place, giving
+    #      node.value = "100".
+    #   3. node.style is None and _STANDALONE_ENV_REF.match(raw) -> True:
+    #      it was unquoted and the whole value is a single reference. We
+    #      re-resolve the tag: resolve("100") -> int, and construct_document()
+    #      later builds the integer 100 (not the string "100").
+    #
+    # Counter-cases that reach check 3 but stop there: "${LIMIT}" quoted fails
+    # the style test; x${LIMIT} fails the regex. Both keep the str tag.
+    if isinstance(node, yaml.ScalarNode):
+        # A ``ScalarNode`` is a leaf -- one configuration value. Only a
+        # ``str``-tagged one can hold a ``${VAR}`` reference (nodes the parser
+        # already typed as int, float, bool or null cannot), so those are the
+        # only substitution candidates.
+        if node.tag == _YAML_STR_TAG:
+            # ``node.value`` is the raw text of this one value (never a key or
+            # comment). Replace any ${VAR} / ${VAR:-default} / $$ in it.
+            raw = node.value
+            node.value = substitute_env_vars(raw)
+            # The spec says node types are interpreted *after* substitution,
+            # but only for a value that is exactly one reference and written
+            # unquoted (``style is None``). Example: ``count: ${N}`` with
+            # ``N=42`` must yield the int 42, not the string "42". In that case
+            # re-run YAML's implicit type resolution on the substituted text
+            # and retag the node. A quoted (``"${N}"``) or embedded
+            # (``foo-${N}``) value keeps its ``str`` tag and stays a string.
+            if node.style is None and _STANDALONE_ENV_REF.match(raw):
+                # ``resolve`` returns the implicit tag (int/float/bool/null/
+                # str) YAML would assign to ``node.value``; the ``(True, False)``
+                # implicit-flag pair marks it as a plain scalar so that
+                # type-guessing applies, exactly as during normal parsing.
+                node.tag = loader.resolve(yaml.ScalarNode, node.value, (True, False))
+    elif isinstance(node, yaml.SequenceNode):
+        # A sequence (list): each item is itself a value node -- recurse.
+        for item in node.value:
+            _substitute_env_in_yaml_node(item, loader, visited)
+    elif isinstance(node, yaml.MappingNode):
+        # A mapping (dict): recurse into values only; keys are not
+        # substitution candidates per the spec. A merge key (``<<: *base``)
+        # appears here as an ordinary pair whose value node is the anchored
+        # mapping itself, so ``visited`` also covers the merged-in values.
+        for _key_node, value_node in node.value:
+            _substitute_env_in_yaml_node(value_node, loader, visited)
+
+
+def _substitute_env_in_json_value(value: Any) -> Any:
+    """Recursively apply env-var substitution to string values in JSON data.
+
+    JSON has explicit types and no comments, so substitution applies only to
+    string values (the result stays a string) and mapping keys are left as-is.
+    """
+    if isinstance(value, str):
+        return substitute_env_vars(value)
+    if isinstance(value, list):
+        return [_substitute_env_in_json_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _substitute_env_in_json_value(val) for key, val in value.items()}
+    return value
+
+
+def _parse_config_content(content: str, suffix: str, file_path: str | os.PathLike[str]) -> Any:
+    """Parse configuration text and substitute environment variables.
+
+    Parsing happens first, so ``${VAR}`` references in comments and mapping
+    keys are never substitution candidates; substitution then runs on
+    configuration values, with YAML node types re-resolved for standalone
+    references.
+
+    Raises:
+        ConfigurationError: If the content cannot be parsed or substitution of
+            a required environment variable fails.
+    """
+    try:
+        if suffix == ".json":
+            return _substitute_env_in_json_value(json.loads(content))
+        yaml_loader = yaml.SafeLoader(content)
+        try:
+            root_node = yaml_loader.get_single_node()
+            if root_node is None:
+                return None
+            _substitute_env_in_yaml_node(root_node, yaml_loader)
+            return yaml_loader.construct_document(root_node)
+        finally:
+            yaml_loader.dispose()
+    except yaml.YAMLError as exc:
+        _logger.exception("Failed to parse YAML from %s", file_path)
+        raise ConfigurationError(f"Failed to parse YAML: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        _logger.exception("Failed to parse JSON from %s", file_path)
+        raise ConfigurationError(f"Failed to parse JSON: {exc}") from exc
 
 
 def load_config_file(
@@ -71,8 +219,9 @@ def load_config_file(
 ) -> OpenTelemetryConfiguration:
     """Load and parse an OpenTelemetry configuration file.
 
-    Supports YAML and JSON formats. Performs environment variable substitution
-    before parsing.
+    Supports YAML and JSON formats. Environment variable substitution is
+    performed after parsing, on configuration values only, so ``${VAR}``
+    references in comments or mapping keys are left untouched.
 
     Args:
         file_path: Path to the configuration file (.yaml, .yml, or .json).
@@ -95,45 +244,24 @@ def load_config_file(
 
     if not path.is_file():
         _logger.error("Configuration path is not a file: %s", file_path)
-        raise ConfigurationError(
-            f"Configuration path is not a file: {file_path}"
-        )
+        raise ConfigurationError(f"Configuration path is not a file: {file_path}")
 
     try:
         with open(path, encoding="utf-8") as config_file:
             content = config_file.read()
     except OSError as exc:
         _logger.exception("Failed to read configuration file: %s", file_path)
-        raise ConfigurationError(
-            f"Failed to read configuration file: {file_path}"
-        ) from exc
+        raise ConfigurationError(f"Failed to read configuration file: {file_path}") from exc
 
-    # Perform environment variable substitution
-    try:
-        content = substitute_env_vars(content)
-    except Exception as exc:
-        raise ConfigurationError(
-            f"Environment variable substitution failed: {exc}"
-        ) from exc
-
-    # Parse based on file extension
+    # Parse the file, then substitute env vars in configuration values only.
+    # Parsing first means comments and mapping keys are never substitution
+    # candidates, and node types are still resolved after substitution.
     suffix = path.suffix.lower()
-    try:
-        if suffix in (".yaml", ".yml"):
-            data = yaml.safe_load(content)
-        elif suffix == ".json":
-            data = json.loads(content)
-        else:
-            _logger.error("Unsupported file format: %s", suffix)
-            raise ConfigurationError(
-                f"Unsupported file format: {suffix}. Use .yaml, .yml, or .json"
-            )
-    except yaml.YAMLError as exc:
-        _logger.exception("Failed to parse YAML from %s", file_path)
-        raise ConfigurationError(f"Failed to parse YAML: {exc}") from exc
-    except json.JSONDecodeError as exc:
-        _logger.exception("Failed to parse JSON from %s", file_path)
-        raise ConfigurationError(f"Failed to parse JSON: {exc}") from exc
+    if suffix not in (".yaml", ".yml", ".json"):
+        _logger.error("Unsupported file format: %s", suffix)
+        raise ConfigurationError(f"Unsupported file format: {suffix}. Use .yaml, .yml, or .json")
+
+    data = _parse_config_content(content, suffix, file_path)
 
     if data is None:
         _logger.error("Configuration file is empty: %s", file_path)
@@ -144,9 +272,7 @@ def load_config_file(
             "Configuration must be a mapping/object, got %s",
             type(data).__name__,
         )
-        raise ConfigurationError(
-            f"Configuration must be a mapping/object, got {type(data).__name__}"
-        )
+        raise ConfigurationError(f"Configuration must be a mapping/object, got {type(data).__name__}")
 
     _validate_schema(data)
     _validate_file_format(data)
@@ -155,12 +281,8 @@ def load_config_file(
     try:
         config = _dict_to_model(data)
     except Exception as exc:
-        _logger.exception(
-            "Failed to validate configuration from %s", file_path
-        )
-        raise ConfigurationError(
-            f"Failed to validate configuration: {exc}"
-        ) from exc
+        _logger.exception("Failed to validate configuration from %s", file_path)
+        raise ConfigurationError(f"Failed to validate configuration: {exc}") from exc
 
     return config
 
@@ -179,15 +301,12 @@ def _validate_schema(data: dict) -> None:
         )
     except jsonschema.ValidationError as exc:
         raise ConfigurationError(
-            f"Configuration does not match schema: {exc.message} "
-            f"(at {' -> '.join(str(p) for p in exc.absolute_path)})"
+            f"Configuration does not match schema: {exc.message} (at {' -> '.join(str(p) for p in exc.absolute_path)})"
             if exc.absolute_path
             else f"Configuration does not match schema: {exc.message}"
         ) from exc
     except jsonschema.SchemaError as exc:
-        raise ConfigurationError(
-            f"Invalid configuration schema: {exc.message}"
-        ) from exc
+        raise ConfigurationError(f"Invalid configuration schema: {exc.message}") from exc
 
 
 def _validate_file_format(data: dict) -> None:
@@ -206,10 +325,7 @@ def _validate_file_format(data: dict) -> None:
     # file_format is required and typed as a string by the schema, which is
     # validated before this runs; guard defensively regardless.
     if not isinstance(file_format, str):
-        raise ConfigurationError(
-            f"Invalid file_format: expected a version string, "
-            f"got {file_format!r}"
-        )
+        raise ConfigurationError(f"Invalid file_format: expected a version string, got {file_format!r}")
 
     # Drop any pre-release / meta tag, e.g. "1.0-rc.2" -> "1.0".
     version = file_format.split("-", 1)[0]
@@ -218,15 +334,11 @@ def _validate_file_format(data: dict) -> None:
         major = int(parts[0])
         minor = int(parts[1]) if len(parts) > 1 else 0
     except ValueError as exc:
-        raise ConfigurationError(
-            f"Invalid file_format '{file_format}': expected MAJOR.MINOR "
-            f"version numbers"
-        ) from exc
+        raise ConfigurationError(f"Invalid file_format '{file_format}': expected MAJOR.MINOR version numbers") from exc
 
     if major != _SUPPORTED_SCHEMA_MAJOR:
         raise ConfigurationError(
-            f"Unsupported file_format '{file_format}': this SDK supports "
-            f"schema version {_SUPPORTED_SCHEMA_MAJOR}.x"
+            f"Unsupported file_format '{file_format}': this SDK supports schema version {_SUPPORTED_SCHEMA_MAJOR}.x"
         )
 
     if minor > _SUPPORTED_SCHEMA_MINOR:
@@ -262,6 +374,5 @@ def _dict_to_model(data: dict[str, Any]) -> OpenTelemetryConfiguration:
         return _dict_to_dataclass(data, OpenTelemetryConfiguration)
     except TypeError as exc:
         raise TypeError(
-            f"Configuration structure is invalid. "
-            f"Check that all required fields are present and correctly typed: {exc}"
+            f"Configuration structure is invalid. Check that all required fields are present and correctly typed: {exc}"
         ) from exc

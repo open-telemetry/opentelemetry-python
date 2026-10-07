@@ -14,12 +14,7 @@ def test_description():
 
 
 def test_threshold():
-    assert (
-        composable_always_on()
-        .sampling_intent(None, "test", None, {}, None, None)
-        .threshold
-        == 0
-    )
+    assert composable_always_on().sampling_intent(None, "test", None, {}, None, None).threshold == 0
 
 
 def test_sampling():

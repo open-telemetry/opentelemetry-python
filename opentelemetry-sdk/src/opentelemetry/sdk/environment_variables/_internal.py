@@ -7,9 +7,7 @@ from os import environ
 _logger = getLogger(__name__)
 
 
-def parse_boolean_environment_variable(
-    environment_variable: str, default: bool = False
-) -> bool:
+def parse_boolean_environment_variable(environment_variable: str, default: bool = False) -> bool:
     value = environ.get(environment_variable)
     if value is None:
         return default

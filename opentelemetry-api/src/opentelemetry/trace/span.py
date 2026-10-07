@@ -38,15 +38,13 @@ _KEY_PATTERN = re.compile(_KEY_FORMAT)
 # nblk-chr = %x21-2B / %x2D-3C / %x3E-7E
 # chr      = %x20 / nblk-chr
 
-_VALUE_FORMAT = (
-    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
-)
+_VALUE_FORMAT = r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
 _VALUE_PATTERN = re.compile(_VALUE_FORMAT)
 
 
 _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
-_delimiter_pattern = re.compile(r"[ \t]*,[ \t]*")
-_member_pattern = re.compile(f"({_KEY_FORMAT})(=)({_VALUE_FORMAT})[ \t]*")
+_TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH = 8192
+_member_pattern = re.compile(f"({_KEY_FORMAT})=({_VALUE_FORMAT})")
 _logger = logging.getLogger(__name__)
 
 
@@ -84,9 +82,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_attributes(
-        self, attributes: Mapping[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         """Sets Attributes.
 
         Sets Attributes with the key and value passed as arguments dict.
@@ -98,7 +94,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AnyValue) -> None:
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
@@ -267,9 +263,7 @@ class TraceState(Mapping[str, str]):
                     continue
                 self._dict[key] = value
             else:
-                _logger.warning(
-                    "Invalid key/value pair (%s, %s) found.", key, value
-                )
+                _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
 
     def __contains__(self, item: object) -> bool:
         return item in self._dict
@@ -284,10 +278,7 @@ class TraceState(Mapping[str, str]):
         return len(self._dict)
 
     def __repr__(self) -> str:
-        pairs = [
-            f"{{key={key}, value={value}}}"
-            for key, value in self._dict.items()
-        ]
+        pairs = [f"{{key={key}, value={value}}}" for key, value in self._dict.items()]
         return str(pairs)
 
     def add(self, key: str, value: str) -> TraceState:
@@ -306,9 +297,7 @@ class TraceState(Mapping[str, str]):
             same tracestate will be returned.
         """
         if not _is_valid_pair(key, value):
-            _logger.warning(
-                "Invalid key/value pair (%s, %s) found.", key, value
-            )
+            _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
             return self
         # There can be a maximum of 32 pairs
         if len(self) >= _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
@@ -325,6 +314,14 @@ class TraceState(Mapping[str, str]):
         """Updates a key-value pair in tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
 
+        Note:
+            This method performs an "upsert": if ``key`` is not already present
+            it is added (when the tracestate is below the 32-entry limit),
+            otherwise its value is updated. This upsert behaviour is intentional
+            but goes beyond what the OpenTelemetry specification defines for
+            ``update`` (https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#tracestate),
+            and is kept for backwards compatibility with callers that rely on it.
+
         Args:
             key: A valid tracestate key to update
             value: A valid tracestate value to update for key
@@ -332,14 +329,19 @@ class TraceState(Mapping[str, str]):
         Returns:
             A new TraceState with the modifications applied.
 
-            If the provided key-value pair is invalid or results in tracestate
-            that violates tracecontext specification, they are discarded and
-            same tracestate will be returned.
+            If the provided pair is invalid, or adding a new key would exceed
+            the maximum of 32 key/value pairs, they are discarded and the same
+            tracestate is returned unchanged. Updating an existing key is always
+            allowed, even at the maximum.
         """
         if not _is_valid_pair(key, value):
-            _logger.warning(
-                "Invalid key/value pair (%s, %s) found.", key, value
-            )
+            _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
+            return self
+        # Adding a new key at the maximum would push the tracestate over the
+        # limit and cause the constructor to drop every entry. Return unchanged
+        # instead of silently discarding existing state.
+        if key not in self._dict and len(self._dict) >= _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+            _logger.warning("There can't be more 32 key/value pairs.")
             return self
         prev_state = self._dict.copy()
         prev_state.pop(key, None)
@@ -395,8 +397,9 @@ class TraceState(Mapping[str, str]):
         """
         pairs = {}  # type: dict[str, str]
         for header in header_list:
-            members: list[str] = re.split(_delimiter_pattern, header)
-            for member in members:
+            for member in header.split(","):
+                # remove optional whitespace (RFC 9110, section 5.6.3)
+                member = member.strip(" \t")
                 # empty members are valid, but no need to process further.
                 if not member:
                     continue
@@ -407,8 +410,7 @@ class TraceState(Mapping[str, str]):
                         member,
                     )
                     return cls()
-                groups: tuple[str, ...] = match.groups()
-                key, _eq, value = groups
+                key, value = match.groups()
                 # duplicate keys are not legal in header
                 if key in pairs:
                     return cls()
@@ -462,8 +464,7 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
             trace_state = DEFAULT_TRACE_STATE
 
         is_valid = (
-            INVALID_TRACE_ID < trace_id <= _TRACE_ID_MAX_VALUE
-            and INVALID_SPAN_ID < span_id <= _SPAN_ID_MAX_VALUE
+            INVALID_TRACE_ID < trace_id <= _TRACE_ID_MAX_VALUE and INVALID_SPAN_ID < span_id <= _SPAN_ID_MAX_VALUE
         )
 
         return tuple.__new__(
@@ -507,9 +508,7 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
         return self[5]  # pylint: disable=unsubscriptable-object
 
     def __setattr__(self, *args: str) -> None:
-        _logger.debug(
-            "Immutable type, ignoring call to set attribute", stack_info=True
-        )
+        _logger.debug("Immutable type, ignoring call to set attribute", stack_info=True)
 
     def __delattr__(self, *args: str) -> None:
         _logger.debug(
@@ -539,12 +538,10 @@ class NonRecordingSpan(Span):
     def end(self, end_time: int | None = None) -> None:
         pass
 
-    def set_attributes(
-        self, attributes: Mapping[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         pass
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AnyValue) -> None:
         pass
 
     def add_event(

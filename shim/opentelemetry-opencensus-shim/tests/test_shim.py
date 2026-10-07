@@ -105,20 +105,22 @@ class TestShim(unittest.TestCase):
             with self.assertLogs(level=logging.WARNING):
                 span.span_kind = SpanKind.CLIENT
 
-    # pylint: disable=no-self-use,no-member,protected-access
+    # pylint: disable=no-self-use,no-member,protected-access,confusing-with-statement
     def test_shim_span_contextmanager_calls_does_not_call_end(self):
         # This was a bug in first implementation where the underlying OTel span.end() was
         # called after span.__exit__ which caused double-ending the span.
         oc_tracer = OcTracer()
         oc_span = oc_tracer.start_span("foo")
 
-        with patch.object(
+        with (
+            patch.object(
+                oc_span,
+                "_self_otel_span",
+                wraps=oc_span._self_otel_span,
+            ) as spy_otel_span,
             oc_span,
-            "_self_otel_span",
-            wraps=oc_span._self_otel_span,
-        ) as spy_otel_span:
-            with oc_span:
-                pass
+        ):
+            pass
 
         spy_otel_span.end.assert_not_called()
 
@@ -142,9 +144,7 @@ class TestShim(unittest.TestCase):
             trace.format_trace_id(span_ctx.trace_id),
             "ace0216bab2b7ba249761dbb19c871b7",
         )
-        self.assertEqual(
-            trace.format_span_id(span_ctx.span_id), "1fead89ecf242225"
-        )
+        self.assertEqual(trace.format_span_id(span_ctx.span_id), "1fead89ecf242225")
 
     def test_set_oc_span_in_context_remote(self):
         for is_from_remote in True, False:
@@ -193,6 +193,4 @@ class TestShim(unittest.TestCase):
             context.get_current(),
         )
         span_ctx = trace.get_current_span(ctx).get_span_context()
-        self.assertEqual(
-            span_ctx.trace_state, trace.TraceState([("hello", "tracestate")])
-        )
+        self.assertEqual(span_ctx.trace_state, trace.TraceState([("hello", "tracestate")]))

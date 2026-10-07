@@ -40,7 +40,7 @@ from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import AnyValue, _ExtendedAttributes
+from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
 
@@ -63,7 +63,7 @@ class LogRecord(ABC):
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None: ...
@@ -83,7 +83,7 @@ class LogRecord(ABC):
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> None: ...
 
     def __init__(
@@ -98,7 +98,7 @@ class LogRecord(ABC):
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -129,7 +129,7 @@ class Logger(ABC):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> None:
         super().__init__()
         self._name = name
@@ -147,7 +147,7 @@ class Logger(ABC):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None: ...
@@ -169,11 +169,28 @@ class Logger(ABC):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
+
+    @abstractmethod
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        """Returns whether the logger is enabled for the given arguments.
+
+        Instrumentation should call this before performing expensive work to
+        construct a log record, and skip that work if ``False`` is returned.
+
+        The returned value may change over time and should be checked each time
+        before emitting a log record.
+        """
 
 
 class NoOpLogger(Logger):
@@ -192,7 +209,7 @@ class NoOpLogger(Logger):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None: ...
@@ -213,11 +230,20 @@ class NoOpLogger(Logger):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
         pass
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return False
 
 
 class ProxyLogger(Logger):
@@ -226,7 +252,7 @@ class ProxyLogger(Logger):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ):
         self._name = name
         self._version = version
@@ -260,7 +286,7 @@ class ProxyLogger(Logger):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None: ...
@@ -281,7 +307,7 @@ class ProxyLogger(Logger):
         severity_number: SeverityNumber | None = None,
         severity_text: str | None = None,
         body: AnyValue | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
     ) -> None:
@@ -300,6 +326,19 @@ class ProxyLogger(Logger):
                 exception=exception,
             )
 
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        return self._logger.enabled(
+            context=context,
+            severity_number=severity_number,
+            event_name=event_name,
+        )
+
 
 class LoggerProvider(ABC):
     """
@@ -312,7 +351,7 @@ class LoggerProvider(ABC):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -351,12 +390,10 @@ class NoOpLoggerProvider(LoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         """Returns a NoOpLogger."""
-        return NoOpLogger(
-            name, version=version, schema_url=schema_url, attributes=attributes
-        )
+        return NoOpLogger(name, version=version, schema_url=schema_url, attributes=attributes)
 
 
 class ProxyLoggerProvider(LoggerProvider):
@@ -365,7 +402,7 @@ class ProxyLoggerProvider(LoggerProvider):
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
-        attributes: _ExtendedAttributes | None = None,
+        attributes: Attributes = None,
     ) -> Logger:
         if _LOGGER_PROVIDER:
             return _LOGGER_PROVIDER.get_logger(
@@ -428,7 +465,7 @@ def get_logger(
     instrumenting_library_version: str = "",
     logger_provider: LoggerProvider | None = None,
     schema_url: str | None = None,
-    attributes: _ExtendedAttributes | None = None,
+    attributes: Attributes = None,
 ) -> Logger:
     """Returns a `Logger` for use within a python process.
 

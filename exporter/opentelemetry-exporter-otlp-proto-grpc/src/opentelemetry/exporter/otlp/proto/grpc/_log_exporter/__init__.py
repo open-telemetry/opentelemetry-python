@@ -8,6 +8,7 @@ from typing import Literal
 
 from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.proto.grpc import _timeout_from_env
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
     _get_credentials,
@@ -55,10 +56,7 @@ class OTLPLogExporter(
         endpoint: str | None = None,
         insecure: bool | None = None,
         credentials: ChannelCredentials | None = None,
-        headers: TypingSequence[tuple[str, str]]
-        | dict[str, str]
-        | str
-        | None = None,
+        headers: TypingSequence[tuple[str, str]] | dict[str, str] | str | None = None,
         timeout: float | None = None,
         compression: Compression | None = None,
         channel_options: tuple[tuple[str, str]] | None = None,
@@ -70,10 +68,7 @@ class OTLPLogExporter(
         if insecure is None and insecure_logs is not None:
             insecure = insecure_logs.lower() == "true"
 
-        if (
-            not insecure
-            and environ.get(OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE) is not None
-        ):
+        if not insecure and environ.get(OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE) is not None:
             credentials = _get_credentials(
                 credentials,
                 _OTEL_PYTHON_EXPORTER_OTLP_GRPC_LOGS_CREDENTIAL_PROVIDER,
@@ -82,15 +77,10 @@ class OTLPLogExporter(
                 OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
             )
 
-        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT)
-        environ_timeout = (
-            float(environ_timeout) if environ_timeout is not None else None
-        )
+        environ_timeout = _timeout_from_env(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT)
 
         compression = (
-            environ_to_compression(OTEL_EXPORTER_OTLP_LOGS_COMPRESSION)
-            if compression is None
-            else compression
+            environ_to_compression(OTEL_EXPORTER_OTLP_LOGS_COMPRESSION) if compression is None else compression
         )
 
         OTLPExporterMixin.__init__(
@@ -110,9 +100,7 @@ class OTLPLogExporter(
             meter_provider=meter_provider,
         )
 
-    def _translate_data(
-        self, data: Sequence[ReadableLogRecord]
-    ) -> ExportLogsServiceRequest:
+    def _translate_data(self, data: Sequence[ReadableLogRecord]) -> ExportLogsServiceRequest:
         return encode_logs(data)
 
     def _count_data(self, data: Sequence[ReadableLogRecord]):

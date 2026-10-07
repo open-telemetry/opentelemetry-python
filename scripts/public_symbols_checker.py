@@ -23,11 +23,7 @@ def get_symbols(change_type, diff_lines_getter, prefix):
     else:
         file_path_symbols = added_symbols
 
-    for diff_lines in (
-        repo.commit("main")
-        .diff(repo.head.commit)
-        .iter_change_type(change_type)
-    ):
+    for diff_lines in repo.commit("main").diff(repo.head.commit).iter_change_type(change_type):
         if diff_lines.b_blob is None:
             # This happens if a file has been removed completely.
             b_file_path = diff_lines.a_blob.path
@@ -55,16 +51,12 @@ def get_symbols(change_type, diff_lines_getter, prefix):
             matching_line = match(
                 r"{prefix}({symbol_re})\s=\s.+|"
                 r"{prefix}def\s({symbol_re})|"
-                r"{prefix}class\s({symbol_re})".format(
-                    symbol_re=r"[a-zA-Z][_\w]+", prefix=prefix
-                ),
+                r"{prefix}class\s({symbol_re})".format(symbol_re=r"[a-zA-Z][_\w]+", prefix=prefix),
                 diff_line,
             )
 
             if matching_line is not None:
-                file_path_symbols[b_file_path].append(
-                    next(filter(bool, matching_line.groups()))
-                )
+                file_path_symbols[b_file_path].append(next(filter(bool, matching_line.groups())))
 
 
 def a_diff_lines_getter(diff_lines):

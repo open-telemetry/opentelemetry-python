@@ -21,19 +21,11 @@ class Test_Providers(TestCase):  # pylint: disable=invalid-name
         reload(_providers)
 
         mock_entry_points.configure_mock(
-            **{
-                "side_effect": [
-                    [
-                        Mock(
-                            **{
-                                "load.return_value": Mock(
-                                    **{"return_value": "a"}
-                                )
-                            }
-                        ),
-                    ],
-                ]
-            }
+            side_effect=[
+                [
+                    Mock(**{"load.return_value": Mock(return_value="a")}),
+                ],
+            ]
         )
 
         self.assertEqual(

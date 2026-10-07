@@ -68,10 +68,7 @@ class ConcurrencyTestBase(unittest.TestCase):
             barrier.wait()
             results[idx] = func_to_test()
 
-        threads = [
-            threading.Thread(target=partial(thread_start, i))
-            for i in range(num_threads)
-        ]
+        threads = [threading.Thread(target=partial(thread_start, i)) for i in range(num_threads)]
         for thread in threads:
             thread.start()
         for thread in threads:

@@ -73,9 +73,7 @@ class TestOTLPLogExporter(TestCase):
                 attributes={"a": 1, "b": "c"},
             ),
             resource=SDKResource({"key": "value"}),
-            instrumentation_scope=InstrumentationScope(
-                "first_name", "first_version"
-            ),
+            instrumentation_scope=InstrumentationScope("first_name", "first_version"),
         )
         ctx_log_data_2 = set_span_in_context(
             NonRecordingSpan(
@@ -97,9 +95,7 @@ class TestOTLPLogExporter(TestCase):
                 attributes={"custom_attr": [1, 2, 3]},
             ),
             resource=SDKResource({"key": "value"}),
-            instrumentation_scope=InstrumentationScope(
-                "second_name", "second_version"
-            ),
+            instrumentation_scope=InstrumentationScope("second_name", "second_version"),
         )
         ctx_log_data_3 = set_span_in_context(
             NonRecordingSpan(
@@ -120,14 +116,10 @@ class TestOTLPLogExporter(TestCase):
                 body="Mumbai, Boil water before drinking",
             ),
             resource=SDKResource({"service": "myapp"}),
-            instrumentation_scope=InstrumentationScope(
-                "third_name", "third_version"
-            ),
+            instrumentation_scope=InstrumentationScope("third_name", "third_version"),
         )
         ctx_log_data_4 = set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(0, 5213367945872657629, False, TraceFlags(0x01))
-            )
+            NonRecordingSpan(SpanContext(0, 5213367945872657629, False, TraceFlags(0x01)))
         )
         self.log_data_4 = ReadWriteLogRecord(
             LogRecord(
@@ -138,9 +130,7 @@ class TestOTLPLogExporter(TestCase):
                 body="Invalid trace id check",
             ),
             resource=SDKResource({"service": "myapp"}),
-            instrumentation_scope=InstrumentationScope(
-                "fourth_name", "fourth_version"
-            ),
+            instrumentation_scope=InstrumentationScope("fourth_name", "fourth_version"),
         )
         ctx_log_data_5 = set_span_in_context(
             NonRecordingSpan(
@@ -161,9 +151,7 @@ class TestOTLPLogExporter(TestCase):
                 body="Invalid span id check",
             ),
             resource=SDKResource({"service": "myapp"}),
-            instrumentation_scope=InstrumentationScope(
-                "fifth_name", "fifth_version"
-            ),
+            instrumentation_scope=InstrumentationScope("fifth_name", "fifth_version"),
         )
 
     def test_exporting(self):
@@ -179,9 +167,7 @@ class TestOTLPLogExporter(TestCase):
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
         },
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__")
     def test_env_variables(self, mock_exporter_mixin):
         OTLPLogExporter()
 
@@ -198,20 +184,15 @@ class TestOTLPLogExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
-            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
-            + "/../fixtures/test.cert",
-            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE: THIS_DIR
-            + "/../fixtures/test-client-cert.pem",
-            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: THIS_DIR
-            + "/../fixtures/test-client-key.pem",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE: THIS_DIR + "/../fixtures/test-client-cert.pem",
+            OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY: THIS_DIR + "/../fixtures/test-client-key.pem",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
         },
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__")
     def test_env_variables_with_client_certificates(self, mock_exporter_mixin):
         OTLPLogExporter()
 
@@ -228,20 +209,15 @@ class TestOTLPLogExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
-            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
-            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR + "/../fixtures/test.cert",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
         },
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__")
     @patch("logging.Logger.error")
-    def test_env_variables_with_only_certificate(
-        self, mock_logger_error, mock_exporter_mixin
-    ):
+    def test_env_variables_with_only_certificate(self, mock_logger_error, mock_exporter_mixin):
         OTLPLogExporter()
 
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
@@ -259,20 +235,15 @@ class TestOTLPLogExporter(TestCase):
         "os.environ",
         {
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
-            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
-            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR + "/../fixtures/test.cert",
             OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
         },
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
-    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__")
     @patch("logging.Logger.error")
-    def test_kwargs_have_precedence_over_env_variables(
-        self, mock_logger_error, mock_exporter_mixin
-    ):
+    def test_kwargs_have_precedence_over_env_variables(self, mock_logger_error, mock_exporter_mixin):
         credentials_mock = Mock()
         OTLPLogExporter(
             endpoint="logs:4318",
@@ -298,11 +269,7 @@ class TestOTLPLogExporter(TestCase):
         # pylint: disable=protected-access
         translated_data = self.exporter._translate_data([log_data])
         request_dict = MessageToDict(translated_data)
-        log_records = (
-            request_dict.get("resourceLogs")[0]
-            .get("scopeLogs")[0]
-            .get("logRecords")
-        )
+        log_records = request_dict.get("resourceLogs")[0].get("scopeLogs")[0].get("logRecords")
         return log_records
 
     def test_exported_log_without_trace_id(self):
@@ -337,16 +304,12 @@ class TestOTLPLogExporter(TestCase):
                 ResourceLogs(
                     resource=OTLPResource(
                         attributes=[
-                            KeyValue(
-                                key="key", value=AnyValue(string_value="value")
-                            ),
+                            KeyValue(key="key", value=AnyValue(string_value="value")),
                         ]
                     ),
                     scope_logs=[
                         ScopeLogs(
-                            scope=PB2InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=PB2InstrumentationScope(name="first_name", version="first_version"),
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
@@ -354,17 +317,13 @@ class TestOTLPLogExporter(TestCase):
                                     observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
-                                    span_id=int.to_bytes(
-                                        5213367945872657620, 8, "big"
-                                    ),
+                                    span_id=int.to_bytes(5213367945872657620, 8, "big"),
                                     trace_id=int.to_bytes(
                                         2604504634922341076776623263868986797,
                                         16,
                                         "big",
                                     ),
-                                    body=_encode_value(
-                                        "Zhengzhou, We have a heaviest rains in 1000 years"
-                                    ),
+                                    body=_encode_value("Zhengzhou, We have a heaviest rains in 1000 years"),
                                     attributes=[
                                         KeyValue(
                                             key="a",
@@ -375,9 +334,7 @@ class TestOTLPLogExporter(TestCase):
                                             value=AnyValue(string_value="c"),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_1.log_record.trace_flags
-                                    ),
+                                    flags=int(self.log_data_1.log_record.trace_flags),
                                 )
                             ],
                         )
@@ -387,9 +344,7 @@ class TestOTLPLogExporter(TestCase):
         )
 
         # pylint: disable=protected-access
-        self.assertEqual(
-            expected, self.exporter._translate_data([self.log_data_1])
-        )
+        self.assertEqual(expected, self.exporter._translate_data([self.log_data_1]))
 
     def test_count_log_data(self):
         # pylint: disable=protected-access
@@ -401,16 +356,12 @@ class TestOTLPLogExporter(TestCase):
                 ResourceLogs(
                     resource=OTLPResource(
                         attributes=[
-                            KeyValue(
-                                key="key", value=AnyValue(string_value="value")
-                            ),
+                            KeyValue(key="key", value=AnyValue(string_value="value")),
                         ]
                     ),
                     scope_logs=[
                         ScopeLogs(
-                            scope=PB2InstrumentationScope(
-                                name="first_name", version="first_version"
-                            ),
+                            scope=PB2InstrumentationScope(name="first_name", version="first_version"),
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
@@ -418,17 +369,13 @@ class TestOTLPLogExporter(TestCase):
                                     observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
-                                    span_id=int.to_bytes(
-                                        5213367945872657620, 8, "big"
-                                    ),
+                                    span_id=int.to_bytes(5213367945872657620, 8, "big"),
                                     trace_id=int.to_bytes(
                                         2604504634922341076776623263868986797,
                                         16,
                                         "big",
                                     ),
-                                    body=_encode_value(
-                                        "Zhengzhou, We have a heaviest rains in 1000 years"
-                                    ),
+                                    body=_encode_value("Zhengzhou, We have a heaviest rains in 1000 years"),
                                     attributes=[
                                         KeyValue(
                                             key="a",
@@ -439,16 +386,12 @@ class TestOTLPLogExporter(TestCase):
                                             value=AnyValue(string_value="c"),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_1.log_record.trace_flags
-                                    ),
+                                    flags=int(self.log_data_1.log_record.trace_flags),
                                 )
                             ],
                         ),
                         ScopeLogs(
-                            scope=PB2InstrumentationScope(
-                                name="second_name", version="second_version"
-                            ),
+                            scope=PB2InstrumentationScope(name="second_name", version="second_version"),
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
@@ -456,26 +399,20 @@ class TestOTLPLogExporter(TestCase):
                                     observed_time_unix_nano=self.log_data_2.log_record.observed_timestamp,
                                     severity_number=self.log_data_2.log_record.severity_number.value,
                                     severity_text="INFO",
-                                    span_id=int.to_bytes(
-                                        5213367945872657623, 8, "big"
-                                    ),
+                                    span_id=int.to_bytes(5213367945872657623, 8, "big"),
                                     trace_id=int.to_bytes(
                                         2604504634922341076776623263868986799,
                                         16,
                                         "big",
                                     ),
-                                    body=_encode_value(
-                                        "Sydney, Opera House is closed"
-                                    ),
+                                    body=_encode_value("Sydney, Opera House is closed"),
                                     attributes=[
                                         KeyValue(
                                             key="custom_attr",
                                             value=_encode_value([1, 2, 3]),
                                         ),
                                     ],
-                                    flags=int(
-                                        self.log_data_2.log_record.trace_flags
-                                    ),
+                                    flags=int(self.log_data_2.log_record.trace_flags),
                                 )
                             ],
                         ),
@@ -492,9 +429,7 @@ class TestOTLPLogExporter(TestCase):
                     ),
                     scope_logs=[
                         ScopeLogs(
-                            scope=PB2InstrumentationScope(
-                                name="third_name", version="third_version"
-                            ),
+                            scope=PB2InstrumentationScope(name="third_name", version="third_version"),
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
@@ -502,21 +437,15 @@ class TestOTLPLogExporter(TestCase):
                                     observed_time_unix_nano=self.log_data_3.log_record.observed_timestamp,
                                     severity_number=self.log_data_3.log_record.severity_number.value,
                                     severity_text="ERROR",
-                                    span_id=int.to_bytes(
-                                        5213367945872657628, 8, "big"
-                                    ),
+                                    span_id=int.to_bytes(5213367945872657628, 8, "big"),
                                     trace_id=int.to_bytes(
                                         2604504634922341076776623263868986800,
                                         16,
                                         "big",
                                     ),
-                                    body=_encode_value(
-                                        "Mumbai, Boil water before drinking"
-                                    ),
+                                    body=_encode_value("Mumbai, Boil water before drinking"),
                                     attributes=[],
-                                    flags=int(
-                                        self.log_data_3.log_record.trace_flags
-                                    ),
+                                    flags=int(self.log_data_3.log_record.trace_flags),
                                 )
                             ],
                         )
@@ -528,16 +457,12 @@ class TestOTLPLogExporter(TestCase):
         # pylint: disable=protected-access
         self.assertEqual(
             expected,
-            self.exporter._translate_data(
-                [self.log_data_1, self.log_data_2, self.log_data_3]
-            ),
+            self.exporter._translate_data([self.log_data_1, self.log_data_2, self.log_data_3]),
         )
 
     def test_count_multiple_logs(self):
         self.assertEqual(
             3,
             # pylint: disable=protected-access
-            self.exporter._count_data(
-                [self.log_data_1, self.log_data_2, self.log_data_3]
-            ),
+            self.exporter._count_data([self.log_data_1, self.log_data_2, self.log_data_3]),
         )

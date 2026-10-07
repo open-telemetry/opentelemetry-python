@@ -17,9 +17,7 @@ from opentelemetry.sdk.resources import PROCESS_PID
 def main() -> None:
     exporter = InMemoryLogRecordExporter()
     logger_provider = LoggerProvider(shutdown_on_exit=False)
-    logger_provider.add_log_record_processor(
-        SimpleLogRecordProcessor(exporter)
-    )
+    logger_provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
     logger = logger_provider.get_logger("cached")
     parent_pid = os.getpid()
     parent_resource_pid = logger_provider.resource.attributes[PROCESS_PID]
@@ -36,22 +34,11 @@ def main() -> None:
             json.dumps(
                 {
                     "child_pid": child_pid,
-                    "provider_pid": logger_provider.resource.attributes[
-                        PROCESS_PID
-                    ],
-                    "cached_logger_pid": logger.resource.attributes[
-                        PROCESS_PID
-                    ],
-                    "new_logger_pid": new_logger.resource.attributes[
-                        PROCESS_PID
-                    ],
-                    "exported_resource_pids": [
-                        log.resource.attributes[PROCESS_PID]
-                        for log in finished_logs
-                    ],
-                    "log_bodies": sorted(
-                        log.log_record.body for log in finished_logs
-                    ),
+                    "provider_pid": logger_provider.resource.attributes[PROCESS_PID],
+                    "cached_logger_pid": logger.resource.attributes[PROCESS_PID],
+                    "new_logger_pid": new_logger.resource.attributes[PROCESS_PID],
+                    "exported_resource_pids": [log.resource.attributes[PROCESS_PID] for log in finished_logs],
+                    "log_bodies": sorted(log.log_record.body for log in finished_logs),
                 }
             ),
             flush=True,
@@ -66,12 +53,8 @@ def main() -> None:
                 "parent_pid": parent_pid,
                 "parent_resource_pid": parent_resource_pid,
                 "parent_logger_pid": parent_logger_pid,
-                "parent_resource_pid_after_fork": logger_provider.resource.attributes[
-                    PROCESS_PID
-                ],
-                "parent_logger_pid_after_fork": logger.resource.attributes[
-                    PROCESS_PID
-                ],
+                "parent_resource_pid_after_fork": logger_provider.resource.attributes[PROCESS_PID],
+                "parent_logger_pid_after_fork": logger.resource.attributes[PROCESS_PID],
             }
         ),
         flush=True,

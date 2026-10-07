@@ -5,19 +5,10 @@
 from collections.abc import Callable, Generator, Iterable, Sequence
 from typing import Final
 
-from opentelemetry.metrics import (
-    CallbackOptions,
-    Meter,
-    ObservableGauge,
-    Observation,
-    UpDownCounter,
-)
+from opentelemetry.metrics import CallbackOptions, Meter, ObservableGauge, Observation, UpDownCounter
 
 # pylint: disable=invalid-name
-CallbackT = (
-    Callable[[CallbackOptions], Iterable[Observation]]
-    | Generator[Iterable[Observation], CallbackOptions, None]
-)
+CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
 
 
 VCS_CHANGE_COUNT: Final = "vcs.change.count"
@@ -45,9 +36,7 @@ Unit: s
 """
 
 
-def create_vcs_change_duration(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_vcs_change_duration(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The time duration a change (pull request/merge request/changelist) has been in a given state"""
     return meter.create_observable_gauge(
         name=VCS_CHANGE_DURATION,
@@ -65,9 +54,7 @@ Unit: s
 """
 
 
-def create_vcs_change_time_to_approval(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_vcs_change_time_to_approval(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The amount of time since its creation it took a change (pull request/merge request/changelist) to get the first approval"""
     return meter.create_observable_gauge(
         name=VCS_CHANGE_TIME_TO_APPROVAL,
@@ -85,9 +72,7 @@ Unit: s
 """
 
 
-def create_vcs_change_time_to_merge(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_vcs_change_time_to_merge(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The amount of time since its creation it took a change (pull request/merge request/changelist) to get merged into the target(base) ref"""
     return meter.create_observable_gauge(
         name=VCS_CHANGE_TIME_TO_MERGE,
@@ -105,9 +90,7 @@ Unit: {contributor}
 """
 
 
-def create_vcs_contributor_count(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_vcs_contributor_count(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The number of unique contributors to a repository"""
     return meter.create_observable_gauge(
         name=VCS_CONTRIBUTOR_COUNT,
@@ -145,9 +128,7 @@ If number of lines added/removed should be calculated from the start of time, th
 """
 
 
-def create_vcs_ref_lines_delta(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_vcs_ref_lines_delta(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The number of lines added/removed in a ref (branch) relative to the ref from the `vcs.ref.base.name` attribute"""
     return meter.create_observable_gauge(
         name=VCS_REF_LINES_DELTA,
@@ -167,9 +148,7 @@ instrumentation SHOULD report two measurements: 3 and 2 (both positive numbers) 
 """
 
 
-def create_vcs_ref_revisions_delta(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_vcs_ref_revisions_delta(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """The number of revisions (commits) a ref (branch) is ahead/behind the branch from the `vcs.ref.base.name` attribute"""
     return meter.create_observable_gauge(
         name=VCS_REF_REVISIONS_DELTA,
@@ -187,9 +166,7 @@ Unit: s
 """
 
 
-def create_vcs_ref_time(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_vcs_ref_time(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Time a ref (branch) created from the default branch (trunk) has existed. The `ref.type` attribute will always be `branch`"""
     return meter.create_observable_gauge(
         name=VCS_REF_TIME,

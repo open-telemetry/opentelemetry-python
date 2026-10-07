@@ -60,9 +60,7 @@ def _is_none_equivalent(val_a, val_b):
     return False
 
 
-def assert_proto_json_equal(
-    test_case: unittest.TestCase, obj_a, obj_b, path: str = ""
-):
+def assert_proto_json_equal(test_case: unittest.TestCase, obj_a, obj_b, path: str = ""):
     """Recursively compare two proto_json dataclass objects, treating
     None as equivalent to the type's empty default ([], "", b"", 0, 0.0)."""
     if dataclasses.is_dataclass(obj_a) and dataclasses.is_dataclass(obj_b):
@@ -78,15 +76,11 @@ def assert_proto_json_equal(
             f"List length mismatch at {path}: {len(obj_a)} != {len(obj_b)}",
         )
         for idx, (item_a, item_b) in enumerate(zip(obj_a, obj_b)):
-            assert_proto_json_equal(
-                test_case, item_a, item_b, f"{path}[{idx}]"
-            )
+            assert_proto_json_equal(test_case, item_a, item_b, f"{path}[{idx}]")
     elif _is_none_equivalent(obj_a, obj_b):
         pass
     else:
-        test_case.assertEqual(
-            obj_a, obj_b, f"Mismatch at {path}: {obj_a!r} != {obj_b!r}"
-        )
+        test_case.assertEqual(obj_a, obj_b, f"Mismatch at {path}: {obj_a!r} != {obj_b!r}")
 
 
 def make_span_unended(
@@ -148,11 +142,7 @@ def make_span(
 
 
 def make_log_context(trace_id=TRACE_ID, span_id=SPAN_ID):
-    return set_span_in_context(
-        NonRecordingSpan(
-            SpanContext(trace_id, span_id, False, TraceFlags(0x01))
-        )
-    )
+    return set_span_in_context(NonRecordingSpan(SpanContext(trace_id, span_id, False, TraceFlags(0x01))))
 
 
 def make_log(
@@ -345,8 +335,7 @@ def make_exponential_histogram(
                     sum=sum_value,
                     scale=scale,
                     zero_count=zero_count,
-                    positive=positive
-                    or Buckets(offset=0, bucket_counts=[1, 2, 3]),
+                    positive=positive or Buckets(offset=0, bucket_counts=[1, 2, 3]),
                     negative=negative or Buckets(offset=1, bucket_counts=[1]),
                     flags=flags,
                     min=min_value,

@@ -61,10 +61,7 @@ def check_file(path):
     if len(lines) < start + 2:
         return False
 
-    return (
-        lines[start] == EXPECTED_LINES[0]
-        and lines[start + 1] == EXPECTED_LINES[1]
-    )
+    return lines[start] == EXPECTED_LINES[0] and lines[start + 1] == EXPECTED_LINES[1]
 
 
 def main():

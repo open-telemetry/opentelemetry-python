@@ -27,11 +27,9 @@ _component_counter = Counter()
 
 
 class ProcessorMetricsT(Protocol):
-    def register_queue_size(
-        self, get_queue_size: Callable[[], int]
-    ) -> None: ...
+    def register_queue_size(self, get_queue_size: Callable[[], int]) -> None: ...
 
-    def drop_items(self, count: int) -> None: ...
+    def drop_items(self, count: int, error_type: str = "queue_full") -> None: ...
 
     def finish_items(self, count: int) -> None: ...
 
@@ -40,7 +38,7 @@ class NoOpProcessorMetrics:
     def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
         pass
 
-    def drop_items(self, count: int) -> None:
+    def drop_items(self, count: int, error_type: str = "queue_full") -> None:
         pass
 
     def finish_items(self, count: int) -> None:
@@ -73,16 +71,22 @@ class ProcessorMetrics:
             ERROR_TYPE: "queue_full",
         }
 
+        self._already_shutdown_attrs = {
+            **self._standard_attrs,
+            ERROR_TYPE: "already_shutdown",
+        }
+
+        self._recursion_attrs = {
+            **self._standard_attrs,
+            ERROR_TYPE: "recursion",
+        }
+
         if signal == "traces":
             create_processed = create_otel_sdk_processor_span_processed
-            create_queue_capacity = (
-                create_otel_sdk_processor_span_queue_capacity
-            )
+            create_queue_capacity = create_otel_sdk_processor_span_queue_capacity
         else:
             create_processed = create_otel_sdk_processor_log_processed
-            create_queue_capacity = (
-                create_otel_sdk_processor_log_queue_capacity
-            )
+            create_queue_capacity = create_otel_sdk_processor_log_queue_capacity
 
         self._processed = create_processed(meter)
 
@@ -112,8 +116,13 @@ class ProcessorMetrics:
             unit=queue_size_unit,
         )
 
-    def drop_items(self, count: int) -> None:
-        self._processed.add(count, self._dropped_attrs)
+    def drop_items(self, count: int, error_type: str = "queue_full") -> None:
+        if error_type == "already_shutdown":
+            self._processed.add(count, self._already_shutdown_attrs)
+        elif error_type == "recursion":
+            self._processed.add(count, self._recursion_attrs)
+        else:
+            self._processed.add(count, self._dropped_attrs)
 
     def finish_items(self, count: int) -> None:
         self._processed.add(count, self._standard_attrs)

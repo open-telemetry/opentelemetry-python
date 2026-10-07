@@ -14,9 +14,7 @@ from opentelemetry.instrumentation.django import DjangoInstrumentor
 
 
 def main():
-    os.environ.setdefault(
-        "DJANGO_SETTINGS_MODULE", "instrumentation_example.settings"
-    )
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "instrumentation_example.settings")
 
     # This call is what makes the Django application be instrumented
     DjangoInstrumentor().instrument()

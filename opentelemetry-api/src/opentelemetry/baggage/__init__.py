@@ -51,9 +51,7 @@ def get_baggage(name: str, context: Context | None = None) -> object | None:
     return _get_baggage_value(context=context).get(name)
 
 
-def set_baggage(
-    name: str, value: object, context: Context | None = None
-) -> Context:
+def set_baggage(name: str, value: object, context: Context | None = None) -> Context:
     """Sets a value in the Baggage
 
     Args:
@@ -110,7 +108,8 @@ def _is_valid_key(name: str) -> bool:
 
 def _is_valid_value(value: object) -> bool:
     parts = str(value).split(";")
-    is_valid_value = _VALUE_PATTERN.fullmatch(parts[0]) is not None
+    # W3C Baggage allows optional whitespace between the value and ";"
+    is_valid_value = _VALUE_PATTERN.fullmatch(parts[0].rstrip(" \t")) is not None
     if len(parts) > 1:  # one or more properties metadata
         for property in parts[1:]:
             if _PROPERT_PATTERN.fullmatch(property) is None:

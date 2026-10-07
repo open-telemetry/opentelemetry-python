@@ -86,17 +86,10 @@ def test_all_release_packages_are_listed_in_eachdist():
 
     config = ConfigParser()
     config.read(root / "eachdist.ini")
-    eachdist_package_names = set(config["stable"]["packages"].split()) | set(
-        config["prerelease"]["packages"].split()
-    )
+    eachdist_package_names = set(config["stable"]["packages"].split()) | set(config["prerelease"]["packages"].split())
 
-    missing_package_names = sorted(
-        releasable_package_names - eachdist_package_names
-    )
-    assert not missing_package_names, (
-        "packages missing from eachdist.ini: "
-        f"{', '.join(missing_package_names)}"
-    )
+    missing_package_names = sorted(releasable_package_names - eachdist_package_names)
+    assert not missing_package_names, f"packages missing from eachdist.ini: {', '.join(missing_package_names)}"
 
 
 def test_update_dependencies_matches_exact_package_name(tmp_path):
@@ -104,8 +97,7 @@ def test_update_dependencies_matches_exact_package_name(tmp_path):
     target = tmp_path / "target"
     write_pyproject(
         target,
-        '"opentelemetry-proto == 1.44.0.dev",\n'
-        '  "opentelemetry-proto-json == 0.65b0.dev",',
+        '"opentelemetry-proto == 1.44.0.dev",\n  "opentelemetry-proto-json == 0.65b0.dev",',
     )
 
     eachdist.update_dependencies(
@@ -124,8 +116,7 @@ def test_update_patch_dependencies_matches_exact_package_name(tmp_path):
     target = tmp_path / "target"
     write_pyproject(
         target,
-        '"opentelemetry-proto == 1.43.0",\n'
-        '  "opentelemetry-proto-json == 1.43.0",',
+        '"opentelemetry-proto == 1.43.0",\n  "opentelemetry-proto-json == 1.43.0",',
     )
 
     eachdist.update_patch_dependencies(
@@ -162,14 +153,10 @@ def test_update_version_files_matches_exact_project_name(tmp_path):
     )
 
     assert (
-        proto.joinpath("src/opentelemetry/version/__init__.py").read_text(
-            encoding="utf-8"
-        )
+        proto.joinpath("src/opentelemetry/version/__init__.py").read_text(encoding="utf-8")
         == '__version__ = "1.45.0.dev"\n'
     )
     assert (
-        proto_json.joinpath("src/opentelemetry/version/__init__.py").read_text(
-            encoding="utf-8"
-        )
+        proto_json.joinpath("src/opentelemetry/version/__init__.py").read_text(encoding="utf-8")
         == '__version__ = "0.65b0.dev"\n'
     )

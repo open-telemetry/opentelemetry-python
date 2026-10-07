@@ -153,6 +153,6 @@ Distinguished name of subject of the x.509 certificate presented by the server.
 
 class TlsProtocolNameValues(Enum):
     SSL = "ssl"
-    """ssl."""
+    """SSL."""
     TLS = "tls"
-    """tls."""
+    """TLS."""

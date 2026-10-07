@@ -16,9 +16,7 @@ FEATURE_FLAG_ERROR_MESSAGE: Final = "feature_flag.error.message"
 A message providing more detail about an error that occurred during feature flag evaluation in human-readable form.
 """
 
-FEATURE_FLAG_EVALUATION_ERROR_MESSAGE: Final = (
-    "feature_flag.evaluation.error.message"
-)
+FEATURE_FLAG_EVALUATION_ERROR_MESSAGE: Final = "feature_flag.evaluation.error.message"
 """
 Deprecated: Replaced by `feature_flag.error.message`.
 """
@@ -78,9 +76,7 @@ The version of the ruleset used during the evaluation. This may be any stable va
 """
 
 
-@deprecated(
-    "The attribute feature_flag.evaluation.reason is deprecated - Replaced by `feature_flag.result.reason`"
-)
+@deprecated("The attribute feature_flag.evaluation.reason is deprecated - Replaced by `feature_flag.result.reason`")
 class FeatureFlagEvaluationReasonValues(Enum):
     STATIC = "static"
     """The resolved value is static (no dynamic evaluation)."""

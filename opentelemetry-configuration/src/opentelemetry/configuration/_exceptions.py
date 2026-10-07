@@ -46,14 +46,8 @@ class MissingDependencyError(ConfigurationError, ImportError):
             install_cmd = f"pip install {self.install_name}"
 
         if feature:
-            message = (
-                f"{feature} requires '{package}'. "
-                f"Install it with: {install_cmd}"
-            )
+            message = f"{feature} requires '{package}'. Install it with: {install_cmd}"
         else:
-            message = (
-                f"'{package}' is required but not installed. "
-                f"Install it with: {install_cmd}"
-            )
+            message = f"'{package}' is required but not installed. Install it with: {install_cmd}"
 
         super().__init__(message)

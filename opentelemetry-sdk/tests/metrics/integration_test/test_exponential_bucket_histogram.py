@@ -71,13 +71,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
-        metric_data = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
+        metric_data = results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
         previous_time_unix_nano = metric_data.time_unix_nano
 
@@ -93,29 +87,18 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(metric_data.sum, self.test_values[0])
 
         for index, metrics_data in enumerate(results[1:]):
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                previous_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(previous_time_unix_nano, metric_data.start_time_unix_nano)
             previous_time_unix_nano = metric_data.time_unix_nano
             self.assertEqual(metric_data.positive.bucket_counts, [1])
             self.assertEqual(metric_data.negative.bucket_counts, [0])
-            self.assertLess(
-                metric_data.start_time_unix_nano, metric_data.time_unix_nano
-            )
+            self.assertLess(metric_data.start_time_unix_nano, metric_data.time_unix_nano)
             self.assertEqual(metric_data.min, self.test_values[index + 1])
             self.assertEqual(metric_data.max, self.test_values[index + 1])
             # Using assertAlmostEqual here because in 3.12 resolution can cause
             # these checks to fail.
-            self.assertAlmostEqual(
-                metric_data.sum, self.test_values[index + 1]
-            )
+            self.assertAlmostEqual(metric_data.sum, self.test_values[index + 1])
 
         # The test scenario here is calling collect without calling aggregate
         # immediately before, but having aggregate being called before at some
@@ -142,26 +125,12 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         histogram.record(2)
         results.append(reader.get_metrics_data())
 
-        metric_data_0 = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
-        metric_data_2 = (
-            results[2]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
+        metric_data_0 = results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
+        metric_data_2 = results[2].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
         self.assertIsNone(results[1])
 
-        self.assertGreater(
-            metric_data_2.start_time_unix_nano, metric_data_0.time_unix_nano
-        )
+        self.assertGreater(metric_data_2.start_time_unix_nano, metric_data_0.time_unix_nano)
 
         provider.shutdown()
 
@@ -178,9 +147,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         reader = InMemoryMetricReader(
             preferred_aggregation={Histogram: aggregation},
-            preferred_temporality={
-                Histogram: AggregationTemporality.CUMULATIVE
-            },
+            preferred_temporality={Histogram: AggregationTemporality.CUMULATIVE},
         )
 
         provider = MeterProvider(metric_readers=[reader])
@@ -205,13 +172,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
-        metric_data = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
+        metric_data = results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
         start_time_unix_nano = metric_data.start_time_unix_nano
 
@@ -226,33 +187,18 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         previous_time_unix_nano = metric_data.time_unix_nano
 
         for index, metrics_data in enumerate(results[1:]):
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
-            self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
-            )
+            self.assertEqual(start_time_unix_nano, metric_data.start_time_unix_nano)
             self.assertLess(
                 metric_data.start_time_unix_nano,
                 metric_data.time_unix_nano,
             )
-            self.assertEqual(
-                metric_data.min, min(self.test_values[: index + 2])
-            )
-            self.assertEqual(
-                metric_data.max, max(self.test_values[: index + 2])
-            )
-            self.assertAlmostEqual(
-                metric_data.sum, sum(self.test_values[: index + 2])
-            )
+            self.assertEqual(metric_data.min, min(self.test_values[: index + 2]))
+            self.assertEqual(metric_data.max, max(self.test_values[: index + 2]))
+            self.assertAlmostEqual(metric_data.sum, sum(self.test_values[: index + 2]))
 
-            self.assertGreater(
-                metric_data.time_unix_nano, previous_time_unix_nano
-            )
+            self.assertGreater(metric_data.time_unix_nano, previous_time_unix_nano)
 
             previous_time_unix_nano = metric_data.time_unix_nano
 
@@ -284,13 +230,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         provider.shutdown()
 
-        metric_data = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-        )
+        metric_data = results[0].resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
         start_time_unix_nano = metric_data.start_time_unix_nano
 
@@ -305,12 +245,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         previous_metric_data = metric_data
 
         for index, metrics_data in enumerate(results[1:]):
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
+            metric_data = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points[0]
 
             self.assertEqual(
                 previous_metric_data.start_time_unix_nano,

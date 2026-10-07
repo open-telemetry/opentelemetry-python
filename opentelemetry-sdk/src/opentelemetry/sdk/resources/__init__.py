@@ -58,6 +58,7 @@ import logging
 import os
 import platform
 import socket
+import subprocess
 import sys
 import threading
 import uuid
@@ -65,7 +66,6 @@ from collections.abc import Mapping, Sequence
 from json import dumps
 from os import environ
 from types import ModuleType
-from typing import cast
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
@@ -78,7 +78,7 @@ from opentelemetry.sdk.version import (
     __version__ as _OPENTELEMETRY_SDK_VERSION,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util.types import AttributeValue
+from opentelemetry.util.types import AnyValue
 
 psutil: ModuleType | None = None
 
@@ -89,10 +89,19 @@ try:
 except ImportError:
     pass
 
-LabelValue = AttributeValue
+# Only available on Windows, where it is used to read the MachineGuid for host.id.
+winreg: ModuleType | None = None
+
+try:
+    import winreg as winreg_module
+
+    winreg = winreg_module
+except ImportError:
+    pass
+
+LabelValue = AnyValue
 Attributes = Mapping[str, LabelValue]
 logger = logging.getLogger(__name__)
-
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
 CLOUD_REGION = ResourceAttributes.CLOUD_REGION
@@ -108,6 +117,7 @@ FAAS_VERSION = ResourceAttributes.FAAS_VERSION
 FAAS_INSTANCE = ResourceAttributes.FAAS_INSTANCE
 HOST_NAME = ResourceAttributes.HOST_NAME
 HOST_ARCH = ResourceAttributes.HOST_ARCH
+HOST_ID = ResourceAttributes.HOST_ID
 HOST_TYPE = ResourceAttributes.HOST_TYPE
 HOST_IMAGE_NAME = ResourceAttributes.HOST_IMAGE_NAME
 HOST_IMAGE_ID = ResourceAttributes.HOST_IMAGE_ID
@@ -158,12 +168,15 @@ class Resource:
 
     _attributes: BoundedAttributes
     _schema_url: str
+    _schema_url_conflict: bool
 
     def __init__(self, attributes: Attributes, schema_url: str | None = None):
-        self._attributes = BoundedAttributes(attributes=attributes)
+        # Immutable set to true so attributes cannot be added or removed after creation.
+        self._attributes = BoundedAttributes(attributes=attributes, immutable=True)
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
+        self._schema_url_conflict = False
 
     @staticmethod
     def create(
@@ -185,21 +198,15 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        resource = get_aggregated_resources(
-            _build_resource_detectors(), _DEFAULT_RESOURCE
-        ).merge(Resource(attributes, schema_url))
+        resource = get_aggregated_resources(_build_resource_detectors(), _DEFAULT_RESOURCE).merge(
+            Resource(attributes, schema_url)
+        )
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
-            process_executable_name = cast(
-                str | None,
-                resource.attributes.get(PROCESS_EXECUTABLE_NAME, None),
-            )
-            if process_executable_name:
-                default_service_name += ":" + process_executable_name
-            resource = resource.merge(
-                Resource({SERVICE_NAME: default_service_name}, schema_url)
-            )
+            if sys.executable:
+                default_service_name += f":{os.path.basename(sys.executable)}"
+            resource = resource.merge(Resource({SERVICE_NAME: default_service_name}, schema_url))
         return resource
 
     @staticmethod
@@ -218,12 +225,15 @@ class Resource:
         """Merges this resource and an updating resource into a new `Resource`.
 
         If a key exists on both the old and updating resource, the value of the
-        updating resource will override the old resource value.
+        updating resource will override the old resource value. Attributes are
+        always merged, regardless of `schema_url`.
 
         The updating resource's `schema_url` will be used only if the old
-        `schema_url` is empty. Attempting to merge two resources with
-        different, non-empty values for `schema_url` will result in an error
-        and return the old resource.
+        `schema_url` is empty. If both resources have a non-empty
+        `schema_url` and they differ, no common schema URL can be
+        established: the merged resource's `schema_url` is cleared (set to
+        the empty string). Once a resource's `schema_url` has been cleared
+        this way, it stays cleared through any further merges.
 
         Args:
             other: The other resource to be merged.
@@ -234,20 +244,28 @@ class Resource:
         merged_attributes = dict(self.attributes)
         merged_attributes.update(other.attributes)
 
-        if self.schema_url == "":
-            schema_url = other.schema_url
-        elif other.schema_url == "":
-            schema_url = self.schema_url
-        elif self.schema_url == other.schema_url:
-            schema_url = other.schema_url
-        else:
-            logger.error(
-                "Failed to merge resources: The two schemas %s and %s are incompatible",
-                self.schema_url,
-                other.schema_url,
-            )
-            return self
-        return Resource(merged_attributes, schema_url)
+        # pylint: disable-next=protected-access
+        conflict = self._schema_url_conflict or other._schema_url_conflict
+        schema_url = ""
+        if not conflict:
+            if self.schema_url == "":
+                schema_url = other.schema_url
+            elif other.schema_url == "":
+                schema_url = self.schema_url
+            elif self.schema_url == other.schema_url:
+                schema_url = other.schema_url
+            else:
+                conflict = True
+                logger.warning(
+                    "Could not find a common schema URL between %s and %s, clearing schema_url",
+                    self.schema_url,
+                    other.schema_url,
+                )
+
+        merged_resource = Resource(merged_attributes, schema_url)
+        # pylint: disable-next=protected-access
+        merged_resource._schema_url_conflict = conflict
+        return merged_resource
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
@@ -255,11 +273,13 @@ class Resource:
         return (
             self._attributes == other._attributes
             and self._schema_url == other._schema_url
+            and self._schema_url_conflict == other._schema_url_conflict
         )
 
     def __hash__(self) -> int:
         return hash(
-            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
+            f"{dumps(self._attributes.copy(), sort_keys=True, default=_json_default)}"
+            f"|{self._schema_url}|{self._schema_url_conflict}"
         )
 
     def to_json(self, indent: int | None = 4) -> str:
@@ -269,7 +289,21 @@ class Resource:
                 "schema_url": self._schema_url,
             },
             indent=indent,
+            default=_json_default,
         )
+
+
+def _json_default(value: object) -> str:
+    """Represent attribute values that `json` cannot encode natively.
+
+    `types.AnyValue` admits `bytes`, which `json.dumps` rejects. Rendering it
+    as hex keeps `to_json` readable and keeps `__hash__` working; `__eq__`
+    still distinguishes `b"\x01"` from the string `"01"`, so the resulting
+    hash collision is harmless.
+    """
+    if isinstance(value, (bytes, bytearray)):
+        return value.hex()
+    return str(value)
 
 
 _EMPTY_RESOURCE = Resource({})
@@ -317,7 +351,7 @@ class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
-        env_resource_map: dict[str, AttributeValue] = {}
+        env_resource_map: dict[str, AnyValue] = {}
 
         if env_resources_items:
             for item in env_resources_items.split(","):
@@ -368,28 +402,26 @@ class ProcessResourceDetector(ResourceDetector):
                 str,
                 (
                     sys.version_info[:3]
-                    if sys.version_info.releaselevel == "final"
-                    and not sys.version_info.serial
+                    if sys.version_info.releaselevel == "final" and not sys.version_info.serial
                     else sys.version_info
                 ),
             )
         )
         _process_pid = os.getpid()
-        _process_executable_name = sys.executable
-        _process_executable_path = os.path.dirname(_process_executable_name)
         # Use sys.orig_argv, which preserves the original arguments received
         # by the interpreter. This correctly captures ``python -m <module>``
         # invocations where sys.argv is rewritten to the resolved module path
         # and the ``-m <module>`` information is lost. Only read argv[0] by
         # default because full command arguments are opt-in.
         _process_command = sys.orig_argv[0] if sys.orig_argv else ""
-        resource_info: dict[str, AttributeValue] = {
+        executable = sys.executable or ""
+        resource_info: dict[str, AnyValue] = {
             PROCESS_RUNTIME_DESCRIPTION: sys.version,
             PROCESS_RUNTIME_NAME: sys.implementation.name,
             PROCESS_RUNTIME_VERSION: _runtime_version,
             PROCESS_PID: _process_pid,
-            PROCESS_EXECUTABLE_NAME: _process_executable_name,
-            PROCESS_EXECUTABLE_PATH: _process_executable_path,
+            PROCESS_EXECUTABLE_NAME: os.path.basename(executable),
+            PROCESS_EXECUTABLE_PATH: executable,
             PROCESS_COMMAND: _process_command,
         }
         if self._include_command_args:
@@ -493,18 +525,131 @@ class OsResourceDetector(ResourceDetector):
         )
 
 
+# Non-privileged machine id sources per the semantic conventions:
+# https://opentelemetry.io/docs/specs/semconv/resource/host/#non-privileged-machine-id-lookup
+_LINUX_MACHINE_ID_PATHS = ("/etc/machine-id", "/var/lib/dbus/machine-id")
+_BSD_HOSTID_PATH = "/etc/hostid"
+_BSD_KENV_COMMAND = ("/bin/kenv", "-q", "smbios.system.uuid")
+_MACOS_IOREG_COMMAND = ("/usr/sbin/ioreg", "-rd1", "-c", "IOPlatformExpertDevice")
+_WINDOWS_CRYPTOGRAPHY_KEY = r"SOFTWARE\Microsoft\Cryptography"
+_WINDOWS_MACHINE_GUID_VALUE = "MachineGuid"
+# Deliberately below get_aggregated_resources' per detector timeout so that a
+# hung command still leaves time for host.name and host.arch to be returned.
+_COMMAND_TIMEOUT_SECONDS = 2
+
+
+def _read_machine_id_file(path: str) -> str | None:
+    try:
+        with open(path, encoding="utf8") as machine_id_file:
+            return machine_id_file.read().strip() or None
+    except OSError as exception:
+        logger.debug("Failed to read %s: %s", path, exception)
+        return None
+
+
+def _run_command(command: tuple[str, ...]) -> str:
+    """Returns the command's stdout, or "" when the source is unavailable here.
+
+    A non-zero exit or a missing binary means this host has no machine id to
+    offer.
+    """
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=_COMMAND_TIMEOUT_SECONDS,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as exception:
+        logger.debug("Failed to run %s: %s", command[0], exception)
+        return ""
+    return completed.stdout
+
+
+def _get_linux_machine_id() -> str | None:
+    for path in _LINUX_MACHINE_ID_PATHS:
+        machine_id = _read_machine_id_file(path)
+        if machine_id:
+            return machine_id
+    return None
+
+
+def _get_bsd_machine_id() -> str | None:
+    return _read_machine_id_file(_BSD_HOSTID_PATH) or _run_command(_BSD_KENV_COMMAND).strip() or None
+
+
+def _get_macos_machine_id() -> str | None:
+    for line in _run_command(_MACOS_IOREG_COMMAND).splitlines():
+        # The line looks like: `    "IOPlatformUUID" = "AAAAAAAA-BBBB-..."`
+        key, separator, value = line.partition("=")
+        if not separator or key.strip().strip('"') != "IOPlatformUUID":
+            continue
+
+        machine_id = value.strip().strip('"')
+        if machine_id:
+            return machine_id
+    return None
+
+
+def _get_windows_machine_id() -> str | None:
+    if winreg is None:
+        logger.debug("winreg is unavailable, cannot detect %s", HOST_ID)
+        return None
+    with winreg.OpenKey(
+        winreg.HKEY_LOCAL_MACHINE,
+        _WINDOWS_CRYPTOGRAPHY_KEY,
+        access=winreg.KEY_READ | winreg.KEY_WOW64_64KEY,
+    ) as key:
+        machine_guid, _ = winreg.QueryValueEx(key, _WINDOWS_MACHINE_GUID_VALUE)
+    return str(machine_guid) if machine_guid else None
+
+
+def _get_host_id() -> str | None:
+    system = platform.system()
+    if system == "Linux":
+        return _get_linux_machine_id()
+    if system == "Darwin":
+        return _get_macos_machine_id()
+    if system == "Windows":
+        return _get_windows_machine_id()
+    if system == "DragonFly" or system.endswith("BSD"):
+        return _get_bsd_machine_id()
+    logger.debug("Unsupported OS type for %s detection: %s", HOST_ID, system)
+    return None
+
+
 class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass]
     """
-    The HostResourceDetector detects the hostname and architecture attributes.
+    The HostResourceDetector detects the hostname, architecture and host id
+    attributes.
+
+    ``host.id`` is the non-privileged machine id described by the `Host resource
+    conventions <https://opentelemetry.io/docs/specs/semconv/resource/host/>`_,
+    and is omitted when it cannot be determined. A failed lookup does not
+    prevent ``host.name`` and ``host.arch`` from being detected unless
+    ``raise_on_error=True``.
     """
 
     def detect(self) -> "Resource":
-        return Resource(
-            {
-                HOST_NAME: socket.gethostname(),
-                HOST_ARCH: platform.machine(),
-            }
-        )
+        resource_info: dict[str, AnyValue] = {
+            HOST_NAME: socket.gethostname(),
+            HOST_ARCH: platform.machine(),
+        }
+
+        # A failed host id lookup must not cost the caller the attributes above,
+        # so it is guarded here rather than relying on the handling in
+        # get_aggregated_resources: detect() is also called directly.
+        try:
+            if host_id := _get_host_id():
+                resource_info[HOST_ID] = host_id
+        # pylint: disable=broad-exception-caught
+        except Exception as exception:
+            logger.warning("Failed to detect %s: %s", HOST_ID, exception)
+            if self.raise_on_error:
+                raise
+
+        return Resource(resource_info)
 
 
 class ServiceInstanceIdResourceDetector(ResourceDetector):
@@ -532,10 +677,7 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
         global _service_instance_id, _service_instance_id_pid
         with _service_instance_id_lock:
             current_pid = os.getpid()
-            if (
-                _service_instance_id is None
-                or _service_instance_id_pid != current_pid
-            ):
+            if _service_instance_id is None or _service_instance_id_pid != current_pid:
                 _service_instance_id = str(uuid.uuid4())
                 _service_instance_id_pid = current_pid
             instance_id = _service_instance_id
@@ -548,24 +690,17 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     Fast path: if no extra detectors are configured, returns only the two
     built-in detectors without scanning entry_points.
 
-    "service_instance" (ServiceInstanceIdResourceDetector) and "otel"
-    (OTELResourceDetector) are always appended as defaults. "otel" is last so
+    "service_instance" (ServiceInstanceIdResourceDetector) is prepended unless
+    it is explicitly configured. "otel" (OTELResourceDetector) is last so
     that OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge
-    priority, but an explicit position in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
-    is respected for either name.
+    priority, but an explicit position in
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS is respected for either name.
     """
-    detector_names: list[str] = list(
-        dict.fromkeys(
-            [
-                name.strip()
-                for name in environ.get(
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, ""
-                ).split(",")
-                if name.strip()
-            ]
-            + ["service_instance", "otel"]
-        )
-    )
+    configured_detector_names = [
+        name.strip() for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",") if name.strip()
+    ]
+    default_detector_names = [] if "service_instance" in configured_detector_names else ["service_instance"]
+    detector_names: list[str] = list(dict.fromkeys(default_detector_names + configured_detector_names + ["otel"]))
 
     # Fast path: only the two built-in detectors — no entry_points scan needed.
     if detector_names == ["service_instance", "otel"]:
@@ -579,16 +714,12 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     if "*" in detector_names:
         registered = set(
             name
-            for name in entry_points(
-                group="opentelemetry_resource_detector"
-            ).names  # type: ignore[reportUnknownArgumentType]
+            for name in entry_points(group="opentelemetry_resource_detector").names  # type: ignore[reportUnknownArgumentType]
             if name != "otel"
         )
         expansion = sorted(registered - set(detector_names))
         idx = detector_names.index("*")
-        detector_names = (
-            detector_names[:idx] + expansion + detector_names[idx + 1 :]
-        )
+        detector_names = detector_names[:idx] + expansion + detector_names[idx + 1 :]
 
     detectors: list[ResourceDetector] = []
     for name in detector_names:
@@ -613,11 +744,7 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
 
 def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
     return get_aggregated_resources(
-        [
-            detector
-            for detector in _build_resource_detectors()
-            if detector.is_process_dependent()
-        ],
+        [detector for detector in _build_resource_detectors() if detector.is_process_dependent()],
         Resource.get_empty(),
     )
 
@@ -636,7 +763,12 @@ def get_aggregated_resources(
     """
     detectors_merged_resource = initial_resource or Resource.create()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    # A detector that exceeds `timeout` is skipped, but shutdown still joins
+    # its worker so no threads outlive this call. A detector that blocks
+    # indefinitely therefore blocks this call. `cancel_futures=True` drops
+    # detectors that have not started yet if a `raise_on_error` detector raises.
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+    try:
         futures = [executor.submit(detector.detect) for detector in detectors]
         for detector_ind, future in enumerate(futures):
             detector = detectors[detector_ind]
@@ -655,12 +787,10 @@ def get_aggregated_resources(
             except Exception as ex:
                 if detector.raise_on_error:
                     raise ex
-                logger.warning(
-                    "Exception %s in detector %s, ignoring", ex, detector
-                )
+                logger.warning("Exception %s in detector %s, ignoring", ex, detector)
             finally:
-                detectors_merged_resource = detectors_merged_resource.merge(
-                    detected_resource
-                )
+                detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
+    finally:
+        executor.shutdown(wait=True, cancel_futures=True)
 
     return detectors_merged_resource

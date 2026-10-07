@@ -26,9 +26,7 @@ class NoOpMetricReaderMetrics:
 
 
 class MetricReaderMetrics:
-    def __init__(
-        self, component_type: str, meter_provider: MeterProvider
-    ) -> None:
+    def __init__(self, component_type: str, meter_provider: MeterProvider) -> None:
         meter = meter_provider.get_meter("opentelemetry-sdk")
 
         count = _component_counter[component_type]
@@ -39,9 +37,7 @@ class MetricReaderMetrics:
             OTEL_COMPONENT_NAME: f"{component_type}/{count}",
         }
 
-        self._collection_duration = (
-            create_otel_sdk_metric_reader_collection_duration(meter)
-        )
+        self._collection_duration = create_otel_sdk_metric_reader_collection_duration(meter)
 
     def record_collection(self, duration: float) -> None:
         self._collection_duration.record(duration, self._standard_attrs)

@@ -1,13 +1,19 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 #
+import logging
 import re
 
 from opentelemetry import trace
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace import format_span_id, format_trace_id
-from opentelemetry.trace.span import TraceState
+from opentelemetry.trace.span import (
+    _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH,
+    TraceState,
+)
+
+_logger = logging.getLogger(__name__)
 
 
 class TraceContextTextMapPropagator(textmap.TextMapPropagator):
@@ -15,10 +21,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     _TRACEPARENT_HEADER_NAME = "traceparent"
     _TRACESTATE_HEADER_NAME = "tracestate"
-    _TRACEPARENT_HEADER_FORMAT = (
-        "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
-        + "(-.*)?[ \t]*$"
-    )
+    _TRACEPARENT_HEADER_FORMAT = "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})" + "(-.*)?[ \t]*$"
     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
 
     def extract(
@@ -60,6 +63,16 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
         if tracestate_headers is None:
             tracestate = None
+        elif (
+            # multiple header fields are combined with "," (RFC 9110, section 5.3)
+            sum(len(header) for header in tracestate_headers) + len(tracestate_headers) - 1
+            > _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH
+        ):
+            _logger.warning(
+                "tracestate header exceeded the maximum length of %d characters",
+                _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH,
+            )
+            tracestate = None
         else:
             tracestate = TraceState.from_header(tracestate_headers)
 
@@ -70,9 +83,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_flags=trace.TraceFlags(int(trace_flags, 16)),
             trace_state=tracestate,
         )
-        return trace.set_span_in_context(
-            trace.NonRecordingSpan(span_context), context
-        )
+        return trace.set_span_in_context(trace.NonRecordingSpan(span_context), context)
 
     def inject(
         self,
@@ -92,9 +103,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
         if span_context.trace_state:
             tracestate_string = span_context.trace_state.to_header()
-            setter.set(
-                carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
-            )
+            setter.set(carrier, self._TRACESTATE_HEADER_NAME, tracestate_string)
 
     @property
     def fields(self) -> set[str]:

@@ -114,14 +114,10 @@ class ZipkinExporter(SpanExporter):
             The tuple (local_node_ipv4, local_node_ipv6, local_node_port) is used to represent
             the network context of a node in the service graph.
         """
-        self.local_node = NodeEndpoint(
-            local_node_ipv4, local_node_ipv6, local_node_port
-        )
+        self.local_node = NodeEndpoint(local_node_ipv4, local_node_ipv6, local_node_port)
 
         if endpoint is None:
-            endpoint = (
-                environ.get(OTEL_EXPORTER_ZIPKIN_ENDPOINT) or DEFAULT_ENDPOINT
-            )
+            endpoint = environ.get(OTEL_EXPORTER_ZIPKIN_ENDPOINT) or DEFAULT_ENDPOINT
         self.endpoint = endpoint
 
         if version == Protocol.V1:
@@ -130,13 +126,9 @@ class ZipkinExporter(SpanExporter):
             self.encoder = JsonV2Encoder(max_tag_value_length)
 
         self.session = session or requests.Session()
-        self.session.headers.update(
-            {"Content-Type": self.encoder.content_type()}
-        )
+        self.session.headers.update({"Content-Type": self.encoder.content_type()})
         self._closed = False
-        self.timeout = timeout or int(
-            environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10)
-        )
+        self.timeout = timeout or int(environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10))
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are

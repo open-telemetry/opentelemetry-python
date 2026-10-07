@@ -12,7 +12,10 @@ jobs:
       pull-requests: write # required for adding labels to PRs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Install dependencies
         run: pip install toml towncrier
@@ -68,6 +71,7 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-pull-requests: write
 
       - name: Create pull request
         id: create_pr
@@ -90,12 +94,15 @@ jobs:
         if: steps.create_pr.outputs.pr_url != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ steps.create_pr.outputs.pr_url }}
         run: |
-          gh pr edit ${{ steps.create_pr.outputs.pr_url }}  --add-label "prepare-release"
+          gh pr edit "$PR_URL" --add-label "prepare-release"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -127,5 +134,6 @@ jobs:
         if: steps.backport_pr.outputs.pr_url != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ steps.backport_pr.outputs.pr_url }}
         run: |
-          gh pr edit ${{ steps.backport_pr.outputs.pr_url }} --add-label "Skip Changelog"
+          gh pr edit "$PR_URL" --add-label "Skip Changelog"

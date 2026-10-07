@@ -81,6 +81,13 @@ class OTLPLogExporter(LogRecordExporter):
         *,
         _transport: BaseHTTPTransport | None = None,
     ) -> None:
+        """OTLP HTTP JSON log exporter.
+
+        Args:
+            endpoint: Full URL of the OTLP/HTTP signal endpoint, including the signal
+                path. Example: ``http://collector:4318/v1/logs``. For a base URL without a
+                signal path, set the ``OTEL_EXPORTER_OTLP_ENDPOINT`` environment variable.
+        """
         transport = _transport or _build_transport(
             certificate_file,
             client_key_file,
@@ -91,14 +98,9 @@ class OTLPLogExporter(LogRecordExporter):
         )
         self._client = _OTLPHTTPClient(
             transport=transport,
-            endpoint=endpoint
-            or _resolve_endpoint(
-                OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, _DEFAULT_LOGS_EXPORT_PATH
-            ),
+            endpoint=endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, _DEFAULT_LOGS_EXPORT_PATH),
             kind="logs",
-            timeout=timeout
-            if timeout is not None
-            else _resolve_timeout(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT),
+            timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT),
             compression=compression
             if compression is not None
             else _resolve_compression(OTEL_EXPORTER_OTLP_LOGS_COMPRESSION),
@@ -107,9 +109,7 @@ class OTLPLogExporter(LogRecordExporter):
         )
         self._shutdown = False
 
-    def export(
-        self, batch: Sequence[ReadableLogRecord]
-    ) -> LogRecordExportResult:
+    def export(self, batch: Sequence[ReadableLogRecord]) -> LogRecordExportResult:
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogRecordExportResult.FAILURE
@@ -120,11 +120,7 @@ class OTLPLogExporter(LogRecordExporter):
             _logger.error("Failed to encode logs: %s", error)
             return LogRecordExportResult.FAILURE
         export_result = self._client.export(body)
-        return (
-            LogRecordExportResult.SUCCESS
-            if export_result.success
-            else LogRecordExportResult.FAILURE
-        )
+        return LogRecordExportResult.SUCCESS if export_result.success else LogRecordExportResult.FAILURE
 
     def shutdown(self) -> None:
         if self._shutdown:

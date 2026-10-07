@@ -5,20 +5,10 @@
 from collections.abc import Callable, Generator, Iterable, Sequence
 from typing import Final
 
-from opentelemetry.metrics import (
-    CallbackOptions,
-    Counter,
-    Meter,
-    ObservableGauge,
-    Observation,
-    UpDownCounter,
-)
+from opentelemetry.metrics import CallbackOptions, Counter, Meter, ObservableGauge, Observation, UpDownCounter
 
 # pylint: disable=invalid-name
-CallbackT = (
-    Callable[[CallbackOptions], Iterable[Observation]]
-    | Generator[Iterable[Observation], CallbackOptions, None]
-)
+CallbackT = Callable[[CallbackOptions], Iterable[Observation]] | Generator[Iterable[Observation], CallbackOptions, None]
 
 
 HW_BATTERY_CHARGE: Final = "hw.battery.charge"
@@ -29,9 +19,7 @@ Unit: 1
 """
 
 
-def create_hw_battery_charge(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_battery_charge(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Remaining fraction of battery charge"""
     return meter.create_observable_gauge(
         name=HW_BATTERY_CHARGE,
@@ -49,9 +37,7 @@ Unit: 1
 """
 
 
-def create_hw_battery_charge_limit(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_battery_charge_limit(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Lower limit of battery charge fraction to ensure proper operation"""
     return meter.create_observable_gauge(
         name=HW_BATTERY_CHARGE_LIMIT,
@@ -69,9 +55,7 @@ Unit: s
 """
 
 
-def create_hw_battery_time_left(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_battery_time_left(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Time left before battery is completely charged or discharged"""
     return meter.create_observable_gauge(
         name=HW_BATTERY_TIME_LEFT,
@@ -89,9 +73,7 @@ Unit: Hz
 """
 
 
-def create_hw_cpu_speed(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_cpu_speed(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """CPU current frequency"""
     return meter.create_observable_gauge(
         name=HW_CPU_SPEED,
@@ -109,9 +91,7 @@ Unit: Hz
 """
 
 
-def create_hw_cpu_speed_limit(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_cpu_speed_limit(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """CPU maximum frequency"""
     return meter.create_observable_gauge(
         name=HW_CPU_SPEED_LIMIT,
@@ -163,9 +143,7 @@ Unit: rpm
 """
 
 
-def create_hw_fan_speed(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_fan_speed(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Fan speed in revolutions per minute"""
     return meter.create_observable_gauge(
         name=HW_FAN_SPEED,
@@ -183,9 +161,7 @@ Unit: rpm
 """
 
 
-def create_hw_fan_speed_limit(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_fan_speed_limit(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Speed limit in rpm"""
     return meter.create_observable_gauge(
         name=HW_FAN_SPEED_LIMIT,
@@ -203,9 +179,7 @@ Unit: 1
 """
 
 
-def create_hw_fan_speed_ratio(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_fan_speed_ratio(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Fan speed expressed as a fraction of its maximum speed"""
     return meter.create_observable_gauge(
         name=HW_FAN_SPEED_RATIO,
@@ -274,9 +248,7 @@ Unit: 1
 """
 
 
-def create_hw_gpu_memory_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_gpu_memory_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Fraction of GPU memory used"""
     return meter.create_observable_gauge(
         name=HW_GPU_MEMORY_UTILIZATION,
@@ -294,9 +266,7 @@ Unit: 1
 """
 
 
-def create_hw_gpu_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_gpu_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Fraction of time spent in a specific task"""
     return meter.create_observable_gauge(
         name=HW_GPU_UTILIZATION,
@@ -314,9 +284,7 @@ Unit: Cel
 """
 
 
-def create_hw_host_ambient_temperature(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_host_ambient_temperature(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Ambient (external) temperature of the physical host"""
     return meter.create_observable_gauge(
         name=HW_HOST_AMBIENT_TEMPERATURE,
@@ -352,9 +320,7 @@ Unit: Cel
 """
 
 
-def create_hw_host_heating_margin(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_host_heating_margin(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """By how many degrees Celsius the temperature of the physical host can be increased, before reaching a warning threshold on one of the internal sensors"""
     return meter.create_observable_gauge(
         name=HW_HOST_HEATING_MARGIN,
@@ -373,9 +339,7 @@ Note: The overall energy usage of a host MUST be reported using the specific `hw
 """
 
 
-def create_hw_host_power(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_host_power(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Instantaneous power consumed by the entire physical host in Watts (`hw.host.energy` is preferred)"""
     return meter.create_observable_gauge(
         name=HW_HOST_POWER,
@@ -427,9 +391,7 @@ Unit: 1
 """
 
 
-def create_hw_logical_disk_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_logical_disk_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Logical disk space utilization as a fraction"""
     return meter.create_observable_gauge(
         name=HW_LOGICAL_DISK_UTILIZATION,
@@ -481,9 +443,7 @@ Unit: 1
 """
 
 
-def create_hw_network_bandwidth_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_network_bandwidth_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Utilization of the network bandwidth as a fraction"""
     return meter.create_observable_gauge(
         name=HW_NETWORK_BANDWIDTH_UTILIZATION,
@@ -544,9 +504,7 @@ def create_hw_network_up(meter: Meter) -> UpDownCounter:
     )
 
 
-HW_PHYSICAL_DISK_ENDURANCE_UTILIZATION: Final = (
-    "hw.physical_disk.endurance_utilization"
-)
+HW_PHYSICAL_DISK_ENDURANCE_UTILIZATION: Final = "hw.physical_disk.endurance_utilization"
 """
 Endurance remaining for this SSD disk
 Instrument: gauge
@@ -591,9 +549,7 @@ Unit: 1
 """
 
 
-def create_hw_physical_disk_smart(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_physical_disk_smart(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Value of the corresponding [S.M.A.R.T.](https://wikipedia.org/wiki/S.M.A.R.T.) (Self-Monitoring, Analysis, and Reporting Technology) attribute"""
     return meter.create_observable_gauge(
         name=HW_PHYSICAL_DISK_SMART,
@@ -612,9 +568,7 @@ Note: It is recommended to report `hw.energy` instead of `hw.power` when possibl
 """
 
 
-def create_hw_power(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_power(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Instantaneous power consumed by the component"""
     return meter.create_observable_gauge(
         name=HW_POWER,
@@ -666,9 +620,7 @@ Unit: 1
 """
 
 
-def create_hw_power_supply_utilization(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_power_supply_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Utilization of the power supply as a fraction of its maximum output"""
     return meter.create_observable_gauge(
         name=HW_POWER_SUPPLY_UTILIZATION,
@@ -721,9 +673,7 @@ Unit: Cel
 """
 
 
-def create_hw_temperature(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_temperature(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Temperature in degrees Celsius"""
     return meter.create_observable_gauge(
         name=HW_TEMPERATURE,
@@ -741,9 +691,7 @@ Unit: Cel
 """
 
 
-def create_hw_temperature_limit(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_temperature_limit(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Temperature limit in degrees Celsius"""
     return meter.create_observable_gauge(
         name=HW_TEMPERATURE_LIMIT,
@@ -761,9 +709,7 @@ Unit: V
 """
 
 
-def create_hw_voltage(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_voltage(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Voltage measured by the sensor"""
     return meter.create_observable_gauge(
         name=HW_VOLTAGE,
@@ -781,9 +727,7 @@ Unit: V
 """
 
 
-def create_hw_voltage_limit(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_voltage_limit(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Voltage limit in Volts"""
     return meter.create_observable_gauge(
         name=HW_VOLTAGE_LIMIT,
@@ -801,9 +745,7 @@ Unit: V
 """
 
 
-def create_hw_voltage_nominal(
-    meter: Meter, callbacks: Sequence[CallbackT] | None
-) -> ObservableGauge:
+def create_hw_voltage_nominal(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
     """Nominal (expected) voltage"""
     return meter.create_observable_gauge(
         name=HW_VOLTAGE_NOMINAL,

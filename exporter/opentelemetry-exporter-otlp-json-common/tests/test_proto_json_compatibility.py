@@ -207,9 +207,7 @@ def _make_logs():
             attributes={"error.code": 500, "path": "/api"},
             context=ctx,
             resource=Resource({"service.name": "log-svc"}, "resource_schema"),
-            instrumentation_scope=InstrumentationScope(
-                "log_lib", "1.0", "scope_schema"
-            ),
+            instrumentation_scope=InstrumentationScope("log_lib", "1.0", "scope_schema"),
         ),
         make_log(
             body="healthy",
@@ -275,9 +273,7 @@ class TestProtoJsonParseCompatibility(unittest.TestCase):
         proto_expected = proto_encode_metrics(data)
 
         denormalized = _denormalize_otlp_json(json_dict)
-        proto_parsed = ParseDict(
-            denormalized, PB2ExportMetricsServiceRequest()
-        )
+        proto_parsed = ParseDict(denormalized, PB2ExportMetricsServiceRequest())
         self.assertEqual(proto_parsed, proto_expected)
 
     def test_log_parse_compatibility(self):

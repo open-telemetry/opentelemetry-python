@@ -21,7 +21,7 @@ class TestProvider(trace.NoOpTracerProvider):
         instrumenting_module_name: str,
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
-        attributes: Attributes | None = None,
+        attributes: Attributes = None,
     ) -> trace.Tracer:
         return TestTracer()
 

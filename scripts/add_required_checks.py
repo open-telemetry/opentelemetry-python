@@ -22,19 +22,14 @@ for yml_file_name in [
     "check-links",
 ]:
     with open(f"../.github/workflows/{yml_file_name}.yml") as yml_file:
-        job_names.extend(
-            [job["name"] for job in safe_load(yml_file)["jobs"].values()]
-        )
+        job_names.extend([job["name"] for job in safe_load(yml_file)["jobs"].values()])
 
 owner = "open-telemetry"
 repo = "opentelemetry-python"
 branch = "main"
 
 response = put(
-    (
-        f"https://api.github.com/repos/{owner}/{repo}/branches/{branch}/"
-        "protection/required_status_checks/contexts"
-    ),
+    (f"https://api.github.com/repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks/contexts"),
     headers={
         "Accept": "application/vnd.github.v3+json",
         # The token has to be created in Github, and exported to the
@@ -51,8 +46,5 @@ response = put(
 if response.status_code == 200:
     print(response.content)
 else:
-    print(
-        "Failed to update branch protection settings. "
-        f"Status code: {response.status_code}"
-    )
+    print(f"Failed to update branch protection settings. Status code: {response.status_code}")
     print(response.json())

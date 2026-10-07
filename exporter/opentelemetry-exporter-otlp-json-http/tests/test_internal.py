@@ -98,9 +98,7 @@ class TestResolveInternal(unittest.TestCase):
         for label, env, default_path, expected in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
                 self.assertEqual(
-                    _resolve_endpoint(
-                        OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, default_path
-                    ),
+                    _resolve_endpoint(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, default_path),
                     expected,
                 )
 
@@ -167,9 +165,7 @@ class TestResolveInternal(unittest.TestCase):
         for label, env, headers_arg, expected in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
                 self.assertEqual(
-                    _resolve_headers(
-                        headers_arg, OTEL_EXPORTER_OTLP_TRACES_HEADERS
-                    ),
+                    _resolve_headers(headers_arg, OTEL_EXPORTER_OTLP_TRACES_HEADERS),
                     expected,
                 )
 
@@ -223,13 +219,9 @@ class TestResolveInternal(unittest.TestCase):
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
                 if errors:
                     with self.assertLogs(level=WARNING):
-                        result = _resolve_timeout(
-                            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
-                        )
+                        result = _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
                 else:
-                    result = _resolve_timeout(
-                        OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
-                    )
+                    result = _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
                 self.assertEqual(result, expected)
                 self.assertIsInstance(result, float)
 
@@ -425,7 +417,5 @@ class TestBuildTransport(unittest.TestCase):
                     OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
                     transport_factory=mock_factory,
                 )
-                mock_factory.assert_called_once_with(
-                    verify=expected_verify, cert=expected_cert
-                )
+                mock_factory.assert_called_once_with(verify=expected_verify, cert=expected_cert)
                 self.assertIs(result, mock_factory.return_value)

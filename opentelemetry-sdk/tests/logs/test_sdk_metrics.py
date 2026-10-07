@@ -16,23 +16,17 @@ from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 class TestLoggerProviderMetrics(TestCase):
     def setUp(self):
         self.metric_reader = InMemoryMetricReader()
-        self.meter_provider = MeterProvider(
-            metric_readers=[self.metric_reader]
-        )
+        self.meter_provider = MeterProvider(metric_readers=[self.metric_reader])
 
     def tearDown(self):
         self.meter_provider.shutdown()
 
     def assert_created_logs(self, metric_data, value, attrs):
         metrics = metric_data.resource_metrics[0].scope_metrics[0].metrics
-        created_logs_metric = next(
-            (m for m in metrics if m.name == "otel.sdk.log.created"), None
-        )
+        created_logs_metric = next((m for m in metrics if m.name == "otel.sdk.log.created"), None)
         self.assertIsNotNone(created_logs_metric)
         self.assertEqual(created_logs_metric.data.data_points[0].value, value)
-        self.assertDictEqual(
-            created_logs_metric.data.data_points[0].attributes, attrs
-        )
+        self.assertDictEqual(created_logs_metric.data.data_points[0].attributes, attrs)
 
     def test_create_logs(self):
         logger_provider = LoggerProvider(meter_provider=self.meter_provider)

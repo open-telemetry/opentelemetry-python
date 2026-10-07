@@ -90,21 +90,15 @@ class TestMetricReader(TestCase):
             AggregationTemporality.DELTA,
         )
         self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[
-                _ObservableCounter
-            ],
+            dummy_metric_reader._instrument_class_temporality[_ObservableCounter],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[
-                _ObservableUpDownCounter
-            ],
+            dummy_metric_reader._instrument_class_temporality[_ObservableUpDownCounter],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[
-                _ObservableGauge
-            ],
+            dummy_metric_reader._instrument_class_temporality[_ObservableGauge],
             AggregationTemporality.DELTA,
         )
 
@@ -119,14 +113,10 @@ class TestMetricReader(TestCase):
             dummy_metric_reader._instrument_class_aggregation.keys(),
             set(_expected_keys),
         )
-        for (
-            value
-        ) in dummy_metric_reader._instrument_class_aggregation.values():
+        for value in dummy_metric_reader._instrument_class_aggregation.values():
             self.assertIsInstance(value, DefaultAggregation)
 
-        dummy_metric_reader = DummyMetricReader(
-            preferred_aggregation={Counter: LastValueAggregation()}
-        )
+        dummy_metric_reader = DummyMetricReader(preferred_aggregation={Counter: LastValueAggregation()})
         self.assertEqual(
             dummy_metric_reader._instrument_class_aggregation.keys(),
             set(_expected_keys),

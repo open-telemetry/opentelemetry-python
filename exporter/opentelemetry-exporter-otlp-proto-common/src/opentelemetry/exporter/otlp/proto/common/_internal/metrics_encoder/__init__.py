@@ -56,8 +56,7 @@ _logger = logging.getLogger(__name__)
 class OTLPMetricExporterMixin:
     def _common_configuration(
         self,
-        preferred_temporality: dict[type, AggregationTemporality]
-        | None = None,
+        preferred_temporality: dict[type, AggregationTemporality] | None = None,
         preferred_aggregation: dict[type, Aggregation] | None = None,
     ) -> None:
         MetricExporter.__init__(
@@ -99,14 +98,9 @@ class OTLPMetricExporterMixin:
             }
 
         else:
-            if otel_exporter_otlp_metrics_temporality_preference != (
-                "CUMULATIVE"
-            ):
+            if otel_exporter_otlp_metrics_temporality_preference != ("CUMULATIVE"):
                 _logger.warning(
-                    "Unrecognized OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
-                    " value found: "
-                    "%s, "
-                    "using CUMULATIVE",
+                    "Unrecognized OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE value found: %s, using CUMULATIVE",
                     otel_exporter_otlp_metrics_temporality_preference,
                 )
             instrument_class_temporality = {
@@ -131,22 +125,15 @@ class OTLPMetricExporterMixin:
             "explicit_bucket_histogram",
         )
 
-        if otel_exporter_otlp_metrics_default_histogram_aggregation == (
-            "base2_exponential_bucket_histogram"
-        ):
+        if otel_exporter_otlp_metrics_default_histogram_aggregation == ("base2_exponential_bucket_histogram"):
             instrument_class_aggregation = {
                 Histogram: ExponentialBucketHistogramAggregation(),
             }
 
         else:
-            if otel_exporter_otlp_metrics_default_histogram_aggregation != (
-                "explicit_bucket_histogram"
-            ):
+            if otel_exporter_otlp_metrics_default_histogram_aggregation != ("explicit_bucket_histogram"):
                 _logger.warning(
-                    (
-                        "Invalid value for %s: %s, using explicit bucket "
-                        "histogram aggregation"
-                    ),
+                    ("Invalid value for %s: %s, using explicit bucket histogram aggregation"),
                     OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
                     otel_exporter_otlp_metrics_default_histogram_aggregation,
                 )
@@ -188,9 +175,7 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
     ) in resource_metrics_dict.items():
         resource_data.append(
             pb2.ResourceMetrics(
-                resource=PB2Resource(
-                    attributes=_encode_attributes(sdk_resource.attributes)
-                ),
+                resource=PB2Resource(attributes=_encode_attributes(sdk_resource.attributes)),
                 scope_metrics=scope_data.values(),
                 schema_url=sdk_resource.schema_url,
             )
@@ -261,9 +246,7 @@ def _encode_metric(metric, pb2_metric):
                 max=data_point.max,
                 min=data_point.min,
             )
-            pb2_metric.histogram.aggregation_temporality = (
-                metric.data.aggregation_temporality
-            )
+            pb2_metric.histogram.aggregation_temporality = metric.data.aggregation_temporality
             pb2_metric.histogram.data_points.append(pt)
 
     elif isinstance(metric.data, Sum):
@@ -281,9 +264,7 @@ def _encode_metric(metric, pb2_metric):
             # note that because sum is a message type, the
             # fields must be set individually rather than
             # instantiating a pb2.Sum and setting it once
-            pb2_metric.sum.aggregation_temporality = (
-                metric.data.aggregation_temporality
-            )
+            pb2_metric.sum.aggregation_temporality = metric.data.aggregation_temporality
             pb2_metric.sum.is_monotonic = metric.data.is_monotonic
             pb2_metric.sum.data_points.append(pt)
 
@@ -320,9 +301,7 @@ def _encode_metric(metric, pb2_metric):
                 max=data_point.max,
                 min=data_point.min,
             )
-            pb2_metric.exponential_histogram.aggregation_temporality = (
-                metric.data.aggregation_temporality
-            )
+            pb2_metric.exponential_histogram.aggregation_temporality = metric.data.aggregation_temporality
             pb2_metric.exponential_histogram.data_points.append(pt)
 
     else:
@@ -344,24 +323,17 @@ def _encode_exemplars(sdk_exemplars: list[Exemplar]) -> list[pb2.Exemplar]:
     """
     pb_exemplars = []
     for sdk_exemplar in sdk_exemplars:
-        if (
-            sdk_exemplar.span_id is not None
-            and sdk_exemplar.trace_id is not None
-        ):
+        if sdk_exemplar.span_id is not None and sdk_exemplar.trace_id is not None:
             pb_exemplar = pb2.Exemplar(
                 time_unix_nano=sdk_exemplar.time_unix_nano,
                 span_id=_encode_span_id(sdk_exemplar.span_id),
                 trace_id=_encode_trace_id(sdk_exemplar.trace_id),
-                filtered_attributes=_encode_attributes(
-                    sdk_exemplar.filtered_attributes
-                ),
+                filtered_attributes=_encode_attributes(sdk_exemplar.filtered_attributes),
             )
         else:
             pb_exemplar = pb2.Exemplar(
                 time_unix_nano=sdk_exemplar.time_unix_nano,
-                filtered_attributes=_encode_attributes(
-                    sdk_exemplar.filtered_attributes
-                ),
+                filtered_attributes=_encode_attributes(sdk_exemplar.filtered_attributes),
             )
 
         # Assign the value based on its type in the SDK exemplar

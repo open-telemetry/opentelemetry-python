@@ -16,9 +16,7 @@ from opentelemetry.sdk.trace.export import (
 trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer_provider().get_tracer(__name__)
 
-trace.get_tracer_provider().add_span_processor(
-    BatchSpanProcessor(ConsoleSpanExporter())
-)
+trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
 # Get parameter from command line argument or use default value "testing"
 param_value = sys.argv[1] if len(sys.argv) > 1 else "testing"

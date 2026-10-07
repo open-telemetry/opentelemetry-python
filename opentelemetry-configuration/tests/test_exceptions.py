@@ -37,9 +37,7 @@ class TestMissingDependencyError(unittest.TestCase):
         )
         self.assertEqual(exc.install_name, "opentelemetry-sdk")
         self.assertEqual(exc.extras, "file-configuration")
-        self.assertIn(
-            'pip install "opentelemetry-sdk[file-configuration]"', str(exc)
-        )
+        self.assertIn('pip install "opentelemetry-sdk[file-configuration]"', str(exc))
 
     def test_with_feature_and_extras(self):
         exc = MissingDependencyError(
@@ -49,9 +47,7 @@ class TestMissingDependencyError(unittest.TestCase):
             extras="file-configuration",
         )
         self.assertIn("File configuration requires 'jsonschema'", str(exc))
-        self.assertIn(
-            'pip install "opentelemetry-sdk[file-configuration]"', str(exc)
-        )
+        self.assertIn('pip install "opentelemetry-sdk[file-configuration]"', str(exc))
 
     def test_can_be_caught_as_configuration_error(self):
         with self.assertRaises(ConfigurationError):
@@ -69,6 +65,4 @@ class TestMissingDependencyError(unittest.TestCase):
         self.assertTrue(issubclass(MissingDependencyError, ImportError))
 
     def test_issubclass_import_error(self):
-        self.assertIsInstance(
-            MissingDependencyError(package="test"), ImportError
-        )
+        self.assertIsInstance(MissingDependencyError(package="test"), ImportError)

@@ -244,9 +244,7 @@ class SpanShim(Span):
         self._otel_span.set_attribute(key, value)
         return self
 
-    def log_kv(
-        self, key_values: Attributes, timestamp: float | None = None
-    ) -> SpanShim:
+    def log_kv(self, key_values: Attributes, timestamp: float | None = None) -> SpanShim:
         """Logs an event for the wrapped OpenTelemetry span.
 
         Note:
@@ -292,9 +290,7 @@ class SpanShim(Span):
             value: A tag value.
         """
         # pylint: disable=protected-access
-        self._context._baggage = set_baggage(
-            key, value, context=self._context._baggage
-        )
+        self._context._baggage = set_baggage(key, value, context=self._context._baggage)
 
     def get_baggage_item(self, key: str) -> object | None:
         """Retrieves value of the baggage item with the given key.
@@ -344,9 +340,7 @@ class ScopeShim(Scope):
             ``__exit__()`` method. Defaults to `None`.
     """
 
-    def __init__(
-        self, manager: ScopeManagerShim, span: SpanShim, span_cm=None
-    ):
+    def __init__(self, manager: ScopeManagerShim, span: SpanShim, span_cm=None):
         super().__init__(manager, span)
         self._span_cm = span_cm
         self._token = attach(set_value(_SHIM_KEY, self))
@@ -585,10 +579,7 @@ class TracerShim(Tracer):
 
         current_span = get_current_span()
 
-        if (
-            child_of is None
-            and current_span.get_span_context() is not INVALID_SPAN_CONTEXT
-        ):
+        if child_of is None and current_span.get_span_context() is not INVALID_SPAN_CONTEXT:
             child_of = SpanShim(None, None, current_span)
 
         span = self.start_span(

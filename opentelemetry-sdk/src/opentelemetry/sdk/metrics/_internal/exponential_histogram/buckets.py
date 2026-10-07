@@ -127,9 +127,7 @@ class Buckets:
             self._counts = self._counts[::-1]
             # [4, 3, 2, 1, 0]
 
-            self._counts = (
-                self._counts[:bias][::-1] + self._counts[bias:][::-1]
-            )
+            self._counts = self._counts[:bias][::-1] + self._counts[bias:][::-1]
             # [3, 4, 0, 1, 2] This is a rotation of the backing array.
 
         size = 1 + self.__index_end - self.__index_start

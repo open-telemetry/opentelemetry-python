@@ -25,13 +25,9 @@ _TIMESTAMP = datetime.fromisoformat("2023-01-01T00:00:00.000000")
 class TestShimWithSdk(unittest.TestCase):
     def setUp(self):
         uninstall_shim()
-        self.tracer_provider = TracerProvider(
-            sampler=ALWAYS_ON, shutdown_on_exit=False
-        )
+        self.tracer_provider = TracerProvider(sampler=ALWAYS_ON, shutdown_on_exit=False)
         self.mem_exporter = InMemorySpanExporter()
-        self.tracer_provider.add_span_processor(
-            SimpleSpanProcessor(self.mem_exporter)
-        )
+        self.tracer_provider.add_span_processor(SimpleSpanProcessor(self.mem_exporter))
         install_shim(self.tracer_provider)
 
     def tearDown(self):
@@ -70,9 +66,7 @@ class TestShimWithSdk(unittest.TestCase):
             otel_span = trace.get_current_span()
 
             self.assertNotEqual(span.span_id, 0)
-            self.assertEqual(
-                span.span_id, otel_span.get_span_context().span_id
-            )
+            self.assertEqual(span.span_id, otel_span.get_span_context().span_id)
 
         # The span should now be popped from context
         self.assertIs(trace.get_current_span(), trace.INVALID_SPAN)
@@ -113,9 +107,7 @@ class TestShimWithSdk(unittest.TestCase):
             trace.format_trace_id(parent.trace_id),
             "ace0216bab2b7ba249761dbb19c871b7",
         )
-        self.assertEqual(
-            trace.format_span_id(parent.span_id), "1fead89ecf242225"
-        )
+        self.assertEqual(trace.format_span_id(parent.span_id), "1fead89ecf242225")
 
     def test_ignores_tracers_span_context_when_parent_already_in_context(self):
         # the SpanContext passed to the Tracer will be ignored since there is already a span
@@ -160,18 +152,12 @@ class TestShimWithSdk(unittest.TestCase):
         self.assertEqual(len(exported_span.events), 1)
         event = exported_span.events[0]
         self.assertEqual(event.name, "description")
-        self.assertDictEqual(
-            dict(event.attributes), {"key1": "value1", "key2": "value2"}
-        )
+        self.assertDictEqual(dict(event.attributes), {"key1": "value1", "key2": "value2"})
 
     def test_span_message_event(self):
         oc_tracer = OcTracer()
         with oc_tracer.start_span("span1") as span:
-            span.add_message_event(
-                time_event.MessageEvent(
-                    _TIMESTAMP, "id_sent", time_event.Type.SENT, "20", "10"
-                )
-            )
+            span.add_message_event(time_event.MessageEvent(_TIMESTAMP, "id_sent", time_event.Type.SENT, "20", "10"))
             span.add_message_event(
                 time_event.MessageEvent(
                     _TIMESTAMP,
@@ -235,9 +221,7 @@ class TestShimWithSdk(unittest.TestCase):
             )
 
         with oc_tracer.start_span("span_exception") as span:
-            span.set_status(
-                OcStatus.from_exception(Exception("exception message"))
-            )
+            span.set_status(OcStatus.from_exception(Exception("exception message")))
 
         self.assertEqual(len(self.mem_exporter.get_finished_spans()), 2)
         ok_span: ReadableSpan = self.mem_exporter.get_finished_spans()[0]
@@ -252,9 +236,7 @@ class TestShimWithSdk(unittest.TestCase):
         self.assertEqual(exc_span.status.description, "exception message")
 
     def assert_related(self, *, child: ReadableSpan, parent: ReadableSpan):
-        self.assertEqual(
-            child.parent.span_id, parent.get_span_context().span_id
-        )
+        self.assertEqual(child.parent.span_id, parent.get_span_context().span_id)
 
     def test_otel_sandwich(self):
         oc_tracer = OcTracer()
@@ -265,13 +247,9 @@ class TestShimWithSdk(unittest.TestCase):
                     pass
 
         self.assertEqual(len(self.mem_exporter.get_finished_spans()), 3)
-        opencensus_inner: ReadableSpan = (
-            self.mem_exporter.get_finished_spans()[0]
-        )
+        opencensus_inner: ReadableSpan = self.mem_exporter.get_finished_spans()[0]
         otel_middle: ReadableSpan = self.mem_exporter.get_finished_spans()[1]
-        opencensus_outer: ReadableSpan = (
-            self.mem_exporter.get_finished_spans()[2]
-        )
+        opencensus_outer: ReadableSpan = self.mem_exporter.get_finished_spans()[2]
 
         self.assertEqual(opencensus_outer.name, "opencensus_outer")
         self.assertEqual(otel_middle.name, "otel_middle")
@@ -291,9 +269,7 @@ class TestShimWithSdk(unittest.TestCase):
 
         self.assertEqual(len(self.mem_exporter.get_finished_spans()), 3)
         otel_inner: ReadableSpan = self.mem_exporter.get_finished_spans()[0]
-        opencensus_middle: ReadableSpan = (
-            self.mem_exporter.get_finished_spans()[1]
-        )
+        opencensus_middle: ReadableSpan = self.mem_exporter.get_finished_spans()[1]
         otel_outer: ReadableSpan = self.mem_exporter.get_finished_spans()[2]
 
         self.assertEqual(otel_outer.name, "otel_outer")

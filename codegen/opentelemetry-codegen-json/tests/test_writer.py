@@ -169,9 +169,7 @@ def test_field(
     expected: list[str],
 ) -> None:
     writer = CodeWriter()
-    writer.field(
-        name, type_hint, default=default, default_factory=default_factory
-    )
+    writer.field(name, type_hint, default=default, default_factory=default_factory)
     assert writer.to_lines() == expected
 
 

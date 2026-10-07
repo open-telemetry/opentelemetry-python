@@ -21,9 +21,7 @@ app = Flask(__name__)
 set_tracer_provider(TracerProvider())
 tracer = get_tracer_provider().get_tracer(__name__)
 
-get_tracer_provider().add_span_processor(
-    BatchSpanProcessor(ConsoleSpanExporter())
-)
+get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
 
 @app.route("/server_request")

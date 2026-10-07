@@ -8,17 +8,14 @@ from __future__ import annotations
 
 import builtins
 import dataclasses
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Resource(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Resource
@@ -45,7 +42,7 @@ class Resource(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Resource":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Resource:
         """
         Create from a dictionary with lowerCamelCase keys.
 

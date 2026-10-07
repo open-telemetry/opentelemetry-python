@@ -85,9 +85,7 @@ _METRIC_DATA_FIELDS = (
 
 def encode_metrics(data: MetricsData) -> JSONExportMetricsServiceRequest:
     return JSONExportMetricsServiceRequest(
-        resource_metrics=[
-            _encode_resource_metrics(rm) for rm in data.resource_metrics
-        ]
+        resource_metrics=[_encode_resource_metrics(rm) for rm in data.resource_metrics]
     )
 
 
@@ -115,48 +113,29 @@ def split_metrics_data(
         field_name,
         data_points,
     ) in _iter_metric_data_points(metrics_data):
-        if (
-            not resource_metrics_batch
-            or resource_metrics_batch[-1].resource
-            is not resource_metrics.resource
-        ):
+        if not resource_metrics_batch or resource_metrics_batch[-1].resource is not resource_metrics.resource:
             scope_metrics_batch = []
-            resource_metrics_batch.append(
-                replace(resource_metrics, scope_metrics=scope_metrics_batch)
-            )
+            resource_metrics_batch.append(replace(resource_metrics, scope_metrics=scope_metrics_batch))
 
-        if (
-            not scope_metrics_batch
-            or scope_metrics_batch[-1].scope is not scope_metrics.scope
-        ):
+        if not scope_metrics_batch or scope_metrics_batch[-1].scope is not scope_metrics.scope:
             metrics_batch = []
-            scope_metrics_batch.append(
-                replace(scope_metrics, metrics=metrics_batch)
-            )
+            scope_metrics_batch.append(replace(scope_metrics, metrics=metrics_batch))
 
         data_points_batch: list = []
-        metrics_batch.append(
-            _build_metric_with_data_points(
-                metric, field_name, data_points_batch
-            )
-        )
+        metrics_batch.append(_build_metric_with_data_points(metric, field_name, data_points_batch))
 
         for data_point in data_points:
             data_points_batch.append(data_point)
             batch_size += 1
 
             if batch_size >= max_export_batch_size:
-                yield JSONExportMetricsServiceRequest(
-                    resource_metrics=resource_metrics_batch
-                )
+                yield JSONExportMetricsServiceRequest(resource_metrics=resource_metrics_batch)
                 (
                     resource_metrics_batch,
                     scope_metrics_batch,
                     metrics_batch,
                     data_points_batch,
-                ) = _build_empty_metric_batches(
-                    resource_metrics, scope_metrics, metric, field_name
-                )
+                ) = _build_empty_metric_batches(resource_metrics, scope_metrics, metric, field_name)
                 batch_size = 0
 
         if not batch_size:
@@ -165,9 +144,7 @@ def split_metrics_data(
             metrics_batch = []
 
     if batch_size:
-        yield JSONExportMetricsServiceRequest(
-            resource_metrics=resource_metrics_batch
-        )
+        yield JSONExportMetricsServiceRequest(resource_metrics=resource_metrics_batch)
 
 
 def _get_metric_data_field_name(metric: JSONMetric) -> str | None:
@@ -179,23 +156,17 @@ def _get_metric_data_field_name(metric: JSONMetric) -> str | None:
 
 def _iter_metric_data_points(
     metrics_data: JSONExportMetricsServiceRequest,
-) -> Iterable[
-    tuple[JSONResourceMetrics, JSONScopeMetrics, JSONMetric, str, list]
-]:
+) -> Iterable[tuple[JSONResourceMetrics, JSONScopeMetrics, JSONMetric, str, list]]:
     for resource_metrics in metrics_data.resource_metrics:
         for scope_metrics in resource_metrics.scope_metrics:
             for metric in scope_metrics.metrics:
                 field_name = _get_metric_data_field_name(metric)
                 if field_name is None:
-                    _logger.warning(
-                        "Tried to split and export an unsupported metric type. Skipping."
-                    )
+                    _logger.warning("Tried to split and export an unsupported metric type. Skipping.")
                     continue
                 dps = getattr(metric, field_name).data_points
                 if not dps:
-                    _logger.warning(
-                        "Unexpected empty metric datapoints. Skipping."
-                    )
+                    _logger.warning("Unexpected empty metric datapoints. Skipping.")
                     continue
                 yield (
                     resource_metrics,
@@ -220,17 +191,11 @@ def _build_empty_metric_batches(
     scope_metrics: JSONScopeMetrics,
     metric: JSONMetric,
     field_name: str,
-) -> tuple[
-    list[JSONResourceMetrics], list[JSONScopeMetrics], list[JSONMetric], list
-]:
+) -> tuple[list[JSONResourceMetrics], list[JSONScopeMetrics], list[JSONMetric], list]:
     data_points_batch = []
-    metrics_batch = [
-        _build_metric_with_data_points(metric, field_name, data_points_batch)
-    ]
+    metrics_batch = [_build_metric_with_data_points(metric, field_name, data_points_batch)]
     scope_metrics_batch = [replace(scope_metrics, metrics=metrics_batch)]
-    resource_metrics_batch = [
-        replace(resource_metrics, scope_metrics=scope_metrics_batch)
-    ]
+    resource_metrics_batch = [replace(resource_metrics, scope_metrics=scope_metrics_batch)]
     return (
         resource_metrics_batch,
         scope_metrics_batch,
@@ -243,9 +208,7 @@ def _encode_resource_metrics(
     rm: ResourceMetrics,
 ) -> JSONResourceMetrics:
     return JSONResourceMetrics(
-        resource=JSONResource(
-            attributes=_encode_attributes(rm.resource.attributes)
-        ),
+        resource=JSONResource(attributes=_encode_attributes(rm.resource.attributes)),
         scope_metrics=[_encode_scope_metrics(sm) for sm in rm.scope_metrics],
         schema_url=rm.resource.schema_url,
     )
@@ -268,33 +231,21 @@ def _encode_metric(metric: Metric) -> JSONMetric:
         unit=metric.unit,
     )
     if isinstance(metric.data, Gauge):
-        json_metric.gauge = JSONGauge(
-            data_points=[
-                _encode_gauge_data_point(pt) for pt in metric.data.data_points
-            ]
-        )
+        json_metric.gauge = JSONGauge(data_points=[_encode_gauge_data_point(pt) for pt in metric.data.data_points])
     elif isinstance(metric.data, Histogram):
         json_metric.histogram = JSONHistogram(
-            data_points=[
-                _encode_histogram_data_point(pt)
-                for pt in metric.data.data_points
-            ],
+            data_points=[_encode_histogram_data_point(pt) for pt in metric.data.data_points],
             aggregation_temporality=metric.data.aggregation_temporality,
         )
     elif isinstance(metric.data, Sum):
         json_metric.sum = JSONSum(
-            data_points=[
-                _encode_sum_data_point(pt) for pt in metric.data.data_points
-            ],
+            data_points=[_encode_sum_data_point(pt) for pt in metric.data.data_points],
             aggregation_temporality=metric.data.aggregation_temporality,
             is_monotonic=metric.data.is_monotonic,
         )
     elif isinstance(metric.data, ExponentialHistogram):
         json_metric.exponential_histogram = JSONExponentialHistogram(
-            data_points=[
-                _encode_exponential_histogram_data_point(pt)
-                for pt in metric.data.data_points
-            ],
+            data_points=[_encode_exponential_histogram_data_point(pt) for pt in metric.data.data_points],
             aggregation_temporality=metric.data.aggregation_temporality,
         )
     else:
@@ -394,24 +345,17 @@ def _encode_exemplars(
 ) -> list[JSONExemplar]:
     json_exemplars = []
     for sdk_exemplar in sdk_exemplars:
-        if (
-            sdk_exemplar.span_id is not None
-            and sdk_exemplar.trace_id is not None
-        ):
+        if sdk_exemplar.span_id is not None and sdk_exemplar.trace_id is not None:
             json_exemplar = JSONExemplar(
                 time_unix_nano=sdk_exemplar.time_unix_nano,
                 span_id=_encode_span_id(sdk_exemplar.span_id),
                 trace_id=_encode_trace_id(sdk_exemplar.trace_id),
-                filtered_attributes=_encode_attributes(
-                    sdk_exemplar.filtered_attributes
-                ),
+                filtered_attributes=_encode_attributes(sdk_exemplar.filtered_attributes),
             )
         else:
             json_exemplar = JSONExemplar(
                 time_unix_nano=sdk_exemplar.time_unix_nano,
-                filtered_attributes=_encode_attributes(
-                    sdk_exemplar.filtered_attributes
-                ),
+                filtered_attributes=_encode_attributes(sdk_exemplar.filtered_attributes),
             )
 
         # Assign the value based on its type in the SDK exemplar

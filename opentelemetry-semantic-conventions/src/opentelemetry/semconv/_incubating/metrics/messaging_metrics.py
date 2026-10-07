@@ -6,9 +6,7 @@ from typing import Final
 
 from opentelemetry.metrics import Counter, Histogram, Meter
 
-MESSAGING_CLIENT_CONSUMED_MESSAGES: Final = (
-    "messaging.client.consumed.messages"
-)
+MESSAGING_CLIENT_CONSUMED_MESSAGES: Final = "messaging.client.consumed.messages"
 """
 Number of messages that were delivered to the application
 Instrument: counter
@@ -27,9 +25,7 @@ def create_messaging_client_consumed_messages(meter: Meter) -> Counter:
     )
 
 
-MESSAGING_CLIENT_OPERATION_DURATION: Final = (
-    "messaging.client.operation.duration"
-)
+MESSAGING_CLIENT_OPERATION_DURATION: Final = "messaging.client.operation.duration"
 """
 Duration of messaging operation initiated by a producer or consumer client
 Instrument: histogram
@@ -47,9 +43,7 @@ def create_messaging_client_operation_duration(meter: Meter) -> Histogram:
     )
 
 
-MESSAGING_CLIENT_PUBLISHED_MESSAGES: Final = (
-    "messaging.client.published.messages"
-)
+MESSAGING_CLIENT_PUBLISHED_MESSAGES: Final = "messaging.client.published.messages"
 """
 Deprecated: Replaced by `messaging.client.sent.messages`.
 """

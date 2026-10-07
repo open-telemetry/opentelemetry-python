@@ -10,9 +10,7 @@ FORMAT = b3_format.B3Format()
 def test_extract_single_header(benchmark):
     benchmark(
         FORMAT.extract,
-        {
-            FORMAT.SINGLE_HEADER_KEY: "bdb5b63237ed38aea578af665aa5aa60-c32d953d73ad2251-1"
-        },
+        {FORMAT.SINGLE_HEADER_KEY: "bdb5b63237ed38aea578af665aa5aa60-c32d953d73ad2251-1"},
     )
 
 

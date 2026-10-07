@@ -33,24 +33,18 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         local_endpoint = {"serviceName": TEST_SERVICE_NAME}
 
         otel_spans = self.get_exhaustive_otel_span_list()
-        trace_id = JsonV1Encoder._encode_trace_id(
-            otel_spans[0].context.trace_id
-        )
+        trace_id = JsonV1Encoder._encode_trace_id(otel_spans[0].context.trace_id)
 
         expected_output = [
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder._encode_span_id(
-                    otel_spans[0].context.span_id
-                ),
+                "id": JsonV1Encoder._encode_span_id(otel_spans[0].context.span_id),
                 "name": otel_spans[0].name,
                 "timestamp": otel_spans[0].start_time // 10**3,
-                "duration": (otel_spans[0].end_time // 10**3)
-                - (otel_spans[0].start_time // 10**3),
+                "duration": (otel_spans[0].end_time // 10**3) - (otel_spans[0].start_time // 10**3),
                 "annotations": [
                     {
-                        "timestamp": otel_spans[0].events[0].timestamp
-                        // 10**3,
+                        "timestamp": otel_spans[0].events[0].timestamp // 10**3,
                         "value": json.dumps(
                             {
                                 "event0": {
@@ -87,19 +81,14 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     },
                 ],
                 "debug": True,
-                "parentId": JsonV1Encoder._encode_span_id(
-                    otel_spans[0].parent.span_id
-                ),
+                "parentId": JsonV1Encoder._encode_span_id(otel_spans[0].parent.span_id),
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder._encode_span_id(
-                    otel_spans[1].context.span_id
-                ),
+                "id": JsonV1Encoder._encode_span_id(otel_spans[1].context.span_id),
                 "name": otel_spans[1].name,
                 "timestamp": otel_spans[1].start_time // 10**3,
-                "duration": (otel_spans[1].end_time // 10**3)
-                - (otel_spans[1].start_time // 10**3),
+                "duration": (otel_spans[1].end_time // 10**3) - (otel_spans[1].start_time // 10**3),
                 "binaryAnnotations": [
                     {
                         "key": "key_resource",
@@ -120,13 +109,10 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder._encode_span_id(
-                    otel_spans[2].context.span_id
-                ),
+                "id": JsonV1Encoder._encode_span_id(otel_spans[2].context.span_id),
                 "name": otel_spans[2].name,
                 "timestamp": otel_spans[2].start_time // 10**3,
-                "duration": (otel_spans[2].end_time // 10**3)
-                - (otel_spans[2].start_time // 10**3),
+                "duration": (otel_spans[2].end_time // 10**3) - (otel_spans[2].start_time // 10**3),
                 "binaryAnnotations": [
                     {
                         "key": "key_string",
@@ -142,13 +128,10 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             },
             {
                 "traceId": trace_id,
-                "id": JsonV1Encoder._encode_span_id(
-                    otel_spans[3].context.span_id
-                ),
+                "id": JsonV1Encoder._encode_span_id(otel_spans[3].context.span_id),
                 "name": otel_spans[3].name,
                 "timestamp": otel_spans[3].start_time // 10**3,
-                "duration": (otel_spans[3].end_time // 10**3)
-                - (otel_spans[3].start_time // 10**3),
+                "duration": (otel_spans[3].end_time // 10**3) - (otel_spans[3].start_time // 10**3),
                 "binaryAnnotations": [
                     {
                         "key": NAME_KEY,
@@ -219,9 +202,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         )
 
     def _test_encode_max_tag_length(self, max_tag_value_length: int):
-        otel_span, expected_tag_output = self.get_data_for_max_tag_length_test(
-            max_tag_value_length
-        )
+        otel_span, expected_tag_output = self.get_data_for_max_tag_length_test(max_tag_value_length)
         service_name = otel_span.name
 
         binary_annotations = []
@@ -236,17 +217,11 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         expected_output = [
             {
-                "traceId": JsonV1Encoder._encode_trace_id(
-                    otel_span.context.trace_id
-                ),
+                "traceId": JsonV1Encoder._encode_trace_id(otel_span.context.trace_id),
                 "id": JsonV1Encoder._encode_span_id(otel_span.context.span_id),
                 "name": service_name,
-                "timestamp": JsonV1Encoder._nsec_to_usec_round(
-                    otel_span.start_time
-                ),
-                "duration": JsonV1Encoder._nsec_to_usec_round(
-                    otel_span.end_time - otel_span.start_time
-                ),
+                "timestamp": JsonV1Encoder._nsec_to_usec_round(otel_span.start_time),
+                "duration": JsonV1Encoder._nsec_to_usec_round(otel_span.end_time - otel_span.start_time),
                 "binaryAnnotations": binary_annotations,
                 "debug": True,
             }
@@ -254,20 +229,13 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         self.assert_equal_encoded_spans(
             json.dumps(expected_output),
-            JsonV1Encoder(max_tag_value_length).serialize(
-                [otel_span], NodeEndpoint()
-            ),
+            JsonV1Encoder(max_tag_value_length).serialize([otel_span], NodeEndpoint()),
         )
 
     def test_dropped_span_attributes(self):
         otel_span = get_span_with_dropped_attributes_events_links()
-        annotations = JsonV1Encoder()._encode_span(otel_span, "test")[
-            "binaryAnnotations"
-        ]
-        annotations = {
-            annotation["key"]: annotation["value"]
-            for annotation in annotations
-        }
+        annotations = JsonV1Encoder()._encode_span(otel_span, "test")["binaryAnnotations"]
+        annotations = {annotation["key"]: annotation["value"] for annotation in annotations}
         self.assertEqual("1", annotations["otel.dropped_links_count"])
         self.assertEqual("2", annotations["otel.dropped_attributes_count"])
         self.assertEqual("3", annotations["otel.dropped_events_count"])

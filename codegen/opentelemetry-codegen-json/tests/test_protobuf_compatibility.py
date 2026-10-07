@@ -18,8 +18,7 @@ def normalize_otlp_json(data: Any) -> Any:
         return {
             key: (
                 base64.b64decode(value).hex()
-                if key in {"traceId", "spanId", "parentSpanId"}
-                and isinstance(value, str)
+                if key in {"traceId", "spanId", "parentSpanId"} and isinstance(value, str)
                 else normalize_otlp_json(value)
             )
             for key, value in data.items()
@@ -135,9 +134,7 @@ def test_parity_test_message(
         {"f64_val": 9223372036854775807},
     ],
 )
-def test_parity_numeric_test(
-    numeric_msg_classes: tuple[type[Any], type[Any]], values: dict[str, Any]
-) -> None:
+def test_parity_numeric_test(numeric_msg_classes: tuple[type[Any], type[Any]], values: dict[str, Any]) -> None:
     JSONNumericTest, ProtoNumericTest = numeric_msg_classes
 
     json_msg = JSONNumericTest(**values)
@@ -203,9 +200,7 @@ def test_parity_oneof_suite(
         {"opt_string": "", "opt_int": 0, "opt_bool": False},
     ],
 )
-def test_parity_optional_scalars(
-    optional_msg_classes: tuple[type[Any], type[Any]], kwargs: dict[str, Any]
-) -> None:
+def test_parity_optional_scalars(optional_msg_classes: tuple[type[Any], type[Any]], kwargs: dict[str, Any]) -> None:
     JSONOptionalScalar, ProtoOptionalScalar = optional_msg_classes
 
     json_msg = JSONOptionalScalar(**kwargs)

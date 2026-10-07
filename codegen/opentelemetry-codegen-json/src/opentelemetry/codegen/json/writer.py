@@ -176,11 +176,7 @@ class CodeWriter:
         if slots:
             dc_params.append("slots=True")
 
-        dc_decorator = (
-            f"{decorator_name}({', '.join(dc_params)})"
-            if dc_params
-            else decorator_name
-        )
+        dc_decorator = f"{decorator_name}({', '.join(dc_params)})" if dc_params else decorator_name
 
         all_decorators = []
         if decorators is not None:
@@ -244,9 +240,7 @@ class CodeWriter:
             default_factory: Optional default factory for the field
         """
         if default_factory:
-            self.writeln(
-                f"{name}: {type_hint} = dataclasses.field(default_factory={default_factory})"
-            )
+            self.writeln(f"{name}: {type_hint} = dataclasses.field(default_factory={default_factory})")
         elif default is not None:
             self.writeln(f"{name}: {type_hint} = {default}")
         else:
@@ -309,9 +303,7 @@ class CodeWriter:
             decorators: Optional iterable of decorator names
             return_type: Optional return type hint for the method
         """
-        with self.function(
-            name, params, decorators=decorators, return_type=return_type
-        ):
+        with self.function(name, params, decorators=decorators, return_type=return_type):
             yield self
 
     @contextmanager
@@ -348,9 +340,7 @@ class CodeWriter:
             yield self
 
     @contextmanager
-    def for_(
-        self, var: str, iterable: str
-    ) -> Generator[CodeWriter, None, None]:
+    def for_(self, var: str, iterable: str) -> Generator[CodeWriter, None, None]:
         """
         Create a for loop
 
@@ -374,9 +364,7 @@ class CodeWriter:
         with self.indent():
             yield self
 
-    def assignment(
-        self, var: str, value: str, type_hint: str | None = None
-    ) -> CodeWriter:
+    def assignment(self, var: str, value: str, type_hint: str | None = None) -> CodeWriter:
         """
         Write a variable assignment with optional type hint
 
