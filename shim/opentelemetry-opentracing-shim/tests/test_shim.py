@@ -11,7 +11,8 @@ from unittest.mock import Mock
 
 import opentracing
 
-from opentelemetry import context, trace
+from opentelemetry import context as context_api
+from opentelemetry import trace
 from opentelemetry.propagate import get_global_textmap, set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.shim.opentracing_shim import (
@@ -89,11 +90,11 @@ class TestShim(TestCase):
                 is_remote=True,
                 trace_flags=trace.TraceFlags.SAMPLED,
             )
-            token = context.attach(trace.set_span_in_context(trace.NonRecordingSpan(invalid_ctx)))
+            token = context_api.attach(trace.set_span_in_context(trace.NonRecordingSpan(invalid_ctx)))
             try:
                 self.assertIsNone(self.shim.scope_manager.active)
             finally:
-                context.detach(token)
+                context_api.detach(token)
 
     def test_start_span(self):
         """Test span creation using `start_span()`."""
