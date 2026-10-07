@@ -121,3 +121,45 @@ class TestView(TestCase):
         view = View(name="name", instrument_name="instrument_name_1")
         self.assertEqual(view._name, "name")
         self.assertEqual(view._instrument_name, "instrument_name_1")
+
+    def test_attribute_keys_and_exclude_attribute_keys_overlap(self):
+        test_cases = [
+            {
+                "name": "exact overlap",
+                "attribute_keys": ("method", "status_code"),
+                "exclude_attribute_keys": ("method", "user_id"),
+            },
+            {
+                "name": "wildcard include overlaps exact exclude",
+                "attribute_keys": ("k8s.*",),
+                "exclude_attribute_keys": ("k8s.node",),
+            },
+            {
+                "name": "exact include overlaps wildcard exclude",
+                "attribute_keys": ("k8s.node",),
+                "exclude_attribute_keys": ("k8s.*",),
+            },
+            {
+                "name": "wildcard overlaps wildcard",
+                "attribute_keys": ("k8s.*",),
+                "exclude_attribute_keys": ("k8s.n*",),
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                with self.assertRaises(ValueError):
+                    View(
+                        instrument_name="instrument_name",
+                        attribute_keys=case["attribute_keys"],
+                        exclude_attribute_keys=case["exclude_attribute_keys"],
+                    )
+
+    def test_attribute_keys_and_exclude_attribute_keys_disjoint(self):
+        view = View(
+            instrument_name="instrument_name",
+            attribute_keys=("method", "status_code"),
+            exclude_attribute_keys=("user_id",),
+        )
+
+        self.assertIsNotNone(view)
