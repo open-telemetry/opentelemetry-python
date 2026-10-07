@@ -1,0 +1,1 @@
+Fixed `TraceState` rejecting tracestate keys whose vendor part (after `@`) exceeded the W3C maximum of 13 characters.
