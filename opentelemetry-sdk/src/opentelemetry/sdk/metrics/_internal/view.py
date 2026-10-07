@@ -92,6 +92,10 @@ class View:
             a set of attribute keys. If not `None` then measurement attributes whose
             keys are in ``exclude_attribute_keys`` will be removed before identifying
             the metric stream.
+            Matching is case-sensitive. Values are evaluated to match as follows:
+            - If the value exactly matches.
+            - If the value matches the wildcard pattern, where '?' matches any single
+              character and '*' matches any number of characters including none.
 
 
     This class is not intended to be subclassed by the user.
@@ -130,12 +134,26 @@ class View:
             # pylint: disable=broad-exception-raised
             raise Exception(f"View {name} declared with wildcard characters in instrument_name")
         attribute_keys = frozenset(attribute_keys) if attribute_keys is not None else None
+
         exclude_attribute_keys = frozenset(exclude_attribute_keys) if exclude_attribute_keys is not None else None
+
         if attribute_keys is not None and exclude_attribute_keys is not None:
-            if overlap := attribute_keys.intersection(exclude_attribute_keys):
-                raise ValueError(
-                    f"attribute_keys and exclude_attribute_keys must be disjoint. Overlapping keys: {sorted(overlap)}"
+            overlap = [
+                (attribute_key, exclude_attribute_key)
+                for attribute_key in attribute_keys
+                for exclude_attribute_key in exclude_attribute_keys
+                if (
+                    fnmatchcase(attribute_key, exclude_attribute_key)
+                    or fnmatchcase(
+                        exclude_attribute_key,
+                        attribute_key,
+                    )
                 )
+            ]
+
+            if overlap:
+                # pylint: disable=broad-exception-raised
+                raise ValueError(f"attribute_keys and exclude_attribute_keys contain overlapping patterns: {overlap}")
         # _name, _description, _aggregation, _exemplar_reservoir_factory and
         # _attribute_keys will be accessed when instantiating a _ViewInstrumentMatch.
         self._name = name

@@ -77,11 +77,48 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         test_cases = [
             {
                 "name": "excluded attribute removed",
+                "exclude_attribute_keys": {"f"},
                 "measurement_attributes": {"c": "d", "f": "g"},
                 "expected_attributes": {"c": "d"},
             },
             {
+                "name": "wildcard exclusion",
+                "exclude_attribute_keys": {"k8s.*"},
+                "measurement_attributes": {
+                    "k8s.node": "node1",
+                    "k8s.cluster": "cluster1",
+                    "service.name": "svc",
+                },
+                "expected_attributes": {
+                    "service.name": "svc",
+                },
+            },
+            {
+                "name": "question mark exclusion",
+                "exclude_attribute_keys": {"node?"},
+                "measurement_attributes": {
+                    "node1": "a",
+                    "node2": "b",
+                    "node12": "c",
+                },
+                "expected_attributes": {
+                    "node12": "c",
+                },
+            },
+            {
+                "name": "wildcard exact exclusion",
+                "exclude_attribute_keys": {"*.node"},
+                "measurement_attributes": {
+                    "k8s.node": "node1",
+                    "k8s.cluster": "cluster1",
+                },
+                "expected_attributes": {
+                    "k8s.cluster": "cluster1",
+                },
+            },
+            {
                 "name": "none attributes become empty attributes",
+                "exclude_attribute_keys": {"f"},
                 "measurement_attributes": None,
                 "expected_attributes": {},
             },
@@ -97,7 +134,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                         instrument_name="instrument1",
                         name="name",
                         aggregation=self.mock_aggregation_factory,
-                        exclude_attribute_keys={"f"},
+                        exclude_attribute_keys=case["exclude_attribute_keys"],
                     ),
                     instrument=instrument1,
                     instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
@@ -163,6 +200,44 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             {
                 _hash_attributes({}): self.mock_created_aggregation,
                 _hash_attributes({"c": "d"}): self.mock_created_aggregation,
+            },
+        )
+
+        # wildcard attribute_keys should match multiple attributes
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                attribute_keys={"k8s.*"},
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={
+                    "k8s.node": "node1",
+                    "k8s.cluster": "cluster1",
+                    "service.name": "svc",
+                },
+            )
+        )
+
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                _hash_attributes(
+                    {
+                        "k8s.node": "node1",
+                        "k8s.cluster": "cluster1",
+                    }
+                ): self.mock_created_aggregation,
             },
         )
 
