@@ -18,6 +18,7 @@ from opentelemetry.configuration._exceptions import (
 )
 from opentelemetry.configuration.models import (
     AttributeLimits,
+    OtlpHttpEncoding,
 )
 from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
@@ -46,7 +47,6 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
-from opentelemetry.configuration.models import OtlpHttpEncoding
 from opentelemetry.configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
 )

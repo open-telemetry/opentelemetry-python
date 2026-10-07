@@ -27,6 +27,7 @@ from opentelemetry.configuration.file._loader import ConfigurationError
 from opentelemetry.configuration.models import (
     AttributeLimits,
     NameStringValuePair,
+    OtlpHttpEncoding,
     SeverityNumber,
 )
 from opentelemetry.configuration.models import (
@@ -55,11 +56,6 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
-)
-from opentelemetry.configuration.models import (
-    NameStringValuePair,
-    OtlpHttpEncoding,
-    SeverityNumber,
 )
 from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,

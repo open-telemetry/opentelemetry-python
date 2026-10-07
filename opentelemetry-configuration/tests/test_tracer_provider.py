@@ -20,6 +20,7 @@ from opentelemetry.configuration._tracer_provider import (
 from opentelemetry.configuration.file._loader import ConfigurationError
 from opentelemetry.configuration.models import (
     AttributeLimits,
+    OtlpHttpEncoding,
 )
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
@@ -63,7 +64,6 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     OtlpGrpcExporter as OtlpGrpcExporterConfig,
 )
-from opentelemetry.configuration.models import OtlpHttpEncoding
 from opentelemetry.configuration.models import (
     OtlpHttpExporter as OtlpHttpExporterConfig,
 )
