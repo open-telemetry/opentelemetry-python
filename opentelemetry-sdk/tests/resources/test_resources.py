@@ -7,6 +7,7 @@ import os
 import platform
 import subprocess
 import sys
+import threading
 import time
 import unittest
 import uuid
@@ -528,14 +529,20 @@ class TestResources(unittest.TestCase):
         resource_detector.raise_on_error = True
         self.assertRaises(Exception, get_aggregated_resources, [resource_detector])
 
-    def test_aggregated_resources_timeout_bounds_wait(self):
-        # A detector that takes longer than the timeout must not hold up the
-        # call beyond the timeout: the skip warning fires, but the wait is bounded.
+    def test_aggregated_resources_joins_detector_threads(self):
+        # A detector that takes longer than the timeout is skipped, but its
+        # worker thread must be joined before the call returns so no threads
+        # outlive resource creation.
+        worker_threads = []
+
+        def slow_detect():
+            worker_threads.append(threading.current_thread())
+            time.sleep(0.5)
+
         resource_detector = Mock(spec=ResourceDetector)
-        resource_detector.detect.side_effect = lambda: time.sleep(2)
+        resource_detector.detect.side_effect = slow_detect
         resource_detector.raise_on_error = False
 
-        start = time.time()
         with self.assertLogs(level=WARNING) as log_entry:
             self.assertEqual(
                 get_aggregated_resources(
@@ -545,10 +552,10 @@ class TestResources(unittest.TestCase):
                 ),
                 _DEFAULT_RESOURCE,
             )
-        elapsed = time.time() - start
 
-        self.assertLess(elapsed, 1.0)
         self.assertIn("took longer than", log_entry.output[0])
+        self.assertEqual(len(worker_threads), 1)
+        self.assertFalse(worker_threads[0].is_alive())
 
     def test_resource_detector_is_not_process_dependent_by_default(self):
         self.assertFalse(DefaultResourceDetector().is_process_dependent())
