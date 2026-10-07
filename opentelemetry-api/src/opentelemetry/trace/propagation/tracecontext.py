@@ -1,13 +1,19 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 #
+import logging
 import re
 
 from opentelemetry import trace
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace import format_span_id, format_trace_id
-from opentelemetry.trace.span import TraceState
+from opentelemetry.trace.span import (
+    _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH,
+    TraceState,
+)
+
+_logger = logging.getLogger(__name__)
 
 
 class TraceContextTextMapPropagator(textmap.TextMapPropagator):
@@ -56,6 +62,16 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
         tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
         if tracestate_headers is None:
+            tracestate = None
+        elif (
+            # multiple header fields are combined with "," (RFC 9110, section 5.3)
+            sum(len(header) for header in tracestate_headers) + len(tracestate_headers) - 1
+            > _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH
+        ):
+            _logger.warning(
+                "tracestate header exceeded the maximum length of %d characters",
+                _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH,
+            )
             tracestate = None
         else:
             tracestate = TraceState.from_header(tracestate_headers)

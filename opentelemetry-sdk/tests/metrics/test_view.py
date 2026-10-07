@@ -106,17 +106,26 @@ class TestView(TestCase):
         )
 
     def test_view_name(self):
-        with self.assertRaises(Exception):
-            View(name="name", instrument_name="instrument_name*")
-
-    def test_view_name_wildcard(self):
-        for instrument_name in ("instrument_name*", "*", "instrument?name", "[ab]"):
-            with self.subTest(instrument_name=instrument_name):
+        for wildcard_name in (
+            "instrument_name*",
+            "*instrument_name",
+            "instrument?name",
+            "instrument_[0-9]",
+            "instrument_[!a-z]",
+            "instrument_[abc]",
+            "instrument_[",
+            "[ab]",
+        ):
+            with self.subTest(wildcard_name=wildcard_name):
                 with self.assertRaisesRegex(
                     Exception,
                     r"View name declared with wildcard characters in instrument_name",
                 ):
-                    View(name="name", instrument_name=instrument_name)
+                    View(name="name", instrument_name=wildcard_name)
+
+        view = View(name="name", instrument_name="instrument_name_1")
+        self.assertEqual(view._name, "name")
+        self.assertEqual(view._instrument_name, "instrument_name_1")
 
     def test_view_name_without_instrument_name(self):
         cases = [

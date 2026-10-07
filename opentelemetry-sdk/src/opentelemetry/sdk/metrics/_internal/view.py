@@ -127,7 +127,7 @@ class View:
                 raise Exception(
                     f"View {name} specifies a name but no instrument_name, which may select multiple instruments"
                 )
-            if "*" in instrument_name or "?" in instrument_name or "[" in instrument_name:
+            if any(c in instrument_name for c in "*?["):
                 # pylint: disable=broad-exception-raised
                 raise Exception(f"View {name} declared with wildcard characters in instrument_name")
 
