@@ -6,6 +6,7 @@ from __future__ import annotations
 import abc
 import base64
 import collections.abc
+import enum
 import json
 import math
 import typing
@@ -14,6 +15,7 @@ from typing_extensions import Self
 
 T = typing.TypeVar("T")
 M = typing.TypeVar("M", bound="JsonMessage")
+EnumT = typing.TypeVar("EnumT", bound=enum.IntEnum)
 
 
 class JsonMessage(abc.ABC):
@@ -134,9 +136,7 @@ def decode_hex(value: str | None, field_name: str) -> bytes:
     try:
         return bytes.fromhex(value)
     except ValueError as error:
-        raise ValueError(
-            f"Invalid hex string for field '{field_name}': {error}"
-        ) from None
+        raise ValueError(f"Invalid hex string for field '{field_name}': {error}") from None
 
 
 def decode_base64(value: str | None, field_name: str) -> bytes:
@@ -155,9 +155,7 @@ def decode_base64(value: str | None, field_name: str) -> bytes:
     try:
         return base64.b64decode(value)
     except Exception as error:
-        raise ValueError(
-            f"Invalid base64 string for field '{field_name}': {error}"
-        ) from None
+        raise ValueError(f"Invalid base64 string for field '{field_name}': {error}") from None
 
 
 def decode_int64(value: int | str | None, field_name: str) -> int:
@@ -176,9 +174,7 @@ def decode_int64(value: int | str | None, field_name: str) -> int:
     try:
         return int(value)
     except (ValueError, TypeError):
-        raise ValueError(
-            f"Invalid int64 value for field '{field_name}': {value}"
-        ) from None
+        raise ValueError(f"Invalid int64 value for field '{field_name}': {value}") from None
 
 
 def decode_float(value: float | str | None, field_name: str) -> float:
@@ -203,9 +199,7 @@ def decode_float(value: float | str | None, field_name: str) -> float:
     try:
         return float(value)
     except (ValueError, TypeError):
-        raise ValueError(
-            f"Invalid float value for field '{field_name}': {value}"
-        ) from None
+        raise ValueError(f"Invalid float value for field '{field_name}': {value}") from None
 
 
 def decode_repeated(
@@ -244,7 +238,32 @@ def validate_type(
         field_name: The name of the field being validated (for error messages).
     """
     if not isinstance(value, expected_types):
-        raise TypeError(
-            f"Field '{field_name}' expected {expected_types}, "
-            f"got {type(value).__name__}"
-        )
+        raise TypeError(f"Field '{field_name}' expected {expected_types}, got {type(value).__name__}")
+
+
+def decode_enum(value: int | str, enum_type: type[EnumT], field_name: str) -> EnumT:
+    """
+    Decode a JSON enum value into an enum member.
+
+    Per the ProtoJSON spec, parsers must accept both enum names (str)
+    and integer values (int).
+
+    Args:
+        value: The enum name or integer value to decode.
+        enum_type: The enum class to decode into.
+        field_name: The name of the field being decoded (for error messages).
+    Returns:
+        The corresponding enum member.
+    """
+    if isinstance(value, bool):
+        raise TypeError(f"Field '{field_name}' expected int or str, got bool")
+    validate_type(value, (int, str), field_name)
+    if isinstance(value, str):
+        try:
+            return enum_type[value]
+        except KeyError:
+            raise ValueError(f"Invalid enum name '{value}' for field '{field_name}'") from None
+    try:
+        return enum_type(value)
+    except ValueError:
+        raise ValueError(f"Invalid enum value {value} for field '{field_name}'") from None
