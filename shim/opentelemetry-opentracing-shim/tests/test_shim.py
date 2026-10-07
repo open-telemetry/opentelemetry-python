@@ -11,7 +11,7 @@ from unittest.mock import Mock
 
 import opentracing
 
-from opentelemetry import trace
+from opentelemetry import context, trace
 from opentelemetry.propagate import get_global_textmap, set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.shim.opentracing_shim import (
@@ -78,6 +78,22 @@ class TestShim(TestCase):
 
         # Verify no span is active.
         self.assertIsNone(self.shim.active_span)
+
+    def test_active_span_with_invalid_span_context(self):
+        """Test that active returns None when nested under an invalid-but-non-canonical span context."""
+        with self.shim.start_active_span("OuterSpan"):
+            self.assertIsNotNone(self.shim.scope_manager.active)
+            invalid_ctx = trace.SpanContext(
+                trace_id=0,
+                span_id=0,
+                is_remote=True,
+                trace_flags=trace.TraceFlags.SAMPLED,
+            )
+            token = context.attach(trace.set_span_in_context(trace.NonRecordingSpan(invalid_ctx)))
+            try:
+                self.assertIsNone(self.shim.scope_manager.active)
+            finally:
+                context.detach(token)
 
     def test_start_span(self):
         """Test span creation using `start_span()`."""
