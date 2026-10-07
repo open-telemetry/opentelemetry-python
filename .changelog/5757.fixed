@@ -1,0 +1,1 @@
+`opentelemetry-api`: replace excessively nested attribute values with `None`

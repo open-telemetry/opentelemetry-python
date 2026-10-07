@@ -15,6 +15,11 @@ from typing_extensions import assert_never, deprecated
 from opentelemetry.util import types
 
 _logger = logging.getLogger(__name__)
+_MAX_NESTING_DEPTH = 20
+
+
+class _AttributeValueTooDeepError(Exception):
+    """Raised when an attribute value exceeds the supported nesting depth."""
 
 
 # Calling str(x) will use an object's `__str__` method if it exists, otherwise it will use it's `__repr__` method.
@@ -52,6 +57,23 @@ def _clean_attribute_value(
     Returns:
         The recursively cleaned AnyValue.
     """
+    try:
+        return _clean_attribute_value_impl(value, max_string_value_length, 0)
+    except _AttributeValueTooDeepError:
+        _logger.warning(
+            "Attribute value exceeds the maximum nesting depth of %d. Replacing value with None.",
+            _MAX_NESTING_DEPTH,
+        )
+        return None
+
+
+def _clean_attribute_value_impl(
+    value: types.AnyValue,
+    max_string_value_length: int | None,
+    depth: int,
+) -> types.AnyValue:
+    if depth > _MAX_NESTING_DEPTH:
+        raise _AttributeValueTooDeepError
     if isinstance(value, (NoneType, bool, int, float, bytes)):
         return value
     if isinstance(value, str):
@@ -63,28 +85,13 @@ def _clean_attribute_value(
             value = value[:max_string_value_length]
         return value
     if isinstance(value, Sequence):
-        return tuple(_clean_attribute_value(v, max_string_value_length) for v in value)
+        return tuple(_clean_attribute_value_impl(v, max_string_value_length, depth + 1) for v in value)
     if isinstance(value, Mapping):
         cleaned_mapping: dict[str, types.AnyValue] = {}
         for key, val in value.items():
-            if not key:
-                _logger.warning(
-                    "invalid attribute key `%s`. must be non-empty string. Dropping key from attributes.",
-                    key,
-                )
-                continue
-            # Spec says to convert unknown types to strings if possible (here and below too).
-            if not isinstance(key, str):
-                _logger.warning(
-                    "Invalid type `%s` for attribute key `%s`, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
-                    type(key),
-                    key,
-                )
-                if _is_non_custom_str(key):
-                    key = str(key)
-                else:
-                    continue
-            cleaned_mapping[key] = _clean_attribute_value(val, max_string_value_length)
+            cleaned_key = _clean_attribute_key(key)
+            if cleaned_key is not None:
+                cleaned_mapping[cleaned_key] = _clean_attribute_value_impl(val, max_string_value_length, depth + 1)
         return cleaned_mapping
     if TYPE_CHECKING:
         assert_never(value)
@@ -96,6 +103,38 @@ def _clean_attribute_value(
     if _is_non_custom_str(value):
         return str(value)
     return None
+
+
+def _clean_attribute_key(key: object) -> str | None:
+    if not key:
+        _logger.warning(
+            "invalid attribute key `%s`. must be non-empty string. Dropping key from attributes.",
+            key,
+        )
+        return None
+    if not isinstance(key, str):
+        _logger.warning(
+            "Invalid type `%s` for attribute key `%s`, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
+            type(key),
+            key,
+        )
+        if _is_non_custom_str(key):
+            return str(key)
+        return None
+    return key
+
+
+def _clean_attributes(
+    attributes: Mapping[str, types.AnyValue],
+    max_string_value_length: int | None,
+) -> dict[str, types.AnyValue]:
+    """Clean top-level attributes while isolating invalid individual values."""
+    cleaned_attributes: dict[str, types.AnyValue] = {}
+    for key, value in attributes.items():
+        cleaned_key = _clean_attribute_key(key)
+        if cleaned_key is not None:
+            cleaned_attributes[cleaned_key] = _clean_attribute_value(value, max_string_value_length)
+    return cleaned_attributes
 
 
 class BoundedAttributes(MutableMapping[str, types.AnyValue]):
@@ -193,7 +232,7 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
             with self._lock:
                 self.dropped += len(attributes)
             return
-        cleaned_attributes: Mapping[str, types.AnyValue] = _clean_attribute_value(attributes, self.max_value_len)
+        cleaned_attributes = _clean_attributes(attributes, self.max_value_len)
         with self._lock:
             self.dropped += len(attributes) - len(cleaned_attributes)
             for key, value in cleaned_attributes.items():
