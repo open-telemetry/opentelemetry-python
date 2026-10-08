@@ -1,914 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791411041477,
+  "lastUpdate": 1791419756516,
   "repoUrl": "https://github.com/open-telemetry/opentelemetry-python",
   "entries": {
     "OpenTelemetry Python SDK Benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "cijo.thomas@gmail.com",
-            "name": "Cijo Thomas",
-            "username": "cijothomas"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "91e49a52ce24f4e42ddf921ea36ac6a90e1171d3",
-          "message": "Count otel.sdk.processor.{span,log}.processed at exporter-submit time (#5472)\n\n* Count processor.processed at exporter-submit time, not export completion\n\n* Add changelog fragment\n\n* Trim comments and fix changelog wording\n\n* Clarify changelog covers simple and batch processors\n\n* Use single-line changelog fragment without redundant PR link\n\nAssisted-by: Claude Opus 4.8\n\n* Add test that shutdown-dropped records are not counted as processed\n\nAssisted-by: Claude Opus 4.8\n\n* Move SimpleSpanProcessor finish_items outside the export try/except\n\nAssisted-by: Claude Opus 4.8\n\n* Simplify shutdown metrics test to call on_emit directly\n\nAssisted-by: Claude Opus 4.8",
-          "timestamp": "2026-08-04T21:45:27Z",
-          "tree_id": "f467c6c5334300efe7a9677ccc85b1c588fdb43a",
-          "url": "https://github.com/open-telemetry/opentelemetry-python/commit/91e49a52ce24f4e42ddf921ea36ac6a90e1171d3"
-        },
-        "date": 1785886691604,
-        "tool": "pytest",
-        "benches": [
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_set_baggage[10]",
-            "value": 66449.06139452253,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000009466204971319706",
-            "extra": "mean: 15.04912152276738 usec\nrounds: 21509"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_set_baggage[100]",
-            "value": 6601.366862967829,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000006052125378949276",
-            "extra": "mean: 151.48377915637036 usec\nrounds: 5104"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_set_baggage[1000]",
-            "value": 335.87933081931436,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0001717995667822099",
-            "extra": "mean: 2.977259712768536 msec\nrounds: 255"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_set_baggage[10000]",
-            "value": 4.436537443624464,
-            "unit": "iter/sec",
-            "range": "stddev: 0.004853425643592691",
-            "extra": "mean: 225.40100533515215 msec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_get_baggage[10]",
-            "value": 251449.28128020477,
-            "unit": "iter/sec",
-            "range": "stddev: 5.941258256753448e-7",
-            "extra": "mean: 3.976945151358938 usec\nrounds: 105585"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_get_baggage[100]",
-            "value": 27600.488603211357,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000003355819076307238",
-            "extra": "mean: 36.23124265574228 usec\nrounds: 25219"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_get_baggage[1000]",
-            "value": 2693.1983787268277,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000010591706749976504",
-            "extra": "mean: 371.30573369524166 usec\nrounds: 2712"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_get_baggage[10000]",
-            "value": 258.11877732362467,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00010758033530044695",
-            "extra": "mean: 3.8741854055283165 msec\nrounds: 260"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_remove_baggage[10]",
-            "value": 110073.88826285889,
-            "unit": "iter/sec",
-            "range": "stddev: 2.467397954275857e-7",
-            "extra": "mean: 9.084806721935522 usec\nrounds: 50652"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_remove_baggage[100]",
-            "value": 9080.69543001661,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0000027254850575720847",
-            "extra": "mean: 110.12372430138545 usec\nrounds: 8589"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_remove_baggage[1000]",
-            "value": 333.690872481945,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000014690179631139117",
-            "extra": "mean: 2.9967855954888516 msec\nrounds: 334"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_remove_baggage[10000]",
-            "value": 4.109297317992292,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0001969613078350633",
-            "extra": "mean: 243.35060780867934 msec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_clear_baggage[10]",
-            "value": 2138616.576826584,
-            "unit": "iter/sec",
-            "range": "stddev: 8.576935123075682e-8",
-            "extra": "mean: 467.59199888175556 nsec\nrounds: 177434"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_clear_baggage[100]",
-            "value": 2155566.989043691,
-            "unit": "iter/sec",
-            "range": "stddev: 1.1694411387692767e-7",
-            "extra": "mean: 463.91506507698284 nsec\nrounds: 140986"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_clear_baggage[1000]",
-            "value": 2159980.818313357,
-            "unit": "iter/sec",
-            "range": "stddev: 4.0523698880621e-8",
-            "extra": "mean: 462.9670743006228 nsec\nrounds: 192704"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_clear_baggage[10000]",
-            "value": 2168448.346846842,
-            "unit": "iter/sec",
-            "range": "stddev: 4.279351171990163e-8",
-            "extra": "mean: 461.15924386859757 nsec\nrounds: 192721"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logging_handler.py::test_simple_get_logger_different_names[1]",
-            "value": 14.719554096745144,
-            "unit": "iter/sec",
-            "range": "stddev: 0.002293743928300191",
-            "extra": "mean: 67.93684057461527 msec\nrounds: 13"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logging_handler.py::test_simple_get_logger_different_names[10]",
-            "value": 13.80230516563627,
-            "unit": "iter/sec",
-            "range": "stddev: 0.009725549133810263",
-            "extra": "mean: 72.45166571810842 msec\nrounds: 15"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logging_handler.py::test_simple_get_logger_different_names[100]",
-            "value": 14.4184839542181,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0011860212039156949",
-            "extra": "mean: 69.35541927814484 msec\nrounds: 15"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logging_handler.py::test_simple_get_logger_different_names[1000]",
-            "value": 13.343447780159735,
-            "unit": "iter/sec",
-            "range": "stddev: 0.015670809521370028",
-            "extra": "mean: 74.9431493625577 msec\nrounds: 14"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[0]",
-            "value": 63456.56964023952,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000629117226083546",
-            "extra": "mean: 15.758809618442926 usec\nrounds: 27921"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[1]",
-            "value": 75547.23994193313,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00002695709905781514",
-            "extra": "mean: 13.23675094905673 usec\nrounds: 21349"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[3]",
-            "value": 53778.08924389228,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0007260078750051502",
-            "extra": "mean: 18.59493362556708 usec\nrounds: 32441"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[5]",
-            "value": 46187.2831202882,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00096652813448926",
-            "extra": "mean: 21.650981232120593 usec\nrounds: 31219"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[10]",
-            "value": 51271.374295077476,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000020513944824259156",
-            "extra": "mean: 19.504060769754112 usec\nrounds: 11859"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[0]",
-            "value": 57121.57668941836,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00003483857729901014",
-            "extra": "mean: 17.50651956680404 usec\nrounds: 16593"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[1]",
-            "value": 25057.849657363637,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0025178423599396295",
-            "extra": "mean: 39.90765423505263 usec\nrounds: 16619"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[3]",
-            "value": 44764.870042852664,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00005375548297279683",
-            "extra": "mean: 22.33894567420204 usec\nrounds: 14210"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[5]",
-            "value": 41760.18828950692,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00005093139752563473",
-            "extra": "mean: 23.94625218323716 usec\nrounds: 15141"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[10]",
-            "value": 34783.04096241173,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00005575461151309247",
-            "extra": "mean: 28.749642708946848 usec\nrounds: 2420"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_get_logger",
-            "value": 687726.7186230917,
-            "unit": "iter/sec",
-            "range": "stddev: 2.227431535598924e-7",
-            "extra": "mean: 1.4540659435220367 usec\nrounds: 40785"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[0-delta]",
-            "value": 254705.00148028912,
-            "unit": "iter/sec",
-            "range": "stddev: 3.706085110664246e-7",
-            "extra": "mean: 3.9261105757178743 usec\nrounds: 7202"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[1-delta]",
-            "value": 242670.42090122466,
-            "unit": "iter/sec",
-            "range": "stddev: 2.5528570189185743e-7",
-            "extra": "mean: 4.1208153687879205 usec\nrounds: 20575"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[3-delta]",
-            "value": 232282.08472995466,
-            "unit": "iter/sec",
-            "range": "stddev: 4.65494954481675e-7",
-            "extra": "mean: 4.305110319474594 usec\nrounds: 24303"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[5-delta]",
-            "value": 213320.7504139919,
-            "unit": "iter/sec",
-            "range": "stddev: 5.496358470795783e-7",
-            "extra": "mean: 4.687776496469747 usec\nrounds: 25056"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[10-delta]",
-            "value": 195977.22262052607,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0000011095751149540387",
-            "extra": "mean: 5.102633799114076 usec\nrounds: 25683"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[0-cumulative]",
-            "value": 332515.699872389,
-            "unit": "iter/sec",
-            "range": "stddev: 8.503359969222154e-7",
-            "extra": "mean: 3.0073767956934794 usec\nrounds: 19686"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[1-cumulative]",
-            "value": 320279.19080667105,
-            "unit": "iter/sec",
-            "range": "stddev: 2.9283009537868014e-7",
-            "extra": "mean: 3.122275903974125 usec\nrounds: 41648"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[3-cumulative]",
-            "value": 303226.6832105323,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0000014022418347839225",
-            "extra": "mean: 3.2978628048564365 usec\nrounds: 37352"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[5-cumulative]",
-            "value": 276309.8374884177,
-            "unit": "iter/sec",
-            "range": "stddev: 1.8383814491774752e-7",
-            "extra": "mean: 3.6191255768876407 usec\nrounds: 41396"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[10-cumulative]",
-            "value": 245547.81564114432,
-            "unit": "iter/sec",
-            "range": "stddev: 2.2352619429634086e-7",
-            "extra": "mean: 4.0725265561370305 usec\nrounds: 48082"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[0]",
-            "value": 335399.50728495646,
-            "unit": "iter/sec",
-            "range": "stddev: 1.971071734093644e-7",
-            "extra": "mean: 2.9815189893835976 usec\nrounds: 12711"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[1]",
-            "value": 320055.2373024688,
-            "unit": "iter/sec",
-            "range": "stddev: 3.3285099104120277e-7",
-            "extra": "mean: 3.1244606663160086 usec\nrounds: 49965"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[3]",
-            "value": 304386.128680088,
-            "unit": "iter/sec",
-            "range": "stddev: 1.316504978798927e-7",
-            "extra": "mean: 3.2853008260800456 usec\nrounds: 45885"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[5]",
-            "value": 277208.2712763441,
-            "unit": "iter/sec",
-            "range": "stddev: 5.438390477604793e-7",
-            "extra": "mean: 3.6073959676445497 usec\nrounds: 48448"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[10]",
-            "value": 250023.1676801687,
-            "unit": "iter/sec",
-            "range": "stddev: 1.8318902481615076e-7",
-            "extra": "mean: 3.9996293514655674 usec\nrounds: 47486"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[None]",
-            "value": 2885507.198808382,
-            "unit": "iter/sec",
-            "range": "stddev: 1.9933694708903877e-8",
-            "extra": "mean: 346.55952354337103 nsec\nrounds: 123996"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[0]",
-            "value": 327447.33960136614,
-            "unit": "iter/sec",
-            "range": "stddev: 1.88020302169803e-7",
-            "extra": "mean: 3.053926170899414 usec\nrounds: 90034"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[1]",
-            "value": 331717.6973279456,
-            "unit": "iter/sec",
-            "range": "stddev: 1.828711414046609e-7",
-            "extra": "mean: 3.0146115448624116 usec\nrounds: 94180"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[10]",
-            "value": 331424.93378837116,
-            "unit": "iter/sec",
-            "range": "stddev: 6.369685564273424e-7",
-            "extra": "mean: 3.017274495824573 usec\nrounds: 97321"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[50]",
-            "value": 327024.7339543125,
-            "unit": "iter/sec",
-            "range": "stddev: 3.1785516276322003e-7",
-            "extra": "mean: 3.0578726810911694 usec\nrounds: 61836"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[0]",
-            "value": 306457.67542565695,
-            "unit": "iter/sec",
-            "range": "stddev: 3.6478505614622953e-7",
-            "extra": "mean: 3.263093341065913 usec\nrounds: 2450"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[1]",
-            "value": 307108.5509600964,
-            "unit": "iter/sec",
-            "range": "stddev: 8.035595217816105e-7",
-            "extra": "mean: 3.2561776507809874 usec\nrounds: 76082"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[3]",
-            "value": 308677.3713199867,
-            "unit": "iter/sec",
-            "range": "stddev: 7.309268593778431e-7",
-            "extra": "mean: 3.2396284694395754 usec\nrounds: 75991"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[5]",
-            "value": 306668.7889424078,
-            "unit": "iter/sec",
-            "range": "stddev: 7.41143671339018e-7",
-            "extra": "mean: 3.26084699864191 usec\nrounds: 86006"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[7]",
-            "value": 308412.1832134826,
-            "unit": "iter/sec",
-            "range": "stddev: 3.608227380744189e-7",
-            "extra": "mean: 3.2424140628316263 usec\nrounds: 83900"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[0]",
-            "value": 308147.32651744585,
-            "unit": "iter/sec",
-            "range": "stddev: 2.1022464927595536e-7",
-            "extra": "mean: 3.245200960532704 usec\nrounds: 11502"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[1]",
-            "value": 305786.38192435965,
-            "unit": "iter/sec",
-            "range": "stddev: 3.3699723955390793e-7",
-            "extra": "mean: 3.2702568168891295 usec\nrounds: 81809"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[3]",
-            "value": 300132.1329527979,
-            "unit": "iter/sec",
-            "range": "stddev: 7.423728537732458e-7",
-            "extra": "mean: 3.3318658357626467 usec\nrounds: 83815"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[5]",
-            "value": 305120.00447496906,
-            "unit": "iter/sec",
-            "range": "stddev: 3.146204527489937e-7",
-            "extra": "mean: 3.277399008041888 usec\nrounds: 79358"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[7]",
-            "value": 305475.23087611527,
-            "unit": "iter/sec",
-            "range": "stddev: 5.521999501617802e-7",
-            "extra": "mean: 3.2735878360152464 usec\nrounds: 91367"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[0]",
-            "value": 307091.16994899075,
-            "unit": "iter/sec",
-            "range": "stddev: 5.6524815365384e-7",
-            "extra": "mean: 3.25636194673427 usec\nrounds: 15469"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[1]",
-            "value": 304422.0863083282,
-            "unit": "iter/sec",
-            "range": "stddev: 2.0368082991800975e-7",
-            "extra": "mean: 3.284912773993569 usec\nrounds: 81240"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[3]",
-            "value": 302410.8323611893,
-            "unit": "iter/sec",
-            "range": "stddev: 2.8216386061244215e-7",
-            "extra": "mean: 3.306759854440775 usec\nrounds: 93195"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[5]",
-            "value": 304182.1420427403,
-            "unit": "iter/sec",
-            "range": "stddev: 4.216031270924908e-7",
-            "extra": "mean: 3.2875039714181877 usec\nrounds: 80775"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[7]",
-            "value": 304872.5320890762,
-            "unit": "iter/sec",
-            "range": "stddev: 2.494260470944e-7",
-            "extra": "mean: 3.2800593518468393 usec\nrounds: 90769"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[0]",
-            "value": 304315.2354829364,
-            "unit": "iter/sec",
-            "range": "stddev: 1.7073616635118626e-7",
-            "extra": "mean: 3.2860661688956823 usec\nrounds: 17420"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[1]",
-            "value": 287194.8628623093,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0000016389566654248985",
-            "extra": "mean: 3.4819564320669376 usec\nrounds: 76740"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[3]",
-            "value": 304784.36518114625,
-            "unit": "iter/sec",
-            "range": "stddev: 6.127861205862188e-7",
-            "extra": "mean: 3.2810081954356733 usec\nrounds: 90919"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[5]",
-            "value": 305357.61446638725,
-            "unit": "iter/sec",
-            "range": "stddev: 2.1278436180038003e-7",
-            "extra": "mean: 3.274848743325104 usec\nrounds: 80912"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[7]",
-            "value": 303570.05301802803,
-            "unit": "iter/sec",
-            "range": "stddev: 7.899387140736771e-7",
-            "extra": "mean: 3.29413257354675 usec\nrounds: 77090"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[0]",
-            "value": 297989.6405284942,
-            "unit": "iter/sec",
-            "range": "stddev: 2.2301633333257807e-7",
-            "extra": "mean: 3.3558213575024554 usec\nrounds: 4588"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[1]",
-            "value": 294937.09198818385,
-            "unit": "iter/sec",
-            "range": "stddev: 6.975652250361393e-7",
-            "extra": "mean: 3.3905535355317844 usec\nrounds: 82028"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[3]",
-            "value": 295527.98412658036,
-            "unit": "iter/sec",
-            "range": "stddev: 6.456079863594221e-7",
-            "extra": "mean: 3.3837743080590315 usec\nrounds: 81289"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[5]",
-            "value": 295857.43847641954,
-            "unit": "iter/sec",
-            "range": "stddev: 3.32599509941216e-7",
-            "extra": "mean: 3.3800062798816604 usec\nrounds: 85076"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[7]",
-            "value": 292037.6116333767,
-            "unit": "iter/sec",
-            "range": "stddev: 8.481077699539599e-7",
-            "extra": "mean: 3.4242164713201313 usec\nrounds: 77992"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record",
-            "value": 310982.57209745585,
-            "unit": "iter/sec",
-            "range": "stddev: 1.6384471662800862e-7",
-            "extra": "mean: 3.215614281068521 usec\nrounds: 19581"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record_10",
-            "value": 313691.8263885289,
-            "unit": "iter/sec",
-            "range": "stddev: 1.7964873180540003e-7",
-            "extra": "mean: 3.18784206624954 usec\nrounds: 18011"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record_49",
-            "value": 308160.07676460594,
-            "unit": "iter/sec",
-            "range": "stddev: 1.6973667725058347e-7",
-            "extra": "mean: 3.2450666890372997 usec\nrounds: 19207"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record_50",
-            "value": 309731.65383920644,
-            "unit": "iter/sec",
-            "range": "stddev: 1.6906522598346953e-7",
-            "extra": "mean: 3.2286012346646955 usec\nrounds: 18178"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record_1000",
-            "value": 304058.9884555903,
-            "unit": "iter/sec",
-            "range": "stddev: 2.485735305685428e-7",
-            "extra": "mean: 3.288835515369269 usec\nrounds: 4651"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span",
-            "value": 71699.92448444769,
-            "unit": "iter/sec",
-            "range": "stddev: 6.891669432262053e-7",
-            "extra": "mean: 13.947016083913844 usec\nrounds: 7803"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[0]",
-            "value": 95237.89960607453,
-            "unit": "iter/sec",
-            "range": "stddev: 5.724518670304005e-7",
-            "extra": "mean: 10.500021568474589 usec\nrounds: 25790"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[1]",
-            "value": 86801.84350151331,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0000014902419159756107",
-            "extra": "mean: 11.520492649243858 usec\nrounds: 29462"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[10]",
-            "value": 56396.60342809121,
-            "unit": "iter/sec",
-            "range": "stddev: 9.359065665192914e-7",
-            "extra": "mean: 17.73156430023406 usec\nrounds: 24502"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[50]",
-            "value": 21852.052362902356,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000005394009145772365",
-            "extra": "mean: 45.762291952845274 usec\nrounds: 13882"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[128]",
-            "value": 10187.868270048259,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00008277262081311722",
-            "extra": "mean: 98.15596094228485 usec\nrounds: 8540"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span_with_tracer_configurator_rules[0]",
-            "value": 71546.44727128855,
-            "unit": "iter/sec",
-            "range": "stddev: 6.405256891420064e-7",
-            "extra": "mean: 13.976934399107446 usec\nrounds: 21838"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span_with_tracer_configurator_rules[1]",
-            "value": 71935.81984623244,
-            "unit": "iter/sec",
-            "range": "stddev: 6.319210560897636e-7",
-            "extra": "mean: 13.901280365436383 usec\nrounds: 28793"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span_with_tracer_configurator_rules[10]",
-            "value": 71784.56763895637,
-            "unit": "iter/sec",
-            "range": "stddev: 5.407047057519301e-7",
-            "extra": "mean: 13.93057077434169 usec\nrounds: 25112"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span_with_tracer_configurator_rules[50]",
-            "value": 71524.35075862461,
-            "unit": "iter/sec",
-            "range": "stddev: 4.985689701972566e-7",
-            "extra": "mean: 13.9812523901787 usec\nrounds: 23148"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute[1]",
-            "value": 84843.21541326583,
-            "unit": "iter/sec",
-            "range": "stddev: 5.603103509288317e-7",
-            "extra": "mean: 11.786446271856441 usec\nrounds: 31719"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute[10]",
-            "value": 49120.0476217952,
-            "unit": "iter/sec",
-            "range": "stddev: 6.629558269861001e-7",
-            "extra": "mean: 20.35828645158493 usec\nrounds: 22497"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute[50]",
-            "value": 16929.039067357902,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0000011641702169730911",
-            "extra": "mean: 59.07009819170256 usec\nrounds: 12194"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute[128]",
-            "value": 7459.711769779526,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0000013158848322984351",
-            "extra": "mean: 134.05343676295357 usec\nrounds: 6411"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[bool-True]",
-            "value": 1.5342124379483268,
-            "unit": "iter/sec",
-            "range": "stddev: 0.006025024081078099",
-            "extra": "mean: 651.8002170138061 msec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[int-42]",
-            "value": 1.4295155402204105,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0005075726925927814",
-            "extra": "mean: 699.5376908220351 msec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[float-3.14]",
-            "value": 1.388667556263555,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0005461464702567149",
-            "extra": "mean: 720.1147571206093 msec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[str-hello world]",
-            "value": 1.4926492367158268,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00036923984349683666",
-            "extra": "mean: 669.9497614055872 msec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[bytes-hello world]",
-            "value": 1.4111393219295778,
-            "unit": "iter/sec",
-            "range": "stddev: 0.005599577576206328",
-            "extra": "mean: 708.6472501046956 msec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_bool-value5]",
-            "value": 0.6864403837440896,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00764843490436376",
-            "extra": "mean: 1.4567907478660345 sec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_int-value6]",
-            "value": 0.5713688609001704,
-            "unit": "iter/sec",
-            "range": "stddev: 0.006365694953638524",
-            "extra": "mean: 1.750182882603258 sec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_float-value7]",
-            "value": 0.6494285434536596,
-            "unit": "iter/sec",
-            "range": "stddev: 0.004591006650797754",
-            "extra": "mean: 1.539815288502723 sec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_str-value8]",
-            "value": 0.5961435224357264,
-            "unit": "iter/sec",
-            "range": "stddev: 0.006921444663535193",
-            "extra": "mean: 1.6774484035558999 sec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_bytes-value9]",
-            "value": 0.6742263280219652,
-            "unit": "iter/sec",
-            "range": "stddev: 0.007128289759586346",
-            "extra": "mean: 1.4831814754754304 sec\nrounds: 5"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_as_current_span",
-            "value": 47509.11095934009,
-            "unit": "iter/sec",
-            "range": "stddev: 9.569881403647032e-7",
-            "extra": "mean: 21.04859425502266 usec\nrounds: 9018"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_events[1]",
-            "value": 65419.169754941526,
-            "unit": "iter/sec",
-            "range": "stddev: 5.055211632382976e-7",
-            "extra": "mean: 15.286039302332533 usec\nrounds: 36360"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_events[10]",
-            "value": 21939.22367422568,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000003938000124854641",
-            "extra": "mean: 45.5804642337826 usec\nrounds: 17947"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_events[50]",
-            "value": 5821.648084894842,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0000037991233413634623",
-            "extra": "mean: 171.7726639290776 usec\nrounds: 4755"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_events[128]",
-            "value": 2357.591128974972,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000006937546936674723",
-            "extra": "mean: 424.16175888597684 usec\nrounds: 213"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_links[1]",
-            "value": 71171.25112490852,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000002468209477701719",
-            "extra": "mean: 14.050617126920505 usec\nrounds: 43290"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_links[10]",
-            "value": 30802.39585263947,
-            "unit": "iter/sec",
-            "range": "stddev: 6.841603686675521e-7",
-            "extra": "mean: 32.46500709828094 usec\nrounds: 24598"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_links[50]",
-            "value": 8762.183627592092,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000001231207609533439",
-            "extra": "mean: 114.1268024617748 usec\nrounds: 7865"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_links[128]",
-            "value": 3659.7759231066602,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000002123977507073543",
-            "extra": "mean: 273.24077238891 usec\nrounds: 3452"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_attribute_iterator[1]",
-            "value": 2701156.1557143526,
-            "unit": "iter/sec",
-            "range": "stddev: 2.1028301577151152e-8",
-            "extra": "mean: 370.21184350430053 nsec\nrounds: 189607"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_attribute_iterator[10]",
-            "value": 2452579.176593979,
-            "unit": "iter/sec",
-            "range": "stddev: 3.6404766284132456e-8",
-            "extra": "mean: 407.73403343852516 nsec\nrounds: 192652"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_attribute_iterator[50]",
-            "value": 1649100.2071762774,
-            "unit": "iter/sec",
-            "range": "stddev: 3.822379339214639e-8",
-            "extra": "mean: 606.3912888060822 nsec\nrounds: 155570"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_attribute_iterator[128]",
-            "value": 1044683.2349808753,
-            "unit": "iter/sec",
-            "range": "stddev: 3.612040111807745e-8",
-            "extra": "mean: 957.2279582129092 nsec\nrounds: 101011"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_list_iterator[1]",
-            "value": 1394451.655455755,
-            "unit": "iter/sec",
-            "range": "stddev: 2.124470207151183e-8",
-            "extra": "mean: 717.1277656615247 nsec\nrounds: 70200"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_list_iterator[10]",
-            "value": 1285409.130281983,
-            "unit": "iter/sec",
-            "range": "stddev: 3.343589845429039e-8",
-            "extra": "mean: 777.9624218015534 nsec\nrounds: 121982"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_list_iterator[50]",
-            "value": 917219.7871186202,
-            "unit": "iter/sec",
-            "range": "stddev: 1.050986901981062e-7",
-            "extra": "mean: 1.090251228815536 usec\nrounds: 90769"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_list_iterator[128]",
-            "value": 588148.4741120702,
-            "unit": "iter/sec",
-            "range": "stddev: 2.7703836517533015e-7",
-            "extra": "mean: 1.7002509468543696 usec\nrounds: 191723"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_gil_contention_batch_processor[1]",
-            "value": 49.99205360903912,
-            "unit": "iter/sec",
-            "range": "stddev: 0.012662886280393462",
-            "extra": "mean: 20.003179061625687 msec\nrounds: 35"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_gil_contention_batch_processor[2]",
-            "value": 47.836152413075176,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0013931163144249837",
-            "extra": "mean: 20.90469131724456 msec\nrounds: 74"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_gil_contention_batch_processor[4]",
-            "value": 45.42882379393762,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00104386495356535",
-            "extra": "mean: 22.012456332480436 msec\nrounds: 38"
-          },
-          {
-            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_gil_contention_batch_processor[8]",
-            "value": 38.45955881539028,
-            "unit": "iter/sec",
-            "range": "stddev: 0.001318971892961385",
-            "extra": "mean: 26.00133830968004 msec\nrounds: 39"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -94520,6 +93614,968 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0014845030670301922",
             "extra": "mean: 31.497494374034986 msec\nrounds: 33"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "119982314+WatchTree-19@users.noreply.github.com",
+            "name": "WatchTree-19",
+            "username": "WatchTree-19"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5d9d4cc539802df23e348db24469a77800d23446",
+          "message": "Apply the specified status precedence in Span.set_status (#5662)\n\n* Keep an existing status description when a bare Status(ERROR) is set\n\nFixes #5661.\n\nset_status returns early when the span is already OK and when the incoming\nstatus is UNSET, but nothing stops a second ERROR replacing a first one. A bare\nStatus(StatusCode.ERROR) therefore overwrites Status(StatusCode.ERROR, \"...\")\nand the description is gone. The status code is unchanged, so the loss is\nsilent.\n\nThe assignment is now declined when the incoming status carries no description,\nthe recorded one does, and the codes match. A described status still replaces a\ndescribed status, a bare status still lands when there is nothing to keep, and a\ndifferent status code still takes precedence as before.\n\nAssisted-by: Claude Opus 5\nSigned-off-by: WatchTree-19 <119982314+WatchTree-19@users.noreply.github.com>\n\n* changelog: add fragment for #5662\n\nAssisted-by: Claude Opus 5\nSigned-off-by: WatchTree-19 <119982314+WatchTree-19@users.noreply.github.com>\n\n* Apply the specified status precedence in set_status\n\nThe specification gives the status codes a total order, Ok > Error > Unset,\nsays an attempt to set Unset should be ignored, and says the value of the\nlast call is the one recorded. The SDK already behaved that way, but the\nrule was spread across two ad-hoc conditions and one of them relied on\nPython's and/or precedence to read correctly, so it was neither obvious nor\ncovered by tests.\n\nState the order explicitly in _STATUS_PRECEDENCE and move the decision into\n_accepts_status, then pin every transition in the lattice with a test. The\nenum's own values are Unset=0, Ok=1, Error=2, which is not the specified\norder, so the map cannot be replaced by a comparison on the enum.\n\nWithin a single status code the last call still wins, with one exception\nkept from the original fix: a bare status carries no new information, so\nletting it through would drop a description already recorded in favour of\nnothing.\n\n* Address review: description-absent check, match-based precedence, subTests\n\nThree points from the review.\n\nA same-code status now has to fill in a description that is missing rather\nthan merely carry one. Previously any described status replaced a described\nstatus of the same code, on the reading that the last call wins. The review\nasked that an already populated description not be overwritten, and that\nalso settles the Error to Error question raised earlier in the thread: a\nrepeat of a code already recorded is ignored unless it adds a message where\nthere was none. One assertion inverts with this, the case that used to\nexpect the second description now expects the first.\n\nThe precedence map becomes _status_precedence, a small function with a match\nexpression and a default arm. A code the ordering has not been taught about\nranks below Unset, so an unknown status cannot displace one already\nrecorded, and it raises nothing at runtime.\n\nThe twelve transition tests become a table of thirteen cases driven through\nself.subTest, and the table is now run twice, once through Status instances\nand once through the StatusCode overload, which covers the overload on every\ncase rather than on one.\n\nAssisted-by: Claude Opus 5\nSigned-off-by: WatchTree-19 <119982314+WatchTree-19@users.noreply.github.com>\n\n* Simplify _accepts_status and drop _status_precedence\n\nOnce Unset is ignored and Ok is final, any code that differs from the one\nrecorded is an upgrade, so the rank comparison is not needed. No change in\nbehaviour. Also fixes the article before Unset in the changelog fragment.\n\nAssisted-by: Claude Opus 5\nSigned-off-by: WatchTree-19 <119982314+WatchTree-19@users.noreply.github.com>\n\n* Treat an empty status description as absent\n\nThe spec says an empty description is equivalent to an absent one, so an Error\nrecorded with an empty description can now take a later one, and an empty\ndescription never replaces one already recorded. Both transitions are added to\nthe precedence cases.\n\nAssisted-by: Claude Opus 5\nSigned-off-by: WatchTree-19 <119982314+WatchTree-19@users.noreply.github.com>\n\n---------\n\nSigned-off-by: WatchTree-19 <119982314+WatchTree-19@users.noreply.github.com>\nCo-authored-by: Lukas Hering <40302054+herin049@users.noreply.github.com>",
+          "timestamp": "2026-10-07T18:01:24Z",
+          "tree_id": "bd4ac90ef7ecc5e8b9d1234c357bb63e7a87b7a6",
+          "url": "https://github.com/open-telemetry/opentelemetry-python/commit/5d9d4cc539802df23e348db24469a77800d23446"
+        },
+        "date": 1791419755625,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logging_handler.py::test_simple_get_logger_different_names[1]",
+            "value": 11.770076653090351,
+            "unit": "iter/sec",
+            "range": "stddev: 0.007584076726330837",
+            "extra": "mean: 84.96121388788407 msec\nrounds: 13"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logging_handler.py::test_simple_get_logger_different_names[10]",
+            "value": 10.884396551208352,
+            "unit": "iter/sec",
+            "range": "stddev: 0.01950316389619341",
+            "extra": "mean: 91.87463864397543 msec\nrounds: 13"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logging_handler.py::test_simple_get_logger_different_names[100]",
+            "value": 11.454737692426045,
+            "unit": "iter/sec",
+            "range": "stddev: 0.007929689271734057",
+            "extra": "mean: 87.30012217226128 msec\nrounds: 12"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logging_handler.py::test_simple_get_logger_different_names[1000]",
+            "value": 11.522329338999146,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002020896287378397",
+            "extra": "mean: 86.78800705820322 msec\nrounds: 11"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[0]",
+            "value": 103728.86986564046,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003732611818077925",
+            "extra": "mean: 9.640517642728545 usec\nrounds: 18068"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[1]",
+            "value": 76093.86861316311,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004174922239425989",
+            "extra": "mean: 13.141663293315789 usec\nrounds: 21693"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[3]",
+            "value": 48961.93213078044,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008613627495018765",
+            "extra": "mean: 20.424030598484883 usec\nrounds: 20645"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[5]",
+            "value": 63783.591859035485,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004251677406470231",
+            "extra": "mean: 15.678013276675347 usec\nrounds: 22205"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_simple_log_record_processor[10]",
+            "value": 52408.33319520943,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003922332917357609",
+            "extra": "mean: 19.080935016101762 usec\nrounds: 18207"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[0]",
+            "value": 36755.004110569476,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0015747086328971617",
+            "extra": "mean: 27.207179653462056 usec\nrounds: 10908"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[1]",
+            "value": 64387.17089837155,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004847085000968776",
+            "extra": "mean: 15.53104424448771 usec\nrounds: 16692"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[3]",
+            "value": 34425.56629321263,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0015629209397428935",
+            "extra": "mean: 29.048178655441927 usec\nrounds: 17206"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[5]",
+            "value": 52579.80760662467,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008820796361619148",
+            "extra": "mean: 19.01870785609355 usec\nrounds: 19268"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_batch_log_record_processor[10]",
+            "value": 46256.831039911915,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005024398841279231",
+            "extra": "mean: 21.618428619486863 usec\nrounds: 15431"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/logs/test_benchmark_logs.py::test_get_logger",
+            "value": 740963.4508696784,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9097772146683858e-7",
+            "extra": "mean: 1.349594232787443 usec\nrounds: 13561"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[0-delta]",
+            "value": 135496.7083264435,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001749734004526944",
+            "extra": "mean: 7.380253087704272 usec\nrounds: 2539"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[1-delta]",
+            "value": 110297.86282034715,
+            "unit": "iter/sec",
+            "range": "stddev: 4.526320421403315e-7",
+            "extra": "mean: 9.0663588072309 usec\nrounds: 16032"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[3-delta]",
+            "value": 85917.5911107459,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011628509551323038",
+            "extra": "mean: 11.639060023354494 usec\nrounds: 16768"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[5-delta]",
+            "value": 83299.45312392848,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000018643449120255107",
+            "extra": "mean: 12.004880734477972 usec\nrounds: 16943"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[10-delta]",
+            "value": 67470.02394415963,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011246316700888767",
+            "extra": "mean: 14.821396844732593 usec\nrounds: 24129"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[0-cumulative]",
+            "value": 179654.15542259585,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0739904578100347e-7",
+            "extra": "mean: 5.566250319385743 usec\nrounds: 19143"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[1-cumulative]",
+            "value": 143172.67907534188,
+            "unit": "iter/sec",
+            "range": "stddev: 6.393640461873428e-7",
+            "extra": "mean: 6.984572800190246 usec\nrounds: 32629"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[3-cumulative]",
+            "value": 114982.92743764713,
+            "unit": "iter/sec",
+            "range": "stddev: 5.35480501683463e-7",
+            "extra": "mean: 8.696943296580088 usec\nrounds: 30873"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[5-cumulative]",
+            "value": 96151.40159657858,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010506193847178811",
+            "extra": "mean: 10.400264410036261 usec\nrounds: 27444"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add[10-cumulative]",
+            "value": 67475.54167389292,
+            "unit": "iter/sec",
+            "range": "stddev: 5.59400235826625e-7",
+            "extra": "mean: 14.820184843168317 usec\nrounds: 25504"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[0]",
+            "value": 181202.4474176208,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2904765413553005e-7",
+            "extra": "mean: 5.51868925752024 usec\nrounds: 8595"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[1]",
+            "value": 144994.2398687882,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3452841556090097e-7",
+            "extra": "mean: 6.896825700834357 usec\nrounds: 32720"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[3]",
+            "value": 114919.289641474,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3356627468923047e-7",
+            "extra": "mean: 8.701759322736914 usec\nrounds: 31197"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[5]",
+            "value": 96417.97131673004,
+            "unit": "iter/sec",
+            "range": "stddev: 7.184262645271553e-7",
+            "extra": "mean: 10.371510480292423 usec\nrounds: 29934"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_up_down_counter_add[10]",
+            "value": 67357.71415216813,
+            "unit": "iter/sec",
+            "range": "stddev: 6.303801245057914e-7",
+            "extra": "mean: 14.846109500403998 usec\nrounds: 25120"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[None]",
+            "value": 2223083.3231388056,
+            "unit": "iter/sec",
+            "range": "stddev: 9.439813453042478e-8",
+            "extra": "mean: 449.8256946069321 nsec\nrounds: 134504"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[0]",
+            "value": 181180.09173143862,
+            "unit": "iter/sec",
+            "range": "stddev: 4.4892643472055057e-7",
+            "extra": "mean: 5.519370204770013 usec\nrounds: 52637"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[1]",
+            "value": 177236.68267686764,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6486444099639155e-7",
+            "extra": "mean: 5.64217285550965 usec\nrounds: 52795"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[10]",
+            "value": 180471.8614114244,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2854124286141158e-7",
+            "extra": "mean: 5.541030009771356 usec\nrounds: 53306"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics.py::test_counter_add_with_meter_configurator_rules[50]",
+            "value": 181283.21457427705,
+            "unit": "iter/sec",
+            "range": "stddev: 9.42380264923934e-7",
+            "extra": "mean: 5.51623051449295 usec\nrounds: 50983"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[0]",
+            "value": 223612.7723682703,
+            "unit": "iter/sec",
+            "range": "stddev: 4.33652351632778e-7",
+            "extra": "mean: 4.47201646582642 usec\nrounds: 2274"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[1]",
+            "value": 216554.0360837747,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000029114177066539063",
+            "extra": "mean: 4.617785094585567 usec\nrounds: 62167"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[3]",
+            "value": 225466.00833852382,
+            "unit": "iter/sec",
+            "range": "stddev: 2.791787025464255e-7",
+            "extra": "mean: 4.435258367188367 usec\nrounds: 61301"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[5]",
+            "value": 223953.70078235384,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6246957889005755e-7",
+            "extra": "mean: 4.465208641369296 usec\nrounds: 57398"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record[7]",
+            "value": 224440.3357445352,
+            "unit": "iter/sec",
+            "range": "stddev: 3.447100750480923e-7",
+            "extra": "mean: 4.4555271078289165 usec\nrounds: 52119"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[0]",
+            "value": 225600.82132376087,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4502690752683387e-7",
+            "extra": "mean: 4.4326079760361115 usec\nrounds: 8708"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[1]",
+            "value": 223122.2870961192,
+            "unit": "iter/sec",
+            "range": "stddev: 2.810464562415363e-7",
+            "extra": "mean: 4.481847210400852 usec\nrounds: 58521"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[3]",
+            "value": 223006.57645266724,
+            "unit": "iter/sec",
+            "range": "stddev: 6.308948966628325e-7",
+            "extra": "mean: 4.484172690809628 usec\nrounds: 39722"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[5]",
+            "value": 224401.07740491783,
+            "unit": "iter/sec",
+            "range": "stddev: 8.115048482217099e-7",
+            "extra": "mean: 4.456306589810004 usec\nrounds: 62602"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10[7]",
+            "value": 224238.22700179016,
+            "unit": "iter/sec",
+            "range": "stddev: 5.627901867955144e-7",
+            "extra": "mean: 4.459542930617341 usec\nrounds: 64926"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10_small_mapping_attrs[1]",
+            "value": 92531.33888338701,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7379958564342507e-7",
+            "extra": "mean: 10.807149362231254 usec\nrounds: 19520"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10_small_mapping_attrs[3]",
+            "value": 53191.22937437007,
+            "unit": "iter/sec",
+            "range": "stddev: 9.516901107791077e-7",
+            "extra": "mean: 18.800091890371778 usec\nrounds: 20348"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10_complex_attrs[1]",
+            "value": 51256.674265969006,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010706263766006562",
+            "extra": "mean: 19.509654387856624 usec\nrounds: 13146"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10_complex_attrs[3]",
+            "value": 22527.735147610307,
+            "unit": "iter/sec",
+            "range": "stddev: 8.356191815256775e-7",
+            "extra": "mean: 44.38972641713065 usec\nrounds: 12031"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10_array_attrs[1]",
+            "value": 62884.56222638202,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001540716849453528",
+            "extra": "mean: 15.90215411534612 usec\nrounds: 19158"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10_array_attrs[3]",
+            "value": 29759.59188923636,
+            "unit": "iter/sec",
+            "range": "stddev: 9.387487913441919e-7",
+            "extra": "mean: 33.60261134366182 usec\nrounds: 14403"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10_json_string_attrs[1]",
+            "value": 91887.83068182785,
+            "unit": "iter/sec",
+            "range": "stddev: 8.489359767628834e-7",
+            "extra": "mean: 10.882833913694347 usec\nrounds: 12053"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_10_json_string_attrs[3]",
+            "value": 53171.27895151565,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016525806113938412",
+            "extra": "mean: 18.807145882495174 usec\nrounds: 17308"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[0]",
+            "value": 159559.4874815078,
+            "unit": "iter/sec",
+            "range": "stddev: 6.840479527626451e-7",
+            "extra": "mean: 6.26725502684944 usec\nrounds: 12872"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[1]",
+            "value": 126421.1760345046,
+            "unit": "iter/sec",
+            "range": "stddev: 4.318534834028424e-7",
+            "extra": "mean: 7.910067216326688 usec\nrounds: 24354"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[3]",
+            "value": 96092.97898043903,
+            "unit": "iter/sec",
+            "range": "stddev: 3.6052355736142757e-7",
+            "extra": "mean: 10.406587563525978 usec\nrounds: 23443"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[5]",
+            "value": 78547.05508415429,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8828971028235044e-7",
+            "extra": "mean: 12.73122205445657 usec\nrounds: 22066"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_49[7]",
+            "value": 65720.52052249465,
+            "unit": "iter/sec",
+            "range": "stddev: 9.198181301500458e-7",
+            "extra": "mean: 15.215947653027529 usec\nrounds: 21202"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[0]",
+            "value": 162264.58743001148,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0796346720336884e-7",
+            "extra": "mean: 6.162774119962085 usec\nrounds: 15040"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[1]",
+            "value": 124704.95577742902,
+            "unit": "iter/sec",
+            "range": "stddev: 8.93922730620239e-7",
+            "extra": "mean: 8.018927505854544 usec\nrounds: 23099"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[3]",
+            "value": 95255.49571138868,
+            "unit": "iter/sec",
+            "range": "stddev: 4.1785806937560934e-7",
+            "extra": "mean: 10.498081948256985 usec\nrounds: 23709"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[5]",
+            "value": 78626.42634461608,
+            "unit": "iter/sec",
+            "range": "stddev: 5.865999132107426e-7",
+            "extra": "mean: 12.71837022856724 usec\nrounds: 20114"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_50[7]",
+            "value": 65535.9625695712,
+            "unit": "iter/sec",
+            "range": "stddev: 4.934672675111346e-7",
+            "extra": "mean: 15.258797777455806 usec\nrounds: 19770"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[0]",
+            "value": 159117.2205161582,
+            "unit": "iter/sec",
+            "range": "stddev: 3.067294614827589e-7",
+            "extra": "mean: 6.284674887834977 usec\nrounds: 4760"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[1]",
+            "value": 123978.9163409665,
+            "unit": "iter/sec",
+            "range": "stddev: 3.284896802618122e-7",
+            "extra": "mean: 8.065887567929716 usec\nrounds: 8826"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[3]",
+            "value": 94513.61450323065,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8930703831274086e-7",
+            "extra": "mean: 10.580486263868558 usec\nrounds: 8729"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[5]",
+            "value": 77881.10051048928,
+            "unit": "iter/sec",
+            "range": "stddev: 6.177122844515882e-7",
+            "extra": "mean: 12.840085636249023 usec\nrounds: 8631"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram.py::test_histogram_record_1000[7]",
+            "value": 63264.17779372928,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003921568739086934",
+            "extra": "mean: 15.806733523993094 usec\nrounds: 8413"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record",
+            "value": 229837.4158095639,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019892643634898876",
+            "extra": "mean: 4.350901686210085 usec\nrounds: 12123"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record_10",
+            "value": 226040.59692477508,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8530418264869256e-7",
+            "extra": "mean: 4.423984070139373 usec\nrounds: 17483"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record_49",
+            "value": 226997.93684546376,
+            "unit": "iter/sec",
+            "range": "stddev: 4.981885355610007e-7",
+            "extra": "mean: 4.405326382683304 usec\nrounds: 18484"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record_50",
+            "value": 227347.06809367126,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7863918650807977e-7",
+            "extra": "mean: 4.398561232326872 usec\nrounds: 19013"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/metrics/test_benchmark_metrics_histogram_steady.py::test_histogram_record_1000",
+            "value": 223627.26270238264,
+            "unit": "iter/sec",
+            "range": "stddev: 6.215078973053319e-7",
+            "extra": "mean: 4.471726693407966 usec\nrounds: 5044"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_set_baggage[10]",
+            "value": 85262.63565797298,
+            "unit": "iter/sec",
+            "range": "stddev: 4.686878652333197e-7",
+            "extra": "mean: 11.728466898577388 usec\nrounds: 16712"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_set_baggage[100]",
+            "value": 8527.54955118319,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002176709630120214",
+            "extra": "mean: 117.26698203251728 usec\nrounds: 7252"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_set_baggage[1000]",
+            "value": 335.0501047454578,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005256258406997928",
+            "extra": "mean: 2.9846282267534696 msec\nrounds: 333"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_set_baggage[10000]",
+            "value": 4.308117179195163,
+            "unit": "iter/sec",
+            "range": "stddev: 0.001170563956483994",
+            "extra": "mean: 232.11996294558048 msec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_get_baggage[10]",
+            "value": 237242.94893171263,
+            "unit": "iter/sec",
+            "range": "stddev: 4.4345422864389745e-7",
+            "extra": "mean: 4.215088391469275 usec\nrounds: 120537"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_get_baggage[100]",
+            "value": 25185.73017188712,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000004277289366372181",
+            "extra": "mean: 39.705023168882455 usec\nrounds: 23464"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_get_baggage[1000]",
+            "value": 2479.1665595213262,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003389610228957195",
+            "extra": "mean: 403.3613619704029 usec\nrounds: 2453"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_get_baggage[10000]",
+            "value": 242.59510586316088,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013439359297003321",
+            "extra": "mean: 4.1220946994869045 msec\nrounds: 241"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_remove_baggage[10]",
+            "value": 108584.15409912942,
+            "unit": "iter/sec",
+            "range": "stddev: 4.864206315126619e-7",
+            "extra": "mean: 9.209446887499562 usec\nrounds: 56238"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_remove_baggage[100]",
+            "value": 8848.369316443459,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000017642270333140515",
+            "extra": "mean: 113.01517423573624 usec\nrounds: 8456"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_remove_baggage[1000]",
+            "value": 322.0243642931328,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000013328204785503198",
+            "extra": "mean: 3.1053550938453798 msec\nrounds: 319"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_remove_baggage[10000]",
+            "value": 4.2278041756377585,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007678757953525153",
+            "extra": "mean: 236.529403552413 msec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_clear_baggage[10]",
+            "value": 2057000.4291125934,
+            "unit": "iter/sec",
+            "range": "stddev: 8.281228291461103e-8",
+            "extra": "mean: 486.1447697565178 nsec\nrounds: 103215"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_clear_baggage[100]",
+            "value": 2018481.715033689,
+            "unit": "iter/sec",
+            "range": "stddev: 4.44334593875047e-8",
+            "extra": "mean: 495.42187702369637 nsec\nrounds: 197962"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_clear_baggage[1000]",
+            "value": 2039984.3647160367,
+            "unit": "iter/sec",
+            "range": "stddev: 2.462167722534901e-8",
+            "extra": "mean: 490.1998354968759 nsec\nrounds: 131377"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/test_baggage.py::test_clear_baggage[10000]",
+            "value": 2027129.3703530654,
+            "unit": "iter/sec",
+            "range": "stddev: 6.108341231892443e-7",
+            "extra": "mean: 493.30842649960226 nsec\nrounds: 189875"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span",
+            "value": 59023.11893459715,
+            "unit": "iter/sec",
+            "range": "stddev: 9.585316086596753e-7",
+            "extra": "mean: 16.94251368024263 usec\nrounds: 2822"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[0]",
+            "value": 95003.70177691056,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6382365910208824e-7",
+            "extra": "mean: 10.525905636268979 usec\nrounds: 22708"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[1]",
+            "value": 74361.64949454546,
+            "unit": "iter/sec",
+            "range": "stddev: 6.106710678855478e-7",
+            "extra": "mean: 13.447792064824375 usec\nrounds: 25544"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[10]",
+            "value": 55233.384130608974,
+            "unit": "iter/sec",
+            "range": "stddev: 7.165381768619741e-7",
+            "extra": "mean: 18.10499240161214 usec\nrounds: 22372"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[50]",
+            "value": 25955.889672604608,
+            "unit": "iter/sec",
+            "range": "stddev: 6.353759533311444e-7",
+            "extra": "mean: 38.52690131656167 usec\nrounds: 13819"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_start_span_with_attributes[128]",
+            "value": 13205.337211940261,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000014966486876748937",
+            "extra": "mean: 75.72695675622734 usec\nrounds: 8910"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span_with_tracer_configurator_rules[0]",
+            "value": 59466.42942659898,
+            "unit": "iter/sec",
+            "range": "stddev: 6.540372848683035e-7",
+            "extra": "mean: 16.81621058540814 usec\nrounds: 19421"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span_with_tracer_configurator_rules[1]",
+            "value": 58850.01507907883,
+            "unit": "iter/sec",
+            "range": "stddev: 5.846897582774867e-7",
+            "extra": "mean: 16.99234908701833 usec\nrounds: 20111"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span_with_tracer_configurator_rules[10]",
+            "value": 58761.53263136578,
+            "unit": "iter/sec",
+            "range": "stddev: 6.722615911495087e-7",
+            "extra": "mean: 17.01793597306921 usec\nrounds: 17494"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span_with_tracer_configurator_rules[50]",
+            "value": 58811.40052173723,
+            "unit": "iter/sec",
+            "range": "stddev: 6.363318265815018e-7",
+            "extra": "mean: 17.003505972118294 usec\nrounds: 14026"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute[1]",
+            "value": 85116.24842801908,
+            "unit": "iter/sec",
+            "range": "stddev: 5.760417710477299e-7",
+            "extra": "mean: 11.748638109275666 usec\nrounds: 18235"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute[10]",
+            "value": 48806.51218150578,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010425571621241403",
+            "extra": "mean: 20.489069087361035 usec\nrounds: 21429"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute[50]",
+            "value": 17018.21072784175,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016285792999268052",
+            "extra": "mean: 58.76058394106042 usec\nrounds: 12603"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute[128]",
+            "value": 7525.642822645894,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016349058420996293",
+            "extra": "mean: 132.87901426717144 usec\nrounds: 6310"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[bool-True]",
+            "value": 1.7422170617063344,
+            "unit": "iter/sec",
+            "range": "stddev: 0.004990036999095118",
+            "extra": "mean: 573.9812919870019 msec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[int-42]",
+            "value": 1.6909399635697624,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0006327868857784388",
+            "extra": "mean: 591.3870519027114 msec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[float-3.14]",
+            "value": 1.6158857535323454,
+            "unit": "iter/sec",
+            "range": "stddev: 0.006229862103327605",
+            "extra": "mean: 618.855632469058 msec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[str-hello world]",
+            "value": 1.5082355561487115,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00033607695726989387",
+            "extra": "mean: 663.0264058709145 msec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[bytes-hello world]",
+            "value": 1.5781577998023613,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000517995505459805",
+            "extra": "mean: 633.6501965299249 msec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_bool-value5]",
+            "value": 0.557364223630139,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00532299507879704",
+            "extra": "mean: 1.7941589316353201 sec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_int-value6]",
+            "value": 0.4610448572023283,
+            "unit": "iter/sec",
+            "range": "stddev: 0.010550467729484017",
+            "extra": "mean: 2.168986345641315 sec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_float-value7]",
+            "value": 0.5176002524766579,
+            "unit": "iter/sec",
+            "range": "stddev: 0.008061145259137073",
+            "extra": "mean: 1.931992875225842 sec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_str-value8]",
+            "value": 0.4065862066992788,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0065492600180339115",
+            "extra": "mean: 2.4595030119642614 sec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_set_attribute_types[seq_bytes-value9]",
+            "value": 0.5060926125313715,
+            "unit": "iter/sec",
+            "range": "stddev: 0.011214633905117205",
+            "extra": "mean: 1.9759229343384503 sec\nrounds: 5"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_simple_start_as_current_span",
+            "value": 41301.109166740185,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000023365382296075234",
+            "extra": "mean: 24.212424803479628 usec\nrounds: 7601"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_events[1]",
+            "value": 53837.21041902871,
+            "unit": "iter/sec",
+            "range": "stddev: 7.671815612978177e-7",
+            "extra": "mean: 18.57451365360028 usec\nrounds: 36400"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_events[10]",
+            "value": 16437.737018897205,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010669449986406666",
+            "extra": "mean: 60.83562468789814 usec\nrounds: 12401"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_events[50]",
+            "value": 4128.309517301505,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000024486221776390567",
+            "extra": "mean: 242.2298996257568 usec\nrounds: 3674"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_events[128]",
+            "value": 1664.5740506964055,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010030246988895843",
+            "extra": "mean: 600.7542888113817 usec\nrounds: 1540"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_links[1]",
+            "value": 72064.38468707437,
+            "unit": "iter/sec",
+            "range": "stddev: 4.893686994986913e-7",
+            "extra": "mean: 13.876480099598522 usec\nrounds: 41898"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_links[10]",
+            "value": 30337.327129708392,
+            "unit": "iter/sec",
+            "range": "stddev: 9.722470572163251e-7",
+            "extra": "mean: 32.96269297965711 usec\nrounds: 23782"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_links[50]",
+            "value": 8961.070324341206,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015605570598180512",
+            "extra": "mean: 111.59381232436844 usec\nrounds: 8084"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_read_links[128]",
+            "value": 3730.7828938431417,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000003864474933023169",
+            "extra": "mean: 268.04025547835704 usec\nrounds: 457"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_attribute_iterator[1]",
+            "value": 2562360.193725179,
+            "unit": "iter/sec",
+            "range": "stddev: 1.584657892283145e-8",
+            "extra": "mean: 390.26519474070983 nsec\nrounds: 126264"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_attribute_iterator[10]",
+            "value": 2258245.1780572864,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6606977817097566e-8",
+            "extra": "mean: 442.8217138319214 nsec\nrounds: 185288"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_attribute_iterator[50]",
+            "value": 1502340.5082741762,
+            "unit": "iter/sec",
+            "range": "stddev: 1.010167976958413e-7",
+            "extra": "mean: 665.6280613432681 nsec\nrounds: 151702"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_attribute_iterator[128]",
+            "value": 966800.964206091,
+            "unit": "iter/sec",
+            "range": "stddev: 4.594969926754499e-8",
+            "extra": "mean: 1.0343390594579838 usec\nrounds: 94520"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_list_iterator[1]",
+            "value": 1407776.5173638156,
+            "unit": "iter/sec",
+            "range": "stddev: 4.667665080217337e-8",
+            "extra": "mean: 710.3400203553524 nsec\nrounds: 134994"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_list_iterator[10]",
+            "value": 1193468.947253953,
+            "unit": "iter/sec",
+            "range": "stddev: 3.718228223018271e-8",
+            "extra": "mean: 837.8936061142564 nsec\nrounds: 114071"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_list_iterator[50]",
+            "value": 874335.0944800435,
+            "unit": "iter/sec",
+            "range": "stddev: 4.059345089600631e-8",
+            "extra": "mean: 1.14372625131179 usec\nrounds: 91235"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_bounded_list_iterator[128]",
+            "value": 584227.6846055733,
+            "unit": "iter/sec",
+            "range": "stddev: 9.573112394726922e-8",
+            "extra": "mean: 1.7116614401372041 usec\nrounds: 193922"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_gil_contention_batch_processor[1]",
+            "value": 34.39242971823791,
+            "unit": "iter/sec",
+            "range": "stddev: 0.041634105201522435",
+            "extra": "mean: 29.07616612703904 msec\nrounds: 46"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_gil_contention_batch_processor[2]",
+            "value": 37.009308389310725,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0012590625592653567",
+            "extra": "mean: 27.02022932935506 msec\nrounds: 40"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_gil_contention_batch_processor[4]",
+            "value": 34.337406600676765,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008211070760205351",
+            "extra": "mean: 29.12275850151976 msec\nrounds: 30"
+          },
+          {
+            "name": "opentelemetry-sdk/benchmarks/trace/test_benchmark_trace.py::test_gil_contention_batch_processor[8]",
+            "value": 31.534655557449298,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0013693817901216905",
+            "extra": "mean: 31.711143893048618 msec\nrounds: 33"
           }
         ]
       }
