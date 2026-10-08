@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix `TraceIdRatioBased` sampler validation for NaN rate values
