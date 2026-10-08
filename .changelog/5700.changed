@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: clarify that bytes attributes are exported as OTLP bytes
