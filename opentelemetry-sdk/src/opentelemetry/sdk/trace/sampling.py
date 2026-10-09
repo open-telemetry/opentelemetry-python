@@ -189,6 +189,8 @@ class SamplingResult:
 
 
 class Sampler(abc.ABC):
+    """Select whether a span is sampled and optionally manage sampler resources."""
+
     @abc.abstractmethod
     def should_sample(
         self,
@@ -205,6 +207,12 @@ class Sampler(abc.ABC):
     @abc.abstractmethod
     def get_description(self) -> str:
         pass
+
+    def shutdown(self) -> None:
+        """Release resources held by the sampler, if any.
+
+        The default is a no-op for samplers that do not manage resources.
+        """
 
 
 class StaticSampler(Sampler):
@@ -303,7 +311,7 @@ class ParentBased(Sampler):
     """
     If a parent is set, applies the respective delegate sampler.
     Otherwise, uses the root provided at initialization to make a
-    decision.
+    decision. Shutdown is forwarded to each distinct delegate.
 
     Args:
         root: Sampler called for spans with no parent (root spans).
@@ -367,6 +375,21 @@ class ParentBased(Sampler):
     def get_description(self):
         return f"ParentBased{{root:{self._root.get_description()},remoteParentSampled:{self._remote_parent_sampled.get_description()},remoteParentNotSampled:{self._remote_parent_not_sampled.get_description()},localParentSampled:{self._local_parent_sampled.get_description()},localParentNotSampled:{self._local_parent_not_sampled.get_description()}}}"
 
+    def shutdown(self) -> None:
+        # A sampler may be used in more than one delegate position.
+        delegates = (
+            self._root,
+            self._remote_parent_sampled,
+            self._remote_parent_not_sampled,
+            self._local_parent_sampled,
+            self._local_parent_not_sampled,
+        )
+        seen = set()
+        for delegate in delegates:
+            if id(delegate) not in seen:
+                seen.add(id(delegate))
+                delegate.shutdown()
+
 
 class AlwaysRecordSampler(Sampler):
     """
@@ -379,7 +402,7 @@ class AlwaysRecordSampler(Sampler):
     The intended use case of this sampler is to provide a means of sending all spans to a
     processor without having an impact on the sampling rate. This may be desirable if a user wishes
     to count or otherwise measure all spans produced in a service, without incurring the cost of 100%
-    sampling.
+    sampling. Shutdown is forwarded to the root sampler.
     """
 
     def __init__(self, root: Sampler):
@@ -413,6 +436,9 @@ class AlwaysRecordSampler(Sampler):
 
     def get_description(self):
         return f"AlwaysRecordSampler{{{self._root.get_description()}}}"
+
+    def shutdown(self) -> None:
+        self._root.shutdown()
 
 
 DEFAULT_OFF = ParentBased(ALWAYS_OFF)

@@ -1302,6 +1302,8 @@ class TracerProvider(trace_api.TracerProvider):
         self._disabled = disabled.lower().strip() == "true"
         self._atexit_handler = None
         self._meter_provider = meter_provider
+        self._shutdown_lock = threading.RLock()
+        self._shutdown = False
 
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
@@ -1320,6 +1322,7 @@ class TracerProvider(trace_api.TracerProvider):
 
     def _handle_fork(self) -> None:
         self._tracers_lock = threading.Lock()
+        self._shutdown_lock = threading.RLock()
         self._update_resource(_get_process_dependent_resource())
 
     def _set_tracer_configurator(self, *, tracer_configurator: _TracerConfiguratorT):
@@ -1421,11 +1424,20 @@ class TracerProvider(trace_api.TracerProvider):
         self._active_span_processor.add_span_processor(span_processor)
 
     def shutdown(self) -> None:
-        """Shut down the span processors added to the tracer provider."""
-        self._active_span_processor.shutdown()
-        if self._atexit_handler is not None:
-            atexit.unregister(self._atexit_handler)
-            self._atexit_handler = None
+        """Shut down the span processors and sampler of the tracer provider."""
+        with self._shutdown_lock:
+            if self._shutdown:
+                return
+            self._shutdown = True
+            try:
+                self._active_span_processor.shutdown()
+            finally:
+                try:
+                    self.sampler.shutdown()
+                finally:
+                    if self._atexit_handler is not None:
+                        atexit.unregister(self._atexit_handler)
+                        self._atexit_handler = None
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Requests the active span processor to process all spans that have not

@@ -88,7 +88,8 @@ class TestTracer(unittest.TestCase):
         self.assertIsInstance(tracer, trace_api.Tracer)
 
     def test_shutdown(self):
-        tracer_provider = trace.TracerProvider()
+        sampler = mock.Mock(spec=trace.sampling.Sampler)
+        tracer_provider = trace.TracerProvider(sampler=sampler)
 
         mock_processor1 = mock.Mock(spec=trace.SpanProcessor)
         tracer_provider.add_span_processor(mock_processor1)
@@ -100,6 +101,12 @@ class TestTracer(unittest.TestCase):
 
         self.assertEqual(mock_processor1.shutdown.call_count, 1)
         self.assertEqual(mock_processor2.shutdown.call_count, 1)
+        sampler.shutdown.assert_called_once_with()
+
+        tracer_provider.shutdown()
+        self.assertEqual(mock_processor1.shutdown.call_count, 1)
+        self.assertEqual(mock_processor2.shutdown.call_count, 1)
+        sampler.shutdown.assert_called_once_with()
 
         shutdown_python_code = """
 import atexit
@@ -108,15 +115,16 @@ from unittest import mock
 from opentelemetry.sdk import trace
 
 mock_processor = mock.Mock(spec=trace.SpanProcessor)
+mock_sampler = mock.Mock(spec=trace.sampling.Sampler)
 
 def print_shutdown_count():
-    print(mock_processor.shutdown.call_count)
+    print(mock_processor.shutdown.call_count, mock_sampler.shutdown.call_count, sep=",")
 
 # atexit hooks are called in inverse order they are added, so do this before
 # creating the tracer
 atexit.register(print_shutdown_count)
 
-tracer_provider = trace.TracerProvider({tracer_parameters})
+tracer_provider = trace.TracerProvider(sampler=mock_sampler{tracer_parameters})
 tracer_provider.add_span_processor(mock_processor)
 
 {tracer_shutdown}
@@ -127,7 +135,7 @@ tracer_provider.add_span_processor(mock_processor)
             tracer_shutdown = ""
 
             if not shutdown_on_exit:
-                tracer_parameters = "shutdown_on_exit=False"
+                tracer_parameters = ", shutdown_on_exit=False"
 
             if explicit_shutdown:
                 tracer_shutdown = "tracer_provider.shutdown()"
@@ -147,16 +155,62 @@ tracer_provider.add_span_processor(mock_processor)
 
         # test default shutdown_on_exit (True)
         out = run_general_code(True, False)
-        self.assertTrue(out.startswith(b"1"))
+        self.assertTrue(out.startswith(b"1,1"))
 
         # test that shutdown is called only once even if Tracer.shutdown is
         # called explicitly
         out = run_general_code(True, True)
-        self.assertTrue(out.startswith(b"1"))
+        self.assertTrue(out.startswith(b"1,1"))
 
         # test shutdown_on_exit=False
         out = run_general_code(False, False)
-        self.assertTrue(out.startswith(b"0"))
+        self.assertTrue(out.startswith(b"0,0"))
+
+    def test_shutdown_orders_processor_before_sampler(self):
+        calls = []
+        sampler = mock.Mock(spec=trace.sampling.Sampler)
+        processor = mock.Mock(spec=trace.SpanProcessor)
+        processor.shutdown.side_effect = lambda: calls.append("processor")
+        sampler.shutdown.side_effect = lambda: calls.append("sampler")
+        tracer_provider = trace.TracerProvider(sampler=sampler, shutdown_on_exit=False)
+        tracer_provider.add_span_processor(processor)
+
+        tracer_provider.shutdown()
+
+        self.assertEqual(calls, ["processor", "sampler"])
+
+    def test_shutdown_sampler_when_processor_fails(self):
+        sampler = mock.Mock(spec=trace.sampling.Sampler)
+        processor = mock.Mock(spec=trace.SpanProcessor)
+        processor.shutdown.side_effect = RuntimeError("processor shutdown failed")
+        tracer_provider = trace.TracerProvider(sampler=sampler, shutdown_on_exit=False)
+        tracer_provider.add_span_processor(processor)
+
+        with self.assertRaisesRegex(RuntimeError, "processor shutdown failed"):
+            tracer_provider.shutdown()
+
+        sampler.shutdown.assert_called_once_with()
+        tracer_provider.shutdown()
+        processor.shutdown.assert_called_once_with()
+        sampler.shutdown.assert_called_once_with()
+
+    def test_shutdown_unregisters_exit_handler_when_sampler_fails(self):
+        sampler = mock.Mock(spec=trace.sampling.Sampler)
+        sampler.shutdown.side_effect = RuntimeError("sampler shutdown failed")
+        tracer_provider = trace.TracerProvider(sampler=sampler)
+        processor = mock.Mock(spec=trace.SpanProcessor)
+        tracer_provider.add_span_processor(processor)
+
+        with (
+            mock.patch("opentelemetry.sdk.trace.atexit.unregister", wraps=trace.atexit.unregister) as unregister,
+            self.assertRaisesRegex(RuntimeError, "sampler shutdown failed"),
+        ):
+            tracer_provider.shutdown()
+
+        unregister.assert_called_once()
+        tracer_provider.shutdown()
+        processor.shutdown.assert_called_once_with()
+        sampler.shutdown.assert_called_once_with()
 
     def test_tracer_provider_accepts_concurrent_multi_span_processor(self):
         span_processor = trace.ConcurrentMultiSpanProcessor(2)
