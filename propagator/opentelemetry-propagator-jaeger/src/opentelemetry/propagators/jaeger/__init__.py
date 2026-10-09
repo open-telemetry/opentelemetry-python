@@ -69,7 +69,7 @@ class JaegerPropagator(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if not span_context.is_valid:
             return
 
         # Non-recording spans do not have a parent; the API Span type does not
@@ -118,7 +118,7 @@ class JaegerPropagator(TextMapPropagator):
         for key in candidates:
             value = _extract_first_element(getter.get(carrier, key))
             if value is not None:
-                pairs.append((key.replace(self.BAGGAGE_PREFIX, ""), value))
+                pairs.append((key.removeprefix(self.BAGGAGE_PREFIX), value))
 
         for baggage_key, value in _limit_baggage_bytes(
             pairs, self.MAX_BAGGAGE_ENTRY_BYTES, self.MAX_BAGGAGE_TOTAL_BYTES

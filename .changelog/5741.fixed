@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: omit histogram min/max when record_min_max is disabled
