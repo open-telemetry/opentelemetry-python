@@ -1,4 +1,4 @@
-asgiref==3.7.2
+asgiref==3.12.1
 iniconfig==2.0.0
 opentracing==2.4.0
 packaging==24.0
