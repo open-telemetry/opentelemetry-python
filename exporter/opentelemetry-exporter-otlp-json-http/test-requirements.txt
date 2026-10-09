@@ -1,5 +1,5 @@
 asgiref==3.7.2
-decorator==5.2.1
+decorator==5.3.1
 h11==0.16.0
 importlib-metadata==6.11.0
 iniconfig==2.0.0
