@@ -1,0 +1,1 @@
+`opentelemetry-api`/`opentelemetry-sdk`: guard unguarded `str()`/`repr()` calls used when stringifying invalid span attribute keys/values, log exception messages, and baggage entries, so an object whose `__str__`/`__repr__` itself raises no longer crashes the calling application
