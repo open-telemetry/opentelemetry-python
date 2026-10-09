@@ -56,7 +56,7 @@ class TestWeaverOptions(unittest.TestCase):
     @patch("opentelemetry.test.weaver_live_check.shutil.which", return_value="weaver")
     def test_local_advice_data_is_absolute(self, _which):
         with tempfile.TemporaryDirectory() as directory:
-            Path(directory, "data.json").write_text("{}")
+            Path(directory, "data.json").write_text("{}", encoding="utf-8")
             cwd = os.getcwd()
             os.chdir(directory)
             try:
