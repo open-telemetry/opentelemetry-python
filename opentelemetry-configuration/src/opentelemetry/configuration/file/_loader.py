@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from opentelemetry.configuration._common import _RAW_MAPPING_ATTRIBUTE
 from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._exceptions import (
     ConfigurationError,
@@ -283,6 +284,11 @@ def load_config_file(
     except Exception as exc:
         _logger.exception("Failed to validate configuration from %s", file_path)
         raise ConfigurationError(f"Failed to validate configuration: {exc}") from exc
+
+    # Keep the parsed mapping, with environment variables already substituted,
+    # next to the typed model. Readers of schemaless nodes need the file as it
+    # was written, which the model cannot reproduce.
+    setattr(config, _RAW_MAPPING_ATTRIBUTE, data)
 
     return config
 
