@@ -17,7 +17,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.metrics import NoOpMeter
+from opentelemetry.metrics import NoOpMeter, Observation
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_SDK_DISABLED,
@@ -1005,6 +1005,29 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         self.assertEqual(metric_1.unit, "unit")
         self.assertEqual(metric_1.description, "description")
         self.assertEqual(next(iter(metric_1.data.data_points)).value, 7)
+
+    def test_duplicate_observable_instrument_aggregates_callbacks(self):
+        reader = InMemoryMetricReader()
+        meter = MeterProvider(metric_readers=[reader], resource=Resource.create()).get_meter("test")
+
+        def first(_options):
+            return [Observation(1, {"who": "first"})]
+
+        def second(_options):
+            return [Observation(2, {"who": "second"})]
+
+        instrument_0 = meter.create_observable_up_down_counter("x.open", callbacks=[first], unit="{c}", description="d")
+        instrument_1 = meter.create_observable_up_down_counter(
+            "x.open", callbacks=[second], unit="{c}", description="d"
+        )
+
+        self.assertIs(instrument_0, instrument_1)
+
+        metrics_data = reader.get_metrics_data()
+        metric = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0]
+        data_points = {data_point.attributes["who"]: data_point.value for data_point in metric.data.data_points}
+
+        self.assertEqual(data_points, {"first": 1, "second": 2})
 
 
 class TestMeasurement(TestCase):
