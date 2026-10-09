@@ -256,9 +256,9 @@ class WeaverLiveCheck:
         otlp_port: int = 0,
         admin_port: int = 0,
         extra_args: Sequence[str] | None = None,
+        startup_timeout: float = 30,
         config: str | None = None,
         advice_data: str | None = None,
-        startup_timeout: float = 30,
     ):
         """Build the ``weaver registry live-check`` command.
 

@@ -56,12 +56,16 @@ class TestWeaverOptions(unittest.TestCase):
     @patch("opentelemetry.test.weaver_live_check.shutil.which", return_value="weaver")
     def test_local_advice_data_is_absolute(self, _which):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "data.json"
-            path.write_text("{}")
-            relative = os.path.relpath(path)
-            weaver = WeaverLiveCheck(registry="registry", otlp_port=4317, admin_port=4320, advice_data=relative)
+            Path(directory, "data.json").write_text("{}")
+            cwd = os.getcwd()
+            os.chdir(directory)
+            try:
+                weaver = WeaverLiveCheck(registry="registry", otlp_port=4317, admin_port=4320, advice_data="data.json")
+                expected = os.path.abspath("data.json")
+            finally:
+                os.chdir(cwd)
             command = weaver._command
-            self.assertEqual(command[command.index("--advice-data") + 1], os.path.abspath(relative))
+            self.assertEqual(command[command.index("--advice-data") + 1], expected)
 
     @patch("opentelemetry.test.weaver_live_check.shutil.which", return_value="weaver")
     def test_optional_flags_are_omitted(self, _which):
