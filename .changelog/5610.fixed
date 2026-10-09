@@ -1,0 +1,1 @@
+`opentelemetry-api`: honor `OTEL_PROPAGATORS` set after import
