@@ -460,7 +460,16 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown_event = Event()
         self._shutdown_once = Once()
         self._daemon_thread = None
-        if self._export_interval_millis > 0 and self._export_interval_millis < math.inf:
+        if self._export_interval_millis <= 0:
+            raise ValueError(
+                f"interval value {self._export_interval_millis} is invalid and needs to be larger than zero."
+            )
+        if self._export_timeout_millis <= 0:
+            raise ValueError(
+                f"timeout value {self._export_timeout_millis} is invalid and needs to be larger than zero."
+            )
+
+        if self._export_interval_millis < math.inf:
             self._daemon_thread = Thread(
                 name="OtelPeriodicExportingMetricReader",
                 target=self._ticker,
@@ -475,11 +484,6 @@ class PeriodicExportingMetricReader(MetricReader):
                         at_fork()
 
                 os.register_at_fork(after_in_child=_after_in_child)
-        elif self._export_interval_millis <= 0:
-            raise ValueError(
-                f"interval value {self._export_interval_millis} is invalid \
-                and needs to be larger than zero."
-            )
 
     def _at_fork_reinit(self):
         self._daemon_thread = Thread(
