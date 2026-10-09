@@ -1,0 +1,13 @@
+description: >
+  `deflate` compression is only supported over HTTP, so it fails for `otlp_grpc`.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+  - output:
+      stream: stderr
+      pattern: "deflate"
+  - spans:
+      count: 0

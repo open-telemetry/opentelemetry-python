@@ -1,0 +1,9 @@
+description: >
+  Exports a span over OTLP/HTTP through a simple span processor.
+until:
+  - spans:
+      name: simple-span
+expect:
+  - spans:
+      name: simple-span
+      count: 1

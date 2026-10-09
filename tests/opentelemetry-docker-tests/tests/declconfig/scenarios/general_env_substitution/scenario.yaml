@@ -1,0 +1,21 @@
+description: >
+  Environment variable substitution: plain, typed standalone, embedded, quoted, defaults,
+  set-but-empty and `$$` escapes.
+env:
+  DECLCONFIG_SERVICE_NAME: declconfig-general-env-substitution
+  DECLCONFIG_INT: "42"
+  DECLCONFIG_EMPTY: ""
+until:
+  - spans:
+      name: env-span
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-general-env-substitution
+          env.standalone: 42
+          env.quoted: "42"
+          env.embedded: v-42
+          env.default: fallback
+          env.empty: ""
+          env.escaped: ${DECLCONFIG_INT}

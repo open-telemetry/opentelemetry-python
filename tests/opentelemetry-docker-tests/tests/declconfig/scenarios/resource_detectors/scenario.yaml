@@ -1,0 +1,21 @@
+description: >
+  `detection/development` runs the service, host, process and os detectors, filtered by
+  `included`/`excluded` globs.
+env:
+  OTEL_SERVICE_NAME: declconfig-resource-detectors
+until:
+  - spans:
+      name: detected-span
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-resource-detectors
+          service.instance.id: {exists: true}
+          host.name: {exists: true}
+          process.pid: {exists: true}
+          os.type: {exists: true}
+          process.command: {exists: false}
+          process.command_args: {exists: false}
+          process.command_line: {exists: false}
+          telemetry.sdk.language: python

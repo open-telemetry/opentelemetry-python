@@ -1,0 +1,19 @@
+description: >
+  Exports spans over OTLP/HTTP through a batch span processor with every batch setting.
+until:
+  - spans:
+      min_count: 20
+      name: batch-span
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-trace-batch-otlp-http
+          telemetry.sdk.language: python
+  - spans:
+      name: batch-span
+      kind: INTERNAL
+      root: true
+      scope:
+        name: __main__
+      count: 20

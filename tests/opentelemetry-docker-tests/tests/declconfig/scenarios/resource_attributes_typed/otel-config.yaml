@@ -1,0 +1,43 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-resource-attributes-typed
+    - name: typed.string
+      value: 12
+      type: string
+    - name: typed.bool
+      value: "false"
+      type: bool
+    - name: typed.int
+      value: "12"
+      type: int
+    - name: typed.double
+      value: 12
+      type: double
+    - name: typed.string_array
+      value: [1, 2]
+      type: string_array
+    - name: typed.bool_array
+      value: [true, false]
+      type: bool_array
+    - name: typed.int_array
+      value: [1, 2]
+      type: int_array
+    - name: typed.double_array
+      value: [1, 2.5]
+      type: double_array
+    - name: untyped.string
+      value: abc
+    - name: untyped.int
+      value: 3
+    - name: untyped.double
+      value: 2.5
+    - name: untyped.bool
+      value: true
+tracer_provider:
+  processors:
+    - simple:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/traces

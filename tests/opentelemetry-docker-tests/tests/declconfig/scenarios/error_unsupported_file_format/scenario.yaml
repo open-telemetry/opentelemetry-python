@@ -1,0 +1,13 @@
+description: >
+  An unsupported major `file_format` version fails configuration.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+  - output:
+      stream: stderr
+      pattern: "Unsupported file_format '2.0'"
+  - spans:
+      count: 0

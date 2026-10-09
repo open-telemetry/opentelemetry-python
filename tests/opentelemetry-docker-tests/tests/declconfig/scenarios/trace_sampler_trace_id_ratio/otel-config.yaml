@@ -1,0 +1,14 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-trace-sampler-trace-id-ratio
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/traces
+  sampler:
+    trace_id_ratio_based:
+      ratio: 0.5

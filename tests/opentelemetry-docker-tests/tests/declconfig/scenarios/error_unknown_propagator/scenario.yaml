@@ -1,0 +1,11 @@
+description: >
+  An unknown propagator name in `composite_list` fails configuration.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+  - output:
+      stream: stderr
+      pattern: "bogus"

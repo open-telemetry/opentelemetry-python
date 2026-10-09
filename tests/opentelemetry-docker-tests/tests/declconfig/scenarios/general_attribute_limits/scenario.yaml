@@ -1,0 +1,24 @@
+description: >
+  Global `attribute_limits` apply to span and log record attributes.
+until:
+  - spans:
+      name: limited-span
+  - logs:
+      body_pattern: limited log
+expect:
+  - spans:
+      name: limited-span
+      attributes:
+        values:
+          dropped: {exists: false}
+          a: abcd
+          b: 1
+      count: 1
+  - logs:
+      body: limited log
+      attributes:
+        values:
+          dropped: {exists: false}
+          a: abcd
+          b: 1
+      count: 1

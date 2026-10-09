@@ -1,0 +1,13 @@
+description: >
+  `meter_configurator/development` disables meters whose name matches a glob.
+until:
+  - metric:
+      name: enabled.requests
+      min: 1
+expect:
+  - metric:
+      name: enabled.requests
+      scope: {name: enabled.meter}
+  - metric:
+      name: disabled.requests
+      count: 0

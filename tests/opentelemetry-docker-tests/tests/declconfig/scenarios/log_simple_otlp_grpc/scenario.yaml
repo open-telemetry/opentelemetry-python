@@ -1,0 +1,9 @@
+description: >
+  Exports a log record over OTLP/gRPC through a simple processor.
+until:
+  - logs:
+      body_pattern: grpc log
+expect:
+  - logs:
+      body: grpc log
+      count: 1

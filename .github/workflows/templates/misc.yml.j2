@@ -23,6 +23,7 @@ env:
   PIP_EXISTS_ACTION: w
   CONTRIB_REPO_UTIL_HTTP: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/util/opentelemetry-util-http
   CONTRIB_REPO_INSTRUMENTATION: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/opentelemetry-instrumentation
+  CONTRIB_REPO_DISTRO: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/opentelemetry-distro
   CONTRIB_REPO_INSTRUMENTATION_REQUESTS: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-requests
   CONTRIB_REPO_INSTRUMENTATION_WSGI: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-wsgi
   CONTRIB_REPO_INSTRUMENTATION_FLASK: ${% raw %}{{ github.workspace }}{% endraw %}/opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-flask
@@ -56,7 +57,7 @@ jobs:
         with:
           persist-credentials: false{% if job_data == "public-symbols-check" %}
           fetch-depth: 0{% endif %}
-      {%- if job_data == "tracecontext" %}
+      {%- if job_data in contrib_job_datas %}
 
       - name: Checkout contrib repo @ ${% raw %}{{ env.CONTRIB_REPO_SHA }}{% endraw %}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

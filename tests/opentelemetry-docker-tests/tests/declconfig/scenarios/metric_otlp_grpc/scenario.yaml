@@ -1,0 +1,11 @@
+description: >
+  Exports metrics over OTLP/gRPC with gzip compression.
+until:
+  - metric:
+      name: grpc.requests
+      min: 1
+expect:
+  - metric:
+      name: grpc.requests
+      type: sum
+      data_point: {value: 1}

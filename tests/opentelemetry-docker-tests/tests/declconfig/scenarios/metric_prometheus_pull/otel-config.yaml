@@ -1,0 +1,13 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-metric-prometheus-pull
+meter_provider:
+  readers:
+    - pull:
+        exporter:
+          prometheus/development:
+            host: 0.0.0.0
+            port: 9464
+            target_info_enabled/development: false

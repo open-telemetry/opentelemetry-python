@@ -1,0 +1,22 @@
+file_format: "1.0"
+resource:
+  detection/development:
+    detectors:
+      - service:
+      - host:
+      - process:
+      - os:
+    attributes:
+      included:
+        - service.*
+        - host.*
+        - process.*
+        - os.*
+      excluded:
+        - process.command*
+tracer_provider:
+  processors:
+    - simple:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/traces
