@@ -269,8 +269,9 @@ class WeaverLiveCheck:
 
         ``config`` selects a Weaver TOML configuration file. Managed command
         flags take precedence over values in that file.
-        ``advice_data`` is passed unchanged to Weaver's ``--advice-data`` option
-        to load JSON/YAML data for advice policies.
+        ``advice_data`` is passed to Weaver's ``--advice-data`` option to load
+        JSON/YAML data for advice policies. Existing local paths are made
+        absolute; other values (URLs, globs) are passed unchanged.
         ``startup_timeout`` controls how long to wait for the health endpoint,
         in seconds. It defaults to 30 seconds.
         """
@@ -311,6 +312,8 @@ class WeaverLiveCheck:
         if config is not None:
             command += ["--config", os.path.abspath(config)]
         if advice_data is not None:
+            if os.path.exists(advice_data):
+                advice_data = os.path.abspath(advice_data)
             command += ["--advice-data", advice_data]
 
         if registry is None:
