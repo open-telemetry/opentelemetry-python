@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 
+from opentelemetry._logs import SeverityNumber as SDKSeverityNumber
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.configuration._common import (
     _map_compression,
@@ -239,24 +240,19 @@ def _create_log_record_processor(
 def _to_logger_config(config: LoggerConfigConfig | None) -> _LoggerConfig:
     """Map an experimental per-logger config to an SDK ``_LoggerConfig``.
 
-    Only ``enabled`` is honored. ``minimum_severity`` and ``trace_based`` are
-    accepted by the config schema but not supported by the Python SDK
-    ``_LoggerConfig``; the ones that are set are ignored with a warning naming
-    them. An absent ``enabled`` leaves the logger enabled.
+    Absent fields use the defaults defined by the Logs SDK specification.
     """
     if config is None:
         return _LoggerConfig.default()
-    unsupported_fields = [
-        field_name for field_name in ("minimum_severity", "trace_based") if getattr(config, field_name) is not None
-    ]
-    if unsupported_fields:
-        _logger.warning(
-            "Ignoring logger_configurator fields that are not supported by the Python SDK LoggerProvider: %s",
-            ", ".join(unsupported_fields),
-        )
-    if config.enabled is None:
-        return _LoggerConfig.default()
-    return _LoggerConfig(is_enabled=config.enabled)
+    return _LoggerConfig(
+        is_enabled=config.enabled if config.enabled is not None else True,
+        minimum_severity=(
+            SDKSeverityNumber[config.minimum_severity.name.upper()]
+            if config.minimum_severity is not None
+            else SDKSeverityNumber.UNSPECIFIED
+        ),
+        trace_based=config.trace_based if config.trace_based is not None else False,
+    )
 
 
 def _create_logger_configurator(
