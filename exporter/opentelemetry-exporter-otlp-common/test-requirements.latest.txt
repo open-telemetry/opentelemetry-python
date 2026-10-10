@@ -32,11 +32,11 @@ h11==0.16.0
     # via mocket
 idna==3.16
     # via requests
-iniconfig==2.3.0
+iniconfig==2.3.1
     # via
     #   -r exporter/opentelemetry-exporter-otlp-common/test-requirements.in
     #   pytest
-mocket==3.14.1
+mocket==3.14.5
     # via -r exporter/opentelemetry-exporter-otlp-common/test-requirements.in
 packaging==26.2
     # via
