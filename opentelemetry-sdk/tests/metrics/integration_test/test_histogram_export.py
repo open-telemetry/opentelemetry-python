@@ -3,16 +3,66 @@
 
 from unittest import TestCase
 
-from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import Histogram, MeterProvider
 from opentelemetry.sdk.metrics._internal.exemplar import (
     AlwaysOffExemplarFilter,
     AlwaysOnExemplarFilter,
 )
-from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    InMemoryMetricReader,
+)
+from opentelemetry.sdk.metrics.view import (
+    ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
+    View,
+)
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 
 
 class TestHistogramExport(TestCase):
+    def test_histogram_collection_without_min_max(self):
+        for aggregation_type in ExplicitBucketHistogramAggregation, ExponentialBucketHistogramAggregation:
+            for temporality in AggregationTemporality.DELTA, AggregationTemporality.CUMULATIVE:
+                with self.subTest(aggregation=aggregation_type.__name__, temporality=temporality):
+                    reader = InMemoryMetricReader(preferred_temporality={Histogram: temporality})
+                    provider = MeterProvider(
+                        metric_readers=[reader],
+                        views=[
+                            View(
+                                instrument_name="my_histogram",
+                                aggregation=aggregation_type(record_min_max=False),
+                            )
+                        ],
+                    )
+                    try:
+                        histogram = provider.get_meter("my-meter").create_histogram("my_histogram")
+                        second_count, second_sum = (1, 20) if temporality == AggregationTemporality.DELTA else (3, 75)
+                        for values, expected_count, expected_sum in (
+                            ((5, 50), 2, 55),
+                            ((20,), second_count, second_sum),
+                        ):
+                            for value in values:
+                                histogram.record(value)
+                            metrics_data = reader.get_metrics_data()
+                            self.assertIsNotNone(metrics_data)
+                            metric = next(
+                                metric
+                                for resource_metrics in metrics_data.resource_metrics
+                                for scope_metrics in resource_metrics.scope_metrics
+                                for metric in scope_metrics.metrics
+                                if metric.name == "my_histogram"
+                            )
+                            self.assertEqual(metric.data.aggregation_temporality, temporality)
+                            self.assertEqual(len(metric.data.data_points), 1)
+                            point = metric.data.data_points[0]
+                            self.assertIsNone(point.min)
+                            self.assertIsNone(point.max)
+                            self.assertEqual(point.count, expected_count)
+                            self.assertEqual(point.sum, expected_sum)
+                    finally:
+                        provider.shutdown()
+
     def test_histogram_counter_collection(self):
         in_memory_metric_reader = InMemoryMetricReader()
 

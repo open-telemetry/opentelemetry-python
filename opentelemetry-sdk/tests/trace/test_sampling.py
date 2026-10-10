@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import contextlib
+import math
 import sys
 import unittest
 import unittest.mock
@@ -212,6 +213,16 @@ class TestSampler(unittest.TestCase):
     def test_probability_sampler_one(self):
         default_off = sampling.TraceIdRatioBased(1.0)
         self.assertTrue(default_off.should_sample(None, 0xFFFFFFFFFFFFFFFF, "span name").decision.is_sampled())
+
+    def test_probability_sampler_invalid_rate(self):
+        for rate in (-0.1, 1.1, float("nan"), math.nan):
+            with self.subTest(rate=rate):
+                with self.assertRaises(ValueError) as error:
+                    sampling.TraceIdRatioBased(rate)
+                self.assertEqual(
+                    str(error.exception),
+                    "Probability must be in range [0.0, 1.0].",
+                )
 
     def test_probability_sampler_limits(self):
         # Sample one of every 2^64 (= 5e-20) traces. This is the lowest
