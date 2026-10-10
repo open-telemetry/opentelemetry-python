@@ -17,14 +17,14 @@ from collections.abc import Callable, Mapping, Sequence
 from os import environ
 from typing import Any, Literal, Protocol
 
-from opentelemetry._logs import set_logger_provider
+from opentelemetry._logs import get_logger_provider, set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
-from opentelemetry.metrics import set_meter_provider
+from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk._logs import (
     LoggerProvider,
     LoggingHandler,
@@ -65,7 +65,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.trace import set_tracer_provider
+from opentelemetry.trace import get_tracer_provider, set_tracer_provider
 from opentelemetry.util._importlib_metadata import entry_points
 
 _EXPORTER_OTLP = "otlp"
@@ -604,6 +604,46 @@ def _initialize_components(
         _init_opamp(resource)
 
 
+def _apply_python_extensions(config: Any) -> None:
+    """Apply Python-specific environment extensions to configured providers."""
+    if config.disabled:
+        return
+
+    setup_logging_handler = (
+        os.getenv(_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false").strip().lower() == "true"
+    )
+    if setup_logging_handler:
+        logger_provider = get_logger_provider()
+        handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
+        logging.getLogger().addHandler(handler)
+
+    logger_configurator_name = _get_logger_configurator()
+    meter_configurator_name = _get_meter_configurator()
+    tracer_configurator_name = _get_tracer_configurator()
+
+    logger_configurator = _import_logger_configurator(logger_configurator_name)
+    meter_configurator = _import_meter_configurator(meter_configurator_name)
+    tracer_configurator = _import_tracer_configurator(tracer_configurator_name)
+
+    if logger_configurator and config.logger_provider:
+        logger_provider = get_logger_provider()
+        if isinstance(logger_provider, LoggerProvider):
+            # pylint: disable-next=protected-access
+            logger_provider._set_logger_configurator(logger_configurator=logger_configurator)
+
+    if meter_configurator and config.meter_provider:
+        meter_provider = get_meter_provider()
+        if isinstance(meter_provider, MeterProvider):
+            # pylint: disable-next=protected-access
+            meter_provider._set_meter_configurator(meter_configurator=meter_configurator)
+
+    if tracer_configurator and config.tracer_provider:
+        tracer_provider = get_tracer_provider()
+        if isinstance(tracer_provider, TracerProvider):
+            # pylint: disable-next=protected-access
+            tracer_provider._set_tracer_configurator(tracer_configurator=tracer_configurator)
+
+
 class _BaseConfigurator(ABC):
     """An ABC for configurators
 
@@ -654,10 +694,7 @@ class _OTelSDKConfigurator(_BaseConfigurator):
                 # silence the static-analysis no-name-in-module on the
                 # conditional import.
                 # pylint: disable=import-outside-toplevel,no-name-in-module
-                from opentelemetry.configuration import (  # noqa: PLC0415
-                    configure_sdk,
-                    load_config_file,
-                )
+                from opentelemetry.configuration import configure_sdk, load_config_file  # noqa: PLC0415
             except ImportError as exc:
                 raise RuntimeError(
                     f"{OTEL_CONFIG_FILE} is set but "
@@ -671,6 +708,8 @@ class _OTelSDKConfigurator(_BaseConfigurator):
                     OTEL_CONFIG_FILE,
                     sorted(kwargs),
                 )
-            configure_sdk(load_config_file(config_file))
+            config = load_config_file(config_file)
+            configure_sdk(config)
+            _apply_python_extensions(config)
             return
         _initialize_components(**kwargs)

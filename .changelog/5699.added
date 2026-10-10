@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: added support for `OTEL_PYTHON*` environment variables to be used when OTEL_CONFIG_FILE is set
