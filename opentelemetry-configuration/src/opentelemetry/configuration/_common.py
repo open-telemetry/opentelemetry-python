@@ -15,6 +15,13 @@ from opentelemetry.util._importlib_metadata import entry_points
 
 _logger = logging.getLogger(__name__)
 
+# Attribute where ``load_config_file`` stashes the mapping it parsed from the
+# configuration file, on the model it returns. The typed model cannot express
+# the difference between a key the file omitted and a key the file wrote as
+# null, since both end up as ``None``, so readers of schemaless nodes such as
+# ``instrumentation/development`` use this mapping instead.
+_RAW_MAPPING_ATTRIBUTE = "_raw_mapping"
+
 
 def _additional_properties(cls):
     """Decorator for dataclasses whose JSON Schema sets additionalProperties.
