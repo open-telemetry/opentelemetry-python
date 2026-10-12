@@ -1,0 +1,20 @@
+rules:
+  adhoc-packages:
+    ignore:
+      # This isolated link-check job pins the CLI to v3.12.2.
+      - check-links.yml:56
+  dangerous-triggers:
+    ignore:
+      # The project-board job uses PR metadata but never checks out or runs PR code.
+      - add-to-project.yml:3
+  unpinned-uses:
+    config:
+      policies:
+        "*": hash-pin
+        # Contrib integration tests intentionally follow the current workflow on main.
+        "open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml": ref-pin
+  use-trusted-publishing:
+    ignore:
+      # TestPyPI and PyPI publishing use existing tokens until trusted publishers are configured.
+      - release.yml:97
+      - release.yml:104

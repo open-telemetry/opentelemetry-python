@@ -45,6 +45,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
@@ -533,6 +534,15 @@ class TestOTLPExporterMixin(TestCase):
             self.assertEqual(mock_trace_service.num_requests, 2)
             self.assertAlmostEqual(after - before, 1.4, delta=0.5)
 
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_TIMEOUT: "invalid"})
+    def test_invalid_timeout_from_env_uses_default(self):
+        # pylint: disable=protected-access
+        with self.assertLogs(level=WARNING) as warning:
+            exporter = OTLPSpanExporterForTesting(insecure=True)
+        self.assertEqual(exporter._timeout, 10)
+        self.assertIn("Invalid value", warning.records[0].message)
+        self.assertIn(OTEL_EXPORTER_OTLP_TIMEOUT, warning.records[0].message)
+
     def test_channel_options_set_correctly(self):
         """Test that gRPC channel options are set correctly for keepalive and reconnection"""
         # This test verifies that the channel is created with the right options
@@ -683,3 +693,35 @@ class TestOTLPExporterMixin(TestCase):
         self.assertTrue(attributes["otel.component.name"].startswith("otlp_grpc_span_exporter/"))
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4317)
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.warning")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_endpoint_path_warning(self, mock_insecure, mock_warning):
+        """Test that a warning is logged when endpoint has a path that will be ignored"""
+        OTLPSpanExporterForTesting(endpoint="https://otlp.example.com:4317/v1/traces", insecure=True)
+        mock_warning.assert_called_once()
+        args = mock_warning.call_args[0]
+        self.assertIn("path", args[0].lower())
+        self.assertIn("/v1/traces", args)
+        self.assertIn("otlp.example.com:4317", args)
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.warning")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_endpoint_no_warning_for_scheme_less(self, mock_insecure, mock_warning):
+        """Test that no warning is logged for scheme-less host:port"""
+        OTLPSpanExporterForTesting(endpoint="otlp.example.com:4317", insecure=True)
+        mock_warning.assert_not_called()
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.warning")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_endpoint_no_warning_for_trailing_slash(self, mock_insecure, mock_warning):
+        """Test that no warning is logged for trailing slash only"""
+        OTLPSpanExporterForTesting(endpoint="https://otlp.example.com/", insecure=True)
+        mock_warning.assert_not_called()
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.logger.warning")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    def test_endpoint_no_warning_for_no_path(self, mock_insecure, mock_warning):
+        """Test that no warning is logged when endpoint has no path"""
+        OTLPSpanExporterForTesting(endpoint="https://otlp.example.com", insecure=True)
+        mock_warning.assert_not_called()
