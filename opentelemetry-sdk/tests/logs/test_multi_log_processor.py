@@ -3,11 +3,16 @@
 
 # pylint:disable=protected-access,no-self-use,no-member
 
+import json
 import logging
+import os
+import subprocess
+import sys
 import threading
 import time
 import unittest
 from abc import ABC, abstractmethod
+from pathlib import Path
 from unittest.mock import Mock
 
 from opentelemetry._logs import LogRecord, SeverityNumber
@@ -251,3 +256,50 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         for mock in mocks:
             self.assertEqual(1, mock.force_flush.call_count)
         multi_log_record_processor.shutdown()
+
+    def test_init_executor_hands_out_a_fresh_pool(self):
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor(max_workers=3)
+        mock_processor = Mock(spec=LogRecordProcessor)
+        multi_log_record_processor.add_log_record_processor(mock_processor)
+        first_executor = multi_log_record_processor._executor
+
+        multi_log_record_processor._init_executor(3)
+
+        self.assertIsNot(multi_log_record_processor._executor, first_executor)
+        self.assertEqual(multi_log_record_processor._executor._max_workers, 3)
+        multi_log_record_processor.on_emit(Mock())
+        self.assertEqual(1, mock_processor.on_emit.call_count)
+        multi_log_record_processor.shutdown()
+
+    @unittest.skipUnless(
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "requires os.fork and os.register_at_fork",
+    )
+    def test_emit_in_child_after_fork(self):
+        script_path = Path(__file__).parent / "scripts" / "concurrent_multi_log_record_processor_after_fork.py"
+
+        try:
+            result = subprocess.run(
+                [sys.executable, str(script_path)],
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=60,
+            )
+        except subprocess.TimeoutExpired:
+            self.fail("the emit in the child never returned, so the executor was not re-instantiated after the fork")
+
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"stdout: {result.stdout} stderr: {result.stderr}",
+        )
+        payload = json.loads(result.stdout.strip().splitlines()[-1])
+        child_payload = json.loads(payload["child_payload"])
+
+        self.assertEqual(payload["child_status"], 0)
+        self.assertNotEqual(child_payload["child_pid"], payload["parent_pid"])
+        # the child's own emit ran ...
+        self.assertEqual(child_payload["child_bodies"], ["parent", "child"])
+        # ... and the parent's executor still works after the fork
+        self.assertEqual(payload["parent_bodies"], ["parent", "parent after fork"])
