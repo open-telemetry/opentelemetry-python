@@ -107,9 +107,9 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict = BoundedAttributes(1, {"first": "value"}, immutable=False)
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             bdict["second"] = "another"
-        self.assertIn("Attributes dict is full. Dropping the oldest", cm.output[0])
-        self.assertNotIn("first", bdict)
-        self.assertEqual(bdict["second"], "another")
+        self.assertIn("Attributes dict is full. Dropping new", cm.output[0])
+        self.assertEqual(bdict["first"], "value")
+        self.assertNotIn("second", bdict)
         self.assertEqual(bdict.dropped, 1)
 
     def test_maxlen_reached_logs_warning_once(self):
@@ -184,23 +184,24 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict["name"] = "Bruno"
         self.assertEqual(bdict.dropped, 0)
 
-        # try to append more elements, old elements should be dropped
+        # try to append more elements, new elements should be dropped
         for key in self.base:
             bdict["new-" + key] = self.base[key]
 
         self.assertEqual(len(bdict), dic_len)
         self.assertEqual(bdict.dropped, dic_len)
 
-        # test that elements in the dict are the new ones
+        # test that elements in the dict are the old ones
         for key in self.base:
-            self.assertEqual(bdict["new-" + key], self.base[key])
+            self.assertIn(key, bdict)
+            self.assertNotIn("new-" + key, bdict)
 
         # delete an element
-        del bdict["new-name"]
+        del bdict["name"]
         self.assertEqual(len(bdict), dic_len - 1)
 
         with self.assertRaises(KeyError):
-            _ = bdict["new-name"]
+            _ = bdict["name"]
 
     def test_immutable(self):
         bdict = BoundedAttributes()
