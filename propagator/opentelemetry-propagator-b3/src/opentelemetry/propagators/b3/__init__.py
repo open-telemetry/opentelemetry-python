@@ -111,7 +111,7 @@ class B3MultiFormat(TextMapPropagator):
         span = trace.get_current_span(context=context)
 
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if not span_context.is_valid:
             return
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
@@ -148,7 +148,7 @@ class B3SingleFormat(B3MultiFormat):
         span = trace.get_current_span(context=context)
 
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if not span_context.is_valid:
             return
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
