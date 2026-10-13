@@ -20,7 +20,7 @@
     #   opentelemetry-sdk
 certifi==2026.5.20
     # via requests
-chardet==3.0.4
+charset-normalizer==3.5.2
     # via requests
 colorama==0.4.6 ; sys_platform == 'win32'
     # via pytest
@@ -54,7 +54,7 @@ pygments==2.20.0
     # via pytest
 pytest==9.0.3
     # via -r exporter/opentelemetry-exporter-otlp-common/test-requirements.in
-requests==2.25.0
+requests==2.30.0
     # via opentelemetry-exporter-http-transport
 tomli==2.4.1 ; python_full_version < '3.11'
     # via pytest
@@ -65,7 +65,7 @@ typing-extensions==4.15.0
     #   opentelemetry-api
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-urllib3==1.26.0
+urllib3==2.8.0
     # via
     #   mocket
     #   opentelemetry-exporter-http-transport
