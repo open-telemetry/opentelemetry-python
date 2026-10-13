@@ -68,6 +68,8 @@ class View:
 
         name: This is a metric stream customizing attribute: the name of the
             metric stream. If `None`, the name of the instrument will be used.
+            When `name` is specified, `instrument_name` must also be specified
+            and cannot contain wildcard characters.
 
         description: This is a metric stream customizing attribute: the
             description of the metric stream. If `None`, the description of the instrument will
@@ -130,9 +132,16 @@ class View:
             # pylint: disable=broad-exception-raised
             raise Exception(f"Some instrument selection criteria must be provided for View {name}")
 
-        if name is not None and instrument_name is not None and any(c in instrument_name for c in "*?["):
-            # pylint: disable=broad-exception-raised
-            raise Exception(f"View {name} declared with wildcard characters in instrument_name")
+        if name is not None:
+            if instrument_name is None:
+                # pylint: disable=broad-exception-raised
+                raise Exception(
+                    f"View {name} specifies a name but no instrument_name, which may select multiple instruments"
+                )
+            if any(c in instrument_name for c in "*?["):
+                # pylint: disable=broad-exception-raised
+                raise Exception(f"View {name} declared with wildcard characters in instrument_name")
+                
         attribute_keys = frozenset(attribute_keys) if attribute_keys is not None else None
 
         exclude_attribute_keys = frozenset(exclude_attribute_keys) if exclude_attribute_keys is not None else None
