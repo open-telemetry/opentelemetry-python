@@ -18,6 +18,13 @@ Run the suite with:
 uv run tox -e docker-tests-declconfig
 ```
 
+Scenarios run in parallel with `pytest-xdist`, each with its own collector,
+which `OTEL_COLLECTOR_ENDPOINT` points to by container IP. Where the host
+can't route to container IPs, as on Docker Desktop for macOS and Windows, the
+collector binds its receiver ports on the host instead and the suite runs
+serially. Pass `-n 0` to run serially anyway. Scenarios that bind a host port
+themselves, such as `metric_prometheus_pull`, must each use a different port.
+
 ## Scenarios
 
 Every directory under `scenarios/` is one test case:

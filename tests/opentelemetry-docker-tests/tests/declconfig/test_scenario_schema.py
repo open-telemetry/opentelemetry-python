@@ -10,6 +10,7 @@ from typing import Any
 from unittest import TestCase
 
 import jsonschema
+from google.protobuf import text_format
 
 from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
@@ -408,7 +409,8 @@ class TestConditions(TestCase):
             (LogsCondition(body_pattern=re.compile("shutdown")), False, "logs(body_pattern='shutdown'): 0/1"),
         ]
         for condition, met, progress in cases:
-            with self.subTest(condition=condition):
+            # pytest-xdist can't serialize the condition's re.Pattern.
+            with self.subTest(progress=progress):
                 self.assertEqual(condition.satisfied(received), met)
                 self.assertEqual(condition.progress(received), progress)
 
@@ -480,7 +482,8 @@ class TestExpectations(TestCase):
             (5, None, False),
         ]
         for spec, value, matches in cases:
-            with self.subTest(spec=spec, value=value):
+            # pytest-xdist can't serialize AnyValue.
+            with self.subTest(spec=spec, value=value and text_format.MessageToString(value, as_one_line=True)):
                 attributes = _build_attributes(key=value) if value is not None else []
                 matcher = AttributesMatcher(matchers={"key": parse_value_matcher(spec)})
                 self.assertEqual(not list(matcher.check("attributes", attributes)), matches)
