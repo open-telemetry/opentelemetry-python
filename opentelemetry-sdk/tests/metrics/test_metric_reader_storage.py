@@ -806,9 +806,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             def _create_aggregation(
                 self,
                 instrument,
-                explicit_bucket_boundaries,
-                exemplar_reservoir_factory,
-                max_scale,
+                attributes,
+                reservoir_factory,
+                start_time_unix_nano,
             ):
                 return Mock()
 

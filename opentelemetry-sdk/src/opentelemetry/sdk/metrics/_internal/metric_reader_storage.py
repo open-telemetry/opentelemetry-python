@@ -22,7 +22,6 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     ExponentialBucketHistogramAggregation,
     LastValueAggregation,
     SumAggregation,
-    _DropAggregation,
     _ExplicitBucketHistogramAggregation,
     _ExponentialBucketHistogramAggregation,
     _LastValueAggregation,
@@ -159,13 +158,6 @@ class MetricReaderStorage:
                             data_points=data_points,
                             aggregation_temporality=aggregation_temporality,
                         )
-                    elif isinstance(
-                        # pylint: disable=protected-access
-                        view_instrument_match._aggregation,
-                        _DropAggregation,
-                    ):
-                        continue
-
                     elif isinstance(
                         # pylint: disable=protected-access
                         view_instrument_match._aggregation,
