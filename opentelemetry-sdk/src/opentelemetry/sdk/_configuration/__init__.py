@@ -42,6 +42,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
+    OTEL_LOG_LEVEL,
     OTEL_PYTHON_LOGGER_CONFIGURATOR,
     OTEL_PYTHON_METER_CONFIGURATOR,
     OTEL_PYTHON_TRACER_CONFIGURATOR,
@@ -95,6 +96,32 @@ _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
 _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 
 _logger = logging.getLogger(__name__)
+
+_OTEL_LOG_LEVEL_MAP: dict[str, int] = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warn": logging.WARNING,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
+}
+
+
+def _configure_otel_log_level() -> None:
+    raw = environ.get(OTEL_LOG_LEVEL, "").strip().lower()
+    if not raw:
+        return
+    level = _OTEL_LOG_LEVEL_MAP.get(raw)
+    if level is None:
+        _logger.warning(
+            "Unrecognized %s value %r; expected one of %s. Log level not changed.",
+            OTEL_LOG_LEVEL,
+            raw,
+            ", ".join(_OTEL_LOG_LEVEL_MAP),
+        )
+        return
+    logging.getLogger("opentelemetry").setLevel(level)
+
 
 ExporterArgsMap = Mapping[
     type[SpanExporter] | type[MetricExporter] | type[MetricReader] | type[LogRecordExporter],
@@ -520,6 +547,7 @@ def _initialize_components(
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
     # pylint: disable=too-many-locals,too-many-branches
+    _configure_otel_log_level()
     if resource_attributes is None:
         resource_attributes = {}
     # populate version if using auto-instrumentation
