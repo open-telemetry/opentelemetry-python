@@ -112,6 +112,29 @@ class TestBoundedAttributes(unittest.TestCase):
         self.assertEqual(bdict["second"], "another")
         self.assertEqual(bdict.dropped, 1)
 
+    def test_maxlen_reached_logs_warning_once(self):
+        bdict = BoundedAttributes(2, immutable=False)
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            for idx in range(5):
+                bdict[f"key-{idx}"] = idx
+
+        full_warnings = [warning for warning in cm.output if "Attributes dict is full" in warning]
+        self.assertEqual(len(full_warnings), 1)
+        self.assertEqual(len(bdict), 2)
+        self.assertEqual(bdict.dropped, 3)
+
+    def test_maxlen_reached_logs_warning_after_invalid_key_drop(self):
+        bdict = BoundedAttributes(2, immutable=False)
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            bdict[1] = 2
+            bdict["first"] = 1
+            bdict["second"] = 2
+            bdict["third"] = 3
+
+        full_warnings = [warning for warning in cm.output if "Attributes dict is full" in warning]
+        self.assertEqual(len(full_warnings), 1)
+        self.assertEqual(bdict.dropped, 2)
+
     def test_negative_maxlen_not_allowed(self):
         with self.assertRaises(ValueError):
             BoundedAttributes(-1)

@@ -126,6 +126,26 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         self.assertEqual(dp.negative.offset, 1)
         self.assertEqual(dp.negative.bucket_counts, [1])
 
+    def test_encode_histogram_without_min_max(self):
+        for make_metric, field_name, json_field_name in (
+            (make_histogram, "histogram", "histogram"),
+            (make_exponential_histogram, "exponential_histogram", "exponentialHistogram"),
+        ):
+            with self.subTest(histogram_type=field_name):
+                metric = make_metric(min_value=None, max_value=None)
+                result = encode_metrics(make_metrics_data([metric]))
+                encoded = getattr(_get_first_metric(result), field_name)
+                self.assertIsNotNone(encoded)
+                point = encoded.data_points[0]
+                self.assertIsNone(point.min)
+                self.assertIsNone(point.max)
+
+                result_json = json.loads(result.to_json())
+                metric_json = result_json["resourceMetrics"][0]["scopeMetrics"][0]["metrics"][0]
+                point_json = metric_json[json_field_name]["dataPoints"][0]
+                self.assertNotIn("min", point_json)
+                self.assertNotIn("max", point_json)
+
     def test_encode_exponential_histogram_empty_buckets(self):
         metric = make_exponential_histogram(
             attributes={},
