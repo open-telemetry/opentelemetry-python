@@ -1,0 +1,2 @@
+# Dependencies for scripts/eachdist.py and its release workflow use.
+toml==0.10.2
