@@ -156,6 +156,11 @@ class _CompressionWithoutDeflate:
     Gzip = "gzip"
 
 
+class _UppercaseCompressionWithDeflate:
+    GZIP = "gzip"
+    DEFLATE = "deflate"
+
+
 class TestMapCompression(unittest.TestCase):
     def test_none_returns_none(self):
         self.assertIsNone(_map_compression(None, _CompressionWithDeflate))
@@ -166,9 +171,18 @@ class TestMapCompression(unittest.TestCase):
     def test_gzip_maps_to_gzip(self):
         self.assertEqual(_map_compression("gzip", _CompressionWithDeflate), "gzip")
 
+    def test_uppercase_gzip_maps_to_gzip(self):
+        self.assertEqual(_map_compression("gzip", _UppercaseCompressionWithDeflate), "gzip")
+
     def test_deflate_maps_when_enabled(self):
         self.assertEqual(
             _map_compression("deflate", _CompressionWithDeflate, allow_deflate=True),
+            "deflate",
+        )
+
+    def test_uppercase_deflate_maps_when_enabled(self):
+        self.assertEqual(
+            _map_compression("deflate", _UppercaseCompressionWithDeflate, allow_deflate=True),
             "deflate",
         )
 
