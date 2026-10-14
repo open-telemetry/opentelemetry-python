@@ -7,6 +7,7 @@
 
 import os
 import sys
+import tempfile
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -57,6 +58,12 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     ExperimentalTracerMatcherAndConfig as TracerMatcherAndConfig,
+)
+from opentelemetry.configuration.models import (
+    GrpcTls as GrpcTlsConfig,
+)
+from opentelemetry.configuration.models import (
+    HttpTls as HttpTlsConfig,
 )
 from opentelemetry.configuration.models import (
     IdGenerator as IdGeneratorConfig,
@@ -599,6 +606,9 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
         mock_exporter_cls.assert_called_once_with(
             endpoint="http://localhost:4318",
+            certificate_file=None,
+            client_key_file=None,
+            client_certificate_file=None,
             headers=None,
             timeout=None,
             compression=None,
@@ -651,6 +661,9 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
         mock_exporter_cls.assert_called_once_with(
             endpoint="http://collector:4318/v1/traces",
+            certificate_file=None,
+            client_key_file=None,
+            client_certificate_file=None,
             headers={"x-api-key": "secret"},
             timeout=5.0,
             compression="json_deflate",
@@ -700,6 +713,116 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
         _, kwargs = mock_exporter_cls.call_args
         self.assertEqual(kwargs["headers"], {"x-api-key": "secret", "env": "prod"})
+
+    def test_otlp_http_tls_files_passed(self):
+        for encoding in (None, OtlpHttpEncoding.protobuf, OtlpHttpEncoding.json):
+            with self.subTest(encoding=encoding):
+                protocol = "json" if encoding == OtlpHttpEncoding.json else "proto"
+                mock_exporter_cls = MagicMock()
+                mock_module = MagicMock()
+                mock_module.OTLPSpanExporter = mock_exporter_cls
+
+                with patch.dict(
+                    sys.modules,
+                    {
+                        f"opentelemetry.exporter.otlp.{protocol}.http.trace_exporter": mock_module,
+                        "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                        "opentelemetry.exporter.otlp.common.http": MagicMock(),
+                    },
+                ):
+                    config = self._make_batch_config(
+                        SpanExporterConfig(
+                            otlp_http=OtlpHttpExporterConfig(
+                                encoding=encoding,
+                                tls=HttpTlsConfig(
+                                    ca_file="/certs/ca.pem",
+                                    key_file="/certs/client.key",
+                                    cert_file="/certs/client.pem",
+                                ),
+                            )
+                        )
+                    )
+                    create_tracer_provider(config)
+
+                _, kwargs = mock_exporter_cls.call_args
+                self.assertEqual(kwargs["certificate_file"], "/certs/ca.pem")
+                self.assertEqual(kwargs["client_key_file"], "/certs/client.key")
+                self.assertEqual(kwargs["client_certificate_file"], "/certs/client.pem")
+
+    def test_otlp_http_tls_key_without_cert_raises(self):
+        mock_module = MagicMock()
+
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                    "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                },
+            ),
+            self.assertRaises(ConfigurationError),
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(tls=HttpTlsConfig(key_file="/certs/client.key")))
+            )
+            create_tracer_provider(config)
+        mock_module.OTLPSpanExporter.assert_not_called()
+
+    def test_otlp_grpc_tls_insecure(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "grpc": mock_grpc,
+                "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(tls=GrpcTlsConfig(insecure=True)))
+            )
+            create_tracer_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertTrue(kwargs["insecure"])
+        self.assertIsNone(kwargs["credentials"])
+        mock_grpc.ssl_channel_credentials.assert_not_called()
+
+    def test_otlp_grpc_tls_files_build_credentials(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "grpc": mock_grpc,
+                    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module,
+                },
+            ),
+        ):
+            ca_file = os.path.join(tmp_dir, "ca.pem")
+            with open(ca_file, "wb") as file:
+                file.write(b"ca-bytes")
+            config = self._make_batch_config(
+                SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(tls=GrpcTlsConfig(ca_file=ca_file)))
+            )
+            create_tracer_provider(config)
+
+        mock_grpc.ssl_channel_credentials.assert_called_once_with(
+            root_certificates=b"ca-bytes",
+            private_key=None,
+            certificate_chain=None,
+        )
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertIs(kwargs["credentials"], mock_grpc.ssl_channel_credentials.return_value)
+        self.assertIsNone(kwargs["insecure"])
 
     def test_otlp_file_development_missing_package_raises(self):
         config = self._make_batch_config(SpanExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig()))
