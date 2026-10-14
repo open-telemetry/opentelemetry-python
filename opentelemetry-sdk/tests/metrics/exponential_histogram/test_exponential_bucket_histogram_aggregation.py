@@ -128,25 +128,31 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
         now = time_ns()
 
-        for record_min_max, expected_min, expected_max in [
-            (True, 1, 9999),
-            (False, inf, -inf),
+        for record_min_max, expected_min, expected_max, expected_point_min, expected_point_max in [
+            (True, 1, 9999, 1, 9999),
+            (False, inf, -inf, None, None),
         ]:
-            with self.subTest(record_min_max=record_min_max):
-                ctx = Context()
-                exponential_histogram_aggregation = _ExponentialBucketHistogramAggregation(
-                    Mock(),
-                    _default_reservoir_factory(_ExponentialBucketHistogramAggregation),
-                    AggregationTemporality.CUMULATIVE,
-                    0,
-                    record_min_max=record_min_max,
-                )
+            for collection_temporality in AggregationTemporality.DELTA, AggregationTemporality.CUMULATIVE:
+                with self.subTest(record_min_max=record_min_max, collection_temporality=collection_temporality):
+                    ctx = Context()
+                    exponential_histogram_aggregation = _ExponentialBucketHistogramAggregation(
+                        Mock(),
+                        _default_reservoir_factory(_ExponentialBucketHistogramAggregation),
+                        AggregationTemporality.DELTA,
+                        0,
+                        record_min_max=record_min_max,
+                    )
 
-                for value in [2, 4, 1, 9999]:
-                    exponential_histogram_aggregation.aggregate(Measurement(value, now, Mock(), ctx))
+                    for value in [2, 4, 1, 9999]:
+                        exponential_histogram_aggregation.aggregate(Measurement(value, now, Mock(), ctx))
 
-                self.assertEqual(exponential_histogram_aggregation._min, expected_min)
-                self.assertEqual(exponential_histogram_aggregation._max, expected_max)
+                    self.assertEqual(exponential_histogram_aggregation._min, expected_min)
+                    self.assertEqual(exponential_histogram_aggregation._max, expected_max)
+
+                    point = exponential_histogram_aggregation.collect(collection_temporality, 0)
+
+                    self.assertEqual(point.min, expected_point_min)
+                    self.assertEqual(point.max, expected_point_max)
 
     def assertInEpsilon(self, first, second, epsilon):
         self.assertLessEqual(first, (second * (1 + epsilon)))

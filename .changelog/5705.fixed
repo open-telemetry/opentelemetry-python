@@ -1,0 +1,1 @@
+`opentelemetry-exporter-prometheus`: warn and fall back to the default port instead of raising `ValueError` when `OTEL_EXPORTER_PROMETHEUS_PORT` holds a non-integer value in the auto-configured metric reader.
