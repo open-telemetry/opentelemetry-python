@@ -76,6 +76,7 @@ from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
 
+
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
@@ -181,8 +182,11 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
 
     def _on_ending(self, span: "Span") -> None:
         for sp in self._span_processors:
-            # pylint: disable=protected-access
-            sp._on_ending(span)
+            try:
+                # pylint: disable=protected-access
+                sp._on_ending(span)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling _on_ending on %s.", sp)
 
     def on_end(self, span: "ReadableSpan") -> None:
         for sp in self._span_processors:
@@ -226,7 +230,9 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
 
     Calls to the underlying span processors are forwarded in parallel by
     submitting them to a thread pool executor and waiting until each span
-    processor finished its work.
+    processor finished its work. The only exception is ``_on_ending``, which
+    is called synchronously on the thread ending the span, since that is the
+    only thread allowed to mutate the span while it is ending.
 
     Args:
         num_threads: The number of threads managed by the thread pool executor
@@ -282,8 +288,15 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self._submit_and_await(lambda sp: sp.on_start, span, parent_context=parent_context)
 
     def _on_ending(self, span: "Span") -> None:
-        # pylint: disable=protected-access
-        self._submit_and_await(lambda sp: sp._on_ending, span)
+        # Unlike the other callbacks, _on_ending runs synchronously on the
+        # thread that ends the span: that is the only thread allowed to
+        # mutate the span while it is ending.
+        for sp in self._span_processors:
+            try:
+                # pylint: disable=protected-access
+                sp._on_ending(span)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while calling _on_ending on %s.", sp)
 
     def on_end(self, span: "ReadableSpan") -> None:
         self._submit_and_await(lambda sp: sp.on_end, span)
@@ -378,7 +391,7 @@ def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
         with self._lock:  # pylint: disable=protected-access
-            if self._end_time is None:  # pylint: disable=protected-access
+            if self._is_mutable():  # pylint: disable=protected-access
                 func(self, *args, **kwargs)
             else:
                 already_ended = True
@@ -807,6 +820,10 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor = span_processor
         self._limits = limits
         self._lock = threading.Lock()
+        # Identifier of the thread running end() while the _on_ending
+        # callbacks execute: the end timestamp is already set, but the span
+        # must remain mutable from that thread until the callbacks return.
+        self._ending_thread: int | None = None
         self._attributes = BoundedAttributes(
             self._limits.max_span_attributes,
             attributes,
@@ -859,7 +876,7 @@ class Span(trace_api.Span, ReadableSpan):
 
     def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
         with self._lock:
-            if self._end_time is not None:
+            if not self._is_mutable():
                 logger.warning("Setting attribute on ended span.")
                 return
 
@@ -867,7 +884,7 @@ class Span(trace_api.Span, ReadableSpan):
 
     def set_attribute(self, key: str, value: types.AnyValue) -> None:
         with self._lock:
-            if self._end_time is not None:
+            if not self._is_mutable():
                 logger.warning("Setting attribute on ended span.")
                 return
 
@@ -961,21 +978,35 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Calling end() on an ended span.")
                 return
 
+            self._ending_thread = threading.get_ident()
             self._end_time = end_time if end_time is not None else time_ns()
-            self._attributes._immutable = True  # pylint: disable=protected-access
 
-        if self._record_end_metrics:
-            self._record_end_metrics()
+        # The span must remain mutable from this thread while the _on_ending
+        # callbacks run; it becomes immutable once they have returned.
         # pylint: disable=protected-access
-        self._span_processor._on_ending(self)
+        try:
+            if self._record_end_metrics:
+                self._record_end_metrics()
+            self._span_processor._on_ending(self)
+        finally:
+            with self._lock:
+                self._ending_thread = None
+                self._attributes._immutable = True
         self._span_processor.on_end(self._readable_span())
 
     @_check_span_ended
     def update_name(self, name: str) -> None:
         self._name = name
 
+    def _is_mutable(self) -> bool:
+        return self._end_time is None or self._ending_thread == threading.get_ident()
+
     def is_recording(self) -> bool:
-        return self._end_time is None
+        # Unlike the mutators, this check is deliberately not taken under
+        # self._lock: it does not modify the span, and the answer can become
+        # stale as soon as it is returned anyway, since another thread may
+        # end the span right after this call.
+        return self._is_mutable()
 
     @_check_span_ended
     def set_status(
@@ -983,21 +1014,43 @@ class Span(trace_api.Span, ReadableSpan):
         status: Status | StatusCode,
         description: str | None = None,
     ) -> None:
-        # Ignore future calls if status is already set to OK
-        # Ignore calls to set to StatusCode.UNSET
         if isinstance(status, Status):
-            if self._status and self._status.status_code is StatusCode.OK or status.status_code is StatusCode.UNSET:
-                return
             if description is not None:
                 logger.warning(
                     "Description %s ignored. Use either `Status` or `(StatusCode, Description)`",
                     description,
                 )
-            self._status = status
+            new_status = status
         elif isinstance(status, StatusCode):
-            if self._status and self._status.status_code is StatusCode.OK or status is StatusCode.UNSET:
-                return
-            self._status = Status(status, description)
+            new_status = Status(status, description)
+        else:
+            return
+
+        if self._accepts_status(new_status):
+            self._status = new_status
+
+    def _accepts_status(self, new_status: Status) -> bool:
+        """Decide whether ``new_status`` may replace the status already recorded.
+
+        The codes are totally ordered, ``Ok > Error > Unset``, an attempt to set
+        ``Unset`` is ignored, and ``Ok`` is final. Once those two are handled, a
+        differing code always outranks the one recorded. A repeat of the same code
+        gets through only when it fills in a description that is still missing,
+        and an empty description counts as missing.
+        """
+        if new_status.status_code is StatusCode.UNSET:
+            return False
+
+        current = self._status
+        if current is None:
+            return True
+        if current.status_code is StatusCode.OK:
+            return False
+
+        # An empty description is equivalent to an absent one.
+        return current.status_code is not new_status.status_code or (
+            not current.description and bool(new_status.description)
+        )
 
     def __exit__(
         self,

@@ -111,6 +111,10 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 _logger.warning("Baggage list-member `%s` doesn't match the format", entry)
                 continue
 
+            # W3C Baggage allows optional whitespace around "="
+            name = name.strip(" \t")
+            value = value.strip(" \t")
+
             if not _is_valid_pair(name, value):
                 _logger.warning("Invalid baggage entry: `%s`", entry)
                 continue

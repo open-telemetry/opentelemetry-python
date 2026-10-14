@@ -52,7 +52,7 @@ API
 """
 
 from collections import deque
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
 from json import dumps
 from logging import getLogger
@@ -100,6 +100,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -111,6 +112,32 @@ _logger = getLogger(__name__)
 
 _TARGET_INFO_NAME = "target"
 _TARGET_INFO_DESCRIPTION = "Target metadata"
+
+_DEFAULT_PORT = 9464
+
+
+def _port_from_env() -> int:
+    """Return ``OTEL_EXPORTER_PROMETHEUS_PORT`` as an int, defaulting to
+    ``_DEFAULT_PORT`` when the variable is unset, empty, or not an integer.
+
+    An invalid value is logged and ignored instead of raising, mirroring the
+    OTLP/Zipkin exporters so a malformed environment variable cannot take
+    auto-instrumentation startup down.
+    """
+    raw = environ.get(OTEL_EXPORTER_PROMETHEUS_PORT)
+    if raw is None or not raw.strip():
+        return _DEFAULT_PORT
+    try:
+        return int(raw)
+    except ValueError:
+        _logger.warning(
+            "Invalid value %r for %s, using default port %s",
+            raw,
+            OTEL_EXPORTER_PROMETHEUS_PORT,
+            _DEFAULT_PORT,
+        )
+        return _DEFAULT_PORT
+
 
 _OTEL_SCOPE_NAME_LABEL = "otel_scope_name"
 _OTEL_SCOPE_VERSION_LABEL = "otel_scope_version"
@@ -246,6 +273,11 @@ class PrometheusMetricReader(MetricReader):
         prefix: Prefix added to exported Prometheus metric names.
         scope_info_enabled: Whether to include instrumentation scope labels on
             exported metrics. Scope labels are exported by default.
+        preferred_aggregation: A mapping between instrument classes and
+            aggregation instances used to override the default aggregation of
+            the corresponding instrument classes. Classes not included in the
+            mapping retain their default aggregation. See
+            :class:`~opentelemetry.sdk.metrics.export.MetricReader` for details.
         resource_attribute_filter: Optional callback to select resource attributes
             that are copied as labels on exported metrics. The callback receives
             the original resource attribute key. Selected keys are sanitized to
@@ -257,6 +289,7 @@ class PrometheusMetricReader(MetricReader):
         disable_target_info: bool = False,
         prefix: str = "",
         scope_info_enabled: bool = True,
+        preferred_aggregation: Mapping[type, Aggregation] | None = None,
         *,
         resource_attribute_filter: Callable[[str], bool] | None = None,
         registry: CollectorRegistry = REGISTRY,
@@ -270,6 +303,7 @@ class PrometheusMetricReader(MetricReader):
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             },
+            preferred_aggregation=dict(preferred_aggregation) if preferred_aggregation is not None else None,
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(
@@ -510,6 +544,6 @@ class _AutoPrometheusMetricReader(PrometheusMetricReader):
         # Default values are specified in
         # https://github.com/open-telemetry/opentelemetry-specification/blob/v1.24.0/specification/configuration/sdk-environment-variables.md#prometheus-exporter
         start_http_server(
-            port=int(environ.get(OTEL_EXPORTER_PROMETHEUS_PORT, "9464")),
+            port=_port_from_env(),
             addr=environ.get(OTEL_EXPORTER_PROMETHEUS_HOST, "localhost"),
         )

@@ -21,14 +21,17 @@ jobs:
       github.event_name != 'merge_group' &&
       !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')
       && github.actor != 'otelbot[bot]'
+    env:
+      BASE_REF: ${{ github.base_ref }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Fetch base branch
-        run: git fetch origin ${{ github.base_ref }} --depth=1
+        run: git fetch origin "$BASE_REF" --depth=1
 
       - name: Ensure no direct changes to CHANGELOG.md
         run: |
@@ -46,11 +49,13 @@ jobs:
         run: pip install towncrier==25.8.0
 
       - name: Check for changelog fragment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
+          if ! towncrier check --compare-with "origin/$BASE_REF"; then
             echo ""
             echo "No changelog fragment found for this PR."
-            echo "Add a file named .changelog/${{ github.event.pull_request.number }}.<type>"
+            echo "Add a file named .changelog/$PR_NUMBER.<type>"
             echo "where <type> is one of: added, changed, deprecated, removed, fixed"
             echo "See CONTRIBUTING.md for details."
             echo ""
@@ -62,7 +67,7 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          fragments=$(git diff --diff-filter=A --name-only origin/${{ github.base_ref }} -- '.changelog/*' | grep -v '/\.gitignore$' || true)
+          fragments=$(git diff --diff-filter=A --name-only "origin/$BASE_REF" -- '.changelog/*' | grep -v '/\.gitignore$' || true)
           [ -z "$fragments" ] && exit 0
           invalid=()
           while IFS= read -r f; do

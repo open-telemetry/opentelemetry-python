@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: count logs dropped by `SimpleLogRecordProcessor`'s recursion guard on `otel.sdk.processor.log.processed` with `error.type=recursion`

@@ -274,15 +274,16 @@ class TestBatchProcessor:
         processor._batch_processor.emit(telemetry)
         processor._batch_processor.emit(telemetry)
         processor._batch_processor.emit(telemetry)
-        before = time.time()
+        before = time.monotonic()
         processor._batch_processor.shutdown(timeout_millis=3000)
-        # Shutdown does not kill the thread.
-        assert processor._batch_processor._worker_thread.is_alive() is True
 
-        after = time.time()
+        after = time.monotonic()
         assert after - before < 3.3
-        # Thread will naturally finish after a little bit.
-        time.sleep(0.1)
+
+        # The exporter shutdown interrupts the in-progress export. Depending
+        # on thread scheduling, the worker may stop before or shortly after
+        # shutdown() returns.
+        processor._batch_processor._worker_thread.join(timeout=1)
         assert processor._batch_processor._worker_thread.is_alive() is False
         # Expect the second call to be interrupted by shutdown, and the third call to never be made.
         assert exporter.sleep_interrupted is True
