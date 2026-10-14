@@ -477,7 +477,7 @@ class ScopeManagerShim(ScopeManager):
         """
 
         span = get_current_span()
-        if span.get_span_context() == INVALID_SPAN_CONTEXT:
+        if not span.get_span_context().is_valid:
             return None
 
         try:
@@ -579,7 +579,7 @@ class TracerShim(Tracer):
 
         current_span = get_current_span()
 
-        if child_of is None and current_span.get_span_context() is not INVALID_SPAN_CONTEXT:
+        if child_of is None and current_span.get_span_context().is_valid:
             child_of = SpanShim(None, None, current_span)
 
         span = self.start_span(
@@ -639,7 +639,7 @@ class TracerShim(Tracer):
         valid_links = []
         if references:
             for ref in references:
-                if ref.referenced_context.unwrap() is not INVALID_SPAN_CONTEXT:
+                if ref.referenced_context.unwrap().is_valid:
                     valid_links.append(Link(ref.referenced_context.unwrap()))
 
         if valid_links and parent is None:

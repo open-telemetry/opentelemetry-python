@@ -412,7 +412,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     added.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
         self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
@@ -489,14 +489,14 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             and thus defining how many log processors can work in parallel.
     """
 
-    def __init__(self, max_workers: int = 2):
+    def __init__(self, max_workers: int = 2) -> None:
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
         self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
 
-    def add_log_record_processor(self, log_record_processor: LogRecordProcessor):
+    def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
