@@ -526,6 +526,7 @@ class PeriodicExportingMetricReader(MetricReader):
         **kwargs,
     ) -> bool:
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        # pylint: disable=broad-exception-caught,invalid-name
         try:
             with self._export_lock:
                 result = self._exporter.export(metrics_data, timeout_millis=timeout_millis)
