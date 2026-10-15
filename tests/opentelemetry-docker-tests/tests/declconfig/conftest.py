@@ -21,7 +21,7 @@ from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
 collect_ignore_glob = ["scenarios/*"]
 
-_DOCKER_COMPOSE_FILE = Path(__file__).parent.parent / "docker-compose.yml"
+_DOCKER_COMPOSE_FILE = Path(__file__).parent / "docker-compose.yml"
 _DEFAULT_COLLECTOR_CONFIG = Path(__file__).parent / "collector-config.yaml"
 _COLLECTOR_CONFIG_PATH = "/etc/otelcol/collector-config.yaml"
 _HEALTH_CHECK_PORT = 13133
@@ -30,7 +30,7 @@ _ROUTING_PROBE_TIMEOUT = 2.0
 
 
 def _get_collector_image() -> str:
-    """Reuse the collector image pinned in docker-compose.yml."""
+    """Read the collector image pinned in this directory's docker-compose.yml."""
     with open(_DOCKER_COMPOSE_FILE, encoding="utf-8") as compose_file:
         return yaml.safe_load(compose_file)["services"]["otcollector"]["image"]
 
