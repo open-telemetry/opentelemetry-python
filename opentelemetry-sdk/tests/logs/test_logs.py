@@ -585,22 +585,39 @@ class TestLogger(unittest.TestCase):
             event_name="my.event",
         )
 
+        other_scope = InstrumentationScope("other")
+
         cases = {
-            "kwargs": lambda: logger.emit(
-                context=context,
-                severity_number=SeverityNumber.WARN,
-                event_name="my.event",
+            "kwargs": (
+                lambda: logger.emit(
+                    context=context,
+                    severity_number=SeverityNumber.WARN,
+                    event_name="my.event",
+                ),
+                logger._instrumentation_scope,
             ),
-            "log_record": lambda: logger.emit(log_record),
-            "read_write_log_record": lambda: logger.emit(ReadWriteLogRecord(log_record=log_record)),
+            "log_record": (lambda: logger.emit(log_record), logger._instrumentation_scope),
+            "read_write_log_record": (
+                lambda: logger.emit(
+                    ReadWriteLogRecord(
+                        log_record=log_record,
+                        instrumentation_scope=logger._instrumentation_scope,
+                    )
+                ),
+                logger._instrumentation_scope,
+            ),
+            "read_write_log_record_other_scope": (
+                lambda: logger.emit(ReadWriteLogRecord(log_record=log_record, instrumentation_scope=other_scope)),
+                other_scope,
+            ),
         }
-        for name, emit in cases.items():
+        for name, (emit, expected_scope) in cases.items():
             with self.subTest(name):
                 processor_mock.reset_mock()
                 emit()
                 processor_mock.enabled.assert_called_once_with(
                     context=context,
-                    instrumentation_scope=logger._instrumentation_scope,
+                    instrumentation_scope=expected_scope,
                     severity_number=SeverityNumber.WARN,
                     event_name="my.event",
                 )
