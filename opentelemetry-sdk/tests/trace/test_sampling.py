@@ -61,32 +61,33 @@ class TestSampler(unittest.TestCase):
             def get_description(self):
                 return type(self).__name__
 
-        self.assertIsNone(LegacySampler().shutdown())
+        # pylint: disable=protected-access
+        self.assertIsNone(LegacySampler()._shutdown())
 
     def test_parent_based_shutdown_calls_each_delegate_once(self):
         delegates = [unittest.mock.Mock(spec=sampling.Sampler) for _ in range(5)]
         parent = sampling.ParentBased(*delegates)
 
-        parent.shutdown()
+        parent._shutdown()  # pylint: disable=protected-access
 
         for delegate in delegates:
-            self.assertEqual(delegate.shutdown.call_count, 1)
+            self.assertEqual(delegate._shutdown.call_count, 1)  # pylint: disable=protected-access
 
     def test_parent_based_shutdown_deduplicates_shared_delegate(self):
         delegate = unittest.mock.Mock(spec=sampling.Sampler)
         parent = sampling.ParentBased(delegate, delegate, delegate, delegate, delegate)
 
-        parent.shutdown()
+        parent._shutdown()  # pylint: disable=protected-access
 
-        self.assertEqual(delegate.shutdown.call_count, 1)
+        self.assertEqual(delegate._shutdown.call_count, 1)  # pylint: disable=protected-access
 
     def test_always_record_shutdown_calls_root(self):
         delegate = unittest.mock.Mock(spec=sampling.Sampler)
         sampler = sampling.AlwaysRecordSampler(delegate)
 
-        sampler.shutdown()
+        sampler._shutdown()  # pylint: disable=protected-access
 
-        self.assertEqual(delegate.shutdown.call_count, 1)
+        self.assertEqual(delegate._shutdown.call_count, 1)  # pylint: disable=protected-access
 
     def _create_parent(
         self, trace_flags: trace.TraceFlags, is_remote=False, trace_state=None

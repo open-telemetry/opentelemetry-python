@@ -1400,6 +1400,17 @@ class TracerProvider(trace_api.TracerProvider):
         # SynchronousMultiSpanProcessor and ConcurrentMultiSpanProcessor.
         self._active_span_processor.add_span_processor(span_processor)
 
+    def _unregister_atexit(self) -> None:
+        if self._atexit_handler is not None:
+            atexit.unregister(self._atexit_handler)
+            self._atexit_handler = None
+
+    def _shutdown_sampler(self) -> None:
+        try:
+            self.sampler._shutdown()  # pylint: disable=protected-access
+        finally:
+            self._unregister_atexit()
+
     def shutdown(self) -> None:
         """Shut down the span processors and sampler of the tracer provider."""
         with self._shutdown_lock:
@@ -1409,12 +1420,7 @@ class TracerProvider(trace_api.TracerProvider):
             try:
                 self._active_span_processor.shutdown()
             finally:
-                try:
-                    self.sampler.shutdown()
-                finally:
-                    if self._atexit_handler is not None:
-                        atexit.unregister(self._atexit_handler)
-                        self._atexit_handler = None
+                self._shutdown_sampler()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Requests the active span processor to process all spans that have not

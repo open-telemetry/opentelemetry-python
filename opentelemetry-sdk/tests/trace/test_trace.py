@@ -101,12 +101,12 @@ class TestTracer(unittest.TestCase):
 
         self.assertEqual(mock_processor1.shutdown.call_count, 1)
         self.assertEqual(mock_processor2.shutdown.call_count, 1)
-        sampler.shutdown.assert_called_once_with()
+        sampler._shutdown.assert_called_once_with()  # pylint: disable=protected-access
 
         tracer_provider.shutdown()
         self.assertEqual(mock_processor1.shutdown.call_count, 1)
         self.assertEqual(mock_processor2.shutdown.call_count, 1)
-        sampler.shutdown.assert_called_once_with()
+        sampler._shutdown.assert_called_once_with()  # pylint: disable=protected-access
 
         shutdown_python_code = """
 import atexit
@@ -118,7 +118,7 @@ mock_processor = mock.Mock(spec=trace.SpanProcessor)
 mock_sampler = mock.Mock(spec=trace.sampling.Sampler)
 
 def print_shutdown_count():
-    print(mock_processor.shutdown.call_count, mock_sampler.shutdown.call_count, sep=",")
+    print(mock_processor.shutdown.call_count, mock_sampler._shutdown.call_count, sep=",")
 
 # atexit hooks are called in inverse order they are added, so do this before
 # creating the tracer
@@ -171,7 +171,9 @@ tracer_provider.add_span_processor(mock_processor)
         sampler = mock.Mock(spec=trace.sampling.Sampler)
         processor = mock.Mock(spec=trace.SpanProcessor)
         processor.shutdown.side_effect = lambda: calls.append("processor")
-        sampler.shutdown.side_effect = lambda: calls.append("sampler")
+        sampler._shutdown.side_effect = lambda: calls.append(  # pylint: disable=protected-access
+            "sampler"
+        )
         tracer_provider = trace.TracerProvider(sampler=sampler, shutdown_on_exit=False)
         tracer_provider.add_span_processor(processor)
 
@@ -189,14 +191,16 @@ tracer_provider.add_span_processor(mock_processor)
         with self.assertRaisesRegex(RuntimeError, "processor shutdown failed"):
             tracer_provider.shutdown()
 
-        sampler.shutdown.assert_called_once_with()
+        sampler._shutdown.assert_called_once_with()  # pylint: disable=protected-access
         tracer_provider.shutdown()
         processor.shutdown.assert_called_once_with()
-        sampler.shutdown.assert_called_once_with()
+        sampler._shutdown.assert_called_once_with()  # pylint: disable=protected-access
 
     def test_shutdown_unregisters_exit_handler_when_sampler_fails(self):
         sampler = mock.Mock(spec=trace.sampling.Sampler)
-        sampler.shutdown.side_effect = RuntimeError("sampler shutdown failed")
+        sampler._shutdown.side_effect = RuntimeError(  # pylint: disable=protected-access
+            "sampler shutdown failed"
+        )
         tracer_provider = trace.TracerProvider(sampler=sampler)
         processor = mock.Mock(spec=trace.SpanProcessor)
         tracer_provider.add_span_processor(processor)
@@ -210,7 +214,7 @@ tracer_provider.add_span_processor(mock_processor)
         unregister.assert_called_once()
         tracer_provider.shutdown()
         processor.shutdown.assert_called_once_with()
-        sampler.shutdown.assert_called_once_with()
+        sampler._shutdown.assert_called_once_with()  # pylint: disable=protected-access
 
     def test_tracer_provider_accepts_concurrent_multi_span_processor(self):
         span_processor = trace.ConcurrentMultiSpanProcessor(2)

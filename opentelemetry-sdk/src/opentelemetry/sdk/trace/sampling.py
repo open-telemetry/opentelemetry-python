@@ -207,7 +207,7 @@ class Sampler(abc.ABC):
     def get_description(self) -> str:
         pass
 
-    def shutdown(self) -> None:
+    def _shutdown(self) -> None:
         """Release resources held by the sampler, if any.
 
         The default is a no-op for samplers that do not manage resources.
@@ -374,7 +374,7 @@ class ParentBased(Sampler):
     def get_description(self):
         return f"ParentBased{{root:{self._root.get_description()},remoteParentSampled:{self._remote_parent_sampled.get_description()},remoteParentNotSampled:{self._remote_parent_not_sampled.get_description()},localParentSampled:{self._local_parent_sampled.get_description()},localParentNotSampled:{self._local_parent_not_sampled.get_description()}}}"
 
-    def shutdown(self) -> None:
+    def _shutdown(self) -> None:
         # A sampler may be used in more than one delegate position.
         delegates = (
             self._root,
@@ -387,7 +387,7 @@ class ParentBased(Sampler):
         for delegate in delegates:
             if id(delegate) not in seen:
                 seen.add(id(delegate))
-                delegate.shutdown()
+                delegate._shutdown()  # pylint: disable=protected-access
 
 
 class AlwaysRecordSampler(Sampler):
@@ -436,8 +436,8 @@ class AlwaysRecordSampler(Sampler):
     def get_description(self):
         return f"AlwaysRecordSampler{{{self._root.get_description()}}}"
 
-    def shutdown(self) -> None:
-        self._root.shutdown()
+    def _shutdown(self) -> None:
+        self._root._shutdown()  # pylint: disable=protected-access
 
 
 DEFAULT_OFF = ParentBased(ALWAYS_OFF)
