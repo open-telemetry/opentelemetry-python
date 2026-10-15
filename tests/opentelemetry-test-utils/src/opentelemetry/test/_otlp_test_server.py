@@ -26,6 +26,7 @@ class RecordedSpan:
     span: Span
     resource: Resource
     scope: InstrumentationScope
+    resource_schema_url: str = ""
 
 
 @dataclass
@@ -33,6 +34,7 @@ class RecordedMetric:
     metric: Metric
     resource: Resource
     scope: InstrumentationScope
+    resource_schema_url: str = ""
 
 
 @dataclass
@@ -40,6 +42,7 @@ class RecordedLogRecord:
     log_record: LogRecord
     resource: Resource
     scope: InstrumentationScope
+    resource_schema_url: str = ""
 
 
 def _make_handler(
@@ -101,7 +104,14 @@ def _make_handler(
             for rs in request.resource_spans:
                 for ss in rs.scope_spans:
                     for span in ss.spans:
-                        spans_queue.put(RecordedSpan(span=span, resource=rs.resource, scope=ss.scope))
+                        spans_queue.put(
+                            RecordedSpan(
+                                span=span,
+                                resource=rs.resource,
+                                scope=ss.scope,
+                                resource_schema_url=rs.schema_url,
+                            )
+                        )
             return ExportTraceServiceResponse().SerializeToString()
 
         @staticmethod
@@ -116,6 +126,7 @@ def _make_handler(
                                 metric=metric,
                                 resource=rm.resource,
                                 scope=sm.scope,
+                                resource_schema_url=rm.schema_url,
                             )
                         )
             return ExportMetricsServiceResponse().SerializeToString()
@@ -132,6 +143,7 @@ def _make_handler(
                                 log_record=log_record,
                                 resource=rl.resource,
                                 scope=sl.scope,
+                                resource_schema_url=rl.schema_url,
                             )
                         )
             return ExportLogsServiceResponse().SerializeToString()

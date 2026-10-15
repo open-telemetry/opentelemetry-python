@@ -1,0 +1,8 @@
+description: >
+  The `otlp_file/development` span exporter writes OTLP JSON to stdout.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stdout
+      pattern: '"name": ?"file-span"'
