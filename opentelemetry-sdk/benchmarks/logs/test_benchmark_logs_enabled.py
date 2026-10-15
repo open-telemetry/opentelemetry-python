@@ -1,12 +1,14 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import gc
 import os
+import tracemalloc
 from unittest import mock
 
 import pytest
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry._logs._internal import ProxyLogger
 from opentelemetry.sdk._logs import LoggerProvider, LogRecordProcessor
 from opentelemetry.sdk._logs._internal import _disable_logger_configurator
@@ -87,7 +89,72 @@ def _emit_guarded(logger, index):
         _emit_unguarded(logger, index)
 
 
+def _emit_log_record_unguarded(logger, index):
+    logger.emit(
+        LogRecord(
+            severity_number=SeverityNumber.INFO,
+            body=f"benchmark log message {index}",
+            attributes={
+                "http.request.method": "GET",
+                "http.route": "/users/{id}",
+                "http.response.status_code": 200,
+                "user.id": index,
+                "server.address": "example.com",
+            },
+            event_name="test.event",
+        )
+    )
+
+
+def _emit_log_record_guarded(logger, index):
+    if logger.enabled(severity_number=SeverityNumber.INFO, event_name="test.event"):
+        logger.emit(
+            LogRecord(
+                severity_number=SeverityNumber.INFO,
+                body=f"benchmark log message {index}",
+                attributes={
+                    "http.request.method": "GET",
+                    "http.route": "/users/{id}",
+                    "http.response.status_code": 200,
+                    "user.id": index,
+                    "server.address": "example.com",
+                },
+                event_name="test.event",
+            )
+        )
+
+
+_EMIT_FUNCTIONS = {
+    ("kwargs", False): _emit_unguarded,
+    ("kwargs", True): _emit_guarded,
+    ("log_record", False): _emit_log_record_unguarded,
+    ("log_record", True): _emit_log_record_guarded,
+}
+
+
+def _measure_allocations(benchmark, emit, logger):
+    for index in range(100):
+        emit(logger, index)
+
+    peaks = []
+    for index in range(200):
+        tracemalloc.start()
+        emit(logger, index)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
+
+    # Measure gen-0 collections before/after emitting 10,000 log records
+    gc.collect()
+    collections_before = gc.get_stats()[0]["collections"]
+    for index in range(10_000):
+        emit(logger, index)
+    benchmark.extra_info["gc_gen0_collections_per_10k"] = gc.get_stats()[0]["collections"] - collections_before
+
+
 @pytest.mark.parametrize("guarded", [False, True], ids=["unguarded", "guarded"])
+@pytest.mark.parametrize("style", ["kwargs", "log_record"])
 @pytest.mark.parametrize(
     "mechanism",
     [
@@ -98,10 +165,11 @@ def _emit_guarded(logger, index):
         "api_proxy_noop",
     ],
 )
-def test_disabled_emit(benchmark, mechanism, guarded):
-    benchmark.group = f"disabled-{mechanism}"
+def test_disabled_emit(benchmark, mechanism, style, guarded):
+    benchmark.group = f"disabled-{mechanism}-{style}"
     logger = _make_disabled_logger(mechanism)
-    emit = _emit_guarded if guarded else _emit_unguarded
+    emit = _EMIT_FUNCTIONS[(style, guarded)]
+    _measure_allocations(benchmark, emit, logger)
 
     benchmark(emit, logger, 42)
 
