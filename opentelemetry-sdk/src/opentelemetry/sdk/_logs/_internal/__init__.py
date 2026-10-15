@@ -809,15 +809,20 @@ class Logger(APILogger):
         if not self._logger_config.is_enabled:
             return
         self._logger_metrics.emit_log()
+        instrumentation_scope = self._instrumentation_scope
         if record is not None:
-            api_record = record.log_record if isinstance(record, ReadWriteLogRecord) else record
+            if isinstance(record, ReadWriteLogRecord):
+                instrumentation_scope = record.instrumentation_scope
+                api_record = record.log_record
+            else:
+                api_record = record
             context = api_record.context
             severity_number = api_record.severity_number
             event_name = api_record.event_name
         # Skip building the record when no processor would accept it.
         if not self._multi_log_record_processor.enabled(
             context=context,
-            instrumentation_scope=self._instrumentation_scope,
+            instrumentation_scope=instrumentation_scope,
             severity_number=severity_number,
             event_name=event_name,
         ):
