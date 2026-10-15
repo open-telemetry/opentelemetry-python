@@ -41,18 +41,18 @@ from opentelemetry.configuration.file._env_substitution import (
 from opentelemetry.configuration.file._loader import load_config_file
 
 __all__ = [
-    "load_config_file",
-    "configure_sdk",
-    "substitute_env_vars",
     "ConfigurationError",
     "MissingDependencyError",
-    "create_resource",
-    "create_propagator",
-    "configure_propagator",
-    "create_logger_provider",
     "configure_logger_provider",
-    "create_tracer_provider",
-    "configure_tracer_provider",
-    "create_meter_provider",
     "configure_meter_provider",
+    "configure_propagator",
+    "configure_sdk",
+    "configure_tracer_provider",
+    "create_logger_provider",
+    "create_meter_provider",
+    "create_propagator",
+    "create_resource",
+    "create_tracer_provider",
+    "load_config_file",
+    "substitute_env_vars",
 ]

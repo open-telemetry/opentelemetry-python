@@ -142,3 +142,26 @@ class TestInMemoryMetricReader(TestCase):
             number_data_point_1.time_unix_nano,
             number_data_point_0.time_unix_nano,
         )
+
+    def test_synchronous_gauge_cumulative_multiple_collect(self):
+        reader = InMemoryMetricReader()
+        meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")
+        gauge = meter.create_gauge("gauge1")
+        gauge.set(5, attributes={"key": "value"})
+
+        first_metrics_data = reader.get_metrics_data()
+        second_metrics_data = reader.get_metrics_data()
+
+        self.assertIsNotNone(second_metrics_data)
+
+        first_gauge_data = first_metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data
+        second_gauge_data = second_metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data
+
+        self.assertEqual(
+            [(point.attributes, point.value) for point in first_gauge_data.data_points],
+            [({"key": "value"}, 5)],
+        )
+        self.assertEqual(
+            [(point.attributes, point.value) for point in second_gauge_data.data_points],
+            [({"key": "value"}, 5)],
+        )

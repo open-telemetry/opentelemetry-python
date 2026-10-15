@@ -8,10 +8,7 @@ from __future__ import annotations
 
 import builtins
 import dataclasses
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
@@ -19,7 +16,7 @@ import opentelemetry.proto_json.resource.v1.resource
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ProfilesDictionary(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ProfilesDictionary
@@ -58,7 +55,7 @@ class ProfilesDictionary(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ProfilesDictionary":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ProfilesDictionary:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -90,7 +87,7 @@ class ProfilesDictionary(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ProfilesData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ProfilesData
@@ -114,7 +111,7 @@ class ProfilesData(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ProfilesData":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ProfilesData:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -136,7 +133,7 @@ class ProfilesData(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ResourceProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceProfiles
@@ -163,7 +160,7 @@ class ResourceProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceProfiles":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ResourceProfiles:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -188,7 +185,7 @@ class ResourceProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ScopeProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeProfiles
@@ -215,7 +212,7 @@ class ScopeProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeProfiles":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ScopeProfiles:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -240,7 +237,7 @@ class ScopeProfiles(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Profile
@@ -291,7 +288,7 @@ class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Profile":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Profile:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -333,7 +330,7 @@ class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Link(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Link
@@ -357,7 +354,7 @@ class Link(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Link":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Link:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -379,7 +376,7 @@ class Link(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ValueType
@@ -403,7 +400,7 @@ class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ValueType":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ValueType:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -427,7 +424,7 @@ class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Sample
@@ -460,7 +457,7 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Sample":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Sample:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -490,7 +487,7 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Mapping
@@ -523,7 +520,7 @@ class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Mapping":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Mapping:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -552,7 +549,7 @@ class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Stack(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Stack
@@ -573,7 +570,7 @@ class Stack(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Stack":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Stack:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -593,7 +590,7 @@ class Stack(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Location(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Location
@@ -623,7 +620,7 @@ class Location(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Location":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Location:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -650,7 +647,7 @@ class Location(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Line(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Line
@@ -677,7 +674,7 @@ class Line(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Line":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Line:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -702,7 +699,7 @@ class Line(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Function(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Function
@@ -732,7 +729,7 @@ class Function(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Function":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Function:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -761,7 +758,7 @@ class Function(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class KeyValueAndUnit(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValueAndUnit
@@ -788,7 +785,7 @@ class KeyValueAndUnit(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "KeyValueAndUnit":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> KeyValueAndUnit:
         """
         Create from a dictionary with lowerCamelCase keys.
 

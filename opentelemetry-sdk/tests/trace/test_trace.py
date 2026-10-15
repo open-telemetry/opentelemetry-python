@@ -51,6 +51,7 @@ from opentelemetry.sdk.trace.sampling import (
     Decision,
     ParentBased,
     StaticSampler,
+    TraceIdRatioBased,
 )
 from opentelemetry.sdk.util import BoundedDict, BoundedList, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import (
@@ -352,6 +353,68 @@ class TestTracerSampling(unittest.TestCase):
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
         self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "5.0",
+        },
+    )
+    def test_ratio_sampler_with_out_of_range_env_arg_does_not_raise(self):
+        # A syntactically valid but out-of-range OTEL_TRACES_SAMPLER_ARG
+        # (outside [0.0, 1.0]) must not crash TracerProvider() construction.
+        # It should degrade gracefully, the same way a non-numeric value
+        # already does.
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "-0.5",
+        },
+    )
+    def test_ratio_sampler_with_negative_env_arg_does_not_raise(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "0.0",
+        },
+    )
+    def test_ratio_sampler_with_env_arg_lower_boundary(self):
+        # 0.0 is a valid boundary value and must be used as-is, not
+        # treated as falsy/invalid and overridden by the fallback.
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 0.0)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "1.0",
+        },
+    )
+    def test_ratio_sampler_with_env_arg_upper_boundary(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, TraceIdRatioBased)
+        self.assertEqual(tracer_provider.sampler.rate, 1.0)
 
     def verify_default_sampler(self, tracer_provider):
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
@@ -681,6 +744,7 @@ class TestSpanCreation(unittest.TestCase):
         new_span = updated_tracer.start_span("new")
         self.assertIs(new_span.resource, tracer_provider.resource)
 
+    @patch("sys.executable", "/usr/bin/python3")
     def test_default_span_resource(self):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
@@ -689,7 +753,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsInstance(span.resource, resources.Resource)
         self.assertEqual(
             span.resource.attributes.get(resources.SERVICE_NAME),
-            "unknown_service",
+            "unknown_service:python3",
         )
         self.assertEqual(
             span.resource.attributes.get(resources.TELEMETRY_SDK_LANGUAGE),
@@ -718,7 +782,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_links(self):
         # pylint: disable=protected-access
         max_links = trace.SpanLimits().max_links
-        links = [trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False)) for idx in range(0, 16 + max_links)]
+        links = [trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False)) for idx in range(16 + max_links)]
         tracer = new_tracer()
         with tracer.start_as_current_span("span", links=links) as root:
             self.assertEqual(len(root.links), max_links)
@@ -726,7 +790,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_surplus_span_attributes(self):
         # pylint: disable=protected-access
         max_attrs = trace.SpanLimits().max_span_attributes
-        attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
+        attributes = {str(idx): idx for idx in range(16 + max_attrs)}
         tracer = new_tracer()
         with tracer.start_as_current_span("span", attributes=attributes) as root:
             self.assertEqual(len(root.attributes), max_attrs)
@@ -1286,6 +1350,135 @@ class TestSpan(unittest.TestCase):
 
         error_status_test(trace.TracerProvider().get_tracer(__name__).start_span("root"))
         error_status_test(trace.TracerProvider().get_tracer(__name__).start_as_current_span("root"))
+
+    # --- status precedence -------------------------------------------------
+    # The spec orders the codes Ok > Error > Unset and says an attempt to set
+    # Unset should be ignored. A repeat of a code already recorded may only
+    # fill in a description that is missing, never replace or drop one.
+
+    # (name, calls as (code, description), expected code, expected description)
+    _PRECEDENCE_CASES = [
+        (
+            "unset on its own is ignored",
+            [(StatusCode.UNSET, None)],
+            StatusCode.UNSET,
+            None,
+        ),
+        (
+            "unset is ignored over error",
+            [(StatusCode.ERROR, "boom"), (StatusCode.UNSET, None)],
+            StatusCode.ERROR,
+            "boom",
+        ),
+        (
+            "unset is ignored over ok",
+            [(StatusCode.OK, None), (StatusCode.UNSET, None)],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "error overrides unset",
+            [(StatusCode.ERROR, "boom")],
+            StatusCode.ERROR,
+            "boom",
+        ),
+        (
+            "ok overrides unset",
+            [(StatusCode.OK, None)],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "ok overrides error",
+            [(StatusCode.ERROR, "boom"), (StatusCode.OK, None)],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "error does not override ok",
+            [(StatusCode.OK, None), (StatusCode.ERROR, "boom")],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "ok does not override ok",
+            [(StatusCode.OK, None), (StatusCode.OK, None)],
+            StatusCode.OK,
+            None,
+        ),
+        (
+            "a bare error does not drop a description",
+            [
+                (StatusCode.ERROR, "connection refused to db-1"),
+                (StatusCode.ERROR, None),
+            ],
+            StatusCode.ERROR,
+            "connection refused to db-1",
+        ),
+        (
+            "a described error does not replace a description",
+            [(StatusCode.ERROR, "first"), (StatusCode.ERROR, "second")],
+            StatusCode.ERROR,
+            "first",
+        ),
+        (
+            "a description fills in where none was recorded",
+            [(StatusCode.ERROR, None), (StatusCode.ERROR, "boom")],
+            StatusCode.ERROR,
+            "boom",
+        ),
+        (
+            "an empty description counts as missing",
+            [(StatusCode.ERROR, ""), (StatusCode.ERROR, "useful detail")],
+            StatusCode.ERROR,
+            "useful detail",
+        ),
+        (
+            "an empty description does not replace one",
+            [(StatusCode.ERROR, "boom"), (StatusCode.ERROR, "")],
+            StatusCode.ERROR,
+            "boom",
+        ),
+        (
+            "a bare error lands when there is nothing to keep",
+            [(StatusCode.ERROR, None)],
+            StatusCode.ERROR,
+            None,
+        ),
+        (
+            "ok stays final over a longer run",
+            [
+                (StatusCode.ERROR, "boom"),
+                (StatusCode.UNSET, None),
+                (StatusCode.OK, None),
+                (StatusCode.ERROR, "late"),
+            ],
+            StatusCode.OK,
+            None,
+        ),
+    ]
+
+    @staticmethod
+    def _span():
+        return trace.TracerProvider().get_tracer(__name__).start_span("root")
+
+    def test_status_precedence_with_a_status_instance(self):
+        for name, calls, code, description in self._PRECEDENCE_CASES:
+            with self.subTest(name):
+                span = self._span()
+                for call_code, call_description in calls:
+                    span.set_status(trace_api.status.Status(call_code, call_description))
+                self.assertIs(span.status.status_code, code)
+                self.assertEqual(span.status.description, description)
+
+    def test_status_precedence_with_the_statuscode_overload(self):
+        for name, calls, code, description in self._PRECEDENCE_CASES:
+            with self.subTest(name):
+                span = self._span()
+                for call_code, call_description in calls:
+                    span.set_status(call_code, call_description)
+                self.assertIs(span.status.status_code, code)
+                self.assertEqual(span.status.description, description)
 
     def test_record_exception_fqn(self):
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
@@ -2080,15 +2273,17 @@ class TestParentChildSpanException(unittest.TestCase):
 
         child_span = None
         try:
-            with tracer.start_as_current_span(
-                "parent",
-            ) as parent_span:
-                with tracer.start_as_current_span(
+            with (
+                tracer.start_as_current_span(
+                    "parent",
+                ) as parent_span,
+                tracer.start_as_current_span(
                     "child",
                     record_exception=False,
                     set_status_on_exception=False,
-                ) as child_span:
-                    raise exception
+                ) as child_span,
+            ):
+                raise exception
 
         except Exception:  # pylint: disable=broad-exception-caught
             pass

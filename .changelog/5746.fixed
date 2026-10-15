@@ -1,0 +1,1 @@
+`opentelemetry-api`: fix quadratic time parsing of the `tracestate` header and discard `tracestate` headers longer than 8192 characters

@@ -103,24 +103,28 @@ class TestLoadEntryPoint(unittest.TestCase):
         self.assertIs(result, mock_class)
 
     def test_raises_when_not_found(self):
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[],
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                load_entry_point("some_group", "missing")
+            load_entry_point("some_group", "missing")
         self.assertIn("missing", str(ctx.exception))
         self.assertIn("some_group", str(ctx.exception))
 
     def test_wraps_load_exception_in_configuration_error(self):
         mock_ep = MagicMock()
         mock_ep.load.side_effect = ImportError("bad import")
-        with patch(
-            "opentelemetry.configuration._common.entry_points",
-            return_value=[mock_ep],
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[mock_ep],
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                load_entry_point("some_group", "some_name")
+            load_entry_point("some_group", "some_name")
         self.assertIn("bad import", str(ctx.exception))
 
     def test_instantiation_error_not_wrapped(self):
@@ -152,6 +156,11 @@ class _CompressionWithoutDeflate:
     Gzip = "gzip"
 
 
+class _UppercaseCompressionWithDeflate:
+    GZIP = "gzip"
+    DEFLATE = "deflate"
+
+
 class TestMapCompression(unittest.TestCase):
     def test_none_returns_none(self):
         self.assertIsNone(_map_compression(None, _CompressionWithDeflate))
@@ -162,9 +171,18 @@ class TestMapCompression(unittest.TestCase):
     def test_gzip_maps_to_gzip(self):
         self.assertEqual(_map_compression("gzip", _CompressionWithDeflate), "gzip")
 
+    def test_uppercase_gzip_maps_to_gzip(self):
+        self.assertEqual(_map_compression("gzip", _UppercaseCompressionWithDeflate), "gzip")
+
     def test_deflate_maps_when_enabled(self):
         self.assertEqual(
             _map_compression("deflate", _CompressionWithDeflate, allow_deflate=True),
+            "deflate",
+        )
+
+    def test_uppercase_deflate_maps_when_enabled(self):
+        self.assertEqual(
+            _map_compression("deflate", _UppercaseCompressionWithDeflate, allow_deflate=True),
             "deflate",
         )
 

@@ -8,17 +8,14 @@ from __future__ import annotations
 
 import builtins
 import dataclasses
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.logs.v1.logs
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportLogsServiceRequest(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportLogsServiceRequest
@@ -39,7 +36,7 @@ class ExportLogsServiceRequest(opentelemetry.proto_json._json_codec.JsonMessage)
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportLogsServiceRequest":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportLogsServiceRequest:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -59,7 +56,7 @@ class ExportLogsServiceRequest(opentelemetry.proto_json._json_codec.JsonMessage)
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportLogsServiceResponse(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportLogsServiceResponse
@@ -80,7 +77,7 @@ class ExportLogsServiceResponse(opentelemetry.proto_json._json_codec.JsonMessage
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportLogsServiceResponse":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportLogsServiceResponse:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -100,7 +97,7 @@ class ExportLogsServiceResponse(opentelemetry.proto_json._json_codec.JsonMessage
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportLogsPartialSuccess(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportLogsPartialSuccess
@@ -124,7 +121,7 @@ class ExportLogsPartialSuccess(opentelemetry.proto_json._json_codec.JsonMessage)
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportLogsPartialSuccess":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportLogsPartialSuccess:
         """
         Create from a dictionary with lowerCamelCase keys.
 

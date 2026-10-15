@@ -9,10 +9,7 @@ from __future__ import annotations
 import builtins
 import dataclasses
 import enum
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.common.v1.common
@@ -31,7 +28,7 @@ class SpanFlags(enum.IntEnum):
     SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK = 512
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class TracesData(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message TracesData
@@ -52,7 +49,7 @@ class TracesData(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "TracesData":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> TracesData:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -72,7 +69,7 @@ class TracesData(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ResourceSpans(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ResourceSpans
@@ -99,7 +96,7 @@ class ResourceSpans(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ResourceSpans":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ResourceSpans:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -124,7 +121,7 @@ class ResourceSpans(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ScopeSpans(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ScopeSpans
@@ -151,7 +148,7 @@ class ScopeSpans(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ScopeSpans":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ScopeSpans:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -176,7 +173,7 @@ class ScopeSpans(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Span(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Span
@@ -196,7 +193,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
         SPAN_KIND_CONSUMER = 5
 
     @typing.final
-    @_dataclass
+    @dataclasses.dataclass(slots=True)
     class Event(opentelemetry.proto_json._json_codec.JsonMessage):
         """
         Generated from protobuf message Event
@@ -226,7 +223,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
             return _result
 
         @builtins.classmethod
-        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Span.Event":
+        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Span.Event:
             """
             Create from a dictionary with lowerCamelCase keys.
 
@@ -253,7 +250,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
             return cls(**_args)
 
     @typing.final
-    @_dataclass
+    @dataclasses.dataclass(slots=True)
     class Link(opentelemetry.proto_json._json_codec.JsonMessage):
         """
         Generated from protobuf message Link
@@ -289,7 +286,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
             return _result
 
         @builtins.classmethod
-        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Span.Link":
+        def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Span.Link:
             """
             Create from a dictionary with lowerCamelCase keys.
 
@@ -380,7 +377,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Span":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Span:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -409,8 +406,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
             opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "name")
             _args["name"] = _value
         if (_value := data.get("kind")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "kind")
-            _args["kind"] = Span.SpanKind(_value)
+            _args["kind"] = opentelemetry.proto_json._json_codec.decode_enum(_value, Span.SpanKind, "kind")
         if (_value := data.get("startTimeUnixNano")) is not None:
             _args["start_time_unix_nano"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "start_time_unix_nano")
         if (_value := data.get("endTimeUnixNano")) is not None:
@@ -437,7 +433,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class Status(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message Status
@@ -471,7 +467,7 @@ class Status(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "Status":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> Status:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -488,7 +484,6 @@ class Status(opentelemetry.proto_json._json_codec.JsonMessage):
             opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "message")
             _args["message"] = _value
         if (_value := data.get("code")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "code")
-            _args["code"] = Status.StatusCode(_value)
+            _args["code"] = opentelemetry.proto_json._json_codec.decode_enum(_value, Status.StatusCode, "code")
 
         return cls(**_args)

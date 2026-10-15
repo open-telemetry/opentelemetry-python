@@ -369,8 +369,10 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         self,
         attributes: Attributes,
         reservoir_builder: ExemplarReservoirBuilder,
+        instrument_is_synchronous: bool,
     ):
         super().__init__(attributes, reservoir_builder)
+        self._instrument_is_synchronous = instrument_is_synchronous
         self._value = None
 
     def aggregate(self, measurement: Measurement, should_sample_exemplar: bool = True):
@@ -391,7 +393,11 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
             if self._value is None:
                 return None
             value = self._value
-            self._value = None
+            if not (
+                self._instrument_is_synchronous
+                and collection_aggregation_temporality is AggregationTemporality.CUMULATIVE
+            ):
+                self._value = None
 
         exemplars = self._collect_exemplars()
 
@@ -522,8 +528,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         sum=sum_,
                         bucket_counts=tuple(value),
                         explicit_bounds=self._boundaries,
-                        min=min_,
-                        max=max_,
+                        min=min_ if self._record_min_max else None,
+                        max=max_ if self._record_min_max else None,
                     )
 
                 if value is None:
@@ -552,8 +558,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     sum=self._previous_sum,
                     bucket_counts=tuple(self._previous_value),
                     explicit_bounds=self._boundaries,
-                    min=self._previous_min,
-                    max=self._previous_max,
+                    min=self._previous_min if self._record_min_max else None,
+                    max=self._previous_max if self._record_min_max else None,
                 )
 
             return None
@@ -808,8 +814,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                         ),
                         # FIXME: Find the right value for flags
                         flags=0,
-                        min=min_,
-                        max=max_,
+                        min=min_ if self._record_min_max else None,
+                        max=max_ if self._record_min_max else None,
                     )
 
                 # Here collection_temporality is CUMULATIVE.
@@ -950,8 +956,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     ),
                     # FIXME: Find the right value for flags
                     flags=0,
-                    min=self._previous_min,
-                    max=self._previous_max,
+                    min=self._previous_min if self._record_min_max else None,
+                    max=self._previous_max if self._record_min_max else None,
                 )
 
             return None
@@ -1171,12 +1177,14 @@ class DefaultAggregation(Aggregation):
             return _LastValueAggregation(
                 attributes,
                 reservoir_builder=reservoir_factory(_LastValueAggregation),
+                instrument_is_synchronous=False,
             )
 
         if isinstance(instrument, _Gauge):
             return _LastValueAggregation(
                 attributes,
                 reservoir_builder=reservoir_factory(_LastValueAggregation),
+                instrument_is_synchronous=True,
             )
 
         # pylint: disable=broad-exception-raised
@@ -1329,6 +1337,7 @@ class LastValueAggregation(Aggregation):
         return _LastValueAggregation(
             attributes,
             reservoir_builder=reservoir_factory(_LastValueAggregation),
+            instrument_is_synchronous=isinstance(instrument, Synchronous),
         )
 
 

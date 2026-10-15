@@ -92,10 +92,9 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         span_processor = export.SimpleSpanProcessor(my_exporter)
         tracer_provider.add_span_processor(span_processor)
 
-        with tracer.start_span("foo"):
-            with tracer.start_span("bar"):
-                with tracer.start_span("xxx"):
-                    pass
+        with tracer.start_span("foo"), tracer.start_span("bar"):
+            with tracer.start_span("xxx"):
+                pass
 
         self.assertListEqual(["xxx", "bar", "foo"], spans_names_list)
 

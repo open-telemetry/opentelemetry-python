@@ -126,6 +126,7 @@ from __future__ import annotations
 
 import abc
 import enum
+import math
 import os
 from collections.abc import Sequence
 from logging import getLogger
@@ -171,7 +172,7 @@ class SamplingResult:
     """
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({str(self.decision)}, attributes={str(self.attributes)})"
+        return f"{type(self).__name__}({self.decision!s}, attributes={self.attributes!s})"
 
     def __init__(
         self,
@@ -252,7 +253,7 @@ class TraceIdRatioBased(Sampler):
     """
 
     def __init__(self, rate: float):
-        if rate < 0.0 or rate > 1.0:
+        if math.isnan(rate) or rate < 0.0 or rate > 1.0:
             raise ValueError("Probability must be in range [0.0, 1.0].")
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)
@@ -471,10 +472,10 @@ def _get_from_env_or_default() -> Sampler:
     if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
         try:
             rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG, ""))
+            return _KNOWN_SAMPLERS[trace_sampler](rate)
         except (ValueError, TypeError):
-            _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
-            rate = 1.0
-        return _KNOWN_SAMPLERS[trace_sampler](rate)
+            _logger.warning("Could not convert TRACES_SAMPLER_ARG to float. Using default rate 1.0.")
+            return _KNOWN_SAMPLERS[trace_sampler](1.0)
 
     return _KNOWN_SAMPLERS[trace_sampler]
 

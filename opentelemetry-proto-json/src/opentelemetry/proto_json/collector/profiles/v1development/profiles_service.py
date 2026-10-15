@@ -8,17 +8,14 @@ from __future__ import annotations
 
 import builtins
 import dataclasses
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 import opentelemetry.proto_json.profiles.v1development.profiles
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportProfilesServiceRequest(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportProfilesServiceRequest
@@ -42,7 +39,7 @@ class ExportProfilesServiceRequest(opentelemetry.proto_json._json_codec.JsonMess
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportProfilesServiceRequest":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportProfilesServiceRequest:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -64,7 +61,7 @@ class ExportProfilesServiceRequest(opentelemetry.proto_json._json_codec.JsonMess
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportProfilesServiceResponse(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportProfilesServiceResponse
@@ -85,7 +82,7 @@ class ExportProfilesServiceResponse(opentelemetry.proto_json._json_codec.JsonMes
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportProfilesServiceResponse":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportProfilesServiceResponse:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -105,7 +102,7 @@ class ExportProfilesServiceResponse(opentelemetry.proto_json._json_codec.JsonMes
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ExportProfilesPartialSuccess(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ExportProfilesPartialSuccess
@@ -129,7 +126,7 @@ class ExportProfilesPartialSuccess(opentelemetry.proto_json._json_codec.JsonMess
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ExportProfilesPartialSuccess":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ExportProfilesPartialSuccess:
         """
         Create from a dictionary with lowerCamelCase keys.
 

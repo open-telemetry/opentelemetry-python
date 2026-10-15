@@ -1,0 +1,5 @@
+`opentelemetry-test-utils`: require Weaver 0.27.0 or later for `WeaverLiveCheck`
+and fix its shutdown sequence.
+Make readiness polling quiet and add a configurable startup timeout.
+Reuse completed reports on repeated end calls; raise when no completed report
+request is available instead of returning an empty report.

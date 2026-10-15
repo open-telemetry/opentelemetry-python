@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Tests access private members of SDK classes to assert correct configuration.
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-lines
 
 import os
 import sys
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.configuration._conversion import _dict_to_dataclass
@@ -25,6 +26,15 @@ from opentelemetry.configuration.models import (
     ConsoleMetricExporter as ConsoleMetricExporterConfig,
 )
 from opentelemetry.configuration.models import (
+    ExperimentalMeterConfig as MeterConfigConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalMeterConfigurator as MeterConfiguratorConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalMeterMatcherAndConfig as MeterMatcherAndConfig,
+)
+from opentelemetry.configuration.models import (
     ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
 )
 from opentelemetry.configuration.models import (
@@ -38,6 +48,7 @@ from opentelemetry.configuration.models import (
     ExporterTemporalityPreference,
     IncludeExclude,
     InstrumentType,
+    OtlpHttpEncoding,
     ViewSelector,
     ViewStream,
 )
@@ -93,6 +104,7 @@ from opentelemetry.sdk.metrics.view import (
     View,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class TestCreateMeterProviderBasic(unittest.TestCase):
@@ -220,15 +232,17 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_otlp_http_missing_package_raises(self):
         config = self._make_periodic_config(PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig()))
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.http.metric_exporter": None,
-                "opentelemetry.exporter.otlp.proto.http": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.metric_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_meter_provider(config)
+            create_meter_provider(config)
         self.assertIn("otlp-proto-http", str(ctx.exception))
 
     def test_otlp_http_created_with_endpoint(self):
@@ -247,7 +261,12 @@ class TestCreateMetricReaders(unittest.TestCase):
             },
         ):
             config = self._make_periodic_config(
-                PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(endpoint="http://localhost:4318"))
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(
+                        endpoint="http://localhost:4318",
+                        encoding=OtlpHttpEncoding.protobuf,
+                    )
+                )
             )
             create_meter_provider(config)
 
@@ -256,6 +275,61 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertIsNone(kwargs["headers"])
         self.assertIsNone(kwargs["timeout"])
         self.assertIsNone(kwargs["compression"])
+
+    def test_otlp_http_json_missing_package_raises(self):
+        config = self._make_periodic_config(
+            PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(encoding=OtlpHttpEncoding.json))
+        )
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.common.http": None,
+                    "opentelemetry.exporter.otlp.json.http.metric_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
+        ):
+            create_meter_provider(config)
+        self.assertIn("opentelemetry-exporter-otlp-json-http", str(ctx.exception))
+
+    def test_otlp_http_json_created_with_config(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = SimpleNamespace(GZIP="json_gzip")
+        mock_common_module = MagicMock()
+        mock_common_module.Compression = mock_compression_cls
+        mock_exporter_module = MagicMock()
+        mock_exporter_module.OTLPMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.common.http": mock_common_module,
+                "opentelemetry.exporter.otlp.json.http.metric_exporter": mock_exporter_module,
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(
+                        endpoint="http://collector:4318/v1/metrics",
+                        compression="gzip",
+                        timeout=5000,
+                        encoding=OtlpHttpEncoding.json,
+                        temporality_preference=ExporterTemporalityPreference.delta,
+                        default_histogram_aggregation=(
+                            ExporterDefaultHistogramAggregation.base2_exponential_bucket_histogram
+                        ),
+                    )
+                )
+            )
+            create_meter_provider(config)
+
+        call_kwargs = mock_exporter_cls.call_args.kwargs
+        self.assertEqual(call_kwargs["endpoint"], "http://collector:4318/v1/metrics")
+        self.assertEqual(call_kwargs["timeout"], 5.0)
+        self.assertEqual(call_kwargs["compression"], "json_gzip")
+        self.assertIsNotNone(call_kwargs["preferred_temporality"])
+        self.assertIsNotNone(call_kwargs["preferred_aggregation"])
 
     def test_otlp_http_created_with_deflate_compression(self):
         mock_exporter_cls = MagicMock()
@@ -283,29 +357,33 @@ class TestCreateMetricReaders(unittest.TestCase):
 
     def test_otlp_grpc_missing_package_raises(self):
         config = self._make_periodic_config(PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig()))
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": None,
-                "grpc": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": None,
+                    "grpc": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_meter_provider(config)
+            create_meter_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
     def test_otlp_file_development_missing_package_raises(self):
         config = self._make_periodic_config(
             PushMetricExporterConfig(otlp_file_development=ExperimentalOtlpFileMetricExporterConfig())
         )
-        with patch.dict(
-            sys.modules,
-            {
-                "opentelemetry.exporter.otlp.json.file.metric_exporter": None,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.json.file.metric_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
         ):
-            with self.assertRaises(ConfigurationError) as ctx:
-                create_meter_provider(config)
+            create_meter_provider(config)
         self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
@@ -857,3 +935,76 @@ class TestCreateViews(unittest.TestCase):
     def test_stream_aggregation_default(self):
         view = self._get_view(self._make_view_config(stream_kwargs={"aggregation": AggregationConfig(default={})}))
         self.assertIsInstance(view._aggregation, DefaultAggregation)
+
+
+class TestMeterConfigurator(unittest.TestCase):
+    @staticmethod
+    def _enabled(provider, name):
+        return provider._apply_meter_configurator(InstrumentationScope(name)).is_enabled
+
+    def test_no_configurator_leaves_meters_enabled(self):
+        provider = create_meter_provider(MeterProviderConfig(readers=[]))
+        self.assertTrue(self._enabled(provider, "any.scope"))
+
+    def test_matching_glob_disables_meter(self):
+        config = MeterProviderConfig(
+            readers=[],
+            meter_configurator_development=MeterConfiguratorConfig(
+                default_config=MeterConfigConfig(enabled=True),
+                meters=[
+                    MeterMatcherAndConfig(
+                        name="noisy.*",
+                        config=MeterConfigConfig(enabled=False),
+                    )
+                ],
+            ),
+        )
+        provider = create_meter_provider(config)
+        self.assertFalse(self._enabled(provider, "noisy.http"))
+        self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_default_config_applies_to_unmatched_scopes(self):
+        config = MeterProviderConfig(
+            readers=[],
+            meter_configurator_development=MeterConfiguratorConfig(
+                default_config=MeterConfigConfig(enabled=False),
+                meters=[
+                    MeterMatcherAndConfig(
+                        name="keep.*",
+                        config=MeterConfigConfig(enabled=True),
+                    )
+                ],
+            ),
+        )
+        provider = create_meter_provider(config)
+        self.assertTrue(self._enabled(provider, "keep.me"))
+        self.assertFalse(self._enabled(provider, "other"))
+
+    def test_first_matching_rule_wins(self):
+        config = MeterProviderConfig(
+            readers=[],
+            meter_configurator_development=MeterConfiguratorConfig(
+                meters=[
+                    MeterMatcherAndConfig(
+                        name="a.*",
+                        config=MeterConfigConfig(enabled=False),
+                    ),
+                    MeterMatcherAndConfig(
+                        name="a.b",
+                        config=MeterConfigConfig(enabled=True),
+                    ),
+                ],
+            ),
+        )
+        provider = create_meter_provider(config)
+        self.assertFalse(self._enabled(provider, "a.b"))
+
+    def test_absent_enabled_defaults_to_enabled(self):
+        config = MeterProviderConfig(
+            readers=[],
+            meter_configurator_development=MeterConfiguratorConfig(
+                default_config=MeterConfigConfig(),
+            ),
+        )
+        provider = create_meter_provider(config)
+        self.assertTrue(self._enabled(provider, "any.scope"))

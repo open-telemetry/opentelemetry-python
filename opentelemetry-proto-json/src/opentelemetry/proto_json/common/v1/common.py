@@ -8,16 +8,13 @@ from __future__ import annotations
 
 import builtins
 import dataclasses
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message AnyValue
@@ -59,7 +56,7 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "AnyValue":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> AnyValue:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -96,7 +93,7 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ArrayValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ArrayValue
@@ -117,7 +114,7 @@ class ArrayValue(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "ArrayValue":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> ArrayValue:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -137,7 +134,7 @@ class ArrayValue(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class KeyValueList(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValueList
@@ -158,7 +155,7 @@ class KeyValueList(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "KeyValueList":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> KeyValueList:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -178,7 +175,7 @@ class KeyValueList(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValue
@@ -205,7 +202,7 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "KeyValue":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> KeyValue:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -231,7 +228,7 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message InstrumentationScope
@@ -261,7 +258,7 @@ class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "InstrumentationScope":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> InstrumentationScope:
         """
         Create from a dictionary with lowerCamelCase keys.
 
@@ -290,7 +287,7 @@ class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class EntityRef(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message EntityRef
@@ -320,7 +317,7 @@ class EntityRef(opentelemetry.proto_json._json_codec.JsonMessage):
         return _result
 
     @builtins.classmethod
-    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> "EntityRef":
+    def from_dict(cls, data: builtins.dict[builtins.str, typing.Any]) -> EntityRef:
         """
         Create from a dictionary with lowerCamelCase keys.
 

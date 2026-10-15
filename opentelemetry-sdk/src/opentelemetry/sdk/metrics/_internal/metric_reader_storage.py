@@ -17,6 +17,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
     ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
     _DropAggregation,
     _ExplicitBucketHistogramAggregation,
     _ExponentialBucketHistogramAggregation,
@@ -247,7 +248,13 @@ class MetricReaderStorage:
         result = True
 
         # pylint: disable=protected-access
-        if isinstance(instrument, Asynchronous) and isinstance(view._aggregation, ExplicitBucketHistogramAggregation):
+        if isinstance(instrument, Asynchronous) and isinstance(
+            view._aggregation,
+            (
+                ExplicitBucketHistogramAggregation,
+                ExponentialBucketHistogramAggregation,
+            ),
+        ):
             _logger.warning(
                 "View %s and instrument %s will produce semantic errors when matched, the view has not been applied.",
                 view,

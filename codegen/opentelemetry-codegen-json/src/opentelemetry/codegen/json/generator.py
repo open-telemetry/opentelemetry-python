@@ -202,8 +202,7 @@ class OtlpJsonGenerator:
             Python module path (dot-separated)
         """
         transformed = self._transform_proto_path(proto_file)
-        if transformed.endswith(".py"):
-            transformed = transformed[:-3]
+        transformed = transformed.removesuffix(".py")
         return transformed.replace("/", ".")
 
     def _generate_file(self, file_desc: descriptor.FileDescriptorProto) -> str:
@@ -300,7 +299,6 @@ class OtlpJsonGenerator:
         std_imports = [
             "builtins",
             "dataclasses",
-            "functools",
             "typing",
         ]
         if include_enum:
@@ -309,12 +307,6 @@ class OtlpJsonGenerator:
         for module in sorted(std_imports):
             writer.import_(module)
 
-        writer.blank_line()
-
-        writer.assignment(
-            "_dataclass",
-            "functools.partial(dataclasses.dataclass, slots=True)",
-        )
         writer.blank_line()
 
         # Collect all imports needed
@@ -400,7 +392,7 @@ class OtlpJsonGenerator:
             msg_desc.name,
             bases=(f"{codec}.JsonMessage",),
             decorators=("typing.final",),
-            decorator_name="_dataclass",
+            slots=True,
         ):
             if msg_desc.field or msg_desc.nested_type or msg_desc.enum_type:
                 writer.docstring([f"Generated from protobuf message {msg_desc.name}"])
@@ -542,7 +534,7 @@ class OtlpJsonGenerator:
             "from_dict",
             ["cls", "data: builtins.dict[builtins.str, typing.Any]"],
             decorators=["builtins.classmethod"],
-            return_type=f'"{current_path}"',
+            return_type=f"{current_path}",
         ):
             writer.docstring(
                 [
@@ -682,10 +674,9 @@ class OtlpJsonGenerator:
             )
         elif field_desc.type == descriptor.FieldDescriptorProto.TYPE_ENUM:
             enum_type = self._resolve_enum_type(field_desc.type_name, proto_file)
-            writer.writeln(f'{codec}.validate_type({var_name}, builtins.int, "{field_desc.name}")')
             writer.assignment(
                 f'{target_dict}["{field_desc.name}"]',
-                f"{enum_type}({var_name})",
+                f'{codec}.decode_enum({var_name}, {enum_type}, "{field_desc.name}")',
             )
         elif is_hex_encoded_field(field_desc.name):
             writer.assignment(
@@ -739,7 +730,7 @@ class OtlpJsonGenerator:
             return f"{msg_type}.from_dict({var_name})"
         if field_desc.type == descriptor.FieldDescriptorProto.TYPE_ENUM:
             enum_type = self._resolve_enum_type(field_desc.type_name, proto_file)
-            return f"{enum_type}({var_name})"
+            return f'{codec}.decode_enum({var_name}, {enum_type}, "{field_desc.name}")'
         if is_hex_encoded_field(field_desc.name):
             return f'{codec}.decode_hex({var_name}, "{field_desc.name}")'
         if is_int64_type(field_desc.type):

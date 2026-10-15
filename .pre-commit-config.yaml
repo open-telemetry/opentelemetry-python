@@ -15,7 +15,7 @@ repos:
         args: ["--preview"]
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
-    rev: 0.6.0
+    rev: 0.12.2
     hooks:
       - id: uv-lock
         args: ["--index-url", "https://pypi.org/simple"]

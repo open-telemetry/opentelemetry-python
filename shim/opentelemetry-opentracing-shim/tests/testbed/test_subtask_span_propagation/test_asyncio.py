@@ -27,7 +27,7 @@ class TestAsyncio(OpenTelemetryTestCase):
         self.assertNamesEqual(spans, ["child", "parent"])
         self.assertIsChildOf(spans[0], spans[1])
 
-    async def parent_task(self, message):  # noqa
+    async def parent_task(self, message):
         with self.tracer.start_active_span("parent"):
             res = await self.child_task(message)
 
