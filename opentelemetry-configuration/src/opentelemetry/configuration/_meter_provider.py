@@ -41,6 +41,7 @@ from opentelemetry.configuration.models import (
     ExporterDefaultHistogramAggregation,
     ExporterTemporalityPreference,
     InstrumentType,
+    OtlpHttpEncoding,
 )
 from opentelemetry.configuration.models import (
     MeterProvider as MeterProviderConfig,
@@ -273,34 +274,64 @@ def _create_otlp_http_metric_exporter(
     config: OtlpHttpMetricExporterConfig,
 ) -> MetricExporter:
     """Create an OTLP HTTP metric exporter from config."""
-    try:
-        # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415  # type: ignore[import-untyped]
-            Compression,
-        )
-        from opentelemetry.exporter.otlp.proto.http.metric_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
-            OTLPMetricExporter,
-        )
-    except ImportError as exc:
-        raise MissingDependencyError(
-            package="opentelemetry-exporter-otlp-proto-http",
-            feature="otlp_http metric exporter",
-        ) from exc
-
-    compression = _map_compression(config.compression, Compression, allow_deflate=True)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
-    return OTLPMetricExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
-        headers=headers,
-        timeout=timeout,
-        compression=compression,  # type: ignore[arg-type]
-        preferred_temporality=preferred_temporality,
-        preferred_aggregation=preferred_aggregation,
-    )
+    match config.encoding:
+        case None | OtlpHttpEncoding.protobuf:
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415
+                    Compression,
+                )
+                from opentelemetry.exporter.otlp.proto.http.metric_exporter import (  # noqa: PLC0415
+                    OTLPMetricExporter,
+                )
+            except ImportError as exc:
+                raise MissingDependencyError(
+                    package="opentelemetry-exporter-otlp-proto-http",
+                    feature="otlp_http metric exporter",
+                ) from exc
+
+            compression = _map_compression(config.compression, Compression, allow_deflate=True)
+            return OTLPMetricExporter(
+                endpoint=config.endpoint,
+                headers=headers,
+                timeout=timeout,
+                compression=compression,
+                preferred_temporality=preferred_temporality,
+                preferred_aggregation=preferred_aggregation,
+            )
+        case OtlpHttpEncoding.json:
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.exporter.otlp.common.http import (  # noqa: PLC0415
+                    Compression as JsonCompression,
+                )
+                from opentelemetry.exporter.otlp.json.http.metric_exporter import (  # noqa: PLC0415
+                    OTLPMetricExporter as JsonOTLPMetricExporter,
+                )
+            except ImportError as exc:
+                raise MissingDependencyError(
+                    package="opentelemetry-exporter-otlp-json-http",
+                    feature="otlp_http JSON metric exporter",
+                ) from exc
+
+            compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
+            return JsonOTLPMetricExporter(
+                endpoint=config.endpoint,
+                headers=headers,
+                timeout=timeout,
+                compression=compression,
+                preferred_temporality=preferred_temporality,
+                preferred_aggregation=preferred_aggregation,
+            )
+        case _:
+            raise ConfigurationError(
+                f"Unsupported OTLP HTTP encoding '{config.encoding}'. Supported values: protobuf, json."
+            )
 
 
 def _create_otlp_grpc_metric_exporter(
@@ -368,14 +399,6 @@ def _create_otlp_file_development_metric_exporter(
     )
 
 
-_METRIC_EXPORTER_REGISTRY: dict = {
-    "otlp_http": _create_otlp_http_metric_exporter,
-    "otlp_grpc": _create_otlp_grpc_metric_exporter,
-    "console": _create_console_metric_exporter,
-    "otlp_file_development": _create_otlp_file_development_metric_exporter,
-}
-
-
 def _create_push_metric_exporter(
     config: PushMetricExporterConfig,
 ) -> MetricExporter:
@@ -386,17 +409,23 @@ def _create_push_metric_exporter(
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_metrics_exporter`` entry point group.
     """
-    for name, factory in _METRIC_EXPORTER_REGISTRY.items():
-        value = getattr(config, name, None)
-        if value is not None:
-            return factory(value)
-    if config.additional_properties:
-        name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_metrics_exporter", name)(**(plugin_config or {}))
-    raise ConfigurationError(
-        "No exporter type specified in push metric exporter config. "
-        "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
-    )
+    match config:
+        case PushMetricExporterConfig(otlp_http=exporter_config) if exporter_config is not None:
+            return _create_otlp_http_metric_exporter(exporter_config)
+        case PushMetricExporterConfig(otlp_grpc=exporter_config) if exporter_config is not None:
+            return _create_otlp_grpc_metric_exporter(exporter_config)
+        case PushMetricExporterConfig(console=exporter_config) if exporter_config is not None:
+            return _create_console_metric_exporter(exporter_config)
+        case PushMetricExporterConfig(otlp_file_development=exporter_config) if exporter_config is not None:
+            return _create_otlp_file_development_metric_exporter(exporter_config)
+        case PushMetricExporterConfig(additional_properties=additional_properties) if additional_properties:
+            name, plugin_config = next(iter(additional_properties.items()))
+            return load_entry_point("opentelemetry_metrics_exporter", name)(**(plugin_config or {}))
+        case _:
+            raise ConfigurationError(
+                "No exporter type specified in push metric exporter config. "
+                "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
+            )
 
 
 def _create_periodic_metric_reader(
