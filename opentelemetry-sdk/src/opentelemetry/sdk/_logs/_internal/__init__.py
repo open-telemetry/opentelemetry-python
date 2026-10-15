@@ -758,9 +758,6 @@ class Logger(APILogger):
         self._logger_config = _logger_config
         self._log_record_limits = log_record_limits or LogRecordLimits()
 
-    def _is_enabled(self) -> bool:
-        return self._logger_config.is_enabled
-
     def enabled(
         self,
         *,
@@ -768,7 +765,7 @@ class Logger(APILogger):
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
     ) -> bool:
-        if not self._is_enabled():
+        if not self._logger_config.is_enabled:
             return False
         return self._multi_log_record_processor.enabled(
             context=context,
@@ -809,7 +806,21 @@ class Logger(APILogger):
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
-        if not self._is_enabled():
+        if not self._logger_config.is_enabled:
+            return
+        self._logger_metrics.emit_log()
+        if record is not None:
+            api_record = record.log_record if isinstance(record, ReadWriteLogRecord) else record
+            context = api_record.context
+            severity_number = api_record.severity_number
+            event_name = api_record.event_name
+        # Skip building the record when no processor would accept it.
+        if not self._multi_log_record_processor.enabled(
+            context=context,
+            instrumentation_scope=self._instrumentation_scope,
+            severity_number=severity_number,
+            event_name=event_name,
+        ):
             return
         # If a record is provided, use it directly
         if record is not None:
@@ -847,7 +858,6 @@ class Logger(APILogger):
                 limits=self._log_record_limits,
             )
 
-        self._logger_metrics.emit_log()
         self._multi_log_record_processor.on_emit(writable_record)
 
 
