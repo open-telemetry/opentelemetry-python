@@ -78,6 +78,7 @@ from opentelemetry.semconv.attributes import (
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
+    get_current_span,
 )
 from opentelemetry.util.types import AnyValue, Attributes
 
@@ -728,6 +729,8 @@ class LoggingHandler(logging.Handler):
 @dataclass
 class _LoggerConfig:
     is_enabled: bool = True
+    minimum_severity: SeverityNumber = SeverityNumber.UNSPECIFIED
+    trace_based: bool = False
 
     @classmethod
     def default(cls) -> _LoggerConfig:
@@ -770,6 +773,16 @@ class Logger(APILogger):
     ) -> bool:
         if not self._is_enabled():
             return False
+        if (
+            severity_number is not None
+            and severity_number is not SeverityNumber.UNSPECIFIED
+            and severity_number.value < self._logger_config.minimum_severity.value
+        ):
+            return False
+        if self._logger_config.trace_based:
+            span_context = get_current_span(context).get_span_context()
+            if span_context.is_valid and not span_context.trace_flags.sampled:
+                return False
         return self._multi_log_record_processor.enabled(
             context=context,
             instrumentation_scope=self._instrumentation_scope,
