@@ -1,0 +1,13 @@
+description: >
+  `temporality_preference: delta` exports counters, histograms and observable counters as delta,
+  and up-down counters as cumulative.
+until:
+  - metric:
+      name: requests
+      min: 3
+expect:
+  - metric: {name: requests, temporality: DELTA}
+  - metric: {name: latency, temporality: DELTA}
+  - metric: {name: cpu.time, temporality: DELTA}
+  - metric: {name: queue.size, temporality: CUMULATIVE}
+  - metric: {name: connections, temporality: CUMULATIVE}

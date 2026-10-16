@@ -1,0 +1,13 @@
+description: >
+  A config that doesn't match the schema fails configuration.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+  - output:
+      stream: stderr
+      pattern: "Configuration does not match schema"
+  - spans:
+      count: 0

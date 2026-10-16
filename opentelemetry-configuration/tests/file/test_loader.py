@@ -25,7 +25,10 @@ from opentelemetry.configuration.file._loader import (
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
-from opentelemetry.configuration.models import OpenTelemetryConfiguration
+from opentelemetry.configuration.models import (
+    OpenTelemetryConfiguration,
+    OtlpHttpEncoding,
+)
 from opentelemetry.configuration.models import (
     ParentBasedSampler as ParentBasedSamplerConfig,
 )
@@ -288,6 +291,22 @@ tracer_provider:
             config.tracer_provider.processors[0].batch,
             BatchSpanProcessorConfig,
         )
+
+    def test_otlp_http_json_encoding_is_typed_enum(self):
+        config = self._load(
+            """
+file_format: '1.0'
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            encoding: json
+"""
+        )
+
+        exporter = config.tracer_provider.processors[0].batch.exporter.otlp_http
+        self.assertIs(exporter.encoding, OtlpHttpEncoding.json)
 
     # pylint: disable=protected-access
     def test_typed_config_feeds_factory_function(self):
