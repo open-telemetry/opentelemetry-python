@@ -15,6 +15,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+import opentelemetry.sdk.metrics._internal.export as _export_module
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
@@ -395,3 +396,53 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(name.startswith("periodic_metric_reader/"))
 
         mp.shutdown()
+
+    def test_force_flush_returns_true_on_success(self):
+        exporter = FakeMetricsExporter()
+        pmr = self._create_periodic_reader(metrics, exporter)
+        self.assertTrue(pmr.force_flush(timeout_millis=5_000))
+        pmr.shutdown()
+
+    def test_force_flush_returns_false_on_export_failure(self):
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock(return_value=MetricExportResult.FAILURE)
+        exporter.force_flush = Mock(return_value=True)
+        pmr = self._create_periodic_reader(metrics, exporter)
+        self.assertFalse(pmr.force_flush(timeout_millis=5_000))
+        # The exporter is not flushed when the export itself failed.
+        exporter.force_flush.assert_not_called()
+        pmr.shutdown()
+
+    def test_force_flush_returns_false_on_export_exception(self):
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock(side_effect=Exception("export failed"))
+        pmr = self._create_periodic_reader(metrics, exporter)
+        with self.assertLogs(level=WARNING):
+            self.assertFalse(pmr.force_flush(timeout_millis=5_000))
+        exporter.export = Mock(return_value=MetricExportResult.SUCCESS)
+        pmr.shutdown()
+
+    def test_force_flush_returns_false_on_exporter_flush_failure(self):
+        exporter = FakeMetricsExporter()
+        exporter.force_flush = Mock(return_value=False)
+        pmr = self._create_periodic_reader(metrics, exporter)
+        self.assertFalse(pmr.force_flush(timeout_millis=5_000))
+        exporter.force_flush.assert_called_once()
+        pmr.shutdown()
+
+    def test_detach_called_on_export_exception(self):
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock(side_effect=Exception("export failed"))
+        pmr = self._create_periodic_reader(metrics, exporter)
+
+        with (
+            self.assertLogs(level=WARNING),
+            patch(
+                "opentelemetry.sdk.metrics._internal.export.detach",
+                wraps=_export_module.detach,
+            ) as mock_detach,
+        ):
+            pmr.force_flush(timeout_millis=5_000)
+        mock_detach.assert_called_once()
+        exporter.export = Mock(return_value=MetricExportResult.SUCCESS)
+        pmr.shutdown()
