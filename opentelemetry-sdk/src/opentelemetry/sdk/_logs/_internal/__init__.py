@@ -225,7 +225,7 @@ class LogLimits(LogRecordLimits):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ReadableLogRecord:
     """Readable LogRecord should be kept exactly in-sync with ReadWriteLogRecord, only difference is the frozen=True param."""
 
@@ -269,7 +269,7 @@ class ReadableLogRecord:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class ReadWriteLogRecord:
     """A ReadWriteLogRecord instance represents an event being logged.
     ReadWriteLogRecord instances are created and emitted via `Logger`
@@ -300,7 +300,12 @@ class ReadWriteLogRecord:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ReadWriteLogRecord):
             return NotImplemented
-        return self.__dict__ == other.__dict__
+        return (
+            self.log_record == other.log_record
+            and self.resource == other.resource
+            and self.instrumentation_scope == other.instrumentation_scope
+            and self.limits == other.limits
+        )
 
     @property
     def dropped_attributes(self) -> int:
@@ -435,16 +440,15 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
     ) -> bool:
-        processors = self._log_record_processors
-        return any(
-            lp.enabled(
+        for lp in self._log_record_processors:
+            if lp.enabled(
                 context=context,
                 instrumentation_scope=instrumentation_scope,
                 severity_number=severity_number,
                 event_name=event_name,
-            )
-            for lp in processors
-        )
+            ):
+                return True
+        return False
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -524,16 +528,15 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
     ) -> bool:
-        processors = self._log_record_processors
-        return any(
-            lp.enabled(
+        for lp in self._log_record_processors:
+            if lp.enabled(
                 context=context,
                 instrumentation_scope=instrumentation_scope,
                 severity_number=severity_number,
                 event_name=event_name,
-            )
-            for lp in processors
-        )
+            ):
+                return True
+        return False
 
     def shutdown(self) -> None:
         self._submit_and_wait(lambda lp: lp.shutdown)
