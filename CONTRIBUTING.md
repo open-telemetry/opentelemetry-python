@@ -69,6 +69,8 @@ You can run `tox` with the following arguments:
 - `tox -e ruff` to run ruff linter and formatter checks against the entire codebase
 - `tox -e typecheck` to run pyright against entire code base.
 - `tox -e public-symbols-check` to run public_symbols_checker.py.
+- `tox -e eachdist -- <arguments>` to run `scripts/eachdist.py` in an isolated environment,
+  for example `tox -e eachdist -- version --mode stable`.
 - `tox -e docker-tests-{otlpexporter,opencensus}` to run tests in both or either one location.
 - `tox -e tracecontext` to run integration tests for tracecontext.
 - `tox -e precommit` to run all `pre-commit` actions
