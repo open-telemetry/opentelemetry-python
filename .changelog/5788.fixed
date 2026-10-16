@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: reinitialize the metrics `SynchronousMeasurementConsumer` and `MetricReaderStorage` locks in the child process after `fork()` to prevent deadlocks

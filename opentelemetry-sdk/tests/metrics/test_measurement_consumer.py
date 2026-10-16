@@ -3,9 +3,10 @@
 
 # pylint: disable=invalid-name,no-self-use
 
+import os
 from threading import Event, Thread
 from time import sleep
-from unittest import TestCase
+from unittest import TestCase, skipUnless
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.sdk.metrics._internal.measurement_consumer import (
@@ -191,6 +192,44 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
         consumer.consume_measurement(Mock())
 
         mock_lock.__enter__.assert_not_called()
+
+    @skipUnless(hasattr(os, "register_at_fork"), "requires os.register_at_fork")
+    def test_collect_after_fork_with_locks_held(self):
+        """Locks held by another thread at fork time must not block collect in the child"""
+        timeout = 1
+        reader = MagicMock()
+        with patch("os.register_at_fork") as register_at_fork:
+            consumer = SynchronousMeasurementConsumer(
+                SdkConfiguration(
+                    exemplar_filter=MagicMock(),
+                    resource=MagicMock(),
+                    views=MagicMock(),
+                ),
+                metric_readers=[reader],
+            )
+        locks_held = Event()
+        release_locks = Event()
+
+        def hold_locks():
+            # pylint: disable-next=protected-access
+            with consumer._lock, consumer._reader_storages[reader]._lock:
+                locks_held.set()
+                release_locks.wait()
+
+        holder = Thread(target=hold_locks)
+        holder.start()
+        self.addCleanup(holder.join)
+        self.addCleanup(release_locks.set)
+        self.assertTrue(locks_held.wait(timeout))
+
+        # The child process has no holder thread, so nothing will release the locks.
+        register_at_fork.assert_called_once()
+        register_at_fork.call_args.kwargs["after_in_child"]()
+
+        collector = Thread(target=consumer.collect, args=(reader,))
+        collector.start()
+        collector.join(timeout)
+        self.assertFalse(collector.is_alive(), "collect blocked on a lock held at fork time")
 
     def test_concurrent_changes_to_metric_readers(self):
         timeout = 1

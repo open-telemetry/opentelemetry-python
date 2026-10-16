@@ -92,6 +92,9 @@ class MetricReaderStorage:
             reset_on_collect=reset_on_collect,
         )
 
+    def _at_fork_reinit(self) -> None:
+        self._lock = RLock()
+
     def _get_or_init_view_instrument_match(self, instrument: _Instrument) -> list[_ViewInstrumentMatch]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
