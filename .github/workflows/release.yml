@@ -22,7 +22,7 @@ jobs:
           persist-credentials: false
 
       - name: Install eachdist dependencies
-        run: python -m pip install -r scripts/eachdist-requirements.txt
+        run: python -m pip install -c dev-requirements.txt toml
 
       - name: Set environment variables
         run: |
