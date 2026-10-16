@@ -9,6 +9,7 @@ import dataclasses
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import unittest
@@ -209,6 +210,37 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertEqual(child_payload["cached_tracer_pid"], child_payload["child_pid"])
         self.assertEqual(child_payload["new_tracer_pid"], child_payload["child_pid"])
         self.assertEqual(child_payload["span_pid"], child_payload["child_pid"])
+
+    @unittest.skipUnless(
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "requires os.fork and os.register_at_fork",
+    )
+    def test_tracer_provider_fork_with_preexec_fn_does_not_deadlock(self):
+        code = (
+            "import os, signal, subprocess, sys\n"
+            "from opentelemetry.sdk.resources import Resource\n"
+            "from opentelemetry.sdk.trace import TracerProvider\n"
+            "provider = TracerProvider(resource=Resource({'service.name': 'test'}))\n"
+            "import concurrent.futures.thread\n"
+            "proc = subprocess.Popen(\n"
+            "    ['true'], preexec_fn=lambda: signal.signal(signal.SIGPIPE, signal.SIG_DFL)\n"
+            ")\n"
+            "proc.wait()\n"
+            "sys.exit(proc.returncode)\n"
+        )
+        proc = subprocess.Popen(
+            [sys.executable, "-c", code],
+            start_new_session=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            proc.communicate()
+            self.fail("TracerProvider fork handler deadlocked during fork with preexec_fn")
+        self.assertEqual(proc.returncode, 0, f"stdout: {stdout}\nstderr: {stderr}")
 
     def test_get_tracer_sdk(self):
         tracer_provider = trace.TracerProvider()

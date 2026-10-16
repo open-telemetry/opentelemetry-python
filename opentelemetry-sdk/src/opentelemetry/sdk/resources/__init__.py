@@ -743,10 +743,20 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
 
 
 def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
-    return get_aggregated_resources(
-        [detector for detector in _build_resource_detectors() if detector.is_process_dependent()],
-        Resource.get_empty(),
-    )
+    detectors = [detector for detector in _build_resource_detectors() if detector.is_process_dependent()]
+    detectors_merged_resource = Resource.get_empty()
+    for detector in detectors:
+        detected_resource: Resource = _EMPTY_RESOURCE
+        try:
+            detected_resource = detector.detect()
+        # pylint: disable=broad-exception-caught
+        except Exception as ex:
+            if detector.raise_on_error:
+                raise ex
+            logger.warning("Exception %s in detector %s, ignoring", ex, detector)
+        finally:
+            detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
+    return detectors_merged_resource
 
 
 def get_aggregated_resources(
