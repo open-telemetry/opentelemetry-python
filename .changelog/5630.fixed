@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: warn when views matching the same instrument produce conflicting metric identities; drop-aggregation views are no longer reported as conflicting
