@@ -1,0 +1,14 @@
+description: >
+  Log record `limits` cap attribute count and length, overriding the global `attribute_limits`.
+until:
+  - logs:
+      body_pattern: limited log
+expect:
+  - logs:
+      body: limited log
+      attributes:
+        values:
+          a: abcd
+          b: 1
+        strict: true
+      count: 1

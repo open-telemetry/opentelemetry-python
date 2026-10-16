@@ -1,0 +1,34 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-trace-sampler-composite-rule-based
+tracer_provider:
+  processors:
+    - simple:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/traces
+  sampler:
+    composite/development:
+      rule_based:
+        rules:
+          - attribute_values:
+              key: route
+              values: [/health]
+            sampler:
+              always_off:
+          - attribute_patterns:
+              key: route
+              included: [/api/*]
+              excluded: [/api/internal*]
+            sampler:
+              always_on:
+          - span_kinds: [server]
+            sampler:
+              always_on:
+          - parent: [local]
+            sampler:
+              always_on:
+          - sampler:
+              always_off:

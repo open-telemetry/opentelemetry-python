@@ -1,0 +1,12 @@
+description: >
+  A `pull` reader with the `prometheus/development` exporter serves metrics for the collector's
+  prometheus receiver to scrape.
+until:
+  - metric:
+      name: prom_requests_total
+      min: 1
+expect:
+  - metric:
+      name: prom_requests_total
+      type: sum
+      monotonic: true

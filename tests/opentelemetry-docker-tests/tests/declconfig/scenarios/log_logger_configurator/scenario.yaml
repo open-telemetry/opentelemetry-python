@@ -1,0 +1,12 @@
+description: >
+  `logger_configurator/development` disables loggers whose name matches a glob.
+until:
+  - exited: {}
+expect:
+  - logs:
+      body: enabled log
+      scope: {name: enabled.lib}
+      count: 1
+  - logs:
+      body: disabled log
+      count: 0
