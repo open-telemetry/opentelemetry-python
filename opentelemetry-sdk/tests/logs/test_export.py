@@ -17,7 +17,7 @@ from unittest.mock import Mock, patch
 
 from pytest import mark
 
-from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.metrics import NoOpMeterProvider
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (

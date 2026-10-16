@@ -1,38 +1,40 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 """
-The OpenTelemetry logging API describes the classes used to generate logs and events.
+Deprecated alias of :mod:`opentelemetry.logs`.
 
-The :class:`.LoggerProvider` provides users access to the :class:`.Logger`.
-
-This module provides abstract (i.e. unimplemented) classes required for
-logging, and a concrete no-op implementation :class:`.NoOpLogger` that allows applications
-to use the API package alone without a supporting implementation.
-
-To get a logger, you need to provide the package name from which you are
-calling the logging APIs to OpenTelemetry by calling `LoggerProvider.get_logger`
-with the calling module name and the version of your package.
-
-The following code shows how to obtain a logger using the global :class:`.LoggerProvider`::
-
-    from opentelemetry._logs import get_logger
-
-    logger = get_logger("example-logger")
-
-.. versionadded:: 1.15.0
+.. deprecated:: 1.46.0
+    This module will be removed in a future release. Use
+    :mod:`opentelemetry.logs` instead.
 """
 
-from opentelemetry._logs._internal import (
+import sys
+import warnings
+
+from opentelemetry.logs import (
     Logger,
     LoggerProvider,
     LogRecord,
     NoOpLogger,
     NoOpLoggerProvider,
+    SeverityNumber,
+    _internal,
     get_logger,
     get_logger_provider,
     set_logger_provider,
+    severity,
 )
-from opentelemetry._logs.severity import SeverityNumber
+
+warnings.warn(
+    "The opentelemetry._logs module is deprecated since version 1.46.0 "
+    "and will be removed in a future release. "
+    "Use opentelemetry.logs instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+sys.modules[f"{__name__}._internal"] = _internal
+sys.modules[f"{__name__}.severity"] = severity
 
 __all__ = [
     "LogRecord",

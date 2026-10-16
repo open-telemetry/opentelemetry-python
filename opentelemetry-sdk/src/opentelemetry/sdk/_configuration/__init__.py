@@ -17,13 +17,13 @@ from collections.abc import Callable, Mapping, Sequence
 from os import environ
 from typing import Any, Literal, Protocol
 
-from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry.logs import set_logger_provider
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._logs import (
     LoggerProvider,
