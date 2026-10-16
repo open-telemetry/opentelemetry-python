@@ -1,0 +1,19 @@
+description: >
+  `composite/development` probability samplers with ratios 0 and 1, and `parent_threshold`
+  following the parent's decision and using its `root` sampler for root spans.
+until:
+  - exited: {}
+expect:
+  - spans:
+      name: never
+      count: 0
+  - spans:
+      name: always
+      count: 10
+  - spans:
+      name: threshold-root
+      count: 0
+  - spans:
+      name: threshold-child
+      parent: {name: always}
+      count: 1

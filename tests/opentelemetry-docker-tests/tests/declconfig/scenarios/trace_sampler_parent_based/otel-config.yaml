@@ -1,0 +1,23 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-trace-sampler-parent-based
+tracer_provider:
+  processors:
+    - simple:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/traces
+  sampler:
+    parent_based:
+      root:
+        always_on:
+      remote_parent_sampled:
+        always_off:
+      remote_parent_not_sampled:
+        always_on:
+      local_parent_sampled:
+        always_off:
+      local_parent_not_sampled:
+        always_on:

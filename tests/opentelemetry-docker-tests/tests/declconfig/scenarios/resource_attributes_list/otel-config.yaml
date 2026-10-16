@@ -1,0 +1,12 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: list.conflict
+      value: from-attributes
+  attributes_list: service.name=declconfig-resource-attributes-list,list.encoded=hello%20world,list.number=5,list.conflict=from-list
+tracer_provider:
+  processors:
+    - simple:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/traces

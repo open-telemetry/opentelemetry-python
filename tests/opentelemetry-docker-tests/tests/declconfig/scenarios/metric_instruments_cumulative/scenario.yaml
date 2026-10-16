@@ -1,0 +1,48 @@
+description: >
+  Every instrument kind exported with the default cumulative temporality.
+until:
+  - metric:
+      name: requests
+      min: 3
+expect:
+  - metric:
+      name: requests
+      type: sum
+      monotonic: true
+      temporality: CUMULATIVE
+      scope: {name: declconfig.metrics}
+      data_point:
+        value: 3
+        attributes: {values: {route: /a}, strict: true}
+  - metric:
+      name: queue.size
+      type: sum
+      monotonic: false
+      temporality: CUMULATIVE
+      data_point: {value: 3}
+  - metric:
+      name: latency
+      type: histogram
+      unit: ms
+      temporality: CUMULATIVE
+      data_point: {count: 2, sum: 30, min: 10, max: 20}
+  - metric:
+      name: temperature
+      type: gauge
+      data_point: {value: 21.5}
+  - metric:
+      name: cpu.time
+      type: sum
+      monotonic: true
+      temporality: CUMULATIVE
+      data_point: {value: 7}
+  - metric:
+      name: memory.usage
+      type: gauge
+      data_point: {value: 1024}
+  - metric:
+      name: connections
+      type: sum
+      monotonic: false
+      temporality: CUMULATIVE
+      data_point: {value: 4}
