@@ -557,6 +557,61 @@ class TestResources(unittest.TestCase):
         self.assertEqual(len(worker_threads), 1)
         self.assertFalse(worker_threads[0].is_alive())
 
+    def test_get_aggregated_resources_synchronous(self):
+        resource_detector1 = Mock(spec=ResourceDetector)
+        resource_detector1.detect.return_value = Resource({"key1": "val1", "shared": "old"})
+        resource_detector1.raise_on_error = False
+
+        resource_detector2 = Mock(spec=ResourceDetector)
+        resource_detector2.detect.return_value = Resource({"key2": "val2", "shared": "new"})
+        resource_detector2.raise_on_error = False
+
+        res = get_aggregated_resources(
+            [resource_detector1, resource_detector2],
+            initial_resource=Resource({"initial": "init"}),
+            use_threads=False,
+        )
+        self.assertEqual(
+            res,
+            Resource({"initial": "init", "key1": "val1", "key2": "val2", "shared": "new"}),
+        )
+
+    @patch("concurrent.futures.ThreadPoolExecutor")
+    def test_get_aggregated_resources_synchronous_does_not_instantiate_thread_pool(self, mock_executor):
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.return_value = Resource({"k": "v"})
+        resource_detector.raise_on_error = False
+
+        res = get_aggregated_resources(
+            [resource_detector],
+            initial_resource=Resource.get_empty(),
+            use_threads=False,
+        )
+        self.assertEqual(res, Resource({"k": "v"}))
+        mock_executor.assert_not_called()
+
+    def test_get_aggregated_resources_synchronous_error_logged(self):
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.side_effect = RuntimeError("detector failure")
+        resource_detector.raise_on_error = False
+
+        with self.assertLogs(level=WARNING) as log_entry:
+            res = get_aggregated_resources(
+                [resource_detector],
+                initial_resource=Resource({"k": "v"}),
+                use_threads=False,
+            )
+            self.assertEqual(res, Resource({"k": "v"}))
+        self.assertIn("Exception detector failure in detector", log_entry.output[0])
+
+    def test_get_aggregated_resources_synchronous_raise_error(self):
+        resource_detector = Mock(spec=ResourceDetector)
+        resource_detector.detect.side_effect = RuntimeError("fatal error")
+        resource_detector.raise_on_error = True
+
+        with self.assertRaises(RuntimeError):
+            get_aggregated_resources([resource_detector], use_threads=False)
+
     def test_resource_detector_is_not_process_dependent_by_default(self):
         self.assertFalse(DefaultResourceDetector().is_process_dependent())
 

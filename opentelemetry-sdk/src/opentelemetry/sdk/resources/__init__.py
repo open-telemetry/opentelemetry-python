@@ -746,6 +746,7 @@ def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnus
     return get_aggregated_resources(
         [detector for detector in _build_resource_detectors() if detector.is_process_dependent()],
         Resource.get_empty(),
+        use_threads=False,
     )
 
 
@@ -753,15 +754,31 @@ def get_aggregated_resources(
     detectors: Sequence["ResourceDetector"],
     initial_resource: Resource | None = None,
     timeout: int = 5,
+    use_threads: bool = True,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
     :param detectors: List of resources in order of priority
     :param initial_resource: Static resource. This has highest priority
-    :param timeout: Number of seconds to wait for each detector to return
+    :param timeout: Number of seconds to wait for each detector to return when running in a thread pool
+    :param use_threads: True to run detectors in a thread pool, False to run synchronously (timeouts do not apply in synchronous mode)
     :return:
     """
     detectors_merged_resource = initial_resource or Resource.create()
+
+    if not use_threads:
+        for detector in detectors:
+            detected_resource: Resource = _EMPTY_RESOURCE
+            try:
+                detected_resource = detector.detect()
+            # pylint: disable=broad-exception-caught
+            except Exception as ex:
+                if detector.raise_on_error:
+                    raise ex
+                logger.warning("Exception %s in detector %s, ignoring", ex, detector)
+            finally:
+                detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
+        return detectors_merged_resource
 
     # A detector that exceeds `timeout` is skipped, but shutdown still joins
     # its worker so no threads outlive this call. A detector that blocks
