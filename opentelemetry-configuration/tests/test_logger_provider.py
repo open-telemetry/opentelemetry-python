@@ -6,6 +6,7 @@
 
 import os
 import sys
+import tempfile
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -44,6 +45,12 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     ExperimentalOtlpFileExporter as ExperimentalOtlpFileExporterConfig,
+)
+from opentelemetry.configuration.models import (
+    GrpcTls as GrpcTlsConfig,
+)
+from opentelemetry.configuration.models import (
+    HttpTls as HttpTlsConfig,
 )
 from opentelemetry.configuration.models import (
     LoggerProvider as LoggerProviderConfig,
@@ -403,6 +410,9 @@ class TestCreateLogRecordExporters(unittest.TestCase):
 
         mock_exporter_cls.assert_called_once_with(
             endpoint="http://collector:4318/v1/logs",
+            certificate_file=None,
+            client_key_file=None,
+            client_certificate_file=None,
             headers={"x-api-key": "secret"},
             timeout=5.0,
             compression="json_deflate",
@@ -479,6 +489,72 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         call_kwargs = mock_exporter_cls.call_args.kwargs
         self.assertEqual(call_kwargs["endpoint"], "http://collector:4317")
         self.assertAlmostEqual(call_kwargs["timeout"], 10.0)
+
+    def test_otlp_http_exporter_tls(self):
+        for encoding in (None, OtlpHttpEncoding.protobuf, OtlpHttpEncoding.json):
+            with self.subTest(encoding=encoding):
+                protocol = "json" if encoding == OtlpHttpEncoding.json else "proto"
+                mock_exporter_cls = MagicMock()
+                mock_log_module = MagicMock()
+                mock_log_module.OTLPLogExporter = mock_exporter_cls
+
+                with patch.dict(
+                    sys.modules,
+                    {
+                        "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                        "opentelemetry.exporter.otlp.common.http": MagicMock(),
+                        f"opentelemetry.exporter.otlp.{protocol}.http._log_exporter": mock_log_module,
+                    },
+                ):
+                    config = LogRecordExporterConfig(
+                        otlp_http=OtlpHttpExporterConfig(
+                            encoding=encoding,
+                            tls=HttpTlsConfig(
+                                ca_file="/certs/ca.pem",
+                                key_file="/certs/client.key",
+                                cert_file="/certs/client.pem",
+                            ),
+                        )
+                    )
+                    _create_log_record_exporter(config)
+
+                call_kwargs = mock_exporter_cls.call_args.kwargs
+                self.assertEqual(call_kwargs["certificate_file"], "/certs/ca.pem")
+                self.assertEqual(call_kwargs["client_key_file"], "/certs/client.key")
+                self.assertEqual(call_kwargs["client_certificate_file"], "/certs/client.pem")
+
+    def test_otlp_grpc_exporter_tls(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc = MagicMock()
+        mock_grpc_log_module = MagicMock()
+        mock_grpc_log_module.OTLPLogExporter = mock_exporter_cls
+
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "grpc": mock_grpc,
+                    "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_grpc_log_module,
+                },
+            ),
+        ):
+            ca_file = os.path.join(tmp_dir, "ca.pem")
+            with open(ca_file, "wb") as file:
+                file.write(b"ca-bytes")
+            config = LogRecordExporterConfig(
+                otlp_grpc=OtlpGrpcExporterConfig(tls=GrpcTlsConfig(ca_file=ca_file, insecure=False))
+            )
+            _create_log_record_exporter(config)
+
+        mock_grpc.ssl_channel_credentials.assert_called_once_with(
+            root_certificates=b"ca-bytes",
+            private_key=None,
+            certificate_chain=None,
+        )
+        call_kwargs = mock_exporter_cls.call_args.kwargs
+        self.assertIs(call_kwargs["credentials"], mock_grpc.ssl_channel_credentials.return_value)
+        self.assertFalse(call_kwargs["insecure"])
 
 
 class TestLogRecordLimits(unittest.TestCase):
