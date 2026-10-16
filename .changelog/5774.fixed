@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: re-instantiate `ConcurrentMultiLogRecordProcessor`'s thread pool after a fork, so the first emit in a child process no longer hangs
