@@ -1,0 +1,8 @@
+description: >
+  `disabled: true` leaves the SDK unconfigured, so nothing is exported.
+until:
+  - exited: {}
+expect:
+  - spans:
+      name: disabled-span
+      count: 0
