@@ -21,7 +21,7 @@ class InMemoryLogRecordExporter(LogRecordExporter):
     :meth:`.get_finished_logs` method.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._logs = []
         self._lock = threading.Lock()
         self._stopped = False

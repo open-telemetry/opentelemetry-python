@@ -12,9 +12,6 @@ from typing import TYPE_CHECKING, Literal
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
 )
-from opentelemetry.exporter.http.transport._urllib3 import (
-    Urllib3HTTPTransport,
-)
 from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
@@ -84,8 +81,7 @@ def _load_session_from_envvar(
             raise ImportError(
                 "The 'requests' package is required to load a credential "
                 "provider session but is not installed. Install it with "
-                "`pip install opentelemetry-exporter-otlp-proto-http[requests]` "
-                "or `pip install requests`."
+                "`pip install requests`."
             ) from exc
 
         try:
@@ -212,8 +208,4 @@ def _build_transport(
         else client_certificate_file
     )
 
-    return (
-        RequestsHTTPTransport(verify=verify, cert=cert, session=session)
-        if session
-        else Urllib3HTTPTransport(verify=verify, cert=cert)
-    )
+    return RequestsHTTPTransport(verify=verify, cert=cert, session=session)

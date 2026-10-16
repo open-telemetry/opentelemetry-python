@@ -1,0 +1,8 @@
+description: >
+  The console span exporter writes spans to stdout.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stdout
+      pattern: '"name": "console-span"'

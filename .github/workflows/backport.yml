@@ -36,8 +36,10 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-pull-requests: write
 
       - name: Create pull request
+        id: create_pr
         env:
           NUMBER: ${{ github.event.inputs.number }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
@@ -50,7 +52,16 @@ jobs:
 
           git cherry-pick $commit
           git push origin HEAD:$branch
-          gh pr create --title "[$GITHUB_REF_NAME] $title" \
-                       --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
-                       --head $branch \
-                       --base $GITHUB_REF_NAME
+          pr_url=$(gh pr create --title "[$GITHUB_REF_NAME] $title" \
+                                --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
+                                --head $branch \
+                                --base $GITHUB_REF_NAME)
+          echo "pr_url=$pr_url" >> $GITHUB_OUTPUT
+
+      - name: Add backport label to PR
+        if: steps.create_pr.outputs.pr_url != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ steps.create_pr.outputs.pr_url }}
+        run: |
+          gh pr edit "$PR_URL" --add-label "backport"

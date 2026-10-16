@@ -20,6 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog start -->
 
+## Version 1.45.1/0.66b1 (2026-10-06)
+
+### Fixed
+
+- `opentelemetry-api`: make `AnyValue` and `AttributeValue` explicit type
+  aliases
+  ([#5703](https://github.com/open-telemetry/opentelemetry-python/pull/5703))
+- `opentelemetry-sdk`: fix thread leak bug in resource initialization logic for
+  long running resource detectors
+  ([#5706](https://github.com/open-telemetry/opentelemetry-python/pull/5706))
+- `opentelemetry-exporter-otlp-proto-http`: restore `requests` as the default
+  HTTP transport so proxy environment variables such as `HTTPS_PROXY` are
+  honored again
+  ([#5714](https://github.com/open-telemetry/opentelemetry-python/pull/5714))
+- `opentelemetry-api`: fix quadratic time parsing of the `tracestate` header
+  and discard `tracestate` headers longer than 8192 characters
+  ([#5746](https://github.com/open-telemetry/opentelemetry-python/pull/5746))
+
 ## Version 1.45.0/0.66b0 (2026-09-25)
 
 ### Added
