@@ -1,0 +1,14 @@
+description: >
+  Without a `propagator` section nothing is propagated.
+until:
+  - spans:
+      name: incoming
+expect:
+  - spans:
+      name: incoming
+      root: true
+      attributes:
+        values:
+          carrier.keys: <none>
+          baggage.user.id: <none>
+      count: 1

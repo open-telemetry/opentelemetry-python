@@ -1,0 +1,8 @@
+description: >
+  The console log exporter writes log records to stdout.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stdout
+      pattern: '"body": "console log"'

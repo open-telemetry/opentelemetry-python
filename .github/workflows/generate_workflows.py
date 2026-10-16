@@ -1,4 +1,5 @@
 from collections import defaultdict
+from configparser import ConfigParser
 from pathlib import Path
 from re import compile as re_compile
 
@@ -122,16 +123,30 @@ def get_misc_job_datas(tox_envs: list) -> list:
     return [tox_env for tox_env in tox_envs if not any(pattern.match(tox_env) for pattern in regex_patterns)]
 
 
+def get_contrib_job_datas(tox_ini_path: Path, job_datas: list) -> list:
+    """Return the jobs whose tox env installs packages from a contrib repo checkout."""
+    tox_ini = ConfigParser(interpolation=None, strict=False)
+    tox_ini.read(tox_ini_path)
+
+    return [
+        job_data
+        for job_data in job_datas
+        if "{env:CONTRIB_REPO_" in tox_ini.get(f"testenv:{job_data}", "deps", fallback="")
+    ]
+
+
 def _generate_workflow(
     job_datas: list,
     template_name: str,
     output_dir: Path,
+    **template_kwargs,
 ) -> None:
     env = Environment(loader=FileSystemLoader(Path(__file__).parent.joinpath("templates")))
     with open(output_dir.joinpath(f"{template_name}.yml"), "w") as yml_file:
         yml_file.write(
             env.get_template(f"{template_name}.yml.j2").render(
                 job_datas=job_datas,
+                **template_kwargs,
             )
         )
         yml_file.write("\n")
@@ -160,10 +175,12 @@ def generate_misc_workflow(
     tox_ini_path: Path,
     workflow_directory_path: Path,
 ) -> None:
+    misc_job_datas = get_misc_job_datas(get_tox_envs(tox_ini_path))
     _generate_workflow(
-        get_misc_job_datas(get_tox_envs(tox_ini_path)),
+        misc_job_datas,
         "misc",
         workflow_directory_path,
+        contrib_job_datas=get_contrib_job_datas(tox_ini_path, misc_job_datas),
     )
 
 
