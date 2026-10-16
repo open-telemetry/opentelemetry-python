@@ -1,11 +1,26 @@
 Working With Fork Process Models
 ================================
 
-The `BatchSpanProcessor` is not fork-safe and doesn't work well with application servers
-(Gunicorn, uWSGI) which are based on the pre-fork web server model. The `BatchSpanProcessor`
-spawns a thread to run in the background to export spans to the telemetry backend. During the fork, the child
-process inherits the lock which is held by the parent process and deadlock occurs. We can use fork hooks to
-get around this limitation of the span processor.
+The `BatchSpanProcessor` uses a background thread to export spans. Forking a
+multithreaded process can leave a child with locks held by threads that no longer
+exist. The current SDK reinitializes the processor's internal lock, event and
+worker thread in the child and clears the inherited span queue. On platforms
+that support ``os.register_at_fork``, this happens in an after-fork hook.
+
+This support covers the processor's internal state, not every exporter or its
+transport. An exporter may have its own restrictions on sharing connections
+across a fork. Initializing the tracer provider, processor and exporter in each
+worker avoids inheriting those connections and is a useful approach for manual
+instrumentation with pre-fork servers such as Gunicorn and uWSGI.
+
+The hooks below show how to initialize tracing in each worker. They are an
+alternative to configuring tracing in the parent process, rather than a second
+initialization step for applications that already configure tracing through
+auto-instrumentation.
+
+For signal-specific auto-instrumentation support and workarounds, see the
+`Python auto-instrumentation troubleshooting guide
+<https://opentelemetry.io/docs/zero-code/python/troubleshooting/#pre-fork-server-issues>`_.
 
 Please see http://bugs.python.org/issue6721 for the problems about Python locks in (multi)threaded
 context with fork.
