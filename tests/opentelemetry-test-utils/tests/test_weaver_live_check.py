@@ -7,9 +7,12 @@ Requires the `weaver` binary on PATH:
   https://github.com/open-telemetry/weaver/releases
 """
 
+import json
 import os
 import shutil
+import tempfile
 import unittest
+from pathlib import Path
 
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -50,6 +53,41 @@ def _make_provider(otlp_endpoint: str) -> TracerProvider:
     "weaver binary not found on PATH — install from https://github.com/open-telemetry/weaver/releases",
 )
 class TestSDKInitLiveCheck(unittest.TestCase):
+    def test_config_advice_data_and_retained_diagnostics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            policies = root / "policies"
+            policies.mkdir()
+            (policies / "test.rego").write_text(
+                "package live_check_advice\nimport rego.v1\n"
+                "deny contains result if {\n"
+                '  input.sample.attribute.name == "never.use.this.attribute"\n'
+                '  result := {"type": "advice", "advice_type": "data_check",\n'
+                '    "advice_level": "violation", "message": data.settings.message}\n'
+                "}\n",
+                encoding="utf-8",
+            )
+            data = root / "data"
+            data.mkdir()
+            (data / "settings.json").write_text('{"message": "message from advice data"}', encoding="utf-8")
+            config = root / "weaver.toml"
+            config.write_text(f"[live-check]\nadvice_policies = {json.dumps(str(policies))}\n", encoding="utf-8")
+            with WeaverLiveCheck(registry=_REGISTRY_DIR, config=str(config), advice_data=str(data)) as weaver:
+                provider = _make_provider(weaver.otlp_endpoint)
+                try:
+                    with provider.get_tracer("test-tracer").start_as_current_span("test-span") as span:
+                        span.set_attribute("never.use.this.attribute", "bad value")
+                    provider.force_flush()
+                    with self.assertRaisesRegex(LiveCheckError, "message from advice data") as caught:
+                        weaver.end_and_check()
+                finally:
+                    provider.shutdown()
+            self.assertTrue(weaver.stderr)
+            self.assertEqual(caught.exception.stderr, weaver.stderr)
+            self.assertEqual(caught.exception.stdout, weaver.stdout)
+            self.assertTrue(caught.exception.report.samples)
+            self.assertTrue(caught.exception.report.statistics)
+
     def test_end_and_check_no_violations(self):
         """end_and_check() returns a LiveCheckReport with no violations on conformant telemetry."""
         with WeaverLiveCheck(registry=_REGISTRY_DIR) as weaver:

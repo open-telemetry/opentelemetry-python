@@ -1,0 +1,22 @@
+description: >
+  Resource attributes are coerced to their declared `type`; untyped values keep their YAML type.
+until:
+  - spans:
+      name: typed-span
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-resource-attributes-typed
+          typed.string: "12"
+          typed.bool: false
+          typed.int: 12
+          typed.double: 12.0
+          typed.string_array: ["1", "2"]
+          typed.bool_array: [true, false]
+          typed.int_array: [1, 2]
+          typed.double_array: [1.0, 2.5]
+          untyped.string: abc
+          untyped.int: 3
+          untyped.double: 2.5
+          untyped.bool: true

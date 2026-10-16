@@ -5,8 +5,8 @@ charset-normalizer==3.5.2
 google-api-core==2.17.1
 google-auth==2.61.0
 googleapis-common-protos==1.63.2
-grpcio==1.75.1
-idna==3.15
+grpcio==1.84.0
+idna==3.20
 iniconfig==2.0.0
 opencensus==0.11.1
 opencensus-context==0.1.3
