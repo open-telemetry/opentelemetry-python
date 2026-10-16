@@ -1,0 +1,10 @@
+description: >
+  Every configured span processor receives each span.
+until:
+  - spans:
+      min_count: 2
+      name: multi-span
+expect:
+  - spans:
+      name: multi-span
+      count: 2
