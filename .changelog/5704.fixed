@@ -1,0 +1,1 @@
+`opentelemetry-exporter-zipkin-json`: warn and fall back to the default instead of raising `ValueError` when `OTEL_EXPORTER_ZIPKIN_TIMEOUT` holds a non-integer value; the same fix is applied to `opentelemetry-exporter-zipkin-proto-http`.
