@@ -25,20 +25,25 @@ _PROPERT_PATTERN = compile(_BAGGAGE_PROPERTY_FORMAT)
 def get_all(
     context: Context | None = None,
 ) -> Mapping[str, object]:
-    """Returns the name/value pairs in the Baggage
+    """Returns the name/value pairs in the Baggage.
+
+    If context is not provided, the current Context is used. Passing an
+    explicit Context reads baggage from that Context instead.
 
     Args:
-        context: The Context to use. If not set, uses current Context
+        context: The Context to use. If not set, uses current Context.
 
     Returns:
-        The name/value pairs in the Baggage
+        The name/value pairs in the Baggage.
     """
     return MappingProxyType(_get_baggage_value(context=context))
 
 
 def get_baggage(name: str, context: Context | None = None) -> object | None:
-    """Provides access to the value for a name/value pair in the
-    Baggage
+    """Provides access to the value for a name/value pair in the Baggage.
+
+    If context is not provided, the current Context is used. Passing an
+    explicit Context reads baggage from that Context instead.
 
     Args:
         name: The name of the value to retrieve
@@ -52,7 +57,12 @@ def get_baggage(name: str, context: Context | None = None) -> object | None:
 
 
 def set_baggage(name: str, value: object, context: Context | None = None) -> Context:
-    """Sets a value in the Baggage
+    """Sets a value in the Baggage.
+
+    This function returns a new Context containing the updated baggage; it does
+    not attach that Context as the current Context. To make the returned
+    Context current, attach it and retain the token so it can be detached
+    later.
 
     Args:
         name: The name of the value to set
@@ -109,7 +119,7 @@ def _is_valid_key(name: str) -> bool:
 def _is_valid_value(value: object) -> bool:
     parts = str(value).split(";")
     # W3C Baggage allows optional whitespace between the value and ";"
-    is_valid_value = _VALUE_PATTERN.fullmatch(parts[0].rstrip(" \t")) is not None
+    is_valid_value = _VALUE_PATTERN.fullmatch(parts[0].rstrip(" \\t")) is not None
     if len(parts) > 1:  # one or more properties metadata
         for property in parts[1:]:
             if _PROPERT_PATTERN.fullmatch(property) is None:
