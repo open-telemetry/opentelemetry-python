@@ -792,6 +792,17 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     previous_collection_start_nano = self._previous_collection_start_nano
                     self._previous_collection_start_nano = collection_start_nano
 
+                    # A delta point covers only its own interval, so the scale
+                    # mapping must not leak into the next one: reset it to the
+                    # maximum (the next interval downscales as needed).
+                    # Otherwise a single wide interval would pin every later
+                    # point to its lowest scale (issue #5716). The reset stays
+                    # under the lock because aggregate() reads and rewrites
+                    # self._mapping under the same lock, and it stays inside
+                    # the delta branch because a cumulative collection needs
+                    # the mapping to survive across collections.
+                    self._mapping = self._new_mapping(self._max_scale)
+
                     if value_positive is None and value_negative is None:
                         return None
 

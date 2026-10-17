@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: Reset the exponential histogram exponent mapping between DELTA collections so the scale can be raised again after a wide interval.
