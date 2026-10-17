@@ -1,0 +1,25 @@
+description: >
+  `composite/development` with `rule_based` rules on attribute values, attribute patterns,
+  span kinds and parent, falling back to `always_off`.
+until:
+  - exited: {}
+expect:
+  - spans:
+      name: health
+      count: 0
+  - spans:
+      name: api
+      count: 1
+  - spans:
+      name: api-internal
+      count: 0
+  - spans:
+      name: server
+      count: 1
+  - spans:
+      name: other
+      count: 0
+  - spans:
+      name: child
+      parent: {name: api}
+      count: 1

@@ -1,0 +1,9 @@
+description: >
+  `trace_id_ratio_based` with ratio 0.5 samples about half of 200 root spans.
+until:
+  - exited: {}
+expect:
+  - spans:
+      name: ratio-span
+      min_count: 60
+      max_count: 140

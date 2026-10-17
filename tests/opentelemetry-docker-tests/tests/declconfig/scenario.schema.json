@@ -1,0 +1,457 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Declarative config docker-test scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["description", "until"],
+  "properties": {
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timeout": {
+      "description": "Seconds to wait for every `until` condition to hold.",
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "default": 30
+    },
+    "env": {
+      "description": "Extra environment variables for the app.",
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "until": {
+      "description": "Termination conditions; all of them must hold.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["spans"],
+            "properties": {"spans": {"$ref": "#/$defs/spans"}}
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metric"],
+            "properties": {"metric": {"$ref": "#/$defs/metric"}}
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["logs"],
+            "properties": {"logs": {"$ref": "#/$defs/logs"}}
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["exited"],
+            "properties": {
+              "exited": {
+                "description": "Met once the app has exited cleanly.",
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    "expect": {
+      "description": "Content assertions, checked after the app has stopped and the sink is drained.",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["spans"],
+            "properties": {"spans": {"$ref": "#/$defs/spans_expectation"}}
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metric"],
+            "properties": {"metric": {"$ref": "#/$defs/metric_expectation"}}
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["logs"],
+            "properties": {"logs": {"$ref": "#/$defs/logs_expectation"}}
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["resource"],
+            "properties": {"resource": {"$ref": "#/$defs/resource_matcher"}}
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["output"],
+            "properties": {"output": {"$ref": "#/$defs/output_expectation"}}
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "min_count": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1
+    },
+    "spans": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_count": {"$ref": "#/$defs/min_count"},
+        "name": {
+          "description": "Exact match on Span.name.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "min"],
+      "properties": {
+        "name": {
+          "description": "Exact match on Metric.name.",
+          "type": "string",
+          "minLength": 1
+        },
+        "field": {
+          "description": "`value` for Gauge/Sum; `count` or `sum` for Histogram/ExponentialHistogram/Summary.",
+          "enum": ["value", "count", "sum"],
+          "default": "value"
+        },
+        "min": {
+          "description": "Met once any received data point has field >= min.",
+          "type": "number"
+        }
+      }
+    },
+    "logs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_count": {"$ref": "#/$defs/min_count"},
+        "body_pattern": {
+          "description": "Regex searched (re.search) in string log bodies.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "typed_literal": {
+      "description": "A literal of an explicit AnyValue type.",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "string": {"type": "string"},
+        "bool": {"type": "boolean"},
+        "int": {"type": "integer"},
+        "double": {"type": "number"},
+        "kvlist": {"type": "object", "additionalProperties": {"$ref": "#/$defs/value_literal"}}
+      }
+    },
+    "value_literal": {
+      "description": "Type-strict literal: string, bool, int (integer), double (float), array (list) or a typed_literal.",
+      "oneOf": [
+        {"type": ["string", "number", "boolean"]},
+        {"type": "array", "items": {"$ref": "#/$defs/value_literal"}},
+        {"$ref": "#/$defs/typed_literal"}
+      ]
+    },
+    "value_operators": {
+      "description": "Operators, all of which must hold. `exists: false` stands alone.",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "pattern": {
+          "description": "Regex searched (re.search) in a string value.",
+          "type": "string",
+          "minLength": 1
+        },
+        "exists": {"type": "boolean"},
+        "gt": {"type": "number"},
+        "gte": {"type": "number"},
+        "lt": {"type": "number"},
+        "lte": {"type": "number"}
+      },
+      "if": {"required": ["exists"], "properties": {"exists": {"const": false}}},
+      "then": {"maxProperties": 1}
+    },
+    "value_matcher": {
+      "oneOf": [{"$ref": "#/$defs/value_literal"}, {"$ref": "#/$defs/value_operators"}]
+    },
+    "string_matcher": {
+      "description": "Exact string, or `pattern`/`exists` operators. An empty string field counts as absent.",
+      "oneOf": [
+        {"type": "string"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "pattern": {"type": "string", "minLength": 1},
+            "exists": {"type": "boolean"}
+          },
+          "if": {"required": ["exists"], "properties": {"exists": {"const": false}}},
+          "then": {"maxProperties": 1}
+        }
+      ]
+    },
+    "number_matcher": {
+      "description": "Number, or `exists`/`gt`/`gte`/`lt`/`lte` operators.",
+      "oneOf": [
+        {"type": "number"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "exists": {"type": "boolean"},
+            "gt": {"type": "number"},
+            "gte": {"type": "number"},
+            "lt": {"type": "number"},
+            "lte": {"type": "number"}
+          },
+          "if": {"required": ["exists"], "properties": {"exists": {"const": false}}},
+          "then": {"maxProperties": 1}
+        }
+      ]
+    },
+    "attributes": {
+      "description": "Attribute assertions. Unlisted attributes are ignored unless `strict` is set.",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "values": {
+          "description": "Attributes that must match.",
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/value_matcher"}
+        },
+        "strict": {
+          "description": "Fail on attributes not listed in `values`.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "counts": {
+      "description": "How many items must match. `min_count` defaults to 1 unless `count` is set.",
+      "properties": {
+        "count": {"type": "integer", "minimum": 0},
+        "min_count": {"type": "integer", "minimum": 1},
+        "max_count": {"type": "integer", "minimum": 1}
+      },
+      "not": {"anyOf": [{"required": ["count", "min_count"]}, {"required": ["count", "max_count"]}]}
+    },
+    "resource_matcher": {
+      "description": "Every received span, metric and log must carry a matching resource.",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "schema_url": {"$ref": "#/$defs/string_matcher"},
+        "attributes": {"$ref": "#/$defs/attributes"}
+      }
+    },
+    "output_expectation": {
+      "description": "A regex searched in the app's captured stdout or stderr.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stream", "pattern"],
+      "properties": {
+        "stream": {"enum": ["stdout", "stderr"]},
+        "pattern": {"type": "string", "minLength": 1},
+        "exists": {
+          "description": "Whether the pattern must be found (true) or must not be found (false).",
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "scope_matcher": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {"$ref": "#/$defs/string_matcher"},
+        "version": {"$ref": "#/$defs/string_matcher"},
+        "attributes": {"$ref": "#/$defs/attributes"}
+      }
+    },
+    "span_fields": {
+      "properties": {
+        "name": {"$ref": "#/$defs/string_matcher"},
+        "kind": {"enum": ["UNSPECIFIED", "INTERNAL", "SERVER", "CLIENT", "PRODUCER", "CONSUMER"]},
+        "status": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "code": {"enum": ["UNSET", "OK", "ERROR"]},
+            "message": {"$ref": "#/$defs/string_matcher"}
+          }
+        },
+        "trace_state": {"$ref": "#/$defs/string_matcher"},
+        "root": {"description": "Whether parent_span_id is empty.", "type": "boolean"},
+        "parent": {
+          "description": "Matcher for the received span that is this span's parent.",
+          "$ref": "#/$defs/span_matcher"
+        },
+        "links": {
+          "description": "Each entry must be matched by some link of the span.",
+          "type": "array",
+          "items": {"$ref": "#/$defs/link_matcher"}
+        },
+        "link_count": {"description": "Number of links on the span.", "$ref": "#/$defs/number_matcher"},
+        "scope": {"$ref": "#/$defs/scope_matcher"},
+        "attributes": {"$ref": "#/$defs/attributes"}
+      },
+      "not": {"required": ["root", "parent"]}
+    },
+    "span_matcher": {
+      "type": "object",
+      "$ref": "#/$defs/span_fields",
+      "unevaluatedProperties": false
+    },
+    "spans_expectation": {
+      "type": "object",
+      "allOf": [{"$ref": "#/$defs/span_fields"}, {"$ref": "#/$defs/counts"}],
+      "unevaluatedProperties": false
+    },
+    "link_matcher": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trace_state": {"$ref": "#/$defs/string_matcher"},
+        "span": {
+          "description": "Matcher for the received span the link points to.",
+          "$ref": "#/$defs/span_matcher"
+        },
+        "attributes": {"$ref": "#/$defs/attributes"}
+      }
+    },
+    "data_point_matcher": {
+      "description": "Fields that don't apply to the received metric's type fail the test.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "description": "Gauge/Sum. Type-strict: an integer matches as_int, a float as_double.",
+          "$ref": "#/$defs/number_matcher"
+        },
+        "count": {
+          "description": "Histogram/ExponentialHistogram/Summary.",
+          "$ref": "#/$defs/number_matcher"
+        },
+        "sum": {
+          "description": "Histogram/ExponentialHistogram/Summary.",
+          "$ref": "#/$defs/number_matcher"
+        },
+        "min": {"description": "Histogram/ExponentialHistogram.", "$ref": "#/$defs/number_matcher"},
+        "max": {"description": "Histogram/ExponentialHistogram.", "$ref": "#/$defs/number_matcher"},
+        "explicit_bounds": {
+          "description": "Histogram, exact list.",
+          "type": "array",
+          "items": {"type": "number"}
+        },
+        "bucket_counts": {
+          "description": "Histogram, exact list.",
+          "type": "array",
+          "items": {"type": "integer", "minimum": 0}
+        },
+        "exemplar_count": {"description": "Number of exemplars on the data point.", "$ref": "#/$defs/number_matcher"},
+        "attributes": {"$ref": "#/$defs/attributes"}
+      }
+    },
+    "metric_expectation": {
+      "description": "Matched against every (metric, data point) pair across all exports.",
+      "type": "object",
+      "allOf": [
+        {
+          "properties": {
+            "name": {"$ref": "#/$defs/string_matcher"},
+            "type": {"enum": ["gauge", "sum", "histogram", "exponential_histogram", "summary"]},
+            "unit": {"$ref": "#/$defs/string_matcher"},
+            "description": {"$ref": "#/$defs/string_matcher"},
+            "temporality": {
+              "description": "Sum/Histogram/ExponentialHistogram.",
+              "enum": ["DELTA", "CUMULATIVE"]
+            },
+            "monotonic": {"description": "Sum.", "type": "boolean"},
+            "scope": {"$ref": "#/$defs/scope_matcher"},
+            "data_point": {"$ref": "#/$defs/data_point_matcher"}
+          }
+        },
+        {"$ref": "#/$defs/counts"}
+      ],
+      "unevaluatedProperties": false
+    },
+    "logs_expectation": {
+      "type": "object",
+      "allOf": [
+        {
+          "properties": {
+            "body": {"$ref": "#/$defs/value_matcher"},
+            "severity_number": {
+              "enum": [
+                "UNSPECIFIED",
+                "TRACE",
+                "TRACE2",
+                "TRACE3",
+                "TRACE4",
+                "DEBUG",
+                "DEBUG2",
+                "DEBUG3",
+                "DEBUG4",
+                "INFO",
+                "INFO2",
+                "INFO3",
+                "INFO4",
+                "WARN",
+                "WARN2",
+                "WARN3",
+                "WARN4",
+                "ERROR",
+                "ERROR2",
+                "ERROR3",
+                "ERROR4",
+                "FATAL",
+                "FATAL2",
+                "FATAL3",
+                "FATAL4"
+              ]
+            },
+            "severity_text": {"$ref": "#/$defs/string_matcher"},
+            "event_name": {"$ref": "#/$defs/string_matcher"},
+            "trace_context": {
+              "description": "Whether trace_id and span_id are both set (true) or both empty (false).",
+              "type": "boolean"
+            },
+            "span": {
+              "description": "Matcher for the received span the record was emitted in.",
+              "$ref": "#/$defs/span_matcher"
+            },
+            "scope": {"$ref": "#/$defs/scope_matcher"},
+            "attributes": {"$ref": "#/$defs/attributes"}
+          }
+        },
+        {"$ref": "#/$defs/counts"}
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}
