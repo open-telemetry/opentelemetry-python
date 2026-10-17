@@ -1,7 +1,7 @@
 asgiref==3.7.2
 certifi==2024.12.14
 charset-normalizer==3.5.2
-googleapis-common-protos==1.75.0
+googleapis-common-protos==1.75.5
 idna==3.20
 iniconfig==2.0.0
 mocket==3.14.1
@@ -10,7 +10,7 @@ pluggy==1.6.0
 protobuf==7.35.0
 py-cpuinfo==9.0.0
 pytest==9.0.3
-PyYAML==6.0.1
+PyYAML==6.0.3
 requests==2.33.0
 responses==0.24.1
 tomli==2.0.1
