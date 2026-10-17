@@ -138,8 +138,7 @@ class ZipkinExporter(SpanExporter):
         self.session = session or requests.Session()
         self.session.headers.update({"Content-Type": self.encoder.content_type()})
         self._closed = False
-        timeout = timeout or _timeout_from_env()
-        self.timeout = timeout
+        self.timeout = timeout or _timeout_from_env()
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
