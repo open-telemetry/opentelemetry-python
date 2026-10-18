@@ -54,6 +54,7 @@ above example.
 
 import abc
 import concurrent.futures
+import functools
 import logging
 import os
 import platform
@@ -182,6 +183,7 @@ class Resource:
     def create(
         attributes: Attributes | None = None,
         schema_url: str | None = None,
+        use_threads: bool = True,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -190,6 +192,7 @@ class Resource:
         Args:
             attributes: Optional zero or more key-value pairs.
             schema_url: Optional URL pointing to the schema
+            use_threads: Optional flag to run detectors in a thread pool or synchronously
 
         Returns:
             The newly-created Resource.
@@ -198,9 +201,9 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        resource = get_aggregated_resources(_build_resource_detectors(), _DEFAULT_RESOURCE).merge(
-            Resource(attributes, schema_url)
-        )
+        resource = get_aggregated_resources(
+            _build_resource_detectors(), _DEFAULT_RESOURCE, use_threads=use_threads
+        ).merge(Resource(attributes, schema_url))
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
@@ -764,34 +767,30 @@ def get_aggregated_resources(
     :param use_threads: True to run detectors in a thread pool, False to run synchronously (timeouts do not apply in synchronous mode)
     :return:
     """
-    detectors_merged_resource = initial_resource or Resource.create()
+    detectors_merged_resource = (
+        initial_resource if initial_resource is not None else Resource.create(use_threads=use_threads)
+    )
 
-    if not use_threads:
-        for detector in detectors:
-            detected_resource: Resource = _EMPTY_RESOURCE
-            try:
-                detected_resource = detector.detect()
-            # pylint: disable=broad-exception-caught
-            except Exception as ex:
-                if detector.raise_on_error:
-                    raise ex
-                logger.warning("Exception %s in detector %s, ignoring", ex, detector)
-            finally:
-                detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
-        return detectors_merged_resource
-
-    # A detector that exceeds `timeout` is skipped, but shutdown still joins
-    # its worker so no threads outlive this call. A detector that blocks
-    # indefinitely therefore blocks this call. `cancel_futures=True` drops
-    # detectors that have not started yet if a `raise_on_error` detector raises.
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+    executor: concurrent.futures.ThreadPoolExecutor | None = None
     try:
-        futures = [executor.submit(detector.detect) for detector in detectors]
-        for detector_ind, future in enumerate(futures):
-            detector = detectors[detector_ind]
+        if use_threads:
+            # A detector that exceeds `timeout` is skipped, but shutdown still joins
+            # its worker so no threads outlive this call. A detector that blocks
+            # indefinitely therefore blocks this call. `cancel_futures=True` drops
+            # detectors that have not started yet if a `raise_on_error` detector raises.
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+            futures = [executor.submit(detector.detect) for detector in detectors]
+            tasks = [
+                (detector, functools.partial(future.result, timeout=timeout))
+                for detector, future in zip(detectors, futures)
+            ]
+        else:
+            tasks = [(detector, detector.detect) for detector in detectors]
+
+        for detector, get_result in tasks:
             detected_resource: Resource = _EMPTY_RESOURCE
             try:
-                detected_resource = future.result(timeout=timeout)
+                detected_resource = get_result()
             except concurrent.futures.TimeoutError as ex:
                 if detector.raise_on_error:
                     raise ex
@@ -808,6 +807,7 @@ def get_aggregated_resources(
             finally:
                 detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
     finally:
-        executor.shutdown(wait=True, cancel_futures=True)
+        if executor is not None:
+            executor.shutdown(wait=True, cancel_futures=True)
 
     return detectors_merged_resource

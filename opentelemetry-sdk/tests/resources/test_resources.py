@@ -590,6 +590,13 @@ class TestResources(unittest.TestCase):
         self.assertEqual(res, Resource({"k": "v"}))
         mock_executor.assert_not_called()
 
+        res_default = get_aggregated_resources(
+            [resource_detector],
+            use_threads=False,
+        )
+        self.assertEqual(res_default.attributes["k"], "v")
+        mock_executor.assert_not_called()
+
     def test_get_aggregated_resources_synchronous_error_logged(self):
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.side_effect = RuntimeError("detector failure")
