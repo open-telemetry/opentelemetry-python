@@ -876,3 +876,29 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         # force_flush must return False when submission fails and not raise
         flushed = multi_processor.force_flush(100)
         self.assertFalse(flushed)
+
+    def test_force_flush_timeout_still_inspects_completed_failures(self):
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        raising_proc = mock.Mock(spec=trace.SpanProcessor)
+        raising_proc.force_flush.side_effect = RuntimeError("flush failed")
+
+        blocking_proc = mock.Mock(spec=trace.SpanProcessor)
+        block_event = Event()
+
+        def _slow_flush(timeout_millis=None):
+            block_event.wait(timeout=2.0)
+            return True
+
+        blocking_proc.force_flush.side_effect = _slow_flush
+
+        multi_processor.add_span_processor(raising_proc)
+        multi_processor.add_span_processor(blocking_proc)
+
+        try:
+            with self.assertLogs("opentelemetry.sdk.trace", level="ERROR") as cm:
+                flushed = multi_processor.force_flush(timeout_millis=50)
+                self.assertFalse(flushed)
+                self.assertTrue(any("Exception while executing SpanProcessor force_flush." in msg for msg in cm.output))
+        finally:
+            block_event.set()
+            multi_processor.shutdown()
