@@ -17,6 +17,7 @@ from opentelemetry.context import get_current
 from opentelemetry.sdk._logs import (
     Logger,
     LoggerProvider,
+    LogRecordProcessor,
     ReadableLogRecord,
     ReadWriteLogRecord,
 )
@@ -540,3 +541,42 @@ class TestLogger(unittest.TestCase):
         provider.add_log_record_processor(p2)
         logger = provider.get_logger("test")
         self.assertTrue(logger.enabled())
+
+    def test_enabled_severity_number_direct_comparison(self):
+        class MinSeverityProcessor(LogRecordProcessor):
+            def __init__(self, min_severity: SeverityNumber):
+                self.min_severity = min_severity
+
+            def on_emit(self, log_data: ReadableLogRecord) -> None:
+                pass
+
+            def shutdown(self) -> None:
+                pass
+
+            def force_flush(self, timeout_millis: int = 30000) -> bool:
+                return True
+
+            def enabled(
+                self,
+                *,
+                context=None,
+                instrumentation_scope=None,
+                severity_number: SeverityNumber | None = None,
+                event_name=None,
+            ) -> bool:
+                if severity_number is None:
+                    return True
+                return severity_number >= self.min_severity
+
+        provider = LoggerProvider()
+        provider.add_log_record_processor(MinSeverityProcessor(SeverityNumber.WARN))
+        logger = provider.get_logger("test")
+
+        self.assertFalse(logger.enabled(severity_number=SeverityNumber.DEBUG))
+        self.assertFalse(logger.enabled(severity_number=SeverityNumber.INFO))
+        self.assertTrue(logger.enabled(severity_number=SeverityNumber.WARN))
+        self.assertTrue(logger.enabled(severity_number=SeverityNumber.ERROR))
+        self.assertTrue(logger.enabled(severity_number=SeverityNumber.FATAL))
+        # IntEnum allows direct comparison with ints as well:
+        self.assertTrue(logger.enabled(severity_number=13))
+        self.assertFalse(logger.enabled(severity_number=5))

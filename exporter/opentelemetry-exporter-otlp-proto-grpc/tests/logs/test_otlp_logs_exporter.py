@@ -315,7 +315,7 @@ class TestOTLPLogExporter(TestCase):
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
                                     observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
-                                    severity_number=self.log_data_1.log_record.severity_number.value,
+                                    severity_number=self.log_data_1.log_record.severity_number,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(5213367945872657620, 8, "big"),
                                     trace_id=int.to_bytes(
@@ -367,7 +367,7 @@ class TestOTLPLogExporter(TestCase):
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
                                     observed_time_unix_nano=self.log_data_1.log_record.observed_timestamp,
-                                    severity_number=self.log_data_1.log_record.severity_number.value,
+                                    severity_number=self.log_data_1.log_record.severity_number,
                                     severity_text="WARNING",
                                     span_id=int.to_bytes(5213367945872657620, 8, "big"),
                                     trace_id=int.to_bytes(
@@ -397,7 +397,7 @@ class TestOTLPLogExporter(TestCase):
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_2.log_record.timestamp,
                                     observed_time_unix_nano=self.log_data_2.log_record.observed_timestamp,
-                                    severity_number=self.log_data_2.log_record.severity_number.value,
+                                    severity_number=self.log_data_2.log_record.severity_number,
                                     severity_text="INFO",
                                     span_id=int.to_bytes(5213367945872657623, 8, "big"),
                                     trace_id=int.to_bytes(
@@ -435,7 +435,7 @@ class TestOTLPLogExporter(TestCase):
                                     # pylint: disable=no-member
                                     time_unix_nano=self.log_data_3.log_record.timestamp,
                                     observed_time_unix_nano=self.log_data_3.log_record.observed_timestamp,
-                                    severity_number=self.log_data_3.log_record.severity_number.value,
+                                    severity_number=self.log_data_3.log_record.severity_number,
                                     severity_text="ERROR",
                                     span_id=int.to_bytes(5213367945872657628, 8, "big"),
                                     trace_id=int.to_bytes(
