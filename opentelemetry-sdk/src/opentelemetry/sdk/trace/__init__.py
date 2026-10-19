@@ -348,7 +348,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         timeout_sec = timeout_millis / 1e3
         done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_sec)
         if not_done_futures:
-            return False
+            all_flushed = False
 
         for future in done_futures:
             try:
