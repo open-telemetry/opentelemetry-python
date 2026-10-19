@@ -82,3 +82,11 @@ class TestMapping(TestCase):
         # should not be interpreted as a per unit since there is no denominator
         self.assertEqual(map_unit("m/"), "m")
         self.assertEqual(map_unit("m/{bar}"), "m")
+
+        # compound units with multiple annotations should not have intermediate tokens stripped
+        self.assertEqual(map_unit("m{length}/s{time}"), "meters_per_second")
+        self.assertEqual(map_unit("By{total}/s{interval}"), "bytes_per_second")
+        self.assertEqual(map_unit("{requests}/s{interval}"), "per_second")
+        self.assertEqual(map_unit("km{distance}/h{duration}"), "km_per_hour")
+        self.assertEqual(map_unit("foo{a}bar{b}"), "foobar")
+
