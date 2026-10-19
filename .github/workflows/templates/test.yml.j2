@@ -34,6 +34,9 @@ jobs:
   {{ job_data.name }}:
     name: {{ job_data.ui_name }}
     runs-on: {{ job_data.os }}
+    {%- if not job_data.run_on_pr %}
+    if: {% raw %}${{ github.event_name != 'pull_request' }}{% endraw %}
+    {%- endif %}
     timeout-minutes: 30
     steps:
       {%- if job_data.os == "windows-latest" %}
