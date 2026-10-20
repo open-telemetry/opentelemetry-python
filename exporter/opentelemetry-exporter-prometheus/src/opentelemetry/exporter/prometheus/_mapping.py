@@ -8,7 +8,7 @@ _SANITIZE_NAME_RE = compile(r"[^a-zA-Z0-9:]+", UNICODE)
 _SANITIZE_ATTRIBUTE_KEY_RE = compile(r"[^a-zA-Z0-9]+", UNICODE)
 
 # UCUM style annotations which are text enclosed in curly braces https://ucum.org/ucum#para-6.
-_UNIT_ANNOTATION = compile(r"\{([^}]+)\}")
+_UNIT_ANNOTATION = compile(r"\{[^}]*\}")
 
 # Remaps common UCUM and SI units to prometheus conventions. Copied from
 # https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.101.0/pkg/translator/prometheus/normalize_name.go#L19

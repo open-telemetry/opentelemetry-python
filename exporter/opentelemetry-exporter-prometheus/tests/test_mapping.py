@@ -89,3 +89,8 @@ class TestMapping(TestCase):
         self.assertEqual(map_unit("{requests}/s{interval}"), "per_second")
         self.assertEqual(map_unit("km{distance}/h{duration}"), "km_per_hour")
         self.assertEqual(map_unit("foo{a}bar{b}"), "foobar")
+
+        # empty annotations attached to units should also be stripped properly
+        self.assertEqual(map_unit("m{}"), "meters")
+        self.assertEqual(map_unit("m/s{}"), "meters_per_second")
+        self.assertEqual(map_unit("By{}/s{}"), "bytes_per_second")
