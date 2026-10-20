@@ -228,19 +228,19 @@ tracer_provider.add_span_processor(mock_processor)
             "proc.wait()\n"
             "sys.exit(proc.returncode)\n"
         )
-        proc = subprocess.Popen(
+        with subprocess.Popen(
             [sys.executable, "-c", code],
             start_new_session=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-        )
-        try:
-            stdout, stderr = proc.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            proc.communicate()
-            self.fail("TracerProvider fork handler deadlocked during fork with preexec_fn")
-        self.assertEqual(proc.returncode, 0, f"stdout: {stdout}\nstderr: {stderr}")
+        ) as proc:
+            try:
+                stdout, stderr = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                proc.communicate()
+                self.fail("TracerProvider fork handler deadlocked during fork with preexec_fn")
+            self.assertEqual(proc.returncode, 0, f"stdout: {stdout}\nstderr: {stderr}")
 
     def test_get_tracer_sdk(self):
         tracer_provider = trace.TracerProvider()

@@ -569,7 +569,7 @@ class TestResources(unittest.TestCase):
         res = get_aggregated_resources(
             [resource_detector1, resource_detector2],
             initial_resource=Resource({"initial": "init"}),
-            use_threads=False,
+            _use_thread_pool=False,
         )
         self.assertEqual(
             res,
@@ -585,14 +585,14 @@ class TestResources(unittest.TestCase):
         res = get_aggregated_resources(
             [resource_detector],
             initial_resource=Resource.get_empty(),
-            use_threads=False,
+            _use_thread_pool=False,
         )
         self.assertEqual(res, Resource({"k": "v"}))
         mock_executor.assert_not_called()
 
         res_default = get_aggregated_resources(
             [resource_detector],
-            use_threads=False,
+            _use_thread_pool=False,
         )
         self.assertEqual(res_default.attributes["k"], "v")
         mock_executor.assert_not_called()
@@ -606,7 +606,7 @@ class TestResources(unittest.TestCase):
             res = get_aggregated_resources(
                 [resource_detector],
                 initial_resource=Resource({"k": "v"}),
-                use_threads=False,
+                _use_thread_pool=False,
             )
             self.assertEqual(res, Resource({"k": "v"}))
         self.assertIn("Exception detector failure in detector", log_entry.output[0])
@@ -617,7 +617,7 @@ class TestResources(unittest.TestCase):
         resource_detector.raise_on_error = True
 
         with self.assertRaises(RuntimeError):
-            get_aggregated_resources([resource_detector], use_threads=False)
+            get_aggregated_resources([resource_detector], _use_thread_pool=False)
 
     def test_resource_detector_is_not_process_dependent_by_default(self):
         self.assertFalse(DefaultResourceDetector().is_process_dependent())

@@ -183,7 +183,8 @@ class Resource:
     def create(
         attributes: Attributes | None = None,
         schema_url: str | None = None,
-        use_threads: bool = True,
+        *,
+        _use_thread_pool: bool = True,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -192,7 +193,6 @@ class Resource:
         Args:
             attributes: Optional zero or more key-value pairs.
             schema_url: Optional URL pointing to the schema
-            use_threads: Optional flag to run detectors in a thread pool or synchronously
 
         Returns:
             The newly-created Resource.
@@ -202,7 +202,9 @@ class Resource:
             attributes = {}
 
         resource = get_aggregated_resources(
-            _build_resource_detectors(), _DEFAULT_RESOURCE, use_threads=use_threads
+            _build_resource_detectors(),
+            _DEFAULT_RESOURCE,
+            _use_thread_pool=_use_thread_pool,
         ).merge(Resource(attributes, schema_url))
 
         if not resource.attributes.get(SERVICE_NAME, None):
@@ -749,7 +751,7 @@ def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnus
     return get_aggregated_resources(
         [detector for detector in _build_resource_detectors() if detector.is_process_dependent()],
         Resource.get_empty(),
-        use_threads=False,
+        _use_thread_pool=False,
     )
 
 
@@ -757,27 +759,25 @@ def get_aggregated_resources(
     detectors: Sequence["ResourceDetector"],
     initial_resource: Resource | None = None,
     timeout: int = 5,
-    use_threads: bool = True,
+    *,
+    _use_thread_pool: bool = True,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
     :param detectors: List of resources in order of priority
     :param initial_resource: Static resource. This has highest priority
-    :param timeout: Number of seconds to wait for each detector to return when running in a thread pool
-    :param use_threads: True to run detectors in a thread pool, False to run synchronously (timeouts do not apply in synchronous mode)
+    :param timeout: Number of seconds to wait for each detector to return
     :return:
     """
     detectors_merged_resource = (
-        initial_resource if initial_resource is not None else Resource.create(use_threads=use_threads)
+        initial_resource
+        if initial_resource is not None
+        else Resource.create(_use_thread_pool=_use_thread_pool)
     )
 
     executor: concurrent.futures.ThreadPoolExecutor | None = None
     try:
-        if use_threads:
-            # A detector that exceeds `timeout` is skipped, but shutdown still joins
-            # its worker so no threads outlive this call. A detector that blocks
-            # indefinitely therefore blocks this call. `cancel_futures=True` drops
-            # detectors that have not started yet if a `raise_on_error` detector raises.
+        if _use_thread_pool:
             executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
             futures = [executor.submit(detector.detect) for detector in detectors]
             tasks = [
