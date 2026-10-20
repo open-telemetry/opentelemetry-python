@@ -9,6 +9,7 @@ from time import sleep
 from unittest import TestCase, skipUnless
 from unittest.mock import MagicMock, Mock, patch
 
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.measurement_consumer import (
     MeasurementConsumer,
     SynchronousMeasurementConsumer,
@@ -16,6 +17,7 @@ from opentelemetry.sdk.metrics._internal.measurement_consumer import (
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
 
 @patch("opentelemetry.sdk.metrics._internal.measurement_consumer.MetricReaderStorage")
@@ -227,6 +229,53 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
         register_at_fork.call_args.kwargs["after_in_child"]()
 
         collector = Thread(target=consumer.collect, args=(reader,))
+        collector.start()
+        collector.join(timeout)
+        self.assertFalse(collector.is_alive(), "collect blocked on a lock held at fork time")
+
+    @skipUnless(hasattr(os, "register_at_fork"), "requires os.register_at_fork")
+    def test_collect_after_fork_with_collection_locks_held(self):
+        """Locks taken while a reader thread collects must not block collect in the child"""
+        timeout = 1
+        reader = InMemoryMetricReader()
+        with patch("os.register_at_fork") as register_at_fork:
+            provider = MeterProvider(metric_readers=[reader])
+        provider.get_meter("test").create_counter("counter").add(1)
+
+        # pylint: disable=protected-access
+        consumer = provider._measurement_consumer
+        storage = consumer._reader_storages[reader]
+        (view_instrument_match,) = next(iter(storage._instrument_view_instrument_matches.values()))
+        (aggregation,) = view_instrument_match._attributes_aggregation.values()
+        locks = [
+            consumer._lock,
+            storage._lock,
+            view_instrument_match._lock,
+            aggregation._lock,
+            aggregation._reservoir._lock,
+        ]
+        locks_held = Event()
+        release_locks = Event()
+
+        def hold_locks():
+            for lock in locks:
+                lock.acquire()
+            locks_held.set()
+            release_locks.wait()
+            for lock in reversed(locks):
+                lock.release()
+
+        holder = Thread(target=hold_locks)
+        holder.start()
+        self.addCleanup(holder.join)
+        self.addCleanup(release_locks.set)
+        self.assertTrue(locks_held.wait(timeout))
+
+        # The child process has no holder thread, so nothing will release the locks.
+        for hook in register_at_fork.call_args_list:
+            hook.kwargs["after_in_child"]()
+
+        collector = Thread(target=reader.collect)
         collector.start()
         collector.join(timeout)
         self.assertFalse(collector.is_alive(), "collect blocked on a lock held at fork time")
