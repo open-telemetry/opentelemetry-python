@@ -89,4 +89,3 @@ class TestMapping(TestCase):
         self.assertEqual(map_unit("{requests}/s{interval}"), "per_second")
         self.assertEqual(map_unit("km{distance}/h{duration}"), "km_per_hour")
         self.assertEqual(map_unit("foo{a}bar{b}"), "foobar")
-
