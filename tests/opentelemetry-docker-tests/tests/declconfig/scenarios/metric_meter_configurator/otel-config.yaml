@@ -1,0 +1,19 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-metric-meter-configurator
+meter_provider:
+  readers:
+    - periodic:
+        interval: 500
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/metrics
+  meter_configurator/development:
+    default_config:
+      enabled: true
+    meters:
+      - name: disabled.*
+        config:
+          enabled: false

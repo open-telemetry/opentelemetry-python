@@ -108,7 +108,8 @@ def _is_valid_key(name: str) -> bool:
 
 def _is_valid_value(value: object) -> bool:
     parts = str(value).split(";")
-    is_valid_value = _VALUE_PATTERN.fullmatch(parts[0]) is not None
+    # W3C Baggage allows optional whitespace between the value and ";"
+    is_valid_value = _VALUE_PATTERN.fullmatch(parts[0].rstrip(" \t")) is not None
     if len(parts) > 1:  # one or more properties metadata
         for property in parts[1:]:
             if _PROPERT_PATTERN.fullmatch(property) is None:

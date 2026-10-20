@@ -1,1 +1,0 @@
-`opentelemetry-sdk`: retain values from synchronous instruments using last-value aggregation across cumulative collections
