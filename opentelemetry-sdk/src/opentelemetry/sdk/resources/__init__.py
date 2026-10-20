@@ -770,9 +770,7 @@ def get_aggregated_resources(
     :return:
     """
     detectors_merged_resource = (
-        initial_resource
-        if initial_resource is not None
-        else Resource.create(_use_thread_pool=_use_thread_pool)
+        initial_resource if initial_resource is not None else Resource.create(_use_thread_pool=_use_thread_pool)
     )
 
     executor: concurrent.futures.ThreadPoolExecutor | None = None
