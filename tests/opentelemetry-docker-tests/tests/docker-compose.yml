@@ -6,7 +6,7 @@ services:
         - "8888:8888"
         - "55678:55678"
   otcollector:
-    image: otel/opentelemetry-collector-contrib:0.162.0@sha256:39923a8e431bd1f57be82411999d389fcfe40857492e4365456d97a4c1f74be6
+    image: otel/opentelemetry-collector-contrib:0.163.2@sha256:7f22d2a6748110ffb6a59bc0df448bccbf501cdb667d610ede4c61d3863d5849
     command: ["--config=/etc/otelcol/collector-config.yaml"]
     volumes:
       - ./collector-config.yaml:/etc/otelcol/collector-config.yaml
