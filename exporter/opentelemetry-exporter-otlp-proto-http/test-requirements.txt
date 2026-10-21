@@ -1,5 +1,5 @@
 asgiref==3.7.2
-certifi==2024.12.14
+certifi==2026.10.19
 charset-normalizer==3.5.2
 googleapis-common-protos==1.75.0
 idna==3.20
