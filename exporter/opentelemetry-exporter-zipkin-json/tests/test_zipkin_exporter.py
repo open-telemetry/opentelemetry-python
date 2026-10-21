@@ -64,17 +64,19 @@ class TestZipkinExporter(unittest.TestCase):
         self.assertEqual(exporter.timeout, 15)
 
     def test_constructor_invalid_timeout_env_var_falls_back(self):
-        os.environ[OTEL_EXPORTER_ZIPKIN_TIMEOUT] = "10s"
+        previous = os.environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT)
+        with patch.dict(os.environ, {OTEL_EXPORTER_ZIPKIN_TIMEOUT: "10s"}):
+            with self.assertLogs("opentelemetry.exporter.zipkin.json", level="WARNING") as cm:
+                exporter = ZipkinExporter()
 
-        with self.assertLogs("opentelemetry.exporter.zipkin.json", level="WARNING") as cm:
-            exporter = ZipkinExporter()
-
-        self.assertEqual(exporter.timeout, 10)
-        self.assertEqual(len(cm.records), 1)
-        self.assertTrue(
-            any("Invalid value" in message for message in cm.output),
-            cm.output,
-        )
+            self.assertEqual(exporter.timeout, 10)
+            self.assertEqual(len(cm.records), 1)
+            self.assertTrue(
+                any("Invalid value" in message for message in cm.output),
+                cm.output,
+            )
+        # patch.dict restores the process environment; no leak between tests.
+        self.assertEqual(os.environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT), previous)
 
     def test_constructor_empty_timeout_env_var_falls_back(self):
         for value in ("", " ", "\t\n"):
