@@ -547,7 +547,7 @@ class TestLogger(unittest.TestCase):
             def __init__(self, min_severity: SeverityNumber):
                 self.min_severity = min_severity
 
-            def on_emit(self, log_data: ReadableLogRecord) -> None:
+            def on_emit(self, log_record: ReadableLogRecord) -> None:
                 pass
 
             def shutdown(self) -> None:
