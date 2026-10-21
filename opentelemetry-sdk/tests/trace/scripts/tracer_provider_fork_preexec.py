@@ -11,12 +11,13 @@ from opentelemetry.sdk.trace import TracerProvider
 
 def main() -> None:
     _provider = TracerProvider(resource=Resource({"service.name": "test"}))
-    proc = subprocess.Popen(
+    # pylint: disable=subprocess-popen-preexec-fn
+    with subprocess.Popen(
         ["true"],
         preexec_fn=lambda: signal.signal(signal.SIGPIPE, signal.SIG_DFL),  # noqa: PLW1509
-    )
-    proc.wait()
-    sys.exit(proc.returncode)
+    ) as proc:
+        proc.wait()
+        sys.exit(proc.returncode)
 
 
 if __name__ == "__main__":
