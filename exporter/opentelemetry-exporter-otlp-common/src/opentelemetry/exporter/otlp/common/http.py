@@ -42,6 +42,11 @@ _RETRYABLE_STATUS_CODES: Final[frozenset[int]] = frozenset(
 )
 
 
+def _transport_timeout(timeout: float) -> float | None:
+    """Map an infinite timeout to ``None``, which transports treat as no timeout."""
+    return None if math.isinf(timeout) else timeout
+
+
 def _is_retryable(status_code: int | None) -> bool:
     return status_code in _RETRYABLE_STATUS_CODES
 
@@ -156,7 +161,7 @@ class _OTLPHTTPClient:
             self._endpoint,
             headers=self._headers,
             data=data,
-            timeout=timeout,
+            timeout=_transport_timeout(timeout),
         )
         if (
             result.error is not None
@@ -171,7 +176,7 @@ class _OTLPHTTPClient:
                 self._endpoint,
                 headers=self._headers,
                 data=data,
-                timeout=remaining,
+                timeout=_transport_timeout(remaining),
             )
         return result
 
