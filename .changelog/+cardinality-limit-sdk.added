@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: enforce a metric cardinality limit (default 2000) with the `otel.metric.overflow` attribute, configurable via `View(aggregation_cardinality_limit=...)` and the `cardinality_limits` argument of metric readers

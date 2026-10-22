@@ -1,0 +1,12 @@
+description: >
+  Without any configured limit, a metric stream is limited to 2000 points: 1999 attribute sets plus
+  the overflow point, which aggregates the other 101 measurements.
+until:
+  - exited: {}
+expect:
+  - metric: {name: requests, count: 2000}
+  - metric:
+      name: requests
+      data_point:
+        attributes: {values: {otel.metric.overflow: true}, strict: true}
+        value: 101

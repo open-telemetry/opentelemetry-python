@@ -22,6 +22,7 @@ from opentelemetry.exporter.prometheus import (
     _CustomCollector,
 )
 from opentelemetry.metrics import NoOpMeterProvider
+from opentelemetry.sdk.metrics import Counter as CounterInstrument
 from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -108,6 +109,21 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         with self._registry_register_patch:
             _ = PrometheusMetricReader()
             self.assertTrue(self._mock_registry_register.called)
+
+    def test_cardinality_limits(self):
+        registry = CollectorRegistry()
+        reader = PrometheusMetricReader(
+            registry=registry,
+            cardinality_limits={CounterInstrument: 3},
+        )
+        provider = MeterProvider(metric_readers=[reader])
+        counter = provider.get_meter("test").create_counter("requests")
+        for index in range(5):
+            counter.add(1, {"k": str(index)})
+
+        output = generate_latest(registry).decode()
+        self.assertEqual(output.count("requests_total{"), 3)
+        self.assertIn('otel_metric_overflow="true"', output)
 
     def test_shutdown(self):
         with patch("prometheus_client.core.REGISTRY.unregister") as registry_unregister_patch:

@@ -90,6 +90,14 @@ class View:
         instrument_unit: This is an instrument matching attribute: the unit the
             instrument must have to match the view.
 
+        aggregation_cardinality_limit: This is a metric stream customizing
+            attribute: the maximum number of metric points the stream may
+            export per collection cycle. Measurements whose attributes would
+            exceed the limit are aggregated into a single point identified by
+            the attribute ``otel.metric.overflow=true``. If `None` the
+            cardinality limit of the metric reader is used, which defaults to
+            2000. Must be a positive integer.
+
     This class is not intended to be subclassed by the user.
     """
 
@@ -108,7 +116,17 @@ class View:
         aggregation: Aggregation | None = None,
         exemplar_reservoir_factory: Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None = None,
         instrument_unit: str | None = None,
+        aggregation_cardinality_limit: int | None = None,
     ):
+        if aggregation_cardinality_limit is not None and (
+            isinstance(aggregation_cardinality_limit, bool)
+            or not isinstance(aggregation_cardinality_limit, int)
+            or aggregation_cardinality_limit < 1
+        ):
+            raise ValueError(
+                f"aggregation_cardinality_limit must be a positive integer, got {aggregation_cardinality_limit!r}"
+            )
+
         if (
             instrument_type
             is instrument_name
@@ -131,8 +149,9 @@ class View:
                 # pylint: disable=broad-exception-raised
                 raise Exception(f"View {name} declared with wildcard characters in instrument_name")
 
-        # _name, _description, _aggregation, _exemplar_reservoir_factory and
-        # _attribute_keys will be accessed when instantiating a _ViewInstrumentMatch.
+        # _name, _description, _aggregation, _exemplar_reservoir_factory,
+        # _attribute_keys and _aggregation_cardinality_limit will be accessed
+        # when instantiating a _ViewInstrumentMatch.
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
@@ -145,6 +164,7 @@ class View:
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
+        self._aggregation_cardinality_limit = aggregation_cardinality_limit
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

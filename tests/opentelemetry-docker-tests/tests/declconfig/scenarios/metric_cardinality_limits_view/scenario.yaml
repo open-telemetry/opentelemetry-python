@@ -1,0 +1,27 @@
+description: >
+  A view's `aggregation_cardinality_limit` takes precedence over the reader's `cardinality_limits`.
+  `requests` uses its view's limit of 4 (3 attribute sets plus the overflow point, which aggregates
+  the other 7 measurements), while `other` uses the reader's limit of 2 (1 attribute set plus the
+  overflow point). `filtered` has a limit of 3, which is applied after its view keeps only the
+  `route` attribute, so its 20 measurements make 2 attribute sets and nothing overflows.
+until:
+  - exited: {}
+expect:
+  - metric: {name: requests, count: 4}
+  - metric:
+      name: requests
+      data_point:
+        attributes: {values: {otel.metric.overflow: true}, strict: true}
+        value: 7
+  - metric: {name: other, count: 2}
+  - metric:
+      name: other
+      data_point:
+        attributes: {values: {otel.metric.overflow: true}, strict: true}
+        value: 9
+  - metric: {name: filtered, count: 2}
+  - metric:
+      name: filtered
+      data_point:
+        attributes: {values: {otel.metric.overflow: true}}
+      count: 0

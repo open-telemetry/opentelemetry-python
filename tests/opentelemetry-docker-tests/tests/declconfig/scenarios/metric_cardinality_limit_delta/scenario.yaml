@@ -1,0 +1,19 @@
+description: >
+  With delta temporality the cardinality limit applies to each collection cycle. Each batch of 10
+  attribute sets is limited to 3 points, so 2 attribute sets plus the overflow point, even though
+  the first batch's attribute sets were already exported.
+until:
+  - exited: {}
+expect:
+  - metric: {name: requests, temporality: DELTA, count: 6}
+  - metric:
+      name: requests
+      data_point:
+        attributes: {values: {otel.metric.overflow: true}, strict: true}
+        value: 8
+      count: 2
+  - metric:
+      name: requests
+      data_point:
+        attributes: {values: {batch: second}}
+      count: 2
