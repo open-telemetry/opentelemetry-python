@@ -822,6 +822,8 @@ class Logger(APILogger):
             context = api_record.context
             severity_number = api_record.severity_number
             event_name = api_record.event_name
+        else:
+            context = context or get_current()
         # Skip building the record when no processor would accept it.
         if not self._multi_log_record_processor.enabled(
             context=context,

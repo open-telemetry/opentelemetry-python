@@ -13,7 +13,7 @@ from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.context import get_current
+from opentelemetry.context import attach, detach, get_current, set_value
 from opentelemetry.sdk._logs import (
     Logger,
     LoggerProvider,
@@ -621,3 +621,24 @@ class TestLogger(unittest.TestCase):
                     severity_number=SeverityNumber.WARN,
                     event_name="my.event",
                 )
+
+    def test_emit_kwargs_passes_current_context_to_processor_enabled(self):  # pylint: disable=no-self-use
+        provider = LoggerProvider()
+        processor_mock = Mock()
+        processor_mock.enabled.return_value = False
+        provider.add_log_record_processor(processor_mock)
+        logger = provider.get_logger("test")
+
+        token = attach(set_value("key", "value"))
+        try:
+            logger.emit(body="a log line")
+            expected_context = get_current()
+        finally:
+            detach(token)
+
+        processor_mock.enabled.assert_called_once_with(
+            context=expected_context,
+            instrumentation_scope=logger._instrumentation_scope,
+            severity_number=None,
+            event_name=None,
+        )
