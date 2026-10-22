@@ -3,7 +3,7 @@ cachetools==5.5.2
 certifi==2024.12.14
 charset-normalizer==3.5.2
 google-api-core==2.17.1
-google-auth==2.61.0
+google-auth==2.62.0
 googleapis-common-protos==1.63.2
 grpcio==1.84.0
 idna==3.20
