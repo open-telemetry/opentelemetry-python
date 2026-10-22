@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: Fix View initialization to detect bracket character pattern wildcards (`[`, `]`) in `instrument_name` when `name` is set.

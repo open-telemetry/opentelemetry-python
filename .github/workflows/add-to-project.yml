@@ -21,6 +21,8 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_PYTHON_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PYTHON_PRIVATE_KEY }}
+          permission-organization-projects: write
+          permission-pull-requests: read
 
       - uses: actions/add-to-project@244f685bbc3b7adfa8466e08b698b5577571133e # v1.0.2
         with:

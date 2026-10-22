@@ -43,8 +43,8 @@ _VALUE_PATTERN = re.compile(_VALUE_FORMAT)
 
 
 _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
-_delimiter_pattern = re.compile(r"[ \t]*,[ \t]*")
-_member_pattern = re.compile(f"({_KEY_FORMAT})(=)({_VALUE_FORMAT})[ \t]*")
+_TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH = 8192
+_member_pattern = re.compile(f"({_KEY_FORMAT})=({_VALUE_FORMAT})")
 _logger = logging.getLogger(__name__)
 
 
@@ -397,8 +397,9 @@ class TraceState(Mapping[str, str]):
         """
         pairs = {}  # type: dict[str, str]
         for header in header_list:
-            members: list[str] = re.split(_delimiter_pattern, header)
-            for member in members:
+            for member in header.split(","):
+                # remove optional whitespace (RFC 9110, section 5.6.3)
+                member = member.strip(" \t")
                 # empty members are valid, but no need to process further.
                 if not member:
                     continue
@@ -409,8 +410,7 @@ class TraceState(Mapping[str, str]):
                         member,
                     )
                     return cls()
-                groups: tuple[str, ...] = match.groups()
-                key, _eq, value = groups
+                key, value = match.groups()
                 # duplicate keys are not legal in header
                 if key in pairs:
                     return cls()

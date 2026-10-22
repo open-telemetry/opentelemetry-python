@@ -8,6 +8,7 @@
 import os
 import sys
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
@@ -17,6 +18,10 @@ from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
+from opentelemetry.configuration.models import (
+    AttributeLimits,
+    OtlpHttpEncoding,
+)
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
@@ -583,7 +588,12 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             },
         ):
             config = self._make_batch_config(
-                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(endpoint="http://localhost:4318"))
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(
+                        endpoint="http://localhost:4318",
+                        encoding=OtlpHttpEncoding.protobuf,
+                    )
+                )
             )
             create_tracer_provider(config)
 
@@ -592,6 +602,58 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             headers=None,
             timeout=None,
             compression=None,
+        )
+
+    def test_otlp_http_json_missing_package_raises(self):
+        config = self._make_batch_config(
+            SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(encoding=OtlpHttpEncoding.json))
+        )
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.common.http": None,
+                    "opentelemetry.exporter.otlp.json.http.trace_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
+        ):
+            create_tracer_provider(config)
+        self.assertIn("opentelemetry-exporter-otlp-json-http", str(ctx.exception))
+
+    def test_otlp_http_json_created_with_config(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = SimpleNamespace(DEFLATE="json_deflate")
+        mock_common_module = MagicMock()
+        mock_common_module.Compression = mock_compression_cls
+        mock_exporter_module = MagicMock()
+        mock_exporter_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.common.http": mock_common_module,
+                "opentelemetry.exporter.otlp.json.http.trace_exporter": mock_exporter_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(
+                        endpoint="http://collector:4318/v1/traces",
+                        headers_list="x-api-key=secret",
+                        compression="deflate",
+                        timeout=5000,
+                        encoding=OtlpHttpEncoding.json,
+                    )
+                )
+            )
+            create_tracer_provider(config)
+
+        mock_exporter_cls.assert_called_once_with(
+            endpoint="http://collector:4318/v1/traces",
+            headers={"x-api-key": "secret"},
+            timeout=5.0,
+            compression="json_deflate",
         )
 
     def test_otlp_http_created_with_deflate_compression(self):
@@ -799,11 +861,15 @@ class TestCreateSpanLimits(unittest.TestCase):
             {
                 "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT": "1",
                 "OTEL_SPAN_EVENT_COUNT_LIMIT": "2",
+                "OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT": "3",
+                "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "4",
             },
         ):
             provider = self._create_with_limits(SpanLimitsConfig())
         self.assertEqual(provider._span_limits.max_span_attributes, 128)
         self.assertEqual(provider._span_limits.max_events, 128)
+        self.assertIsNone(provider._span_limits.max_attribute_length)
+        self.assertIsNone(provider._span_limits.max_span_attribute_length)
 
 
 class TestCreateIdGenerator(unittest.TestCase):
@@ -926,3 +992,66 @@ class TestTracerConfigurator(unittest.TestCase):
         )
         provider = create_tracer_provider(config)
         self.assertTrue(self._enabled(provider, "any.scope"))
+
+
+class TestGlobalAttributeLimitsFallback(unittest.TestCase):
+    # pylint: disable=no-self-use
+
+    def test_global_attribute_count_limit_used_when_no_per_signal_limits(self):
+        global_limits = AttributeLimits(attribute_count_limit=42)
+        provider = create_tracer_provider(
+            TracerProviderConfig(processors=[]),
+            global_attribute_limits=global_limits,
+        )
+        self.assertEqual(provider._span_limits.max_span_attributes, 42)
+
+    def test_global_attribute_value_length_limit_used_when_no_per_signal_limits(
+        self,
+    ):
+        global_limits = AttributeLimits(attribute_value_length_limit=64)
+        provider = create_tracer_provider(
+            TracerProviderConfig(processors=[]),
+            global_attribute_limits=global_limits,
+        )
+        self.assertEqual(provider._span_limits.max_attribute_length, 64)
+
+    def test_per_signal_limits_take_precedence_over_global(self):
+        global_limits = AttributeLimits(
+            attribute_count_limit=99,
+            attribute_value_length_limit=99,
+        )
+        provider = create_tracer_provider(
+            TracerProviderConfig(
+                processors=[],
+                limits=SpanLimitsConfig(
+                    attribute_count_limit=7,
+                    attribute_value_length_limit=16,
+                ),
+            ),
+            global_attribute_limits=global_limits,
+        )
+        self.assertEqual(provider._span_limits.max_span_attributes, 7)
+        self.assertEqual(provider._span_limits.max_attribute_length, 16)
+
+    def test_global_limits_absent_uses_sdk_defaults(self):
+        provider = create_tracer_provider(
+            TracerProviderConfig(processors=[]),
+        )
+        self.assertEqual(provider._span_limits.max_span_attributes, 128)
+        self.assertIsNone(provider._span_limits.max_attribute_length)
+
+    def test_global_limits_absent_does_not_read_env_vars(self):
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_ATTRIBUTE_COUNT_LIMIT": "1",
+                "OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT": "2",
+                "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "3",
+            },
+        ):
+            provider = create_tracer_provider(
+                TracerProviderConfig(processors=[]),
+            )
+        self.assertEqual(provider._span_limits.max_span_attributes, 128)
+        self.assertIsNone(provider._span_limits.max_attribute_length)
+        self.assertIsNone(provider._span_limits.max_span_attribute_length)

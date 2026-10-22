@@ -1,0 +1,21 @@
+description: >
+  `parent_based` applies each configured sub-sampler; every one is the opposite of its default.
+until:
+  - exited: {}
+expect:
+  - spans:
+      name: root
+      root: true
+      count: 1
+  - spans:
+      name: local-sampled-child
+      count: 0
+  - spans:
+      name: local-unsampled-child
+      count: 1
+  - spans:
+      name: remote-sampled-child
+      count: 0
+  - spans:
+      name: remote-unsampled-child
+      count: 1

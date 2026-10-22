@@ -17,6 +17,10 @@ from opentelemetry.configuration._exceptions import (
     MissingDependencyError,
 )
 from opentelemetry.configuration.models import (
+    AttributeLimits,
+    OtlpHttpEncoding,
+)
+from opentelemetry.configuration.models import (
     BatchLogRecordProcessor as BatchLogRecordProcessorConfig,
 )
 from opentelemetry.configuration.models import (
@@ -35,6 +39,9 @@ from opentelemetry.configuration.models import (
     LogRecordExporter as LogRecordExporterConfig,
 )
 from opentelemetry.configuration.models import (
+    LogRecordLimits as LogRecordLimitsConfig,
+)
+from opentelemetry.configuration.models import (
     LogRecordProcessor as LogRecordProcessorConfig,
 )
 from opentelemetry.configuration.models import (
@@ -48,6 +55,7 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs._internal import (
+    LogRecordLimits,
     _LoggerConfig,
     _RuleBasedLoggerConfigurator,
 )
@@ -61,6 +69,8 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
 _logger = logging.getLogger(__name__)
+
+_DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT = 128
 
 # BatchLogRecordProcessor defaults per OTel spec (milliseconds).
 _DEFAULT_SCHEDULE_DELAY_MILLIS = 1000
@@ -78,30 +88,58 @@ def _create_otlp_http_log_exporter(
     config: OtlpHttpExporterConfig,
 ) -> LogRecordExporter:
     """Create an OTLP HTTP log exporter from config."""
-    try:
-        # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415  # type: ignore[import-untyped]
-            Compression,
-        )
-        from opentelemetry.exporter.otlp.proto.http._log_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
-            OTLPLogExporter,
-        )
-    except ImportError as exc:
-        raise MissingDependencyError(
-            package="opentelemetry-exporter-otlp-proto-http",
-            feature="otlp_http log exporter",
-        ) from exc
-
-    compression = _map_compression(config.compression, Compression, allow_deflate=True)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
-    return OTLPLogExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
-        headers=headers,
-        timeout=timeout,
-        compression=compression,  # type: ignore[arg-type]
-    )
+    match config.encoding:
+        case None | OtlpHttpEncoding.protobuf:
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415
+                    Compression,
+                )
+                from opentelemetry.exporter.otlp.proto.http._log_exporter import (  # noqa: PLC0415
+                    OTLPLogExporter,
+                )
+            except ImportError as exc:
+                raise MissingDependencyError(
+                    package="opentelemetry-exporter-otlp-proto-http",
+                    feature="otlp_http log exporter",
+                ) from exc
+
+            compression = _map_compression(config.compression, Compression, allow_deflate=True)
+            return OTLPLogExporter(
+                endpoint=config.endpoint,
+                headers=headers,
+                timeout=timeout,
+                compression=compression,
+            )
+        case OtlpHttpEncoding.json:
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.exporter.otlp.common.http import (  # noqa: PLC0415
+                    Compression as JsonCompression,
+                )
+                from opentelemetry.exporter.otlp.json.http._log_exporter import (  # noqa: PLC0415
+                    OTLPLogExporter as JsonOTLPLogExporter,
+                )
+            except ImportError as exc:
+                raise MissingDependencyError(
+                    package="opentelemetry-exporter-otlp-json-http",
+                    feature="otlp_http JSON log exporter",
+                ) from exc
+
+            compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
+            return JsonOTLPLogExporter(
+                endpoint=config.endpoint,
+                headers=headers,
+                timeout=timeout,
+                compression=compression,
+            )
+        case _:
+            raise ConfigurationError(
+                f"Unsupported OTLP HTTP encoding '{config.encoding}'. Supported values: protobuf, json."
+            )
 
 
 def _create_otlp_grpc_log_exporter(
@@ -152,14 +190,6 @@ def _create_otlp_file_development_log_exporter(
     return FileLogExporter(path) if path is not None else FileLogExporter()
 
 
-_LOG_EXPORTER_REGISTRY: dict = {
-    "otlp_http": _create_otlp_http_log_exporter,
-    "otlp_grpc": _create_otlp_grpc_log_exporter,
-    "console": lambda _: ConsoleLogRecordExporter(),
-    "otlp_file_development": _create_otlp_file_development_log_exporter,
-}
-
-
 def _create_log_record_exporter(
     config: LogRecordExporterConfig,
 ) -> LogRecordExporter:
@@ -170,17 +200,23 @@ def _create_log_record_exporter(
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_logs_exporter`` entry point group.
     """
-    for name, factory in _LOG_EXPORTER_REGISTRY.items():
-        value = getattr(config, name, None)
-        if value is not None:
-            return factory(value)
-    if config.additional_properties:
-        name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_logs_exporter", name)(**(plugin_config or {}))
-    raise ConfigurationError(
-        "No exporter type specified in log record exporter config. "
-        "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
-    )
+    match config:
+        case LogRecordExporterConfig(otlp_http=exporter_config) if exporter_config is not None:
+            return _create_otlp_http_log_exporter(exporter_config)
+        case LogRecordExporterConfig(otlp_grpc=exporter_config) if exporter_config is not None:
+            return _create_otlp_grpc_log_exporter(exporter_config)
+        case LogRecordExporterConfig(console=exporter_config) if exporter_config is not None:
+            return ConsoleLogRecordExporter()
+        case LogRecordExporterConfig(otlp_file_development=exporter_config) if exporter_config is not None:
+            return _create_otlp_file_development_log_exporter(exporter_config)
+        case LogRecordExporterConfig(additional_properties=additional_properties) if additional_properties:
+            name, plugin_config = next(iter(additional_properties.items()))
+            return load_entry_point("opentelemetry_logs_exporter", name)(**(plugin_config or {}))
+        case _:
+            raise ConfigurationError(
+                "No exporter type specified in log record exporter config. "
+                "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
+            )
 
 
 def _create_batch_log_record_processor(
@@ -272,9 +308,46 @@ def _create_logger_configurator(
     )
 
 
+def _create_log_record_limits(
+    config: LogRecordLimitsConfig,
+    global_limits: AttributeLimits | None = None,
+) -> LogRecordLimits:
+    """Create LogRecordLimits from config.
+
+    Absent fields fall back to global_limits (if provided), then to OTel spec
+    defaults (128 for counts, unlimited for lengths).
+    Explicit values suppress env-var reading — matching Java SDK behavior.
+    """
+    attribute_count_limit = config.attribute_count_limit
+    if attribute_count_limit is None and global_limits is not None:
+        attribute_count_limit = global_limits.attribute_count_limit
+
+    attribute_value_length_limit = config.attribute_value_length_limit
+    if attribute_value_length_limit is None and global_limits is not None:
+        attribute_value_length_limit = global_limits.attribute_value_length_limit
+
+    max_attributes = (
+        attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT
+    )
+    max_attribute_length = (
+        attribute_value_length_limit if attribute_value_length_limit is not None else LogRecordLimits.UNSET
+    )
+
+    # The log-record-specific fields are the ones the SDK enforces, so they are
+    # set explicitly too. Leaving them absent would let OTEL_LOGRECORD_ATTRIBUTE_*
+    # override the configured values.
+    return LogRecordLimits(
+        max_attributes=max_attributes,
+        max_attribute_length=max_attribute_length,
+        max_log_record_attributes=max_attributes,
+        max_log_record_attribute_length=max_attribute_length,
+    )
+
+
 def create_logger_provider(
     config: LoggerProviderConfig | None,
     resource: Resource | None = None,
+    global_attribute_limits: AttributeLimits | None = None,
 ) -> LoggerProvider:
     """Create an SDK LoggerProvider from declarative config.
 
@@ -284,6 +357,8 @@ def create_logger_provider(
     Args:
         config: LoggerProvider config from the parsed config file, or None.
         resource: Resource to attach to the provider.
+        global_attribute_limits: Top-level attribute_limits from the root config,
+            used as a fallback when per-signal limits are not specified.
 
     Returns:
         A configured LoggerProvider.
@@ -294,16 +369,22 @@ def create_logger_provider(
         else None
     )
 
-    provider = LoggerProvider(resource=resource, _logger_configurator=logger_configurator)
+    if config is not None and config.limits is not None:
+        limits = config.limits
+
+    else:
+        limits = LogRecordLimitsConfig()
+
+    log_record_limits = _create_log_record_limits(limits, global_attribute_limits)
+
+    provider = LoggerProvider(
+        resource=resource,
+        log_record_limits=log_record_limits,
+        _logger_configurator=logger_configurator,
+    )
 
     if config is None:
         return provider
-
-    if config.limits is not None:
-        _logger.warning(
-            "log_record_limits are specified in config but are not supported "
-            "by the Python SDK LoggerProvider constructor; limits will be ignored."
-        )
 
     for processor_config in config.processors:
         provider.add_log_record_processor(_create_log_record_processor(processor_config))
@@ -314,6 +395,7 @@ def create_logger_provider(
 def configure_logger_provider(
     config: LoggerProviderConfig | None,
     resource: Resource | None = None,
+    global_attribute_limits: AttributeLimits | None = None,
 ) -> None:
     """Configure the global LoggerProvider from declarative config.
 
@@ -323,7 +405,9 @@ def configure_logger_provider(
     Args:
         config: LoggerProvider config from the parsed config file, or None.
         resource: Resource to attach to the provider.
+        global_attribute_limits: Top-level attribute_limits from the root config,
+            used as a fallback when per-signal limits are not specified.
     """
     if config is None:
         return
-    set_logger_provider(create_logger_provider(config, resource))
+    set_logger_provider(create_logger_provider(config, resource, global_attribute_limits))

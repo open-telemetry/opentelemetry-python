@@ -1,4 +1,5 @@
 from collections import defaultdict
+from configparser import ConfigParser
 from pathlib import Path
 from re import compile as re_compile
 
@@ -39,6 +40,47 @@ def get_tox_envs(tox_ini_path: Path) -> list:
     return core_config_set.load("env_list")
 
 
+_all_python_versions_on_pr = frozenset(("opentelemetry-sdk",))
+
+
+def _get_pr_tox_envs(tox_envs: list) -> set:
+    """Return the test envs that run on pull requests.
+
+    For each test variant (the tox env without its Python factor) only PyPy,
+    the oldest and newest CPython versions and the newest free-threaded
+    CPython version run on pull requests. The remaining CPython versions only
+    run in the merge queue and on pushes to main.
+    """
+    variant_tox_envs = defaultdict(list)
+    variant_threaded_tox_envs = defaultdict(list)
+    pr_tox_envs = set()
+
+    for tox_env in tox_envs:
+        tox_test_env_match = _tox_test_env_regex.match(tox_env)
+        if tox_test_env_match is None:
+            continue
+
+        python_version = tox_test_env_match.group("python_version")
+        if python_version == "pypy3" or tox_test_env_match.group("name") in _all_python_versions_on_pr:
+            pr_tox_envs.add(tox_env)
+            continue
+
+        variant = tox_env.split("-", 1)[1]
+        if python_version.endswith("t"):
+            variant_threaded_tox_envs[variant].append((int(python_version[2:-1]), tox_env))
+        else:
+            variant_tox_envs[variant].append((int(python_version[2:]), tox_env))
+
+    for versioned_tox_envs in variant_tox_envs.values():
+        pr_tox_envs.add(min(versioned_tox_envs)[1])
+        pr_tox_envs.add(max(versioned_tox_envs)[1])
+
+    for versioned_tox_envs in variant_threaded_tox_envs.values():
+        pr_tox_envs.add(max(versioned_tox_envs)[1])
+
+    return pr_tox_envs
+
+
 def get_test_job_datas(tox_envs: list, operating_systems: list) -> list:
     os_alias = {"ubuntu-latest": "Ubuntu", "windows-latest": "Windows"}
 
@@ -51,6 +93,8 @@ def get_test_job_datas(tox_envs: list, operating_systems: list) -> list:
         "py314": "3.14",
         "py314t": "3.14t",
     }
+
+    pr_tox_envs = _get_pr_tox_envs(tox_envs)
 
     test_job_datas = []
 
@@ -83,6 +127,7 @@ def get_test_job_datas(tox_envs: list, operating_systems: list) -> list:
                     "python_version": aliased_python_version,
                     "tox_env": tox_env,
                     "os": operating_system,
+                    "run_on_pr": tox_env in pr_tox_envs,
                 }
             )
 
@@ -122,16 +167,30 @@ def get_misc_job_datas(tox_envs: list) -> list:
     return [tox_env for tox_env in tox_envs if not any(pattern.match(tox_env) for pattern in regex_patterns)]
 
 
+def get_contrib_job_datas(tox_ini_path: Path, job_datas: list) -> list:
+    """Return the jobs whose tox env installs packages from a contrib repo checkout."""
+    tox_ini = ConfigParser(interpolation=None, strict=False)
+    tox_ini.read(tox_ini_path)
+
+    return [
+        job_data
+        for job_data in job_datas
+        if "{env:CONTRIB_REPO_" in tox_ini.get(f"testenv:{job_data}", "deps", fallback="")
+    ]
+
+
 def _generate_workflow(
     job_datas: list,
     template_name: str,
     output_dir: Path,
+    **template_kwargs,
 ) -> None:
     env = Environment(loader=FileSystemLoader(Path(__file__).parent.joinpath("templates")))
     with open(output_dir.joinpath(f"{template_name}.yml"), "w") as yml_file:
         yml_file.write(
             env.get_template(f"{template_name}.yml.j2").render(
                 job_datas=job_datas,
+                **template_kwargs,
             )
         )
         yml_file.write("\n")
@@ -160,10 +219,12 @@ def generate_misc_workflow(
     tox_ini_path: Path,
     workflow_directory_path: Path,
 ) -> None:
+    misc_job_datas = get_misc_job_datas(get_tox_envs(tox_ini_path))
     _generate_workflow(
-        get_misc_job_datas(get_tox_envs(tox_ini_path)),
+        misc_job_datas,
         "misc",
         workflow_directory_path,
+        contrib_job_datas=get_contrib_job_datas(tox_ini_path, misc_job_datas),
     )
 
 
