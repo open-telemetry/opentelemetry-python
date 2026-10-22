@@ -614,6 +614,28 @@ class TestLoggerConfigurator(unittest.TestCase):
         self.assertFalse(self._enabled(provider, "noisy.http"))
         self.assertTrue(self._enabled(provider, "app.service"))
 
+    def test_scope_patterns_treat_brackets_literally(self):
+        for pattern in ("noisy.[bc]", "noisy.[bc]*"):
+            with self.subTest(pattern=pattern):
+                config = LoggerProviderConfig(
+                    processors=[],
+                    logger_configurator_development=LoggerConfiguratorConfig(
+                        default_config=LoggerConfigConfig(enabled=True),
+                        loggers=[
+                            LoggerMatcherAndConfig(
+                                name=pattern,
+                                config=LoggerConfigConfig(enabled=False),
+                            )
+                        ],
+                    ),
+                )
+                provider = create_logger_provider(config)
+                self.assertFalse(self._enabled(provider, "noisy.[bc]"))
+                self.assertTrue(self._enabled(provider, "noisy.b"))
+                self.assertTrue(self._enabled(provider, "noisy.btail"))
+                self.assertTrue(self._enabled(provider, "Noisy.[bc]"))
+                self.assertEqual(self._enabled(provider, "noisy.[bc]tail"), pattern == "noisy.[bc]")
+
     def test_default_config_applies_to_unmatched_scopes(self):
         config = LoggerProviderConfig(
             processors=[],
