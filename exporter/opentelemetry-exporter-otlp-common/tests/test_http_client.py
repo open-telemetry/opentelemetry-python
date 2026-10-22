@@ -4,6 +4,7 @@
 # pylint: disable=unexpected-keyword-arg
 
 import gzip
+import math
 import threading
 import unittest
 import zlib
@@ -334,6 +335,38 @@ class TestOTLPHTTPClient(unittest.TestCase):
         self.assertAlmostEqual(transport.requests[0]["timeout"], 10.0)
         self.assertAlmostEqual(transport.requests[1]["timeout"], 9.0)
         self.assertAlmostEqual(transport.requests[2]["timeout"], 7.0)
+
+    def test_export_infinite_timeout_passes_no_timeout_to_transport(self):
+        shutdown_event = Mock(spec=threading.Event)
+        shutdown_event.is_set.return_value = False
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(status_code=503, reason="Service Unavailable"),
+            _TestHTTPResult(status_code=503, reason="Service Unavailable"),
+            _TestHTTPResult(status_code=200, reason="OK"),
+        )
+        client = self._client(transport, timeout=math.inf, jitter=0.0)
+        # pylint: disable-next=protected-access
+        client._shutdown_event = shutdown_event
+
+        with _mock_clock(shutdown_event):
+            result = client.export(b"payload")
+
+        self.assertTrue(result.success)
+        self.assertEqual([request["timeout"] for request in transport.requests], [None, None, None])
+
+    def test_export_connection_error_with_infinite_timeout_passes_no_timeout(self):
+        stale_error = RuntimeError("stale connection")
+        transport = _TestHTTPTransport(
+            _TestHTTPResult(error=stale_error),
+            _TestHTTPResult(status_code=200, reason="OK"),
+            connection_errors={stale_error},
+        )
+        client = self._client(transport, timeout=math.inf)
+
+        result = client.export(b"payload")
+
+        self.assertTrue(result.success)
+        self.assertEqual([request["timeout"] for request in transport.requests], [None, None])
 
     def test_export_backoff_exhausts_remaining_timeout(self):
         shutdown_event = Mock(spec=threading.Event)

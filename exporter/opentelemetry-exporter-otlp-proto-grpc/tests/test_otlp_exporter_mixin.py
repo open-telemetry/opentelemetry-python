@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import math
 import threading
 import time
 import unittest
@@ -533,6 +534,14 @@ class TestOTLPExporterMixin(TestCase):
             )
             self.assertEqual(mock_trace_service.num_requests, 2)
             self.assertAlmostEqual(after - before, 1.4, delta=0.5)
+
+    def test_infinite_timeout_sets_no_deadline(self):
+        # pylint: disable=protected-access
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=math.inf)
+        exporter._client = Mock()
+
+        self.assertEqual(exporter.export([self.span]), SpanExportResult.SUCCESS)
+        self.assertIsNone(exporter._client.Export.call_args.kwargs["timeout"])
 
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_TIMEOUT: "invalid"})
     def test_invalid_timeout_from_env_uses_default(self):

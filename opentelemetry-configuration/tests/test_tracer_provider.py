@@ -5,6 +5,7 @@
 # pylint: disable=protected-access
 # pylint: disable=too-many-lines
 
+import math
 import os
 import sys
 import unittest
@@ -603,6 +604,23 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             timeout=None,
             compression=None,
         )
+
+    def test_otlp_http_zero_timeout_is_unlimited(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            },
+        ):
+            config = self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(timeout=0)))
+            create_tracer_provider(config)
+
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["timeout"], math.inf)
 
     def test_otlp_http_json_missing_package_raises(self):
         config = self._make_batch_config(
