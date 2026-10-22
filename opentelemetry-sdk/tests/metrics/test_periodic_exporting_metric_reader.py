@@ -245,6 +245,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             },
         )
         pmr = PeriodicExportingMetricReader(exporter)
+        self.addCleanup(pmr.shutdown)
         for key, value in pmr._instrument_class_temporality.items():
             if key is not _Counter:
                 self.assertEqual(value, AggregationTemporality.CUMULATIVE)
@@ -258,6 +259,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             },
         )
         pmr = PeriodicExportingMetricReader(exporter)
+        self.addCleanup(pmr.shutdown)
         for key, value in pmr._instrument_class_aggregation.items():
             if key is not _Counter:
                 self.assertTrue(isinstance(value, DefaultAggregation))
