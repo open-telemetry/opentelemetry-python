@@ -69,5 +69,9 @@ class {{ class_name }}:
     {%- endif %}
 {%- endfor -%}
 {%- if has_additional %}
+{%- if additionalPropertiesType is defined %}
     additional_properties: dict[str, dict[str, Any] | None] = field(default_factory=dict, init=False)
+{%- else %}
+    additional_properties: dict[str, Any] = field(default_factory=dict, init=False)
+{%- endif %}
 {%- endif -%}

@@ -14,6 +14,11 @@ The generated field is not accepted as a constructor argument. The
 the field during initialization, which keeps plugin/custom component names
 flowing through typed dataclasses without a post-processing step.
 
+Unrestricted schemas (`additionalProperties: true`), including the root
+`OpenTelemetryConfiguration`, use `dict[str, Any]` so scalar and array extras
+remain valid. Component schemas with object-or-null additional properties use
+`dict[str, dict[str, Any] | None]`.
+
 ## Usage
 
 Templates are applied automatically when regenerating models:

@@ -5,7 +5,7 @@ import inspect
 import unittest
 from dataclasses import dataclass, field, fields
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, get_type_hints
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.configuration._common import (
@@ -20,6 +20,7 @@ from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
     LogRecordExporter,
+    OpenTelemetryConfiguration,
     PushMetricExporter,
     Sampler,
     SpanExporter,
@@ -353,6 +354,20 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
             field for field in fields(model_cls) if field.name == "additional_properties"
         )
         self.assertFalse(additional_properties_field.init)
+        self.assertEqual(
+            get_type_hints(model_cls)["additional_properties"],
+            dict[str, dict[str, Any] | None],
+        )
+
+    def test_root_configuration_allows_unrestricted_extras(self):
+        # pylint: disable=unexpected-keyword-arg
+        extras = {"vendor_label": "prod", "vendor_flags": [True], "vendor_count": 3, "vendor_option": None}
+        obj = OpenTelemetryConfiguration(file_format="1.0", **extras)
+        self.assertEqual(obj.additional_properties, extras)
+        self.assertEqual(
+            get_type_hints(OpenTelemetryConfiguration)["additional_properties"],
+            dict[str, Any],
+        )
 
     def test_sampler(self):
         self._assert_supports_additional_properties(Sampler)
