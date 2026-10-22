@@ -10,6 +10,7 @@ from opentelemetry.sdk.metrics._internal.export import (
     InMemoryMetricReader,
     MetricExporter,
     MetricExportResult,
+    MetricProducer,
     MetricReader,
     PeriodicExportingMetricReader,
 )
@@ -47,6 +48,7 @@ __all__ = [
     "Metric",
     "MetricExportResult",
     "MetricExporter",
+    "MetricProducer",
     "MetricReader",
     "MetricsData",
     "NumberDataPoint",
