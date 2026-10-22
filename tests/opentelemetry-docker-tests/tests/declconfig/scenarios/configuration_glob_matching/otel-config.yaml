@@ -25,7 +25,7 @@ tracer_provider:
           - attribute_patterns:
               key: route
               included: ["keep[bc]*"]
-              excluded: ["keep[bc].drop", "keep[bc].?ecret"]
+              excluded: ["keep[bc].drop", "keep[bc].?ecret"]  # codespell:ignore ecret
             sampler:
               always_on:
 meter_provider:
