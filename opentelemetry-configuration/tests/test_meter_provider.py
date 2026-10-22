@@ -619,6 +619,32 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             name="my_custom_reader",
         )
 
+    def test_pull_plugin_cardinality_limits_warns(self):
+        mock_class = MagicMock()
+        mock_entry_points = MagicMock(return_value=[MagicMock(**{"load.return_value": mock_class})])
+        with patch(
+            "opentelemetry.configuration._common.entry_points",
+            mock_entry_points,
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            # pylint: disable=unexpected-keyword-arg
+                            exporter=PullMetricExporterConfig(my_custom_reader={"port": 8080}),
+                            cardinality_limits=CardinalityLimitsConfig(default=5),
+                        )
+                    )
+                ]
+            )
+            with self.assertLogs(
+                "opentelemetry.configuration._meter_provider",
+                level="WARNING",
+            ) as cm:
+                create_meter_provider(config)
+        self.assertTrue(any("cardinality_limits" in msg for msg in cm.output))
+        mock_class.assert_called_once_with(port=8080)
+
     def test_pull_plugin_not_found_raises(self):
         with patch(
             "opentelemetry.configuration._common.entry_points",

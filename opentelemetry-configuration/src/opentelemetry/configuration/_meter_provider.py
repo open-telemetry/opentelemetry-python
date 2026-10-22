@@ -537,6 +537,10 @@ def _create_pull_metric_exporter(
         return _create_prometheus_metric_reader(config.prometheus_development, cardinality_limits)
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
+        if cardinality_limits is not None:
+            _logger.warning(
+                "cardinality_limits is not yet supported for pull metric exporter plugins and will be ignored."
+            )
         return load_entry_point("opentelemetry_pull_metric_exporter", name)(**(plugin_config or {}))
     raise ConfigurationError(
         "No exporter type specified in pull metric exporter config. Supported types: prometheus_development."
