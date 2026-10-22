@@ -1,1 +1,1 @@
-[BREAKING] `opentelemetry-api`: Change `SeverityNumber` inheritance from `Enum` to `IntEnum`
+[BREAKING] `opentelemetry-api`: Change `SeverityNumber` inheritance from `Enum` to `IntEnum`. This change is breaking because `SeverityNumber.UNSPECIFIED` (value 0) is now falsy, and strict type checks expecting base `Enum` rather than `int` subclasses may be affected.

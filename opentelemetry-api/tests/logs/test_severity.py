@@ -86,3 +86,10 @@ class TestSeverityNumber(unittest.TestCase):
     def test_int_conversion_and_lookup(self):
         self.assertEqual(int(SeverityNumber.INFO), 9)
         self.assertIs(SeverityNumber(9), SeverityNumber.INFO)
+
+    def test_unspecified_falsy_behavior(self):
+        self.assertFalse(bool(SeverityNumber.UNSPECIFIED))
+        self.assertIs(bool(SeverityNumber.UNSPECIFIED), False)
+        self.assertFalse(SeverityNumber.UNSPECIFIED)
+        self.assertTrue(bool(SeverityNumber.TRACE))
+        self.assertTrue(bool(SeverityNumber.INFO))

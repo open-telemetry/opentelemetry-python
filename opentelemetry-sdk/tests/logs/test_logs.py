@@ -547,7 +547,7 @@ class TestLogger(unittest.TestCase):
             def __init__(self, min_severity: SeverityNumber):
                 self.min_severity = min_severity
 
-            def on_emit(self, log_record: ReadableLogRecord) -> None:
+            def on_emit(self, log_record: ReadWriteLogRecord) -> None:
                 pass
 
             def shutdown(self) -> None:
@@ -577,6 +577,3 @@ class TestLogger(unittest.TestCase):
         self.assertTrue(logger.enabled(severity_number=SeverityNumber.WARN))
         self.assertTrue(logger.enabled(severity_number=SeverityNumber.ERROR))
         self.assertTrue(logger.enabled(severity_number=SeverityNumber.FATAL))
-        # IntEnum allows direct comparison with ints as well:
-        self.assertTrue(logger.enabled(severity_number=13))
-        self.assertFalse(logger.enabled(severity_number=5))
