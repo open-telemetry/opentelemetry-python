@@ -549,6 +549,19 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIsInstance(procs[0], BatchSpanProcessor)
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
 
+    def test_batch_processor_zero_schedule_delay(self):
+        config = TracerProviderConfig(
+            processors=[
+                SpanProcessorConfig(
+                    batch=BatchSpanProcessorConfig(exporter=SpanExporterConfig(console={}), schedule_delay=0)
+                )
+            ]
+        )
+        provider = create_tracer_provider(config)
+        procs = provider._active_span_processor._span_processors
+        self.assertEqual(procs[0]._batch_processor._schedule_delay_millis, 0)
+        provider.shutdown()
+
     def test_console_exporter_simple(self):
         config = self._make_simple_config(SpanExporterConfig(console={}))
         provider = create_tracer_provider(config)
