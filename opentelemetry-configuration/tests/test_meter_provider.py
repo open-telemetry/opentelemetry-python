@@ -6,6 +6,7 @@
 
 import os
 import sys
+import tempfile
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -51,6 +52,12 @@ from opentelemetry.configuration.models import (
     OtlpHttpEncoding,
     ViewSelector,
     ViewStream,
+)
+from opentelemetry.configuration.models import (
+    GrpcTls as GrpcTlsConfig,
+)
+from opentelemetry.configuration.models import (
+    HttpTls as HttpTlsConfig,
 )
 from opentelemetry.configuration.models import (
     MeterProvider as MeterProviderConfig,
@@ -369,6 +376,76 @@ class TestCreateMetricReaders(unittest.TestCase):
         ):
             create_meter_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
+
+    def test_otlp_http_tls_files_passed(self):
+        for encoding in (None, OtlpHttpEncoding.protobuf, OtlpHttpEncoding.json):
+            with self.subTest(encoding=encoding):
+                protocol = "json" if encoding == OtlpHttpEncoding.json else "proto"
+                mock_exporter_cls = MagicMock()
+                mock_module = MagicMock()
+                mock_module.OTLPMetricExporter = mock_exporter_cls
+
+                with patch.dict(
+                    sys.modules,
+                    {
+                        f"opentelemetry.exporter.otlp.{protocol}.http.metric_exporter": mock_module,
+                        "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                        "opentelemetry.exporter.otlp.common.http": MagicMock(),
+                    },
+                ):
+                    config = self._make_periodic_config(
+                        PushMetricExporterConfig(
+                            otlp_http=OtlpHttpMetricExporterConfig(
+                                encoding=encoding,
+                                tls=HttpTlsConfig(
+                                    ca_file="/certs/ca.pem",
+                                    key_file="/certs/client.key",
+                                    cert_file="/certs/client.pem",
+                                ),
+                            )
+                        )
+                    )
+                    create_meter_provider(config)
+
+                _, kwargs = mock_exporter_cls.call_args
+                self.assertEqual(kwargs["certificate_file"], "/certs/ca.pem")
+                self.assertEqual(kwargs["client_key_file"], "/certs/client.key")
+                self.assertEqual(kwargs["client_certificate_file"], "/certs/client.pem")
+
+    def test_otlp_grpc_tls_files_build_credentials(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "grpc": mock_grpc,
+                    "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": mock_module,
+                },
+            ),
+        ):
+            ca_file = os.path.join(tmp_dir, "ca.pem")
+            with open(ca_file, "wb") as file:
+                file.write(b"ca-bytes")
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_grpc=OtlpGrpcMetricExporterConfig(tls=GrpcTlsConfig(ca_file=ca_file, insecure=False))
+                )
+            )
+            create_meter_provider(config)
+
+        mock_grpc.ssl_channel_credentials.assert_called_once_with(
+            root_certificates=b"ca-bytes",
+            private_key=None,
+            certificate_chain=None,
+        )
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertIs(kwargs["credentials"], mock_grpc.ssl_channel_credentials.return_value)
+        self.assertFalse(kwargs["insecure"])
 
     def test_otlp_file_development_missing_package_raises(self):
         config = self._make_periodic_config(

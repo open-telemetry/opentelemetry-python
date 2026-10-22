@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import inspect
+import os
+import sys
+import tempfile
 import unittest
 from dataclasses import dataclass
 from types import SimpleNamespace
@@ -10,15 +13,19 @@ from unittest.mock import MagicMock, patch
 
 from opentelemetry.configuration._common import (
     _additional_properties,
+    _grpc_credentials_from_tls,
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _read_tls_file,
     _resolve_component,
+    _validate_mtls_pair,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
+    GrpcTls,
     LogRecordExporter,
     PushMetricExporter,
     Sampler,
@@ -446,3 +453,74 @@ class TestResolveComponent(unittest.TestCase):
         result = _resolve_component(config, self.registry, "test_group", "test component")
         # builtin_a comes first in the registry dict
         self.assertEqual(result, ("resolved_a", {"a": 1}))
+
+
+class TestValidateMtlsPair(unittest.TestCase):
+    def test_valid_combinations(self):
+        for key_file, cert_file in ((None, None), ("/k.pem", "/c.pem")):
+            with self.subTest(key_file=key_file, cert_file=cert_file):
+                _validate_mtls_pair(key_file, cert_file, "otlp_http")
+
+    def test_partial_pair_raises(self):
+        for key_file, cert_file in (("/k.pem", None), (None, "/c.pem")):
+            with self.subTest(key_file=key_file, cert_file=cert_file):
+                with self.assertRaises(ConfigurationError) as ctx:
+                    _validate_mtls_pair(key_file, cert_file, "otlp_http")
+                self.assertIn("otlp_http", str(ctx.exception))
+
+
+class TestReadTlsFile(unittest.TestCase):
+    def test_reads_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, "ca.pem")
+            with open(path, "wb") as file:
+                file.write(b"pem-bytes")
+            self.assertEqual(_read_tls_file(path, "ca_file"), b"pem-bytes")
+
+    def test_missing_file_raises(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = os.path.join(tmp_dir, "missing.pem")
+            with self.assertRaises(ConfigurationError) as ctx:
+                _read_tls_file(path, "ca_file")
+        self.assertIn("tls.ca_file", str(ctx.exception))
+        self.assertIn(path, str(ctx.exception))
+
+
+class TestGrpcCredentialsFromTls(unittest.TestCase):
+    def test_returns_none_without_files(self):
+        mock_grpc = MagicMock()
+        for tls in (None, GrpcTls(), GrpcTls(insecure=True)):
+            with self.subTest(tls=tls), patch.dict(sys.modules, {"grpc": mock_grpc}):
+                self.assertIsNone(_grpc_credentials_from_tls(tls))
+        mock_grpc.ssl_channel_credentials.assert_not_called()
+
+    def test_builds_credentials_from_files(self):
+        mock_grpc = MagicMock()
+        with tempfile.TemporaryDirectory() as tmp_dir, patch.dict(sys.modules, {"grpc": mock_grpc}):
+            paths = {}
+            for name in ("ca", "key", "cert"):
+                paths[name] = os.path.join(tmp_dir, f"{name}.pem")
+                with open(paths[name], "wb") as file:
+                    file.write(f"{name}-bytes".encode())
+            result = _grpc_credentials_from_tls(
+                GrpcTls(ca_file=paths["ca"], key_file=paths["key"], cert_file=paths["cert"])
+            )
+
+        mock_grpc.ssl_channel_credentials.assert_called_once_with(
+            root_certificates=b"ca-bytes",
+            private_key=b"key-bytes",
+            certificate_chain=b"cert-bytes",
+        )
+        self.assertIs(result, mock_grpc.ssl_channel_credentials.return_value)
+
+    def test_partial_mtls_pair_raises(self):
+        with patch.dict(sys.modules, {"grpc": MagicMock()}), self.assertRaises(ConfigurationError):
+            _grpc_credentials_from_tls(GrpcTls(cert_file="/certs/client.pem"))
+
+    def test_missing_file_raises(self):
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(sys.modules, {"grpc": MagicMock()}),
+            self.assertRaises(ConfigurationError),
+        ):
+            _grpc_credentials_from_tls(GrpcTls(ca_file=os.path.join(tmp_dir, "missing.pem")))
