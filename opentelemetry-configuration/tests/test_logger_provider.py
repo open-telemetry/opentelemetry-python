@@ -148,6 +148,11 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=2000))
         self.assertEqual(processor._batch_processor._schedule_delay_millis, 2000.0)
 
+    def test_batch_processor_zero_schedule_delay(self):
+        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=0))
+        self.assertEqual(processor._batch_processor._schedule_delay_millis, 0)
+        processor.shutdown()
+
     def test_batch_processor_explicit_export_timeout(self):
         processor = _create_batch_log_record_processor(self._make_batch_config(export_timeout=5000))
         self.assertEqual(processor._batch_processor._export_timeout_millis, 5000.0)
