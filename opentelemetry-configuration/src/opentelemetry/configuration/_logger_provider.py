@@ -10,6 +10,7 @@ from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _resolve_export_timeout,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -89,7 +90,7 @@ def _create_otlp_http_log_exporter(
 ) -> LogRecordExporter:
     """Create an OTLP HTTP log exporter from config."""
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
 
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
@@ -161,7 +162,7 @@ def _create_otlp_grpc_log_exporter(
 
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
 
     return OTLPLogExporter(  # type: ignore[return-value]
         endpoint=config.endpoint,

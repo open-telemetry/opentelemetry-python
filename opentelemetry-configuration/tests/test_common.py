@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import inspect
+import math
 import unittest
 from dataclasses import dataclass
 from types import SimpleNamespace
@@ -14,6 +15,7 @@ from opentelemetry.configuration._common import (
     _parse_headers,
     _parse_otlp_file_output_stream,
     _resolve_component,
+    _resolve_export_timeout,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import ConfigurationError
@@ -88,6 +90,13 @@ class TestParseHeaders(unittest.TestCase):
 
     def test_both_empty_struct_and_none_list_returns_empty_dict(self):
         self.assertEqual(_parse_headers([], None), {})
+
+
+class TestResolveExportTimeout(unittest.TestCase):
+    def test_conversion(self):
+        for timeout, expected in ((None, None), (0, math.inf), (5000, 5.0), (1, 0.001)):
+            with self.subTest(timeout=timeout):
+                self.assertEqual(_resolve_export_timeout(timeout), expected)
 
 
 class TestLoadEntryPoint(unittest.TestCase):

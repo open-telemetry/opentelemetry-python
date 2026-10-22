@@ -4,6 +4,7 @@
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access
 
+import math
 import os
 import sys
 import unittest
@@ -479,6 +480,32 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         call_kwargs = mock_exporter_cls.call_args.kwargs
         self.assertEqual(call_kwargs["endpoint"], "http://collector:4317")
         self.assertAlmostEqual(call_kwargs["timeout"], 10.0)
+
+    def test_otlp_zero_timeout_is_unlimited(self):
+        mock_exporter_cls = MagicMock()
+        mock_exporter_module = MagicMock()
+        mock_exporter_module.OTLPLogExporter = mock_exporter_cls
+        cases = (
+            (
+                LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(timeout=0)),
+                {
+                    "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                    "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_exporter_module,
+                },
+            ),
+            (
+                LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(timeout=0)),
+                {
+                    "grpc": MagicMock(),
+                    "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_exporter_module,
+                },
+            ),
+        )
+        for config, modules in cases:
+            with self.subTest(config=config), patch.dict(sys.modules, modules):
+                mock_exporter_cls.reset_mock()
+                _create_log_record_exporter(config)
+                self.assertEqual(mock_exporter_cls.call_args.kwargs["timeout"], math.inf)
 
 
 class TestLogRecordLimits(unittest.TestCase):
