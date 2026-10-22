@@ -1,1 +1,0 @@
-`opentelemetry-configuration`: support `cardinality_limits` on periodic and pull metric readers and `aggregation_cardinality_limit` on view streams
