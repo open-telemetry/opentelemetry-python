@@ -1296,13 +1296,19 @@ class Tracer(trace_api.Tracer):
             start_time=start_time,
             **kwargs,
         )
-        with trace_api.use_span(
-            span,
-            end_on_exit=end_on_exit,
-            record_exception=_bool_kwarg(kwargs, "record_exception", True),
-            set_status_on_exception=_bool_kwarg(kwargs, "set_status_on_exception", True),
-        ) as span:
-            yield span
+        # unlike start_as_current_span, the explicit context becomes current too
+        token = context_api.attach(context) if context is not None else None
+        try:
+            with trace_api.use_span(
+                span,
+                end_on_exit=end_on_exit,
+                record_exception=_bool_kwarg(kwargs, "record_exception", True),
+                set_status_on_exception=_bool_kwarg(kwargs, "set_status_on_exception", True),
+            ) as span:
+                yield span
+        finally:
+            if token is not None:
+                context_api.detach(token)
 
     def _new_span(  # pylint: disable=too-many-locals
         self,

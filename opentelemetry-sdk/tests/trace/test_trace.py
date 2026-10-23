@@ -21,6 +21,7 @@ from time import time_ns
 from unittest import mock
 from unittest.mock import Mock, patch
 
+from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import Context
@@ -853,6 +854,20 @@ class TestSpanType(unittest.TestCase):
 
         self.assertEqual(sync_func(), "a.sync")
         self.assertEqual(asyncio.run(async_func()), "a.async")
+
+    def test_start_as_current_typed_span_explicit_context_becomes_current(self):
+        tracer = new_tracer()
+        key = context_api.create_key("test-key")
+        with tracer.start_as_current_span("parent") as parent:
+            ctx = context_api.set_value(key, "value")
+
+        with tracer._start_as_current_typed_span("child", span_type="x", context=ctx) as span:
+            self.assertEqual(context_api.get_value(key), "value")
+            self.assertIs(trace_api.get_current_span(), span)
+            self.assertEqual(span.parent.span_id, parent.get_span_context().span_id)
+
+        self.assertIsNone(context_api.get_value(key))
+        self.assertIs(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
     def test_start_as_current_typed_span_end_on_exit(self):
         tracer = new_tracer()
