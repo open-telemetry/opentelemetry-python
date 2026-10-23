@@ -359,6 +359,38 @@ class TestServiceResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes[SERVICE_NAME], "unknown_service:python3")
 
 
+class TestDetectedAttributeFilters(unittest.TestCase):
+    def test_include_exclude_patterns(self):
+        attrs = {"attr[bc]": 1, "attrb": 2, "attr[bc].child": 3, "Attr[bc]": 4}
+        cases = [
+            (None, None, set(attrs)),
+            ([], [], set(attrs)),
+            (["attr[bc]"], None, {"attr[bc]"}),
+            (["attr[bc]*"], None, {"attr[bc]", "attr[bc].child"}),
+            (None, ["attr[bc]"], {"attrb", "attr[bc].child", "Attr[bc]"}),
+            (None, ["attr[bc]*"], {"attrb", "Attr[bc]"}),
+            (["attr*"], ["attr[bc]"], {"attrb", "attr[bc].child"}),
+            (["attr[bc]"], ["attr[bc]"], set()),
+            (["attr[bc]*"], ["attr[bc]*"], set()),
+            (["Attr*"], None, {"Attr[bc]"}),
+        ]
+        with patch(
+            "opentelemetry.configuration._resource._HostResourceDetector.detect",
+            return_value=Resource(attrs),
+        ):
+            for included, excluded, expected_keys in cases:
+                with self.subTest(included=included, excluded=excluded):
+                    config = ResourceConfig(
+                        detection_development=ExperimentalResourceDetection(
+                            detectors=[ExperimentalResourceDetector(host={})],
+                            attributes=IncludeExclude(included=included, excluded=excluded),
+                        )
+                    )
+                    resource = create_resource(config)
+                    detected = {key: value for key, value in resource.attributes.items() if key in attrs}
+                    self.assertEqual(detected, {key: attrs[key] for key in expected_keys})
+
+
 class TestHostResourceDetector(unittest.TestCase):
     @staticmethod
     def _config_with_host() -> ResourceConfig:

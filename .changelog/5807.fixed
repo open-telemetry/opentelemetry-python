@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: allow zero schedule delay in batch span and log record processors
