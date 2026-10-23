@@ -1267,7 +1267,7 @@ class Tracer(trace_api.Tracer):
             attributes,
             links,
             start_time,
-            _bool_kwarg(kwargs, "record_exception", True),
+            _bool_kwarg(kwargs, "record_exception", False),
             _bool_kwarg(kwargs, "set_status_on_exception", True),
             span_type,
         )
@@ -1302,7 +1302,7 @@ class Tracer(trace_api.Tracer):
             with trace_api.use_span(
                 span,
                 end_on_exit=end_on_exit,
-                record_exception=_bool_kwarg(kwargs, "record_exception", True),
+                record_exception=_bool_kwarg(kwargs, "record_exception", False),
                 set_status_on_exception=_bool_kwarg(kwargs, "set_status_on_exception", True),
             ) as span:
                 yield span
