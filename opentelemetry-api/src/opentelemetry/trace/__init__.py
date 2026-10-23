@@ -459,9 +459,15 @@ class Tracer(ABC):
     ) -> Iterator["Span"]:
         """Experimental: same as :meth:`start_as_current_span`, with a span type.
 
-        See :meth:`_start_typed_span` for ``span_type`` and ``kwargs``. The
-        default implementation calls :meth:`start_as_current_span` and drops
-        ``span_type``.
+        See :meth:`_start_typed_span` for ``span_type`` and ``kwargs``.
+
+        Unlike :meth:`start_as_current_span`, an explicit ``context`` becomes
+        the current context for the duration of the block, with the new span
+        set in it, so values like baggage are visible inside the block.
+
+        The default implementation calls :meth:`start_as_current_span` and
+        drops ``span_type``; the ``context`` handling then follows that
+        implementation.
         """
         args = _non_default_start_args(context, kind, attributes, links, start_time, kwargs)
         if not end_on_exit:
