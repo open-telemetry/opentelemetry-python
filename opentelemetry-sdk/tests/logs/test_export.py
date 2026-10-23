@@ -614,12 +614,6 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             ValueError,
             BatchLogRecordProcessor,
             exporter,
-            schedule_delay_millis=0,
-        )
-        self.assertRaises(
-            ValueError,
-            BatchLogRecordProcessor,
-            exporter,
             schedule_delay_millis=-1,
         )
         self.assertRaises(
@@ -641,6 +635,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_queue_size=100,
             max_export_batch_size=101,
         )
+        BatchLogRecordProcessor(exporter, schedule_delay_millis=0).shutdown()
 
     @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics_already_shutdown(self):

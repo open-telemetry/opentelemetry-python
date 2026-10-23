@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import dataclasses
-import fnmatch
 import logging
 import os
 import sys
@@ -12,7 +11,7 @@ from collections.abc import Callable
 from typing import Any
 from urllib import parse
 
-from opentelemetry.configuration._common import load_entry_point
+from opentelemetry.configuration._common import _matches_glob, load_entry_point
 from opentelemetry.configuration.models import (
     AttributeNameValue,
     AttributeType,
@@ -195,7 +194,7 @@ def _run_detectors(
 def _filter_attributes(attrs: dict[str, object], filter_config: IncludeExclude | None) -> dict[str, object]:
     """Filter detected attribute keys using include/exclude glob patterns.
 
-    Mirrors other SDK IncludeExcludePredicate.createPatternMatching behaviour:
+    Mirrors other SDK IncludeExcludePredicate.createPatternMatching behavior:
     - No filter config (attributes absent) → include all detected attributes.
     - included patterns are checked first; excluded patterns are applied after.
     - An empty included list is treated as "include everything".
@@ -211,9 +210,9 @@ def _filter_attributes(attrs: dict[str, object], filter_config: IncludeExclude |
 
     result: dict[str, object] = {}
     for key, value in attrs.items():
-        if included and not any(fnmatch.fnmatch(key, pat) for pat in included):
+        if included and not any(_matches_glob(key, pat) for pat in included):
             continue
-        if excluded and any(fnmatch.fnmatch(key, pat) for pat in excluded):
+        if excluded and any(_matches_glob(key, pat) for pat in excluded):
             continue
         result[key] = value
     return result

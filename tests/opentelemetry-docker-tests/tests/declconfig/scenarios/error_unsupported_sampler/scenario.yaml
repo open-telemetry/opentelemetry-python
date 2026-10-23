@@ -1,0 +1,13 @@
+description: >
+  The `jaeger_remote/development` sampler is unsupported and fails configuration.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+  - output:
+      stream: stderr
+      pattern: "Unsupported sampler type"
+  - spans:
+      count: 0

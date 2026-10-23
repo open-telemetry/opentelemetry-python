@@ -1,0 +1,22 @@
+description: >
+  Span `limits` cap attribute count and length, link count and link attribute count, overriding
+  the global `attribute_limits`.
+until:
+  - spans:
+      name: limited-span
+expect:
+  - spans:
+      name: limited-span
+      attributes:
+        values:
+          a: abcd
+          b: 1
+        strict: true
+      link_count: 1
+      links:
+        - span: {name: target}
+          attributes:
+            values:
+              y: 2
+            strict: true
+      count: 1

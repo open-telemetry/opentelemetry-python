@@ -1,0 +1,13 @@
+description: >
+  `exemplar_filter: always_on` records exemplars for every measurement.
+until:
+  - metric:
+      name: inside.requests
+      min: 1
+  - metric:
+      name: outside.requests
+      min: 1
+expect:
+  - metric:
+      name: outside.requests
+      data_point: {exemplar_count: {gte: 1}}

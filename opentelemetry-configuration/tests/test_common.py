@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 from opentelemetry.configuration._common import (
     _additional_properties,
     _map_compression,
+    _matches_glob,
     _parse_headers,
     _parse_otlp_file_output_stream,
     _resolve_component,
@@ -156,6 +157,11 @@ class _CompressionWithoutDeflate:
     Gzip = "gzip"
 
 
+class _UppercaseCompressionWithDeflate:
+    GZIP = "gzip"
+    DEFLATE = "deflate"
+
+
 class TestMapCompression(unittest.TestCase):
     def test_none_returns_none(self):
         self.assertIsNone(_map_compression(None, _CompressionWithDeflate))
@@ -166,9 +172,18 @@ class TestMapCompression(unittest.TestCase):
     def test_gzip_maps_to_gzip(self):
         self.assertEqual(_map_compression("gzip", _CompressionWithDeflate), "gzip")
 
+    def test_uppercase_gzip_maps_to_gzip(self):
+        self.assertEqual(_map_compression("gzip", _UppercaseCompressionWithDeflate), "gzip")
+
     def test_deflate_maps_when_enabled(self):
         self.assertEqual(
             _map_compression("deflate", _CompressionWithDeflate, allow_deflate=True),
+            "deflate",
+        )
+
+    def test_uppercase_deflate_maps_when_enabled(self):
+        self.assertEqual(
+            _map_compression("deflate", _UppercaseCompressionWithDeflate, allow_deflate=True),
             "deflate",
         )
 
@@ -432,3 +447,52 @@ class TestResolveComponent(unittest.TestCase):
         result = _resolve_component(config, self.registry, "test_group", "test component")
         # builtin_a comes first in the registry dict
         self.assertEqual(result, ("resolved_a", {"a": 1}))
+
+
+class TestMatchesGlob(unittest.TestCase):
+    def test_exact_and_wildcard_matches(self):
+        cases = [
+            ("a[bc]", "a[bc]", True),
+            ("ab", "a[bc]", False),
+            ("ac", "a[bc]", False),
+            ("a[bc]def", "a[bc]*", True),
+            ("abdef", "a[bc]*", False),
+            ("a[bc]d", "a[bc]?", True),
+            ("a[bcd]", "a[bc?]", True),
+            ("a[bc]", "a[bc?]", False),
+            ("[a-z]", "[a-z]", True),
+            ("b", "[a-z]", False),
+            ("[!a]", "[!a]", True),
+            ("b", "[!a]", False),
+            ("a[[b]]c", "a[[b]]*", True),
+            ("a[", "a[", True),
+            ("a[tail", "a[*", True),
+            ("a]tail", "a]*", True),
+            ("a\\tail", "a\\*", True),
+            ("a*", "a\\*", False),
+            ("a.c+($)^|{}", "a.c+($)^|{}", True),
+            ("prefix.value", "value", False),
+            ("value.suffix", "value", False),
+            ("value", "value", True),
+            ("VALUE", "value", False),
+            ("value", "V*", False),
+            ("VALUE", "v*", False),
+            ("value", "v*", True),
+            ("ab", "a*b", True),
+            ("a\nb", "a*b", True),
+            ("a\nb", "a?b", True),
+            ("ab", "a?b", False),
+            ("ab", "a?", True),
+            ("abc", "a?", False),
+            ("aéb", "a?b", True),
+            ("a😀b", "a?b", True),
+            ("abc", "**a**?**c**", True),
+            ("", "", True),
+            ("", "*", True),
+            ("", "**", True),
+            ("", "?", False),
+            ("a", "", False),
+        ]
+        for value, pattern, expected in cases:
+            with self.subTest(value=value, pattern=pattern):
+                self.assertEqual(_matches_glob(value, pattern), expected)
