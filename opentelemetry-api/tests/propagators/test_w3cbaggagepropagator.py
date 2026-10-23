@@ -46,6 +46,26 @@ class TestW3CBaggagePropagator(TestCase):
         expected = {"key1": "val1", "key2": "val2"}
         self.assertEqual(self._extract(header), expected)
 
+    def test_multiple_baggage_headers(self):
+        carrier = {"baggage": ["key1=val1", "key2=val2"]}
+        expected = {"key1": "val1", "key2": "val2"}
+        self.assertEqual(get_all(self.propagator.extract(carrier)), expected)
+
+    def test_multiple_baggage_headers_with_comma_separated_entries(self):
+        carrier = {"baggage": ["key1=val1,key2=val2", "key3=val3", "key4=val4"]}
+        expected = {"key1": "val1", "key2": "val2", "key3": "val3", "key4": "val4"}
+        self.assertEqual(get_all(self.propagator.extract(carrier)), expected)
+
+    def test_multiple_baggage_headers_with_empty_and_whitespace_entries(self):
+        carrier = {"baggage": ["key1=val1", "", "  ", "key2=val2"]}
+        expected = {"key1": "val1", "key2": "val2"}
+        self.assertEqual(get_all(self.propagator.extract(carrier)), expected)
+
+    def test_multiple_baggage_headers_duplicate_keys_last_wins(self):
+        carrier = {"baggage": ["key1=val1", "key1=val2"]}
+        expected = {"key1": "val2"}
+        self.assertEqual(get_all(self.propagator.extract(carrier)), expected)
+
     def test_valid_header_with_whitespace(self):
         for header, expected in (
             (

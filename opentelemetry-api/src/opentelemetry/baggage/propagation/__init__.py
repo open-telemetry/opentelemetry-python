@@ -85,7 +85,14 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         if context is None:
             context = get_current()
 
-        header = _extract_first_element(getter.get(carrier, self._BAGGAGE_HEADER_NAME))
+        headers = getter.get(carrier, self._BAGGAGE_HEADER_NAME)
+        if not headers:
+            return context
+
+        if isinstance(headers, str):
+            header = headers
+        else:
+            header = ",".join(h for h in headers if h)
 
         if not header:
             return context
