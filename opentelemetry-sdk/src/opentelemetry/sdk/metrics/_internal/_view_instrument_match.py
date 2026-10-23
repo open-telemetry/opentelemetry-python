@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Mapping, Sequence
+from fnmatch import fnmatchcase
 from logging import getLogger
 from threading import Lock
 from time import time_ns
@@ -130,7 +131,19 @@ class _ViewInstrumentMatch:
             # leading to unexpected behavior, but deep copying is expensive.
             attributes = dict(measurement.attributes)
         if self._view._attribute_keys is not None:
-            attributes = {k: v for k, v in attributes.items() if k in self._view._attribute_keys}
+            attributes = {
+                key: value
+                for key, value in attributes.items()
+                if any(fnmatchcase(key, pattern) for pattern in self._view._attribute_keys)
+            }
+        elif self._view._exclude_attribute_keys:
+            attributes = {
+                key: value
+                for key, value in attributes.items()
+                if not any(fnmatchcase(key, pattern) for pattern in self._view._exclude_attribute_keys)
+            }
+        else:
+            attributes = {}
 
         aggr_key = _hash_attributes(attributes)
 
