@@ -1,0 +1,1 @@
+`opentelemetry-api`, `opentelemetry-sdk`: Add experimental `Tracer._start_typed_span` and `Tracer._start_as_current_typed_span` to create spans with a span type; the SDK validates it and exposes it on `ReadableSpan._span_type`
