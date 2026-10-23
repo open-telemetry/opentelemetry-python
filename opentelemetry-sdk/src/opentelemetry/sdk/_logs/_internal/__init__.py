@@ -244,9 +244,7 @@ class ReadableLogRecord:
         return json.dumps(
             {
                 "body": self.log_record.body,
-                "severity_number": self.log_record.severity_number.value
-                if self.log_record.severity_number is not None
-                else None,
+                "severity_number": self.log_record.severity_number,
                 "severity_text": self.log_record.severity_text,
                 "attributes": (dict(self.log_record.attributes) if bool(self.log_record.attributes) else None),
                 "dropped_attributes": self.dropped_attributes,
