@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: match Views by instrument `unit` exactly instead of using an fnmatch pattern, so UCUM annotated units such as `[degF]` are selected correctly.
