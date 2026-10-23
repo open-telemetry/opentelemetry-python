@@ -85,10 +85,11 @@ _SPAN_TYPE_MAX_LENGTH = 255
 _SPAN_TYPE_CHARS = frozenset(ascii_letters + digits + "_./-")
 
 
-def _is_valid_span_type(span_type: str) -> bool:
+def _is_valid_span_type(span_type: object) -> bool:
     """Checks the span type for compliance with the span type syntax."""
     return (
-        0 < len(span_type) <= _SPAN_TYPE_MAX_LENGTH
+        isinstance(span_type, str)
+        and 0 < len(span_type) <= _SPAN_TYPE_MAX_LENGTH
         and span_type[0] in ascii_letters
         and all(char in _SPAN_TYPE_CHARS for char in span_type)
     )

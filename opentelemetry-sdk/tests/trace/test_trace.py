@@ -903,7 +903,18 @@ class TestSpanType(unittest.TestCase):
 
     def test_span_type_invalid_syntax(self):
         tracer = new_tracer()
-        for span_type in ("", "1abc", "_abc", "a b", "a!", "h\u00e9llo", "a" * 256):
+        for span_type in (
+            "",
+            "1abc",
+            "_abc",
+            "a b",
+            "a!",
+            "h\u00e9llo",
+            "a" * 256,
+            123,
+            b"http.client.request",
+            ["a", "b"],
+        ):
             with self.subTest(span_type=span_type):
                 with self.assertLogs(level=ERROR):
                     span = tracer._start_typed_span("s", span_type=span_type)
