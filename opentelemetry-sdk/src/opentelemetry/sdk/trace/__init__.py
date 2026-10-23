@@ -1313,13 +1313,19 @@ class Tracer(trace_api.Tracer):
             set_status_on_exception,
             type_,
         )
-        with trace_api.use_span(
-            span,
-            end_on_exit=end_on_exit,
-            record_exception=record_exception,
-            set_status_on_exception=set_status_on_exception,
-        ) as span:
-            yield span
+        # unlike start_as_current_span, the explicit context becomes current too
+        token = context_api.attach(context) if context is not None else None
+        try:
+            with trace_api.use_span(
+                span,
+                end_on_exit=end_on_exit,
+                record_exception=record_exception,
+                set_status_on_exception=set_status_on_exception,
+            ) as span:
+                yield span
+        finally:
+            if token is not None:
+                context_api.detach(token)
 
     def _new_span(  # pylint: disable=too-many-locals
         self,
