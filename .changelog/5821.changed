@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: The experimental `Tracer._start_typed_span` and `Tracer._start_as_current_typed_span` no longer record exception span events by default; pass `record_exception=True` to opt in

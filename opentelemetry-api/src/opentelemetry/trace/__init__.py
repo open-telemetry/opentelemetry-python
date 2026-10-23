@@ -426,15 +426,15 @@ class Tracer(ABC):
                 starts with a letter, followed by letters, digits, ``_``,
                 ``.``, ``-`` or ``/``. Not validated by the API.
             kwargs: Reserved for future span creation inputs. Implementations
-                ignore the ones they don't know. ``record_exception`` and
-                ``set_status_on_exception`` are recognized here, with the same
-                defaults as in :meth:`start_span`.
+                ignore the ones they don't know. ``record_exception``
+                (default ``False``) and ``set_status_on_exception`` (default
+                ``True``) are recognized here.
 
         The default implementation calls :meth:`start_span` and drops
         ``span_type``, so existing ``Tracer`` implementations keep working.
         It passes ``record_exception`` and ``set_status_on_exception`` only if
         the caller set them, so when they're not set the implementation's own
-        :meth:`start_span` defaults apply.
+        :meth:`start_span` defaults apply (``True`` for both in the API).
         Implementations that support span type override this method.
         """
         return self.start_span(

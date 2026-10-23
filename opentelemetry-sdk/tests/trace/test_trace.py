@@ -885,25 +885,25 @@ class TestSpanType(unittest.TestCase):
             with tracer._start_as_current_typed_span("s", span_type="a") as span:
                 raise DummyError()
         self.assertIs(span.status.status_code, StatusCode.ERROR)
-        self.assertEqual(span.events[0].name, "exception")
+        self.assertEqual(len(span.events), 0)
 
     def test_typed_span_exception_flags_ignore_non_bool(self):
         tracer = new_tracer()
         with self.assertRaises(DummyError):
-            with tracer._start_as_current_typed_span("s", record_exception="no", set_status_on_exception=0) as span:
+            with tracer._start_as_current_typed_span("s", record_exception="yes", set_status_on_exception=0) as span:
                 raise DummyError()
         self.assertIs(span.status.status_code, StatusCode.ERROR)
-        self.assertEqual(span.events[0].name, "exception")
+        self.assertEqual(len(span.events), 0)
 
     def test_typed_span_exception_handling_from_kwargs(self):
         tracer = new_tracer()
         with self.assertRaises(DummyError):
             with tracer._start_as_current_typed_span(
-                "s", span_type="a", record_exception=False, set_status_on_exception=False
+                "s", span_type="a", record_exception=True, set_status_on_exception=False
             ) as span:
                 raise DummyError()
         self.assertIs(span.status.status_code, StatusCode.UNSET)
-        self.assertEqual(len(span.events), 0)
+        self.assertEqual(span.events[0].name, "exception")
 
     def test_span_type_unset(self):
         span = new_tracer().start_span("s")
