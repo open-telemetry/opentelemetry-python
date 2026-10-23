@@ -67,7 +67,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from enum import Enum
 from logging import getLogger
-from typing import cast
+from typing import Any, cast
 
 from typing_extensions import deprecated
 
@@ -400,6 +400,102 @@ class Tracer(ABC):
             The newly-created span.
         """
 
+    # Experimental. Becomes public (start_typed_span) once span type is stable.
+    def _start_typed_span(
+        self,
+        name: str,
+        *,
+        span_type: str | None = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        context: Context | None = None,
+        attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: int | None = None,
+        **kwargs: Any,
+    ) -> "Span":
+        """Experimental: starts a span with a span type.
+
+        Same as :meth:`start_span`, plus ``span_type``. All arguments after
+        ``name`` are keyword-only.
+
+        Args:
+            span_type: Identifies the class of spans this span belongs to, as
+                defined by semantic conventions, for example
+                ``"http.client.request"``. Immutable after creation. Should be
+                a case-sensitive ASCII string of at most 255 characters that
+                starts with a letter, followed by letters, digits, ``_``,
+                ``.``, ``-`` or ``/``. Not validated by the API.
+            kwargs: Reserved for future span creation inputs. Implementations
+                ignore the ones they don't know. ``record_exception`` and
+                ``set_status_on_exception`` are recognized here, with the same
+                defaults as in :meth:`start_span`.
+
+        The default implementation calls :meth:`start_span` and drops
+        ``span_type``, so existing ``Tracer`` implementations keep working.
+        It passes ``record_exception`` and ``set_status_on_exception`` only if
+        the caller set them, so when they're not set the implementation's own
+        :meth:`start_span` defaults apply.
+        Implementations that support span type override this method.
+        """
+        return self.start_span(
+            name,
+            **_non_default_start_args(context, kind, attributes, links, start_time, kwargs),
+        )
+
+    # Experimental. Becomes public (start_as_current_typed_span) once span type is stable.
+    @_agnosticcontextmanager
+    def _start_as_current_typed_span(
+        self,
+        name: str,
+        *,
+        span_type: str | None = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        context: Context | None = None,
+        attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: int | None = None,
+        end_on_exit: bool = True,
+        **kwargs: Any,
+    ) -> Iterator["Span"]:
+        """Experimental: same as :meth:`start_as_current_span`, with a span type.
+
+        See :meth:`_start_typed_span` for ``span_type`` and ``kwargs``. The
+        default implementation calls :meth:`start_as_current_span` and drops
+        ``span_type``.
+        """
+        args = _non_default_start_args(context, kind, attributes, links, start_time, kwargs)
+        if not end_on_exit:
+            args["end_on_exit"] = end_on_exit
+        with self.start_as_current_span(name, **args) as span:
+            yield span
+
+
+def _non_default_start_args(
+    context: Context | None,
+    kind: SpanKind,
+    attributes: types.Attributes,
+    links: _Links,
+    start_time: int | None,
+    kwargs: dict[str, Any],
+) -> dict[str, Any]:
+    # Only forward what the caller set, so implementations that override
+    # start_span with a subset of the parameters keep working.
+    args: dict[str, Any] = {}
+    if context is not None:
+        args["context"] = context
+    if kind is not SpanKind.INTERNAL:
+        args["kind"] = kind
+    if attributes is not None:
+        args["attributes"] = attributes
+    if links is not None:
+        args["links"] = links
+    if start_time is not None:
+        args["start_time"] = start_time
+    for key in ("record_exception", "set_status_on_exception"):
+        if key in kwargs:
+            args[key] = kwargs[key]
+    return args
+
 
 class ProxyTracer(Tracer):
     # pylint: disable=W0222,signature-differs
@@ -438,6 +534,14 @@ class ProxyTracer(Tracer):
     @_agnosticcontextmanager  # type: ignore
     def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:
         with self._tracer.start_as_current_span(*args, **kwargs) as span:  # type: ignore
+            yield span
+
+    def _start_typed_span(self, *args, **kwargs) -> Span:  # type: ignore
+        return self._tracer._start_typed_span(*args, **kwargs)  # type: ignore  # pylint: disable=protected-access
+
+    @_agnosticcontextmanager  # type: ignore
+    def _start_as_current_typed_span(self, *args, **kwargs) -> Iterator[Span]:
+        with self._tracer._start_as_current_typed_span(*args, **kwargs) as span:  # type: ignore  # pylint: disable=protected-access
             yield span
 
 
