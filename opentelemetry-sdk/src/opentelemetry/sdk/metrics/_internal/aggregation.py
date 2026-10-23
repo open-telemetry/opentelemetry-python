@@ -792,6 +792,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     previous_collection_start_nano = self._previous_collection_start_nano
                     self._previous_collection_start_nano = collection_start_nano
 
+                    # A delta point covers only its own interval, so the scale
+                    # mapping must not leak into the next one (issue #5716).
+                    self._mapping = self._new_mapping(self._max_scale)
+
                     if value_positive is None and value_negative is None:
                         return None
 
