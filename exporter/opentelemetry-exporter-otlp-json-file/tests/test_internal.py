@@ -19,14 +19,14 @@ from opentelemetry.exporter.otlp.json.file._internal import (
 _LOGGER_NAME = "opentelemetry.exporter.otlp.json.file._internal"
 
 
-class _ConcurrentVerificationStream:
+class _ConcurrentVerificationStream(io.StringIO):
     """A test stream that simulates non-atomic chunked writes and verifies mutual exclusion."""
 
     def __init__(self):
+        super().__init__()
         self._chunks: list[str] = []
         self._active_writers = 0
         self.concurrent_write_detected = False
-        self.closed = False
         self._tracking_lock = threading.Lock()
 
     def write(self, text: str) -> int:
@@ -45,11 +45,12 @@ class _ConcurrentVerificationStream:
             with self._tracking_lock:
                 self._active_writers -= 1
 
-    def flush(self) -> None:
-        pass
-
     def getvalue(self) -> str:
         return "".join(self._chunks)
+
+
+def _dummy_encode(data: dict) -> dict:
+    return data
 
 
 class TestFormatLine(unittest.TestCase):
@@ -77,7 +78,7 @@ class TestFileExporter(unittest.TestCase):
     def test_caller_stream_remains_open_after_shutdown(self):
         stream = io.StringIO()
         exporter = _FileExporter(
-            encode=lambda data: data,
+            encode=_dummy_encode,
             kind="spans",
             stream=stream,
         )
@@ -93,9 +94,10 @@ class TestFileExporter(unittest.TestCase):
 
     def test_default_stdout_remains_open_after_shutdown(self):
         exporter = _FileExporter(
-            encode=lambda data: data,
+            encode=_dummy_encode,
             kind="spans",
         )
+        # pylint: disable-next=protected-access
         self.assertIs(exporter._stream, sys.stdout)
         exporter.shutdown()
         self.assertFalse(sys.stdout.closed)
@@ -104,10 +106,11 @@ class TestFileExporter(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             path = os.path.join(tmp_dir, "output.jsonl")
             exporter = _FileExporter(
-                encode=lambda data: data,
+                encode=_dummy_encode,
                 kind="spans",
                 path=path,
             )
+            # pylint: disable-next=protected-access
             file_stream = exporter._stream
             self.assertFalse(file_stream.closed)
 
@@ -122,7 +125,7 @@ class TestFileExporter(unittest.TestCase):
     def test_export_to_closed_stream_returns_failure_and_logs_warning(self):
         stream = io.StringIO()
         exporter = _FileExporter(
-            encode=lambda data: data,
+            encode=_dummy_encode,
             kind="spans",
             stream=stream,
         )
@@ -140,7 +143,7 @@ class TestFileExporter(unittest.TestCase):
     def test_concurrent_exports_produce_atomic_lines(self):
         stream = _ConcurrentVerificationStream()
         exporter = _FileExporter(
-            encode=lambda data: data,
+            encode=_dummy_encode,
             kind="spans",
             stream=stream,
         )
