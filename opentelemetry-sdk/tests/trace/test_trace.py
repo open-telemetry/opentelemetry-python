@@ -4,6 +4,7 @@
 # pylint: disable=too-many-lines
 # pylint: disable=no-member
 
+import asyncio
 import copy
 import dataclasses
 import json
@@ -44,6 +45,8 @@ from opentelemetry.sdk.trace import (
     _RuleBasedTracerConfigurator,
     _TracerConfig,
 )
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
@@ -794,6 +797,129 @@ class TestSpanCreation(unittest.TestCase):
         tracer = new_tracer()
         with tracer.start_as_current_span("span", attributes=attributes) as root:
             self.assertEqual(len(root.attributes), max_attrs)
+
+
+class TestSpanType(unittest.TestCase):
+    # pylint: disable=protected-access
+
+    def test_span_type(self):
+        tracer = new_tracer()
+        span = tracer._start_typed_span("s", span_type="http.client.request")
+        self.assertEqual(span._span_type, "http.client.request")
+        span.end()
+        readable = span._readable_span()
+        self.assertEqual(readable._span_type, "http.client.request")
+
+        with tracer._start_as_current_typed_span("s", span_type="db.client.operation") as span:
+            self.assertEqual(span._span_type, "db.client.operation")
+            self.assertIs(trace_api.get_current_span(), span)
+
+    def test_span_type_through_proxy_created_before_provider(self):
+        with mock.patch.object(trace_api, "_TRACER_PROVIDER", None):
+            proxy = trace_api.get_tracer("instr")
+            self.assertIsInstance(proxy, trace_api.ProxyTracer)
+        with mock.patch.object(trace_api, "_TRACER_PROVIDER", trace.TracerProvider()):
+            span = proxy._start_typed_span("a", span_type="http.client.request")
+            with proxy._start_as_current_typed_span("b", span_type="db.client.operation") as current:
+                self.assertEqual(current._span_type, "db.client.operation")
+        self.assertEqual(span._span_type, "http.client.request")
+
+    def test_span_type_exported(self):
+        exporter = InMemorySpanExporter()
+        tracer_provider = trace.TracerProvider()
+        tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
+        tracer = tracer_provider.get_tracer("instr")
+
+        tracer._start_typed_span("a", span_type="http.client.request").end()
+        with tracer._start_as_current_typed_span("b", span_type="db.client.operation"):
+            pass
+        tracer.start_span("c").end()
+
+        self.assertEqual(
+            [(s.name, s._span_type) for s in exporter.get_finished_spans()],
+            [("a", "http.client.request"), ("b", "db.client.operation"), ("c", None)],
+        )
+
+    def test_start_as_current_typed_span_decorator(self):
+        tracer = new_tracer()
+
+        @tracer._start_as_current_typed_span("sync", span_type="a.sync")
+        def sync_func() -> str | None:
+            return trace_api.get_current_span()._span_type
+
+        @tracer._start_as_current_typed_span("async", span_type="a.async")
+        async def async_func() -> str | None:
+            return trace_api.get_current_span()._span_type
+
+        self.assertEqual(sync_func(), "a.sync")
+        self.assertEqual(asyncio.run(async_func()), "a.async")
+
+    def test_start_as_current_typed_span_end_on_exit(self):
+        tracer = new_tracer()
+        with tracer._start_as_current_typed_span("a", span_type="x", end_on_exit=False) as span:
+            pass
+        self.assertTrue(span.is_recording())
+        span.end()
+        with tracer._start_as_current_typed_span("b", span_type="x") as span:
+            pass
+        self.assertFalse(span.is_recording())
+
+    def test_typed_span_exception_handling_defaults(self):
+        tracer = new_tracer()
+        with self.assertRaises(DummyError):
+            with tracer._start_as_current_typed_span("s", span_type="a") as span:
+                raise DummyError()
+        self.assertIs(span.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span.events[0].name, "exception")
+
+    def test_typed_span_exception_flags_ignore_non_bool(self):
+        tracer = new_tracer()
+        with self.assertRaises(DummyError):
+            with tracer._start_as_current_typed_span("s", record_exception="no", set_status_on_exception=0) as span:
+                raise DummyError()
+        self.assertIs(span.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span.events[0].name, "exception")
+
+    def test_typed_span_exception_handling_from_kwargs(self):
+        tracer = new_tracer()
+        with self.assertRaises(DummyError):
+            with tracer._start_as_current_typed_span(
+                "s", span_type="a", record_exception=False, set_status_on_exception=False
+            ) as span:
+                raise DummyError()
+        self.assertIs(span.status.status_code, StatusCode.UNSET)
+        self.assertEqual(len(span.events), 0)
+
+    def test_span_type_unset(self):
+        span = new_tracer().start_span("s")
+        self.assertIsNone(span._span_type)
+        self.assertIsNone(new_tracer()._start_typed_span("s")._span_type)
+
+    def test_span_type_valid_syntax(self):
+        tracer = new_tracer()
+        for span_type in ("a", "A_b.c-d/e9", "a" * 255):
+            with self.subTest(span_type=span_type):
+                self.assertEqual(tracer._start_typed_span("s", span_type=span_type)._span_type, span_type)
+
+    def test_span_type_invalid_syntax(self):
+        tracer = new_tracer()
+        for span_type in (
+            "",
+            "1abc",
+            "_abc",
+            "a b",
+            "a!",
+            "h\u00e9llo",
+            "a" * 256,
+            123,
+            b"http.client.request",
+            ["a", "b"],
+        ):
+            with self.subTest(span_type=span_type):
+                with self.assertLogs(level=ERROR):
+                    span = tracer._start_typed_span("s", span_type=span_type)
+                self.assertTrue(span.is_recording())
+                self.assertIsNone(span._span_type)
 
 
 class TestReadableSpan(unittest.TestCase):
