@@ -35,9 +35,11 @@ class CompositePropagator(textmap.TextMapPropagator):
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
+        if context is None:
+            context = Context()
         for propagator in self._propagators:
             context = propagator.extract(carrier, context, getter=getter)
-        return context  # type: ignore
+        return context
 
     def inject(
         self,
