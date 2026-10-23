@@ -21,7 +21,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     _TRACEPARENT_HEADER_NAME = "traceparent"
     _TRACESTATE_HEADER_NAME = "tracestate"
-    _TRACEPARENT_HEADER_FORMAT = "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})" + "(-.*)?[ \t]*$"
+    _TRACEPARENT_HEADER_FORMAT = "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})" + "(?:(-.*)|[ \t]*)$"
     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
     _TRACEPARENT_MAXIMUM_LENGTH = 512
 

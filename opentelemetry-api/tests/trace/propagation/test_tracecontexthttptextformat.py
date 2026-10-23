@@ -237,6 +237,28 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)
 
+    def test_traceparent_whitespace_and_suffix(self):
+        base = "-12345678901234567890123456789012-1234567890123456-01"
+        cases = [
+            ("00" + base, True),
+            ("00" + base + " \t ", True),
+            ("00" + base + "-x", False),
+            ("00" + base + "-" + " " * 100, False),
+            ("01" + base + "-x", True),
+            ("01" + base + "-" + " " * 100, True),
+            ("01" + base + " -x", False),
+            ("01" + base + "-" + " " * 100 + "\nx", False),
+        ]
+        for traceparent, valid in cases:
+            with self.subTest(traceparent=traceparent):
+                span = trace.get_current_span(FORMAT.extract({"traceparent": [traceparent]}))
+                span_context = span.get_span_context()
+                self.assertEqual(span_context.is_valid, valid)
+                if valid:
+                    self.assertEqual(span_context.trace_id, self.TRACE_ID)
+                    self.assertEqual(span_context.span_id, self.SPAN_ID)
+                    self.assertEqual(span_context.trace_flags, trace.TraceFlags.SAMPLED)
+
     def test_tracestate_keys(self):
         """Test for valid key patterns in the tracestate"""
         tracestate_value = ",".join(
