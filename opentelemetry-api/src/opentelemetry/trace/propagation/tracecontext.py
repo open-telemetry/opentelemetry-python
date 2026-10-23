@@ -23,6 +23,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
     _TRACESTATE_HEADER_NAME = "tracestate"
     _TRACEPARENT_HEADER_FORMAT = "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})" + "(-.*)?[ \t]*$"
     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+    _TRACEPARENT_MAXIMUM_LENGTH = 512
 
     def extract(
         self,
@@ -42,7 +43,14 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         if not header:
             return context
 
-        match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
+        if len(header[0]) > self._TRACEPARENT_MAXIMUM_LENGTH:
+            _logger.warning(
+                "traceparent header exceeded the maximum length of %d characters",
+                self._TRACEPARENT_MAXIMUM_LENGTH,
+            )
+            match = None
+        else:
+            match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
             return context
 

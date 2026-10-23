@@ -220,6 +220,23 @@ class TestTraceContextFormat(unittest.TestCase):
                 )
                 self.assertEqual(span.get_span_context().trace_state["foo"], "1")
 
+    def test_traceparent_header_exceeds_maximum_length(self):
+        """Discard a traceparent longer than the maximum length."""
+        prefix = "01-12345678901234567890123456789012-1234567890123456-00-"
+        traceparent = prefix + "a" * (513 - len(prefix))
+        with self.assertLogs(tracecontext.__name__, level="WARNING"):
+            span = trace.get_current_span(FORMAT.extract({"traceparent": [traceparent]}))
+        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+
+    def test_traceparent_header_at_maximum_length(self):
+        """Accept a future-version traceparent with a length equal to the maximum."""
+        prefix = "01-12345678901234567890123456789012-1234567890123456-00-"
+        traceparent = prefix + "a" * (512 - len(prefix))
+        span = trace.get_current_span(FORMAT.extract({"traceparent": [traceparent]}))
+        span_context = span.get_span_context()
+        self.assertEqual(span_context.trace_id, self.TRACE_ID)
+        self.assertEqual(span_context.span_id, self.SPAN_ID)
+
     def test_tracestate_keys(self):
         """Test for valid key patterns in the tracestate"""
         tracestate_value = ",".join(
