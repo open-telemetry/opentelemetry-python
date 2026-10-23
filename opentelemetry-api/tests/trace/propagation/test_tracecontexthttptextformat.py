@@ -14,6 +14,7 @@ from opentelemetry.trace.span import TraceState
 FORMAT = tracecontext.TraceContextTextMapPropagator()
 
 
+# pylint: disable-next=too-many-public-methods
 class TestTraceContextFormat(unittest.TestCase):
     TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
     SPAN_ID = int("1234567890123456", 16)  # type:int

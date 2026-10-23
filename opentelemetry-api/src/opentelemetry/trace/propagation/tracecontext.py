@@ -25,6 +25,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
     _TRACEPARENT_MAXIMUM_LENGTH = 512
 
+    # pylint: disable-next=too-many-return-statements
     def extract(
         self,
         carrier: textmap.CarrierT,
