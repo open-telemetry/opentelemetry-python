@@ -186,6 +186,30 @@ def test_attribute_patterns_predicate_is_case_sensitive():
     )
 
 
+def test_attribute_patterns_predicate_fnmatch():
+    included = AttributePatternsPredicate("http.route", included=["/api/[bc]"])
+    excluded = AttributePatternsPredicate("http.route", excluded=["/api/[bc]"])
+
+    assert _predicate_result(included, attributes={"http.route": "/api/b"}) is True
+    assert _predicate_result(included, attributes={"http.route": "/api/[bc]"}) is False
+    assert _predicate_result(excluded, attributes={"http.route": "/api/b"}) is False
+    assert _predicate_result(excluded, attributes={"http.route": "/api/[bc]"}) is True
+
+
+def test_attribute_patterns_predicate_custom_matcher():
+    predicate = AttributePatternsPredicate(
+        "http.route",
+        included=["/api/"],
+        excluded=["/api/private/"],
+        matcher=str.startswith,
+    )
+
+    assert _predicate_result(predicate, attributes={"http.route": "/api/users"}) is True
+    assert _predicate_result(predicate, attributes={"http.route": "/api/private/user"}) is False
+    assert _predicate_result(predicate, attributes={"http.route": "/other/users"}) is False
+    assert _predicate_result(predicate, attributes={"http.route": ("/other/users", "/api/users")}) is True
+
+
 def test_attribute_patterns_predicate_matches_array_item():
     assert (
         _predicate_result(
