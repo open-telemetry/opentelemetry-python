@@ -4,7 +4,7 @@
 import json
 import os
 
-from opentelemetry._logs import LogRecord
+from opentelemetry.logs import LogRecord
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import (
     InMemoryLogRecordExporter,

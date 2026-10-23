@@ -37,6 +37,9 @@ contextvars_context = "opentelemetry.context.contextvars_context:ContextVarsRunt
 [project.entry-points.opentelemetry_environment_variables]
 api = "opentelemetry.environment_variables"
 
+[project.entry-points.opentelemetry_logger_provider]
+default_logger_provider = "opentelemetry.logs:NoOpLoggerProvider"
+
 [project.entry-points.opentelemetry_meter_provider]
 default_meter_provider = "opentelemetry.metrics:NoOpMeterProvider"
 

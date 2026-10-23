@@ -11,9 +11,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.sdk._logs import (
     Logger,
     LoggerProvider,

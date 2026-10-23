@@ -5,9 +5,9 @@ import json
 import unittest
 import warnings
 
-from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.sdk._logs import (
     LogRecordDroppedAttributesWarning,
     LogRecordLimits,
