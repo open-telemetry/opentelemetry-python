@@ -48,9 +48,9 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
                 "traceparent header exceeded the maximum length of %d characters",
                 self._TRACEPARENT_MAXIMUM_LENGTH,
             )
-            match = None
-        else:
-            match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
+            return context
+
+        match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
             return context
 
