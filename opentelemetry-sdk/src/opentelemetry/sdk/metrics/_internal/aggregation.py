@@ -87,6 +87,12 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
         self._reservoir = reservoir_builder()
         self._previous_point = None
 
+    def _at_fork_reinit(self) -> None:
+        self._lock = Lock()
+        # The reservoir may be a user-defined ExemplarReservoir without a lock of its own.
+        if reservoir_reinit := getattr(self._reservoir, "_at_fork_reinit", None):
+            reservoir_reinit()
+
     @abstractmethod
     def aggregate(self, measurement: Measurement, should_sample_exemplar: bool = True) -> None:
         """Aggregate a measurement.

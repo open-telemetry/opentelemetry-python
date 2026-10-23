@@ -62,6 +62,13 @@ class MetricReaderStorage:
         self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
 
+    def _at_fork_reinit(self) -> None:
+        self._lock = RLock()
+        for view_instrument_matches in self._instrument_view_instrument_matches.values():
+            for view_instrument_match in view_instrument_matches:
+                # pylint: disable-next=protected-access
+                view_instrument_match._at_fork_reinit()
+
     def _get_or_init_view_instrument_match(self, instrument: _Instrument) -> list[_ViewInstrumentMatch]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
