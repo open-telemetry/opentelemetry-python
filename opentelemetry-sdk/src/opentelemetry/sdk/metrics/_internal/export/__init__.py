@@ -34,6 +34,9 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
 )
+from opentelemetry.sdk.metrics._internal._view_instrument_match import (
+    _DEFAULT_CARDINALITY_LIMIT,
+)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
@@ -183,8 +186,6 @@ InstrumentCardinalityKey = (
 
 CardinalityLimits = dict[InstrumentCardinalityKey, int]
 
-_DEFAULT_CARDINALITY_LIMIT = 2000
-
 _CARDINALITY_INSTRUMENT_CLASSES: dict[type, type] = {
     Counter: _Counter,
     UpDownCounter: _UpDownCounter,
@@ -264,11 +265,11 @@ class MetricReader(ABC):
             third-party metric sources. Their metrics are collected alongside
             the SDK's own metrics whenever this reader collects.
         cardinality_limits: A dictionary mapping instrument classes to the
-            maximum number of metric points a metric stream of that instrument
-            class may export per collection cycle. Instrument classes not
-            included use a limit of 2000. A limit defined by a view takes
-            precedence. Measurements beyond the limit are aggregated into a
-            single point identified by the attribute
+            maximum number of distinct attribute sets a metric stream of that
+            instrument class aggregates per collection cycle. Instrument
+            classes not included use a limit of 2000. A limit defined by a view
+            takes precedence. Measurements with further attribute sets are
+            aggregated into one additional point identified by the attribute
             ``otel.metric.overflow=true``.
 
     .. document protected _receive_metrics which is a intended to be overridden by subclass

@@ -66,6 +66,8 @@ def _hash_attributes(value: Attributes | AnyValue) -> _HashedAttributes:
         assert_never(value)
 
 
+_DEFAULT_CARDINALITY_LIMIT = 2000
+
 _OVERFLOW_ATTRIBUTES: dict[str, AnyValue] = {"otel.metric.overflow": True}
 _OVERFLOW_KEY = _hash_attributes(_OVERFLOW_ATTRIBUTES)
 
@@ -76,7 +78,7 @@ class _ViewInstrumentMatch:
         view: View,
         instrument: _Instrument,
         instrument_class_aggregation: dict[type, Aggregation],
-        cardinality_limit: int = 2000,
+        cardinality_limit: int = _DEFAULT_CARDINALITY_LIMIT,
         reset_on_collect: bool = False,
     ):
         self._view = view
@@ -164,9 +166,9 @@ class _ViewInstrumentMatch:
         if aggregation is not None:
             return aggregation
 
-        # One slot is reserved for the overflow aggregation, so the number of
-        # exported points never exceeds the cardinality limit.
-        if len(self._attributes_aggregation) >= self._cardinality_limit - 1:
+        # Overflow is only used once the limit of distinct attribute sets is
+        # reached, so the overflow point is exported in addition to them.
+        if len(self._attributes_aggregation) >= self._cardinality_limit:
             aggr_key = _OVERFLOW_KEY
             attributes = dict(_OVERFLOW_ATTRIBUTES)
             aggregation = self._attributes_aggregation.get(aggr_key)

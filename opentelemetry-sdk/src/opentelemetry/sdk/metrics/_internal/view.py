@@ -91,10 +91,10 @@ class View:
             instrument must have to match the view.
 
         aggregation_cardinality_limit: This is a metric stream customizing
-            attribute: the maximum number of metric points the stream may
-            export per collection cycle. Measurements whose attributes would
-            exceed the limit are aggregated into a single point identified by
-            the attribute ``otel.metric.overflow=true``. If `None` the
+            attribute: the maximum number of distinct attribute sets the
+            stream aggregates per collection cycle. Measurements with further
+            attribute sets are aggregated into one additional point identified
+            by the attribute ``otel.metric.overflow=true``. If `None` the
             cardinality limit of the metric reader is used, which defaults to
             2000. Must be a positive integer.
 

@@ -11,6 +11,7 @@ from opentelemetry.metrics import (
     ObservableCounter,
 )
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
+    _DEFAULT_CARDINALITY_LIMIT,
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -48,7 +49,6 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 _logger = getLogger(__name__)
 
 _DEFAULT_VIEW = View(instrument_name="")
-_DEFAULT_CARDINALITY_LIMIT = 2000
 
 
 class MetricReaderStorage:

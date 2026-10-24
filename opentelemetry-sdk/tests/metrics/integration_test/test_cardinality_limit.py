@@ -44,23 +44,25 @@ class TestCardinalityLimit(TestCase):
             counter.add(1, {"k": index})
 
         data_points = _data_points(reader)
-        self.assertEqual(len(data_points), 2000)
+        self.assertEqual(len(data_points), 2001)
         self.assertEqual(sum(point.value for point in data_points), 2500)
         overflow = _overflow_points(data_points)
         self.assertEqual(len(overflow), 1)
         self.assertEqual(dict(overflow[0].attributes), {_OVERFLOW: True})
-        self.assertEqual(overflow[0].value, 2500 - 1999)
+        self.assertEqual(overflow[0].value, 2500 - 2000)
 
-    def test_no_overflow_below_limit(self):
-        reader = InMemoryMetricReader(cardinality_limits={Counter: 5})
-        counter = self._create(reader).get_meter("m").create_counter("c")
+    def test_no_overflow_up_to_limit(self):
+        for attribute_sets in (4, 5):
+            with self.subTest(attribute_sets=attribute_sets):
+                reader = InMemoryMetricReader(cardinality_limits={Counter: 5})
+                counter = self._create(reader).get_meter("m").create_counter("c")
 
-        for index in range(4):
-            counter.add(1, {"k": index})
+                for index in range(attribute_sets):
+                    counter.add(1, {"k": index})
 
-        data_points = _data_points(reader)
-        self.assertEqual(len(data_points), 4)
-        self.assertEqual(_overflow_points(data_points), [])
+                data_points = _data_points(reader)
+                self.assertEqual(len(data_points), attribute_sets)
+                self.assertEqual(_overflow_points(data_points), [])
 
     def test_reader_limit_per_instrument_class(self):
         reader = InMemoryMetricReader(cardinality_limits={Counter: 3})
@@ -75,7 +77,7 @@ class TestCardinalityLimit(TestCase):
         metrics = {
             metric.name: metric for metric in reader.get_metrics_data().resource_metrics[0].scope_metrics[0].metrics
         }
-        self.assertEqual(len(metrics["counter"].data.data_points), 3)
+        self.assertEqual(len(metrics["counter"].data.data_points), 4)
         self.assertEqual(len(metrics["histogram"].data.data_points), 10)
 
     def test_view_limit_overrides_reader_limit(self):
@@ -87,10 +89,10 @@ class TestCardinalityLimit(TestCase):
             counter.add(1, {"k": index})
 
         data_points = _data_points(reader)
-        self.assertEqual(len(data_points), 6)
+        self.assertEqual(len(data_points), 7)
         self.assertEqual(sum(point.value for point in data_points), 10)
 
-    def test_limit_of_one_aggregates_everything_into_overflow(self):
+    def test_limit_of_one_keeps_first_attribute_set(self):
         reader = InMemoryMetricReader(cardinality_limits={Counter: 1})
         counter = self._create(reader).get_meter("m").create_counter("c")
 
@@ -98,9 +100,8 @@ class TestCardinalityLimit(TestCase):
             counter.add(2, {"k": index})
 
         data_points = _data_points(reader)
-        self.assertEqual(len(data_points), 1)
-        self.assertEqual(dict(data_points[0].attributes), {_OVERFLOW: True})
-        self.assertEqual(data_points[0].value, 10)
+        by_attributes = {tuple(sorted(point.attributes.items())): point.value for point in data_points}
+        self.assertEqual(by_attributes, {(("k", 0),): 2, ((_OVERFLOW, True),): 8})
 
     def test_limit_applies_after_attribute_filtering(self):
         reader = InMemoryMetricReader(cardinality_limits={Counter: 3})
@@ -132,14 +133,15 @@ class TestCardinalityLimit(TestCase):
             {
                 (("k", "a"),): 2,
                 (("k", "b"),): 1,
-                ((_OVERFLOW, True),): 3,
+                (("k", "c"),): 1,
+                ((_OVERFLOW, True),): 2,
             },
         )
 
         # The sets that were present before overflow are still exported.
         counter.add(1, {"k": "c"})
         data_points = _data_points(reader)
-        self.assertEqual(len(data_points), 3)
+        self.assertEqual(len(data_points), 4)
         self.assertEqual(sum(point.value for point in data_points), 7)
 
     def test_delta_limit_resets_every_collection(self):
@@ -155,7 +157,7 @@ class TestCardinalityLimit(TestCase):
 
             data_points = _data_points(reader)
             with self.subTest(cycle=cycle):
-                self.assertEqual(len(data_points), 3)
+                self.assertEqual(len(data_points), 4)
                 self.assertEqual(sum(point.value for point in data_points), 6)
                 self.assertEqual(len(_overflow_points(data_points)), 1)
 
@@ -218,7 +220,8 @@ class TestCardinalityLimit(TestCase):
             {
                 (("k", 0),): 0,
                 (("k", 1),): 1,
-                ((_OVERFLOW, True),): 2 + 3 + 4 + 5,
+                (("k", 2),): 2,
+                ((_OVERFLOW, True),): 3 + 4 + 5,
             },
         )
 
@@ -246,11 +249,11 @@ class TestCardinalityLimit(TestCase):
         histogram.record(3, {"k": "c"})
 
         data_points = _data_points(reader)
-        self.assertEqual(len(data_points), 2)
+        self.assertEqual(len(data_points), 3)
         overflow = _overflow_points(data_points)
         self.assertEqual(len(overflow), 1)
-        self.assertEqual(overflow[0].count, 2)
-        self.assertEqual(overflow[0].sum, 5)
+        self.assertEqual(overflow[0].count, 1)
+        self.assertEqual(overflow[0].sum, 3)
 
 
 def _data_points_or_empty(reader):

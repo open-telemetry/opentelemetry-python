@@ -122,7 +122,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             counter.add(1, {"k": str(index)})
 
         output = generate_latest(registry).decode()
-        self.assertEqual(output.count("requests_total{"), 3)
+        self.assertEqual(output.count("requests_total{"), 4)
         self.assertIn('otel_metric_overflow="true"', output)
 
     def test_shutdown(self):
