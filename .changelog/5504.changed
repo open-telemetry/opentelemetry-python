@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-common`: move the OTLP encoders into a private `opentelemetry.exporter.otlp._proto.common` package, re-exported from the unchanged public `opentelemetry.exporter.otlp.proto.common` API
