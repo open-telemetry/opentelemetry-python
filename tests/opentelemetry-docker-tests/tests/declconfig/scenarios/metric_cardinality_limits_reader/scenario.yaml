@@ -1,0 +1,20 @@
+description: >
+  A reader's `cardinality_limits` applies per instrument type and falls back to `default`. Counters
+  are limited to 3 attribute sets plus the overflow point, which aggregates the other 7
+  measurements. Histograms use `default` and are limited to 5 attribute sets plus the overflow
+  point, which aggregates the other 5 measurements.
+until:
+  - exited: {}
+expect:
+  - metric: {name: requests, count: 4}
+  - metric:
+      name: requests
+      data_point:
+        attributes: {values: {otel.metric.overflow: true}, strict: true}
+        value: 7
+  - metric: {name: latency, count: 6}
+  - metric:
+      name: latency
+      data_point:
+        attributes: {values: {otel.metric.overflow: true}, strict: true}
+        count: 5
