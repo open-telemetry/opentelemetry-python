@@ -161,8 +161,14 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 def _split_baggage_entries(headers: Iterable[str]) -> Iterator[str]:
     """Yield the list-members of all baggage headers, combined as a single baggage string."""
     for header in headers:
-        for entry in header.split(","):
-            yield entry.strip(" \t")
+        start = 0
+        while True:
+            end = header.find(",", start)
+            if end == -1:
+                yield header[start:].strip(" \t")
+                break
+            yield header[start:end].strip(" \t")
+            start = end + 1
 
 
 def _encode_baggage_pairs(
