@@ -1222,7 +1222,7 @@ class TestSpan(unittest.TestCase):
         )
         context = Context()
         span.start(parent_context=context)
-        span_processor.on_start.assert_called_once_with(span, parent_context=context)
+        span_processor.on_start.assert_called_once_with(span, context)
 
     def test_span_override_start_and_end_time(self):
         """Span sending custom start_time and end_time values"""

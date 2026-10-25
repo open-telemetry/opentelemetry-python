@@ -60,6 +60,8 @@ def _is_valid_pair(key: str, value: str) -> bool:
 class Span(abc.ABC):
     """A span represents a single operation within a trace."""
 
+    __slots__ = ()
+
     @abc.abstractmethod
     def end(self, end_time: int | None = None) -> None:
         """Sets the current time as the span's end time.
@@ -449,6 +451,8 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
         trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
     """
+
+    __slots__ = ()
 
     def __new__(
         cls,

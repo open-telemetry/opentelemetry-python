@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from logging import getLogger
@@ -44,7 +45,7 @@ class Measurement:
                 object.__setattr__(
                     self,
                     "attributes",
-                    _clean_attribute_value(self.attributes, None),
+                    _clean_attribute_value(self.attributes, sys.maxsize),
                 )
             else:
                 _logger.warning(
