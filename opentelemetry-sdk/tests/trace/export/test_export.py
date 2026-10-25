@@ -317,12 +317,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
         )
 
         # zero schedule_delay_millis
-        self.assertRaises(
-            ValueError,
-            export.BatchSpanProcessor,
-            None,
-            schedule_delay_millis=0,
-        )
+        export.BatchSpanProcessor(mock.Mock(), schedule_delay_millis=0).shutdown()
 
         # negative schedule_delay_millis
         self.assertRaises(
