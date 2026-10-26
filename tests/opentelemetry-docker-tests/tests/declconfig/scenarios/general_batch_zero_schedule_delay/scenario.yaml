@@ -1,0 +1,20 @@
+description: >
+  Exports spans and log records over OTLP/HTTP through batch processors with a zero schedule delay.
+until:
+  - spans:
+      min_count: 5
+      name: zero-delay-span
+  - logs:
+      min_count: 1
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-general-batch-zero-schedule-delay
+  - spans:
+      name: zero-delay-span
+      count: 5
+  - logs:
+      body: zero delay log
+      span: {name: handler}
+      count: 1

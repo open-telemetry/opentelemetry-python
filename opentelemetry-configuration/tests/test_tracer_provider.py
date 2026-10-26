@@ -433,6 +433,34 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         self.assertEqual(excluded, Decision.DROP)
         self.assertEqual(case_mismatch, Decision.DROP)
 
+    def test_composite_rule_based_attribute_patterns_literal_brackets(self):
+        cases = [
+            (["/api/[bc]"], None, "/api/[bc]", True),
+            (["/api/[bc]"], None, "/api/b", False),
+            (["/api/[bc]*"], None, "/api/[bc]/users", True),
+            (["/api/[bc]*"], None, "/api/b/users", False),
+            (None, ["/api/[bc]"], "/api/[bc]", False),
+            (None, ["/api/[bc]"], "/api/b", True),
+            (None, ["/api/[bc]*"], "/api/[bc]/users", False),
+            (None, ["/api/[bc]*"], "/api/b/users", True),
+            (["/api/*"], ["/api/[bc]*"], "/api/[bc]/users", False),
+            (["/api/[bc]"], ["/api/[bc]"], "/api/[bc]", False),
+            (["/api/[bc]*"], None, "/API/[bc]/users", False),
+            (["/api/[bc]"], None, ("/api/b", "/api/[bc]"), True),
+        ]
+        for included, excluded, value, expected in cases:
+            with self.subTest(included=included, excluded=excluded, value=value):
+                rule_based = RuleBasedSamplerConfig(
+                    rules=[
+                        self._rule(
+                            self._always_on(),
+                            attribute_patterns=self._attribute_patterns("http.route", included, excluded),
+                        )
+                    ]
+                )
+                decision = self._decision(rule_based, attributes={"http.route": value})
+                self.assertEqual(decision, Decision.RECORD_AND_SAMPLE if expected else Decision.DROP)
+
     def test_composite_rule_based_span_kind(self):
         rule_based = RuleBasedSamplerConfig(
             rules=[
@@ -548,6 +576,19 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertEqual(len(procs), 1)
         self.assertIsInstance(procs[0], BatchSpanProcessor)
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
+
+    def test_batch_processor_zero_schedule_delay(self):
+        config = TracerProviderConfig(
+            processors=[
+                SpanProcessorConfig(
+                    batch=BatchSpanProcessorConfig(exporter=SpanExporterConfig(console={}), schedule_delay=0)
+                )
+            ]
+        )
+        provider = create_tracer_provider(config)
+        procs = provider._active_span_processor._span_processors
+        self.assertEqual(procs[0]._batch_processor._schedule_delay_millis, 0)
+        provider.shutdown()
 
     def test_console_exporter_simple(self):
         config = self._make_simple_config(SpanExporterConfig(console={}))
@@ -946,6 +987,28 @@ class TestTracerConfigurator(unittest.TestCase):
         provider = create_tracer_provider(config)
         self.assertFalse(self._enabled(provider, "noisy.http"))
         self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_scope_patterns_treat_brackets_literally(self):
+        for pattern in ("noisy.[bc]", "noisy.[bc]*"):
+            with self.subTest(pattern=pattern):
+                config = TracerProviderConfig(
+                    processors=[],
+                    tracer_configurator_development=TracerConfiguratorConfig(
+                        default_config=TracerConfigConfig(enabled=True),
+                        tracers=[
+                            TracerMatcherAndConfig(
+                                name=pattern,
+                                config=TracerConfigConfig(enabled=False),
+                            )
+                        ],
+                    ),
+                )
+                provider = create_tracer_provider(config)
+                self.assertFalse(self._enabled(provider, "noisy.[bc]"))
+                self.assertTrue(self._enabled(provider, "noisy.b"))
+                self.assertTrue(self._enabled(provider, "noisy.btail"))
+                self.assertTrue(self._enabled(provider, "Noisy.[bc]"))
+                self.assertEqual(self._enabled(provider, "noisy.[bc]tail"), pattern == "noisy.[bc]")
 
     def test_default_config_applies_to_unmatched_scopes(self):
         config = TracerProviderConfig(
