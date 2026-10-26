@@ -148,6 +148,11 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=2000))
         self.assertEqual(processor._batch_processor._schedule_delay_millis, 2000.0)
 
+    def test_batch_processor_zero_schedule_delay(self):
+        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=0))
+        self.assertEqual(processor._batch_processor._schedule_delay_millis, 0)
+        processor.shutdown()
+
     def test_batch_processor_explicit_export_timeout(self):
         processor = _create_batch_log_record_processor(self._make_batch_config(export_timeout=5000))
         self.assertEqual(processor._batch_processor._export_timeout_millis, 5000.0)
@@ -613,6 +618,28 @@ class TestLoggerConfigurator(unittest.TestCase):
         provider = create_logger_provider(config)
         self.assertFalse(self._enabled(provider, "noisy.http"))
         self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_scope_patterns_treat_brackets_literally(self):
+        for pattern in ("noisy.[bc]", "noisy.[bc]*"):
+            with self.subTest(pattern=pattern):
+                config = LoggerProviderConfig(
+                    processors=[],
+                    logger_configurator_development=LoggerConfiguratorConfig(
+                        default_config=LoggerConfigConfig(enabled=True),
+                        loggers=[
+                            LoggerMatcherAndConfig(
+                                name=pattern,
+                                config=LoggerConfigConfig(enabled=False),
+                            )
+                        ],
+                    ),
+                )
+                provider = create_logger_provider(config)
+                self.assertFalse(self._enabled(provider, "noisy.[bc]"))
+                self.assertTrue(self._enabled(provider, "noisy.b"))
+                self.assertTrue(self._enabled(provider, "noisy.btail"))
+                self.assertTrue(self._enabled(provider, "Noisy.[bc]"))
+                self.assertEqual(self._enabled(provider, "noisy.[bc]tail"), pattern == "noisy.[bc]")
 
     def test_default_config_applies_to_unmatched_scopes(self):
         config = LoggerProviderConfig(

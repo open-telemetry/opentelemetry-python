@@ -7,15 +7,38 @@ import dataclasses
 import inspect
 import logging
 from collections.abc import Callable
+from fnmatch import fnmatchcase
 from typing import Any, Protocol, TypeVar
 from urllib.parse import urlparse
 
 from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._importlib_metadata import entry_points
 
 _logger = logging.getLogger(__name__)
 
 _CompressionT = TypeVar("_CompressionT")
+
+
+def _matches_glob(value: str, pattern: str) -> bool:
+    """Match exactly or using the configuration schema's case-sensitive wildcards.
+
+    Only ``*`` (zero or more characters) and ``?`` (one character) are
+    wildcards. All other characters, including brackets and backslashes,
+    are literal.
+    """
+    # Escape opening brackets to disable fnmatch's character classes while
+    # retaining its wildcard implementation and compiled-pattern cache.
+    return value == pattern or fnmatchcase(value, pattern.replace("[", "[[]"))
+
+
+def _scope_name_matches_glob(pattern: str) -> Callable[[InstrumentationScope], bool]:
+    """Match scope names using the configuration schema's wildcard semantics."""
+
+    def matches(scope: InstrumentationScope) -> bool:
+        return _matches_glob(scope.name, pattern)
+
+    return matches
 
 
 def _additional_properties(cls):

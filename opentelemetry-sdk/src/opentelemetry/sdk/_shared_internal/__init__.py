@@ -155,16 +155,21 @@ class BatchProcessor(Generic[Telemetry]):
         while not self._shutdown:
             # Lots of strategies in the spec for setting next timeout.
             # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#batching-processor.
-            # Shutdown will interrupt this sleep. Emit will interrupt this sleep only if the queue is bigger then threshold.
-            sleep_interrupted = self._worker_awaken.wait(self._schedule_delay)
+            # Shutdown will interrupt this sleep. Emit will interrupt this sleep only if the queue is bigger then threshold,
+            # or on every emit when the schedule delay is 0, in which case there is no timeout and telemetry is exported
+            # as soon as it is emitted.
+            sleep_interrupted = self._worker_awaken.wait(self._schedule_delay or None)
             if self._shutdown:
                 break
-            self._export(
-                BatchExportStrategy.EXPORT_WHILE_BATCH_EXCEEDS_THRESHOLD
-                if sleep_interrupted
-                else BatchExportStrategy.EXPORT_AT_LEAST_ONE_BATCH
-            )
+            # Clear before exporting so that an emit during the export wakes the worker again.
             self._worker_awaken.clear()
+            if self._schedule_delay == 0:
+                batch_strategy = BatchExportStrategy.EXPORT_ALL
+            elif sleep_interrupted:
+                batch_strategy = BatchExportStrategy.EXPORT_WHILE_BATCH_EXCEEDS_THRESHOLD
+            else:
+                batch_strategy = BatchExportStrategy.EXPORT_AT_LEAST_ONE_BATCH
+            self._export(batch_strategy)
         self._export(BatchExportStrategy.EXPORT_ALL)
 
     def _export(self, batch_strategy: BatchExportStrategy) -> None:
@@ -201,7 +206,9 @@ class BatchProcessor(Generic[Telemetry]):
             self._metrics.drop_items(1)
         # This will drop a log from the right side if the queue is at _max_queue_size.
         self._queue.appendleft(data)
-        if len(self._queue) >= self._max_export_batch_size and not self._worker_awaken.is_set():
+        if (
+            self._schedule_delay == 0 or len(self._queue) >= self._max_export_batch_size
+        ) and not self._worker_awaken.is_set():
             self._worker_awaken.set()
 
     def shutdown(self, timeout_millis: int = 30000):
