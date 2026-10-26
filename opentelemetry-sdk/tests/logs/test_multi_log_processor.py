@@ -308,7 +308,6 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         self.assertEqual(processor_a.shutdown.call_count, 1)
         self.assertEqual(processor_b.shutdown.call_count, 1)
 
-
     def test_callback_logger_handler_raise_does_not_crash(self):
         # A logging handler attached to the OTel logger that raises must not
         # escape out of shutdown() nor deadlock; reentry guard routes to stderr.

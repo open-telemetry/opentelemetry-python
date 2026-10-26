@@ -807,7 +807,9 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
                     raise app_error
             self.assertIs(caught.exception, app_error)
         finally:
-            multi_processor._executor.shutdown(wait=True)
+            # Tear down through the public contract instead of reaching into
+            # the executor's protected member; the processor was never shut down.
+            multi_processor.shutdown()
 
     def test_callback_logger_handler_raise_does_not_crash(self):
         # A logging handler attached to the OTel logger that raises must not
@@ -838,7 +840,6 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         finally:
             logging.raiseExceptions = old_raise
             otel_logger.removeHandler(handler)
-            multi_processor._executor.shutdown(wait=True)
 
         healthy.shutdown.assert_called_once_with()
 
