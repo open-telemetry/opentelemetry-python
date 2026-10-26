@@ -54,6 +54,8 @@ class TestLogRecord(unittest.TestCase):
 
         decoded = json.loads(actual.to_json())
         self.assertEqual(SeverityNumber.WARN.value, decoded["severity_number"])
+        self.assertEqual(SeverityNumber.WARN, decoded["severity_number"])
+        self.assertIsInstance(decoded["severity_number"], int)
 
     def test_log_record_to_json_serializes_null_severity_number(self):
         actual = ReadableLogRecord(
