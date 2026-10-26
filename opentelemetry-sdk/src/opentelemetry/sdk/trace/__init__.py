@@ -7,8 +7,8 @@ import atexit
 import concurrent.futures
 import json
 import logging
-import sys
 import os
+import sys
 import threading
 import traceback
 import typing
