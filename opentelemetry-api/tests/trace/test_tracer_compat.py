@@ -163,9 +163,9 @@ class TestLegacyTracerImplementations(TraceGlobalsTest):
     def test_typed_span_with_short_signature_tracer(self):
         trace.set_tracer_provider(_Provider(ShortSignatureTracer()))
         tracer = trace.get_tracer("instr")
-        span = tracer._start_typed_span("a", kind=SpanKind.CLIENT, span_type="http.client.request")
+        span = tracer._start_typed_span("a", kind=SpanKind.CLIENT, type_="http.client.request")
         self.assertIs(span, INVALID_SPAN)
-        with tracer._start_as_current_typed_span("b", span_type="http.client.request") as span:
+        with tracer._start_as_current_typed_span("b", type_="http.client.request") as span:
             self.assertIs(span, INVALID_SPAN)
 
     def test_delegating_tracer(self):
@@ -179,10 +179,10 @@ class TestLegacyTracerImplementations(TraceGlobalsTest):
         explicit = ExplicitTracer()
         trace.set_tracer_provider(_Provider(explicit))
         tracer = trace.get_tracer("instr")
-        tracer._start_typed_span("a", kind=SpanKind.CLIENT, attributes={"k": "v"}, span_type="http.client.request")
+        tracer._start_typed_span("a", kind=SpanKind.CLIENT, attributes={"k": "v"}, type_="http.client.request")
         # simulates a caller built against a newer API with options this one doesn't know
         future_options: dict[str, Any] = {"future_arg": 1}
-        with tracer._start_as_current_typed_span("b", span_type="http.client.request", **future_options):
+        with tracer._start_as_current_typed_span("b", type_="http.client.request", **future_options):
             pass
         tracer._start_typed_span("c", record_exception=False)
 
@@ -197,13 +197,13 @@ class TestLegacyTracerImplementations(TraceGlobalsTest):
 
     def test_typed_span_with_delegating_tracer(self):
         tracer = DelegatingTracer()
-        tracer._start_typed_span("a", span_type="http.client.request")
-        with tracer._start_as_current_typed_span("b", span_type="http.client.request"):
+        tracer._start_typed_span("a", type_="http.client.request")
+        with tracer._start_as_current_typed_span("b", type_="http.client.request"):
             pass
         self.assertEqual(tracer.started, ["a", "b"])
 
     def test_typed_span_with_noop_tracer(self):
-        with trace.get_tracer("instr")._start_as_current_typed_span("a", span_type="not valid!") as span:
+        with trace.get_tracer("instr")._start_as_current_typed_span("a", type_="not valid!") as span:
             self.assertFalse(span.is_recording())
 
     def test_typed_span_through_proxy_created_before_provider(self):
@@ -212,8 +212,8 @@ class TestLegacyTracerImplementations(TraceGlobalsTest):
         explicit = ExplicitTracer()
         trace.set_tracer_provider(_Provider(explicit))
 
-        proxy._start_typed_span("a", span_type="http.client.request", kind=SpanKind.CLIENT)
-        with proxy._start_as_current_typed_span("b", span_type="http.client.request"):
+        proxy._start_typed_span("a", type_="http.client.request", kind=SpanKind.CLIENT)
+        with proxy._start_as_current_typed_span("b", type_="http.client.request"):
             pass
 
         self.assertEqual(

@@ -804,13 +804,13 @@ class TestSpanType(unittest.TestCase):
 
     def test_span_type(self):
         tracer = new_tracer()
-        span = tracer._start_typed_span("s", span_type="http.client.request")
+        span = tracer._start_typed_span("s", type_="http.client.request")
         self.assertEqual(span._span_type, "http.client.request")
         span.end()
         readable = span._readable_span()
         self.assertEqual(readable._span_type, "http.client.request")
 
-        with tracer._start_as_current_typed_span("s", span_type="db.client.operation") as span:
+        with tracer._start_as_current_typed_span("s", type_="db.client.operation") as span:
             self.assertEqual(span._span_type, "db.client.operation")
             self.assertIs(trace_api.get_current_span(), span)
 
@@ -819,8 +819,8 @@ class TestSpanType(unittest.TestCase):
             proxy = trace_api.get_tracer("instr")
             self.assertIsInstance(proxy, trace_api.ProxyTracer)
         with mock.patch.object(trace_api, "_TRACER_PROVIDER", trace.TracerProvider()):
-            span = proxy._start_typed_span("a", span_type="http.client.request")
-            with proxy._start_as_current_typed_span("b", span_type="db.client.operation") as current:
+            span = proxy._start_typed_span("a", type_="http.client.request")
+            with proxy._start_as_current_typed_span("b", type_="db.client.operation") as current:
                 self.assertEqual(current._span_type, "db.client.operation")
         self.assertEqual(span._span_type, "http.client.request")
 
@@ -830,8 +830,8 @@ class TestSpanType(unittest.TestCase):
         tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
         tracer = tracer_provider.get_tracer("instr")
 
-        tracer._start_typed_span("a", span_type="http.client.request").end()
-        with tracer._start_as_current_typed_span("b", span_type="db.client.operation"):
+        tracer._start_typed_span("a", type_="http.client.request").end()
+        with tracer._start_as_current_typed_span("b", type_="db.client.operation"):
             pass
         tracer.start_span("c").end()
 
@@ -843,11 +843,11 @@ class TestSpanType(unittest.TestCase):
     def test_start_as_current_typed_span_decorator(self):
         tracer = new_tracer()
 
-        @tracer._start_as_current_typed_span("sync", span_type="a.sync")
+        @tracer._start_as_current_typed_span("sync", type_="a.sync")
         def sync_func() -> str | None:
             return trace_api.get_current_span()._span_type
 
-        @tracer._start_as_current_typed_span("async", span_type="a.async")
+        @tracer._start_as_current_typed_span("async", type_="a.async")
         async def async_func() -> str | None:
             return trace_api.get_current_span()._span_type
 
@@ -856,18 +856,18 @@ class TestSpanType(unittest.TestCase):
 
     def test_start_as_current_typed_span_end_on_exit(self):
         tracer = new_tracer()
-        with tracer._start_as_current_typed_span("a", span_type="x", end_on_exit=False) as span:
+        with tracer._start_as_current_typed_span("a", type_="x", end_on_exit=False) as span:
             pass
         self.assertTrue(span.is_recording())
         span.end()
-        with tracer._start_as_current_typed_span("b", span_type="x") as span:
+        with tracer._start_as_current_typed_span("b", type_="x") as span:
             pass
         self.assertFalse(span.is_recording())
 
     def test_typed_span_exception_handling_defaults(self):
         tracer = new_tracer()
         with self.assertRaises(DummyError):
-            with tracer._start_as_current_typed_span("s", span_type="a") as span:
+            with tracer._start_as_current_typed_span("s", type_="a") as span:
                 raise DummyError()
         self.assertIs(span.status.status_code, StatusCode.ERROR)
         self.assertEqual(span.events[0].name, "exception")
@@ -884,7 +884,7 @@ class TestSpanType(unittest.TestCase):
         tracer = new_tracer()
         with self.assertRaises(DummyError):
             with tracer._start_as_current_typed_span(
-                "s", span_type="a", record_exception=False, set_status_on_exception=False
+                "s", type_="a", record_exception=False, set_status_on_exception=False
             ) as span:
                 raise DummyError()
         self.assertIs(span.status.status_code, StatusCode.UNSET)
@@ -893,12 +893,12 @@ class TestSpanType(unittest.TestCase):
     def test_typed_span_unknown_options_warn(self):
         tracer = new_tracer()
         with self.assertLogs(level=WARNING) as logs:
-            span = tracer._start_typed_span("s", span_type="a", kindd=trace_api.SpanKind.CLIENT)
+            span = tracer._start_typed_span("s", type_="a", kindd=trace_api.SpanKind.CLIENT)
         self.assertIn("kindd", logs.output[0])
         self.assertIs(span.kind, trace_api.SpanKind.INTERNAL)
 
         with self.assertLogs(level=WARNING) as logs:
-            with tracer._start_as_current_typed_span("s", span_type="a", foo=1, record_exception=False):
+            with tracer._start_as_current_typed_span("s", type_="a", foo=1, record_exception=False):
                 pass
         self.assertEqual(len(logs.output), 1)
         self.assertIn("foo", logs.output[0])
@@ -906,8 +906,8 @@ class TestSpanType(unittest.TestCase):
     def test_typed_span_known_options_dont_warn(self):
         tracer = new_tracer()
         with self.assertNoLogs(level=WARNING):
-            tracer._start_typed_span("s", span_type="a", record_exception=False, set_status_on_exception=False)
-            with tracer._start_as_current_typed_span("s", span_type="a"):
+            tracer._start_typed_span("s", type_="a", record_exception=False, set_status_on_exception=False)
+            with tracer._start_as_current_typed_span("s", type_="a"):
                 pass
 
     def test_span_type_unset(self):
@@ -918,8 +918,8 @@ class TestSpanType(unittest.TestCase):
     def test_span_type_valid_syntax(self):
         tracer = new_tracer()
         for span_type in ("a", "A_b.c-d/e9", "a" * 255):
-            with self.subTest(span_type=span_type):
-                self.assertEqual(tracer._start_typed_span("s", span_type=span_type)._span_type, span_type)
+            with self.subTest(type_=span_type):
+                self.assertEqual(tracer._start_typed_span("s", type_=span_type)._span_type, span_type)
 
     def test_span_type_invalid_syntax(self):
         tracer = new_tracer()
@@ -936,9 +936,9 @@ class TestSpanType(unittest.TestCase):
             b"http.client.request",
             ["a", "b"],
         ):
-            with self.subTest(span_type=span_type):
+            with self.subTest(type_=span_type):
                 with self.assertLogs(level=ERROR):
-                    span = tracer._start_typed_span("s", span_type=span_type)
+                    span = tracer._start_typed_span("s", type_=span_type)
                 self.assertTrue(span.is_recording())
                 self.assertIsNone(span._span_type)
 

@@ -1262,7 +1262,7 @@ class Tracer(trace_api.Tracer):
         self,
         name: str,
         *,
-        span_type: str | None = None,
+        type_: str | None = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         context: context_api.Context | None = None,
         attributes: types.Attributes = None,
@@ -1270,8 +1270,8 @@ class Tracer(trace_api.Tracer):
         start_time: int | None = None,
         **kwargs: Unpack[_SpanOptions],
     ) -> trace_api.Span:
-        if span_type is not None:
-            span_type = _checked_span_type(span_type)
+        if type_ is not None:
+            type_ = _checked_span_type(type_)
         record_exception, set_status_on_exception = _read_span_options(kwargs) if kwargs else _DEFAULT_SPAN_OPTIONS
         return self._new_span(
             name,
@@ -1282,7 +1282,7 @@ class Tracer(trace_api.Tracer):
             start_time,
             record_exception,
             set_status_on_exception,
-            span_type,
+            type_,
         )
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
@@ -1290,7 +1290,7 @@ class Tracer(trace_api.Tracer):
         self,
         name: str,
         *,
-        span_type: str | None = None,
+        type_: str | None = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         context: context_api.Context | None = None,
         attributes: types.Attributes = None,
@@ -1299,8 +1299,8 @@ class Tracer(trace_api.Tracer):
         end_on_exit: bool = True,
         **kwargs: Unpack[_SpanOptions],
     ) -> Iterator[trace_api.Span]:
-        if span_type is not None:
-            span_type = _checked_span_type(span_type)
+        if type_ is not None:
+            type_ = _checked_span_type(type_)
         record_exception, set_status_on_exception = _read_span_options(kwargs) if kwargs else _DEFAULT_SPAN_OPTIONS
         span = self._new_span(
             name,
@@ -1311,7 +1311,7 @@ class Tracer(trace_api.Tracer):
             start_time,
             record_exception,
             set_status_on_exception,
-            span_type,
+            type_,
         )
         with trace_api.use_span(
             span,

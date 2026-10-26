@@ -412,7 +412,7 @@ class Tracer(ABC):
         self,
         name: str,
         *,
-        span_type: str | None = None,
+        type_: str | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         context: Context | None = None,
         attributes: types.Attributes = None,
@@ -422,11 +422,11 @@ class Tracer(ABC):
     ) -> "Span":
         """Experimental: starts a span with a span type.
 
-        Same as :meth:`start_span`, plus ``span_type``. All arguments after
+        Same as :meth:`start_span`, plus ``type_``. All arguments after
         ``name`` are keyword-only.
 
         Args:
-            span_type: Identifies the class of spans this span belongs to, as
+            type_: Identifies the class of spans this span belongs to, as
                 defined by semantic conventions, for example
                 ``"http.client.request"``. Immutable after creation. Should be
                 a case-sensitive ASCII string of at most 255 characters that
@@ -437,7 +437,7 @@ class Tracer(ABC):
                 added there. Implementations ignore the ones they don't know.
 
         The default implementation calls :meth:`start_span` and drops
-        ``span_type``, so existing ``Tracer`` implementations keep working.
+        ``type_``, so existing ``Tracer`` implementations keep working.
         It passes ``record_exception`` and ``set_status_on_exception`` only if
         the caller set them, so when they're not set the implementation's own
         :meth:`start_span` defaults apply.
@@ -454,7 +454,7 @@ class Tracer(ABC):
         self,
         name: str,
         *,
-        span_type: str | None = None,
+        type_: str | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
         context: Context | None = None,
         attributes: types.Attributes = None,
@@ -465,9 +465,9 @@ class Tracer(ABC):
     ) -> Iterator["Span"]:
         """Experimental: same as :meth:`start_as_current_span`, with a span type.
 
-        See :meth:`_start_typed_span` for ``span_type`` and ``kwargs``. The
+        See :meth:`_start_typed_span` for ``type_`` and ``kwargs``. The
         default implementation calls :meth:`start_as_current_span` and drops
-        ``span_type``.
+        ``type_``.
         """
         args = _non_default_start_args(context, kind, attributes, links, start_time, kwargs)
         if not end_on_exit:

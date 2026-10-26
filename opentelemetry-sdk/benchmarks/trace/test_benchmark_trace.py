@@ -170,7 +170,7 @@ def _start_typed_span_no_type():
 def _start_typed_span_type():
     span = tracer._start_typed_span(
         "benchmarkedSpan",
-        span_type="http.client.request",
+        type_="http.client.request",
         attributes={"long.attribute": -10000000001000000000},
     )
     span.add_event("benchmarkEvent")
@@ -180,7 +180,7 @@ def _start_typed_span_type():
 def _start_typed_span_type_with_option():
     span = tracer._start_typed_span(
         "benchmarkedSpan",
-        span_type="http.client.request",
+        type_="http.client.request",
         attributes={"long.attribute": -10000000001000000000},
         record_exception=False,
     )
@@ -198,7 +198,7 @@ def _start_as_current_typed_span_no_type():
 def _start_as_current_typed_span_type():
     with tracer._start_as_current_typed_span(
         "benchmarkedSpan",
-        span_type="http.client.request",
+        type_="http.client.request",
         attributes={"long.attribute": -10000000001000000000},
     ) as span:
         span.add_event("benchmarkEvent")
@@ -207,7 +207,7 @@ def _start_as_current_typed_span_type():
 def _start_as_current_typed_span_type_with_option():
     with tracer._start_as_current_typed_span(
         "benchmarkedSpan",
-        span_type="http.client.request",
+        type_="http.client.request",
         attributes={"long.attribute": -10000000001000000000},
         record_exception=False,
     ) as span:
