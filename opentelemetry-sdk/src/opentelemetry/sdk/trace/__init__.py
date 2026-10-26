@@ -101,6 +101,26 @@ def _safe_log_exception(logger, msg):  # pylint: disable=redefined-outer-name
         _callback_log_reentry.in_diag = False
 
 
+def _safe_log_debug(logger, msg):  # pylint: disable=redefined-outer-name
+    """Emit a DEBUG diagnostic without letting a user logging handler error escape.
+
+    The inline fallback path must run even when an attached logging handler
+    raises; the DEBUG record is still attempted through the standard handler,
+    and any handler error falls back to stderr instead of aborting the
+    callback dispatch.
+    """
+    if getattr(_callback_log_reentry, "in_diag", False):
+        print(msg, file=sys.stderr)
+        return
+    _callback_log_reentry.in_diag = True
+    try:
+        logger.debug(msg)  # noqa: SHADOW
+    except Exception:  # pylint: disable=broad-exception-caught
+        print(msg, file=sys.stderr)
+    finally:
+        _callback_log_reentry.in_diag = False
+
+
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
@@ -373,7 +393,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             try:
                 callback = func(sp)
             except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception("Exception while resolving SpanProcessor callback.")
+                _safe_log_exception(logger, "Exception while resolving SpanProcessor callback.")
                 continue
             attempt = _CallbackAttempt(callback, args, kwargs)
             attempts.append(attempt)
@@ -386,17 +406,18 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
                 # TracerProvider.shutdown() runs. Run inline through the SAME
                 # attempt; the shared lock prevents double invocation even if
                 # the work item was already enqueued before Thread.start failed.
-                logger.debug(
+                _safe_log_debug(
+                    logger,
                     "Executor is shut down; running SpanProcessor callback inline.",
                 )
                 attempt.run()
             except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception("Exception while submitting SpanProcessor callback.")
+                _safe_log_exception(logger, "Exception while submitting SpanProcessor callback.")
         for future in futures:
             try:
                 future.result()
             except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception("Exception in SpanProcessor worker.")
+                _safe_log_exception(logger, "Exception in SpanProcessor worker.")
         for attempt in attempts:
             attempt.wait_if_started()
 
