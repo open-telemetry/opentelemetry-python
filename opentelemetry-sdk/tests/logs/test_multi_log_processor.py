@@ -403,6 +403,50 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         healthy.shutdown.assert_called_once_with()
         faulty.shutdown.assert_called_once_with()
 
+    def test_submit_runtime_error_after_enqueue_does_not_double_invoke(self):
+        # When executor.submit raises RuntimeError AFTER the work item was
+        # actually enqueued, the inline fallback must not run the callback a
+        # second time. The shared _CallbackAttempt lock guarantees at-most-once,
+        # and an outward-raising user handler on the diagnostic log must not
+        # escape either.
+        multi = ConcurrentMultiLogRecordProcessor(2)
+        faulty = Mock(spec=LogRecordProcessor)
+        faulty.shutdown.side_effect = RuntimeError("processor fault")
+        healthy = Mock(spec=LogRecordProcessor)
+        multi.add_log_record_processor(faulty)
+        multi.add_log_record_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk._logs._internal")
+        old_level = otel_logger.level
+        otel_logger.setLevel(logging.DEBUG)
+        handler = _OutwardBoom(level=logging.DEBUG)
+        otel_logger.addHandler(handler)
+
+        # pylint: disable=protected-access
+        orig_submit = multi._executor.submit
+        submit_calls = []
+
+        def patched(fn, *a, **kw):
+            fut = orig_submit(fn, *a, **kw)  # actually enqueue
+            submit_calls.append(fut)
+            raise RuntimeError("cannot start new thread")
+
+        multi._executor.submit = patched
+        try:
+            multi.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
+            multi._executor.shutdown(wait=True)
+
+        assert len(submit_calls) == 2
+        healthy.shutdown.assert_called_once_with()
+        faulty.shutdown.assert_called_once_with()
+
     def test_real_logging_handler_reentry_runs_inline(self):
         # Wire the REAL LoggingHandler bridge into a ConcurrentMultiLogRecordProcessor.
         # When a child processor emits a Python log on a worker thread, the bridge

@@ -908,6 +908,49 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         healthy.shutdown.assert_called_once_with()
         faulty.shutdown.assert_called_once_with()
 
+    def test_submit_runtime_error_after_enqueue_does_not_double_invoke(self):
+        # When executor.submit raises RuntimeError AFTER the work item was
+        # actually enqueued (e.g. Thread.start failure), the inline fallback
+        # must not run the callback a second time. The shared _CallbackAttempt
+        # lock guarantees at-most-once, and an outward-raising user handler on
+        # the diagnostic log must not escape either.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        faulty = mock.Mock(spec=trace.SpanProcessor)
+        faulty.shutdown.side_effect = RuntimeError("processor fault")
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(faulty)
+        multi_processor.add_span_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk.trace")
+        old_level = otel_logger.level
+        otel_logger.setLevel(logging.DEBUG)
+        handler = _OutwardBoom(level=logging.DEBUG)
+        otel_logger.addHandler(handler)
+
+        # pylint: disable=protected-access
+        orig_submit = multi_processor._executor.submit
+        submit_calls = []
+
+        def patched(fn, *a, **kw):
+            fut = orig_submit(fn, *a, **kw)  # actually enqueue
+            submit_calls.append(fut)
+            raise RuntimeError("cannot start new thread")  # then raise
+
+        multi_processor._executor.submit = patched
+        try:
+            multi_processor.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
+
+        assert len(submit_calls) == 2  # one per processor, both enqueued
+        healthy.shutdown.assert_called_once_with()
+        faulty.shutdown.assert_called_once_with()
+
     @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")
     def test_batch_span_processor_fork(self):
         multiprocessing_context = multiprocessing.get_context("fork")
