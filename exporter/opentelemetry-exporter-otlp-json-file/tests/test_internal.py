@@ -5,11 +5,11 @@ import concurrent.futures
 import io
 import json
 import os
-import sys
 import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 
 from opentelemetry.exporter.otlp.json.file._internal import (
     _FileExporter,
@@ -93,14 +93,15 @@ class TestFileExporter(unittest.TestCase):
         )
 
     def test_default_stdout_remains_open_after_shutdown(self):
-        exporter = _FileExporter(
-            encode=_dummy_encode,
-            kind="spans",
-        )
-        # pylint: disable-next=protected-access
-        self.assertIs(exporter._stream, sys.stdout)
-        exporter.shutdown()
-        self.assertFalse(sys.stdout.closed)
+        with mock.patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            exporter = _FileExporter(
+                encode=_dummy_encode,
+                kind="spans",
+            )
+            # pylint: disable-next=protected-access
+            self.assertIs(exporter._stream, mock_stdout)
+            exporter.shutdown()
+            self.assertFalse(mock_stdout.closed)
 
     def test_exporter_owned_file_stream_closes_after_shutdown(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
