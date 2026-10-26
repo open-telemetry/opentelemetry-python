@@ -9,11 +9,3 @@ tomli==2.0.1
 typing_extensions==4.10.0
 wrapt==1.16.0
 zipp==3.19.2
--e opentelemetry-api
--e opentelemetry-sdk
--e opentelemetry-semantic-conventions
--e tests/opentelemetry-test-utils
--e opentelemetry-proto-json
--e exporter/opentelemetry-exporter-otlp-common
--e exporter/opentelemetry-exporter-otlp-json-common
--e exporter/opentelemetry-exporter-otlp-json-file
