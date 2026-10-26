@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: split declarative configuration into `load_config` (Parse) and `create_sdk` (Create) per the configuration spec
