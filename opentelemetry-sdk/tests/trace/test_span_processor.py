@@ -767,36 +767,30 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         # fallback must not run the callback a second time: the queue worker
         # will pick up the enqueued item. A shared claim per dispatch ensures
         # at-most-once.
-        import threading
         multi_processor = trace.ConcurrentMultiSpanProcessor(2)
-        a = mock.Mock(spec=trace.SpanProcessor)
-        b = mock.Mock(spec=trace.SpanProcessor)
-        multi_processor.add_span_processor(a)
-        multi_processor.add_span_processor(b)
+        processor_a = mock.Mock(spec=trace.SpanProcessor)
+        processor_b = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(processor_a)
+        multi_processor.add_span_processor(processor_b)
 
-        real_start = threading.Thread.start
+        real_start = Thread.start
         calls = {"n": 0}
 
-        def first_start_fails(t):
+        def first_start_fails(target):
             calls["n"] += 1
             if calls["n"] == 1:
                 raise RuntimeError("cannot start new thread")
-            return real_start(t)
+            return real_start(target)
 
-        try:
-            with mock.patch.object(threading.Thread, "start", first_start_fails):
-                multi_processor.shutdown()
-        finally:
-            pass
+        with mock.patch.object(Thread, "start", first_start_fails):
+            multi_processor.shutdown()
 
-        self.assertEqual(a.shutdown.call_count, 1)
-        self.assertEqual(b.shutdown.call_count, 1)
+        self.assertEqual(processor_a.shutdown.call_count, 1)
+        self.assertEqual(processor_b.shutdown.call_count, 1)
 
     def test_callback_exception_preserves_application_exception(self):
         # A processor callback failure must not replace the caller's own
         # exception when on_end runs on the caller's thread.
-        from opentelemetry.sdk.trace import TracerProvider
-
         multi_processor = trace.ConcurrentMultiSpanProcessor(2)
         faulty = mock.Mock(spec=trace.SpanProcessor)
         faulty.on_end.side_effect = RuntimeError("telemetry fault")
@@ -804,7 +798,9 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         multi_processor.add_span_processor(faulty)
         multi_processor.add_span_processor(healthy)
 
-        provider = TracerProvider(active_span_processor=multi_processor, shutdown_on_exit=False)
+        provider = trace.TracerProvider(
+            active_span_processor=multi_processor, shutdown_on_exit=False
+        )
         app_error = ValueError("business fault")
         try:
             with self.assertRaises(ValueError) as caught:
@@ -812,7 +808,6 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
                     raise app_error
             self.assertIs(caught.exception, app_error)
         finally:
-            # pylint: disable=protected-access
             multi_processor._executor.shutdown(wait=True)
 
     @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")

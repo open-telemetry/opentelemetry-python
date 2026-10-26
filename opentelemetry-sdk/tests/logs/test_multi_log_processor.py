@@ -8,8 +8,7 @@ import threading
 import time
 import unittest
 from abc import ABC, abstractmethod
-from unittest import mock
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.sdk._logs._internal import (
@@ -288,24 +287,23 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
     def test_submit_runtime_error_does_not_double_invoke(self):
         # If Thread.start fails AFTER the work item was enqueued, the inline
         # fallback must not run the callback a second time.
-        import threading
         multi_log_record_processor = ConcurrentMultiLogRecordProcessor(2)
-        a = Mock(spec=LogRecordProcessor)
-        b = Mock(spec=LogRecordProcessor)
-        multi_log_record_processor.add_log_record_processor(a)
-        multi_log_record_processor.add_log_record_processor(b)
+        processor_a = Mock(spec=LogRecordProcessor)
+        processor_b = Mock(spec=LogRecordProcessor)
+        multi_log_record_processor.add_log_record_processor(processor_a)
+        multi_log_record_processor.add_log_record_processor(processor_b)
 
         real_start = threading.Thread.start
         calls = {"n": 0}
 
-        def first_start_fails(t):
+        def first_start_fails(target):
             calls["n"] += 1
             if calls["n"] == 1:
                 raise RuntimeError("cannot start new thread")
-            return real_start(t)
+            return real_start(target)
 
-        with mock.patch.object(threading.Thread, "start", first_start_fails):
+        with patch.object(threading.Thread, "start", first_start_fails):
             multi_log_record_processor.shutdown()
 
-        self.assertEqual(a.shutdown.call_count, 1)
-        self.assertEqual(b.shutdown.call_count, 1)
+        self.assertEqual(processor_a.shutdown.call_count, 1)
+        self.assertEqual(processor_b.shutdown.call_count, 1)
