@@ -90,6 +90,32 @@ _logger = logging.getLogger(__name__)
 _callback_log_reentry = threading.local()
 
 
+def _safe_log_exception(logger, msg):
+    """Log an exception safely against recursive logging handlers.
+
+    If we are already inside a diagnostic log dispatch on this thread, write
+    the record to stderr directly instead of going through the logging module
+    to prevent infinite feedback loops. Any exception raised by a user logging
+    handler during the outer dispatch is contained here.
+    """
+    if getattr(_callback_log_reentry, "in_diag", False):
+        import sys as _sys
+        import traceback as _tb
+        print(msg, file=_sys.stderr)
+        _tb.print_exc(file=_sys.stderr)
+        return
+    _callback_log_reentry.in_diag = True
+    try:
+        logger.exception(msg)
+    except Exception:  # pylint: disable=broad-exception-caught
+        import sys as _sys
+        import traceback as _tb
+        print(msg, file=_sys.stderr)
+        _tb.print_exc(file=_sys.stderr)
+    finally:
+        _callback_log_reentry.in_diag = False
+
+
 class BytesEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, bytes):
@@ -508,7 +534,7 @@ class _CallbackAttempt:
         try:
             self._callback(*self._args, **self._kwargs)
         except Exception:  # pylint: disable=broad-exception-caught
-            _logger.exception("Exception while calling LogRecordProcessor callback.")
+            _safe_log_exception(_logger, "Exception while calling LogRecordProcessor callback.")
         finally:
             _callback_log_reentry.active = reentry
             self._finished.set()
@@ -561,8 +587,9 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
                     callback = func(lp)
                     callback(*args, **kwargs)
                 except Exception:  # pylint: disable=broad-exception-caught
-                    _logger.exception(
-                        "Exception while re-entering LogRecordProcessor callback inline."
+                    _safe_log_exception(
+                        _logger,
+                        "Exception while re-entering LogRecordProcessor callback inline.",
                     )
             return
         attempts = []
