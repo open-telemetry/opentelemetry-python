@@ -339,6 +339,40 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
 
         healthy.shutdown.assert_called_once_with()
 
+
+    def test_logging_handler_outward_raise_inline_fallback_is_isolated(self):
+        # A user logging handler that raises OUTWARD (no self-catch, with
+        # raiseExceptions left at its default) must not abort the inline
+        # fallback when the executor is already shut down. The executor-shutdown
+        # DEBUG diagnostic and per-callback exception log are wrapped so a
+        # handler error falls back to stderr; both faulty and healthy shut down.
+        multi = ConcurrentMultiLogRecordProcessor(2)
+        faulty = Mock(spec=LogRecordProcessor)
+        faulty.shutdown.side_effect = RuntimeError("processor fault")
+        healthy = Mock(spec=LogRecordProcessor)
+        multi.add_log_record_processor(faulty)
+        multi.add_log_record_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk._logs._internal")
+        old_level = otel_logger.level
+        handler = _OutwardBoom(level=logging.DEBUG)
+        otel_logger.setLevel(logging.DEBUG)
+        otel_logger.addHandler(handler)
+        multi._executor.shutdown(wait=True)
+        try:
+            multi.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
+            multi._executor.shutdown(wait=True)
+
+        healthy.shutdown.assert_called_once_with()
+        faulty.shutdown.assert_called_once_with()
+
     def test_real_logging_handler_reentry_runs_inline(self):
         # Wire the REAL LoggingHandler bridge into a ConcurrentMultiLogRecordProcessor.
         # When a child processor emits a Python log on a worker thread, the bridge

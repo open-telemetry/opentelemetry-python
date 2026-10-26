@@ -843,6 +843,42 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
 
         healthy.shutdown.assert_called_once_with()
 
+
+    def test_logging_handler_outward_raise_inline_fallback_is_isolated(self):
+        # A user logging handler that raises OUTWARD (no self-catch, with
+        # raiseExceptions left at its default) must not abort the inline
+        # fallback when the executor is already shut down (the atexit path).
+        # The executor-shutdown DEBUG diagnostic and the per-callback exception
+        # log are wrapped so a handler error falls back to stderr instead of
+        # escaping; both the faulty and the healthy processor still shut down.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        faulty = mock.Mock(spec=trace.SpanProcessor)
+        faulty.shutdown.side_effect = RuntimeError("processor fault")
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(faulty)
+        multi_processor.add_span_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk.trace")
+        old_level = otel_logger.level
+        handler = _OutwardBoom(level=logging.DEBUG)
+        otel_logger.setLevel(logging.DEBUG)
+        otel_logger.addHandler(handler)
+        multi_processor._executor.shutdown(wait=True)
+        try:
+            # Must not raise despite the outward handler raise on the
+            # "Executor is shut down" DEBUG diagnostic.
+            multi_processor.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
+
+        healthy.shutdown.assert_called_once_with()
+        faulty.shutdown.assert_called_once_with()
+
     @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")
     def test_batch_span_processor_fork(self):
         multiprocessing_context = multiprocessing.get_context("fork")
