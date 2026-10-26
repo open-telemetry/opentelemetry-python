@@ -224,6 +224,50 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         return all_flushed
 
 
+class _CallbackAttempt:
+    """Per-dispatch at-most-once wrapper for a processor callback.
+
+    The queue worker and the inline fallback (when ``executor.submit`` raises
+    ``RuntimeError``) share the same attempt. A lock-guarded claim ensures the
+    underlying callback runs at most once even when ``Thread.start`` fails
+    after the work item was already enqueued, which previously caused the
+    callback to run twice. Callback exceptions are contained and logged so a
+    faulty processor does not block healthy siblings or replace the caller's
+    own exception.
+
+    This scopes to a single dispatch entry; it does not promise global
+    exactly-once delivery, retry, or bounded shutdown.
+    """
+
+    __slots__ = ("_callback", "_args", "_kwargs", "_lock", "_started", "_finished")
+
+    def __init__(self, callback: Callable[..., None], args: tuple[Any, ...], kwargs: dict[str, Any]):
+        self._callback = callback
+        self._args = args
+        self._kwargs = kwargs
+        self._lock = threading.Lock()
+        self._started = False
+        self._finished = threading.Event()
+
+    def run(self) -> None:
+        with self._lock:
+            if self._started:
+                return
+            self._started = True
+        try:
+            self._callback(*self._args, **self._kwargs)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Exception while calling SpanProcessor callback.")
+        finally:
+            self._finished.set()
+
+    def wait_if_started(self) -> None:
+        with self._lock:
+            started = self._started
+        if started:
+            self._finished.wait()
+
+
 class ConcurrentMultiSpanProcessor(SpanProcessor):
     """Implementation of :class:`SpanProcessor` that forwards all received
     events to a list of span processors in parallel.
@@ -273,25 +317,38 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         *args: Any,
         **kwargs: Any,
     ):
+        attempts = []
         futures = []
         for sp in self._span_processors:
             try:
-                future = self._executor.submit(func(sp), *args, **kwargs)
-                futures.append(future)
+                callback = func(sp)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while resolving SpanProcessor callback.")
+                continue
+            attempt = _CallbackAttempt(callback, args, kwargs)
+            attempts.append(attempt)
+            try:
+                futures.append(self._executor.submit(attempt.run))
             except RuntimeError:
                 # The executor may already be shut down when this runs from an
                 # atexit handler: CPython runs threading._shutdown() before the
                 # atexit queue, so the ThreadPoolExecutor is closed by the time
-                # TracerProvider.shutdown() runs. Run inline so buffered work is
-                # still flushed instead of being silently dropped. A
-                # RuntimeError raised by the callback itself is not caught here
-                # and still propagates via future.result() below.
+                # TracerProvider.shutdown() runs. Run inline through the SAME
+                # attempt; the shared lock prevents double invocation even if
+                # the work item was already enqueued before Thread.start failed.
                 logger.debug(
                     "Executor is shut down; running SpanProcessor callback inline.",
                 )
-                func(sp)(*args, **kwargs)
+                attempt.run()
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception while submitting SpanProcessor callback.")
         for future in futures:
-            future.result()
+            try:
+                future.result()
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Exception in SpanProcessor worker.")
+        for attempt in attempts:
+            attempt.wait_if_started()
 
     def on_start(
         self,

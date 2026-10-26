@@ -476,6 +476,41 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         return all_flushed
 
 
+class _CallbackAttempt:
+    """Per-dispatch at-most-once wrapper for a log record processor callback.
+
+    See :class:`opentelemetry.sdk.trace._CallbackAttempt` for the rationale.
+    """
+
+    __slots__ = ("_callback", "_args", "_kwargs", "_lock", "_started", "_finished")
+
+    def __init__(self, callback: Callable[..., None], args: tuple[Any, ...], kwargs: dict[str, Any]):
+        self._callback = callback
+        self._args = args
+        self._kwargs = kwargs
+        self._lock = threading.Lock()
+        self._started = False
+        self._finished = threading.Event()
+
+    def run(self) -> None:
+        with self._lock:
+            if self._started:
+                return
+            self._started = True
+        try:
+            self._callback(*self._args, **self._kwargs)
+        except Exception:  # pylint: disable=broad-exception-caught
+            _logger.exception("Exception while calling LogRecordProcessor callback.")
+        finally:
+            self._finished.set()
+
+    def wait_if_started(self) -> None:
+        with self._lock:
+            started = self._started
+        if started:
+            self._finished.wait()
+
+
 class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     """Implementation of :class:`LogRecordProcessor` that forwards all received
     events to a list of log processors in parallel.
@@ -506,25 +541,38 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         *args: Any,
         **kwargs: Any,
     ):
+        attempts = []
         futures = []
         for lp in self._log_record_processors:
             try:
-                future = self._executor.submit(func(lp), *args, **kwargs)
-                futures.append(future)
+                callback = func(lp)
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.exception("Exception while resolving LogRecordProcessor callback.")
+                continue
+            attempt = _CallbackAttempt(callback, args, kwargs)
+            attempts.append(attempt)
+            try:
+                futures.append(self._executor.submit(attempt.run))
             except RuntimeError:
                 # The executor may already be shut down when this runs from an
                 # atexit handler: CPython runs threading._shutdown() before the
-                # atexit queue, so the ThreadPoolExecutor is closed by the time
-                # LoggerProvider.shutdown() runs. Run inline so buffered work is
-                # still flushed instead of being silently dropped. A
-                # RuntimeError raised by the callback itself is not caught here
-                # and still propagates via future.result() below.
+                # atexit queue, so the LoggerProvider.shutdown() runs. Run
+                # inline through the SAME attempt; the shared lock prevents
+                # double invocation even if the work item was already enqueued
+                # before Thread.start failed.
                 _logger.debug(
                     "Executor is shut down; running LogRecordProcessor callback inline.",
                 )
-                func(lp)(*args, **kwargs)
+                attempt.run()
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.exception("Exception while submitting LogRecordProcessor callback.")
         for future in futures:
-            future.result()
+            try:
+                future.result()
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.exception("Exception in LogRecordProcessor worker.")
+        for attempt in attempts:
+            attempt.wait_if_started()
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)

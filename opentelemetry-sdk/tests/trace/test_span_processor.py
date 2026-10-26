@@ -746,17 +746,74 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         multi_processor.on_end(span)
         mock_processor.on_end.assert_called_once_with(span)
 
-    def test_callback_runtime_error_propagates_not_swallowed(self):
-        # A RuntimeError raised by a processor callback (while the executor is
-        # alive) must still propagate out of shutdown(); the inline fallback
-        # must not mask unrelated callback failures.
+    def test_callback_exception_does_not_block_siblings(self):
+        # Per OTel error-handling spec, a processor callback must not raise out
+        # of shutdown() and must not prevent healthy siblings from running.
         multi_processor = trace.ConcurrentMultiSpanProcessor(2)
         raising_processor = mock.Mock(spec=trace.SpanProcessor)
         raising_processor.shutdown.side_effect = RuntimeError("processor boom")
+        healthy_processor = mock.Mock(spec=trace.SpanProcessor)
         multi_processor.add_span_processor(raising_processor)
+        multi_processor.add_span_processor(healthy_processor)
 
-        with self.assertRaises(RuntimeError):
+        with self.assertLogs("opentelemetry.sdk.trace", level="ERROR"):
             multi_processor.shutdown()
+
+        raising_processor.shutdown.assert_called_once_with()
+        healthy_processor.shutdown.assert_called_once_with()
+
+    def test_submit_runtime_error_does_not_double_invoke(self):
+        # If Thread.start fails AFTER the work item was enqueued, the inline
+        # fallback must not run the callback a second time: the queue worker
+        # will pick up the enqueued item. A shared claim per dispatch ensures
+        # at-most-once.
+        import threading
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        a = mock.Mock(spec=trace.SpanProcessor)
+        b = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(a)
+        multi_processor.add_span_processor(b)
+
+        real_start = threading.Thread.start
+        calls = {"n": 0}
+
+        def first_start_fails(t):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise RuntimeError("cannot start new thread")
+            return real_start(t)
+
+        try:
+            with mock.patch.object(threading.Thread, "start", first_start_fails):
+                multi_processor.shutdown()
+        finally:
+            pass
+
+        self.assertEqual(a.shutdown.call_count, 1)
+        self.assertEqual(b.shutdown.call_count, 1)
+
+    def test_callback_exception_preserves_application_exception(self):
+        # A processor callback failure must not replace the caller's own
+        # exception when on_end runs on the caller's thread.
+        from opentelemetry.sdk.trace import TracerProvider
+
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        faulty = mock.Mock(spec=trace.SpanProcessor)
+        faulty.on_end.side_effect = RuntimeError("telemetry fault")
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(faulty)
+        multi_processor.add_span_processor(healthy)
+
+        provider = TracerProvider(active_span_processor=multi_processor, shutdown_on_exit=False)
+        app_error = ValueError("business fault")
+        try:
+            with self.assertRaises(ValueError) as caught:
+                with provider.get_tracer("test").start_as_current_span("x"):
+                    raise app_error
+            self.assertIs(caught.exception, app_error)
+        finally:
+            # pylint: disable=protected-access
+            multi_processor._executor.shutdown(wait=True)
 
     @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")
     def test_batch_span_processor_fork(self):

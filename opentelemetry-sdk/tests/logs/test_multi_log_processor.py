@@ -8,6 +8,7 @@ import threading
 import time
 import unittest
 from abc import ABC, abstractmethod
+from unittest import mock
 from unittest.mock import Mock
 
 from opentelemetry._logs import LogRecord, SeverityNumber
@@ -268,13 +269,43 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         multi_log_record_processor.shutdown()
         mock_processor.shutdown.assert_called_once_with()
 
-    def test_callback_runtime_error_propagates_not_swallowed(self):
-        # A RuntimeError raised by a processor callback (while the executor is
-        # alive) must still propagate out of shutdown().
+    def test_callback_exception_does_not_block_siblings(self):
+        # A LogRecordProcessor callback failure must not raise out of
+        # shutdown() and must not prevent healthy siblings from running.
         multi_log_record_processor = ConcurrentMultiLogRecordProcessor(2)
         raising_processor = Mock(spec=LogRecordProcessor)
         raising_processor.shutdown.side_effect = RuntimeError("processor boom")
+        healthy_processor = Mock(spec=LogRecordProcessor)
         multi_log_record_processor.add_log_record_processor(raising_processor)
+        multi_log_record_processor.add_log_record_processor(healthy_processor)
 
-        with self.assertRaises(RuntimeError):
+        with self.assertLogs("opentelemetry.sdk._logs._internal", level="ERROR"):
             multi_log_record_processor.shutdown()
+
+        raising_processor.shutdown.assert_called_once_with()
+        healthy_processor.shutdown.assert_called_once_with()
+
+    def test_submit_runtime_error_does_not_double_invoke(self):
+        # If Thread.start fails AFTER the work item was enqueued, the inline
+        # fallback must not run the callback a second time.
+        import threading
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor(2)
+        a = Mock(spec=LogRecordProcessor)
+        b = Mock(spec=LogRecordProcessor)
+        multi_log_record_processor.add_log_record_processor(a)
+        multi_log_record_processor.add_log_record_processor(b)
+
+        real_start = threading.Thread.start
+        calls = {"n": 0}
+
+        def first_start_fails(t):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise RuntimeError("cannot start new thread")
+            return real_start(t)
+
+        with mock.patch.object(threading.Thread, "start", first_start_fails):
+            multi_log_record_processor.shutdown()
+
+        self.assertEqual(a.shutdown.call_count, 1)
+        self.assertEqual(b.shutdown.call_count, 1)
