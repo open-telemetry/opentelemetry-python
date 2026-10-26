@@ -799,9 +799,7 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         multi_processor.add_span_processor(faulty)
         multi_processor.add_span_processor(healthy)
 
-        provider = trace.TracerProvider(
-            active_span_processor=multi_processor, shutdown_on_exit=False
-        )
+        provider = trace.TracerProvider(active_span_processor=multi_processor, shutdown_on_exit=False)
         app_error = ValueError("business fault")
         try:
             with self.assertRaises(ValueError) as caught:
@@ -810,7 +808,6 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
             self.assertIs(caught.exception, app_error)
         finally:
             multi_processor._executor.shutdown(wait=True)
-
 
     def test_callback_logger_handler_raise_does_not_crash(self):
         # A logging handler attached to the OTel logger that raises must not
