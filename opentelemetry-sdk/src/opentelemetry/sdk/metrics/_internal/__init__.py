@@ -442,6 +442,7 @@ class MeterProvider(APIMeterProvider):
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
+        self._metric_readers_lock = Lock()
         self._atexit_handler = None
         if resource is None:
             resource = Resource.create({})
@@ -493,6 +494,7 @@ class MeterProvider(APIMeterProvider):
     def _handle_fork(self) -> None:
         self._lock = Lock()
         self._meter_lock = Lock()
+        self._metric_readers_lock = Lock()
         type(self)._all_metric_readers_lock = Lock()
         self._update_resource(_get_process_dependent_resource())
 
@@ -640,9 +642,16 @@ class MeterProvider(APIMeterProvider):
                 )
                 return
             self._measurement_consumer.add_metric_reader(metric_reader)
-            # pylint: disable-next=protected-access
-            metric_reader._set_collect_callback(self._measurement_consumer.collect)
             self._all_metric_readers.add(metric_reader)
+            # Replaced rather than mutated so force_flush and shutdown can
+            # iterate it without holding the lock.
+            with self._metric_readers_lock:
+                self._metric_readers = (*self._metric_readers, metric_reader)
+
+        # pylint: disable-next=protected-access
+        metric_reader._set_collect_callback(self._measurement_consumer.collect)
+        # pylint: disable-next=protected-access
+        metric_reader._set_meter_provider(self)
 
     def remove_metric_reader(
         self,
@@ -653,7 +662,10 @@ class MeterProvider(APIMeterProvider):
                 _logger.warning("MetricReader '%s' has not been registered!", metric_reader)
                 return
             self._measurement_consumer.remove_metric_reader(metric_reader)
-            # pylint: disable-next=protected-access
-            metric_reader._set_collect_callback(None)
-            metric_reader.shutdown()
             self._all_metric_readers.remove(metric_reader)
+            with self._metric_readers_lock:
+                self._metric_readers = tuple(reader for reader in self._metric_readers if reader is not metric_reader)
+
+        # pylint: disable-next=protected-access
+        metric_reader._set_collect_callback(None)
+        metric_reader.shutdown()

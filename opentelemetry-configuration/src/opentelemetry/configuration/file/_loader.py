@@ -9,7 +9,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, TextIO, get_args
 
 from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._exceptions import (
@@ -48,6 +48,16 @@ except ImportError as exc:
 # https://github.com/open-telemetry/opentelemetry-configuration/blob/main/VERSIONING.md
 _SUPPORTED_SCHEMA_MAJOR = 1
 _SUPPORTED_SCHEMA_MINOR = 1
+
+ConfigFileFormat = Literal["yaml", "json"]
+
+_FILE_FORMATS: tuple[str, ...] = get_args(ConfigFileFormat)
+
+_SUFFIX_TO_FILE_FORMAT: dict[str, ConfigFileFormat] = {
+    ".yaml": "yaml",
+    ".yml": "yaml",
+    ".json": "json",
+}
 
 _schema_cache: list[dict] = []
 
@@ -182,7 +192,7 @@ def _substitute_env_in_json_value(value: Any) -> Any:
     return value
 
 
-def _parse_config_content(content: str, suffix: str, file_path: str | os.PathLike[str]) -> Any:
+def _parse_config_content(content: str, file_format: ConfigFileFormat, source_name: str) -> Any:
     """Parse configuration text and substitute environment variables.
 
     Parsing happens first, so ``${VAR}`` references in comments and mapping
@@ -195,7 +205,7 @@ def _parse_config_content(content: str, suffix: str, file_path: str | os.PathLik
             a required environment variable fails.
     """
     try:
-        if suffix == ".json":
+        if file_format == "json":
             return _substitute_env_in_json_value(json.loads(content))
         yaml_loader = yaml.SafeLoader(content)
         try:
@@ -207,34 +217,22 @@ def _parse_config_content(content: str, suffix: str, file_path: str | os.PathLik
         finally:
             yaml_loader.dispose()
     except yaml.YAMLError as exc:
-        _logger.exception("Failed to parse YAML from %s", file_path)
+        _logger.exception("Failed to parse YAML from %s", source_name)
         raise ConfigurationError(f"Failed to parse YAML: {exc}") from exc
     except json.JSONDecodeError as exc:
-        _logger.exception("Failed to parse JSON from %s", file_path)
+        _logger.exception("Failed to parse JSON from %s", source_name)
         raise ConfigurationError(f"Failed to parse JSON: {exc}") from exc
 
 
-def load_config_file(
+def _read_config_path(
     file_path: str | os.PathLike[str],
-) -> OpenTelemetryConfiguration:
-    """Load and parse an OpenTelemetry configuration file.
-
-    Supports YAML and JSON formats. Environment variable substitution is
-    performed after parsing, on configuration values only, so ``${VAR}``
-    references in comments or mapping keys are left untouched.
-
-    Args:
-        file_path: Path to the configuration file (.yaml, .yml, or .json).
-
-    Returns:
-        Parsed OpenTelemetryConfiguration object.
+    file_format: ConfigFileFormat | None,
+) -> tuple[str, ConfigFileFormat]:
+    """Read a configuration file, inferring its format from the extension.
 
     Raises:
-        ConfigurationError: If file cannot be read, parsed, or validated.
-
-    Examples:
-        >>> config = load_config_file("otel-config.yaml")
-        >>> print(config.tracer_provider)
+        ConfigurationError: If the file is missing, unreadable, or has an
+            unsupported extension while ``file_format`` is not given.
     """
     path = Path(file_path)
 
@@ -246,25 +244,67 @@ def load_config_file(
         _logger.error("Configuration path is not a file: %s", file_path)
         raise ConfigurationError(f"Configuration path is not a file: {file_path}")
 
+    if file_format is None:
+        suffix = path.suffix.lower()
+        if suffix not in _SUFFIX_TO_FILE_FORMAT:
+            _logger.error("Unsupported file format: %s", suffix)
+            raise ConfigurationError(f"Unsupported file format: {suffix}. Use .yaml, .yml, or .json")
+        file_format = _SUFFIX_TO_FILE_FORMAT[suffix]
+
     try:
         with open(path, encoding="utf-8") as config_file:
-            content = config_file.read()
+            return config_file.read(), file_format
     except OSError as exc:
         _logger.exception("Failed to read configuration file: %s", file_path)
         raise ConfigurationError(f"Failed to read configuration file: {file_path}") from exc
 
-    # Parse the file, then substitute env vars in configuration values only.
-    # Parsing first means comments and mapping keys are never substitution
-    # candidates, and node types are still resolved after substitution.
-    suffix = path.suffix.lower()
-    if suffix not in (".yaml", ".yml", ".json"):
-        _logger.error("Unsupported file format: %s", suffix)
-        raise ConfigurationError(f"Unsupported file format: {suffix}. Use .yaml, .yml, or .json")
 
-    data = _parse_config_content(content, suffix, file_path)
+def load_config(
+    source: str | os.PathLike[str] | TextIO,
+    file_format: ConfigFileFormat | None = None,
+) -> OpenTelemetryConfiguration:
+    """Parse and validate an OpenTelemetry configuration file.
+
+    Implements the configuration spec's Parse operation. Environment variable
+    substitution is performed after parsing, on configuration values only, so
+    ``${VAR}`` references in comments or mapping keys are left untouched. The
+    parsed content is validated against the configuration JSON schema.
+
+    Args:
+        source: Path to the configuration file, or a text stream of its
+            content.
+        file_format: ``"yaml"`` or ``"json"``. Inferred from the extension
+            (``.yaml``, ``.yml``, ``.json``) when ``source`` is a path;
+            required when ``source`` is a stream.
+
+    Returns:
+        Parsed OpenTelemetryConfiguration object.
+
+    Raises:
+        ConfigurationError: If the file cannot be read, parsed, or validated.
+        ValueError: If ``file_format`` is invalid, or missing for a stream.
+
+    Examples:
+        >>> config = load_config("otel-config.yaml")
+        >>> with open("otel-config.txt", encoding="utf-8") as stream:
+        ...     config = load_config(stream, file_format="yaml")
+    """
+    if file_format is not None and file_format not in _FILE_FORMATS:
+        raise ValueError(f"Invalid file_format {file_format!r}: expected one of {list(_FILE_FORMATS)}")
+
+    if isinstance(source, (str, os.PathLike)):
+        source_name = os.fspath(source)
+        content, file_format = _read_config_path(source, file_format)
+    else:
+        if file_format is None:
+            raise ValueError("file_format is required when parsing configuration from a stream")
+        source_name = getattr(source, "name", "<stream>")
+        content = source.read()
+
+    data = _parse_config_content(content, file_format, source_name)
 
     if data is None:
-        _logger.error("Configuration file is empty: %s", file_path)
+        _logger.error("Configuration file is empty: %s", source_name)
         raise ConfigurationError("Configuration file is empty")
 
     if not isinstance(data, dict):
@@ -275,13 +315,13 @@ def load_config_file(
         raise ConfigurationError(f"Configuration must be a mapping/object, got {type(data).__name__}")
 
     _validate_schema(data)
-    _validate_file_format(data)
+    _validate_file_format(data.get("file_format"))
 
     # Convert to OpenTelemetryConfiguration model
     try:
         config = _dict_to_model(data)
     except Exception as exc:
-        _logger.exception("Failed to validate configuration from %s", file_path)
+        _logger.exception("Failed to validate configuration from %s", source_name)
         raise ConfigurationError(f"Failed to validate configuration: {exc}") from exc
 
     return config
@@ -309,7 +349,7 @@ def _validate_schema(data: dict) -> None:
         raise ConfigurationError(f"Invalid configuration schema: {exc.message}") from exc
 
 
-def _validate_file_format(data: dict) -> None:
+def _validate_file_format(file_format: Any) -> None:
     """Validate the ``file_format`` version per the configuration spec.
 
     The spec requires implementations to fail on an unsupported major version
@@ -321,9 +361,9 @@ def _validate_file_format(data: dict) -> None:
         ConfigurationError: If ``file_format`` is malformed or its major
             version is not supported.
     """
-    file_format = data.get("file_format")
-    # file_format is required and typed as a string by the schema, which is
-    # validated before this runs; guard defensively regardless.
+    # file_format is required and typed as a string by the schema. Parsed
+    # files are schema-validated before this runs, but models built directly
+    # in code are not, so guard regardless.
     if not isinstance(file_format, str):
         raise ConfigurationError(f"Invalid file_format: expected a version string, got {file_format!r}")
 

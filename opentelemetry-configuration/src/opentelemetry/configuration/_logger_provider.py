@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 
-from opentelemetry._logs import set_logger_provider
 from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
@@ -54,6 +53,7 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs._internal import (
     LogRecordLimits,
@@ -86,8 +86,12 @@ def _create_console_log_exporter() -> ConsoleLogRecordExporter:
 
 def _create_otlp_http_log_exporter(
     config: OtlpHttpExporterConfig,
+    meter_provider: MeterProvider | None,
 ) -> LogRecordExporter:
-    """Create an OTLP HTTP log exporter from config."""
+    """Create an OTLP HTTP log exporter from config.
+
+    ``meter_provider`` receives the protobuf exporter's own metrics
+    """
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
@@ -113,6 +117,7 @@ def _create_otlp_http_log_exporter(
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
+                meter_provider=meter_provider,
             )
         case OtlpHttpEncoding.json:
             try:
@@ -144,6 +149,7 @@ def _create_otlp_http_log_exporter(
 
 def _create_otlp_grpc_log_exporter(
     config: OtlpGrpcExporterConfig,
+    meter_provider: MeterProvider | None,
 ) -> LogRecordExporter:
     """Create an OTLP gRPC log exporter from config."""
     try:
@@ -168,6 +174,7 @@ def _create_otlp_grpc_log_exporter(
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
+        meter_provider=meter_provider,
     )
 
 
@@ -192,6 +199,7 @@ def _create_otlp_file_development_log_exporter(
 
 def _create_log_record_exporter(
     config: LogRecordExporterConfig,
+    meter_provider: MeterProvider | None,
 ) -> LogRecordExporter:
     """Create a log record exporter from config.
 
@@ -202,9 +210,9 @@ def _create_log_record_exporter(
     """
     match config:
         case LogRecordExporterConfig(otlp_http=exporter_config) if exporter_config is not None:
-            return _create_otlp_http_log_exporter(exporter_config)
+            return _create_otlp_http_log_exporter(exporter_config, meter_provider)
         case LogRecordExporterConfig(otlp_grpc=exporter_config) if exporter_config is not None:
-            return _create_otlp_grpc_log_exporter(exporter_config)
+            return _create_otlp_grpc_log_exporter(exporter_config, meter_provider)
         case LogRecordExporterConfig(console=exporter_config) if exporter_config is not None:
             return ConsoleLogRecordExporter()
         case LogRecordExporterConfig(otlp_file_development=exporter_config) if exporter_config is not None:
@@ -221,12 +229,13 @@ def _create_log_record_exporter(
 
 def _create_batch_log_record_processor(
     config: BatchLogRecordProcessorConfig,
+    meter_provider: MeterProvider | None,
 ) -> BatchLogRecordProcessor:
     """Create a BatchLogRecordProcessor from config.
 
     Passes explicit defaults to suppress OTEL_BLRP_* env var reading.
     """
-    exporter = _create_log_record_exporter(config.exporter)
+    exporter = _create_log_record_exporter(config.exporter, meter_provider)
     schedule_delay = config.schedule_delay if config.schedule_delay is not None else _DEFAULT_SCHEDULE_DELAY_MILLIS
     export_timeout = config.export_timeout if config.export_timeout is not None else _DEFAULT_EXPORT_TIMEOUT_MILLIS
     max_queue_size = config.max_queue_size if config.max_queue_size is not None else _DEFAULT_MAX_QUEUE_SIZE
@@ -239,25 +248,28 @@ def _create_batch_log_record_processor(
         export_timeout_millis=float(export_timeout),
         max_queue_size=max_queue_size,
         max_export_batch_size=max_export_batch_size,
+        meter_provider=meter_provider,
     )
 
 
 def _create_simple_log_record_processor(
     config: SimpleLogRecordProcessorConfig,
+    meter_provider: MeterProvider | None,
 ) -> SimpleLogRecordProcessor:
     """Create a SimpleLogRecordProcessor from config."""
-    exporter = _create_log_record_exporter(config.exporter)
-    return SimpleLogRecordProcessor(exporter)
+    exporter = _create_log_record_exporter(config.exporter, meter_provider)
+    return SimpleLogRecordProcessor(exporter, meter_provider=meter_provider)
 
 
 def _create_log_record_processor(
     config: LogRecordProcessorConfig,
+    meter_provider: MeterProvider | None,
 ) -> BatchLogRecordProcessor | SimpleLogRecordProcessor:
     """Create a log record processor from config."""
     if config.batch is not None:
-        return _create_batch_log_record_processor(config.batch)
+        return _create_batch_log_record_processor(config.batch, meter_provider)
     if config.simple is not None:
-        return _create_simple_log_record_processor(config.simple)
+        return _create_simple_log_record_processor(config.simple, meter_provider)
     raise ConfigurationError(
         "No processor type specified in log record processor config. Supported types: batch, simple."
     )
@@ -348,6 +360,7 @@ def create_logger_provider(
     config: LoggerProviderConfig | None,
     resource: Resource | None = None,
     global_attribute_limits: AttributeLimits | None = None,
+    meter_provider: MeterProvider | None = None,
 ) -> LoggerProvider:
     """Create an SDK LoggerProvider from declarative config.
 
@@ -359,6 +372,9 @@ def create_logger_provider(
         resource: Resource to attach to the provider.
         global_attribute_limits: Top-level attribute_limits from the root config,
             used as a fallback when per-signal limits are not specified.
+        meter_provider: MeterProvider for the SDK's own metrics (provider,
+            processors, and OTLP exporters). When None, those components use
+            the global MeterProvider.
 
     Returns:
         A configured LoggerProvider.
@@ -379,6 +395,7 @@ def create_logger_provider(
 
     provider = LoggerProvider(
         resource=resource,
+        meter_provider=meter_provider,
         log_record_limits=log_record_limits,
         _logger_configurator=logger_configurator,
     )
@@ -387,27 +404,6 @@ def create_logger_provider(
         return provider
 
     for processor_config in config.processors:
-        provider.add_log_record_processor(_create_log_record_processor(processor_config))
+        provider.add_log_record_processor(_create_log_record_processor(processor_config, meter_provider))
 
     return provider
-
-
-def configure_logger_provider(
-    config: LoggerProviderConfig | None,
-    resource: Resource | None = None,
-    global_attribute_limits: AttributeLimits | None = None,
-) -> None:
-    """Configure the global LoggerProvider from declarative config.
-
-    When config is None (logger_provider section absent from config file),
-    the global is not set — matching Java/JS SDK behavior.
-
-    Args:
-        config: LoggerProvider config from the parsed config file, or None.
-        resource: Resource to attach to the provider.
-        global_attribute_limits: Top-level attribute_limits from the root config,
-            used as a fallback when per-signal limits are not specified.
-    """
-    if config is None:
-        return
-    set_logger_provider(create_logger_provider(config, resource, global_attribute_limits))
