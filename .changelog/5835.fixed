@@ -1,1 +1,1 @@
-﻿opentelemetry-sdk: run concurrent span/log record processor callbacks inline when the executor is already shut down at interpreter exit, so buffered telemetry is flushed instead of being dropped
+opentelemetry-sdk: run concurrent span/log record processor callbacks inline when the executor is already shut down at interpreter exit, so buffered telemetry is flushed instead of being dropped
