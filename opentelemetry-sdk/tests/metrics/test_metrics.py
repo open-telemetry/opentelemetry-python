@@ -554,6 +554,41 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
             meter_provider.remove_metric_reader(reader)
             self.assertIn("has not been registered!", cm.output[0])
 
+    def test_add_metric_reader_sets_meter_provider(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider()
+
+        with patch.object(reader, "_set_meter_provider") as mock_set_meter_provider:
+            meter_provider.add_metric_reader(reader)
+
+        mock_set_meter_provider.assert_called_once_with(meter_provider)
+
+    def test_added_metric_reader_is_flushed_and_shut_down(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(shutdown_on_exit=False)
+        meter_provider.add_metric_reader(reader)
+
+        with (
+            patch.object(reader, "force_flush") as mock_force_flush,
+            patch.object(reader, "shutdown") as mock_shutdown,
+        ):
+            meter_provider.force_flush()
+            meter_provider.shutdown()
+
+        mock_force_flush.assert_called_once()
+        mock_shutdown.assert_called_once()
+
+    def test_removed_metric_reader_is_not_flushed(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(shutdown_on_exit=False)
+        meter_provider.add_metric_reader(reader)
+        meter_provider.remove_metric_reader(reader)
+
+        with patch.object(reader, "force_flush") as mock_force_flush:
+            meter_provider.force_flush()
+
+        mock_force_flush.assert_not_called()
+
 
 class TestMeterConcurrency(ConcurrencyTestBase, TestCase):
     def test_create_instrument_concurrency(self):
@@ -602,6 +637,32 @@ class TestMeterConcurrency(ConcurrencyTestBase, TestCase):
 
                     for instr in instruments:
                         self.assertIs(instr, instruments[0])
+
+    def test_add_and_remove_metric_reader_concurrency(self):
+        """
+        Tests that concurrently adding and removing metric readers does not
+        lose any update to the provider's metric readers.
+        """
+        num_threads = 50
+        meter_provider = MeterProvider(shutdown_on_exit=False)
+        readers = [InMemoryMetricReader() for _ in range(num_threads)]
+        lock = Lock()
+
+        def make_update(update: Callable[[InMemoryMetricReader], None]) -> Callable[[], None]:
+            pending = list(readers)
+
+            def run() -> None:
+                with lock:
+                    reader = pending.pop()
+                update(reader)
+
+            return run
+
+        self.run_with_many_threads(make_update(meter_provider.add_metric_reader), num_threads=num_threads)
+        self.assertCountEqual(meter_provider._metric_readers, readers)
+
+        self.run_with_many_threads(make_update(meter_provider.remove_metric_reader), num_threads=num_threads)
+        self.assertEqual(meter_provider._metric_readers, ())
 
 
 class TestMeter(TestCase):

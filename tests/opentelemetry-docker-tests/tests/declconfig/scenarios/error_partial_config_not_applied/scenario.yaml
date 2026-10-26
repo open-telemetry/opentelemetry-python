@@ -1,0 +1,17 @@
+description: >
+  A meter exporter that fails to load fails configuration without installing
+  the tracer provider that was already created, so nothing is exported.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+  - output:
+      stream: stderr
+      pattern: bogus_exporter
+  - output:
+      stream: stdout
+      pattern: "(?m)^tracer_provider=ProxyTracerProvider$"
+  - spans:
+      count: 0

@@ -1,0 +1,14 @@
+description: >
+  A null `jaeger_remote/development` sampler passes the schema but selects no
+  sampler, which fails configuration.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+  - output:
+      stream: stderr
+      pattern: Sampler requires exactly one of
+  - spans:
+      count: 0

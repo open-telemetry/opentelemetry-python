@@ -1,5 +1,5 @@
 description: >
-  `disabled: true` leaves the SDK unconfigured, so nothing is exported.
+  `disabled: true` installs no-op providers, so nothing is exported.
 until:
   - exited: {}
 expect:

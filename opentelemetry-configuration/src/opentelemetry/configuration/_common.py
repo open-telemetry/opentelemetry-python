@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 import inspect
 import logging
 from collections.abc import Callable
@@ -75,6 +76,33 @@ def _additional_properties(cls):
     return cls
 
 
+def _exactly_one_property(cls):
+    """Decorator for dataclasses whose JSON Schema allows exactly one property.
+
+    The configuration schema models mutually exclusive component choices
+    (e.g. a ``Sampler`` is one of ``always_on``, ``always_off``, ...) with
+    ``minProperties: 1, maxProperties: 1``. Wraps ``__init__`` so that
+    constructing such a model with zero or several choices raises
+    ``ValueError``.
+    """
+    original_init = cls.__init__
+    field_names = tuple(f.name for f in dataclasses.fields(cls))
+
+    @functools.wraps(original_init)
+    def _init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        chosen = [name for name in field_names if getattr(self, name) is not None]
+        chosen.extend(getattr(self, "additional_properties", {}))
+        if len(chosen) != 1:
+            raise ValueError(
+                f"{cls.__name__} requires exactly one of {sorted(field_names)} "
+                f"or a plugin component; got {len(chosen)}: {chosen}"
+            )
+
+    cls.__init__ = _init
+    return cls
+
+
 def load_entry_point(group: str, name: str) -> type:
     """Load a plugin class from an entry point group by name.
 
@@ -127,9 +155,8 @@ def _resolve_component(
     for plugin components found in ``config.additional_properties``.
 
     The JSON schema enforces exactly one component per config block
-    (``minProperties: 1, maxProperties: 1``). If multiple typed fields or
-    ``additional_properties`` entries are set (e.g. when schema validation
-    is bypassed), the first registry match wins.
+    (``minProperties: 1, maxProperties: 1``), and the generated models
+    enforce it at construction via ``@_exactly_one_property``.
 
     Args:
         config: A dataclass with ``additional_properties`` (from the
