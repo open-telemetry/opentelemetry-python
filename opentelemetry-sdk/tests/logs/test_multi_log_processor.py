@@ -444,8 +444,8 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         sys.stderr = stderr_buf
         try:
             multi.shutdown()
-            for f in enqueued_futures:
-                f.result()
+            for fut in enqueued_futures:
+                fut.result()
         finally:
             sys.stderr = old_stderr
             otel_logger.removeHandler(handler)
