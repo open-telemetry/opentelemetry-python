@@ -91,7 +91,7 @@ _logger = logging.getLogger(__name__)
 _callback_log_reentry = threading.local()
 
 
-def _safe_log_exception(logger, msg):
+def _safe_log_exception(logger, msg):  # pylint: disable=redefined-outer-name
     """Log an exception safely against recursive logging handlers.
 
     If we are already inside a diagnostic log dispatch on this thread, write

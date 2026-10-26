@@ -79,7 +79,7 @@ logger = logging.getLogger(__name__)
 _callback_log_reentry = threading.local()
 
 
-def _safe_log_exception(logger, msg):
+def _safe_log_exception(logger, msg):  # pylint: disable=redefined-outer-name
     """Log an exception safely against recursive logging handlers.
 
     If we are already inside a diagnostic log dispatch on this thread, write
@@ -93,7 +93,7 @@ def _safe_log_exception(logger, msg):
         return
     _callback_log_reentry.in_diag = True
     try:
-        logger.exception(msg)
+        logger.exception(msg)  # noqa: SHADOW
     except Exception:  # pylint: disable=broad-exception-caught
         print(msg, file=sys.stderr)
         traceback.print_exc(file=sys.stderr)

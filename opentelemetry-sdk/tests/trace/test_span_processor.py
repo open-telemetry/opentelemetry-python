@@ -3,10 +3,10 @@
 
 import abc
 import gc
+import logging
 import multiprocessing
 import os
 import time
-import logging
 import unittest
 import weakref
 from threading import Event, Thread
