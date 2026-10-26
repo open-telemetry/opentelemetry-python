@@ -342,7 +342,7 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
     def test_real_logging_handler_reentry_runs_inline(self):
         # Wire the REAL LoggingHandler bridge into a ConcurrentMultiLogRecordProcessor.
         # When a child processor emits a Python log on a worker thread, the bridge
-        # re-enters on_emit on that same thread. The ctive reentry guard must run
+        # re-enters on_emit on that same thread. The active reentry guard must run
         # the re-entered callbacks inline instead of submitting to the (busy) executor,
         # so the call returns without deadlock and a healthy sibling still receives
         # both the outer and the re-entered record.
