@@ -383,8 +383,8 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
 
-        if schedule_delay_millis <= 0:
-            raise ValueError("schedule_delay_millis must be positive.")
+        if schedule_delay_millis < 0:
+            raise ValueError("schedule_delay_millis must be non-negative.")
 
         if max_export_batch_size <= 0:
             raise ValueError("max_export_batch_size must be a positive integer.")
