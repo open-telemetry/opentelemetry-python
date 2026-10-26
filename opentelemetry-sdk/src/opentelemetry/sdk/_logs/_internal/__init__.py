@@ -29,18 +29,18 @@ from weakref import WeakMethod, WeakSet
 
 from typing_extensions import deprecated
 
-from opentelemetry._logs import Logger as APILogger
-from opentelemetry._logs import LoggerProvider as APILoggerProvider
-from opentelemetry._logs import (
+from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.context import get_current
+from opentelemetry.context.context import Context
+from opentelemetry.logs import Logger as APILogger
+from opentelemetry.logs import LoggerProvider as APILoggerProvider
+from opentelemetry.logs import (
     LogRecord,
     NoOpLogger,
     SeverityNumber,
     get_logger,
     get_logger_provider,
 )
-from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.context import get_current
-from opentelemetry.context.context import Context
 from opentelemetry.metrics import MeterProvider, get_meter_provider
 from opentelemetry.sdk._logs._internal._exceptions import (
     _copy_log_record_with_exception,

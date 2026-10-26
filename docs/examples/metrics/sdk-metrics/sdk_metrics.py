@@ -4,7 +4,7 @@
 import os
 import time
 
-from opentelemetry import _logs, metrics, trace
+from opentelemetry import logs, metrics, trace
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter,
 )
@@ -60,10 +60,10 @@ logger_provider.add_log_record_processor(
         meter_provider=meter_provider,
     )
 )
-_logs.set_logger_provider(logger_provider)
+logs.set_logger_provider(logger_provider)
 
 tracer = trace.get_tracer(__name__)
-logger = _logs.get_logger(__name__)
+logger = logs.get_logger(__name__)
 
 with tracer.start_as_current_span("example-span"):
     logger.emit(body="example log record")

@@ -9,7 +9,6 @@ destinations do not block each other.
 
 import logging
 
-from opentelemetry._logs import set_logger_provider
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter as GrpcLogExporter,
 )
@@ -19,6 +18,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
 
 # this is available in the opentelemetry-instrumentation-logging package
 from opentelemetry.instrumentation.logging.handler import LoggingHandler
+from opentelemetry.logs import set_logger_provider
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,

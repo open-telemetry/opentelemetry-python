@@ -10,7 +10,6 @@ import pytest
 from grpc import Compression as GRPCCompression
 from inline_snapshot import snapshot
 
-from opentelemetry._logs import Logger, SeverityNumber
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
 )
@@ -35,6 +34,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter as HTTPLogExporter,
 )
+from opentelemetry.logs import Logger, SeverityNumber
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
