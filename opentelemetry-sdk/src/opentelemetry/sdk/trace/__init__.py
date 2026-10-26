@@ -466,12 +466,12 @@ class ReadableSpan:
         end_time: int | None = None,
         instrumentation_scope: InstrumentationScope | None = None,
         *,
-        _span_type: str | None = None,
+        _type: str | None = None,
     ) -> None:
         self._name = name
         self._context = context
         self._kind = kind
-        self._span_type_value = _span_type
+        self._type_value = _type
         self._instrumentation_info = instrumentation_info
         self._instrumentation_scope = instrumentation_scope
         self._parent = parent
@@ -520,9 +520,9 @@ class ReadableSpan:
         return self._kind
 
     @property
-    def _span_type(self) -> str | None:
-        """Experimental: the span type, if set. Becomes public once span type is stable."""
-        return self._span_type_value
+    def _type(self) -> str | None:
+        """Experimental: the span type, if set. Becomes public as ``type`` once span type is stable."""
+        return self._type_value
 
     @property
     def parent(self) -> trace_api.SpanContext | None:
@@ -845,7 +845,7 @@ class Span(trace_api.Span, ReadableSpan):
         instrumentation_scope: InstrumentationScope | None = None,
         *,
         record_end_metrics: Callable[[], None] | None = None,
-        _span_type: str | None = None,
+        _type: str | None = None,
     ) -> None:
         if resource is None:
             resource = Resource.create({})
@@ -854,7 +854,7 @@ class Span(trace_api.Span, ReadableSpan):
             context=context,
             parent=parent,
             kind=kind,
-            _span_type=_span_type,
+            _type=_type,
             resource=resource,
             instrumentation_info=instrumentation_info,
             instrumentation_scope=instrumentation_scope,
@@ -996,7 +996,7 @@ class Span(trace_api.Span, ReadableSpan):
             events=self._events,
             links=self._links,
             kind=self.kind,
-            _span_type=self._span_type,
+            _type=self._type,
             status=self._status,
             start_time=self._start_time,
             end_time=self._end_time,
@@ -1331,7 +1331,7 @@ class Tracer(trace_api.Tracer):
         start_time: int | None,
         record_exception: bool,
         set_status_on_exception: bool,
-        span_type: str | None,
+        type_: str | None,
     ) -> trace_api.Span:
         links = links or ()
         parent_span_context = trace_api.get_current_span(context).get_span_context()
@@ -1393,7 +1393,7 @@ class Tracer(trace_api.Tracer):
                 attributes=sampling_result.attributes,
                 span_processor=self.span_processor,
                 kind=kind,
-                _span_type=span_type,
+                _type=type_,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
