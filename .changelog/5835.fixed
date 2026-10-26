@@ -1,1 +1,1 @@
-opentelemetry-sdk: run concurrent span/log record processor callbacks inline when the executor is already shut down at interpreter exit, so buffered telemetry is flushed instead of being dropped
+Fix concurrent span/log processor shutdown at exit so that a failing processor callback no longer blocks healthy sibling processors and a Thread.start RuntimeError no longer double-invokes a callback.

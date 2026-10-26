@@ -75,6 +75,7 @@ from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
+_callback_log_reentry = threading.local()
 
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
@@ -254,11 +255,19 @@ class _CallbackAttempt:
             if self._started:
                 return
             self._started = True
+        # Mark that we are executing a processor callback on this thread. If a
+        # logging handler (e.g. LoggingHandler) synchronously calls back into
+        # on_emit/on_start, _submit_and_await sees this flag and runs callbacks
+        # inline instead of submitting to the executor (whose worker threads
+        # are blocked inside the outer callback, which would deadlock).
+        reentry = getattr(_callback_log_reentry, "active", False)
+        _callback_log_reentry.active = True
         try:
             self._callback(*self._args, **self._kwargs)
         except Exception:  # pylint: disable=broad-exception-caught
             logger.exception("Exception while calling SpanProcessor callback.")
         finally:
+            _callback_log_reentry.active = reentry
             self._finished.set()
 
     def wait_if_started(self) -> None:
@@ -317,6 +326,23 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         *args: Any,
         **kwargs: Any,
     ):
+        # Reentry guard: if we are already running a callback on this thread
+        # (e.g. a logging handler synchronously called back into on_start),
+        # run the remaining callbacks inline instead of through the executor.
+        # Submitting would queue work that no worker can pick up (workers are
+        # blocked inside the outer callback), and future.result() would
+        # deadlock. This is bounded: it runs synchronously on the calling
+        # thread and does not recurse through the executor.
+        if getattr(_callback_log_reentry, "active", False):
+            for sp in self._span_processors:
+                try:
+                    callback = func(sp)
+                    callback(*args, **kwargs)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    logger.exception(
+                        "Exception while re-entering SpanProcessor callback inline."
+                    )
+            return
         attempts = []
         futures = []
         for sp in self._span_processors:

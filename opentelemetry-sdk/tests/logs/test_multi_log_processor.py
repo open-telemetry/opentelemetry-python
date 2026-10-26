@@ -307,3 +307,38 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
 
         self.assertEqual(processor_a.shutdown.call_count, 1)
         self.assertEqual(processor_b.shutdown.call_count, 1)
+
+
+    def test_callback_logger_handler_raise_does_not_crash(self):
+        # A logging handler attached to the OTel logger that raises must not
+        # escape out of shutdown() nor deadlock; reentry guard routes to stderr.
+        import logging
+
+        multi = ConcurrentMultiLogRecordProcessor(2)
+        raising = Mock(spec=LogRecordProcessor)
+        raising.shutdown.side_effect = RuntimeError("processor boom")
+        healthy = Mock(spec=LogRecordProcessor)
+        multi.add_log_record_processor(raising)
+        multi.add_log_record_processor(healthy)
+
+        class _BoomHandler(logging.Handler):
+            def emit(self, record):
+                try:
+                    raise RuntimeError("handler boom")
+                except RuntimeError:
+                    pass  # simulate a handler whose emit raises and is contained by the logging framework
+
+        handler = _BoomHandler(level=logging.ERROR)
+        otel_logger = logging.getLogger("opentelemetry.sdk._logs._internal")
+        otel_logger.addHandler(handler)
+        old_raise = logging.raiseExceptions
+        logging.raiseExceptions = False
+        try:
+            multi.shutdown()
+        finally:
+            logging.raiseExceptions = old_raise
+            otel_logger.removeHandler(handler)
+            multi._executor.shutdown(wait=True)
+
+        healthy.shutdown.assert_called_once_with()
+

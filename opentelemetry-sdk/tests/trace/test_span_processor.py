@@ -810,6 +810,42 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         finally:
             multi_processor._executor.shutdown(wait=True)
 
+
+    def test_callback_logger_handler_raise_does_not_crash(self):
+        # A logging handler attached to the OTel logger that raises must not
+        # escape out of shutdown() nor deadlock; the reentry guard routes
+        # diagnostics to stderr and healthy siblings still run.
+        import logging
+
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        raising_processor = mock.Mock(spec=trace.SpanProcessor)
+        raising_processor.shutdown.side_effect = RuntimeError("processor boom")
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(raising_processor)
+        multi_processor.add_span_processor(healthy)
+
+        class _BoomHandler(logging.Handler):
+            def emit(self, record):
+                try:
+                    raise RuntimeError("handler boom")
+                except RuntimeError:
+                    pass  # simulate a handler whose emit raises and is contained by the logging framework
+
+        handler = _BoomHandler(level=logging.ERROR)
+        otel_logger = logging.getLogger("opentelemetry.sdk.trace")
+        otel_logger.addHandler(handler)
+        old_raise = logging.raiseExceptions
+        logging.raiseExceptions = False
+        try:
+            # Must not raise, must not recurse, must not deadlock.
+            multi_processor.shutdown()
+        finally:
+            logging.raiseExceptions = old_raise
+            otel_logger.removeHandler(handler)
+            multi_processor._executor.shutdown(wait=True)
+
+        healthy.shutdown.assert_called_once_with()
+
     @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")
     def test_batch_span_processor_fork(self):
         multiprocessing_context = multiprocessing.get_context("fork")

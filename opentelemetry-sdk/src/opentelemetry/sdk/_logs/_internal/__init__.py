@@ -87,6 +87,7 @@ _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
 _logger = logging.getLogger(__name__)
+_callback_log_reentry = threading.local()
 
 
 class BytesEncoder(json.JSONEncoder):
@@ -497,11 +498,19 @@ class _CallbackAttempt:
             if self._started:
                 return
             self._started = True
+        # Mark that we are executing a processor callback on this thread. If a
+        # logging handler (e.g. LoggingHandler) synchronously calls back into
+        # on_emit, _submit_and_wait sees this flag and runs callbacks inline
+        # instead of submitting to the executor (whose workers are blocked
+        # inside the outer callback, which would deadlock).
+        reentry = getattr(_callback_log_reentry, "active", False)
+        _callback_log_reentry.active = True
         try:
             self._callback(*self._args, **self._kwargs)
         except Exception:  # pylint: disable=broad-exception-caught
             _logger.exception("Exception while calling LogRecordProcessor callback.")
         finally:
+            _callback_log_reentry.active = reentry
             self._finished.set()
 
     def wait_if_started(self) -> None:
@@ -541,6 +550,21 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         *args: Any,
         **kwargs: Any,
     ):
+        # Reentry guard: if we are already running a callback on this thread
+        # (e.g. a LoggingHandler synchronously called back into on_emit), run
+        # the remaining callbacks inline instead of through the executor.
+        # Submitting would queue work no worker can pick up (workers blocked
+        # inside the outer callback), and future.result() would deadlock.
+        if getattr(_callback_log_reentry, "active", False):
+            for lp in self._log_record_processors:
+                try:
+                    callback = func(lp)
+                    callback(*args, **kwargs)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _logger.exception(
+                        "Exception while re-entering LogRecordProcessor callback inline."
+                    )
+            return
         attempts = []
         futures = []
         for lp in self._log_record_processors:
