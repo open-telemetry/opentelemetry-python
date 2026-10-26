@@ -13,3 +13,30 @@ updates:
           - "*"  # Group all Actions updates into a single larger pull request
     schedule:
       interval: weekly
+
+  - package-ecosystem: uv
+    directory: /
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 0
+    groups:
+      python-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: pip
+    directories:
+      - /**
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 0
+    groups:
+      python-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    schedule:
+      interval: weekly
