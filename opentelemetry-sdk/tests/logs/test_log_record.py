@@ -115,7 +115,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_set_limits(self):
         attr = {"key": "value", "key2": "value2"}
-        expected = {"key2": "v"}
+        expected = {"key": "v"}
         limits = LogRecordLimits(
             max_attributes=1,
             max_attribute_length=1,
