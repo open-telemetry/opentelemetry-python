@@ -338,3 +338,71 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
             multi._executor.shutdown(wait=True)
 
         healthy.shutdown.assert_called_once_with()
+
+    def test_real_logging_handler_reentry_runs_inline(self):
+        # Wire the REAL LoggingHandler bridge into a ConcurrentMultiLogRecordProcessor.
+        # When a child processor emits a Python log on a worker thread, the bridge
+        # re-enters on_emit on that same thread. The ctive reentry guard must run
+        # the re-entered callbacks inline instead of submitting to the (busy) executor,
+        # so the call returns without deadlock and a healthy sibling still receives
+        # both the outer and the re-entered record.
+        multi = ConcurrentMultiLogRecordProcessor(2)
+        bridge_logger = logging.getLogger("otel.bridge.reentry")
+        bridge_logger.propagate = False
+        state = {"fired": False}
+
+        class _Reenter(LogRecordProcessor):
+            def on_emit(self, log_record):
+                if not state["fired"]:
+                    state["fired"] = True
+                    bridge_logger.error("reentered")
+
+            def shutdown(self):
+                pass
+
+            def force_flush(self, timeout_millis=30000):
+                return True
+
+        healthy = Mock(spec=LogRecordProcessor)
+        multi.add_log_record_processor(_Reenter())
+        multi.add_log_record_processor(healthy)
+        provider = LoggerProvider(multi_log_record_processor=multi, shutdown_on_exit=False)
+        bridge = LoggingHandler(logger_provider=provider)
+        bridge_logger.addHandler(bridge)
+        try:
+            # Must return promptly: no executor deadlock, no unbounded recursion.
+            bridge_logger.error("outer")
+        finally:
+            bridge_logger.removeHandler(bridge)
+            multi._executor.shutdown(wait=True)
+
+        # healthy sibling saw the outer record and the inline re-entered record.
+        self.assertEqual(healthy.on_emit.call_count, 2)
+
+    def test_real_logging_handler_raise_is_isolated(self):
+        # Attach the REAL LoggingHandler bridge to the OTel internal logger. A
+        # raising child processor must not let the handler error escape shutdown(),
+        # must not deadlock, and must not prevent a healthy sibling from shutting
+        # down. The Python logging framework contains the handler error; the SDK's
+        # own diagnostic fallback keeps the record off the recursive path.
+        multi = ConcurrentMultiLogRecordProcessor(2)
+        raising = Mock(spec=LogRecordProcessor)
+        raising.shutdown.side_effect = RuntimeError("processor boom")
+        healthy = Mock(spec=LogRecordProcessor)
+        multi.add_log_record_processor(raising)
+        multi.add_log_record_processor(healthy)
+        provider = LoggerProvider(multi_log_record_processor=multi, shutdown_on_exit=False)
+        bridge = LoggingHandler(logger_provider=provider)
+        otel_logger = logging.getLogger("opentelemetry.sdk._logs._internal")
+        otel_logger.addHandler(bridge)
+        old_raise = logging.raiseExceptions
+        logging.raiseExceptions = False
+        try:
+            # Must not raise and must not deadlock.
+            multi.shutdown()
+        finally:
+            logging.raiseExceptions = old_raise
+            otel_logger.removeHandler(bridge)
+            multi._executor.shutdown(wait=True)
+
+        healthy.shutdown.assert_called_once_with()

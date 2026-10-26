@@ -573,12 +573,14 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         *args: Any,
         **kwargs: Any,
     ):
-        # Reentry guard: if we are already running a callback on this thread
-        # (e.g. a LoggingHandler synchronously called back into on_emit), run
-        # the remaining callbacks inline instead of through the executor.
-        # Submitting would queue work no worker can pick up (workers blocked
-        # inside the outer callback), and future.result() would deadlock.
-        if getattr(_callback_log_reentry, "active", False):
+        # Reentry guard: if we are already running a callback on this thread, or
+        # we were dispatched from inside a real logging handler that holds its own
+        # lock across emit(), run the callbacks inline instead of through the
+        # executor. Submitting would either queue work no worker can pick up
+        # (workers blocked inside the outer callback) or block a re-entrant
+        # worker on the logging handler lock the dispatching thread still holds,
+        # and future.result() would deadlock in both cases.
+        if getattr(_callback_log_reentry, "active", False) or getattr(_callback_log_reentry, "in_bridge", False):
             for lp in self._log_record_processors:
                 try:
                     callback = func(lp)
@@ -819,7 +821,17 @@ class LoggingHandler(logging.Handler):
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+            # A real logging handler holds its own lock across emit(). If the
+            # concurrent multi-processor submits work to its executor and then
+            # blocks waiting on it, a worker that re-enters logging through this
+            # same handler would deadlock on that lock. Mark the bridge boundary
+            # so the multi-processor dispatches inline while we hold the handler
+            # lock, matching the re-entry guard for callbacks.
+            _callback_log_reentry.in_bridge = True
+            try:
+                logger.emit(self._translate(record))
+            finally:
+                _callback_log_reentry.in_bridge = False
 
     def flush(self) -> None:
         """
