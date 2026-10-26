@@ -251,3 +251,29 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         for mock in mocks:
             self.assertEqual(1, mock.force_flush.call_count)
         multi_log_record_processor.shutdown()
+
+    def test_shutdown_runs_inline_after_executor_shutdown(self):
+        # Simulate the atexit scenario: CPython runs threading._shutdown()
+        # before the atexit queue, so the ThreadPoolExecutor is closed by the
+        # time LoggerProvider.shutdown() runs. Underlying processors must
+        # still be shut down inline so buffered work is not dropped.
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor(2)
+        mock_processor = Mock(spec=LogRecordProcessor)
+        multi_log_record_processor.add_log_record_processor(mock_processor)
+
+        # pylint: disable=protected-access
+        multi_log_record_processor._executor.shutdown(wait=True)
+
+        multi_log_record_processor.shutdown()
+        mock_processor.shutdown.assert_called_once_with()
+
+    def test_callback_runtime_error_propagates_not_swallowed(self):
+        # A RuntimeError raised by a processor callback (while the executor is
+        # alive) must still propagate out of shutdown().
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor(2)
+        raising_processor = Mock(spec=LogRecordProcessor)
+        raising_processor.shutdown.side_effect = RuntimeError("processor boom")
+        multi_log_record_processor.add_log_record_processor(raising_processor)
+
+        with self.assertRaises(RuntimeError):
+            multi_log_record_processor.shutdown()

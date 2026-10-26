@@ -275,8 +275,21 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
     ):
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(func(sp), *args, **kwargs)
-            futures.append(future)
+            try:
+                future = self._executor.submit(func(sp), *args, **kwargs)
+                futures.append(future)
+            except RuntimeError:
+                # The executor may already be shut down when this runs from an
+                # atexit handler: CPython runs threading._shutdown() before the
+                # atexit queue, so the ThreadPoolExecutor is closed by the time
+                # TracerProvider.shutdown() runs. Run inline so buffered work is
+                # still flushed instead of being silently dropped. A
+                # RuntimeError raised by the callback itself is not caught here
+                # and still propagates via future.result() below.
+                logger.debug(
+                    "Executor is shut down; running SpanProcessor callback inline.",
+                )
+                func(sp)(*args, **kwargs)
         for future in futures:
             future.result()
 

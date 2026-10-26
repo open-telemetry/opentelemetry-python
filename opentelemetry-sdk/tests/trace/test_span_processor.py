@@ -718,6 +718,45 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
             "The ConcurrentMultiSpanProcessor object created by this test wasn't garbage collected",
         )
 
+    def test_shutdown_runs_inline_after_executor_shutdown(self):
+        # Simulate the atexit scenario: CPython runs threading._shutdown()
+        # before the atexit queue, so the ThreadPoolExecutor is closed by the
+        # time TracerProvider.shutdown() runs. The underlying processors must
+        # still be shut down inline so buffered work is not dropped.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        mock_processor = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(mock_processor)
+
+        # pylint: disable=protected-access
+        multi_processor._executor.shutdown(wait=True)
+
+        multi_processor.shutdown()
+        mock_processor.shutdown.assert_called_once_with()
+
+    def test_on_end_runs_inline_after_executor_shutdown(self):
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        mock_processor = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(mock_processor)
+
+        # pylint: disable=protected-access
+        multi_processor._executor.shutdown(wait=True)
+
+        span = self.create_default_span()
+        multi_processor.on_end(span)
+        mock_processor.on_end.assert_called_once_with(span)
+
+    def test_callback_runtime_error_propagates_not_swallowed(self):
+        # A RuntimeError raised by a processor callback (while the executor is
+        # alive) must still propagate out of shutdown(); the inline fallback
+        # must not mask unrelated callback failures.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        raising_processor = mock.Mock(spec=trace.SpanProcessor)
+        raising_processor.shutdown.side_effect = RuntimeError("processor boom")
+        multi_processor.add_span_processor(raising_processor)
+
+        with self.assertRaises(RuntimeError):
+            multi_processor.shutdown()
+
     @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")
     def test_batch_span_processor_fork(self):
         multiprocessing_context = multiprocessing.get_context("fork")
