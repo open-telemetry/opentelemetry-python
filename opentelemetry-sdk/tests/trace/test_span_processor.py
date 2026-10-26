@@ -872,7 +872,6 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
 
         healthy.shutdown.assert_called_once_with()
 
-
     def test_logging_handler_outward_raise_inline_fallback_is_isolated(self):
         # A user logging handler that raises OUTWARD (no self-catch, with
         # raiseExceptions left at its default) must not abort the inline
@@ -896,6 +895,7 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         handler = _OutwardBoom(level=logging.DEBUG)
         otel_logger.setLevel(logging.DEBUG)
         otel_logger.addHandler(handler)
+        # pylint: disable=protected-access
         multi_processor._executor.shutdown(wait=True)
         try:
             # Must not raise despite the outward handler raise on the

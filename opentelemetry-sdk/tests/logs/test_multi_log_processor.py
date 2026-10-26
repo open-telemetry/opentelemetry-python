@@ -369,7 +369,6 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
 
         healthy.shutdown.assert_called_once_with()
 
-
     def test_logging_handler_outward_raise_inline_fallback_is_isolated(self):
         # A user logging handler that raises OUTWARD (no self-catch, with
         # raiseExceptions left at its default) must not abort the inline
@@ -392,6 +391,7 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         handler = _OutwardBoom(level=logging.DEBUG)
         otel_logger.setLevel(logging.DEBUG)
         otel_logger.addHandler(handler)
+        # pylint: disable=protected-access
         multi._executor.shutdown(wait=True)
         try:
             multi.shutdown()
