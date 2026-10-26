@@ -21,6 +21,7 @@ jobs:
       github.event_name != 'merge_group' &&
       !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')
       && github.actor != 'otelbot[bot]'
+      && github.actor != 'dependabot[bot]'
     env:
       BASE_REF: ${{ github.base_ref }}
 
