@@ -69,7 +69,7 @@ from enum import Enum
 from logging import getLogger
 from typing import Any, cast
 
-from typing_extensions import deprecated
+from typing_extensions import TypedDict, Unpack, deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry.attributes import BoundedAttributes
@@ -146,6 +146,13 @@ class Link(_LinkBase):
 
 
 _Links = Sequence[Link] | None
+
+
+# Experimental. Options for the typed span methods. New span start options are
+# added here as keys, so older implementations keep accepting newer callers.
+class _SpanOptions(TypedDict, total=False):
+    record_exception: bool
+    set_status_on_exception: bool
 
 
 class SpanKind(Enum):
@@ -411,7 +418,7 @@ class Tracer(ABC):
         attributes: types.Attributes = None,
         links: _Links = None,
         start_time: int | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[_SpanOptions],
     ) -> "Span":
         """Experimental: starts a span with a span type.
 
@@ -425,10 +432,9 @@ class Tracer(ABC):
                 a case-sensitive ASCII string of at most 255 characters that
                 starts with a letter, followed by letters, digits, ``_``,
                 ``.``, ``-`` or ``/``. Not validated by the API.
-            kwargs: Reserved for future span creation inputs. Implementations
-                ignore the ones they don't know. ``record_exception`` and
-                ``set_status_on_exception`` are recognized here, with the same
-                defaults as in :meth:`start_span`.
+            kwargs: Options from :class:`_SpanOptions`, with the same defaults
+                as in :meth:`start_span`. Future span creation inputs are
+                added there. Implementations ignore the ones they don't know.
 
         The default implementation calls :meth:`start_span` and drops
         ``span_type``, so existing ``Tracer`` implementations keep working.
@@ -455,7 +461,7 @@ class Tracer(ABC):
         links: _Links = None,
         start_time: int | None = None,
         end_on_exit: bool = True,
-        **kwargs: Any,
+        **kwargs: Unpack[_SpanOptions],
     ) -> Iterator["Span"]:
         """Experimental: same as :meth:`start_as_current_span`, with a span type.
 
@@ -476,7 +482,7 @@ def _non_default_start_args(
     attributes: types.Attributes,
     links: _Links,
     start_time: int | None,
-    kwargs: dict[str, Any],
+    kwargs: _SpanOptions,
 ) -> dict[str, Any]:
     # Only forward what the caller set, so implementations that override
     # start_span with a subset of the parameters keep working.
@@ -491,9 +497,10 @@ def _non_default_start_args(
         args["links"] = links
     if start_time is not None:
         args["start_time"] = start_time
-    for key in ("record_exception", "set_status_on_exception"):
-        if key in kwargs:
-            args[key] = kwargs[key]
+    if "record_exception" in kwargs:
+        args["record_exception"] = kwargs["record_exception"]
+    if "set_status_on_exception" in kwargs:
+        args["set_status_on_exception"] = kwargs["set_status_on_exception"]
     return args
 
 

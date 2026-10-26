@@ -8,6 +8,7 @@ import concurrent.futures
 import json
 import logging
 import os
+import re
 import threading
 import traceback
 import typing
@@ -21,7 +22,6 @@ from collections.abc import (
 )
 from dataclasses import dataclass
 from os import environ
-from string import ascii_letters, digits
 from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
@@ -29,7 +29,7 @@ from typing import (
 )
 from warnings import filterwarnings
 
-from typing_extensions import deprecated
+from typing_extensions import Unpack, deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry import metrics as metrics_api
@@ -70,7 +70,7 @@ from opentelemetry.semconv.attributes.exception_attributes import (
     EXCEPTION_STACKTRACE,
     EXCEPTION_TYPE,
 )
-from opentelemetry.trace import NoOpTracer, SpanContext
+from opentelemetry.trace import NoOpTracer, SpanContext, _SpanOptions
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
@@ -81,23 +81,36 @@ _SPAN_TYPE_ERROR_MESSAGE = (
     "Dropping span type: expected ASCII string of maximum length 255 characters starting with a letter but got %s"
 )
 
-_SPAN_TYPE_MAX_LENGTH = 255
-_SPAN_TYPE_CHARS = frozenset(ascii_letters + digits + "_./-")
+_SPAN_TYPE_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_./-]{0,254}")
+
+_KNOWN_SPAN_OPTIONS = frozenset(("record_exception", "set_status_on_exception"))
+# (record_exception, set_status_on_exception) when no options are passed
+_DEFAULT_SPAN_OPTIONS = (True, True)
 
 
 def _is_valid_span_type(span_type: object) -> bool:
     """Checks the span type for compliance with the span type syntax."""
+    return isinstance(span_type, str) and _SPAN_TYPE_PATTERN.fullmatch(span_type) is not None
+
+
+def _checked_span_type(span_type: str) -> str | None:
+    if _is_valid_span_type(span_type):
+        return span_type
+    logger.error(_SPAN_TYPE_ERROR_MESSAGE, span_type)
+    return None
+
+
+def _read_span_options(kwargs: Mapping[str, Any]) -> tuple[bool, bool]:
+    if not _KNOWN_SPAN_OPTIONS.issuperset(kwargs):
+        logger.warning(
+            "Ignoring unknown span start options: %s",
+            sorted(kwargs.keys() - _KNOWN_SPAN_OPTIONS),
+        )
+    # both default to True; only an explicit False turns them off, other non-bool values are ignored
     return (
-        isinstance(span_type, str)
-        and 0 < len(span_type) <= _SPAN_TYPE_MAX_LENGTH
-        and span_type[0] in ascii_letters
-        and all(char in _SPAN_TYPE_CHARS for char in span_type)
+        kwargs.get("record_exception") is not False,
+        kwargs.get("set_status_on_exception") is not False,
     )
-
-
-def _bool_kwarg(kwargs: Mapping[str, Any], key: str, default: bool) -> bool:
-    value = kwargs.get(key, default)
-    return value if isinstance(value, bool) else default
 
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
@@ -1255,11 +1268,11 @@ class Tracer(trace_api.Tracer):
         attributes: types.Attributes = None,
         links: Sequence[trace_api.Link] | None = (),
         start_time: int | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[_SpanOptions],
     ) -> trace_api.Span:
-        if span_type is not None and not _is_valid_span_type(span_type):
-            logger.error(_SPAN_TYPE_ERROR_MESSAGE, span_type)
-            span_type = None
+        if span_type is not None:
+            span_type = _checked_span_type(span_type)
+        record_exception, set_status_on_exception = _read_span_options(kwargs) if kwargs else _DEFAULT_SPAN_OPTIONS
         return self._new_span(
             name,
             context,
@@ -1267,8 +1280,8 @@ class Tracer(trace_api.Tracer):
             attributes,
             links,
             start_time,
-            _bool_kwarg(kwargs, "record_exception", True),
-            _bool_kwarg(kwargs, "set_status_on_exception", True),
+            record_exception,
+            set_status_on_exception,
             span_type,
         )
 
@@ -1284,23 +1297,27 @@ class Tracer(trace_api.Tracer):
         links: Sequence[trace_api.Link] | None = (),
         start_time: int | None = None,
         end_on_exit: bool = True,
-        **kwargs: Any,
+        **kwargs: Unpack[_SpanOptions],
     ) -> Iterator[trace_api.Span]:
-        span = self._start_typed_span(
+        if span_type is not None:
+            span_type = _checked_span_type(span_type)
+        record_exception, set_status_on_exception = _read_span_options(kwargs) if kwargs else _DEFAULT_SPAN_OPTIONS
+        span = self._new_span(
             name,
-            span_type=span_type,
-            kind=kind,
-            context=context,
-            attributes=attributes,
-            links=links,
-            start_time=start_time,
-            **kwargs,
+            context,
+            kind,
+            attributes,
+            links,
+            start_time,
+            record_exception,
+            set_status_on_exception,
+            span_type,
         )
         with trace_api.use_span(
             span,
             end_on_exit=end_on_exit,
-            record_exception=_bool_kwarg(kwargs, "record_exception", True),
-            set_status_on_exception=_bool_kwarg(kwargs, "set_status_on_exception", True),
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
         ) as span:
             yield span
 

@@ -180,7 +180,9 @@ class TestLegacyTracerImplementations(TraceGlobalsTest):
         trace.set_tracer_provider(_Provider(explicit))
         tracer = trace.get_tracer("instr")
         tracer._start_typed_span("a", kind=SpanKind.CLIENT, attributes={"k": "v"}, span_type="http.client.request")
-        with tracer._start_as_current_typed_span("b", span_type="http.client.request", future_arg=1):
+        # simulates a caller built against a newer API with options this one doesn't know
+        future_options: dict[str, Any] = {"future_arg": 1}
+        with tracer._start_as_current_typed_span("b", span_type="http.client.request", **future_options):
             pass
         tracer._start_typed_span("c", record_exception=False)
 

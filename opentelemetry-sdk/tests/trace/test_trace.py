@@ -890,6 +890,26 @@ class TestSpanType(unittest.TestCase):
         self.assertIs(span.status.status_code, StatusCode.UNSET)
         self.assertEqual(len(span.events), 0)
 
+    def test_typed_span_unknown_options_warn(self):
+        tracer = new_tracer()
+        with self.assertLogs(level=WARNING) as logs:
+            span = tracer._start_typed_span("s", span_type="a", kindd=trace_api.SpanKind.CLIENT)
+        self.assertIn("kindd", logs.output[0])
+        self.assertIs(span.kind, trace_api.SpanKind.INTERNAL)
+
+        with self.assertLogs(level=WARNING) as logs:
+            with tracer._start_as_current_typed_span("s", span_type="a", foo=1, record_exception=False):
+                pass
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn("foo", logs.output[0])
+
+    def test_typed_span_known_options_dont_warn(self):
+        tracer = new_tracer()
+        with self.assertNoLogs(level=WARNING):
+            tracer._start_typed_span("s", span_type="a", record_exception=False, set_status_on_exception=False)
+            with tracer._start_as_current_typed_span("s", span_type="a"):
+                pass
+
     def test_span_type_unset(self):
         span = new_tracer().start_span("s")
         self.assertIsNone(span._span_type)
@@ -909,6 +929,7 @@ class TestSpanType(unittest.TestCase):
             "_abc",
             "a b",
             "a!",
+            "abc\n",
             "h\u00e9llo",
             "a" * 256,
             123,
