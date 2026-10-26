@@ -1,1 +1,1 @@
-`opentelemetry-configuration`: split declarative configuration into `load_config` (Parse) and `create_sdk` (Create) per the configuration spec
+[BREAKING] `opentelemetry-configuration`: split declarative configuration into `load_config` (Parse) and `create_sdk` (Create) per the configuration spec. `load_config_file` is renamed to `load_config` and the `configure_*_provider`/`configure_propagator` functions are replaced by `create_*` equivalents
