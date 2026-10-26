@@ -911,13 +911,9 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         faulty.shutdown.assert_called_once_with()
 
     def test_submit_runtime_error_after_enqueue_does_not_double_invoke(self):
-        # When executor.submit raises RuntimeError AFTER the work item was
-        # actually enqueued (e.g. Thread.start failure), the inline fallback
-        # must not run the callback a second time. The shared _CallbackAttempt
-        # lock guarantees at-most-once, and an outward-raising user handler on
-        # the diagnostic log must not escape. Stderr must still contain the
-        # diagnostic record (safe fallback).
-
+        # submit raises RuntimeError after enqueue: inline fallback must not
+        # double-invoke; outward DEBUG handler must not escape; stderr fallback
+        # must still record the diagnostic.
         multi_processor = trace.ConcurrentMultiSpanProcessor(2)
         faulty = mock.Mock(spec=trace.SpanProcessor)
         faulty.shutdown.side_effect = RuntimeError("processor fault")
