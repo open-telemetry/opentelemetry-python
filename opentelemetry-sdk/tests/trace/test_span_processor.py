@@ -718,6 +718,7 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
             "The ConcurrentMultiSpanProcessor object created by this test wasn't garbage collected",
         )
 
+    # pylint: disable=no-self-use
     def test_shutdown_runs_inline_after_executor_shutdown(self):
         # Simulate the atexit scenario: CPython runs threading._shutdown()
         # before the atexit queue, so the ThreadPoolExecutor is closed by the

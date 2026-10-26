@@ -252,6 +252,7 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
             self.assertEqual(1, mock.force_flush.call_count)
         multi_log_record_processor.shutdown()
 
+    # pylint: disable=no-self-use
     def test_shutdown_runs_inline_after_executor_shutdown(self):
         # Simulate the atexit scenario: CPython runs threading._shutdown()
         # before the atexit queue, so the ThreadPoolExecutor is closed by the
