@@ -414,6 +414,23 @@ class ReadableSpan:
 
     """
 
+    __slots__ = (
+        "_name",
+        "_context",
+        "_kind",
+        "_instrumentation_info",
+        "_instrumentation_scope",
+        "_parent",
+        "_start_time",
+        "_end_time",
+        "_attributes",
+        "_events",
+        "_links",
+        "_resource",
+        "_status",
+        "__weakref__",
+    )
+
     def __init__(
         self,
         name: str,
@@ -775,6 +792,18 @@ class Span(trace_api.Span, ReadableSpan):
         limits: `SpanLimits` instance that was passed to the `TracerProvider`
     """
 
+    __slots__ = (
+        "_sampler",
+        "_trace_config",
+        "_record_exception",
+        "_set_status_on_exception",
+        "_span_processor",
+        "_limits",
+        "_lock",
+        "_ending_thread",
+        "_record_end_metrics",
+    )
+
     def __new__(cls, *args, **kwargs):
         if cls is Span:
             raise TypeError("Span must be instantiated via a tracer.")
@@ -805,12 +834,15 @@ class Span(trace_api.Span, ReadableSpan):
         if resource is None:
             resource = Resource.create({})
         super().__init__(
-            name=name,
-            context=context,
-            parent=parent,
-            kind=kind,
-            resource=resource,
-            instrumentation_info=instrumentation_info,
+            name,
+            context,
+            parent,
+            resource,
+            None,  # attributes
+            (),  # events
+            (),  # links
+            kind,
+            instrumentation_info,
             instrumentation_scope=instrumentation_scope,
         )
         self._sampler = sampler
@@ -827,8 +859,8 @@ class Span(trace_api.Span, ReadableSpan):
         self._attributes = BoundedAttributes(
             self._limits.max_span_attributes,
             attributes,
-            immutable=False,
-            max_value_len=self._limits.max_span_attribute_length,
+            False,
+            self._limits.max_span_attribute_length,
         )
         self._events = self._new_events()
         if events:
@@ -942,19 +974,19 @@ class Span(trace_api.Span, ReadableSpan):
 
     def _readable_span(self) -> ReadableSpan:
         return ReadableSpan(
-            name=self._name,
-            context=self._context,
-            parent=self._parent,
-            resource=self._resource,
-            attributes=self._attributes,
-            events=self._events,
-            links=self._links,
-            kind=self.kind,
-            status=self._status,
-            start_time=self._start_time,
-            end_time=self._end_time,
-            instrumentation_info=self._instrumentation_info,
-            instrumentation_scope=self._instrumentation_scope,
+            self._name,
+            self._context,
+            self._parent,
+            self._resource,
+            self._attributes,
+            self._events,
+            self._links,
+            self.kind,
+            self._instrumentation_info,
+            self._status,
+            self._start_time,
+            self._end_time,
+            self._instrumentation_scope,
         )
 
     def start(
@@ -968,7 +1000,7 @@ class Span(trace_api.Span, ReadableSpan):
                 return
             self._start_time = start_time if start_time is not None else time_ns()
 
-        self._span_processor.on_start(self, parent_context=parent_context)
+        self._span_processor.on_start(self, parent_context)
 
     def end(self, end_time: int | None = None) -> None:
         with self._lock:
@@ -1106,6 +1138,8 @@ class _Span(Span):
     by other mechanisms than through the `Tracer`.
     """
 
+    __slots__ = ()
+
 
 @dataclass
 class _TracerConfig:
@@ -1171,20 +1205,20 @@ class Tracer(trace_api.Tracer):
         end_on_exit: bool = True,
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(
-            name=name,
-            context=context,
-            kind=kind,
-            attributes=attributes,
-            links=links,
-            start_time=start_time,
-            record_exception=record_exception,
-            set_status_on_exception=set_status_on_exception,
+            name,
+            context,
+            kind,
+            attributes,
+            links,
+            start_time,
+            record_exception,
+            set_status_on_exception,
         )
         with trace_api.use_span(
             span,
-            end_on_exit=end_on_exit,
-            record_exception=record_exception,
-            set_status_on_exception=set_status_on_exception,
+            end_on_exit,
+            record_exception,
+            set_status_on_exception,
         ) as span:
             yield span
 
@@ -1206,7 +1240,7 @@ class Tracer(trace_api.Tracer):
             raise TypeError("parent_span_context must be a SpanContext or None.")
 
         if not self._is_enabled():
-            return trace_api.NonRecordingSpan(context=parent_span_context)
+            return trace_api.NonRecordingSpan(parent_span_context)
 
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
@@ -1240,9 +1274,9 @@ class Tracer(trace_api.Tracer):
         span_context = trace_api.SpanContext(
             trace_id,
             self.id_generator.generate_span_id(),
-            is_remote=False,
-            trace_flags=trace_flags,
-            trace_state=sampling_result.trace_state,
+            False,
+            trace_flags,
+            sampling_result.trace_state,
         )
 
         record_end_metrics = self._tracer_metrics.start_span(parent_span_context, sampling_result.decision)
@@ -1251,25 +1285,27 @@ class Tracer(trace_api.Tracer):
         if sampling_result.decision.is_recording():
             # pylint:disable=protected-access
             span = _Span(
-                name=name,
-                context=span_context,
-                parent=parent_span_context,
-                sampler=self.sampler,
-                resource=self.resource,
-                attributes=sampling_result.attributes,
-                span_processor=self.span_processor,
-                kind=kind,
-                links=links,
-                instrumentation_info=self.instrumentation_info,
-                record_exception=record_exception,
-                set_status_on_exception=set_status_on_exception,
-                limits=self._span_limits,
-                instrumentation_scope=self._instrumentation_scope,
+                name,
+                span_context,
+                parent_span_context,
+                self.sampler,
+                None,  # trace_config
+                self.resource,
+                sampling_result.attributes,
+                None,  # events
+                links,
+                kind,
+                self.span_processor,
+                self.instrumentation_info,
+                record_exception,
+                set_status_on_exception,
+                self._span_limits,
+                self._instrumentation_scope,
                 record_end_metrics=record_end_metrics,
             )
-            span.start(start_time=start_time, parent_context=context)
+            span.start(start_time, context)
         else:
-            span = trace_api.NonRecordingSpan(context=span_context)
+            span = trace_api.NonRecordingSpan(span_context)
         return span
 
 

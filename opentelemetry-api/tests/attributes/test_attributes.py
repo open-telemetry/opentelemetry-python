@@ -5,6 +5,7 @@
 
 import copy
 import logging
+import sys
 import threading
 import unittest
 import unittest.mock
@@ -33,7 +34,7 @@ class TestBoundedAttributes(unittest.TestCase):
         # A python object that isn't a primitive and has no string/repr method is converted to None.
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             self.assertEqual(
-                _clean_attribute_value(_NoStrNoReprObject(), None),
+                _clean_attribute_value(_NoStrNoReprObject(), sys.maxsize),
                 None,
             )
         self.assertEqual(len(cm.output), 1)
@@ -41,11 +42,11 @@ class TestBoundedAttributes(unittest.TestCase):
 
         valid_primitive_sequence = [1, 2.2, None, "cookie"]
         self.assertEqual(
-            _clean_attribute_value(valid_primitive_sequence, None),
+            _clean_attribute_value(valid_primitive_sequence, sys.maxsize),
             tuple(valid_primitive_sequence),
         )
         for valid_primitive in valid_primitive_sequence:
-            self.assertEqual(_clean_attribute_value(valid_primitive, None), valid_primitive)
+            self.assertEqual(_clean_attribute_value(valid_primitive, sys.maxsize), valid_primitive)
 
         self.assertEqual(_clean_attribute_value(b"hello", 4), b"hello")
 
@@ -57,13 +58,13 @@ class TestBoundedAttributes(unittest.TestCase):
 
         # Sequence of different types of values. List converted to tuple.
         self.assertEqual(
-            _clean_attribute_value(["a", 2, _NoStrNoReprObject(), None, b"\xff"], None),
+            _clean_attribute_value(["a", 2, _NoStrNoReprObject(), None, b"\xff"], sys.maxsize),
             ("a", 2, None, None, b"\xff"),
         )
 
         # non-str key in map... will be converted to string
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
-            self.assertEqual(_clean_attribute_value({2.2: 4.4}, None), {"2.2": 4.4})
+            self.assertEqual(_clean_attribute_value({2.2: 4.4}, sys.maxsize), {"2.2": 4.4})
         self.assertEqual(len(cm.output), 1)
         self.assertIn(
             "Invalid type",
@@ -81,7 +82,7 @@ class TestBoundedAttributes(unittest.TestCase):
                     "d": [2, 3],
                     "bytes": b"\xff",
                 },
-                None,
+                sys.maxsize,
             ),
             {"a": 1, "c": 3, "d": (2, 3), "bytes": b"\xff"},
         )
@@ -257,7 +258,7 @@ class TestBoundedAttributes(unittest.TestCase):
 
         self.assertEqual(
             "<DummyWSGIRequest method=GET path=/example/>",
-            _clean_attribute_value(DummyWSGIRequest(), None),
+            _clean_attribute_value(DummyWSGIRequest(), sys.maxsize),
         )
 
     def test_deepcopy(self):

@@ -5,6 +5,7 @@
 
 import copy
 import logging
+import sys
 import threading
 from collections.abc import Mapping, MutableMapping, Sequence
 from types import NoneType
@@ -27,24 +28,24 @@ def _is_non_custom_str(key: Any) -> bool:
 @overload
 def _clean_attribute_value(
     value: Mapping[str, types.AnyValue],
-    max_string_value_length: int | None,
+    max_string_value_length: int,
 ) -> Mapping[str, types.AnyValue]: ...
 
 
 @overload
 def _clean_attribute_value(
     value: types.AnyValue,
-    max_string_value_length: int | None,
+    max_string_value_length: int,
 ) -> types.AnyValue: ...
 
 
 def _clean_attribute_value(
     value: types.AnyValue,
-    max_string_value_length: int | None,
+    max_string_value_length: int,
 ) -> types.AnyValue:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
-    String values are truncated to max_string_value_length if provided.
+    String values are truncated to max_string_value_length.
     Anything that isn't of `types.AnyValue`, we attempt to cast to `str`.
     If this fails, the value is replaced with None. Sequence's are converted to tuples and mappings
     are copied into new dicts.
@@ -52,15 +53,15 @@ def _clean_attribute_value(
     Returns:
         The recursively cleaned AnyValue.
     """
-    if isinstance(value, (NoneType, bool, int, float, bytes)):
-        return value
     if isinstance(value, str):
-        if max_string_value_length is not None and len(value) > max_string_value_length:
+        if len(value) > max_string_value_length:
             _logger.warning(
                 "String attribute value exceeds max length of %d, truncating.",
                 max_string_value_length,
             )
             value = value[:max_string_value_length]
+        return value
+    if isinstance(value, (NoneType, bool, int, float, bytes)):
         return value
     if isinstance(value, Sequence):
         return tuple(_clean_attribute_value(v, max_string_value_length) for v in value)
@@ -149,9 +150,9 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
         if max_value_len is not None and max_value_len < 0:
             raise ValueError("max_value_len must be valid int greater or equal to 0")
         self._dict: dict[str, types.AnyValue] = {}
-        self.maxlen = maxlen
+        self.maxlen: int = sys.maxsize if maxlen is None else maxlen
         self.dropped = 0
-        self.max_value_len = max_value_len
+        self.max_value_len: int = sys.maxsize if max_value_len is None else max_value_len
         self._lock = threading.Lock()
         # The spec allows the limit log to be emitted at most once per record, so track
         # it separately from ``dropped``, which also counts other kinds of drops.
@@ -168,13 +169,10 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
     def __getitem__(self, key: str) -> types.AnyValue:
         return self._dict[key]
 
-    def _raise_if_immutable(self) -> None:
+    def __setitem__(self, key: str, value: types.AnyValue) -> None:
         if self._immutable:
             raise TypeError("Cannot mutate immutable BoundedAttributes")
-
-    def __setitem__(self, key: str, value: types.AnyValue) -> None:
-        self._raise_if_immutable()
-        if self.maxlen is not None and self.maxlen == 0:
+        if self.maxlen == 0:
             with self._lock:
                 self.dropped += 1
                 return
@@ -191,21 +189,42 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
             self._setitem_locked(key, cleaned)
 
     def _set_items(self, attributes: Mapping[str, types.AnyValue]) -> None:
-        self._raise_if_immutable()
-        if self.maxlen is not None and self.maxlen == 0:
+        if self._immutable:
+            raise TypeError("Cannot mutate immutable BoundedAttributes")
+        if self.maxlen == 0:
             with self._lock:
                 self.dropped += len(attributes)
             return
-        cleaned_attributes: Mapping[str, types.AnyValue] = _clean_attribute_value(attributes, self.max_value_len)
         with self._lock:
-            self.dropped += len(attributes) - len(cleaned_attributes)
-            for key, value in cleaned_attributes.items():
-                self._setitem_locked(key, value)
+            for key, value in attributes.items():
+                if not key:
+                    _logger.warning(
+                        "invalid attribute key `%s`. must be non-empty string. Dropping key from attributes.",
+                        key,
+                    )
+                    self.dropped += 1
+                    continue
+                # Spec says to convert unknown types to strings if possible.
+                if not isinstance(key, str):
+                    _logger.warning(
+                        "Invalid type `%s` for attribute key `%s`, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
+                        type(key),
+                        key,
+                    )
+                    if _is_non_custom_str(key):
+                        key = str(key)
+                    else:
+                        self.dropped += 1
+                        continue
+                self._setitem_locked(key, _clean_attribute_value(value, self.max_value_len))
 
     def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
+        if len(self._dict) < self.maxlen:
+            self._dict[key] = value
+            return
         if key in self._dict:
             del self._dict[key]
-        if self.maxlen is not None and len(self._dict) >= self.maxlen:
+        if len(self._dict) >= self.maxlen:
             if not self._dropped_logged:
                 self._dropped_logged = True
                 _logger.warning(
@@ -218,7 +237,8 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
         self._dict[key] = value
 
     def __delitem__(self, key: str) -> None:
-        self._raise_if_immutable()
+        if self._immutable:
+            raise TypeError("Cannot mutate immutable BoundedAttributes")
         del self._dict[key]
 
     def __iter__(self):
