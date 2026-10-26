@@ -7,6 +7,7 @@ import atexit
 import concurrent.futures
 import json
 import logging
+import sys
 import os
 import threading
 import traceback
@@ -87,19 +88,15 @@ def _safe_log_exception(logger, msg):
     handler during the outer dispatch is contained here.
     """
     if getattr(_callback_log_reentry, "in_diag", False):
-        import sys as _sys
-        import traceback as _tb
-        print(msg, file=_sys.stderr)
-        _tb.print_exc(file=_sys.stderr)
+        print(msg, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         return
     _callback_log_reentry.in_diag = True
     try:
         logger.exception(msg)
     except Exception:  # pylint: disable=broad-exception-caught
-        import sys as _sys
-        import traceback as _tb
-        print(msg, file=_sys.stderr)
-        _tb.print_exc(file=_sys.stderr)
+        print(msg, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
     finally:
         _callback_log_reentry.in_diag = False
 

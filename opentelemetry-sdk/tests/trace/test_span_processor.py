@@ -6,6 +6,7 @@ import gc
 import multiprocessing
 import os
 import time
+import logging
 import unittest
 import weakref
 from threading import Event, Thread
@@ -815,8 +816,6 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         # A logging handler attached to the OTel logger that raises must not
         # escape out of shutdown() nor deadlock; the reentry guard routes
         # diagnostics to stderr and healthy siblings still run.
-        import logging
-
         multi_processor = trace.ConcurrentMultiSpanProcessor(2)
         raising_processor = mock.Mock(spec=trace.SpanProcessor)
         raising_processor.shutdown.side_effect = RuntimeError("processor boom")

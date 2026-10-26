@@ -312,8 +312,6 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
     def test_callback_logger_handler_raise_does_not_crash(self):
         # A logging handler attached to the OTel logger that raises must not
         # escape out of shutdown() nor deadlock; reentry guard routes to stderr.
-        import logging
-
         multi = ConcurrentMultiLogRecordProcessor(2)
         raising = Mock(spec=LogRecordProcessor)
         raising.shutdown.side_effect = RuntimeError("processor boom")
@@ -341,4 +339,3 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
             multi._executor.shutdown(wait=True)
 
         healthy.shutdown.assert_called_once_with()
-
