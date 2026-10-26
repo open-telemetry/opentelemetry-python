@@ -824,22 +824,51 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
 
         class _BoomHandler(logging.Handler):
             def emit(self, record):
-                try:
-                    raise RuntimeError("handler boom")
-                except RuntimeError:
-                    pass  # simulate a handler whose emit raises and is contained by the logging framework
+                # Raises OUTWARD (no self-catch, raiseExceptions left default).
+                # The safe diagnostic wrapper must contain it and fall back to stderr.
+                raise RuntimeError("handler boom")
 
         handler = _BoomHandler(level=logging.ERROR)
         otel_logger = logging.getLogger("opentelemetry.sdk.trace")
         otel_logger.addHandler(handler)
-        old_raise = logging.raiseExceptions
-        logging.raiseExceptions = False
         try:
-            # Must not raise, must not recurse, must not deadlock.
+            # Normal-executor path: faulty callback raises -> future.result() ->
+            # safe_log_exception -> outward handler raise must not escape.
             multi_processor.shutdown()
         finally:
-            logging.raiseExceptions = old_raise
             otel_logger.removeHandler(handler)
+
+        healthy.shutdown.assert_called_once_with()
+
+    def test_logging_handler_raise_during_callback_resolution_is_isolated(self):
+        # If resolving a callback (attribute lookup) raises AND an attached
+        # handler raises on the resulting exception log, dispatch must continue
+        # to healthy siblings.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+
+        class _ResolveBoom:
+            @property
+            def shutdown(self):
+                raise RuntimeError("resolve boom")
+
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(_ResolveBoom())
+        multi_processor.add_span_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk.trace")
+        old_level = otel_logger.level
+        otel_logger.setLevel(logging.ERROR)
+        handler = _OutwardBoom(level=logging.ERROR)
+        otel_logger.addHandler(handler)
+        try:
+            multi_processor.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
 
         healthy.shutdown.assert_called_once_with()
 

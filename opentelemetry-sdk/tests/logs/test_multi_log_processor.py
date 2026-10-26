@@ -320,21 +320,51 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
 
         class _BoomHandler(logging.Handler):
             def emit(self, record):
-                try:
-                    raise RuntimeError("handler boom")
-                except RuntimeError:
-                    pass  # simulate a handler whose emit raises and is contained by the logging framework
+                # Raises OUTWARD (no self-catch, raiseExceptions left default).
+                raise RuntimeError("handler boom")
 
         handler = _BoomHandler(level=logging.ERROR)
         otel_logger = logging.getLogger("opentelemetry.sdk._logs._internal")
         otel_logger.addHandler(handler)
-        old_raise = logging.raiseExceptions
-        logging.raiseExceptions = False
+        try:
+            # Normal-executor path: faulty callback raises -> future.result() ->
+            # safe_log_exception -> outward handler raise must not escape.
+            multi.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+            multi._executor.shutdown(wait=True)
+
+        healthy.shutdown.assert_called_once_with()
+
+    def test_logging_handler_raise_during_callback_resolution_is_isolated(self):
+        # If resolving a callback (attribute lookup) raises AND an attached
+        # handler raises on the resulting exception log, dispatch continues to
+        # healthy siblings.
+        multi = ConcurrentMultiLogRecordProcessor(2)
+
+        class _ResolveBoom:
+            @property
+            def shutdown(self):
+                raise RuntimeError("resolve boom")
+
+        healthy = Mock(spec=LogRecordProcessor)
+        multi.add_log_record_processor(_ResolveBoom())
+        multi.add_log_record_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk._logs._internal")
+        old_level = otel_logger.level
+        otel_logger.setLevel(logging.ERROR)
+        handler = _OutwardBoom(level=logging.ERROR)
+        otel_logger.addHandler(handler)
         try:
             multi.shutdown()
         finally:
-            logging.raiseExceptions = old_raise
             otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
             multi._executor.shutdown(wait=True)
 
         healthy.shutdown.assert_called_once_with()
