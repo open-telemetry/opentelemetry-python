@@ -25,8 +25,8 @@ _PACKAGE_ROOT = Path(_generated_validator.__file__).parent
 _SCHEMA = json.loads((_PACKAGE_ROOT / "schema.json").read_text(encoding="utf-8"))
 
 _CODEGEN_SPEC = spec_from_file_location(
-    "generate_validator",
-    Path(__file__).resolve().parent.parent / "codegen" / "generate_validator.py",
+    "_generate_validator",
+    Path(__file__).resolve().parent.parent / "codegen" / "_generate_validator.py",
 )
 _CODEGEN = module_from_spec(_CODEGEN_SPEC)
 _CODEGEN_SPEC.loader.exec_module(_CODEGEN)
