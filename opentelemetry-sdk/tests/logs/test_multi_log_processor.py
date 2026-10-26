@@ -3,7 +3,9 @@
 
 # pylint:disable=protected-access,no-self-use,no-member
 
+import io
 import logging
+import sys
 import threading
 import time
 import unittest
@@ -409,8 +411,6 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         # second time. The shared _CallbackAttempt lock guarantees at-most-once,
         # and an outward-raising user handler on the diagnostic log must not
         # escape. Stderr must still contain the diagnostic record.
-        import io
-        import sys as _sys
 
         multi = ConcurrentMultiLogRecordProcessor(2)
         faulty = Mock(spec=LogRecordProcessor)
@@ -440,14 +440,14 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
 
         multi._executor.submit = patched
         stderr_buf = io.StringIO()
-        old_stderr = _sys.stderr
-        _sys.stderr = stderr_buf
+        old_stderr = sys.stderr
+        sys.stderr = stderr_buf
         try:
             multi.shutdown()
             for f in enqueued_futures:
                 f.result()
         finally:
-            _sys.stderr = old_stderr
+            sys.stderr = old_stderr
             otel_logger.removeHandler(handler)
             otel_logger.setLevel(old_level)
             multi._executor.shutdown(wait=True)

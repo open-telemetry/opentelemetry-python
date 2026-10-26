@@ -3,9 +3,11 @@
 
 import abc
 import gc
+import io
 import logging
 import multiprocessing
 import os
+import sys
 import time
 import unittest
 import weakref
@@ -915,8 +917,6 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         # lock guarantees at-most-once, and an outward-raising user handler on
         # the diagnostic log must not escape. Stderr must still contain the
         # diagnostic record (safe fallback).
-        import io
-        import sys as _sys
 
         multi_processor = trace.ConcurrentMultiSpanProcessor(2)
         faulty = mock.Mock(spec=trace.SpanProcessor)
@@ -946,15 +946,15 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
 
         multi_processor._executor.submit = patched
         stderr_buf = io.StringIO()
-        old_stderr = _sys.stderr
-        _sys.stderr = stderr_buf
+        old_stderr = sys.stderr
+        sys.stderr = stderr_buf
         try:
             multi_processor.shutdown()
             # Wait for all enqueued workers to finish before asserting.
             for f in enqueued_futures:
                 f.result()
         finally:
-            _sys.stderr = old_stderr
+            sys.stderr = old_stderr
             otel_logger.removeHandler(handler)
             otel_logger.setLevel(old_level)
             multi_processor._executor.shutdown(wait=True)
