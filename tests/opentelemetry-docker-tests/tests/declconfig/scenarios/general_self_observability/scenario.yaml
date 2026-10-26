@@ -1,0 +1,62 @@
+description: >
+  With self-observability enabled, the SDK components built from declarative
+  config record their own metrics through the configured MeterProvider, so
+  they are exported with the configured resource.
+env:
+  OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"
+until:
+  - metric:
+      name: otel.sdk.exporter.metric_data_point.exported
+      min: 1
+  - metric:
+      name: otel.sdk.exporter.span.exported
+      min: 1
+  - metric:
+      name: otel.sdk.metric_reader.collection.duration
+      field: count
+      min: 1
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-general-self-observability
+  - spans:
+      name: self-obs-span
+      min_count: 1
+  - metric:
+      name: otel.sdk.exporter.metric_data_point.exported
+      scope:
+        name: opentelemetry-sdk
+      data_point:
+        value: {gte: 1}
+        attributes:
+          values:
+            otel.component.type: otlp_grpc_metric_exporter
+  - metric:
+      name: otel.sdk.metric_reader.collection.duration
+      scope:
+        name: opentelemetry-sdk
+      data_point:
+        attributes:
+          values:
+            otel.component.type: periodic_metric_reader
+  - metric:
+      name: otel.sdk.exporter.span.exported
+      scope:
+        name: opentelemetry-sdk
+      data_point:
+        attributes:
+          values:
+            otel.component.type: otlp_http_span_exporter
+  - metric:
+      name: otel.sdk.processor.span.processed
+      scope:
+        name: opentelemetry-sdk
+      data_point:
+        attributes:
+          values:
+            otel.component.type: batching_span_processor
+  - metric:
+      name: otel.sdk.span.started
+      scope:
+        name: opentelemetry-sdk

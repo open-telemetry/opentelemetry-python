@@ -90,8 +90,10 @@ class TestDictToDataclass(unittest.TestCase):
         # (ExperimentalJaegerRemoteSampler) has required fields, so it cannot
         # be defaulted. A present null must stay None rather than raising a
         # TypeError trying to instantiate it. Regression test for #5451.
-        result = _dict_to_dataclass({"jaeger_remote_development": None}, SamplerConfig)
-        self.assertIsNone(result.jaeger_remote_development)
+        # Leaving it None selects no sampler, which the exactly-one constraint
+        # rejects with a ValueError instead.
+        with self.assertRaises(ValueError):
+            _dict_to_dataclass({"jaeger_remote_development": None}, SamplerConfig)
 
     def test_missing_optional_fields_default_to_none(self):
         result = _dict_to_dataclass({}, _Outer)

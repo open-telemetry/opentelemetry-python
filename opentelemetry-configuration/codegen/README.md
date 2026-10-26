@@ -11,6 +11,12 @@ Extends the default dataclass template to support `additionalProperties` from th
 
 This enables plugin/custom component names to flow through typed dataclasses without a post-processing step.
 
+Schema types that allow exactly one property (`minProperties: 1` and `maxProperties: 1`, e.g. `Sampler`, `SpanExporter`, `Aggregation`) get the `@_exactly_one_property` decorator, which raises `ValueError` at construction unless exactly one component choice (typed field or additional property) is set.
+
+## `one_of_template_data.py`
+
+datamodel-codegen does not expose `minProperties`/`maxProperties` to templates. This script derives an `exactly_one_property` flag for each such schema type and writes it as `--extra-template-data` for `dataclass.jinja2`.
+
 ## Usage
 
 Templates are applied automatically when regenerating models:

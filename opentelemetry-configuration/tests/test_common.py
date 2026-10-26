@@ -3,13 +3,15 @@
 
 import inspect
 import unittest
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from types import SimpleNamespace
 from typing import Any, ClassVar
 from unittest.mock import MagicMock, patch
 
+from opentelemetry.configuration import models
 from opentelemetry.configuration._common import (
     _additional_properties,
+    _exactly_one_property,
     _map_compression,
     _matches_glob,
     _parse_headers,
@@ -18,6 +20,7 @@ from opentelemetry.configuration._common import (
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.configuration.file._loader import _get_schema
 from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
     LogRecordExporter,
@@ -378,6 +381,93 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
 
     def test_push_metric_exporter(self):
         self._assert_supports_additional_properties(PushMetricExporter)
+
+
+class TestExactlyOneProperty(unittest.TestCase):
+    def setUp(self):
+        @_exactly_one_property
+        @_additional_properties
+        @dataclass
+        class _Choice:
+            first: dict | None = None
+            second: dict | None = None
+            additional_properties: ClassVar[dict[str, Any]]
+
+        self.choice_cls = _Choice
+
+    def test_single_choice_accepted(self):
+        cases = [
+            {"first": {}},
+            {"second": {"key": "value"}},
+            {"my_plugin": {}},
+            {"my_plugin": None},
+        ]
+        for kwargs in cases:
+            with self.subTest(kwargs=kwargs):
+                self.choice_cls(**kwargs)
+
+    def test_zero_or_multiple_choices_rejected(self):
+        cases = [
+            {},
+            {"first": None},
+            {"first": {}, "second": {}},
+            {"first": {}, "my_plugin": {}},
+            {"plugin_a": {}, "plugin_b": None},
+        ]
+        for kwargs in cases:
+            with self.subTest(kwargs=kwargs):
+                with self.assertRaises(ValueError) as ctx:
+                    self.choice_cls(**kwargs)
+                self.assertIn("_Choice requires exactly one of", str(ctx.exception))
+
+    def test_preserves_signature(self):
+        params = inspect.signature(self.choice_cls.__init__).parameters
+        self.assertIn("first", params)
+        self.assertIn("kwargs", params)
+
+
+class TestGeneratedModelsHaveExactlyOneProperty(unittest.TestCase):
+    """Guards the codegen wiring for ``minProperties: 1, maxProperties: 1``"""
+
+    @staticmethod
+    def _one_of_model_classes():
+        return [
+            getattr(models, definition.get("title", name))
+            for name, definition in _get_schema()["$defs"].items()
+            if definition.get("minProperties") == 1 and definition.get("maxProperties") == 1
+        ]
+
+    def test_schema_has_one_of_types(self):
+        self.assertIn(models.Sampler, self._one_of_model_classes())
+
+    def test_rejects_zero_choices(self):
+        for model_cls in self._one_of_model_classes():
+            with self.subTest(model=model_cls.__name__):
+                with self.assertRaises(ValueError):
+                    model_cls()
+
+    def test_rejects_multiple_choices(self):
+        for model_cls in self._one_of_model_classes():
+            with self.subTest(model=model_cls.__name__):
+                field_names = [field.name for field in fields(model_cls)]
+                # pylint: disable=unexpected-keyword-arg
+                with self.assertRaises(ValueError):
+                    if len(field_names) >= 2:
+                        model_cls(**{field_names[0]: {}, field_names[1]: {}})
+                    else:
+                        model_cls(**{field_names[0]: {}, "_test_plugin_key": {}})
+
+    def test_accepts_single_choice(self):
+        for model_cls in self._one_of_model_classes():
+            with self.subTest(model=model_cls.__name__):
+                field_name = fields(model_cls)[0].name
+                self.assertEqual(getattr(model_cls(**{field_name: {}}), field_name), {})
+
+    def test_sampler_always_on_and_always_off_rejected(self):
+        with self.assertRaises(ValueError) as ctx:
+            Sampler(always_on={}, always_off={})
+        self.assertIn("always_off", str(ctx.exception))
+        self.assertIn("always_on", str(ctx.exception))
 
 
 class TestResolveComponent(unittest.TestCase):

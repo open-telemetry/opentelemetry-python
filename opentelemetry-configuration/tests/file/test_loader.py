@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import io
 import os
 import tempfile
 import unittest
@@ -14,7 +15,7 @@ from opentelemetry.configuration._tracer_provider import (
 )
 from opentelemetry.configuration.file import (
     ConfigurationError,
-    load_config_file,
+    load_config,
 )
 from opentelemetry.configuration.file._loader import (
     _SUPPORTED_SCHEMA_MAJOR,
@@ -56,7 +57,7 @@ class TestConfigLoader(unittest.TestCase):
     def test_load_minimal_yaml(self):
         """Test loading minimal YAML configuration."""
         config_path = self.test_data_dir / "minimal_config.yaml"
-        config = load_config_file(str(config_path))
+        config = load_config(str(config_path))
 
         self.assertIsInstance(config, OpenTelemetryConfiguration)
         self.assertEqual(config.file_format, "1.0")
@@ -64,7 +65,7 @@ class TestConfigLoader(unittest.TestCase):
     def test_load_minimal_json(self):
         """Test loading minimal JSON configuration."""
         config_path = self.test_data_dir / "minimal_config.json"
-        config = load_config_file(str(config_path))
+        config = load_config(str(config_path))
 
         self.assertIsInstance(config, OpenTelemetryConfiguration)
         self.assertEqual(config.file_format, "1.0")
@@ -74,21 +75,21 @@ class TestConfigLoader(unittest.TestCase):
         config_path = self.test_data_dir / "config_with_env_vars.yaml"
 
         with patch.dict(os.environ, {"SERVICE_NAME": "test-service"}):
-            config = load_config_file(str(config_path))
+            config = load_config(str(config_path))
 
             self.assertIsInstance(config, OpenTelemetryConfiguration)
 
     def test_file_not_found(self):
         """Test error when file doesn't exist."""
         with self.assertRaises(ConfigurationError) as ctx:
-            load_config_file("nonexistent_file.yaml")
+            load_config("nonexistent_file.yaml")
 
         self.assertIn("not found", str(ctx.exception))
 
     def test_directory_instead_of_file(self):
         """Test error when path is a directory."""
         with self.assertRaises(ConfigurationError) as ctx:
-            load_config_file(str(self.test_data_dir))
+            load_config(str(self.test_data_dir))
 
         self.assertIn("not a file", str(ctx.exception))
 
@@ -97,7 +98,7 @@ class TestConfigLoader(unittest.TestCase):
         config_path = self.test_data_dir / "invalid_yaml.yaml"
 
         with self.assertRaises(ConfigurationError) as ctx:
-            load_config_file(str(config_path))
+            load_config(str(config_path))
 
         self.assertIn("yaml", str(ctx.exception).lower())
 
@@ -109,7 +110,7 @@ class TestConfigLoader(unittest.TestCase):
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(temp_path)
+                load_config(temp_path)
 
             self.assertIn("Unsupported file format", str(ctx.exception))
         finally:
@@ -122,7 +123,7 @@ class TestConfigLoader(unittest.TestCase):
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(temp_path)
+                load_config(temp_path)
 
             self.assertIn("empty", str(ctx.exception).lower())
         finally:
@@ -136,7 +137,7 @@ class TestConfigLoader(unittest.TestCase):
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(temp_path)
+                load_config(temp_path)
 
             self.assertIn("mapping", str(ctx.exception).lower())
         finally:
@@ -153,7 +154,7 @@ class TestConfigLoader(unittest.TestCase):
         config_path = self.test_data_dir / "config_with_env_vars.yaml"
 
         with patch.dict(os.environ, {}, clear=True):
-            config = load_config_file(str(config_path))
+            config = load_config(str(config_path))
 
         attributes = {attribute.name: attribute.value for attribute in config.resource.attributes}
         self.assertIsNone(attributes["service.name"])
@@ -166,7 +167,7 @@ class TestConfigLoader(unittest.TestCase):
             temp_path = temp_file.name
 
         try:
-            config = load_config_file(temp_path)
+            config = load_config(temp_path)
             self.assertEqual(config.file_format, "1.0")
         finally:
             os.unlink(temp_path)
@@ -179,7 +180,7 @@ class TestConfigLoader(unittest.TestCase):
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(temp_path)
+                load_config(temp_path)
 
             self.assertIn("json", str(ctx.exception).lower())
         finally:
@@ -194,7 +195,7 @@ class TestConfigLoader(unittest.TestCase):
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(temp_path)
+                load_config(temp_path)
 
             self.assertIn("schema", str(ctx.exception).lower())
         finally:
@@ -208,7 +209,7 @@ class TestConfigLoader(unittest.TestCase):
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(temp_path)
+                load_config(temp_path)
 
             self.assertIn("schema", str(ctx.exception).lower())
         finally:
@@ -222,7 +223,7 @@ class TestConfigLoader(unittest.TestCase):
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(temp_path)
+                load_config(temp_path)
 
             error = str(ctx.exception)
             self.assertIn("schema", error.lower())
@@ -239,11 +240,54 @@ class TestConfigLoader(unittest.TestCase):
 
         try:
             with self.assertRaises(ConfigurationError) as ctx:
-                load_config_file(temp_path)
+                load_config(temp_path)
 
             self.assertIn("schema", str(ctx.exception).lower())
         finally:
             os.unlink(temp_path)
+
+
+class TestParseConfigSource(unittest.TestCase):
+    """load_config accepts paths and streams, with an optional file_format."""
+
+    def setUp(self):
+        self.test_data_dir = Path(__file__).parent / "data"
+
+    def test_load_path_like(self):
+        config = load_config(self.test_data_dir / "minimal_config.yaml")
+
+        self.assertEqual(config.file_format, "1.0")
+
+    def test_load_stream(self):
+        cases = [
+            ("yaml", 'file_format: "1.0"\n'),
+            ("json", '{"file_format": "1.0"}'),
+        ]
+        for file_format, content in cases:
+            with self.subTest(file_format=file_format):
+                config = load_config(io.StringIO(content), file_format=file_format)
+
+                self.assertIsInstance(config, OpenTelemetryConfiguration)
+                self.assertEqual(config.file_format, "1.0")
+
+    def test_stream_without_file_format_raises(self):
+        with self.assertRaises(ValueError) as ctx:
+            load_config(io.StringIO('file_format: "1.0"\n'))
+
+        self.assertIn("file_format is required", str(ctx.exception))
+
+    def test_invalid_file_format_argument_raises(self):
+        with self.assertRaises(ValueError):
+            load_config(io.StringIO('file_format: "1.0"\n'), file_format="toml")
+
+    def test_explicit_file_format_overrides_extension(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as temp_file:
+            temp_file.write('{"file_format": "1.0"}')
+        self.addCleanup(os.unlink, temp_file.name)
+
+        config = load_config(temp_file.name, file_format="json")
+
+        self.assertEqual(config.file_format, "1.0")
 
 
 class TestConfigLoaderEndToEnd(unittest.TestCase):
@@ -273,7 +317,7 @@ tracer_provider:
             fh.write(self._YAML if yaml_content is None else yaml_content)
             path = fh.name
         try:
-            return load_config_file(path)
+            return load_config(path)
         finally:
             os.unlink(path)
 
@@ -330,9 +374,11 @@ tracer_provider:
         # in the schema (so ``jaeger_remote_development:`` passes validation and
         # is NOT rejected before conversion), yet its model has required
         # fields. Coercing the present null into it would raise TypeError, so
-        # it must be left as None instead. The rest of the config still loads.
-        config = self._load(
-            """
+        # it is left as None instead. That selects no sampler, so loading
+        # fails with a ConfigurationError rather than crashing.
+        with self.assertRaises(ConfigurationError) as ctx:
+            self._load(
+                """
 file_format: '1.0'
 tracer_provider:
   processors:
@@ -342,13 +388,9 @@ tracer_provider:
   sampler:
     jaeger_remote_development:
 """
-        )
+            )
 
-        # Schema accepted the null, and conversion left the required-field
-        # node unset rather than crashing.
-        self.assertIsNone(config.tracer_provider.sampler.jaeger_remote_development)
-        # A sibling nullable dict-typed node (console:) was still coerced.
-        self.assertEqual(config.tracer_provider.processors[0].batch.exporter.console, {})
+        self.assertIn("Sampler requires exactly one of", str(ctx.exception))
 
 
 class TestFileFormatValidation(unittest.TestCase):
@@ -362,7 +404,7 @@ class TestFileFormatValidation(unittest.TestCase):
             fh.write(f'file_format: "{file_format}"')
             path = fh.name
         try:
-            return load_config_file(path)
+            return load_config(path)
         finally:
             os.unlink(path)
 
@@ -544,7 +586,7 @@ class TestEnvVarSubstitutionEndToEnd(unittest.TestCase):
             fh.write(text)
             path = fh.name
         try:
-            return load_config_file(path)
+            return load_config(path)
         finally:
             os.unlink(path)
 

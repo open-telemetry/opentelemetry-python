@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 
-from opentelemetry import trace
 from opentelemetry.configuration._common import (
     _map_compression,
     _matches_glob,
@@ -67,6 +66,7 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     TracerProvider as TracerProviderConfig,
 )
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import (
     _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
@@ -122,8 +122,13 @@ _DEFAULT_SAMPLER = ParentBased(root=ALWAYS_ON)
 
 def _create_otlp_http_span_exporter(
     config: OtlpHttpExporterConfig,
+    meter_provider: MeterProvider | None,
 ) -> SpanExporter:
-    """Create an OTLP HTTP span exporter from config."""
+    """Create an OTLP HTTP span exporter from config.
+
+    ``meter_provider`` receives the protobuf exporter's own metrics; the JSON
+    exporter does not record any.
+    """
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
@@ -149,6 +154,7 @@ def _create_otlp_http_span_exporter(
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
+                meter_provider=meter_provider,
             )
         case OtlpHttpEncoding.json:
             try:
@@ -180,6 +186,7 @@ def _create_otlp_http_span_exporter(
 
 def _create_otlp_grpc_span_exporter(
     config: OtlpGrpcExporterConfig,
+    meter_provider: MeterProvider | None,
 ) -> SpanExporter:
     """Create an OTLP gRPC span exporter from config."""
     try:
@@ -204,6 +211,7 @@ def _create_otlp_grpc_span_exporter(
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
+        meter_provider=meter_provider,
     )
 
 
@@ -226,7 +234,10 @@ def _create_otlp_file_development_span_exporter(
     return FileSpanExporter(path) if path is not None else FileSpanExporter()
 
 
-def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
+def _create_span_exporter(
+    config: SpanExporterConfig,
+    meter_provider: MeterProvider | None,
+) -> SpanExporter:
     """Create a span exporter from config.
 
     Known exporter types are checked via typed fields on the SpanExporter
@@ -236,9 +247,9 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
     """
     match config:
         case SpanExporterConfig(otlp_http=exporter_config) if exporter_config is not None:
-            return _create_otlp_http_span_exporter(exporter_config)
+            return _create_otlp_http_span_exporter(exporter_config, meter_provider)
         case SpanExporterConfig(otlp_grpc=exporter_config) if exporter_config is not None:
-            return _create_otlp_grpc_span_exporter(exporter_config)
+            return _create_otlp_grpc_span_exporter(exporter_config, meter_provider)
         case SpanExporterConfig(console=exporter_config) if exporter_config is not None:
             return ConsoleSpanExporter()
         case SpanExporterConfig(otlp_file_development=exporter_config) if exporter_config is not None:
@@ -255,19 +266,24 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
 
 def _create_span_processor(
     config: SpanProcessorConfig,
+    meter_provider: MeterProvider | None,
 ) -> BatchSpanProcessor | SimpleSpanProcessor:
     """Create a span processor from config."""
     if config.batch is not None:
-        exporter = _create_span_exporter(config.batch.exporter)
+        exporter = _create_span_exporter(config.batch.exporter, meter_provider)
         return BatchSpanProcessor(
             exporter,
             max_queue_size=config.batch.max_queue_size,
             schedule_delay_millis=config.batch.schedule_delay,
             max_export_batch_size=config.batch.max_export_batch_size,
             export_timeout_millis=config.batch.export_timeout,
+            meter_provider=meter_provider,
         )
     if config.simple is not None:
-        return SimpleSpanProcessor(_create_span_exporter(config.simple.exporter))
+        return SimpleSpanProcessor(
+            _create_span_exporter(config.simple.exporter, meter_provider),
+            meter_provider=meter_provider,
+        )
     raise ConfigurationError("No processor type specified in span processor config. Supported types: batch, simple.")
 
 
@@ -482,6 +498,7 @@ def create_tracer_provider(
     config: TracerProviderConfig | None,
     resource: Resource | None = None,
     global_attribute_limits: AttributeLimits | None = None,
+    meter_provider: MeterProvider | None = None,
 ) -> TracerProvider:
     """Create an SDK TracerProvider from declarative config.
 
@@ -494,6 +511,9 @@ def create_tracer_provider(
         resource: Resource to attach to the provider.
         global_attribute_limits: Top-level attribute_limits from the root config,
             used as a fallback when per-signal limits are not specified.
+        meter_provider: MeterProvider for the SDK's own metrics (provider,
+            processors, and OTLP exporters). When None, those components use
+            the global MeterProvider.
 
     Returns:
         A configured TracerProvider.
@@ -521,33 +541,12 @@ def create_tracer_provider(
         sampler=sampler,
         span_limits=span_limits,
         id_generator=id_generator,
+        meter_provider=meter_provider,
         _tracer_configurator=tracer_configurator,
     )
 
     if config is not None:
         for proc_config in config.processors:
-            provider.add_span_processor(_create_span_processor(proc_config))
+            provider.add_span_processor(_create_span_processor(proc_config, meter_provider))
 
     return provider
-
-
-def configure_tracer_provider(
-    config: TracerProviderConfig | None,
-    resource: Resource | None = None,
-    global_attribute_limits: AttributeLimits | None = None,
-) -> None:
-    """Configure the global TracerProvider from declarative config.
-
-    When config is None (tracer_provider section absent from config file),
-    the global is not set — matching Java/JS SDK behavior and the spec's
-    "a noop tracer provider is used" default.
-
-    Args:
-        config: TracerProvider config from the parsed config file, or None.
-        resource: Resource to attach to the provider.
-        global_attribute_limits: Top-level attribute_limits from the root config,
-            used as a fallback when per-signal limits are not specified.
-    """
-    if config is None:
-        return
-    trace.set_tracer_provider(create_tracer_provider(config, resource, global_attribute_limits))
