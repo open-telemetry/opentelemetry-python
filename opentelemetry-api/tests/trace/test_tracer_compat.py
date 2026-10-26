@@ -3,8 +3,8 @@
 
 # pylint: disable=protected-access
 
-# Tracer implementations written against the current API, the way third parties
-# write them. They must keep working, and keep type-checking, when the API grows.
+# Tracers written against today's API, like third-party ones. They must keep
+# working and type-checking as the API grows.
 
 from collections.abc import Iterator
 from typing import Any
@@ -63,7 +63,7 @@ class ExplicitTracer(Tracer):
 
 
 class ShortSignatureTracer(Tracer):
-    """Overrides with a subset of parameters, as minimal implementations do."""
+    """Overrides with a subset of parameters."""
 
     def start_span(  # type: ignore[override]  # pylint: disable=arguments-differ
         self, name: str, context: Context | None = None, kind: SpanKind = SpanKind.INTERNAL
@@ -180,7 +180,7 @@ class TestLegacyTracerImplementations(TraceGlobalsTest):
         trace.set_tracer_provider(_Provider(explicit))
         tracer = trace.get_tracer("instr")
         tracer._start_typed_span("a", kind=SpanKind.CLIENT, attributes={"k": "v"}, type_="http.client.request")
-        # simulates a caller built against a newer API with options this one doesn't know
+        # a caller built against a newer API, passing an option this one doesn't have
         future_options: dict[str, Any] = {"future_arg": 1}
         with tracer._start_as_current_typed_span("b", type_="http.client.request", **future_options):
             pass

@@ -148,8 +148,8 @@ class Link(_LinkBase):
 _Links = Sequence[Link] | None
 
 
-# Experimental. Options for the typed span methods. New span start options are
-# added here as keys, so older implementations keep accepting newer callers.
+# Experimental. New span start options go here, so older implementations
+# still accept calls from newer callers.
 class _SpanOptions(TypedDict, total=False):
     record_exception: bool
     set_status_on_exception: bool
@@ -407,7 +407,7 @@ class Tracer(ABC):
             The newly-created span.
         """
 
-    # Experimental. Becomes public (start_typed_span) once span type is stable.
+    # Experimental. Becomes public as start_typed_span once span type is stable.
     def _start_typed_span(
         self,
         name: str,
@@ -422,8 +422,7 @@ class Tracer(ABC):
     ) -> "Span":
         """Experimental: starts a span with a span type.
 
-        Same as :meth:`start_span`, plus ``type_``. All arguments after
-        ``name`` are keyword-only.
+        Arguments after ``name`` are keyword-only.
 
         Args:
             type_: Identifies the class of spans this span belongs to, as
@@ -433,22 +432,18 @@ class Tracer(ABC):
                 starts with a letter, followed by letters, digits, ``_``,
                 ``.``, ``-`` or ``/``. Not validated by the API.
             kwargs: Options from :class:`_SpanOptions`, with the same defaults
-                as in :meth:`start_span`. Future span creation inputs are
-                added there. Implementations ignore the ones they don't know.
+                as :meth:`start_span`. Implementations ignore options they
+                don't know.
 
-        The default implementation calls :meth:`start_span` and drops
-        ``type_``, so existing ``Tracer`` implementations keep working.
-        It passes ``record_exception`` and ``set_status_on_exception`` only if
-        the caller set them, so when they're not set the implementation's own
-        :meth:`start_span` defaults apply.
-        Implementations that support span type override this method.
+        The default implementation calls :meth:`start_span` without ``type_``.
+        Implementations that support span type should override this method.
         """
         return self.start_span(
             name,
             **_non_default_start_args(context, kind, attributes, links, start_time, kwargs),
         )
 
-    # Experimental. Becomes public (start_as_current_typed_span) once span type is stable.
+    # Experimental. Becomes public as start_as_current_typed_span once span type is stable.
     @_agnosticcontextmanager
     def _start_as_current_typed_span(
         self,
@@ -484,8 +479,8 @@ def _non_default_start_args(
     start_time: int | None,
     kwargs: _SpanOptions,
 ) -> dict[str, Any]:
-    # Only forward what the caller set, so implementations that override
-    # start_span with a subset of the parameters keep working.
+    # Forward only what the caller set. Overrides of start_span may not
+    # accept every parameter.
     args: dict[str, Any] = {}
     if context is not None:
         args["context"] = context

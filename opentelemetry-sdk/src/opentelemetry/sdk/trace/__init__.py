@@ -106,7 +106,7 @@ def _read_span_options(kwargs: Mapping[str, Any]) -> tuple[bool, bool]:
             "Ignoring unknown span start options: %s",
             sorted(kwargs.keys() - _KNOWN_SPAN_OPTIONS),
         )
-    # both default to True; only an explicit False turns them off, other non-bool values are ignored
+    # Both default to True. Only an explicit False turns them off, other values are ignored.
     return (
         kwargs.get("record_exception") is not False,
         kwargs.get("set_status_on_exception") is not False,
