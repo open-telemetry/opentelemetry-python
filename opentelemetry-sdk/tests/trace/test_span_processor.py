@@ -913,7 +913,11 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
         # actually enqueued (e.g. Thread.start failure), the inline fallback
         # must not run the callback a second time. The shared _CallbackAttempt
         # lock guarantees at-most-once, and an outward-raising user handler on
-        # the diagnostic log must not escape either.
+        # the diagnostic log must not escape. Stderr must still contain the
+        # diagnostic record (safe fallback).
+        import io
+        import sys as _sys
+
         multi_processor = trace.ConcurrentMultiSpanProcessor(2)
         faulty = mock.Mock(spec=trace.SpanProcessor)
         faulty.shutdown.side_effect = RuntimeError("processor fault")
@@ -933,23 +937,33 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
 
         # pylint: disable=protected-access
         orig_submit = multi_processor._executor.submit
-        submit_calls = []
+        enqueued_futures = []
 
         def patched(fn, *a, **kw):
             fut = orig_submit(fn, *a, **kw)  # actually enqueue
-            submit_calls.append(fut)
+            enqueued_futures.append(fut)
             raise RuntimeError("cannot start new thread")  # then raise
 
         multi_processor._executor.submit = patched
+        stderr_buf = io.StringIO()
+        old_stderr = _sys.stderr
+        _sys.stderr = stderr_buf
         try:
             multi_processor.shutdown()
+            # Wait for all enqueued workers to finish before asserting.
+            for f in enqueued_futures:
+                f.result()
         finally:
+            _sys.stderr = old_stderr
             otel_logger.removeHandler(handler)
             otel_logger.setLevel(old_level)
+            multi_processor._executor.shutdown(wait=True)
 
-        assert len(submit_calls) == 2  # one per processor, both enqueued
+        assert len(enqueued_futures) == 2  # one per processor, both enqueued
         healthy.shutdown.assert_called_once_with()
         faulty.shutdown.assert_called_once_with()
+        # Diagnostic stderr fallback must have recorded the shutdown message.
+        assert "Executor is shut down" in stderr_buf.getvalue()
 
     @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")
     def test_batch_span_processor_fork(self):

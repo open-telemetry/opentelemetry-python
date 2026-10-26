@@ -408,7 +408,10 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         # actually enqueued, the inline fallback must not run the callback a
         # second time. The shared _CallbackAttempt lock guarantees at-most-once,
         # and an outward-raising user handler on the diagnostic log must not
-        # escape either.
+        # escape. Stderr must still contain the diagnostic record.
+        import io
+        import sys as _sys
+
         multi = ConcurrentMultiLogRecordProcessor(2)
         faulty = Mock(spec=LogRecordProcessor)
         faulty.shutdown.side_effect = RuntimeError("processor fault")
@@ -428,24 +431,31 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
 
         # pylint: disable=protected-access
         orig_submit = multi._executor.submit
-        submit_calls = []
+        enqueued_futures = []
 
         def patched(fn, *a, **kw):
             fut = orig_submit(fn, *a, **kw)  # actually enqueue
-            submit_calls.append(fut)
+            enqueued_futures.append(fut)
             raise RuntimeError("cannot start new thread")
 
         multi._executor.submit = patched
+        stderr_buf = io.StringIO()
+        old_stderr = _sys.stderr
+        _sys.stderr = stderr_buf
         try:
             multi.shutdown()
+            for f in enqueued_futures:
+                f.result()
         finally:
+            _sys.stderr = old_stderr
             otel_logger.removeHandler(handler)
             otel_logger.setLevel(old_level)
             multi._executor.shutdown(wait=True)
 
-        assert len(submit_calls) == 2
+        assert len(enqueued_futures) == 2
         healthy.shutdown.assert_called_once_with()
         faulty.shutdown.assert_called_once_with()
+        assert "Executor is shut down" in stderr_buf.getvalue()
 
     def test_real_logging_handler_reentry_runs_inline(self):
         # Wire the REAL LoggingHandler bridge into a ConcurrentMultiLogRecordProcessor.
