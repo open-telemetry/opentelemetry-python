@@ -142,7 +142,7 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         self.assertEqual(processor._batch_processor._schedule_delay_millis, 2000.0)
 
     def test_batch_processor_zero_schedule_delay(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=0))
+        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=0), None)
         self.assertEqual(processor._batch_processor._schedule_delay_millis, 0)
         processor.shutdown()
 
