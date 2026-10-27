@@ -3,7 +3,7 @@
 
 import pytest
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
@@ -11,6 +11,7 @@ from opentelemetry.sdk._logs.export import (
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
 
 resource = Resource(
     {
@@ -70,3 +71,60 @@ def test_get_logger(benchmark):
         )
 
     benchmark(benchmark_get_logger)
+
+
+def test_emit_with_exception(benchmark):
+    try:
+        raise ValueError("benchmark exception")
+    except ValueError as exc:
+        exception = exc
+
+    def benchmark_emit():
+        simple_logger.emit(
+            severity_number=SeverityNumber.ERROR,
+            body="benchmark log message",
+            # pylint: disable-next=used-before-assignment
+            exception=exception,
+        )
+
+    benchmark(benchmark_emit)
+
+
+def test_emit_in_active_span(benchmark):
+    tracer = TracerProvider(resource=resource, shutdown_on_exit=False).get_tracer("benchmark_tracer")
+
+    def benchmark_emit():
+        simple_logger.emit(
+            severity_number=SeverityNumber.INFO,
+            body="benchmark log message",
+            event_name="test.event",
+        )
+
+    with tracer.start_as_current_span("benchmark_span"):
+        benchmark(benchmark_emit)
+
+
+@pytest.mark.parametrize("style", ["kwargs", "log_record"])
+def test_emit_log_record_vs_kwargs(benchmark, style):
+    benchmark.group = "emit-log-record-vs-kwargs"
+    attributes = {f"key{i}": f"value{i}" for i in range(5)}
+
+    def benchmark_emit_kwargs():
+        simple_logger.emit(
+            severity_number=SeverityNumber.INFO,
+            body="benchmark log message",
+            attributes=attributes,
+            event_name="test.event",
+        )
+
+    def benchmark_emit_log_record():
+        simple_logger.emit(
+            LogRecord(
+                severity_number=SeverityNumber.INFO,
+                body="benchmark log message",
+                attributes=attributes,
+                event_name="test.event",
+            )
+        )
+
+    benchmark(benchmark_emit_kwargs if style == "kwargs" else benchmark_emit_log_record)
