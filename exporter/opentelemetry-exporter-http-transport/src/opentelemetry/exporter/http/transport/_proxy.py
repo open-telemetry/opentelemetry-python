@@ -38,7 +38,8 @@ def _should_bypass_proxies(url: str) -> bool:
 
     Matches ``requests.utils.should_bypass_proxies``: entries in ``NO_PROXY``
     are compared against the host (IPv4 hosts by exact address or CIDR, other
-    hosts by suffix, with or without port), then the platform's bypass rules
+    hosts by exact match or domain suffix on a ``.`` boundary, with or without
+    port), then the platform's bypass rules
     are consulted via :func:`urllib.request.proxy_bypass`.
     """
     parsed = urlparse(url)
@@ -58,8 +59,12 @@ def _should_bypass_proxies(url: str) -> bool:
             if parsed.port:
                 host_with_port += f":{parsed.port}"
             for entry in entries:
-                if hostname.endswith(entry) or host_with_port.endswith(entry):
-                    return True
+                suffix = entry.lstrip(".")
+                if not suffix:
+                    continue
+                for candidate in (hostname, host_with_port):
+                    if candidate == suffix or candidate.endswith(f".{suffix}"):
+                        return True
 
     try:
         return bool(proxy_bypass(hostname))
