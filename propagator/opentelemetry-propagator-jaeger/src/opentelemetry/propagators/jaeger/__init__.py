@@ -185,6 +185,11 @@ def _parse_trace_id_header(
     if header is None:
         return invalid_header_result
 
+    # some Jaeger clients URL-encode the header value, including the ":"
+    # delimiter, so decode it when no plain delimiter can be found
+    if ":" not in header:
+        header = urllib.parse.unquote(header)
+
     fields = header.split(":")
     if len(fields) != 4:
         return invalid_header_result
