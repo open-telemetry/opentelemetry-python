@@ -13,7 +13,7 @@ from unittest.mock import Mock, patch
 
 from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.context import get_current
+from opentelemetry.context import attach, detach, get_current, set_value
 from opentelemetry.sdk._logs import (
     Logger,
     LoggerProvider,
@@ -180,13 +180,13 @@ class TestLoggerProvider(unittest.TestCase):
         provider = LoggerProvider()
         logger = provider.get_logger("module_name", "1.0", "schema_url")
         other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
-        self.assertTrue(logger._is_enabled())
-        self.assertTrue(other_logger._is_enabled())
+        self.assertTrue(logger._logger_config.is_enabled)
+        self.assertTrue(other_logger._logger_config.is_enabled)
 
     def test_logger_provider_with_disabled_configurator(self):
         provider = LoggerProvider(_logger_configurator=_disable_logger_configurator)
         logger = provider.get_logger("test")
-        self.assertFalse(logger._is_enabled())
+        self.assertFalse(logger._logger_config.is_enabled)
 
     def test_logger_provider_with_custom_configurator(self):
         def configurator(scope):
@@ -197,22 +197,22 @@ class TestLoggerProvider(unittest.TestCase):
         provider = LoggerProvider(_logger_configurator=configurator)
         enabled = provider.get_logger("enabled_logger")
         disabled = provider.get_logger("disabled_logger")
-        self.assertTrue(enabled._is_enabled())
-        self.assertFalse(disabled._is_enabled())
+        self.assertTrue(enabled._logger_config.is_enabled)
+        self.assertFalse(disabled._logger_config.is_enabled)
 
     def test_set_logger_configurator_updates_existing_loggers(self):
         provider = LoggerProvider()
         logger = provider.get_logger("test")
-        self.assertTrue(logger._is_enabled())
+        self.assertTrue(logger._logger_config.is_enabled)
 
         provider._set_logger_configurator(logger_configurator=_disable_logger_configurator)
-        self.assertFalse(logger._is_enabled())
+        self.assertFalse(logger._logger_config.is_enabled)
 
     def test_set_logger_configurator_affects_new_loggers(self):
         provider = LoggerProvider()
         provider._set_logger_configurator(logger_configurator=_disable_logger_configurator)
         logger = provider.get_logger("new_logger")
-        self.assertFalse(logger._is_enabled())
+        self.assertFalse(logger._logger_config.is_enabled)
 
     # pylint: disable-next=no-self-use
     def test_disabled_logger_skips_emit(self):
@@ -241,13 +241,13 @@ class TestLoggerProvider(unittest.TestCase):
         logger = provider.get_logger("module_name", "1.0", "schema_url")
         other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
 
-        self.assertTrue(logger._is_enabled())
-        self.assertTrue(other_logger._is_enabled())
+        self.assertTrue(logger._logger_config.is_enabled)
+        self.assertTrue(other_logger._logger_config.is_enabled)
 
         provider._set_logger_configurator(logger_configurator=configurator)
 
-        self.assertTrue(logger._is_enabled())
-        self.assertFalse(other_logger._is_enabled())
+        self.assertTrue(logger._logger_config.is_enabled)
+        self.assertFalse(other_logger._logger_config.is_enabled)
 
     def test_rule_based_logger_configurator_default_when_rules_dont_match(
         self,
@@ -264,13 +264,13 @@ class TestLoggerProvider(unittest.TestCase):
         logger = provider.get_logger("module_name", "1.0", "schema_url")
         other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
 
-        self.assertTrue(logger._is_enabled())
-        self.assertTrue(other_logger._is_enabled())
+        self.assertTrue(logger._logger_config.is_enabled)
+        self.assertTrue(other_logger._logger_config.is_enabled)
 
         provider._set_logger_configurator(logger_configurator=configurator)
 
-        self.assertFalse(logger._is_enabled())
-        self.assertTrue(other_logger._is_enabled())
+        self.assertFalse(logger._logger_config.is_enabled)
+        self.assertTrue(other_logger._logger_config.is_enabled)
 
     def test_rule_based_configurator_first_match_wins(self):
         disabled_config = _LoggerConfig(is_enabled=False)
@@ -610,3 +610,105 @@ class TestLogger(unittest.TestCase):
         provider.add_log_record_processor(p2)
         logger = provider.get_logger("test")
         self.assertTrue(logger.enabled())
+
+    def test_emit_skipped_when_all_processors_disabled(self):  # pylint: disable=no-self-use
+        provider = LoggerProvider()
+        p1 = Mock()
+        p1.enabled.return_value = False
+        p2 = Mock()
+        p2.enabled.return_value = False
+        provider.add_log_record_processor(p1)
+        provider.add_log_record_processor(p2)
+        logger = provider.get_logger("test")
+
+        logger.emit(body="a log line")
+        logger.emit(LogRecord(body="a log line"))
+
+        p1.on_emit.assert_not_called()
+        p2.on_emit.assert_not_called()
+
+    def test_emit_forwarded_when_one_processor_enabled(self):  # pylint: disable=no-self-use
+        provider = LoggerProvider()
+        p1 = Mock()
+        p1.enabled.return_value = False
+        p2 = Mock()
+        p2.enabled.return_value = True
+        provider.add_log_record_processor(p1)
+        provider.add_log_record_processor(p2)
+        logger = provider.get_logger("test")
+
+        logger.emit(body="a log line")
+
+        p1.on_emit.assert_called_once()
+        p2.on_emit.assert_called_once()
+
+    def test_emit_passes_args_to_processor_enabled(self):
+        provider = LoggerProvider()
+        processor_mock = Mock()
+        processor_mock.enabled.return_value = False
+        provider.add_log_record_processor(processor_mock)
+        logger = provider.get_logger("test")
+        context = get_current()
+        log_record = LogRecord(
+            context=context,
+            severity_number=SeverityNumber.WARN,
+            event_name="my.event",
+        )
+
+        other_scope = InstrumentationScope("other")
+
+        cases = {
+            "kwargs": (
+                lambda: logger.emit(
+                    context=context,
+                    severity_number=SeverityNumber.WARN,
+                    event_name="my.event",
+                ),
+                logger._instrumentation_scope,
+            ),
+            "log_record": (lambda: logger.emit(log_record), logger._instrumentation_scope),
+            "read_write_log_record": (
+                lambda: logger.emit(
+                    ReadWriteLogRecord(
+                        log_record=log_record,
+                        instrumentation_scope=logger._instrumentation_scope,
+                    )
+                ),
+                logger._instrumentation_scope,
+            ),
+            "read_write_log_record_other_scope": (
+                lambda: logger.emit(ReadWriteLogRecord(log_record=log_record, instrumentation_scope=other_scope)),
+                other_scope,
+            ),
+        }
+        for name, (emit, expected_scope) in cases.items():
+            with self.subTest(name):
+                processor_mock.reset_mock()
+                emit()
+                processor_mock.enabled.assert_called_once_with(
+                    context=context,
+                    instrumentation_scope=expected_scope,
+                    severity_number=SeverityNumber.WARN,
+                    event_name="my.event",
+                )
+
+    def test_emit_kwargs_passes_current_context_to_processor_enabled(self):  # pylint: disable=no-self-use
+        provider = LoggerProvider()
+        processor_mock = Mock()
+        processor_mock.enabled.return_value = False
+        provider.add_log_record_processor(processor_mock)
+        logger = provider.get_logger("test")
+
+        token = attach(set_value("key", "value"))
+        try:
+            logger.emit(body="a log line")
+            expected_context = get_current()
+        finally:
+            detach(token)
+
+        processor_mock.enabled.assert_called_once_with(
+            context=expected_context,
+            instrumentation_scope=logger._instrumentation_scope,
+            severity_number=None,
+            event_name=None,
+        )
