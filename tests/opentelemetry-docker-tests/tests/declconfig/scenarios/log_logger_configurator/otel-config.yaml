@@ -1,0 +1,18 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-log-logger-configurator
+logger_provider:
+  processors:
+    - simple:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/logs
+  logger_configurator/development:
+    default_config:
+      enabled: true
+    loggers:
+      - name: disabled.*
+        config:
+          enabled: false

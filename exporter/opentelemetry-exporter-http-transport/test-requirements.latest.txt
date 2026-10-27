@@ -6,7 +6,7 @@
     # via
     #   -r exporter/opentelemetry-exporter-http-transport/test-requirements.in
     #   opentelemetry-exporter-http-transport
-certifi==2026.4.22
+certifi==2026.10.19
     # via requests
 charset-normalizer==3.4.7
     # via requests

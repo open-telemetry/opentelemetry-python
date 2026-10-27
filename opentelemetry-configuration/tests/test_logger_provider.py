@@ -7,6 +7,7 @@
 import os
 import sys
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from opentelemetry._logs import get_logger_provider
@@ -26,6 +27,7 @@ from opentelemetry.configuration.file._loader import ConfigurationError
 from opentelemetry.configuration.models import (
     AttributeLimits,
     NameStringValuePair,
+    OtlpHttpEncoding,
     SeverityNumber,
 )
 from opentelemetry.configuration.models import (
@@ -146,6 +148,11 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=2000))
         self.assertEqual(processor._batch_processor._schedule_delay_millis, 2000.0)
 
+    def test_batch_processor_zero_schedule_delay(self):
+        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=0))
+        self.assertEqual(processor._batch_processor._schedule_delay_millis, 0)
+        processor.shutdown()
+
     def test_batch_processor_explicit_export_timeout(self):
         processor = _create_batch_log_record_processor(self._make_batch_config(export_timeout=5000))
         self.assertEqual(processor._batch_processor._export_timeout_millis, 5000.0)
@@ -241,6 +248,21 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             self.assertRaises(ConfigurationError),
         ):
             _create_log_record_exporter(config)
+
+    def test_otlp_http_json_missing_package_raises(self):
+        config = LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(encoding=OtlpHttpEncoding.json))
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.common.http": None,
+                    "opentelemetry.exporter.otlp.json.http._log_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
+        ):
+            _create_log_record_exporter(config)
+        self.assertIn("opentelemetry-exporter-otlp-json-http", str(ctx.exception))
 
     def test_otlp_grpc_missing_package_raises(self):
         config = LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(endpoint="http://localhost:4317"))
@@ -347,6 +369,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 otlp_http=OtlpHttpExporterConfig(
                     endpoint="http://collector:4318",
                     timeout=5000,
+                    encoding=OtlpHttpEncoding.protobuf,
                 )
             )
             _create_log_record_exporter(config)
@@ -355,6 +378,40 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         call_kwargs = mock_exporter_cls.call_args.kwargs
         self.assertEqual(call_kwargs["endpoint"], "http://collector:4318")
         self.assertAlmostEqual(call_kwargs["timeout"], 5.0)
+
+    # pylint: disable-next=no-self-use
+    def test_otlp_http_json_exporter_created_with_config(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = SimpleNamespace(DEFLATE="json_deflate")
+        mock_common_module = MagicMock()
+        mock_common_module.Compression = mock_compression_cls
+        mock_exporter_module = MagicMock()
+        mock_exporter_module.OTLPLogExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.common.http": mock_common_module,
+                "opentelemetry.exporter.otlp.json.http._log_exporter": mock_exporter_module,
+            },
+        ):
+            config = LogRecordExporterConfig(
+                otlp_http=OtlpHttpExporterConfig(
+                    endpoint="http://collector:4318/v1/logs",
+                    headers=[NameStringValuePair(name="x-api-key", value="secret")],
+                    compression="deflate",
+                    timeout=5000,
+                    encoding=OtlpHttpEncoding.json,
+                )
+            )
+            _create_log_record_exporter(config)
+
+        mock_exporter_cls.assert_called_once_with(
+            endpoint="http://collector:4318/v1/logs",
+            headers={"x-api-key": "secret"},
+            timeout=5.0,
+            compression="json_deflate",
+        )
 
     def test_otlp_http_exporter_headers(self):
         mock_exporter_cls = MagicMock()
@@ -561,6 +618,28 @@ class TestLoggerConfigurator(unittest.TestCase):
         provider = create_logger_provider(config)
         self.assertFalse(self._enabled(provider, "noisy.http"))
         self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_scope_patterns_treat_brackets_literally(self):
+        for pattern in ("noisy.[bc]", "noisy.[bc]*"):
+            with self.subTest(pattern=pattern):
+                config = LoggerProviderConfig(
+                    processors=[],
+                    logger_configurator_development=LoggerConfiguratorConfig(
+                        default_config=LoggerConfigConfig(enabled=True),
+                        loggers=[
+                            LoggerMatcherAndConfig(
+                                name=pattern,
+                                config=LoggerConfigConfig(enabled=False),
+                            )
+                        ],
+                    ),
+                )
+                provider = create_logger_provider(config)
+                self.assertFalse(self._enabled(provider, "noisy.[bc]"))
+                self.assertTrue(self._enabled(provider, "noisy.b"))
+                self.assertTrue(self._enabled(provider, "noisy.btail"))
+                self.assertTrue(self._enabled(provider, "Noisy.[bc]"))
+                self.assertEqual(self._enabled(provider, "noisy.[bc]tail"), pattern == "noisy.[bc]")
 
     def test_default_config_applies_to_unmatched_scopes(self):
         config = LoggerProviderConfig(
