@@ -5,7 +5,6 @@ from collections.abc import Mapping
 from logging import getLogger
 from string import ascii_letters, digits
 from types import MappingProxyType
-from typing import Any
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
@@ -21,7 +20,7 @@ _VALUE_CHARS = frozenset(map(chr, range(0x21, 0x7F))) - frozenset('",;\\')
 
 def get_all(
     context: Context | None = None,
-) -> Mapping[str, Any]:
+) -> Mapping[str, object]:
     """Returns the name/value pairs in the Baggage
 
     Args:
@@ -33,7 +32,7 @@ def get_all(
     return MappingProxyType(_get_baggage_value(context=context))
 
 
-def get_baggage(name: str, context: Context | None = None) -> Any | None:
+def get_baggage(name: str, context: Context | None = None) -> object | None:
     """Provides access to the value for a name/value pair in the
     Baggage
 
@@ -48,7 +47,7 @@ def get_baggage(name: str, context: Context | None = None) -> Any | None:
     return _get_baggage_value(context=context).get(name)
 
 
-def set_baggage(name: str, value: Any, context: Context | None = None) -> Context:
+def set_baggage(name: str, value: object, context: Context | None = None) -> Context:
     """Sets a value in the Baggage
 
     Args:
@@ -92,7 +91,7 @@ def clear(context: Context | None = None) -> Context:
     return set_value(_BAGGAGE_KEY, {}, context=context)
 
 
-def _get_baggage_value(context: Context | None = None) -> dict[str, Any]:
+def _get_baggage_value(context: Context | None = None) -> dict[str, object]:
     baggage = get_value(_BAGGAGE_KEY, context=context)
     if isinstance(baggage, dict):
         return baggage
@@ -108,7 +107,7 @@ def _is_valid_property(property: str) -> bool:
     return _is_valid_key(key.strip(" \t")) and (not separator or _VALUE_CHARS.issuperset(value.strip(" \t")))
 
 
-def _is_valid_value(value: Any) -> bool:
+def _is_valid_value(value: object) -> bool:
     value, *properties = str(value).split(";")
     # W3C Baggage allows optional whitespace between the value and ";"
     return _VALUE_CHARS.issuperset(value.rstrip(" \t")) and all(map(_is_valid_property, properties))

@@ -3,7 +3,6 @@
 #
 from collections.abc import Iterable, Iterator, Mapping
 from logging import getLogger
-from typing import Any
 from urllib.parse import quote, unquote
 
 from opentelemetry.baggage import (
@@ -172,7 +171,7 @@ def _split_baggage_entries(headers: Iterable[str]) -> Iterator[str]:
 
 
 def _encode_baggage_pairs(
-    baggage_entries: Mapping[str, Any],
+    baggage_entries: Mapping[str, object],
 ) -> Iterator[str]:
     """Yield 'key=value' pairs with percent-encoded values from baggage entries."""
     for key, value in baggage_entries.items():
