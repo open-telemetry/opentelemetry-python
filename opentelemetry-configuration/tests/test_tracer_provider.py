@@ -8,6 +8,7 @@
 import os
 import sys
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
@@ -19,6 +20,7 @@ from opentelemetry.configuration._tracer_provider import (
 from opentelemetry.configuration.file._loader import ConfigurationError
 from opentelemetry.configuration.models import (
     AttributeLimits,
+    OtlpHttpEncoding,
 )
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
@@ -431,6 +433,34 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         self.assertEqual(excluded, Decision.DROP)
         self.assertEqual(case_mismatch, Decision.DROP)
 
+    def test_composite_rule_based_attribute_patterns_literal_brackets(self):
+        cases = [
+            (["/api/[bc]"], None, "/api/[bc]", True),
+            (["/api/[bc]"], None, "/api/b", False),
+            (["/api/[bc]*"], None, "/api/[bc]/users", True),
+            (["/api/[bc]*"], None, "/api/b/users", False),
+            (None, ["/api/[bc]"], "/api/[bc]", False),
+            (None, ["/api/[bc]"], "/api/b", True),
+            (None, ["/api/[bc]*"], "/api/[bc]/users", False),
+            (None, ["/api/[bc]*"], "/api/b/users", True),
+            (["/api/*"], ["/api/[bc]*"], "/api/[bc]/users", False),
+            (["/api/[bc]"], ["/api/[bc]"], "/api/[bc]", False),
+            (["/api/[bc]*"], None, "/API/[bc]/users", False),
+            (["/api/[bc]"], None, ("/api/b", "/api/[bc]"), True),
+        ]
+        for included, excluded, value, expected in cases:
+            with self.subTest(included=included, excluded=excluded, value=value):
+                rule_based = RuleBasedSamplerConfig(
+                    rules=[
+                        self._rule(
+                            self._always_on(),
+                            attribute_patterns=self._attribute_patterns("http.route", included, excluded),
+                        )
+                    ]
+                )
+                decision = self._decision(rule_based, attributes={"http.route": value})
+                self.assertEqual(decision, Decision.RECORD_AND_SAMPLE if expected else Decision.DROP)
+
     def test_composite_rule_based_span_kind(self):
         rule_based = RuleBasedSamplerConfig(
             rules=[
@@ -547,6 +577,19 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIsInstance(procs[0], BatchSpanProcessor)
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
 
+    def test_batch_processor_zero_schedule_delay(self):
+        config = TracerProviderConfig(
+            processors=[
+                SpanProcessorConfig(
+                    batch=BatchSpanProcessorConfig(exporter=SpanExporterConfig(console={}), schedule_delay=0)
+                )
+            ]
+        )
+        provider = create_tracer_provider(config)
+        procs = provider._active_span_processor._span_processors
+        self.assertEqual(procs[0]._batch_processor._schedule_delay_millis, 0)
+        provider.shutdown()
+
     def test_console_exporter_simple(self):
         config = self._make_simple_config(SpanExporterConfig(console={}))
         provider = create_tracer_provider(config)
@@ -586,7 +629,12 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             },
         ):
             config = self._make_batch_config(
-                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(endpoint="http://localhost:4318"))
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(
+                        endpoint="http://localhost:4318",
+                        encoding=OtlpHttpEncoding.protobuf,
+                    )
+                )
             )
             create_tracer_provider(config)
 
@@ -595,6 +643,58 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             headers=None,
             timeout=None,
             compression=None,
+        )
+
+    def test_otlp_http_json_missing_package_raises(self):
+        config = self._make_batch_config(
+            SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(encoding=OtlpHttpEncoding.json))
+        )
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.common.http": None,
+                    "opentelemetry.exporter.otlp.json.http.trace_exporter": None,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
+        ):
+            create_tracer_provider(config)
+        self.assertIn("opentelemetry-exporter-otlp-json-http", str(ctx.exception))
+
+    def test_otlp_http_json_created_with_config(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = SimpleNamespace(DEFLATE="json_deflate")
+        mock_common_module = MagicMock()
+        mock_common_module.Compression = mock_compression_cls
+        mock_exporter_module = MagicMock()
+        mock_exporter_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.common.http": mock_common_module,
+                "opentelemetry.exporter.otlp.json.http.trace_exporter": mock_exporter_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(
+                        endpoint="http://collector:4318/v1/traces",
+                        headers_list="x-api-key=secret",
+                        compression="deflate",
+                        timeout=5000,
+                        encoding=OtlpHttpEncoding.json,
+                    )
+                )
+            )
+            create_tracer_provider(config)
+
+        mock_exporter_cls.assert_called_once_with(
+            endpoint="http://collector:4318/v1/traces",
+            headers={"x-api-key": "secret"},
+            timeout=5.0,
+            compression="json_deflate",
         )
 
     def test_otlp_http_created_with_deflate_compression(self):
@@ -887,6 +987,28 @@ class TestTracerConfigurator(unittest.TestCase):
         provider = create_tracer_provider(config)
         self.assertFalse(self._enabled(provider, "noisy.http"))
         self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_scope_patterns_treat_brackets_literally(self):
+        for pattern in ("noisy.[bc]", "noisy.[bc]*"):
+            with self.subTest(pattern=pattern):
+                config = TracerProviderConfig(
+                    processors=[],
+                    tracer_configurator_development=TracerConfiguratorConfig(
+                        default_config=TracerConfigConfig(enabled=True),
+                        tracers=[
+                            TracerMatcherAndConfig(
+                                name=pattern,
+                                config=TracerConfigConfig(enabled=False),
+                            )
+                        ],
+                    ),
+                )
+                provider = create_tracer_provider(config)
+                self.assertFalse(self._enabled(provider, "noisy.[bc]"))
+                self.assertTrue(self._enabled(provider, "noisy.b"))
+                self.assertTrue(self._enabled(provider, "noisy.btail"))
+                self.assertTrue(self._enabled(provider, "Noisy.[bc]"))
+                self.assertEqual(self._enabled(provider, "noisy.[bc]tail"), pattern == "noisy.[bc]")
 
     def test_default_config_applies_to_unmatched_scopes(self):
         config = TracerProviderConfig(

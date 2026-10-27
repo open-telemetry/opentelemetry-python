@@ -1,0 +1,32 @@
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+receivers:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: declconfig
+          scrape_interval: 1s
+          static_configs:
+            - targets: [host.docker.internal:9464]
+
+processors:
+  # The receiver reports these on every scrape, even once the app has stopped.
+  filter/scrape:
+    error_mode: ignore
+    metrics:
+      metric:
+        - 'name == "up" or IsMatch(name, "^scrape_")'
+
+exporters:
+  otlphttp:
+    endpoint: ${env:OTLP_SINK_ENDPOINT}
+
+service:
+  extensions: [health_check]
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      processors: [filter/scrape]
+      exporters: [otlphttp]

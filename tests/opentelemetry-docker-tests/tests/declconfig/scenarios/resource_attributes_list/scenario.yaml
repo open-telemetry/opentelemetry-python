@@ -1,0 +1,13 @@
+description: >
+  `attributes_list` adds URL-decoded string attributes; `attributes` wins on conflicts.
+until:
+  - spans:
+      name: list-span
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-resource-attributes-list
+          list.encoded: hello world
+          list.number: "5"
+          list.conflict: from-attributes
