@@ -365,3 +365,51 @@ class TestProxy(MetricsGlobalsTest, TestCase):
 
                 real_meter = real_meter_provider.get_meter()
                 getattr(real_meter, method_name).assert_called_once_with(*args)
+
+    def test_proxy_meter_forwards_opt_in_advisory(self) -> None:
+        name = "foo"
+        unit = "s"
+        description = "Foobar"
+        callback = Mock()
+        sync_args = (name, unit, description)
+        async_args = (name, [callback], unit, description)
+
+        cases = [
+            ("create_counter", sync_args, {}),
+            ("create_up_down_counter", sync_args, {}),
+            ("create_gauge", sync_args, {}),
+            (
+                "create_histogram",
+                sync_args,
+                {"explicit_bucket_boundaries_advisory": [1.0, 2.0]},
+            ),
+            ("create_observable_counter", async_args, {}),
+            ("create_observable_up_down_counter", async_args, {}),
+            ("create_observable_gauge", async_args, {}),
+        ]
+
+        for opt_in_advisory in (True, False):
+            for method_name, args, kwargs in cases:
+                with self.subTest(method_name, opt_in_advisory=opt_in_advisory, real_meter_set="before"):
+                    proxy_meter = _ProxyMeterProvider().get_meter("foo")
+                    real_meter_provider = Mock()
+                    proxy_meter.on_set_meter_provider(real_meter_provider)
+
+                    getattr(proxy_meter, method_name)(*args, _opt_in_advisory=opt_in_advisory, **kwargs)
+
+                    real_meter = real_meter_provider.get_meter()
+                    getattr(real_meter, method_name).assert_called_once_with(
+                        *args, _opt_in_advisory=opt_in_advisory, **kwargs
+                    )
+
+                with self.subTest(method_name, opt_in_advisory=opt_in_advisory, real_meter_set="after"):
+                    proxy_meter = _ProxyMeterProvider().get_meter("foo")
+                    getattr(proxy_meter, method_name)(*args, _opt_in_advisory=opt_in_advisory, **kwargs)
+
+                    real_meter_provider = Mock()
+                    proxy_meter.on_set_meter_provider(real_meter_provider)
+
+                    real_meter = real_meter_provider.get_meter()
+                    getattr(real_meter, method_name).assert_called_once_with(
+                        *args, _opt_in_advisory=opt_in_advisory, **kwargs
+                    )

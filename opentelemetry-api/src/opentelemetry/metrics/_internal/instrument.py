@@ -32,6 +32,7 @@ _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 @dataclass(frozen=True)
 class _InstrumentAdvisory:
     attributes: frozenset[str] | None = None
+    opt_in: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -79,23 +80,45 @@ def _validate_explicit_bucket_boundaries_advisory(
     return None
 
 
+def _validate_opt_in_advisory(
+    opt_in_advisory: bool | None,
+) -> bool | None:
+    """Returns the advisory as a bool, otherwise logs a warning and returns
+    `None` so the advisory is ignored."""
+
+    if opt_in_advisory is None:
+        return None
+
+    if isinstance(opt_in_advisory, bool):
+        return opt_in_advisory
+
+    _logger.warning("_opt_in_advisory must be a bool")
+    return None
+
+
 def _instrument_advisory(
     attributes_advisory: Sequence[str] | None = None,
+    opt_in_advisory: bool | None = None,
 ) -> _InstrumentAdvisory:
     """Returns the validated advisory for an instrument."""
 
-    return _InstrumentAdvisory(attributes=_validate_attributes_advisory(attributes_advisory))
+    return _InstrumentAdvisory(
+        attributes=_validate_attributes_advisory(attributes_advisory),
+        opt_in=_validate_opt_in_advisory(opt_in_advisory),
+    )
 
 
 def _histogram_advisory(
     attributes_advisory: Sequence[str] | None = None,
     explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+    opt_in_advisory: bool | None = None,
 ) -> _HistogramAdvisory:
     """Returns the validated advisory for a histogram."""
 
     return _HistogramAdvisory(
         attributes=_validate_attributes_advisory(attributes_advisory),
         explicit_bucket_boundaries=_validate_explicit_bucket_boundaries_advisory(explicit_bucket_boundaries_advisory),
+        opt_in=_validate_opt_in_advisory(opt_in_advisory),
     )
 
 
@@ -170,11 +193,13 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
         description: str = "",
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
         self._name = name
         self._unit = unit
         self._description = description
         self._attributes_advisory = _attributes_advisory
+        self._opt_in_advisory = _opt_in_advisory
         self._real_instrument: InstrumentT | None = None
 
     def on_meter_set(self, meter: "metrics.Meter") -> None:
@@ -199,8 +224,15 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
         description: str = "",
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
-        super().__init__(name, unit, description, _attributes_advisory=_attributes_advisory)
+        super().__init__(
+            name,
+            unit,
+            description,
+            _attributes_advisory=_attributes_advisory,
+            _opt_in_advisory=_opt_in_advisory,
+        )
         self._callbacks = callbacks
 
 
@@ -277,7 +309,10 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
             self._name,
             self._unit,
             self._description,
-            **_non_default_kwargs(_attributes_advisory=self._attributes_advisory),
+            **_non_default_kwargs(
+                _attributes_advisory=self._attributes_advisory,
+                _opt_in_advisory=self._opt_in_advisory,
+            ),
         )
 
 
@@ -340,7 +375,10 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
             self._name,
             self._unit,
             self._description,
-            **_non_default_kwargs(_attributes_advisory=self._attributes_advisory),
+            **_non_default_kwargs(
+                _attributes_advisory=self._attributes_advisory,
+                _opt_in_advisory=self._opt_in_advisory,
+            ),
         )
 
 
@@ -375,7 +413,10 @@ class _ProxyObservableCounter(_ProxyAsynchronousInstrument[ObservableCounter], O
             self._callbacks,
             self._unit,
             self._description,
-            **_non_default_kwargs(_attributes_advisory=self._attributes_advisory),
+            **_non_default_kwargs(
+                _attributes_advisory=self._attributes_advisory,
+                _opt_in_advisory=self._opt_in_advisory,
+            ),
         )
 
 
@@ -414,7 +455,10 @@ class _ProxyObservableUpDownCounter(
             self._callbacks,
             self._unit,
             self._description,
-            **_non_default_kwargs(_attributes_advisory=self._attributes_advisory),
+            **_non_default_kwargs(
+                _attributes_advisory=self._attributes_advisory,
+                _opt_in_advisory=self._opt_in_advisory,
+            ),
         )
 
 
@@ -492,8 +536,15 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description, _attributes_advisory=_attributes_advisory)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _attributes_advisory=_attributes_advisory,
+            _opt_in_advisory=_opt_in_advisory,
+        )
         self._explicit_bucket_boundaries_advisory = explicit_bucket_boundaries_advisory
 
     def record(
@@ -513,6 +564,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
             **_non_default_kwargs(
                 explicit_bucket_boundaries_advisory=self._explicit_bucket_boundaries_advisory,
                 _attributes_advisory=self._attributes_advisory,
+                _opt_in_advisory=self._opt_in_advisory,
             ),
         )
 
@@ -552,7 +604,10 @@ class _ProxyObservableGauge(
             self._callbacks,
             self._unit,
             self._description,
-            **_non_default_kwargs(_attributes_advisory=self._attributes_advisory),
+            **_non_default_kwargs(
+                _attributes_advisory=self._attributes_advisory,
+                _opt_in_advisory=self._opt_in_advisory,
+            ),
         )
 
 
@@ -618,5 +673,8 @@ class _ProxyGauge(
             self._name,
             self._unit,
             self._description,
-            **_non_default_kwargs(_attributes_advisory=self._attributes_advisory),
+            **_non_default_kwargs(
+                _attributes_advisory=self._attributes_advisory,
+                _opt_in_advisory=self._opt_in_advisory,
+            ),
         )

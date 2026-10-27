@@ -133,16 +133,62 @@ class TestMeter(TestCase):
         try:
             test_meter = NoOpMeter("name")
 
+            test_meter.create_counter("counter", _opt_in_advisory=True)
+            test_meter.create_up_down_counter("up_down_counter", _opt_in_advisory=True)
+            test_meter.create_observable_counter(
+                "observable_counter",
+                Mock(),
+                _opt_in_advisory=True,
+            )
             test_meter.create_histogram("histogram", explicit_bucket_boundaries_advisory=[1.0])
+            test_meter.create_histogram("histogram_opt_in", _opt_in_advisory=True)
+            test_meter.create_gauge("gauge", _opt_in_advisory=True)
+            test_meter.create_observable_gauge(
+                "observable_gauge",
+                Mock(),
+                _opt_in_advisory=True,
+            )
+            test_meter.create_observable_up_down_counter(
+                "observable_up_down_counter",
+                Mock(),
+                _opt_in_advisory=True,
+            )
         except Exception as error:  # pylint: disable=broad-exception-caught
             self.fail(f"Unexpected exception raised {error}")
 
+        for method_name, instrument_name in [
+            ("create_counter", "counter"),
+            ("create_up_down_counter", "up_down_counter"),
+            ("create_histogram", "histogram"),
+            ("create_histogram", "histogram_opt_in"),
+            ("create_gauge", "gauge"),
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(test_meter, method_name)(instrument_name)
+
         for instrument_name in [
-            "histogram",
+            "observable_counter",
+            "observable_gauge",
+            "observable_up_down_counter",
         ]:
             with self.assertLogs(level=WARNING):
                 getattr(test_meter, f"create_{instrument_name}")(
                     instrument_name,
+                    Mock(),
+                )
+
+    def test_opt_in_advisory_validation(self):
+        test_meter = NoOpMeter("name")
+        for idx, invalid_value in enumerate(("true", 123, [True])):
+            with self.subTest(invalid_value=invalid_value):
+                with self.assertLogs(level=WARNING) as log:
+                    test_meter.create_counter(
+                        f"counter_{idx}",
+                        _opt_in_advisory=invalid_value,
+                    )
+                self.assertIn(
+                    "_opt_in_advisory must be a bool",
+                    log.output[0],
                 )
 
     def test_repeated_instrument_names_with_different_attributes_advisory(
@@ -258,6 +304,41 @@ class TestMeter(TestCase):
                 "bar",
                 explicit_bucket_boundaries_advisory=[1.0],
                 _attributes_advisory=["a"],
+            ),
+            ("histogram", "foo", "s", "bar", [1.0]),
+        )
+
+    def test_legacy_meter_ignores_opt_in_advisory(self):
+        """Meters implemented without _opt_in_advisory ignore it"""
+        # pylint: disable=unexpected-keyword-arg
+        meter = LegacyMeter("name")
+        callbacks = [Mock()]
+
+        for instrument_name in ["counter", "up_down_counter", "gauge"]:
+            with self.subTest(instrument_name=instrument_name):
+                self.assertEqual(
+                    getattr(meter, f"create_{instrument_name}")("foo", "s", "bar", _opt_in_advisory=True),
+                    (instrument_name, "foo", "s", "bar"),
+                )
+
+        for instrument_name in [
+            "observable_counter",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.subTest(instrument_name=instrument_name):
+                self.assertEqual(
+                    getattr(meter, f"create_{instrument_name}")("foo", callbacks, "s", "bar", _opt_in_advisory=True),
+                    (instrument_name, "foo", callbacks, "s", "bar"),
+                )
+
+        self.assertEqual(
+            meter.create_histogram(
+                "foo",
+                "s",
+                "bar",
+                explicit_bucket_boundaries_advisory=[1.0],
+                _opt_in_advisory=True,
             ),
             ("histogram", "foo", "s", "bar", [1.0]),
         )

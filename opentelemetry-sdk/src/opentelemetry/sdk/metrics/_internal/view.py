@@ -97,6 +97,13 @@ class View:
             by the attribute ``otel.metric.overflow=true``. If `None` the
             cardinality limit of the metric reader is used, which defaults to
             2000. Must be a positive integer.
+        enabled: This is a metric stream customizing attribute: whether the
+            metric stream is enabled. If `False`, the metric stream will use
+            `DropAggregation` regardless of `aggregation`. If `True`, the
+            metric stream will be enabled (including for instruments with
+            `_opt_in_advisory=True`). If `None`, instruments with
+            `_opt_in_advisory=True` will use `DropAggregation` and all other
+            instruments will be enabled.
 
     This class is not intended to be subclassed by the user.
     """
@@ -117,6 +124,7 @@ class View:
         exemplar_reservoir_factory: Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None = None,
         instrument_unit: str | None = None,
         aggregation_cardinality_limit: int | None = None,
+        enabled: bool | None = None,
     ):
         if aggregation_cardinality_limit is not None and (
             isinstance(aggregation_cardinality_limit, bool)
@@ -165,6 +173,7 @@ class View:
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
         self._aggregation_cardinality_limit = aggregation_cardinality_limit
+        self._enabled = enabled
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
