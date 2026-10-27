@@ -117,6 +117,26 @@ class MultiLogRecordProcessorTestBase(ABC):
             mock.on_emit.assert_called_with(record)
         multi_log_record_processor.shutdown()
 
+    def test_on_emit_exception_does_not_stop_other_processors(self):
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        before = Mock(spec=LogRecordProcessor)
+        failing = Mock(spec=LogRecordProcessor)
+        failing.on_emit.side_effect = RuntimeError("Exporter queue error")
+        after = Mock(spec=LogRecordProcessor)
+        multi_log_record_processor.add_log_record_processor(before)
+        multi_log_record_processor.add_log_record_processor(failing)
+        multi_log_record_processor.add_log_record_processor(after)
+
+        record = self.make_record()
+        with self.assertLogs("opentelemetry.sdk._logs._internal", level="ERROR") as logs:
+            multi_log_record_processor.on_emit(record)
+
+        before.on_emit.assert_called_once_with(record)
+        failing.on_emit.assert_called_once_with(record)
+        after.on_emit.assert_called_once_with(record)
+        self.assertTrue(any("Exception while calling on_emit" in message for message in logs.output))
+        multi_log_record_processor.shutdown()
+
     def test_on_shutdown(self):
         multi_log_record_processor = self._get_multi_log_record_processor()
         mocks = [Mock(spec=LogRecordProcessor) for _ in range(5)]

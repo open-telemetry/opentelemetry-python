@@ -430,7 +430,10 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         for lp in self._log_record_processors:
-            lp.on_emit(log_record)
+            try:
+                lp.on_emit(log_record)
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.exception("Exception while calling on_emit on %s.", lp)
 
     def enabled(
         self,
@@ -518,7 +521,16 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             future.result()
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
-        self._submit_and_wait(lambda lp: lp.on_emit, log_record)
+        def _on_emit(lp: LogRecordProcessor) -> Callable[[ReadWriteLogRecord], None]:
+            def _call(record: ReadWriteLogRecord) -> None:
+                try:
+                    lp.on_emit(record)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _logger.exception("Exception while calling on_emit on %s.", lp)
+
+            return _call
+
+        self._submit_and_wait(_on_emit, log_record)
 
     def enabled(
         self,
