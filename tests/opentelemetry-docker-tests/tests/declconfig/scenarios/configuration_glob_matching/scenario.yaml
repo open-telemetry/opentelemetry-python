@@ -1,0 +1,53 @@
+description: >
+  Configuration globs treat brackets literally, support '*' and '?', and match
+  case-sensitively across resource filters, scope configurators, and sampler rules.
+env:
+  OTEL_RESOURCE_ATTRIBUTES: >-
+    keep[bc]=literal,keepb=class,keep[bc].child=wildcard,keep[bc].drop=excluded,Keep[bc]=case,drop[bc]=excluded,dropb=retained
+until:
+  - exited: {}
+expect:
+  - resource:
+      attributes:
+        values:
+          keep[bc]: literal
+          keepb: {exists: false}
+          keep[bc].child: wildcard
+          keep[bc].drop: {exists: false}
+          Keep[bc]: {exists: false}
+          drop[bc]: {exists: false}
+          dropb: retained
+  - spans:
+      name: scope-span
+      count: 4
+  - spans:
+      name: scope-span
+      scope:
+        name: {pattern: '^(disabledb|wildb\.x|Disabled\[bc\]|wild\[bc\]\.xx)$'}
+      count: 4
+  - metric:
+      name: glob.requests
+      count: 4
+  - metric:
+      name: glob.requests
+      scope:
+        name: {pattern: '^(disabledb|wildb\.x|Disabled\[bc\]|wild\[bc\]\.xx)$'}
+      data_point: {value: 1}
+      count: 4
+  - logs:
+      body: scope-log
+      count: 4
+  - logs:
+      body: scope-log
+      scope:
+        name: {pattern: '^(disabledb|wildb\.x|Disabled\[bc\]|wild\[bc\]\.xx)$'}
+      count: 4
+  - spans:
+      name: {pattern: '^sampler-'}
+      count: 2
+  - spans:
+      name: sampler-exact
+      count: 1
+  - spans:
+      name: sampler-wildcard
+      count: 1

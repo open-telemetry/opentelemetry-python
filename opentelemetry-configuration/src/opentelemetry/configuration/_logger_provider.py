@@ -10,6 +10,7 @@ from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _scope_name_matches_glob,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -66,7 +67,6 @@ from opentelemetry.sdk._logs._internal.export import (
     SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
 _logger = logging.getLogger(__name__)
 

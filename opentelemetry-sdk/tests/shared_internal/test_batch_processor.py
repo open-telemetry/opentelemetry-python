@@ -116,6 +116,49 @@ class TestBatchProcessor:
         exporter.export.assert_called_once_with([telemetry])
         batch_processor.shutdown()
 
+    # pylint: disable=no-self-use
+    def test_zero_schedule_delay_exports_immediately(self, batch_processor_class, telemetry):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=15,
+            max_export_batch_size=15,
+            schedule_delay_millis=0,
+            export_timeout_millis=500,
+        )
+        batch_processor._batch_processor.emit(telemetry)
+        time.sleep(0.1)
+        exporter.export.assert_called_once_with([telemetry])
+        batch_processor.shutdown()
+
+    # pylint: disable=no-self-use
+    def test_zero_schedule_delay_exports_during_export(self, batch_processor_class, telemetry):
+        export_started = threading.Event()
+        export_unblocked = threading.Event()
+
+        def export(_):
+            export_started.set()
+            export_unblocked.wait(5)
+
+        exporter = Mock()
+        exporter.export.side_effect = export
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=15,
+            max_export_batch_size=15,
+            schedule_delay_millis=0,
+            export_timeout_millis=500,
+        )
+        batch_processor._batch_processor.emit(telemetry)
+        assert export_started.wait(5)
+        # Emitted while the first export is still in progress.
+        batch_processor._batch_processor.emit(telemetry)
+        export_unblocked.set()
+        time.sleep(0.1)
+        assert exporter.export.call_count == 2
+        exporter.export.assert_called_with([telemetry])
+        batch_processor.shutdown()
+
     def test_telemetry_flushed_before_shutdown_and_dropped_after_shutdown(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
