@@ -637,13 +637,82 @@ class TestMeter(TestCase):
 
     def test_repeated_instrument_names_with_different_advisory(self):
         with self.assertNotRaises(Exception):
+            self.meter.create_counter("counter", _opt_in_advisory=True)
+            self.meter.create_up_down_counter("up_down_counter", _opt_in_advisory=True)
+            self.meter.create_observable_counter("observable_counter", callbacks=[Mock()], _opt_in_advisory=True)
             self.meter.create_histogram("histogram", explicit_bucket_boundaries_advisory=[1.0])
+            self.meter.create_histogram("histogram_opt_in", _opt_in_advisory=True)
+            self.meter.create_gauge("gauge", _opt_in_advisory=True)
+            self.meter.create_observable_gauge("observable_gauge", callbacks=[Mock()], _opt_in_advisory=True)
+            self.meter.create_observable_up_down_counter(
+                "observable_up_down_counter",
+                callbacks=[Mock()],
+                _opt_in_advisory=True,
+            )
 
-        for instrument_name in [
-            "histogram",
+        for method_name, instrument_name in [
+            ("create_counter", "counter"),
+            ("create_up_down_counter", "up_down_counter"),
+            ("create_histogram", "histogram"),
+            ("create_histogram", "histogram_opt_in"),
+            ("create_gauge", "gauge"),
         ]:
             with self.assertLogs(level=WARNING):
-                getattr(self.meter, f"create_{instrument_name}")(instrument_name)
+                getattr(self.meter, method_name)(instrument_name)
+
+        for instrument_name in [
+            "observable_counter",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(self.meter, f"create_{instrument_name}")(instrument_name, callbacks=[Mock()])
+
+    def test_create_instruments_with_opt_in_advisory(self):
+        counter = self.meter.create_counter("counter", _opt_in_advisory=True)
+        self.assertTrue(counter._advisory.opt_in)
+
+        up_down_counter = self.meter.create_up_down_counter("up_down_counter", _opt_in_advisory=False)
+        self.assertFalse(up_down_counter._advisory.opt_in)
+
+        observable_counter = self.meter.create_observable_counter(
+            "observable_counter", callbacks=[Mock()], _opt_in_advisory=True
+        )
+        self.assertTrue(observable_counter._advisory.opt_in)
+
+        histogram = self.meter.create_histogram(
+            "histogram",
+            explicit_bucket_boundaries_advisory=[1.0, 2.0],
+            _opt_in_advisory=True,
+        )
+        self.assertTrue(histogram._advisory.opt_in)
+        self.assertEqual(histogram._advisory.explicit_bucket_boundaries, [1.0, 2.0])
+
+        gauge = self.meter.create_gauge("gauge", _opt_in_advisory=True)
+        self.assertTrue(gauge._advisory.opt_in)
+
+        observable_gauge = self.meter.create_observable_gauge(
+            "observable_gauge", callbacks=[Mock()], _opt_in_advisory=True
+        )
+        self.assertTrue(observable_gauge._advisory.opt_in)
+
+        observable_up_down_counter = self.meter.create_observable_up_down_counter(
+            "observable_up_down_counter",
+            callbacks=[Mock()],
+            _opt_in_advisory=True,
+        )
+        self.assertTrue(observable_up_down_counter._advisory.opt_in)
+
+    def test_create_instruments_opt_in_advisory_validation(self):
+        for idx, invalid_advisory in enumerate(("hello", 123, [True])):
+            with self.subTest(invalid_advisory=invalid_advisory):
+                with self.assertLogs(level=WARNING) as log:
+                    counter = self.meter.create_counter(
+                        f"counter_{idx}",
+                        _opt_in_advisory=invalid_advisory,
+                    )
+                self.assertIsNone(counter._advisory.opt_in)
+                self.assertIn("_opt_in_advisory must be a bool", log.output[0])
 
     def test_create_counter(self):
         counter = self.meter.create_counter("name", unit="unit", description="description")

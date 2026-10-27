@@ -320,6 +320,42 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             _DEFAULT_VIEW,
         )
 
+    def test_conflicting_view_configuration_disabled_view_allowed(self):
+        for aggregation in (
+            ExplicitBucketHistogramAggregation(),
+            ExponentialBucketHistogramAggregation(),
+        ):
+            observable_counter = _ObservableCounter(
+                "observable_counter",
+                Mock(),
+                [Mock()],
+                unit="unit",
+                description="description",
+            )
+            disabled_view = View(
+                instrument_name="observable_counter",
+                aggregation=aggregation,
+                enabled=False,
+            )
+            metric_reader_storage = MetricReaderStorage(
+                SdkConfiguration(
+                    exemplar_filter=Mock(),
+                    resource=Mock(),
+                    views=(disabled_view,),
+                ),
+                MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+                MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+            )
+
+            with self.assertNoLogs("opentelemetry.sdk.metrics._internal.metric_reader_storage", level=WARNING):
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
+
+            self.assertIs(
+                metric_reader_storage._instrument_view_instrument_matches[observable_counter][0]._view,
+                disabled_view,
+            )
+            self.assertIsNone(metric_reader_storage.collect())
+
     def test_conflicting_view_configuration_exponential_histogram(self):
         observable_counter = _ObservableCounter(
             "observable_counter",
@@ -753,3 +789,35 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             "will cause conflicting metrics",
             log.records[0].message,
         )
+
+    def test_view_instrument_match_no_conflict_when_disabled(self):
+        observable_counter_0 = _ObservableCounter(
+            "observable_counter_0",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_1 = _ObservableCounter(
+            "observable_counter_1",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                views=(
+                    View(instrument_name="observable_counter_0", name="foo", enabled=False),
+                    View(instrument_name="observable_counter_1", name="foo", enabled=False),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertNoLogs("opentelemetry.sdk.metrics._internal.metric_reader_storage", level=WARNING):
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_0, Context()))
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter_1, Context()))
