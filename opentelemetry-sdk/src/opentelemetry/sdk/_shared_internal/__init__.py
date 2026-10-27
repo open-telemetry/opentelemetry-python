@@ -246,10 +246,6 @@ class BatchProcessor(Generic[Telemetry]):
     def force_flush(self, timeout_millis: int | None = None) -> bool:
         if self._shutdown:
             return False
-        deadline = (
-            time.time() + (timeout_millis / 1000)
-            if timeout_millis is not None
-            else math.inf
-        )
+        deadline = time.time() + (timeout_millis / 1000) if timeout_millis is not None else math.inf
         # Blocking call to export.
         return self._export(BatchExportStrategy.EXPORT_ALL, deadline)

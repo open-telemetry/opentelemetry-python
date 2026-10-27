@@ -198,9 +198,7 @@ class TestBatchProcessor:
         batch_processor.shutdown()
 
     # pylint: disable=no-self-use
-    def test_force_flush_returns_true_when_all_exported(
-        self, batch_processor_class, telemetry
-    ):
+    def test_force_flush_returns_true_when_all_exported(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -217,9 +215,7 @@ class TestBatchProcessor:
         batch_processor.shutdown()
 
     # pylint: disable=no-self-use
-    def test_force_flush_returns_false_when_timeout_exceeded(
-        self, batch_processor_class, telemetry
-    ):
+    def test_force_flush_returns_false_when_timeout_exceeded(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
@@ -249,9 +245,7 @@ class TestBatchProcessor:
         batch_processor._batch_processor._exporter.shutdown()
 
     # pylint: disable=no-self-use
-    def test_force_flush_returns_false_when_shutdown(
-        self, batch_processor_class, telemetry
-    ):
+    def test_force_flush_returns_false_when_shutdown(self, batch_processor_class, telemetry):
         exporter = Mock()
         batch_processor = batch_processor_class(
             exporter,
