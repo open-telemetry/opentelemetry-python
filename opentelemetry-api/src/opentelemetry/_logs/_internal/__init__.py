@@ -28,7 +28,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
-from typing import cast, overload
+from typing import TYPE_CHECKING, TypedDict, cast, overload
 
 from typing_extensions import deprecated
 
@@ -42,7 +42,24 @@ from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import AnyValue, Attributes
 
+if TYPE_CHECKING:
+    from typing_extensions import Unpack
+
 _logger = getLogger(__name__)
+
+
+class LoggerProviderOptions(TypedDict):
+    """Additional keyword-only arguments accepted by `LoggerProvider.get_logger`.
+
+    Reserved for forward compatibility, currently empty.
+    """
+
+
+class LoggerOptions(TypedDict):
+    """Additional keyword-only arguments accepted by `Logger.emit` and `Logger.enabled`.
+
+    Reserved for forward compatibility, currently empty.
+    """
 
 
 class LogRecord(ABC):
@@ -165,12 +182,14 @@ class Logger(ABC):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None: ...
 
     @overload
     def emit(
         self,
         record: LogRecord,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None: ...
 
     @abstractmethod
@@ -187,6 +206,7 @@ class Logger(ABC):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
@@ -197,6 +217,7 @@ class Logger(ABC):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> bool:
         """Returns whether the logger is enabled for the given arguments.
 
@@ -227,12 +248,14 @@ class NoOpLogger(Logger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None: ...
 
     @overload
     def emit(  # pylint:disable=arguments-differ
         self,
         record: LogRecord,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None: ...
 
     def emit(
@@ -248,6 +271,7 @@ class NoOpLogger(Logger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None:
         pass
 
@@ -257,6 +281,7 @@ class NoOpLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> bool:
         return False
 
@@ -268,11 +293,13 @@ class ProxyLogger(Logger):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **kwargs: Unpack[LoggerProviderOptions],
     ):
         self._name = name
         self._version = version
         self._schema_url = schema_url
         self._attributes = attributes
+        self._get_logger_kwargs = kwargs
         self._real_logger: Logger | None = None
         self._noop_logger = NoOpLogger(name)
 
@@ -287,6 +314,7 @@ class ProxyLogger(Logger):
                 self._version,
                 self._schema_url,
                 self._attributes,
+                **self._get_logger_kwargs,
             )
             return self._real_logger
         return self._noop_logger
@@ -304,12 +332,14 @@ class ProxyLogger(Logger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None: ...
 
     @overload
     def emit(  # pylint:disable=arguments-differ
         self,
         record: LogRecord,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None: ...
 
     def emit(
@@ -325,9 +355,10 @@ class ProxyLogger(Logger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None:
         if record:
-            self._logger.emit(record)
+            self._logger.emit(record, **kwargs)
         else:
             self._logger.emit(
                 timestamp=timestamp,
@@ -339,6 +370,7 @@ class ProxyLogger(Logger):
                 attributes=attributes,
                 event_name=event_name,
                 exception=exception,
+                **kwargs,
             )
 
     def enabled(
@@ -347,11 +379,13 @@ class ProxyLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> bool:
         return self._logger.enabled(
             context=context,
             severity_number=severity_number,
             event_name=event_name,
+            **kwargs,
         )
 
 
@@ -367,6 +401,7 @@ class LoggerProvider(ABC):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **kwargs: Unpack[LoggerProviderOptions],
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -394,6 +429,9 @@ class LoggerProvider(ABC):
 
             attributes: Optional. Specifies the instrumentation scope attributes to
                 associate with emitted telemetry.
+
+            kwargs: Additional keyword-only arguments, see `LoggerProviderOptions`.
+                Reserved for forward compatibility.
         """
 
 
@@ -406,6 +444,7 @@ class NoOpLoggerProvider(LoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **kwargs: Unpack[LoggerProviderOptions],
     ) -> Logger:
         """Returns a NoOpLogger."""
         return NoOpLogger(name, version=version, schema_url=schema_url, attributes=attributes)
@@ -418,6 +457,7 @@ class ProxyLoggerProvider(LoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **kwargs: Unpack[LoggerProviderOptions],
     ) -> Logger:
         if _LOGGER_PROVIDER:
             return _LOGGER_PROVIDER.get_logger(
@@ -425,12 +465,14 @@ class ProxyLoggerProvider(LoggerProvider):
                 version=version,
                 schema_url=schema_url,
                 attributes=attributes,
+                **kwargs,
             )
         return ProxyLogger(
             name,
             version=version,
             schema_url=schema_url,
             attributes=attributes,
+            **kwargs,
         )
 
 
@@ -481,6 +523,7 @@ def get_logger(
     logger_provider: LoggerProvider | None = None,
     schema_url: str | None = None,
     attributes: Attributes = None,
+    **kwargs: Unpack[LoggerProviderOptions],
 ) -> Logger:
     """Returns a `Logger` for use within a python process.
 
@@ -496,4 +539,5 @@ def get_logger(
         instrumenting_library_version,
         schema_url,
         attributes,
+        **kwargs,
     )

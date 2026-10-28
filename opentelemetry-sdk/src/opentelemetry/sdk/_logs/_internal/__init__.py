@@ -19,6 +19,7 @@ from threading import Lock
 from time import time_ns
 from types import NoneType
 from typing import (  # noqa
+    TYPE_CHECKING,
     Any,
     Tuple,
     Union,
@@ -30,14 +31,16 @@ from weakref import WeakMethod, WeakSet
 from typing_extensions import deprecated
 
 from opentelemetry._logs import Logger as APILogger
-from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import (
+    LoggerOptions,
+    LoggerProviderOptions,
     LogRecord,
     NoOpLogger,
     SeverityNumber,
     get_logger,
     get_logger_provider,
 )
+from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
@@ -80,6 +83,9 @@ from opentelemetry.trace import (
     format_trace_id,
 )
 from opentelemetry.util.types import AnyValue, Attributes
+
+if TYPE_CHECKING:
+    from typing_extensions import Unpack
 
 # pylint: disable=too-many-lines
 
@@ -767,6 +773,7 @@ class Logger(APILogger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> bool:
         if not self._logger_config.is_enabled:
             return False
@@ -791,7 +798,30 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    # pylint: disable=arguments-differ
+    @overload
+    def emit(
+        self,
+        *,
+        timestamp: int | None = None,
+        observed_timestamp: int | None = None,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        severity_text: str | None = None,
+        body: AnyValue | None = None,
+        attributes: Attributes = None,
+        event_name: str | None = None,
+        exception: BaseException | None = None,
+        **kwargs: Unpack[LoggerOptions],
+    ) -> None: ...
+
+    @overload
+    def emit(  # pylint:disable=arguments-differ
+        self,
+        record: LogRecord,
+        **kwargs: Unpack[LoggerOptions],
+    ) -> None: ...
+
+    # pylint: disable=arguments-differ,too-many-locals
     def emit(
         self,
         record: LogRecord | None = None,
@@ -805,6 +835,7 @@ class Logger(APILogger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **kwargs: Unpack[LoggerOptions],
     ) -> None:
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
@@ -983,6 +1014,7 @@ class LoggerProvider(APILoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **kwargs: Unpack[LoggerProviderOptions],
     ) -> APILogger:
         if self._disabled:
             return NoOpLogger(
