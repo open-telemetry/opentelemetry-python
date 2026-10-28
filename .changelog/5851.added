@@ -1,0 +1,1 @@
+`opentelemetry-api`, `opentelemetry-sdk`: accept forward-compatible `**kwargs` (`LoggerOptions`, `LoggerProviderOptions`) in `Logger.emit`, `Logger.enabled` and `LoggerProvider.get_logger`
