@@ -18,9 +18,9 @@ from typing import TYPE_CHECKING
 import opentelemetry.sdk.metrics
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
+from opentelemetry.metrics import HistogramOptions, InstrumentOptions, NoOpMeter
 from opentelemetry.metrics import Meter as APIMeter
 from opentelemetry.metrics import MeterProvider as APIMeterProvider
-from opentelemetry.metrics import NoOpMeter
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
 from opentelemetry.metrics import ObservableGauge as APIObservableGauge
 from opentelemetry.metrics import (
@@ -29,8 +29,6 @@ from opentelemetry.metrics import (
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import (
-    _HistogramOptions,
-    _InstrumentOptions,
     _MetricsAdvisory,
     _validate_attributes_advisory,
     _validate_explicit_bucket_boundaries_advisory,
@@ -134,7 +132,7 @@ class Meter(APIMeter):
         name,
         unit="",
         description="",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> APICounter:
         advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
@@ -170,7 +168,7 @@ class Meter(APIMeter):
         name,
         unit="",
         description="",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> APIUpDownCounter:
         advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
@@ -207,7 +205,7 @@ class Meter(APIMeter):
         callbacks=None,
         unit="",
         description="",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> APIObservableCounter:
         advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
@@ -247,7 +245,7 @@ class Meter(APIMeter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_HistogramOptions],
+        **kwargs: Unpack[HistogramOptions],
     ) -> APIHistogram:
         advisory = _MetricsAdvisory(
             attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")),
@@ -294,7 +292,7 @@ class Meter(APIMeter):
         name,
         unit="",
         description="",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> APIGauge:
         advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
@@ -331,7 +329,7 @@ class Meter(APIMeter):
         callbacks=None,
         unit="",
         description="",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> APIObservableGauge:
         advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
@@ -372,7 +370,7 @@ class Meter(APIMeter):
         callbacks=None,
         unit="",
         description="",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> APIObservableUpDownCounter:
         advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 

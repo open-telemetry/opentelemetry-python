@@ -46,6 +46,8 @@ from opentelemetry.metrics._internal.instrument import (
     Counter,
     Gauge,
     Histogram,
+    HistogramOptions,
+    InstrumentOptions,
     NoOpCounter,
     NoOpGauge,
     NoOpHistogram,
@@ -57,10 +59,7 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
-    _HistogramOptions,
-    _InstrumentOptions,
     _MetricsAdvisory,
-    _populated_options,
     _ProxyCounter,
     _ProxyGauge,
     _ProxyHistogram,
@@ -295,7 +294,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> Counter:
         """Creates a `Counter` instrument
 
@@ -312,7 +311,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> UpDownCounter:
         """Creates an `UpDownCounter` instrument
 
@@ -330,7 +329,7 @@ class Meter(ABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableCounter:
         """Creates an `ObservableCounter` instrument
 
@@ -474,7 +473,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_HistogramOptions],
+        **kwargs: Unpack[HistogramOptions],
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
 
@@ -490,7 +489,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> Gauge:  # pyright: ignore[reportReturnType]
         """Creates a ``Gauge`` instrument
 
@@ -509,7 +508,7 @@ class Meter(ABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableGauge:
         """Creates an `ObservableGauge` instrument
 
@@ -530,7 +529,7 @@ class Meter(ABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableUpDownCounter:
         """Creates an `ObservableUpDownCounter` instrument
 
@@ -577,22 +576,21 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> Counter:
-        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_counter(
                     name,
                     unit,
                     description,
-                    **options,
+                    **kwargs,
                 )
             proxy = _ProxyCounter(
                 name,
                 unit,
                 description,
-                **options,
+                **kwargs,
             )
             self._instruments.append(proxy)
             return proxy
@@ -602,22 +600,21 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> UpDownCounter:
-        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_up_down_counter(
                     name,
                     unit,
                     description,
-                    **options,
+                    **kwargs,
                 )
             proxy = _ProxyUpDownCounter(
                 name,
                 unit,
                 description,
-                **options,
+                **kwargs,
             )
             self._instruments.append(proxy)
             return proxy
@@ -628,9 +625,8 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableCounter:
-        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_counter(
@@ -638,14 +634,14 @@ class _ProxyMeter(Meter):
                     callbacks,
                     unit,
                     description,
-                    **options,
+                    **kwargs,
                 )
             proxy = _ProxyObservableCounter(
                 name,
                 callbacks,
                 unit=unit,
                 description=description,
-                **options,
+                **kwargs,
             )
             self._instruments.append(proxy)
             return proxy
@@ -655,22 +651,21 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_HistogramOptions],
+        **kwargs: Unpack[HistogramOptions],
     ) -> Histogram:
-        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_histogram(
                     name,
                     unit,
                     description,
-                    **options,
+                    **kwargs,
                 )
             proxy = _ProxyHistogram(
                 name,
                 unit,
                 description,
-                **options,
+                **kwargs,
             )
             self._instruments.append(proxy)
             return proxy
@@ -680,22 +675,21 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> Gauge:
-        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_gauge(
                     name,
                     unit,
                     description,
-                    **options,
+                    **kwargs,
                 )
             proxy = _ProxyGauge(
                 name,
                 unit,
                 description,
-                **options,
+                **kwargs,
             )
             self._instruments.append(proxy)
             return proxy
@@ -706,9 +700,8 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableGauge:
-        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_gauge(
@@ -716,14 +709,14 @@ class _ProxyMeter(Meter):
                     callbacks,
                     unit,
                     description,
-                    **options,
+                    **kwargs,
                 )
             proxy = _ProxyObservableGauge(
                 name,
                 callbacks,
                 unit=unit,
                 description=description,
-                **options,
+                **kwargs,
             )
             self._instruments.append(proxy)
             return proxy
@@ -734,9 +727,8 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableUpDownCounter:
-        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_up_down_counter(
@@ -744,14 +736,14 @@ class _ProxyMeter(Meter):
                     callbacks,
                     unit,
                     description,
-                    **options,
+                    **kwargs,
                 )
             proxy = _ProxyObservableUpDownCounter(
                 name,
                 callbacks,
                 unit=unit,
                 description=description,
-                **options,
+                **kwargs,
             )
             self._instruments.append(proxy)
             return proxy
@@ -768,7 +760,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> Counter:
         """Returns a no-op Counter."""
         status = self._register_instrument(
@@ -799,7 +791,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> Gauge:
         """Returns a no-op Gauge."""
         status = self._register_instrument(
@@ -829,7 +821,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
         status = self._register_instrument(
@@ -860,7 +852,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
         status = self._register_instrument(
@@ -891,7 +883,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_HistogramOptions],
+        **kwargs: Unpack[HistogramOptions],
     ) -> Histogram:
         """Returns a no-op Histogram."""
         status = self._register_instrument(
@@ -928,7 +920,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
         status = self._register_instrument(
@@ -960,7 +952,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
         status = self._register_instrument(

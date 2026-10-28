@@ -298,7 +298,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         )
         self.assertIs(observable_gauge, real_meter.create_observable_gauge())
 
-    def test_proxy_meter_forwards_only_populated_options(self) -> None:
+    def test_proxy_meter_forwards_options(self) -> None:
         name = "foo"
         unit = "s"
         description = "Foobar"
@@ -368,9 +368,9 @@ class TestProxy(MetricsGlobalsTest, TestCase):
                 real_meter = real_meter_provider.get_meter()
                 getattr(real_meter, method_name).assert_called_once_with(*args, **options)
 
-            with self.subTest(method_name, options="none"):
+            with self.subTest(method_name, options="unset"):
                 proxy_meter = _ProxyMeterProvider().get_meter("foo")
-                getattr(proxy_meter, method_name)(*args, **dict.fromkeys(options))
+                getattr(proxy_meter, method_name)(*args)
 
                 real_meter_provider = Mock()
                 proxy_meter.on_set_meter_provider(real_meter_provider)

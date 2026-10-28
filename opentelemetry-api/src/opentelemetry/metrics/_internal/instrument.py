@@ -15,7 +15,6 @@ from typing import (
     Generic,
     TypedDict,
     TypeVar,
-    cast,
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
@@ -41,29 +40,16 @@ class _MetricsAdvisory:
     explicit_bucket_boundaries: tuple[float, ...] | None = None
 
 
-class _InstrumentOptions(TypedDict):
+class InstrumentOptions(TypedDict):
     """Optional keyword arguments accepted by the ``Meter.create_*`` methods."""
 
     _attributes_advisory: NotRequired[Sequence[str]]
 
 
-class _HistogramOptions(_InstrumentOptions):
+class HistogramOptions(InstrumentOptions):
     """Optional keyword arguments accepted by ``Meter.create_histogram``."""
 
     explicit_bucket_boundaries_advisory: NotRequired[Sequence[float]]
-
-
-_OptionsT = TypeVar("_OptionsT", bound=_InstrumentOptions)
-
-
-def _populated_options(options: _OptionsT) -> _OptionsT:
-    """Returns only the options that were set to a non-None value, so that
-    meters which don't support an option are not passed it."""
-
-    return cast(
-        _OptionsT,
-        {key: value for key, value in options.items() if value is not None},
-    )
 
 
 def _validate_attributes_advisory(
@@ -177,12 +163,12 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> None:
         self._name = name
         self._unit = unit
         self._description = description
-        self._options: _InstrumentOptions = kwargs
+        self._options: InstrumentOptions = kwargs
         self._real_instrument: InstrumentT | None = None
 
     def on_meter_set(self, meter: metrics.Meter) -> None:
@@ -205,7 +191,7 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_InstrumentOptions],
+        **kwargs: Unpack[InstrumentOptions],
     ) -> None:
         super().__init__(name, unit, description, **kwargs)
         self._callbacks = callbacks
@@ -528,7 +514,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         name: str,
         unit: str = "",
         description: str = "",
-        **kwargs: Unpack[_HistogramOptions],
+        **kwargs: Unpack[HistogramOptions],
     ) -> None:
         super().__init__(name, unit=unit, description=description)
         self._histogram_options = kwargs
