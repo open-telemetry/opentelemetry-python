@@ -223,6 +223,7 @@ def _encode_metric(metric, pb2_metric):
         for data_point in metric.data.data_points:
             pt = pb2.NumberDataPoint(
                 attributes=_encode_attributes(data_point.attributes),
+                start_time_unix_nano=data_point.start_time_unix_nano,
                 time_unix_nano=data_point.time_unix_nano,
                 exemplars=_encode_exemplars(data_point.exemplars),
             )
