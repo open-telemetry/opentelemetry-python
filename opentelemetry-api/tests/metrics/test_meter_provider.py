@@ -230,15 +230,25 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_meter_provider.get_meter.assert_called_once_with(meter_name, None, None)
 
         real_meter: Mock = real_meter_provider.get_meter()
-        real_meter.create_counter.assert_called_once_with(name, unit, description)
-        real_meter.create_up_down_counter.assert_called_once_with(name, unit, description)
+        real_meter.create_counter.assert_called_once_with(name, unit, description, _opt_in_advisory=None)
+        real_meter.create_up_down_counter.assert_called_once_with(name, unit, description, _opt_in_advisory=None)
         real_meter.create_histogram.assert_called_once_with(
-            name, unit, description, explicit_bucket_boundaries_advisory=None
+            name,
+            unit,
+            description,
+            explicit_bucket_boundaries_advisory=None,
+            _opt_in_advisory=None,
         )
-        real_meter.create_gauge.assert_called_once_with(name, unit, description)
-        real_meter.create_observable_counter.assert_called_once_with(name, [callback], unit, description)
-        real_meter.create_observable_up_down_counter.assert_called_once_with(name, [callback], unit, description)
-        real_meter.create_observable_gauge.assert_called_once_with(name, [callback], unit, description)
+        real_meter.create_gauge.assert_called_once_with(name, unit, description, _opt_in_advisory=None)
+        real_meter.create_observable_counter.assert_called_once_with(
+            name, [callback], unit, description, _opt_in_advisory=None
+        )
+        real_meter.create_observable_up_down_counter.assert_called_once_with(
+            name, [callback], unit, description, _opt_in_advisory=None
+        )
+        real_meter.create_observable_gauge.assert_called_once_with(
+            name, [callback], unit, description, _opt_in_advisory=None
+        )
 
         # The synchronous instrument measurement methods should call through to
         # the real instruments
@@ -299,3 +309,67 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             real_meter.create_observable_up_down_counter(),
         )
         self.assertIs(observable_gauge, real_meter.create_observable_gauge())
+
+    def test_proxy_meter_forwards_opt_in_advisory(self) -> None:
+        meter_name = "foo"
+        proxy_meter: _ProxyMeter = _ProxyMeterProvider().get_meter(meter_name)
+        self.assertIsInstance(proxy_meter, _ProxyMeter)
+        name = "foo"
+        unit = "s"
+        description = "Foobar"
+        callback = Mock()
+
+        proxy_meter.create_counter(name, unit=unit, description=description, _opt_in_advisory=True)
+        proxy_meter.create_up_down_counter(name, unit=unit, description=description, _opt_in_advisory=True)
+        proxy_meter.create_histogram(
+            name,
+            unit=unit,
+            description=description,
+            explicit_bucket_boundaries_advisory=[1.0, 2.0],
+            _opt_in_advisory=True,
+        )
+        proxy_meter.create_gauge(name, unit=unit, description=description, _opt_in_advisory=True)
+        proxy_meter.create_observable_counter(
+            name,
+            callbacks=[callback],
+            unit=unit,
+            description=description,
+            _opt_in_advisory=True,
+        )
+        proxy_meter.create_observable_up_down_counter(
+            name,
+            callbacks=[callback],
+            unit=unit,
+            description=description,
+            _opt_in_advisory=True,
+        )
+        proxy_meter.create_observable_gauge(
+            name,
+            callbacks=[callback],
+            unit=unit,
+            description=description,
+            _opt_in_advisory=True,
+        )
+
+        real_meter_provider = Mock()
+        proxy_meter.on_set_meter_provider(real_meter_provider)
+        real_meter: Mock = real_meter_provider.get_meter()
+        real_meter.create_counter.assert_called_once_with(name, unit, description, _opt_in_advisory=True)
+        real_meter.create_up_down_counter.assert_called_once_with(name, unit, description, _opt_in_advisory=True)
+        real_meter.create_histogram.assert_called_once_with(
+            name,
+            unit,
+            description,
+            explicit_bucket_boundaries_advisory=[1.0, 2.0],
+            _opt_in_advisory=True,
+        )
+        real_meter.create_gauge.assert_called_once_with(name, unit, description, _opt_in_advisory=True)
+        real_meter.create_observable_counter.assert_called_once_with(
+            name, [callback], unit, description, _opt_in_advisory=True
+        )
+        real_meter.create_observable_up_down_counter.assert_called_once_with(
+            name, [callback], unit, description, _opt_in_advisory=True
+        )
+        real_meter.create_observable_gauge.assert_called_once_with(
+            name, [callback], unit, description, _opt_in_advisory=True
+        )

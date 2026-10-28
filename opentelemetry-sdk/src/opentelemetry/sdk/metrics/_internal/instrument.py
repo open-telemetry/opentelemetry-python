@@ -29,6 +29,7 @@ from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import (
     CallbackOptions,
+    _MetricsAdvisory,
     _MetricsHistogramAdvisory,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
@@ -69,6 +70,7 @@ class _Synchronous(_Instrument, Synchronous):
         description: str = "",
         *,
         _meter_config: _ProxyMeterConfig | None = None,
+        _advisory: _MetricsAdvisory | None = None,
     ):
         # pylint: disable=no-member
         result = self._check_name_unit_description(name, unit, description)
@@ -91,7 +93,13 @@ class _Synchronous(_Instrument, Synchronous):
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         self._meter_config = _meter_config
-        super().__init__(name, unit=unit, description=description)
+        self._advisory = _advisory or _MetricsAdvisory()
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _opt_in_advisory=self._advisory.opt_in,
+        )
 
     def _is_enabled(self) -> bool:
         return self._meter_config is None or self._meter_config.is_enabled
@@ -108,6 +116,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         description: str = "",
         *,
         _meter_config: _ProxyMeterConfig | None = None,
+        _advisory: _MetricsAdvisory | None = None,
     ):
         # pylint: disable=no-member
         result = self._check_name_unit_description(name, unit, description)
@@ -130,7 +139,14 @@ class _Asynchronous(_Instrument, Asynchronous):
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         self._meter_config = _meter_config
-        super().__init__(name, callbacks, unit=unit, description=description)
+        self._advisory = _advisory or _MetricsAdvisory()
+        super().__init__(
+            name,
+            callbacks,
+            unit=unit,
+            description=description,
+            _opt_in_advisory=self._advisory.opt_in,
+        )
 
         self._callbacks: list[CallbackT] = []
 
@@ -278,7 +294,10 @@ class Histogram(_Synchronous, APIHistogram):
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
         *,
         _meter_config: _ProxyMeterConfig | None = None,
+        _advisory: _MetricsAdvisory | None = None,
     ):
+        if _advisory is None:
+            _advisory = _MetricsHistogramAdvisory(explicit_bucket_boundaries=explicit_bucket_boundaries_advisory)
         super().__init__(
             name,
             unit=unit,
@@ -286,8 +305,8 @@ class Histogram(_Synchronous, APIHistogram):
             instrumentation_scope=instrumentation_scope,
             measurement_consumer=measurement_consumer,
             _meter_config=_meter_config,
+            _advisory=_advisory,
         )
-        self._advisory = _MetricsHistogramAdvisory(explicit_bucket_boundaries=explicit_bucket_boundaries_advisory)
 
     def __new__(cls, *args, **kwargs):
         if cls is Histogram:

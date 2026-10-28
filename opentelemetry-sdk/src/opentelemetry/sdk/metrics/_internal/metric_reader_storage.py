@@ -248,12 +248,16 @@ class MetricReaderStorage:
         result = True
 
         # pylint: disable=protected-access
-        if isinstance(instrument, Asynchronous) and isinstance(
-            view._aggregation,
-            (
-                ExplicitBucketHistogramAggregation,
-                ExponentialBucketHistogramAggregation,
-            ),
+        if (
+            view._enabled is not False
+            and isinstance(instrument, Asynchronous)
+            and isinstance(
+                view._aggregation,
+                (
+                    ExplicitBucketHistogramAggregation,
+                    ExponentialBucketHistogramAggregation,
+                ),
+            )
         ):
             _logger.warning(
                 "View %s and instrument %s will produce semantic errors when matched, the view has not been applied.",

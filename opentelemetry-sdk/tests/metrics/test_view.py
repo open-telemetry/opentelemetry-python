@@ -199,3 +199,13 @@ class TestView(TestCase):
         self.assertEqual(view_with_counter._name, "custom_name")
         self.assertEqual(view_with_counter._instrument_name, "my_counter")
         self.assertIs(view_with_counter._instrument_type, Counter)
+
+    def test_view_enabled(self):
+        default_view = View(instrument_name="my_counter")
+        self.assertIsNone(default_view._enabled)
+
+        enabled_view = View(instrument_name="my_counter", enabled=True)
+        self.assertTrue(enabled_view._enabled)
+
+        disabled_view = View(instrument_name="my_counter", enabled=False)
+        self.assertFalse(disabled_view._enabled)

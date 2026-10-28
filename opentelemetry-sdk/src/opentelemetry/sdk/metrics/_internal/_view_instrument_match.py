@@ -14,7 +14,9 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
     DefaultAggregation,
+    DropAggregation,
     _Aggregation,
+    _DropAggregation,
     _SumAggregation,
 )
 from opentelemetry.sdk.metrics._internal.instrument import _Instrument
@@ -80,23 +82,25 @@ class _ViewInstrumentMatch:
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
         self._description = self._view._description or self._instrument.description
-        if not isinstance(self._view._aggregation, DefaultAggregation):
-            self._aggregation = self._view._aggregation._create_aggregation(
-                self._instrument,
-                None,
-                self._view._exemplar_reservoir_factory,
-                0,
-            )
+        advisory = getattr(self._instrument, "_advisory", None)
+        opt_in = getattr(advisory, "opt_in", None) is True
+        if self._view._enabled is False or (opt_in and self._view._enabled is not True):
+            self._aggregation_factory: Aggregation = DropAggregation()
+        elif not isinstance(self._view._aggregation, DefaultAggregation):
+            self._aggregation_factory = self._view._aggregation
         else:
-            self._aggregation = self._instrument_class_aggregation[self._instrument.__class__]._create_aggregation(
-                self._instrument,
-                None,
-                self._view._exemplar_reservoir_factory,
-                0,
-            )
+            self._aggregation_factory = self._instrument_class_aggregation[self._instrument.__class__]
+        self._aggregation = self._aggregation_factory._create_aggregation(
+            self._instrument,
+            None,
+            self._view._exemplar_reservoir_factory,
+            0,
+        )
 
     def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
         # pylint: disable=protected-access
+        if isinstance(self._aggregation, _DropAggregation) or isinstance(other._aggregation, _DropAggregation):
+            return False
 
         result = (
             self._name == other._name
@@ -137,23 +141,12 @@ class _ViewInstrumentMatch:
         if aggr_key not in self._attributes_aggregation:
             with self._lock:
                 if aggr_key not in self._attributes_aggregation:
-                    if not isinstance(self._view._aggregation, DefaultAggregation):
-                        aggregation = self._view._aggregation._create_aggregation(
-                            self._instrument,
-                            attributes,
-                            self._view._exemplar_reservoir_factory,
-                            time_ns(),
-                        )
-                    else:
-                        aggregation = self._instrument_class_aggregation[
-                            self._instrument.__class__
-                        ]._create_aggregation(
-                            self._instrument,
-                            attributes,
-                            self._view._exemplar_reservoir_factory,
-                            time_ns(),
-                        )
-                    self._attributes_aggregation[aggr_key] = aggregation
+                    self._attributes_aggregation[aggr_key] = self._aggregation_factory._create_aggregation(
+                        self._instrument,
+                        attributes,
+                        self._view._exemplar_reservoir_factory,
+                        time_ns(),
+                    )
 
         self._attributes_aggregation[aggr_key].aggregate(measurement, should_sample_exemplar)
 

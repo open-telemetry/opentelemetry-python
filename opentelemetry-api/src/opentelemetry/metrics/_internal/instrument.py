@@ -29,8 +29,48 @@ _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 
 
 @dataclass(frozen=True)
-class _MetricsHistogramAdvisory:
+class _MetricsAdvisory:
+    opt_in: bool | None = None
     explicit_bucket_boundaries: Sequence[float] | None = None
+
+
+_MetricsHistogramAdvisory = _MetricsAdvisory
+
+
+def _validate_opt_in_advisory(
+    opt_in_advisory: bool | None,
+) -> bool | None:
+    """Returns the advisory as a bool, otherwise logs a warning and returns
+    `None` so the advisory is ignored."""
+
+    if opt_in_advisory is None:
+        return None
+
+    if isinstance(opt_in_advisory, bool):
+        return opt_in_advisory
+
+    _logger.warning("_opt_in_advisory must be a bool")
+    return None
+
+
+def _validate_explicit_bucket_boundaries_advisory(
+    explicit_bucket_boundaries_advisory: Sequence[float] | None,
+) -> Sequence[float] | None:
+    """Returns the advisory if it is a sequence of numbers, otherwise logs a
+    warning and returns `None` so the advisory is ignored."""
+
+    if explicit_bucket_boundaries_advisory is None:
+        return None
+
+    if isinstance(explicit_bucket_boundaries_advisory, Sequence):
+        try:
+            if all(isinstance(entry, (float, int)) for entry in explicit_bucket_boundaries_advisory):
+                return explicit_bucket_boundaries_advisory
+        except (KeyError, TypeError):
+            pass
+
+    _logger.warning("explicit_bucket_boundaries_advisory must be a sequence of numbers")
+    return None
 
 
 @dataclass(frozen=True)
@@ -59,6 +99,8 @@ class Instrument(ABC):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
         pass
 
@@ -102,10 +144,13 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
         self._name = name
         self._unit = unit
         self._description = description
+        self._opt_in_advisory = _opt_in_advisory
         self._real_instrument: InstrumentT | None = None
 
     def on_meter_set(self, meter: "metrics.Meter") -> None:
@@ -128,8 +173,15 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
-        super().__init__(name, unit, description)
+        super().__init__(
+            name,
+            unit,
+            description,
+            _opt_in_advisory=_opt_in_advisory,
+        )
         self._callbacks = callbacks
 
 
@@ -147,8 +199,15 @@ class Asynchronous(Instrument):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _opt_in_advisory=_opt_in_advisory,
+        )
 
 
 class Counter(Synchronous):
@@ -179,8 +238,15 @@ class NoOpCounter(Counter):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _opt_in_advisory=_opt_in_advisory,
+        )
 
     def add(
         self,
@@ -206,6 +272,7 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
             self._name,
             self._unit,
             self._description,
+            _opt_in_advisory=self._opt_in_advisory,
         )
 
 
@@ -241,8 +308,15 @@ class NoOpUpDownCounter(UpDownCounter):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _opt_in_advisory=_opt_in_advisory,
+        )
 
     def add(
         self,
@@ -268,6 +342,7 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
             self._name,
             self._unit,
             self._description,
+            _opt_in_advisory=self._opt_in_advisory,
         )
 
 
@@ -286,12 +361,15 @@ class NoOpObservableCounter(ObservableCounter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _opt_in_advisory=_opt_in_advisory,
         )
 
 
@@ -302,6 +380,7 @@ class _ProxyObservableCounter(_ProxyAsynchronousInstrument[ObservableCounter], O
             self._callbacks,
             self._unit,
             self._description,
+            _opt_in_advisory=self._opt_in_advisory,
         )
 
 
@@ -321,12 +400,15 @@ class NoOpObservableUpDownCounter(ObservableUpDownCounter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _opt_in_advisory=_opt_in_advisory,
         )
 
 
@@ -340,6 +422,7 @@ class _ProxyObservableUpDownCounter(
             self._callbacks,
             self._unit,
             self._description,
+            _opt_in_advisory=self._opt_in_advisory,
         )
 
 
@@ -356,6 +439,8 @@ class Histogram(Synchronous):
         unit: str = "",
         description: str = "",
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
         pass
 
@@ -391,12 +476,15 @@ class NoOpHistogram(Histogram):
         unit: str = "",
         description: str = "",
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
         super().__init__(
             name,
             unit=unit,
             description=description,
             explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
+            _opt_in_advisory=_opt_in_advisory,
         )
 
     def record(
@@ -415,8 +503,15 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         unit: str = "",
         description: str = "",
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _opt_in_advisory=_opt_in_advisory,
+        )
         self._explicit_bucket_boundaries_advisory = explicit_bucket_boundaries_advisory
 
     def record(
@@ -434,6 +529,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
             self._unit,
             self._description,
             explicit_bucket_boundaries_advisory=self._explicit_bucket_boundaries_advisory,
+            _opt_in_advisory=self._opt_in_advisory,
         )
 
 
@@ -453,12 +549,15 @@ class NoOpObservableGauge(ObservableGauge):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
         super().__init__(
             name,
             callbacks,
             unit=unit,
             description=description,
+            _opt_in_advisory=_opt_in_advisory,
         )
 
 
@@ -472,6 +571,7 @@ class _ProxyObservableGauge(
             self._callbacks,
             self._unit,
             self._description,
+            _opt_in_advisory=self._opt_in_advisory,
         )
 
 
@@ -507,8 +607,15 @@ class NoOpGauge(Gauge):
         name: str,
         unit: str = "",
         description: str = "",
+        *,
+        _opt_in_advisory: bool | None = None,
     ) -> None:
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            _opt_in_advisory=_opt_in_advisory,
+        )
 
     def set(
         self,
@@ -537,4 +644,5 @@ class _ProxyGauge(
             self._name,
             self._unit,
             self._description,
+            _opt_in_advisory=self._opt_in_advisory,
         )
