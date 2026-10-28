@@ -431,9 +431,9 @@ class Tracer(ABC):
                 a case-sensitive ASCII string of at most 255 characters that
                 starts with a letter, followed by letters, digits, ``_``,
                 ``.``, ``-`` or ``/``. Not validated by the API.
-            kwargs: Options from :class:`_SpanOptions`, with the same defaults
-                as :meth:`start_span`. Implementations ignore options they
-                don't know.
+            kwargs: Options from :class:`_SpanOptions`. ``record_exception``
+                defaults to ``False``, ``set_status_on_exception`` to ``True``.
+                Implementations ignore options they don't know.
 
         The default implementation calls :meth:`start_span` without ``type_``.
         Implementations that support span type should override this method.

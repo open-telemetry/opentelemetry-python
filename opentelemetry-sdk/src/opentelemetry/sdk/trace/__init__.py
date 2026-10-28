@@ -85,7 +85,7 @@ _SPAN_TYPE_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_./-]{0,254}")
 
 _KNOWN_SPAN_OPTIONS = frozenset(("record_exception", "set_status_on_exception"))
 # (record_exception, set_status_on_exception) when no options are passed
-_DEFAULT_SPAN_OPTIONS = (True, True)
+_DEFAULT_SPAN_OPTIONS = (False, True)
 
 
 def _is_valid_span_type(span_type: object) -> bool:
@@ -106,9 +106,10 @@ def _read_span_options(kwargs: Mapping[str, Any]) -> tuple[bool, bool]:
             "Ignoring unknown span start options: %s",
             sorted(kwargs.keys() - _KNOWN_SPAN_OPTIONS),
         )
-    # Both default to True. Only an explicit False turns them off, other values are ignored.
+    # record_exception defaults to False, set_status_on_exception to True.
+    # Non-bool values fall back to the default.
     return (
-        kwargs.get("record_exception") is not False,
+        kwargs.get("record_exception") is True,
         kwargs.get("set_status_on_exception") is not False,
     )
 
