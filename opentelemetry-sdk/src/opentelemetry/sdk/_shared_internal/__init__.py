@@ -150,6 +150,7 @@ class BatchProcessor(Generic[Telemetry]):
         )
         self._worker_thread.start()
         self._pid = os.getpid()
+        self._bsp_reset_once = Once()
 
     def worker(self):
         while not self._shutdown:

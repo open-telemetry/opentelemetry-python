@@ -332,6 +332,31 @@ class TestBatchProcessor:
         assert exporter.sleep_interrupted is True
         assert 2 == exporter.num_export_calls
 
+    def test_repeated_fork_fallback_reinitializes(self, batch_processor_class, telemetry):
+        exporter = Mock()
+        processor = batch_processor_class(
+            exporter,
+            max_queue_size=200,
+            max_export_batch_size=10,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        bp = processor._batch_processor
+        initial_pid = bp._pid
+
+        with unittest.mock.patch("os.getpid") as mock_getpid:
+            # First fork fallback
+            mock_getpid.return_value = initial_pid + 1
+            bp.emit(telemetry)
+            assert bp._pid == initial_pid + 1
+
+            # Second fork fallback
+            mock_getpid.return_value = initial_pid + 2
+            bp.emit(telemetry)
+            assert bp._pid == initial_pid + 2
+
+        processor.shutdown()
+
 
 class TestCommonFuncs(unittest.TestCase):
     def test_duplicate_logs_filter_works(self):
