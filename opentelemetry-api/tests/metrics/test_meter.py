@@ -13,97 +13,26 @@ from opentelemetry.metrics import Meter, NoOpMeter
 
 class ChildMeter(Meter):
     # pylint: disable=signature-differs
-    def create_counter(self, name, unit="", description="", *, _attributes_advisory=None):
-        super().create_counter(
-            name,
-            unit=unit,
-            description=description,
-            _attributes_advisory=_attributes_advisory,
-        )
+    def create_counter(self, name, unit="", description="", **kwargs):
+        super().create_counter(name, unit=unit, description=description, **kwargs)
 
-    def create_up_down_counter(self, name, unit="", description="", *, _attributes_advisory=None):
-        super().create_up_down_counter(
-            name,
-            unit=unit,
-            description=description,
-            _attributes_advisory=_attributes_advisory,
-        )
+    def create_up_down_counter(self, name, unit="", description="", **kwargs):
+        super().create_up_down_counter(name, unit=unit, description=description, **kwargs)
 
-    def create_observable_counter(
-        self,
-        name,
-        callbacks,
-        unit="",
-        description="",
-        *,
-        _attributes_advisory=None,
-    ):
-        super().create_observable_counter(
-            name,
-            callbacks,
-            unit=unit,
-            description=description,
-            _attributes_advisory=_attributes_advisory,
-        )
+    def create_observable_counter(self, name, callbacks, unit="", description="", **kwargs):
+        super().create_observable_counter(name, callbacks, unit=unit, description=description, **kwargs)
 
-    def create_histogram(
-        self,
-        name,
-        unit="",
-        description="",
-        *,
-        explicit_bucket_boundaries_advisory=None,
-        _attributes_advisory=None,
-    ):
-        super().create_histogram(
-            name,
-            unit=unit,
-            description=description,
-            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
-            _attributes_advisory=_attributes_advisory,
-        )
+    def create_histogram(self, name, unit="", description="", **kwargs):
+        super().create_histogram(name, unit=unit, description=description, **kwargs)
 
-    def create_gauge(self, name, unit="", description="", *, _attributes_advisory=None):
-        super().create_gauge(
-            name,
-            unit=unit,
-            description=description,
-            _attributes_advisory=_attributes_advisory,
-        )
+    def create_gauge(self, name, unit="", description="", **kwargs):
+        super().create_gauge(name, unit=unit, description=description, **kwargs)
 
-    def create_observable_gauge(
-        self,
-        name,
-        callbacks,
-        unit="",
-        description="",
-        *,
-        _attributes_advisory=None,
-    ):
-        super().create_observable_gauge(
-            name,
-            callbacks,
-            unit=unit,
-            description=description,
-            _attributes_advisory=_attributes_advisory,
-        )
+    def create_observable_gauge(self, name, callbacks, unit="", description="", **kwargs):
+        super().create_observable_gauge(name, callbacks, unit=unit, description=description, **kwargs)
 
-    def create_observable_up_down_counter(
-        self,
-        name,
-        callbacks,
-        unit="",
-        description="",
-        *,
-        _attributes_advisory=None,
-    ):
-        super().create_observable_up_down_counter(
-            name,
-            callbacks,
-            unit=unit,
-            description=description,
-            _attributes_advisory=_attributes_advisory,
-        )
+    def create_observable_up_down_counter(self, name, callbacks, unit="", description="", **kwargs):
+        super().create_observable_up_down_counter(name, callbacks, unit=unit, description=description, **kwargs)
 
 
 class TestMeter(TestCase):

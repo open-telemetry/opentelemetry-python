@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import os
 import weakref
 from atexit import register, unregister
@@ -10,6 +12,7 @@ from logging import getLogger
 from os import environ
 from threading import Lock
 from time import time_ns
+from typing import TYPE_CHECKING
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -26,6 +29,8 @@ from opentelemetry.metrics import (
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import (
+    _HistogramOptions,
+    _InstrumentOptions,
     _MetricsAdvisory,
     _validate_attributes_advisory,
     _validate_explicit_bucket_boundaries_advisory,
@@ -70,6 +75,9 @@ from opentelemetry.util.types import (
     Attributes,
 )
 
+if TYPE_CHECKING:
+    from typing_extensions import Unpack
+
 _logger = getLogger(__name__)
 
 
@@ -78,7 +86,7 @@ class _MeterConfig:
     is_enabled: bool = True
 
     @classmethod
-    def default(cls) -> "_MeterConfig":
+    def default(cls) -> _MeterConfig:
         return _MeterConfig()
 
 
@@ -126,10 +134,9 @@ class Meter(APIMeter):
         name,
         unit="",
         description="",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> APICounter:
-        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Counter, unit, description, advisory)
@@ -163,10 +170,9 @@ class Meter(APIMeter):
         name,
         unit="",
         description="",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> APIUpDownCounter:
-        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _UpDownCounter, unit, description, advisory)
@@ -201,10 +207,9 @@ class Meter(APIMeter):
         callbacks=None,
         unit="",
         description="",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> APIObservableCounter:
-        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableCounter, unit, description, advisory)
@@ -242,14 +247,12 @@ class Meter(APIMeter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_HistogramOptions],
     ) -> APIHistogram:
         advisory = _MetricsAdvisory(
-            attributes=_validate_attributes_advisory(_attributes_advisory),
+            attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")),
             explicit_bucket_boundaries=_validate_explicit_bucket_boundaries_advisory(
-                explicit_bucket_boundaries_advisory
+                kwargs.get("explicit_bucket_boundaries_advisory")
             ),
         )
 
@@ -291,10 +294,9 @@ class Meter(APIMeter):
         name,
         unit="",
         description="",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> APIGauge:
-        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Gauge, unit, description, advisory)
@@ -329,10 +331,9 @@ class Meter(APIMeter):
         callbacks=None,
         unit="",
         description="",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> APIObservableGauge:
-        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableGauge, unit, description, advisory)
@@ -371,10 +372,9 @@ class Meter(APIMeter):
         callbacks=None,
         unit="",
         description="",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> APIObservableUpDownCounter:
-        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory))
+        advisory = _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")))
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableUpDownCounter, unit, description, advisory)
@@ -484,11 +484,11 @@ class MeterProvider(APIMeterProvider):
 
     def __init__(
         self,
-        metric_readers: Sequence["opentelemetry.sdk.metrics.export.MetricReader"] = (),
+        metric_readers: Sequence[opentelemetry.sdk.metrics.export.MetricReader] = (),
         resource: Resource | None = None,
         exemplar_filter: ExemplarFilter | None = None,
         shutdown_on_exit: bool = True,
-        views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
+        views: Sequence[opentelemetry.sdk.metrics.view.View] = (),
         *,
         _meter_configurator: _MeterConfiguratorT | None = None,
     ):
@@ -683,7 +683,7 @@ class MeterProvider(APIMeterProvider):
                 )
             return self._meters[instrumentation_scope]
 
-    def add_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader") -> None:
+    def add_metric_reader(self, metric_reader: opentelemetry.sdk.metrics.export.MetricReader) -> None:
         with self._all_metric_readers_lock:
             if metric_reader in self._all_metric_readers:
                 _logger.warning(
@@ -698,7 +698,7 @@ class MeterProvider(APIMeterProvider):
 
     def remove_metric_reader(
         self,
-        metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
+        metric_reader: opentelemetry.sdk.metrics.export.MetricReader,
     ) -> None:
         with self._all_metric_readers_lock:
             if metric_reader not in self._all_metric_readers:

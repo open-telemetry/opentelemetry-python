@@ -29,6 +29,8 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 .. versionadded:: 1.10.0
 """
 
+from __future__ import annotations
+
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -36,7 +38,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
@@ -55,7 +57,10 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _HistogramOptions,
+    _InstrumentOptions,
     _MetricsAdvisory,
+    _populated_options,
     _ProxyCounter,
     _ProxyGauge,
     _ProxyHistogram,
@@ -71,6 +76,9 @@ from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import (
     Attributes,
 )
+
+if TYPE_CHECKING:
+    from typing_extensions import Unpack
 
 _logger = getLogger(__name__)
 
@@ -99,7 +107,7 @@ class MeterProvider(ABC):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
-    ) -> "Meter":
+    ) -> Meter:
         """Returns a `Meter` for use by the given instrumentation library.
 
         For any two calls it is undefined whether the same or different
@@ -138,7 +146,7 @@ class NoOpMeterProvider(MeterProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
-    ) -> "Meter":
+    ) -> Meter:
         """Returns a NoOpMeter."""
         return NoOpMeter(name, version=version, schema_url=schema_url)
 
@@ -155,7 +163,7 @@ class _ProxyMeterProvider(MeterProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
-    ) -> "Meter":
+    ) -> Meter:
         with self._lock:
             if self._real_meter_provider is not None:
                 return self._real_meter_provider.get_meter(name, version, schema_url)
@@ -287,8 +295,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> Counter:
         """Creates a `Counter` instrument
 
@@ -305,8 +312,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> UpDownCounter:
         """Creates an `UpDownCounter` instrument
 
@@ -324,8 +330,7 @@ class Meter(ABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableCounter:
         """Creates an `ObservableCounter` instrument
 
@@ -469,9 +474,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_HistogramOptions],
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
 
@@ -487,8 +490,7 @@ class Meter(ABC):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> Gauge:  # pyright: ignore[reportReturnType]
         """Creates a ``Gauge`` instrument
 
@@ -507,8 +509,7 @@ class Meter(ABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableGauge:
         """Creates an `ObservableGauge` instrument
 
@@ -529,8 +530,7 @@ class Meter(ABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableUpDownCounter:
         """Creates an `ObservableUpDownCounter` instrument
 
@@ -577,22 +577,22 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> Counter:
+        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_counter(
                     name,
                     unit,
                     description,
-                    _attributes_advisory=_attributes_advisory,
+                    **options,
                 )
             proxy = _ProxyCounter(
                 name,
                 unit,
                 description,
-                _attributes_advisory=_attributes_advisory,
+                **options,
             )
             self._instruments.append(proxy)
             return proxy
@@ -602,22 +602,22 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> UpDownCounter:
+        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_up_down_counter(
                     name,
                     unit,
                     description,
-                    _attributes_advisory=_attributes_advisory,
+                    **options,
                 )
             proxy = _ProxyUpDownCounter(
                 name,
                 unit,
                 description,
-                _attributes_advisory=_attributes_advisory,
+                **options,
             )
             self._instruments.append(proxy)
             return proxy
@@ -628,9 +628,9 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableCounter:
+        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_counter(
@@ -638,14 +638,14 @@ class _ProxyMeter(Meter):
                     callbacks,
                     unit,
                     description,
-                    _attributes_advisory=_attributes_advisory,
+                    **options,
                 )
             proxy = _ProxyObservableCounter(
                 name,
                 callbacks,
                 unit=unit,
                 description=description,
-                _attributes_advisory=_attributes_advisory,
+                **options,
             )
             self._instruments.append(proxy)
             return proxy
@@ -655,25 +655,22 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_HistogramOptions],
     ) -> Histogram:
+        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_histogram(
                     name,
                     unit,
                     description,
-                    explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
-                    _attributes_advisory=_attributes_advisory,
+                    **options,
                 )
             proxy = _ProxyHistogram(
                 name,
                 unit,
                 description,
-                explicit_bucket_boundaries_advisory,
-                _attributes_advisory=_attributes_advisory,
+                **options,
             )
             self._instruments.append(proxy)
             return proxy
@@ -683,22 +680,22 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> Gauge:
+        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_gauge(
                     name,
                     unit,
                     description,
-                    _attributes_advisory=_attributes_advisory,
+                    **options,
                 )
             proxy = _ProxyGauge(
                 name,
                 unit,
                 description,
-                _attributes_advisory=_attributes_advisory,
+                **options,
             )
             self._instruments.append(proxy)
             return proxy
@@ -709,9 +706,9 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableGauge:
+        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_gauge(
@@ -719,14 +716,14 @@ class _ProxyMeter(Meter):
                     callbacks,
                     unit,
                     description,
-                    _attributes_advisory=_attributes_advisory,
+                    **options,
                 )
             proxy = _ProxyObservableGauge(
                 name,
                 callbacks,
                 unit=unit,
                 description=description,
-                _attributes_advisory=_attributes_advisory,
+                **options,
             )
             self._instruments.append(proxy)
             return proxy
@@ -737,9 +734,9 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableUpDownCounter:
+        options = _populated_options(kwargs)
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_up_down_counter(
@@ -747,14 +744,14 @@ class _ProxyMeter(Meter):
                     callbacks,
                     unit,
                     description,
-                    _attributes_advisory=_attributes_advisory,
+                    **options,
                 )
             proxy = _ProxyObservableUpDownCounter(
                 name,
                 callbacks,
                 unit=unit,
                 description=description,
-                _attributes_advisory=_attributes_advisory,
+                **options,
             )
             self._instruments.append(proxy)
             return proxy
@@ -771,8 +768,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> Counter:
         """Returns a no-op Counter."""
         status = self._register_instrument(
@@ -780,7 +776,7 @@ class NoOpMeter(Meter):
             NoOpCounter,
             unit,
             description,
-            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory"))),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -795,7 +791,7 @@ class NoOpMeter(Meter):
             name,
             unit=unit,
             description=description,
-            _attributes_advisory=_attributes_advisory,
+            _attributes_advisory=kwargs.get("_attributes_advisory"),
         )
 
     def create_gauge(
@@ -803,8 +799,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> Gauge:
         """Returns a no-op Gauge."""
         status = self._register_instrument(
@@ -812,7 +807,7 @@ class NoOpMeter(Meter):
             NoOpGauge,
             unit,
             description,
-            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory"))),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -826,7 +821,7 @@ class NoOpMeter(Meter):
             name,
             unit=unit,
             description=description,
-            _attributes_advisory=_attributes_advisory,
+            _attributes_advisory=kwargs.get("_attributes_advisory"),
         )
 
     def create_up_down_counter(
@@ -834,8 +829,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
         status = self._register_instrument(
@@ -843,7 +837,7 @@ class NoOpMeter(Meter):
             NoOpUpDownCounter,
             unit,
             description,
-            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory"))),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -857,7 +851,7 @@ class NoOpMeter(Meter):
             name,
             unit=unit,
             description=description,
-            _attributes_advisory=_attributes_advisory,
+            _attributes_advisory=kwargs.get("_attributes_advisory"),
         )
 
     def create_observable_counter(
@@ -866,8 +860,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
         status = self._register_instrument(
@@ -875,7 +868,7 @@ class NoOpMeter(Meter):
             NoOpObservableCounter,
             unit,
             description,
-            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory"))),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -890,7 +883,7 @@ class NoOpMeter(Meter):
             callbacks,
             unit=unit,
             description=description,
-            _attributes_advisory=_attributes_advisory,
+            _attributes_advisory=kwargs.get("_attributes_advisory"),
         )
 
     def create_histogram(
@@ -898,9 +891,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
-        *,
-        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_HistogramOptions],
     ) -> Histogram:
         """Returns a no-op Histogram."""
         status = self._register_instrument(
@@ -909,9 +900,9 @@ class NoOpMeter(Meter):
             unit,
             description,
             _MetricsAdvisory(
-                attributes=_validate_attributes_advisory(_attributes_advisory),
+                attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory")),
                 explicit_bucket_boundaries=_validate_explicit_bucket_boundaries_advisory(
-                    explicit_bucket_boundaries_advisory
+                    kwargs.get("explicit_bucket_boundaries_advisory")
                 ),
             ),
         )
@@ -927,8 +918,8 @@ class NoOpMeter(Meter):
             name,
             unit=unit,
             description=description,
-            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
-            _attributes_advisory=_attributes_advisory,
+            explicit_bucket_boundaries_advisory=kwargs.get("explicit_bucket_boundaries_advisory"),
+            _attributes_advisory=kwargs.get("_attributes_advisory"),
         )
 
     def create_observable_gauge(
@@ -937,8 +928,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
         status = self._register_instrument(
@@ -946,7 +936,7 @@ class NoOpMeter(Meter):
             NoOpObservableGauge,
             unit,
             description,
-            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory"))),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -961,7 +951,7 @@ class NoOpMeter(Meter):
             callbacks,
             unit=unit,
             description=description,
-            _attributes_advisory=_attributes_advisory,
+            _attributes_advisory=kwargs.get("_attributes_advisory"),
         )
 
     def create_observable_up_down_counter(
@@ -970,8 +960,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
-        *,
-        _attributes_advisory: Sequence[str] | None = None,
+        **kwargs: Unpack[_InstrumentOptions],
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
         status = self._register_instrument(
@@ -979,7 +968,7 @@ class NoOpMeter(Meter):
             NoOpObservableUpDownCounter,
             unit,
             description,
-            _MetricsAdvisory(attributes=_validate_attributes_advisory(_attributes_advisory)),
+            _MetricsAdvisory(attributes=_validate_attributes_advisory(kwargs.get("_attributes_advisory"))),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -994,7 +983,7 @@ class NoOpMeter(Meter):
             callbacks,
             unit=unit,
             description=description,
-            _attributes_advisory=_attributes_advisory,
+            _attributes_advisory=kwargs.get("_attributes_advisory"),
         )
 
 
@@ -1009,7 +998,7 @@ def get_meter(
     meter_provider: MeterProvider | None = None,
     schema_url: str | None = None,
     attributes: Attributes = None,
-) -> "Meter":
+) -> Meter:
     """Returns a `Meter` for use by the given instrumentation library.
 
     This function is a convenience wrapper for
