@@ -27,46 +27,20 @@ def _is_non_custom_str(key: Any) -> bool:
 @overload
 def _clean_attribute_value(
     value: Mapping[str, types.AnyValue],
-    max_value_length: int | None = ...,
+    max_value_length: int | None,
 ) -> Mapping[str, types.AnyValue]: ...
 
 
 @overload
 def _clean_attribute_value(
     value: types.AnyValue,
-    max_value_length: int | None = ...,
-) -> types.AnyValue: ...
-
-
-def _clean_mapping(
-    mapping: Mapping[Any, types.AnyValue],
     max_value_length: int | None,
-) -> dict[str, types.AnyValue]:
-    cleaned_mapping: dict[str, types.AnyValue] = {}
-    for key, val in mapping.items():
-        if not key:
-            _logger.warning(
-                "invalid attribute key `%s`. must be non-empty string. Dropping key from attributes.",
-                key,
-            )
-            continue
-        # Spec says to convert unknown types to strings if possible (here and below too).
-        if not isinstance(key, str):
-            _logger.warning(
-                "Invalid type `%s` for attribute key `%s`, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
-                type(key).__name__,
-                key,
-            )
-            if not _is_non_custom_str(key):
-                continue
-            key = str(key)
-        cleaned_mapping[key] = _clean_attribute_value(val, max_value_length)
-    return cleaned_mapping
+) -> types.AnyValue: ...
 
 
 def _clean_attribute_value(
     value: types.AnyValue,
-    max_value_length: int | None = None,
+    max_value_length: int | None,
 ) -> types.AnyValue:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
@@ -80,26 +54,39 @@ def _clean_attribute_value(
     """
     if isinstance(value, (NoneType, bool, int, float)):
         return value
-    if isinstance(value, (bytes, bytearray)):
+    if isinstance(value, (str, bytes, bytearray)):
         if max_value_length is not None and len(value) > max_value_length:
             _logger.warning(
-                "Byte array attribute value exceeds max length of %d, truncating.",
+                "%s attribute value exceeds max length of %d, truncating.",
+                "Byte array" if isinstance(value, (bytes, bytearray)) else "String",
                 max_value_length,
             )
             value = value[:max_value_length]
-        return bytes(value)
-    if isinstance(value, str):
-        if max_value_length is not None and len(value) > max_value_length:
-            _logger.warning(
-                "String attribute value exceeds max length of %d, truncating.",
-                max_value_length,
-            )
-            value = value[:max_value_length]
-        return value
+        return bytes(value) if isinstance(value, bytearray) else value
     if isinstance(value, Sequence):
         return tuple(_clean_attribute_value(v, max_value_length) for v in value)
     if isinstance(value, Mapping):
-        return _clean_mapping(value, max_value_length)
+        cleaned_mapping: dict[str, types.AnyValue] = {}
+        for key, val in value.items():
+            if not key:
+                _logger.warning(
+                    "invalid attribute key `%s`. must be non-empty string. Dropping key from attributes.",
+                    key,
+                )
+                continue
+            # Spec says to convert unknown types to strings if possible (here and below too).
+            if not isinstance(key, str):
+                _logger.warning(
+                    "Invalid type `%s` for attribute key `%s`, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
+                    type(key),
+                    key,
+                )
+                if _is_non_custom_str(key):
+                    key = str(key)
+                else:
+                    continue
+            cleaned_mapping[key] = _clean_attribute_value(val, max_value_length)
+        return cleaned_mapping
     if TYPE_CHECKING:
         assert_never(value)
     _logger.warning(
@@ -107,8 +94,9 @@ def _clean_attribute_value(
         "Mapping or Sequence of those types. Value's __str__ method will be called if it exists, otherwise the value will be replaced with None.",
         type(value),
     )
-    fallback: types.AnyValue = str(value) if _is_non_custom_str(value) else None
-    return fallback
+    if _is_non_custom_str(value):
+        return str(value)
+    return None
 
 
 class BoundedAttributes(MutableMapping[str, types.AnyValue]):
