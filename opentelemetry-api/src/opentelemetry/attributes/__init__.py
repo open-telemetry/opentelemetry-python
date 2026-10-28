@@ -28,7 +28,6 @@ def _is_non_custom_str(key: Any) -> bool:
 def _clean_attribute_value(
     value: Mapping[str, types.AnyValue],
     max_value_length: int | None = ...,
-    max_string_value_length: int | None = ...,
 ) -> Mapping[str, types.AnyValue]: ...
 
 
@@ -36,7 +35,6 @@ def _clean_attribute_value(
 def _clean_attribute_value(
     value: types.AnyValue,
     max_value_length: int | None = ...,
-    max_string_value_length: int | None = ...,
 ) -> types.AnyValue: ...
 
 
@@ -69,7 +67,6 @@ def _clean_mapping(
 def _clean_attribute_value(
     value: types.AnyValue,
     max_value_length: int | None = None,
-    max_string_value_length: int | None = None,
 ) -> types.AnyValue:
     """Recursively checks if an attribute value is valid and cleans it if required.
 
@@ -81,8 +78,6 @@ def _clean_attribute_value(
     Returns:
         The recursively cleaned AnyValue.
     """
-    if max_value_length is None and max_string_value_length is not None:
-        max_value_length = max_string_value_length
     if isinstance(value, (NoneType, bool, int, float)):
         return value
     if isinstance(value, (bytes, bytearray)):
