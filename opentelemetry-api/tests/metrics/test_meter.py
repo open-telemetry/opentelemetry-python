@@ -3,10 +3,12 @@
 # type: ignore
 
 from logging import WARNING
+from typing import get_type_hints
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.metrics import Meter, NoOpMeter
+from opentelemetry.metrics import HistogramOptions, InstrumentOptions, Meter, NoOpMeter
+from opentelemetry.metrics._internal import _ProxyMeter
 
 # FIXME Test that the meter methods can be called concurrently safely.
 
@@ -163,3 +165,22 @@ class TestMeter(TestCase):
 
         self.assertTrue(hasattr(Meter, "create_observable_up_down_counter"))
         self.assertTrue(Meter.create_observable_up_down_counter.__isabstractmethod__)
+
+    def test_type_hints_resolve_at_runtime(self):
+        for obj in [InstrumentOptions, HistogramOptions]:
+            with self.subTest(obj.__name__):
+                get_type_hints(obj)
+
+        for meter_class in [Meter, NoOpMeter, _ProxyMeter]:
+            for method_name in [
+                "create_counter",
+                "create_up_down_counter",
+                "create_observable_counter",
+                "create_histogram",
+                "create_gauge",
+                "create_observable_gauge",
+                "create_observable_up_down_counter",
+            ]:
+                with self.subTest(meter_class.__name__, method=method_name):
+                    hints = get_type_hints(getattr(meter_class, method_name))
+                    self.assertIn("kwargs", hints)

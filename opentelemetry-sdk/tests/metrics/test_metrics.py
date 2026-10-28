@@ -13,7 +13,7 @@ from logging import DEBUG, WARNING
 from pathlib import Path
 from threading import Lock
 from time import sleep
-from typing import Any
+from typing import Any, get_type_hints
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.attributes import BoundedAttributes
@@ -920,6 +920,20 @@ class TestMeter(TestCase):
         self.assertTrue(meter._is_enabled())
         counter.add(1)
         sync_consumer_instance.consume_measurement.assert_called_once()
+
+    def test_type_hints_resolve_at_runtime(self):
+        for method_name in [
+            "create_counter",
+            "create_up_down_counter",
+            "create_observable_counter",
+            "create_histogram",
+            "create_gauge",
+            "create_observable_gauge",
+            "create_observable_up_down_counter",
+        ]:
+            with self.subTest(method_name):
+                hints = get_type_hints(getattr(Meter, method_name))
+                self.assertIn("kwargs", hints)
 
 
 class InMemoryMetricExporter(MetricExporter):

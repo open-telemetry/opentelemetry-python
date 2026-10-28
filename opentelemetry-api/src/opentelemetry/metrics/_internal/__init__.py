@@ -38,7 +38,9 @@ from dataclasses import dataclass
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import TYPE_CHECKING, cast
+from typing import cast
+
+from typing_extensions import Unpack
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
@@ -75,9 +77,6 @@ from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import (
     Attributes,
 )
-
-if TYPE_CHECKING:
-    from typing_extensions import Unpack
 
 _logger = getLogger(__name__)
 

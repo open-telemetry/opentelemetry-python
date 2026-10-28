@@ -12,7 +12,8 @@ from logging import getLogger
 from os import environ
 from threading import Lock
 from time import time_ns
-from typing import TYPE_CHECKING
+
+from typing_extensions import Unpack
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -72,9 +73,6 @@ from opentelemetry.util._once import Once
 from opentelemetry.util.types import (
     Attributes,
 )
-
-if TYPE_CHECKING:
-    from typing_extensions import Unpack
 
 _logger = getLogger(__name__)
 
