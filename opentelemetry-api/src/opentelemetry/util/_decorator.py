@@ -5,20 +5,13 @@ import contextlib
 import functools
 import inspect
 from collections.abc import Callable, Iterator
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import Generic, ParamSpec, TypeVar
 
 V = TypeVar("V")
 R = TypeVar("R")  # Return type
 Pargs = TypeVar("Pargs")  # Generic type for arguments
 Pkwargs = TypeVar("Pkwargs")  # Generic type for arguments
-
-# We don't actually depend on typing_extensions but we can use it in CI with this conditional
-# import. ParamSpec can be imported directly from typing after python 3.9 is dropped
-# https://peps.python.org/pep-0612/.
-if TYPE_CHECKING:
-    from typing_extensions import ParamSpec
-
-    P = ParamSpec("P")  # Generic type for all arguments
+P = ParamSpec("P")  # Generic type for all arguments
 
 
 class _AgnosticContextManager(
