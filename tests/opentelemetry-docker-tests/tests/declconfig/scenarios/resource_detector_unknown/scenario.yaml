@@ -1,0 +1,19 @@
+description: >
+  A detector whose entry point doesn't exist is skipped with a warning, and
+  the SDK still starts with the remaining detectors.
+until:
+  - spans:
+      name: unknown-detector-span
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-resource-detector-unknown
+          host.name: {exists: true}
+  - output:
+      stream: stderr
+      pattern: "Resource detector 'no_such_detector' could not be loaded and will be ignored"
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+      exists: false
