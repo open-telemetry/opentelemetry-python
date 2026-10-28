@@ -4,6 +4,7 @@
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access,too-many-lines
 
+import math
 import os
 import sys
 import unittest
@@ -230,6 +231,15 @@ class TestCreateMetricReaders(unittest.TestCase):
         reader = provider._metric_readers[0]
         self.assertEqual(reader._export_timeout_millis, 10000.0)
 
+    def test_periodic_reader_zero_timeout_is_unlimited(self):
+        config = self._make_periodic_config(
+            PushMetricExporterConfig(console=ConsoleMetricExporterConfig()),
+            timeout=0,
+        )
+        provider = create_meter_provider(config)
+        reader = provider._metric_readers[0]
+        self.assertEqual(reader._export_timeout_millis, math.inf)
+
     def test_otlp_http_missing_package_raises(self):
         config = self._make_periodic_config(PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig()))
         with (
@@ -275,6 +285,26 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertIsNone(kwargs["headers"])
         self.assertIsNone(kwargs["timeout"])
         self.assertIsNone(kwargs["compression"])
+
+    def test_otlp_http_zero_timeout_is_unlimited(self):
+        mock_exporter_cls = MagicMock()
+        mock_http_module = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(timeout=0))
+            )
+            create_meter_provider(config)
+
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["timeout"], math.inf)
 
     def test_otlp_http_json_missing_package_raises(self):
         config = self._make_periodic_config(

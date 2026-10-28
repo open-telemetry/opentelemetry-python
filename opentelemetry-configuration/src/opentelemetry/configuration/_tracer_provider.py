@@ -11,6 +11,7 @@ from opentelemetry.configuration._common import (
     _matches_glob,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _resolve_export_timeout,
     _scope_name_matches_glob,
     load_entry_point,
 )
@@ -125,7 +126,7 @@ def _create_otlp_http_span_exporter(
 ) -> SpanExporter:
     """Create an OTLP HTTP span exporter from config."""
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
 
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
@@ -197,7 +198,7 @@ def _create_otlp_grpc_span_exporter(
 
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
 
     return OTLPSpanExporter(  # type: ignore[return-value]
         endpoint=config.endpoint,
