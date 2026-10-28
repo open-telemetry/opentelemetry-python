@@ -34,6 +34,9 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
 )
+from opentelemetry.sdk.metrics._internal._view_instrument_match import (
+    _DEFAULT_CARDINALITY_LIMIT,
+)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
@@ -168,6 +171,38 @@ class ConsoleMetricExporter(MetricExporter):
         return True
 
 
+InstrumentCardinalityKey = (
+    type[Counter]
+    | type[UpDownCounter]
+    | type[Histogram]
+    | type[Gauge]
+    | type[ObservableCounter]
+    | type[ObservableUpDownCounter]
+    | type[ObservableGauge]
+)
+
+CardinalityLimits = dict[InstrumentCardinalityKey, int]
+
+_CARDINALITY_INSTRUMENT_CLASSES: dict[type, type] = {
+    Counter: _Counter,
+    UpDownCounter: _UpDownCounter,
+    Histogram: _Histogram,
+    Gauge: _Gauge,
+    ObservableCounter: _ObservableCounter,
+    ObservableUpDownCounter: _ObservableUpDownCounter,
+    ObservableGauge: _ObservableGauge,
+}
+
+
+def _validate_cardinality_limit(typ: type, limit: int) -> type:
+    """Return the SDK instrument class for ``typ`` after validating ``limit``."""
+    if typ not in _CARDINALITY_INSTRUMENT_CLASSES:
+        raise ValueError(f"Invalid instrument class found {typ}")
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+        raise ValueError(f"Cardinality limit for {typ} must be a positive integer, got {limit!r}")
+    return _CARDINALITY_INSTRUMENT_CLASSES[typ]
+
+
 class MetricReader(ABC):
     # pylint: disable=too-many-branches,broad-exception-raised
     """
@@ -197,6 +232,13 @@ class MetricReader(ABC):
             default aggregations. The aggregation defined here will be
             overridden by an aggregation defined by a view that is not
             `DefaultAggregation`.
+        cardinality_limits: A dictionary mapping instrument classes to the
+            maximum number of distinct attribute sets a metric stream of that
+            instrument class aggregates per collection cycle. Instrument
+            classes not included use a limit of 2000. A limit defined by a view
+            takes precedence. Measurements with further attribute sets are
+            aggregated into one additional point identified by the attribute
+            ``otel.metric.overflow=true``.
 
     .. document protected _receive_metrics which is a intended to be overridden by subclass
     .. automethod:: _receive_metrics
@@ -206,6 +248,7 @@ class MetricReader(ABC):
         self,
         preferred_temporality: dict[type, AggregationTemporality] | None = None,
         preferred_aggregation: dict[type, opentelemetry.sdk.metrics.view.Aggregation] | None = None,
+        cardinality_limits: CardinalityLimits | None = None,
         *,
         otel_component_type: OtelComponentTypeValues | None = None,
     ) -> None:
@@ -286,6 +329,20 @@ class MetricReader(ABC):
                     self._instrument_class_aggregation[_ObservableGauge] = aggregation
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
+
+        self._instrument_class_cardinality_limit = {
+            _Counter: _DEFAULT_CARDINALITY_LIMIT,
+            _UpDownCounter: _DEFAULT_CARDINALITY_LIMIT,
+            _Histogram: _DEFAULT_CARDINALITY_LIMIT,
+            _Gauge: _DEFAULT_CARDINALITY_LIMIT,
+            _ObservableCounter: _DEFAULT_CARDINALITY_LIMIT,
+            _ObservableUpDownCounter: _DEFAULT_CARDINALITY_LIMIT,
+            _ObservableGauge: _DEFAULT_CARDINALITY_LIMIT,
+        }
+
+        if cardinality_limits is not None:
+            for typ, limit in cardinality_limits.items():
+                self._instrument_class_cardinality_limit[_validate_cardinality_limit(typ, limit)] = limit
 
         self._otel_component_type = otel_component_type.value if otel_component_type else type(self).__qualname__
         self._metrics = create_metric_reader_metrics(
@@ -382,10 +439,12 @@ class InMemoryMetricReader(MetricReader):
         self,
         preferred_temporality: dict[type, AggregationTemporality] | None = None,
         preferred_aggregation: dict[type, opentelemetry.sdk.metrics.view.Aggregation] | None = None,
+        cardinality_limits: CardinalityLimits | None = None,
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
+            cardinality_limits=cardinality_limits,
         )
         self._lock = RLock()
         self._metrics_data: MetricsData | None = None
@@ -428,11 +487,13 @@ class PeriodicExportingMetricReader(MetricReader):
         exporter: MetricExporter,
         export_interval_millis: float | None = None,
         export_timeout_millis: float | None = None,
+        cardinality_limits: CardinalityLimits | None = None,
     ) -> None:
         # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
             preferred_temporality=exporter._preferred_temporality,
             preferred_aggregation=exporter._preferred_aggregation,
+            cardinality_limits=cardinality_limits,
             otel_component_type=OtelComponentTypeValues.PERIODIC_METRIC_READER,
         )
 
