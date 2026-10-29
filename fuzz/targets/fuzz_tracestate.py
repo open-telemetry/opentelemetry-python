@@ -11,10 +11,10 @@ translation of the W3C Trace Context ABNF
 import logging
 import sys
 from collections.abc import Callable
-from itertools import pairwise
 from pathlib import Path
 
 import atheris
+from _strategies import Mutation, char_mutations, split_headers
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.lark import from_lark
@@ -34,10 +34,6 @@ _GRAMMAR = Lark.open(str(Path(__file__).parent.parent / "grammars" / "tracestate
 
 _MAX_KEYS = 32
 _MAX_LENGTH = 8192
-_MAX_HEADERS = 4
-
-# Whitespace allowed around list members (OWS, RFC 9110 section 5.6.3)
-_OWS = " \t"
 
 _KEY_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789_-*/"
 # Characters that are invalid in a key, a value, or both
@@ -47,8 +43,6 @@ _RANDOM_ALPHABET = st.one_of(
     st.characters(min_codepoint=0x20, max_codepoint=0x7E),
     st.sampled_from("\x00\x1f\x7f\x80é \U0001f600"),
 )
-
-_Mutation = Callable[[st.DrawFn, str], str]
 
 # Invalid input is logged on every exec, which is slow and floods stderr
 logging.disable(logging.CRITICAL)
@@ -84,23 +78,6 @@ def _valid_tracestates(draw: st.DrawFn) -> str:
     keys = [_parse_member(token)[0] for token in _member_tokens(tracestate)]
     assume(len(set(keys)) == len(keys) and len(tracestate) <= _MAX_LENGTH)
     return tracestate
-
-
-def _insert_char(draw: st.DrawFn, tracestate: str) -> str:
-    index = draw(st.integers(0, len(tracestate)))
-    return tracestate[:index] + draw(st.sampled_from(_INVALID_CHARS)) + tracestate[index:]
-
-
-def _replace_char(draw: st.DrawFn, tracestate: str) -> str:
-    assume(tracestate)
-    index = draw(st.integers(0, len(tracestate) - 1))
-    return tracestate[:index] + draw(st.sampled_from(_INVALID_CHARS)) + tracestate[index + 1 :]
-
-
-def _delete_char(draw: st.DrawFn, tracestate: str) -> str:
-    assume(tracestate)
-    index = draw(st.integers(0, len(tracestate) - 1))
-    return tracestate[:index] + tracestate[index + 1 :]
 
 
 def _exceed_total_length(draw: st.DrawFn, tracestate: str) -> str:
@@ -145,7 +122,7 @@ def _duplicate_member(draw: st.DrawFn, key: str, value: str) -> str:
     return f"{key}={value},{key}={draw(st.sampled_from([value, 'other']))}"
 
 
-def _member_mutation(mutate_member: Callable[[st.DrawFn, str, str], str]) -> _Mutation:
+def _member_mutation(mutate_member: Callable[[st.DrawFn, str, str], str]) -> Mutation:
     """Wraps a mutation of a single list member into a mutation of the whole header."""
 
     def mutation(draw: st.DrawFn, tracestate: str) -> str:
@@ -158,10 +135,8 @@ def _member_mutation(mutate_member: Callable[[st.DrawFn, str, str], str]) -> _Mu
     return mutation
 
 
-_MUTATIONS: list[_Mutation] = [
-    _insert_char,
-    _replace_char,
-    _delete_char,
+_MUTATIONS: list[Mutation] = [
+    *char_mutations(_INVALID_CHARS),
     _exceed_total_length,
     _exceed_key_count,
     _member_mutation(_structural_member),
@@ -182,19 +157,9 @@ def _random_tracestates() -> st.SearchStrategy[str]:
     return st.text(alphabet=_RANDOM_ALPHABET, max_size=512)
 
 
-@st.composite
-def _split_headers(draw: st.DrawFn, tracestate: str) -> list[str]:
-    """Splits a tracestate at commas into between 1 and 4 header values, with optional OWS around each."""
-    commas = [index for index, char in enumerate(tracestate) if char == ","]
-    splits = draw(st.sets(st.sampled_from(commas), max_size=_MAX_HEADERS - 1)) if commas else set()
-    bounds = [-1, *sorted(splits), len(tracestate)]
-    ows = st.text(alphabet=_OWS, max_size=2)
-    return [draw(ows) + tracestate[start + 1 : end] + draw(ows) for start, end in pairwise(bounds)]
-
-
 def _tracestate_headers() -> st.SearchStrategy[list[str]]:
     """Generates the tracestate header values of a request, valid or not."""
-    return st.one_of(_valid_tracestates(), _mutated_tracestates(), _random_tracestates()).flatmap(_split_headers)
+    return st.one_of(_valid_tracestates(), _mutated_tracestates(), _random_tracestates()).flatmap(split_headers)
 
 
 def _trace_state_in(ctx: Context) -> TraceState:
@@ -226,7 +191,7 @@ def test_tracestate(headers: list[str]) -> None:
 
 
 def main() -> None:
-    atheris.Setup(sys.argv, test_tracestate.hypothesis.fuzz_one_input)
+    atheris.Setup(sys.argv, atheris.instrument_func(test_tracestate.hypothesis.fuzz_one_input))
     atheris.Fuzz()
 
 

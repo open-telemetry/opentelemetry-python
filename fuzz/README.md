@@ -39,6 +39,11 @@ python fuzz/targets/fuzz_tracestate.py crash-<sha1>
 [W3C tracestate ABNF](https://www.w3.org/TR/trace-context/#tracestate-header-field-values) into
 [Lark](https://lark-parser.readthedocs.io/). The length limits on keys and values, and the limit
 
+`fuzz_baggage` is built from `grammars/baggage.lark`, a translation of the
+[W3C Baggage ABNF](https://www.w3.org/TR/baggage/#definition) for a single list-member. Since
+`W3CBaggagePropagator` accepts or drops list-members one by one, splitting the header, empty
+list-members, and the limits on list-members and lengths are handled by the oracle in the target.
+
 The grammars and oracles have unit tests. They import the targets, so like the fuzzers they need
 atheris and run on Linux:
 
@@ -49,8 +54,9 @@ uv run tox -e test-fuzz
 ## Adding a target
 
 1. Add `targets/fuzz_<name>.py` with a Hypothesis `@given` test. Import the code under test inside
-   `atheris.instrument_imports()`, and from `main()` pass the test's `.hypothesis.fuzz_one_input`
-   to `atheris.Setup`, then call `atheris.Fuzz`.
+   `atheris.instrument_imports()`, and from `main()` pass the test's `.hypothesis.fuzz_one_input`,
+   wrapped in `atheris.instrument_func`, to `atheris.Setup`, then call `atheris.Fuzz`. Strategies
+   shared between targets live in `targets/_strategies.py`.
 2. If the input has a grammar, add it under `grammars/` with tests under `tests/`.
 3. Add a command for the target to the `fuzz` environment in `tox.ini`.
 4. Add any new dependencies to `requirements.in` and regenerate `requirements.txt`.
