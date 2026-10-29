@@ -178,6 +178,7 @@ class BatchProcessor(Generic[Telemetry]):
         batch_strategy: BatchExportStrategy,
         deadline: float = math.inf,
     ) -> bool:
+        # pylint: disable=consider-using-with
         if deadline == math.inf:
             self._export_lock.acquire()
         else:
