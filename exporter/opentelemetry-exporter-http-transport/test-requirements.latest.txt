@@ -53,7 +53,7 @@ typing-extensions==4.15.0
     #   exceptiongroup
     #   mocket
     #   opentelemetry-api
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   mocket
     #   opentelemetry-exporter-http-transport
