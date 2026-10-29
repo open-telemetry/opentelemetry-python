@@ -498,6 +498,20 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         # iterating through it on "emit".
         self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
+        self._init_executor(max_workers)
+        if hasattr(os, "register_at_fork"):
+            # Only the main thread is kept in forked processes, the executor
+            # needs to be re-instantiated to get a fresh pool of threads:
+            weak_reinit = WeakMethod(self._init_executor)
+
+            def _after_in_child() -> None:
+                reinit = weak_reinit()
+                if reinit is not None:
+                    reinit(max_workers)
+
+            os.register_at_fork(after_in_child=_after_in_child)
+
+    def _init_executor(self, max_workers: int) -> None:
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
 
     def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:

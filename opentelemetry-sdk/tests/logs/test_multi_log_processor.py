@@ -3,10 +3,14 @@
 
 # pylint:disable=protected-access,no-self-use,no-member
 
+import gc
 import logging
+import multiprocessing
+import os
 import threading
 import time
 import unittest
+import weakref
 from abc import ABC, abstractmethod
 from unittest.mock import Mock
 
@@ -44,6 +48,17 @@ class AnotherLogRecordProcessor(LogRecordProcessor):
     def force_flush(self, timeout_millis=30000):
         self._log_list.clear()
         return True
+
+
+def _make_record(body):
+    return ReadWriteLogRecord(
+        LogRecord(
+            timestamp=1622300111608942000,
+            severity_text="WARN",
+            severity_number=SeverityNumber.WARN,
+            body=body,
+        )
+    )
 
 
 class TestLogRecordProcessor(unittest.TestCase):
@@ -250,4 +265,55 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         self.assertTrue(ret_value)
         for mock in mocks:
             self.assertEqual(1, mock.force_flush.call_count)
+        multi_log_record_processor.shutdown()
+
+    def test_processor_gc(self):
+        # The fork handler is registered for the lifetime of the process, so it
+        # must not keep the processor alive. _init_executor is held through a
+        # WeakMethod for that reason; a strong bound method here would leak
+        # every processor ever constructed.
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor(5)
+        weak_ref = weakref.ref(multi_log_record_processor)
+        multi_log_record_processor.shutdown()
+
+        del multi_log_record_processor
+        gc.collect()
+
+        self.assertIsNone(
+            weak_ref(),
+            "The ConcurrentMultiLogRecordProcessor object created by this test wasn't garbage collected",
+        )
+
+    @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")
+    def test_concurrent_multi_log_record_processor_fork(self):
+        multiprocessing_context = multiprocessing.get_context("fork")
+        logs_list = []
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor(2)
+        multi_log_record_processor.add_log_record_processor(AnotherLogRecordProcessor(Mock(), logs_list))
+
+        # Emit in the main process first, so the underlying ThreadPoolExecutor
+        # has actually started a worker. Without this the child inherits a pool
+        # that was never used and the test passes without reaching the defect.
+        multi_log_record_processor.on_emit(_make_record("main process before fork"))
+        self.assertEqual(logs_list[-1][0], "main process before fork")
+
+        # The forked processor is usable in the child process:
+        def child(conn):
+            multi_log_record_processor.on_emit(_make_record("child process"))
+            conn.send(logs_list[-1][0])
+            conn.close()
+
+        parent_conn, child_conn = multiprocessing_context.Pipe()
+        process = multiprocessing_context.Process(target=child, args=(child_conn,))
+        process.start()
+        has_response = parent_conn.poll(timeout=5)
+        if not has_response:
+            process.kill()
+            self.fail("The child process did not send any message after 5 seconds, it's very probably locked")
+        process.join(timeout=5)
+        self.assertEqual(parent_conn.recv(), "child process")
+
+        # The processor is still usable in the main process after the child exits:
+        multi_log_record_processor.on_emit(_make_record("main process after fork"))
+        self.assertEqual(logs_list[-1][0], "main process after fork")
         multi_log_record_processor.shutdown()
