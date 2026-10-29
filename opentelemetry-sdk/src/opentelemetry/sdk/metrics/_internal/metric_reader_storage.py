@@ -62,6 +62,7 @@ class MetricReaderStorage:
         instrument_class_cardinality_limit: dict[type, int] | None = None,
     ) -> None:
         self._lock = RLock()
+        self._previous_collection_start_nanos: int | None = None
         self._sdk_config = sdk_config
         self._instrument_view_instrument_matches: dict[_Instrument, list[_ViewInstrumentMatch]] = {}
         self._instrument_class_temporality = instrument_class_temporality
@@ -84,12 +85,19 @@ class MetricReaderStorage:
             instrument.__class__
         ] is AggregationTemporality.DELTA and not isinstance(instrument, _Asynchronous)
 
+        previous_collection_start_nanos = self._previous_collection_start_nanos
+        if previous_collection_start_nanos is None:
+            start_time_unix_nano = instrument._creation_time_unix_nano
+        else:
+            start_time_unix_nano = max(previous_collection_start_nanos, instrument._creation_time_unix_nano)
+
         return _ViewInstrumentMatch(
             view=view,
             instrument=instrument,
             instrument_class_aggregation=self._instrument_class_aggregation,
             cardinality_limit=cardinality_limit,
             reset_on_collect=reset_on_collect,
+            start_time_unix_nano=start_time_unix_nano,
         )
 
     def _get_or_init_view_instrument_match(self, instrument: _Instrument) -> list[_ViewInstrumentMatch]:
@@ -133,9 +141,10 @@ class MetricReaderStorage:
         # streams produced by the SDK, but we still align the output timestamps
         # for a single instrument.
 
-        collection_start_nanos = time_ns()
-
         with self._lock:
+            # A newly registered instrument must not be newer than the end of
+            # the collection interval that includes its measurements.
+            collection_start_nanos = time_ns()
             instrumentation_scope_scope_metrics: dict[InstrumentationScope, ScopeMetrics] = {}
 
             instrument_matches_snapshot = list(self._instrument_view_instrument_matches.items())
@@ -216,6 +225,8 @@ class MetricReaderStorage:
                         )
                     else:
                         instrumentation_scope_scope_metrics[instrument.instrumentation_scope].metrics.extend(metrics)
+
+            self._previous_collection_start_nanos = collection_start_nanos
 
             if instrumentation_scope_scope_metrics:
                 return MetricsData(

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, cast
 
 from typing_extensions import assert_never
 
+from opentelemetry.metrics import Asynchronous, Synchronous
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
@@ -80,12 +81,13 @@ class _ViewInstrumentMatch:
         instrument_class_aggregation: dict[type, Aggregation],
         cardinality_limit: int = _DEFAULT_CARDINALITY_LIMIT,
         reset_on_collect: bool = False,
+        start_time_unix_nano: int | None = None,
     ):
         self._view = view
         self._cardinality_limit = cardinality_limit
         self._reset_on_collect = reset_on_collect
-        # Delta aggregations created after a collection continue from it.
-        self._previous_collection_start_nanos: int | None = None
+        # Track the active start boundary for delta and asynchronous series.
+        self._previous_collection_start_nanos = start_time_unix_nano
         self._instrument = instrument
         self._attributes_aggregation: dict[_HashedAttributes, _Aggregation] = {}
         self._lock = Lock()
@@ -175,7 +177,9 @@ class _ViewInstrumentMatch:
             if aggregation is not None:
                 return aggregation
 
-        start_time_unix_nano = self._previous_collection_start_nanos or time_ns()
+        start_time_unix_nano = self._previous_collection_start_nanos
+        if start_time_unix_nano is None or (isinstance(self._instrument, Synchronous) and not self._reset_on_collect):
+            start_time_unix_nano = time_ns()
         # pylint: disable=protected-access
         if not isinstance(self._view._aggregation, DefaultAggregation):
             aggregation = self._view._aggregation._create_aggregation(
@@ -204,6 +208,8 @@ class _ViewInstrumentMatch:
             aggregations = self._attributes_aggregation
             if self._reset_on_collect and collection_aggregation_temporality is AggregationTemporality.DELTA:
                 self._attributes_aggregation = {}
+
+            if self._reset_on_collect or isinstance(self._instrument, Asynchronous):
                 self._previous_collection_start_nanos = collection_start_nanos
 
             for aggregation in aggregations.values():
