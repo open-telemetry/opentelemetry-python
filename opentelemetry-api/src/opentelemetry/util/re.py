@@ -3,7 +3,7 @@
 
 from collections.abc import Mapping
 from logging import getLogger
-from re import compile, split
+from re import compile
 from urllib.parse import unquote
 
 from typing_extensions import deprecated
@@ -26,9 +26,6 @@ _KEY_VALUE_FORMAT = rf"{_OWS}{_KEY_FORMAT}{_OWS}={_OWS}{_VALUE_FORMAT}{_OWS}"
 
 _HEADER_PATTERN = compile(_KEY_VALUE_FORMAT)
 _LIBERAL_HEADER_PATTERN = compile(rf"{_OWS}{_KEY_FORMAT}{_OWS}={_OWS}{_LIBERAL_VALUE_FORMAT}{_OWS}")
-_DELIMITER_PATTERN = compile(r"[ \t]*,[ \t]*")
-
-_BAGGAGE_PROPERTY_FORMAT = rf"{_KEY_VALUE_FORMAT}|{_OWS}{_KEY_FORMAT}{_OWS}"
 
 _INVALID_HEADER_ERROR_MESSAGE_STRICT_TEMPLATE = (
     "Header format invalid! Header values in environment variables must be "
@@ -59,7 +56,7 @@ def parse_env_headers(s: str, liberal: bool = False) -> Mapping[str, str]:
     with other languages SDKs that accept non URL-encoded headers by default.
     """
     headers: dict[str, str] = {}
-    headers_list: list[str] = split(_DELIMITER_PATTERN, s)
+    headers_list: list[str] = [header.strip(" \t") for header in s.split(",")]
     for header in headers_list:
         if not header:  # empty string
             continue
