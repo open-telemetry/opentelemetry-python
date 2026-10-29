@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: make `Logger.enabled()` respect the configured minimum severity and trace-based filtering
