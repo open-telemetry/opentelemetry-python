@@ -3,23 +3,19 @@
 
 from collections.abc import Mapping
 from logging import getLogger
-from re import compile
+from string import ascii_letters, digits
 from types import MappingProxyType
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
-from opentelemetry.util.re import (
-    _BAGGAGE_PROPERTY_FORMAT,
-    _KEY_FORMAT,
-    _VALUE_FORMAT,
-)
 
 _BAGGAGE_KEY = create_key("baggage")
 _logger = getLogger(__name__)
 
-_KEY_PATTERN = compile(_KEY_FORMAT)
-_VALUE_PATTERN = compile(_VALUE_FORMAT)
-_PROPERT_PATTERN = compile(_BAGGAGE_PROPERTY_FORMAT)
+# RFC 7230 token characters
+_KEY_CHARS = frozenset("!#$%&'*+-.^_`|~" + digits + ascii_letters)
+# baggage-octet: printable US-ASCII except SP, DQUOTE, ",", ";" and "\"
+_VALUE_CHARS = frozenset(map(chr, range(0x21, 0x7F))) - frozenset('",;\\')
 
 
 def get_all(
@@ -103,19 +99,18 @@ def _get_baggage_value(context: Context | None = None) -> dict[str, object]:
 
 
 def _is_valid_key(name: str) -> bool:
-    return _KEY_PATTERN.fullmatch(str(name)) is not None
+    return bool(name) and _KEY_CHARS.issuperset(name)
+
+
+def _is_valid_property(property: str) -> bool:
+    key, separator, value = property.partition("=")
+    return _is_valid_key(key.strip(" \t")) and (not separator or _VALUE_CHARS.issuperset(value.strip(" \t")))
 
 
 def _is_valid_value(value: object) -> bool:
-    parts = str(value).split(";")
+    value, *properties = str(value).split(";")
     # W3C Baggage allows optional whitespace between the value and ";"
-    is_valid_value = _VALUE_PATTERN.fullmatch(parts[0].rstrip(" \t")) is not None
-    if len(parts) > 1:  # one or more properties metadata
-        for property in parts[1:]:
-            if _PROPERT_PATTERN.fullmatch(property) is None:
-                is_valid_value = False
-                break
-    return is_valid_value
+    return _VALUE_CHARS.issuperset(value.rstrip(" \t")) and all(map(_is_valid_property, properties))
 
 
 def _is_valid_pair(key: str, value: str) -> bool:

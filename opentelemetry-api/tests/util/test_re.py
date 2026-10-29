@@ -28,6 +28,8 @@ class TestParseHeaders(unittest.TestCase):
             ("key=value%20with%20space", [("key", "value with space")], False),
             ("key%21=value", [("key!", "value")], False),
             ("%20key%20=%20value%20", [("key", "value")], False),
+            # whitespace and empty members around delimiters
+            ("name1=value1 ,\t, \tname2=value2", [("name1", "value1"), ("name2", "value2")], False),
             # header name case normalization
             ("Key=Value", [("key", "Value")], False),
             # mix of valid and invalid headers
