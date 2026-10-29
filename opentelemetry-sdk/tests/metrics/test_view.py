@@ -14,6 +14,16 @@ class TestView(TestCase):
         with self.assertRaises(Exception):
             View()
 
+    def test_aggregation_cardinality_limit(self):
+        self.assertIsNone(View(instrument_name="a")._aggregation_cardinality_limit)
+        self.assertEqual(View(instrument_name="a", aggregation_cardinality_limit=5)._aggregation_cardinality_limit, 5)
+
+    def test_invalid_aggregation_cardinality_limit(self):
+        for limit in (0, -1, 1.5, "5", True):
+            with self.subTest(limit=limit):
+                with self.assertRaises(ValueError):
+                    View(instrument_name="a", aggregation_cardinality_limit=limit)
+
     def test_instrument_type(self):
         self.assertTrue(View(instrument_type=Mock)._match(Mock()))
 

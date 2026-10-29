@@ -197,13 +197,15 @@ class TestSynchronousMeasurementConsumerConcurrency(TestCase):
         iteration_timeout_error = "Timed out waiting for iteration to start"
         mutation_timeout_error = "Timed out waiting for mutation to be done"
 
+        reader = MagicMock()
+        reader._instrument_class_cardinality_limit = {}  # pylint: disable=protected-access
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
                 exemplar_filter=MagicMock(),
                 resource=MagicMock(),
                 views=MagicMock(),
             ),
-            metric_readers=[MagicMock()],
+            metric_readers=[reader],
         )
 
         def _hooked_iter(iterable):
