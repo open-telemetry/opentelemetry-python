@@ -260,9 +260,11 @@ extlinks = {
 
 
 def on_missing_reference(app, env, node, contnode):
-    # FIXME Remove when opentelemetry.metrics._Gauge is renamed to
-    # opentelemetry.metrics.Gauge
-    if node["reftarget"] == "opentelemetry.metrics.Gauge":
+    # FIXME Remove when the API and SDK expose Gauge without the _ prefix.
+    if node["reftarget"] in (
+        "opentelemetry.metrics.Gauge",
+        "opentelemetry.sdk.metrics._internal.instrument.Gauge",
+    ):
         return contnode
 
 

@@ -91,6 +91,7 @@ from opentelemetry.sdk.metrics import (
 from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    CardinalityLimits,
     DataT,
     Gauge,
     Histogram,
@@ -282,6 +283,11 @@ class PrometheusMetricReader(MetricReader):
             that are copied as labels on exported metrics. The callback receives
             the original resource attribute key. Selected keys are sanitized to
             valid Prometheus label names.
+        cardinality_limits: A mapping between instrument classes and the
+            maximum number of metric points a metric stream of that class may
+            export per collection cycle. Classes not included in the mapping
+            use a limit of 2000. See
+            :class:`~opentelemetry.sdk.metrics.export.MetricReader` for details.
     """
 
     def __init__(
@@ -293,6 +299,7 @@ class PrometheusMetricReader(MetricReader):
         *,
         resource_attribute_filter: Callable[[str], bool] | None = None,
         registry: CollectorRegistry = REGISTRY,
+        cardinality_limits: CardinalityLimits | None = None,
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -304,6 +311,7 @@ class PrometheusMetricReader(MetricReader):
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             },
             preferred_aggregation=dict(preferred_aggregation) if preferred_aggregation is not None else None,
+            cardinality_limits=cardinality_limits,
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(
