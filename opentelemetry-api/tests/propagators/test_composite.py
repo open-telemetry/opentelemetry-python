@@ -6,6 +6,7 @@
 import unittest
 from unittest.mock import Mock
 
+from opentelemetry.context.context import Context
 from opentelemetry.propagators.composite import CompositePropagator
 
 
@@ -63,6 +64,21 @@ class TestCompositePropagator(unittest.TestCase):
 
         context = propagator.extract(carrier=new_carrier, context={}, getter=get_as_list)
         self.assertEqual(context, {})
+
+    def test_no_propagators_and_no_context_extracts_root_context(self):
+        propagator = CompositePropagator([])
+
+        context = propagator.extract(carrier={}, getter=get_as_list)
+
+        self.assertIsInstance(context, Context)
+        self.assertEqual(context, {})
+
+    def test_propagators_and_no_context_are_passed_a_root_context(self):
+        propagator = CompositePropagator([self.mock_propagator_0])
+
+        context = propagator.extract(carrier={}, getter=get_as_list)
+
+        self.assertEqual(context, {"mock-0": "context"})
 
     def test_single_propagator(self):
         propagator = CompositePropagator([self.mock_propagator_0])
