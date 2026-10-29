@@ -86,6 +86,58 @@ class TestBoundedAttributes(unittest.TestCase):
             {"a": 1, "c": 3, "d": (2, 3), "bytes": b"\xff"},
         )
 
+    def test_cyclic_attribute_values_are_replaced_with_none(self):
+        cyclic_list = [1, 2]
+        cyclic_list.append(cyclic_list)
+        cyclic_mapping = {"value": 1}
+        cyclic_mapping["self"] = cyclic_mapping
+
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            self.assertIsNone(_clean_attribute_value(cyclic_list, None))
+            self.assertIsNone(_clean_attribute_value(cyclic_mapping, None))
+
+        self.assertEqual(len(cm.output), 2)
+
+    def test_excessively_nested_attribute_values_are_replaced_with_none(self):
+        value = "value"
+        for _ in range(5000):
+            value = [value]
+
+        with self.assertLogs("opentelemetry", level="WARNING"):
+            self.assertIsNone(_clean_attribute_value(value, None))
+
+    def test_attribute_values_at_supported_depth_are_preserved(self):
+        value = "value"
+        for _ in range(20):
+            value = [value]
+
+        cleaned = _clean_attribute_value(value, None)
+        for _ in range(20):
+            self.assertIsInstance(cleaned, tuple)
+            cleaned = cleaned[0]
+        self.assertEqual(cleaned, "value")
+
+    def test_cyclic_attribute_keeps_sibling_attributes(self):
+        cyclic = []
+        cyclic.append(cyclic)
+
+        with self.assertLogs("opentelemetry", level="WARNING"):
+            attributes = BoundedAttributes(attributes={"good": "kept", "cyclic": cyclic})
+
+        self.assertEqual(attributes["good"], "kept")
+        self.assertIsNone(attributes["cyclic"])
+
+    def test_cyclic_attribute_can_be_set_on_bounded_attributes(self):
+        cyclic = {}
+        cyclic["self"] = cyclic
+        attributes = BoundedAttributes(immutable=False)
+
+        with self.assertLogs("opentelemetry", level="WARNING"):
+            attributes["cyclic"] = cyclic
+
+        self.assertIn("cyclic", attributes)
+        self.assertIsNone(attributes["cyclic"])
+
     def test_same_key_value_overwritten(self):
         bdict = BoundedAttributes(1, {"name": "Firulais"}, immutable=False)
         self.assertEqual(bdict["name"], "Firulais")
