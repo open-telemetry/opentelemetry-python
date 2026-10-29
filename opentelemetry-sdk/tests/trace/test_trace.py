@@ -210,6 +210,25 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertEqual(child_payload["new_tracer_pid"], child_payload["child_pid"])
         self.assertEqual(child_payload["span_pid"], child_payload["child_pid"])
 
+    @unittest.skipUnless(
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "requires os.fork and os.register_at_fork",
+    )
+    def test_tracer_provider_fork_with_preexec_fn_does_not_deadlock(self):
+        script_path = Path(__file__).parent / "scripts" / "tracer_provider_fork_preexec.py"
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=5,
+        )
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"stdout: {result.stdout}\nstderr: {result.stderr}",
+        )
+
     def test_get_tracer_sdk(self):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(
