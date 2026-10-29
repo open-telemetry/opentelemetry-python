@@ -25,14 +25,10 @@ jobs:
   tests:
     uses: ./.github/workflows/test.yml
   contrib:
-    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@main
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@release/v1.45.x-0.66bx
     with:
       CORE_REPO_SHA: ${% raw %}{{ github.sha }}{% endraw %}
-      CONTRIB_REPO_SHA: {% raw %}${{ github.event_name == 'pull_request' && (
-          contains(github.event.pull_request.labels.*.name, 'prepare-release') && github.event.pull_request.head.ref ||
-          contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
-          'main'
-        ) || 'main' }}{% endraw %}
+      CONTRIB_REPO_SHA: release/v1.45.x-0.66bx
 
   check:
     if: always()
