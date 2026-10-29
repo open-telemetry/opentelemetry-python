@@ -4,7 +4,7 @@
 import copy
 import unittest
 
-from opentelemetry.sdk.util import BoundedList
+from opentelemetry.sdk.util import BoundedList, get_dict_as_key, ns_to_iso_str
 
 
 # pylint: disable=unsubscriptable-object
@@ -150,3 +150,21 @@ class TestBoundedList(unittest.TestCase):
         self.assertEqual(blist._dq.maxlen, blist_copy._dq.maxlen)
         self.assertIsNot(blist[1], blist_copy[1])
         self.assertEqual(blist[1], blist_copy[1])
+
+    def test_slice(self):
+        blist = BoundedList.from_seq(10, [1, 2, 3, 4, 5])
+        self.assertEqual(blist[1:3], [2, 3])
+        self.assertEqual(blist[:2], [1, 2])
+        self.assertEqual(blist[3:], [4, 5])
+        self.assertEqual(blist[::-1], [5, 4, 3, 2, 1])
+
+
+class TestUtilFunctions(unittest.TestCase):
+    def test_ns_to_iso_str(self):
+        iso = ns_to_iso_str(1_577_836_800_000_000_000)
+        self.assertEqual(iso, "2020-01-01T00:00:00.000000Z")
+
+    def test_get_dict_as_key(self):
+        labels = {"b": 2, "a": [1, 2]}
+        key = get_dict_as_key(labels)
+        self.assertEqual(key, (("a", (1, 2)), ("b", 2)))
