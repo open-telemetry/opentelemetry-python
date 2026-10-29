@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: validate `explicit_bucket_boundaries_advisory` for finite, strictly increasing values in `create_histogram`, instead of only at the first `record()` call
