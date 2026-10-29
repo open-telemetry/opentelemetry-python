@@ -200,8 +200,9 @@ class BatchProcessor(Generic[Telemetry]):
             _logger.info("Shutdown called, ignoring %s.", self._exporting)
             self._metrics.drop_items(1, "already_shutdown")
             return
+        reset_once = self._bsp_reset_once
         if self._pid != os.getpid():
-            self._bsp_reset_once.do_once(self._at_fork_reinit)
+            reset_once.do_once(self._at_fork_reinit)
         if len(self._queue) == self._max_queue_size:
             _logger.warning("Queue full, dropping %s.", self._exporting)
             self._metrics.drop_items(1)
