@@ -337,6 +337,8 @@ class _SumAggregation(_Aggregation[Sum]):
             if value is None:
                 # This happens when the corresponding instrument callback
                 # does not produce measurements.
+                if collection_aggregation_temporality is AggregationTemporality.DELTA:
+                    self._previous_collection_start_nano = collection_start_nano
                 return None
 
             if collection_aggregation_temporality is AggregationTemporality.DELTA:
