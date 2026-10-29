@@ -1,0 +1,1 @@
+`opentelemetry-exporter-http-transport`: add environment proxy support to the urllib3 transport, set its default connection pool size to 10, and prefer certifi's CA bundle when available
