@@ -14,7 +14,7 @@ PyYAML==6.0.1
 requests==2.33.0
 responses==0.24.1
 tomli==2.0.1
-typing_extensions==4.12.0
+typing_extensions==4.14.0
 urllib3==2.8.0
 wrapt==1.16.0
 -e opentelemetry-api
