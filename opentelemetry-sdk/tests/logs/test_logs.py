@@ -151,6 +151,12 @@ class TestLoggerProvider(unittest.TestCase):
         self.assertEqual(logger._instrumentation_scope.schema_url, "schema_url")
         self.assertEqual(logger._instrumentation_scope.attributes, {"key": "value"})
 
+    def test_get_logger_accepts_unknown_kwargs(self):
+        logger = LoggerProvider().get_logger("name", future_option=True)
+
+        self.assertIsInstance(logger, Logger)
+        self.assertEqual(logger._instrumentation_scope.name, "name")
+
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_logger_with_sdk_disabled(self):
         logger = LoggerProvider().get_logger(Mock())
@@ -365,6 +371,18 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(log_record.attributes, {})
         self.assertEqual(log_record.event_name, None)
         self.assertEqual(log_data.resource, logger.resource)
+
+    def test_emit_and_enabled_accept_unknown_kwargs(self):
+        logger, log_record_processor_mock = self._get_logger()
+        log_record_processor_mock.enabled.return_value = True
+
+        self.assertTrue(logger.enabled(future_option=True))
+        logger.emit(LogRecord(body="record"), future_option=True)
+        logger.emit(body="keywords", future_option=True)
+
+        self.assertEqual(log_record_processor_mock.on_emit.call_count, 2)
+        bodies = [call.args[0].log_record.body for call in log_record_processor_mock.on_emit.call_args_list]
+        self.assertEqual(bodies, ["record", "keywords"])
 
     def test_can_emit_with_keywords_arguments(self):
         logger, log_record_processor_mock = self._get_logger()
