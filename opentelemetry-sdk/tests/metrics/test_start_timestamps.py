@@ -1,8 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import concurrent.futures
 import os
-from concurrent.futures import ThreadPoolExecutor
 from itertools import count
 from threading import Event
 from unittest import TestCase
@@ -214,7 +214,7 @@ class TestStartTimestamps(TestCase):
 
         meter = provider.get_meter("start-time-tests")
         clock = Mock(side_effect=(100, 200, 300))
-        with ThreadPoolExecutor(max_workers=1) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             with (
                 patch("opentelemetry.sdk.metrics._internal.instrument.time_ns", clock),
                 patch("opentelemetry.sdk.metrics._internal.metric_reader_storage.time_ns", clock),
