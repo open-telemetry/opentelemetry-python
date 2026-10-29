@@ -64,12 +64,12 @@ _logger = logging.getLogger(__name__)
 _YAML_STR_TAG = "tag:yaml.org,2002:str"
 
 # A configuration value whose entire content is a single ``${VAR}`` /
-# ``${VAR:-default}`` reference. Only such standalone references (when
-# unquoted) have their type re-interpreted after substitution; embedded or
-# multiple references resolve to a string per the configuration spec. A
-# leading ``$$`` escape does not match, so ``$${VAR}`` is treated as an
-# embedded (string) value.
-_STANDALONE_ENV_REF = re.compile(r"\A\$\{[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}\Z")
+# ``${VAR:-default}`` reference, optionally with the ``env:`` prefix. Only such
+# standalone references (when unquoted) have their type re-interpreted after
+# substitution; embedded or multiple references resolve to a string per the
+# configuration spec. A leading ``$$`` escape does not match, so ``$${VAR}`` is
+# treated as an embedded (string) value.
+_STANDALONE_ENV_REF = re.compile(r"\A\$\{(?:env:)?[A-Za-z_][A-Za-z0-9_]*(?::-[^}]*)?\}\Z")
 
 
 def _substitute_env_in_yaml_node(
