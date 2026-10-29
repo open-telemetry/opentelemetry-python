@@ -31,7 +31,7 @@ from opentelemetry.proto_json.trace.v1.trace import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import Event, SpanContext
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.trace import Link, SpanKind
+from opentelemetry.trace import Link, SpanKind, TraceFlags
 from opentelemetry.trace.span import TraceState
 from opentelemetry.trace.status import Status, StatusCode
 from tests import (
@@ -93,7 +93,12 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertEqual(encoded.events[0].attributes[0].key, "event_key")
 
     def test_encode_span_links(self):
-        link_ctx = SpanContext(TRACE_ID, 0x2222222222222222, is_remote=False)
+        link_ctx = SpanContext(
+            TRACE_ID,
+            0x2222222222222222,
+            is_remote=False,
+            trace_flags=TraceFlags.SAMPLED,
+        )
         link = Link(context=link_ctx, attributes={"link_key": True})
         span = make_span(links=(link,))
         result = encode_spans([span])
@@ -108,7 +113,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertEqual(encoded.links[0].attributes[0].key, "link_key")
         self.assertEqual(
             encoded.links[0].flags,
-            int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK),
+            int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | TraceFlags.SAMPLED),
         )
 
     def test_encode_span_status(self):
@@ -141,7 +146,11 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         )
         self.assertEqual(
             encoded.flags,
-            int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK),
+            int(
+                JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+                | JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+                | TraceFlags.SAMPLED
+            ),
         )
 
     def test_encode_span_no_parent(self):
@@ -152,7 +161,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
         self.assertIsNone(encoded.parent_span_id)
         self.assertEqual(
             encoded.flags,
-            int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK),
+            int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | TraceFlags.SAMPLED),
         )
 
     def test_encode_span_grouping_by_resource(self):
@@ -248,27 +257,46 @@ class TestOTLPTraceEncoder(unittest.TestCase):
     def test_span_flags(self):
         cases = [
             (
-                "remote_parent",
+                "sampled_remote_parent",
+                SpanContext(
+                    TRACE_ID,
+                    0x1110,
+                    is_remote=False,
+                    trace_flags=TraceFlags.SAMPLED,
+                ),
                 SpanContext(TRACE_ID, 0x1111, is_remote=True),
                 int(
                     JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
                     | JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+                    | TraceFlags.SAMPLED
                 ),
             ),
             (
-                "local_parent",
+                "unsampled_local_parent",
+                SpanContext(
+                    TRACE_ID,
+                    0x2220,
+                    is_remote=False,
+                    trace_flags=TraceFlags.DEFAULT,
+                ),
                 SpanContext(TRACE_ID, 0x2222, is_remote=False),
                 int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK),
             ),
             (
                 "no_parent",
+                SpanContext(
+                    TRACE_ID,
+                    0x3330,
+                    is_remote=False,
+                    trace_flags=TraceFlags.SAMPLED,
+                ),
                 None,
-                int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK),
+                int(JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | TraceFlags.SAMPLED),
             ),
         ]
-        for name, context, expected_flags in cases:
+        for name, span_context, parent_context, expected_flags in cases:
             with self.subTest(name=name):
-                self.assertEqual(_span_flags(context), expected_flags)
+                self.assertEqual(_span_flags(span_context, parent_context), expected_flags)
 
     def test_encode_status_translations(self):
         cases = [
