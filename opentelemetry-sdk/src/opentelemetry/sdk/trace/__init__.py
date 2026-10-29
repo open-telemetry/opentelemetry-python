@@ -8,6 +8,7 @@ import concurrent.futures
 import json
 import logging
 import os
+import sys
 import threading
 import traceback
 import typing
@@ -75,6 +76,49 @@ from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
+_callback_log_reentry = threading.local()
+
+
+def _safe_log_exception(logger, msg):  # pylint: disable=redefined-outer-name
+    """Log an exception safely against recursive logging handlers.
+
+    If we are already inside a diagnostic log dispatch on this thread, write
+    the record to stderr directly instead of going through the logging module
+    to prevent infinite feedback loops. Any exception raised by a user logging
+    handler during the outer dispatch is contained here.
+    """
+    if getattr(_callback_log_reentry, "in_diag", False):
+        print(msg, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        return
+    _callback_log_reentry.in_diag = True
+    try:
+        logger.exception(msg)  # noqa: SHADOW
+    except Exception:  # pylint: disable=broad-exception-caught
+        print(msg, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+    finally:
+        _callback_log_reentry.in_diag = False
+
+
+def _safe_log_debug(logger, msg):  # pylint: disable=redefined-outer-name
+    """Emit a DEBUG diagnostic without letting a user logging handler error escape.
+
+    The inline fallback path must run even when an attached logging handler
+    raises; the DEBUG record is still attempted through the standard handler,
+    and any handler error falls back to stderr instead of aborting the
+    callback dispatch.
+    """
+    if getattr(_callback_log_reentry, "in_diag", False):
+        print(msg, file=sys.stderr)
+        return
+    _callback_log_reentry.in_diag = True
+    try:
+        logger.debug(msg)  # noqa: SHADOW
+    except Exception:  # pylint: disable=broad-exception-caught
+        print(msg, file=sys.stderr)
+    finally:
+        _callback_log_reentry.in_diag = False
 
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
@@ -224,6 +268,58 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         return all_flushed
 
 
+class _CallbackAttempt:
+    """Per-dispatch at-most-once wrapper for a processor callback.
+
+    The queue worker and the inline fallback (when ``executor.submit`` raises
+    ``RuntimeError``) share the same attempt. A lock-guarded claim ensures the
+    underlying callback runs at most once even when ``Thread.start`` fails
+    after the work item was already enqueued, which previously caused the
+    callback to run twice. Callback exceptions are contained and logged so a
+    faulty processor does not block healthy siblings or replace the caller's
+    own exception.
+
+    This scopes to a single dispatch entry; it does not promise global
+    exactly-once delivery, retry, or bounded shutdown.
+    """
+
+    __slots__ = ("_callback", "_args", "_kwargs", "_lock", "_started", "_finished")
+
+    def __init__(self, callback: Callable[..., None], args: tuple[Any, ...], kwargs: dict[str, Any]):
+        self._callback = callback
+        self._args = args
+        self._kwargs = kwargs
+        self._lock = threading.Lock()
+        self._started = False
+        self._finished = threading.Event()
+
+    def run(self) -> None:
+        with self._lock:
+            if self._started:
+                return
+            self._started = True
+        # Mark that we are executing a processor callback on this thread. If a
+        # logging handler (e.g. LoggingHandler) synchronously calls back into
+        # on_emit/on_start, _submit_and_await sees this flag and runs callbacks
+        # inline instead of submitting to the executor (whose worker threads
+        # are blocked inside the outer callback, which would deadlock).
+        reentry = getattr(_callback_log_reentry, "active", False)
+        _callback_log_reentry.active = True
+        try:
+            self._callback(*self._args, **self._kwargs)
+        except Exception:  # pylint: disable=broad-exception-caught
+            _safe_log_exception(logger, "Exception while calling SpanProcessor callback.")
+        finally:
+            _callback_log_reentry.active = reentry
+            self._finished.set()
+
+    def wait_if_started(self) -> None:
+        with self._lock:
+            started = self._started
+        if started:
+            self._finished.wait()
+
+
 class ConcurrentMultiSpanProcessor(SpanProcessor):
     """Implementation of :class:`SpanProcessor` that forwards all received
     events to a list of span processors in parallel.
@@ -273,12 +369,57 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         *args: Any,
         **kwargs: Any,
     ):
+        # Reentry guard: if we are already running a callback on this thread
+        # (e.g. a logging handler synchronously called back into on_start),
+        # run the remaining callbacks inline instead of through the executor.
+        # Submitting would queue work that no worker can pick up (workers are
+        # blocked inside the outer callback), and future.result() would
+        # deadlock. This is bounded: it runs synchronously on the calling
+        # thread and does not recurse through the executor.
+        if getattr(_callback_log_reentry, "active", False):
+            for sp in self._span_processors:
+                try:
+                    callback = func(sp)
+                    callback(*args, **kwargs)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _safe_log_exception(
+                        logger,
+                        "Exception while re-entering SpanProcessor callback inline.",
+                    )
+            return
+        attempts = []
         futures = []
         for sp in self._span_processors:
-            future = self._executor.submit(func(sp), *args, **kwargs)
-            futures.append(future)
+            try:
+                callback = func(sp)
+            except Exception:  # pylint: disable=broad-exception-caught
+                _safe_log_exception(logger, "Exception while resolving SpanProcessor callback.")
+                continue
+            attempt = _CallbackAttempt(callback, args, kwargs)
+            attempts.append(attempt)
+            try:
+                futures.append(self._executor.submit(attempt.run))
+            except RuntimeError:
+                # The executor may already be shut down when this runs from an
+                # atexit handler: CPython runs threading._shutdown() before the
+                # atexit queue, so the ThreadPoolExecutor is closed by the time
+                # TracerProvider.shutdown() runs. Run inline through the SAME
+                # attempt; the shared lock prevents double invocation even if
+                # the work item was already enqueued before Thread.start failed.
+                _safe_log_debug(
+                    logger,
+                    "Executor is shut down; running SpanProcessor callback inline.",
+                )
+                attempt.run()
+            except Exception:  # pylint: disable=broad-exception-caught
+                _safe_log_exception(logger, "Exception while submitting SpanProcessor callback.")
         for future in futures:
-            future.result()
+            try:
+                future.result()
+            except Exception:  # pylint: disable=broad-exception-caught
+                _safe_log_exception(logger, "Exception in SpanProcessor worker.")
+        for attempt in attempts:
+            attempt.wait_if_started()
 
     def on_start(
         self,
