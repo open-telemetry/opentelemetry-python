@@ -11,7 +11,9 @@ permissions:
 
 env:
   CORE_REPO_SHA: main
-  CONTRIB_REPO_SHA: release/v1.45.x-0.66bx
+  CONTRIB_REPO_SHA: ${{ github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'prepare-release') &&
+      github.event.pull_request.head.ref || 'release/v1.45.x-0.66bx' }}
   PIP_EXISTS_ACTION: w
   CONTRIB_REPO_UTIL_HTTP: ${{ github.workspace }}/opentelemetry-python-contrib/util/opentelemetry-util-http
   CONTRIB_REPO_INSTRUMENTATION: ${{ github.workspace }}/opentelemetry-python-contrib/opentelemetry-instrumentation
