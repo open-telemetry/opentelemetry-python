@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: honour `OTEL_LOG_LEVEL` to set SDK internal log level
