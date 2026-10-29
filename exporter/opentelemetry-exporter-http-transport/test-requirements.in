@@ -2,6 +2,7 @@ iniconfig==2.3.0
 mocket==3.14.1
 packaging==26.2
 pluggy==1.6.0
+PySocks==1.7.1
 pytest==9.0.3
 -e opentelemetry-api
 -e exporter/opentelemetry-exporter-http-transport[urllib3,requests]
