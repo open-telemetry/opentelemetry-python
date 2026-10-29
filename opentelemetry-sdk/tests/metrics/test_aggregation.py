@@ -235,6 +235,7 @@ class TestLastValueAggregation(TestCase):
             Mock(),
             _default_reservoir_factory(_LastValueAggregation),
             instrument_is_synchronous=True,
+            start_time_unix_nano=1000,
         )
 
         self.assertIsNone(last_value_aggregation.collect(AggregationTemporality.CUMULATIVE, 1))
@@ -247,7 +248,7 @@ class TestLastValueAggregation(TestCase):
 
         self.assertEqual(first_number_data_point.value, 1)
 
-        self.assertIsNone(first_number_data_point.start_time_unix_nano)
+        self.assertEqual(first_number_data_point.start_time_unix_nano, 1000)
 
         last_value_aggregation.aggregate(measurement(2))
 
@@ -260,7 +261,7 @@ class TestLastValueAggregation(TestCase):
 
         self.assertEqual(second_number_data_point.value, 2)
 
-        self.assertIsNone(second_number_data_point.start_time_unix_nano)
+        self.assertEqual(second_number_data_point.start_time_unix_nano, 1000)
 
         self.assertGreater(
             second_number_data_point.time_unix_nano,
@@ -272,7 +273,7 @@ class TestLastValueAggregation(TestCase):
         third_number_data_point = last_value_aggregation.collect(AggregationTemporality.CUMULATIVE, 3)
         self.assertIsInstance(third_number_data_point, NumberDataPoint)
         self.assertEqual(third_number_data_point.value, 2)
-        self.assertIsNone(third_number_data_point.start_time_unix_nano)
+        self.assertEqual(third_number_data_point.start_time_unix_nano, 1000)
         self.assertGreater(
             third_number_data_point.time_unix_nano,
             second_number_data_point.time_unix_nano,
@@ -591,8 +592,10 @@ class TestAggregationFactory(TestCase):
         factory = LastValueAggregation()
         aggregation = factory._create_aggregation(counter, Mock(), _default_reservoir_factory, 0)
         self.assertIsInstance(aggregation, _LastValueAggregation)
-        aggregation2 = factory._create_aggregation(counter, Mock(), _default_reservoir_factory, 0)
+        self.assertEqual(aggregation._start_time_unix_nano, 0)
+        aggregation2 = factory._create_aggregation(counter, Mock(), _default_reservoir_factory, 123456)
         self.assertNotEqual(aggregation, aggregation2)
+        self.assertEqual(aggregation2._start_time_unix_nano, 123456)
 
 
 class TestDefaultAggregation(TestCase):
@@ -694,9 +697,10 @@ class TestDefaultAggregation(TestCase):
             ),
             Mock(),
             _default_reservoir_factory,
-            0,
+            123456,
         )
         self.assertIsInstance(aggregation, _LastValueAggregation)
+        self.assertEqual(aggregation._start_time_unix_nano, 123456)
 
     def test_observable_gauge(self):
         aggregation = self.default_aggregation._create_aggregation(
@@ -708,9 +712,10 @@ class TestDefaultAggregation(TestCase):
             ),
             Mock(),
             _default_reservoir_factory,
-            0,
+            654321,
         )
         self.assertIsInstance(aggregation, _LastValueAggregation)
+        self.assertEqual(aggregation._start_time_unix_nano, 654321)
 
 
 class TestExemplarsFromAggregations(TestCase):

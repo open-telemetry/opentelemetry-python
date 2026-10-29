@@ -263,6 +263,7 @@ def _encode_gauge_data_point(
 ) -> JSONNumberDataPoint:
     pt = JSONNumberDataPoint(
         attributes=_encode_attributes(data_point.attributes),
+        start_time_unix_nano=data_point.start_time_unix_nano,
         time_unix_nano=data_point.time_unix_nano,
         exemplars=_encode_exemplars(data_point.exemplars),
     )

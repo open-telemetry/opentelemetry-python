@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: assign and preserve `start_time_unix_nano` for Gauge metrics in `_LastValueAggregation` and OTLP encoders
