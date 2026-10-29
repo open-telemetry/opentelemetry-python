@@ -872,23 +872,41 @@ class TestSpanType(unittest.TestCase):
         self.assertIs(span.status.status_code, StatusCode.ERROR)
         self.assertEqual(span.events[0].name, "exception")
 
-    def test_typed_span_exception_flags_ignore_non_bool(self):
+    def test_typed_span_positional_args_match_start_span(self):
         tracer = new_tracer()
-        with self.assertRaises(DummyError):
-            with tracer._start_as_current_typed_span("s", record_exception="no", set_status_on_exception=0) as span:
-                raise DummyError()
-        self.assertIs(span.status.status_code, StatusCode.ERROR)
-        self.assertEqual(span.events[0].name, "exception")
+        span = tracer._start_typed_span("s", None, trace_api.SpanKind.CLIENT, {"k": "v"}, type_="a")
+        self.assertIs(span.kind, trace_api.SpanKind.CLIENT)
+        self.assertEqual(span.attributes, {"k": "v"})
+        self.assertEqual(span._type, "a")
 
-    def test_typed_span_exception_handling_from_kwargs(self):
-        tracer = new_tracer()
         with self.assertRaises(DummyError):
             with tracer._start_as_current_typed_span(
-                "s", type_="a", record_exception=False, set_status_on_exception=False
+                "s", None, trace_api.SpanKind.SERVER, None, None, None, False, False, type_="b"
             ) as span:
                 raise DummyError()
+        self.assertIs(span.kind, trace_api.SpanKind.SERVER)
         self.assertIs(span.status.status_code, StatusCode.UNSET)
         self.assertEqual(len(span.events), 0)
+        self.assertEqual(span._type, "b")
+
+    def test_typed_span_exception_handling(self):
+        tracer = new_tracer()
+        for record_exception in (True, False):
+            for set_status_on_exception in (True, False):
+                with self.subTest(record_exception=record_exception, set_status_on_exception=set_status_on_exception):
+                    with self.assertRaises(DummyError):
+                        with tracer._start_as_current_typed_span(
+                            "s",
+                            type_="a",
+                            record_exception=record_exception,
+                            set_status_on_exception=set_status_on_exception,
+                        ) as span:
+                            raise DummyError()
+                    self.assertIs(
+                        span.status.status_code,
+                        StatusCode.ERROR if set_status_on_exception else StatusCode.UNSET,
+                    )
+                    self.assertEqual(len(span.events), 1 if record_exception else 0)
 
     def test_typed_span_unknown_options_warn(self):
         tracer = new_tracer()
