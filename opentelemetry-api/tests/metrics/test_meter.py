@@ -3,63 +3,38 @@
 # type: ignore
 
 from logging import WARNING
+from typing import get_type_hints
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.metrics import Meter, NoOpMeter
+from opentelemetry.metrics import HistogramOptions, InstrumentOptions, Meter, NoOpMeter
+from opentelemetry.metrics._internal import _ProxyMeter
 
 # FIXME Test that the meter methods can be called concurrently safely.
 
 
 class ChildMeter(Meter):
     # pylint: disable=signature-differs
-    def create_counter(self, name, unit="", description=""):
-        super().create_counter(name, unit=unit, description=description)
+    def create_counter(self, name, unit="", description="", **kwargs):
+        super().create_counter(name, unit=unit, description=description, **kwargs)
 
-    def create_up_down_counter(self, name, unit="", description=""):
-        super().create_up_down_counter(name, unit=unit, description=description)
+    def create_up_down_counter(self, name, unit="", description="", **kwargs):
+        super().create_up_down_counter(name, unit=unit, description=description, **kwargs)
 
-    def create_observable_counter(self, name, callbacks, unit="", description=""):
-        super().create_observable_counter(
-            name,
-            callbacks,
-            unit=unit,
-            description=description,
-        )
+    def create_observable_counter(self, name, callbacks, unit="", description="", **kwargs):
+        super().create_observable_counter(name, callbacks, unit=unit, description=description, **kwargs)
 
-    def create_histogram(
-        self,
-        name,
-        unit="",
-        description="",
-        *,
-        explicit_bucket_boundaries_advisory=None,
-    ):
-        super().create_histogram(
-            name,
-            unit=unit,
-            description=description,
-            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
-        )
+    def create_histogram(self, name, unit="", description="", **kwargs):
+        super().create_histogram(name, unit=unit, description=description, **kwargs)
 
-    def create_gauge(self, name, unit="", description=""):
-        super().create_gauge(name, unit=unit, description=description)
+    def create_gauge(self, name, unit="", description="", **kwargs):
+        super().create_gauge(name, unit=unit, description=description, **kwargs)
 
-    def create_observable_gauge(self, name, callbacks, unit="", description=""):
-        super().create_observable_gauge(
-            name,
-            callbacks,
-            unit=unit,
-            description=description,
-        )
+    def create_observable_gauge(self, name, callbacks, unit="", description="", **kwargs):
+        super().create_observable_gauge(name, callbacks, unit=unit, description=description, **kwargs)
 
-    def create_observable_up_down_counter(self, name, callbacks, unit="", description=""):
-        super().create_observable_up_down_counter(
-            name,
-            callbacks,
-            unit=unit,
-            description=description,
-        )
+    def create_observable_up_down_counter(self, name, callbacks, unit="", description="", **kwargs):
+        super().create_observable_up_down_counter(name, callbacks, unit=unit, description=description, **kwargs)
 
 
 class TestMeter(TestCase):
@@ -110,6 +85,30 @@ class TestMeter(TestCase):
                 getattr(test_meter, f"create_{instrument_name}")(
                     instrument_name,
                 )
+
+    def test_repeated_instrument_names_with_different_attributes_advisory(
+        self,
+    ):
+        test_meter = NoOpMeter("name")
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "histogram",
+            "gauge",
+            "observable_counter",
+            "observable_up_down_counter",
+            "observable_gauge",
+        ]:
+            with self.subTest(instrument_name=instrument_name):
+                create_instrument = getattr(test_meter, f"create_{instrument_name}")
+                create_instrument(instrument_name, _attributes_advisory=["a", "b"])
+
+                with self.assertNoLogs(level=WARNING):
+                    create_instrument(instrument_name, _attributes_advisory=["b", "a"])
+
+                with self.assertLogs(level=WARNING):
+                    create_instrument(instrument_name, _attributes_advisory=["c"])
 
     def test_create_counter(self):
         """
@@ -166,3 +165,22 @@ class TestMeter(TestCase):
 
         self.assertTrue(hasattr(Meter, "create_observable_up_down_counter"))
         self.assertTrue(Meter.create_observable_up_down_counter.__isabstractmethod__)
+
+    def test_type_hints_resolve_at_runtime(self):
+        for obj in [InstrumentOptions, HistogramOptions]:
+            with self.subTest(obj.__name__):
+                get_type_hints(obj)
+
+        for meter_class in [Meter, NoOpMeter, _ProxyMeter]:
+            for method_name in [
+                "create_counter",
+                "create_up_down_counter",
+                "create_observable_counter",
+                "create_histogram",
+                "create_gauge",
+                "create_observable_gauge",
+                "create_observable_up_down_counter",
+            ]:
+                with self.subTest(meter_class.__name__, method=method_name):
+                    hints = get_type_hints(getattr(meter_class, method_name))
+                    self.assertIn("kwargs", hints)
