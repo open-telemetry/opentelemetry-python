@@ -178,7 +178,14 @@ class BatchProcessor(Generic[Telemetry]):
         batch_strategy: BatchExportStrategy,
         deadline: float = math.inf,
     ) -> bool:
-        with self._export_lock:
+        if deadline == math.inf:
+            self._export_lock.acquire()
+        else:
+            remaining = deadline - time.time()
+            if remaining <= 0 or not self._export_lock.acquire(timeout=remaining):
+                return False
+
+        try:
             iteration = 0
             # We could see concurrent export calls from worker and force_flush. We call _should_export_batch
             # once the lock is obtained to see if we still need to make the requested export.
@@ -200,7 +207,9 @@ class BatchProcessor(Generic[Telemetry]):
                 except Exception:  # pylint: disable=broad-exception-caught
                     _logger.exception("Exception while exporting %s.", self._exporting)
                 detach(token)
-        return True
+            return True
+        finally:
+            self._export_lock.release()
 
     def emit(self, data: Telemetry) -> None:
         if self._shutdown:

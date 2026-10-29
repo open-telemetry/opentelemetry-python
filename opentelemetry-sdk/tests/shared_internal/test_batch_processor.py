@@ -233,16 +233,51 @@ class TestBatchProcessor:
         # Emit items after worker is stopped.
         for _ in range(3):
             batch_processor._batch_processor.emit(telemetry)
-        # Mock time.time(): first call computes deadline, second call in loop is past it.
+        # Mock time.time(): first call computes deadline, subsequent calls during lock acquire and loop.
         start = time.time()
         with patch(
             "opentelemetry.sdk._shared_internal.time.time",
-            side_effect=[start, start + 1000],
+            side_effect=[start, start, start + 1000],
         ):
             result = batch_processor.force_flush(timeout_millis=100)
         assert result is False
         batch_processor._batch_processor._shutdown = True
         batch_processor._batch_processor._exporter.shutdown()
+
+    # pylint: disable=no-self-use
+    def test_force_flush_returns_false_when_lock_acquisition_times_out(self, batch_processor_class, telemetry):
+        # When another thread holds _export_lock (e.g. worker running slow export),
+        # force_flush must wait up to timeout_millis for the lock, not block indefinitely.
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=15,
+            max_export_batch_size=1,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        lock_held = threading.Event()
+        release_lock = threading.Event()
+
+        def slow_holder():
+            with batch_processor._batch_processor._export_lock:
+                lock_held.set()
+                release_lock.wait(timeout=2.0)
+
+        holder_thread = threading.Thread(target=slow_holder)
+        holder_thread.start()
+        try:
+            assert lock_held.wait(timeout=1.0)
+            start = time.time()
+            result = batch_processor.force_flush(timeout_millis=100)
+            duration = time.time() - start
+            assert result is False
+            # Should have returned around 100ms, well before the 2.0s hold
+            assert duration < 1.0
+        finally:
+            release_lock.set()
+            holder_thread.join()
+            batch_processor.shutdown()
 
     # pylint: disable=no-self-use
     def test_force_flush_returns_false_when_shutdown(self, batch_processor_class, telemetry):
