@@ -413,3 +413,47 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(name.startswith("periodic_metric_reader/"))
 
         mp.shutdown()
+
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    def test_metric_reader_metrics_failed_collection_records_error_type(self):
+        exporter = FakeMetricsExporter()
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=100000)
+        mp = MeterProvider(metric_readers=[pmr])
+
+        # The first two collections succeed. The second one exports the data
+        # point recorded by the first one, so the exporter is cleared after it.
+        mp.force_flush()
+        mp.force_flush()
+        exporter.metrics.clear()
+
+        successful_collect = pmr._collect
+
+        def failing_collect(*args, **kwargs):
+            raise MetricsTimeoutError("simulated collection failure")
+
+        pmr._set_collect_callback(failing_collect)
+        with self.assertRaises(MetricsTimeoutError):
+            pmr.collect()
+        pmr._set_collect_callback(successful_collect)
+
+        # This collection exports the data point recorded by the failed one.
+        mp.force_flush()
+
+        collection_points = []
+        for metrics_data in exporter.metrics:
+            for resource_metrics in metrics_data.resource_metrics:
+                for scope_metrics in resource_metrics.scope_metrics:
+                    if scope_metrics.scope.name != "opentelemetry-sdk":
+                        continue
+                    for metric in scope_metrics.metrics:
+                        if metric.name == "otel.sdk.metric_reader.collection.duration":
+                            collection_points.extend(metric.data.data_points)
+
+        self.assertTrue(collection_points)
+        error_types = [point.attributes.get("error.type") for point in collection_points]
+        # A failed collection must be reported with its failure cause, while a
+        # successful one must not set error.type at all.
+        self.assertIn("MetricsTimeoutError", error_types)
+        self.assertIn(None, error_types)
+
+        mp.shutdown()

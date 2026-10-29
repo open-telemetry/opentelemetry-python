@@ -403,10 +403,14 @@ class MetricReader(ABC):
             return
 
         start_time = perf_counter()
+        collection_error_type = None
         try:
             metrics = self._collect(self, timeout_millis=timeout_millis)
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            collection_error_type = type(error).__qualname__
+            raise
         finally:
-            self._metrics.record_collection(perf_counter() - start_time)
+            self._metrics.record_collection(perf_counter() - start_time, collection_error_type)
 
         if metrics is not None:
             self._receive_metrics(
