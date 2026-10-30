@@ -85,6 +85,8 @@ class B3MultiFormat(TextMapPropagator):
             or self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
+            if debug and trace_id == trace.INVALID_TRACE_ID and span_id == trace.INVALID_SPAN_ID:
+                context = set_value(_DEBUG_FLAG_KEY, True, context)
             return context
 
         trace_id = int(trace_id, 16)

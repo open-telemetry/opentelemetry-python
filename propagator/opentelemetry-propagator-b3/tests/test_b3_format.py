@@ -309,6 +309,20 @@ class AbstractB3FormatTestCase:
 
         self.assertDebug(new_carrier)
 
+    def test_extract_debug_flag_from_single_header_without_ids(self):
+        """A sampling state of "d" sent on its own still carries the debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract({propagator.SINGLE_HEADER_KEY: "d"})
+
+        self.assertTrue(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_debug_flag_from_multi_header_without_ids(self):
+        """An x-b3-flags of "1" sent on its own still carries the debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract({propagator.FLAGS_KEY: "1"})
+
+        self.assertTrue(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
     def test_extract_clears_a_debug_flag_left_by_an_earlier_carrier(self):
         """The debug flag in the returned context comes from the carrier being extracted."""
         propagator = self.get_propagator()
