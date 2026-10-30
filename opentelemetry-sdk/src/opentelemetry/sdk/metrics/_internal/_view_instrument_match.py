@@ -20,7 +20,10 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import DataPointT
-from opentelemetry.sdk.metrics._internal.view import View
+from opentelemetry.sdk.metrics._internal.view import (
+    View,
+    _attribute_key_matches,
+)
 from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
@@ -141,8 +144,20 @@ class _ViewInstrumentMatch:
             # The user can still modify mutable attribute values (lists/dicts)
             # leading to unexpected behavior, but deep copying is expensive.
             attributes = dict(measurement.attributes)
+
         if self._view._attribute_keys is not None:
-            attributes = {k: v for k, v in attributes.items() if k in self._view._attribute_keys}
+            attributes = {
+                key: value
+                for key, value in attributes.items()
+                if any(_attribute_key_matches(key, pattern) for pattern in self._view._attribute_keys)
+            }
+
+        if self._view._exclude_attribute_keys is not None:
+            attributes = {
+                key: value
+                for key, value in attributes.items()
+                if not any(_attribute_key_matches(key, pattern) for pattern in self._view._exclude_attribute_keys)
+            }
 
         aggr_key = _hash_attributes(attributes)
 
