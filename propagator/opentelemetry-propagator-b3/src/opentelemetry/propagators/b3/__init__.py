@@ -97,8 +97,7 @@ class B3MultiFormat(TextMapPropagator):
         if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceFlags.SAMPLED
 
-        if debug:
-            context = set_value(_DEBUG_FLAG_KEY, True, context)
+        context = set_value(_DEBUG_FLAG_KEY, debug, context)
 
         return trace.set_span_in_context(
             trace.NonRecordingSpan(

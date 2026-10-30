@@ -242,7 +242,7 @@ class AbstractB3FormatTestCase:
             }
         )
 
-        self.assertIsNone(get_value(_DEBUG_FLAG_KEY, new_ctx))
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
 
     def test_extract_multi_header_sampled_d_is_not_debug(self):
         """In the multi header form only x-b3-flags carries the debug flag."""
@@ -255,7 +255,7 @@ class AbstractB3FormatTestCase:
             }
         )
 
-        self.assertIsNone(get_value(_DEBUG_FLAG_KEY, new_ctx))
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
         self.assertTrue(trace_api.get_current_span(new_ctx).get_span_context().trace_flags.sampled)
 
     def test_inject_debug_flag_received_in_single_header(self):
@@ -305,6 +305,32 @@ class AbstractB3FormatTestCase:
         propagator.inject(new_carrier, context=trace_api.set_span_in_context(child, ctx))
 
         self.assertDebug(new_carrier)
+
+    def test_extract_clears_a_debug_flag_left_by_an_earlier_carrier(self):
+        """The debug flag in the returned context comes from the carrier being extracted."""
+        propagator = self.get_propagator()
+        debug_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
+            }
+        )
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.SAMPLED_KEY: "1",
+            },
+            debug_ctx,
+        )
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+        new_carrier = {}
+        propagator.inject(new_carrier, context=new_ctx)
+
+        self.assertNotDebug(new_carrier)
 
     def test_derived_ctx_is_returned_for_success(self):
         """Ensure returned context is derived from the given context."""
