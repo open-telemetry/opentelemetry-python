@@ -23,6 +23,9 @@ from opentelemetry.configuration.models import (
     Base2ExponentialBucketHistogramAggregation as Base2Config,
 )
 from opentelemetry.configuration.models import (
+    CardinalityLimits as CardinalityLimitsConfig,
+)
+from opentelemetry.configuration.models import (
     ConsoleMetricExporter as ConsoleMetricExporterConfig,
 )
 from opentelemetry.configuration.models import (
@@ -88,6 +91,15 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     TraceBasedExemplarFilter,
     UpDownCounter,
+)
+from opentelemetry.sdk.metrics._internal.instrument import (
+    _Counter,
+    _Gauge,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -175,6 +187,37 @@ class TestCreateMetricReaders(unittest.TestCase):
                 )
             ]
         )
+
+    def test_cardinality_limits_default_and_per_type(self):
+        config = MeterProviderConfig(
+            readers=[
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig()),
+                        cardinality_limits=CardinalityLimitsConfig(default=10, histogram=20, observable_gauge=30),
+                    )
+                )
+            ]
+        )
+        reader = create_meter_provider(config)._metric_readers[0]
+        limits = reader._instrument_class_cardinality_limit
+        expected = {
+            _Counter: 10,
+            _UpDownCounter: 10,
+            _Histogram: 20,
+            _Gauge: 10,
+            _ObservableCounter: 10,
+            _ObservableUpDownCounter: 10,
+            _ObservableGauge: 30,
+        }
+        for instrument_class, limit in expected.items():
+            with self.subTest(instrument_class=instrument_class):
+                self.assertEqual(limits[instrument_class], limit)
+
+    def test_cardinality_limits_omitted_uses_sdk_default(self):
+        config = self._make_periodic_config(PushMetricExporterConfig(console=ConsoleMetricExporterConfig()))
+        reader = create_meter_provider(config)._metric_readers[0]
+        self.assertEqual(set(reader._instrument_class_cardinality_limit.values()), {2000})
 
     def test_console_exporter(self):
         config = self._make_periodic_config(PushMetricExporterConfig(console=ConsoleMetricExporterConfig()))
@@ -496,7 +539,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             )
             provider = create_meter_provider(config)
 
-        mock_reader_cls.assert_called_once_with(disable_target_info=True)
+        mock_reader_cls.assert_called_once_with(disable_target_info=True, cardinality_limits=None)
         mock_start_server.assert_called_once_with(port=9090, addr="0.0.0.0")
         self.assertEqual(len(provider._metric_readers), 1)
 
@@ -522,7 +565,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             )
             provider = create_meter_provider(config)
 
-        mock_reader_cls.assert_called_once_with(disable_target_info=False)
+        mock_reader_cls.assert_called_once_with(disable_target_info=False, cardinality_limits=None)
         mock_start_server.assert_called_once_with(port=9464, addr="localhost")
         self.assertEqual(len(provider._metric_readers), 1)
 
@@ -576,6 +619,32 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             name="my_custom_reader",
         )
 
+    def test_pull_plugin_cardinality_limits_warns(self):
+        mock_class = MagicMock()
+        mock_entry_points = MagicMock(return_value=[MagicMock(**{"load.return_value": mock_class})])
+        with patch(
+            "opentelemetry.configuration._common.entry_points",
+            mock_entry_points,
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            # pylint: disable=unexpected-keyword-arg
+                            exporter=PullMetricExporterConfig(my_custom_reader={"port": 8080}),
+                            cardinality_limits=CardinalityLimitsConfig(default=5),
+                        )
+                    )
+                ]
+            )
+            with self.assertLogs(
+                "opentelemetry.configuration._meter_provider",
+                level="WARNING",
+            ) as cm:
+                create_meter_provider(config)
+        self.assertTrue(any("cardinality_limits" in msg for msg in cm.output))
+        mock_class.assert_called_once_with(port=8080)
+
     def test_pull_plugin_not_found_raises(self):
         with patch(
             "opentelemetry.configuration._common.entry_points",
@@ -618,7 +687,7 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 create_meter_provider(config)
         self.assertTrue(any("MetricProducer" in msg for msg in cm.output))
 
-    def test_pull_cardinality_limits_warns(self):
+    def test_pull_cardinality_limits_passed_to_prometheus_reader(self):
         mock_module = MagicMock()
 
         with patch.dict(
@@ -630,17 +699,36 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                     MetricReaderConfig(
                         pull=PullMetricReaderConfig(
                             exporter=PullMetricExporterConfig(prometheus_development=PrometheusMetricExporterConfig()),
-                            cardinality_limits=MagicMock(),
+                            cardinality_limits=CardinalityLimitsConfig(default=5, counter=7),
                         )
                     )
                 ]
             )
-            with self.assertLogs(
-                "opentelemetry.configuration._meter_provider",
-                level="WARNING",
-            ) as cm:
-                create_meter_provider(config)
-        self.assertTrue(any("cardinality_limits" in msg for msg in cm.output))
+            create_meter_provider(config)
+
+        limits = mock_module.PrometheusMetricReader.call_args.kwargs["cardinality_limits"]
+        self.assertEqual(limits[Counter], 7)
+        self.assertEqual(limits[Histogram], 5)
+
+    def test_pull_without_cardinality_limits(self):
+        mock_module = MagicMock()
+
+        with patch.dict(
+            sys.modules,
+            {"opentelemetry.exporter.prometheus": mock_module},
+        ):
+            config = MeterProviderConfig(
+                readers=[
+                    MetricReaderConfig(
+                        pull=PullMetricReaderConfig(
+                            exporter=PullMetricExporterConfig(prometheus_development=PrometheusMetricExporterConfig()),
+                        )
+                    )
+                ]
+            )
+            create_meter_provider(config)
+
+        self.assertIsNone(mock_module.PrometheusMetricReader.call_args.kwargs["cardinality_limits"])
 
 
 class TestCreateMetricReadersGeneral(unittest.TestCase):
@@ -857,6 +945,14 @@ class TestCreateViews(unittest.TestCase):
             )
         )
         self.assertEqual(view._name, "renamed")
+
+    def test_stream_aggregation_cardinality_limit(self):
+        view = self._get_view(self._make_view_config(stream_kwargs={"aggregation_cardinality_limit": 42}))
+        self.assertEqual(view._aggregation_cardinality_limit, 42)
+
+    def test_stream_aggregation_cardinality_limit_default(self):
+        view = self._get_view(self._make_view_config())
+        self.assertIsNone(view._aggregation_cardinality_limit)
 
     def test_stream_description(self):
         view = self._get_view(self._make_view_config(stream_kwargs={"description": "a description"}))

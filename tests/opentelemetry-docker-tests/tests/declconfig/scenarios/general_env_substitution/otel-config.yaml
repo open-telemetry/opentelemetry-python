@@ -15,6 +15,40 @@ resource:
       value: "${DECLCONFIG_EMPTY:-fallback}"
     - name: env.escaped
       value: $${DECLCONFIG_INT}
+    - name: env.prefixed
+      value: ${env:DECLCONFIG_INT}
+    - name: env.prefixed_quoted
+      value: "${env:DECLCONFIG_INT}"
+    - name: env.prefixed_default
+      value: ${env:DECLCONFIG_UNSET:-fallback}
+    - name: env.bool
+      value: ${DECLCONFIG_BOOL}
+    - name: env.float
+      value: ${DECLCONFIG_FLOAT}
+    - name: env.hex
+      value: ${DECLCONFIG_HEX}
+    - name: env.multiple
+      value: foo ${DECLCONFIG_INT} ${DECLCONFIG_FLOAT}
+    - name: env.no_injection
+      value: ${DECLCONFIG_INJECT}
+    - name: env.not_recursive
+      value: ${DECLCONFIG_REPLACE_ME}
+    - name: env.default_not_recursive
+      value: ${DECLCONFIG_UNSET:-${DECLCONFIG_INT}}
+    - name: env.escape_then_ref
+      value: $$${DECLCONFIG_INT}
+    - name: env.double_escape
+      value: $$$${DECLCONFIG_INT}
+    - name: env.escaped_default
+      value: $${DECLCONFIG_INT:-${DECLCONFIG_INT}}
+    - name: env.escape_in_default
+      value: ${DECLCONFIG_UNSET:-$${DECLCONFIG_UNSET}}
+    - name: env.value_not_unescaped
+      value: ${DECLCONFIG_WITH_ESCAPE}
+    - name: env.lone_escape
+      value: a $$ b
+    - name: env.lone_dollar
+      value: a $ b
 tracer_provider:
   processors:
     - simple:
