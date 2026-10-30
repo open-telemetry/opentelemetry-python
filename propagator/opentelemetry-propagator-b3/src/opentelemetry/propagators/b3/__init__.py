@@ -7,7 +7,7 @@ from re import compile as re_compile
 from typing_extensions import deprecated
 
 from opentelemetry import trace
-from opentelemetry.context import Context
+from opentelemetry.context import Context, create_key, get_value, set_value
 from opentelemetry.propagators.textmap import (
     CarrierT,
     Getter,
@@ -17,6 +17,8 @@ from opentelemetry.propagators.textmap import (
     default_setter,
 )
 from opentelemetry.trace import format_span_id, format_trace_id
+
+_DEBUG_FLAG_KEY = create_key("b3-debug-flag")
 
 
 class B3MultiFormat(TextMapPropagator):
@@ -32,6 +34,8 @@ class B3MultiFormat(TextMapPropagator):
     SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = {"1", "True", "true", "d"}
+    _DEBUG_SAMPLED_VALUE = "d"
+    _DEBUG_FLAGS_VALUE = "1"
     _trace_id_regex = re_compile(r"[\da-fA-F]{16}|[\da-fA-F]{32}")
     _span_id_regex = re_compile(r"[\da-fA-F]{16}")
 
@@ -47,6 +51,7 @@ class B3MultiFormat(TextMapPropagator):
         span_id = trace.INVALID_SPAN_ID
         sampled = "0"
         flags = None
+        debug = False
 
         single_header = _extract_first_element(getter.get(carrier, self.SINGLE_HEADER_KEY))
         if single_header:
@@ -64,11 +69,15 @@ class B3MultiFormat(TextMapPropagator):
                 trace_id, span_id, sampled = fields
             elif len(fields) == 4:
                 trace_id, span_id, sampled, _ = fields
+
+            debug = sampled == self._DEBUG_SAMPLED_VALUE
         else:
             trace_id = _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY)) or trace_id
             span_id = _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY)) or span_id
             sampled = _extract_first_element(getter.get(carrier, self.SAMPLED_KEY)) or sampled
             flags = _extract_first_element(getter.get(carrier, self.FLAGS_KEY)) or flags
+
+            debug = flags == self._DEBUG_FLAGS_VALUE
 
         if (
             trace_id == trace.INVALID_TRACE_ID
@@ -87,6 +96,9 @@ class B3MultiFormat(TextMapPropagator):
         # header is set to allow.
         if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceFlags.SAMPLED
+
+        if debug:
+            context = set_value(_DEBUG_FLAG_KEY, True, context)
 
         return trace.set_span_in_context(
             trace.NonRecordingSpan(

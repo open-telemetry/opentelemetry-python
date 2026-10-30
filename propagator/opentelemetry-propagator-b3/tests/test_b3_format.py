@@ -6,8 +6,9 @@ from abc import abstractmethod
 from unittest.mock import Mock
 
 import opentelemetry.trace as trace_api
-from opentelemetry.context import Context, get_current
+from opentelemetry.context import Context, get_current, get_value
 from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,import-error
+    _DEBUG_FLAG_KEY,
     B3MultiFormat,
     B3SingleFormat,
 )
@@ -201,6 +202,55 @@ class AbstractB3FormatTestCase:
         )
 
         self.assertSampled(new_carrier)
+
+    def test_extract_debug_flag_from_multi_header(self):
+        """A received x-b3-flags of "1" is stored in the extracted context."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
+            }
+        )
+
+        self.assertTrue(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_debug_flag_from_single_header(self):
+        """A received sampling state of "d" is stored in the extracted context."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-d"}
+        )
+
+        self.assertTrue(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_without_debug_flag(self):
+        """A sampled trace carrying no debug flag leaves none in the extracted context."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.SAMPLED_KEY: "1",
+            }
+        )
+
+        self.assertIsNone(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_multi_header_sampled_d_is_not_debug(self):
+        """In the multi header form only x-b3-flags carries the debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.SAMPLED_KEY: "d",
+            }
+        )
+
+        self.assertIsNone(get_value(_DEBUG_FLAG_KEY, new_ctx))
+        self.assertTrue(trace_api.get_current_span(new_ctx).get_span_context().trace_flags.sampled)
 
     def test_derived_ctx_is_returned_for_success(self):
         """Ensure returned context is derived from the given context."""
