@@ -5,11 +5,13 @@
 
 set -ev
 
-# Get the latest versions of packaging tools
-python3 -m pip install --upgrade pip build setuptools wheel
-
 BASEDIR=$(dirname "$(readlink -f "$(dirname $0)")")
 DISTDIR=dist
+
+# Get the versions of packaging tools recorded in the lockfile
+uv sync --locked --only-group build --project "$BASEDIR"
+PATH="$BASEDIR/.venv/bin:$PATH"
+export PATH
 
 (
   cd $BASEDIR
