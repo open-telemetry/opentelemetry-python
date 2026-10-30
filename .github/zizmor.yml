@@ -16,5 +16,5 @@ rules:
   use-trusted-publishing:
     ignore:
       # TestPyPI and PyPI publishing use existing tokens until trusted publishers are configured.
-      - release.yml:97
-      - release.yml:104
+      - release.yml:107
+      - release.yml:114
