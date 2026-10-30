@@ -142,20 +142,19 @@ class _ViewInstrumentMatch:
             # The user can still modify mutable attribute values (lists/dicts)
             # leading to unexpected behavior, but deep copying is expensive.
             attributes = dict(measurement.attributes)
+
         if self._view._attribute_keys is not None:
             attributes = {
                 key: value
                 for key, value in attributes.items()
                 if any(fnmatchcase(key, pattern) for pattern in self._view._attribute_keys)
             }
-        elif self._view._exclude_attribute_keys:
+        if self._view._exclude_attribute_keys:
             attributes = {
                 key: value
                 for key, value in attributes.items()
                 if not any(fnmatchcase(key, pattern) for pattern in self._view._exclude_attribute_keys)
             }
-        else:
-            attributes = {}
 
         aggr_key = _hash_attributes(attributes)
 
