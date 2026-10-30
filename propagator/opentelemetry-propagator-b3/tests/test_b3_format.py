@@ -186,7 +186,7 @@ class AbstractB3FormatTestCase:
     def test_flags(self):
         """x-b3-flags set to "1" should result in propagation of the debug flag."""
         propagator = self.get_propagator()
-        _, _, new_carrier = self.get_child_parent_new_carrier(
+        _, parent, new_carrier = self.get_child_parent_new_carrier(
             {
                 propagator.TRACE_ID_KEY: self.serialized_trace_id,
                 propagator.SPAN_ID_KEY: self.serialized_span_id,
@@ -194,12 +194,13 @@ class AbstractB3FormatTestCase:
             }
         )
 
+        self.assertTrue(parent.context.trace_flags.sampled)
         self.assertDebug(new_carrier)
 
     def test_flags_and_sampling(self):
         """x-b3-flags set to "1" wins over x-b3-sampled set to "0"."""
         propagator = self.get_propagator()
-        _, _, new_carrier = self.get_child_parent_new_carrier(
+        _, parent, new_carrier = self.get_child_parent_new_carrier(
             {
                 propagator.TRACE_ID_KEY: self.serialized_trace_id,
                 propagator.SPAN_ID_KEY: self.serialized_span_id,
@@ -208,6 +209,7 @@ class AbstractB3FormatTestCase:
             }
         )
 
+        self.assertTrue(parent.context.trace_flags.sampled)
         self.assertDebug(new_carrier)
 
     def test_extract_debug_flag_from_multi_header(self):
