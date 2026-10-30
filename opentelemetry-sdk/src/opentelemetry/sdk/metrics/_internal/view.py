@@ -1,11 +1,10 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-
+import re
 from collections.abc import Callable, Iterable
 from fnmatch import fnmatchcase
 from logging import getLogger
-import re
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -35,15 +34,10 @@ def _normalize_attribute_keys(keys: Iterable[str] | None) -> frozenset[str] | No
 
 
 def _attribute_key_matches(key: str, pattern: str) -> bool:
-    """Match attribute keys with exact semantics plus * and ? wildcards.
-
-    Brackets, backslashes, and other regex metacharacters are treated as literal
-    characters rather than glob syntax. This preserves the declarative matching
-    contract for literal keys such as ``header[0]`` while still allowing the
-    explicit wildcard operators ``*`` and ``?``.
-    """
+    """Match attribute keys using only ``*`` and ``?`` as wildcards."""
     if pattern == key:
         return True
+
     expression = "".join(
         ".*" if char == "*" else "." if char == "?" else re.escape(char) for char in pattern
     )
