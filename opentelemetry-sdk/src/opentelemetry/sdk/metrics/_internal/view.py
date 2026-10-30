@@ -24,6 +24,15 @@ from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 _logger = getLogger(__name__)
 
 
+def _normalize_attribute_keys(keys: Iterable[str] | None) -> frozenset[str] | None:
+    """Normalize attribute-key iterables to immutable sets for internal use."""
+    if keys is None:
+        return None
+    if isinstance(keys, str):
+        return frozenset({keys})
+    return frozenset(keys)
+
+
 def _default_reservoir_factory(
     aggregation_type: type[_Aggregation],
 ) -> ExemplarReservoirBuilder:
@@ -75,9 +84,13 @@ class View:
             description of the metric stream. If `None`, the description of the instrument will
             be used.
 
-        attribute_keys: This is a metric stream customizing attribute: this is
-            a set of attribute keys. If not `None` then only the measurement attributes that
-            are in ``attribute_keys`` will be used to identify the metric stream.
+        attribute_keys: This is a metric stream customizing attribute: a set-like
+            collection of attribute keys to keep. If not `None`, only the measurement
+            attributes whose keys are in ``attribute_keys`` are used to identify the
+            metric stream.
+
+        exclude_attribute_keys: This is a metric stream customizing attribute: a set-like
+            collection of attribute keys to drop after any include list is applied.
 
         aggregation: This is a metric stream customizing attribute: the
             aggregation instance to use when data is aggregated for the
@@ -89,15 +102,6 @@ class View:
 
         instrument_unit: This is an instrument matching attribute: the unit the
             instrument must have to match the view.
-
-        exclude_attribute_keys: This is a metric stream customizing attribute: this is
-            a set of attribute keys. If not `None` then measurement attributes whose
-            keys are in ``exclude_attribute_keys`` will be removed before identifying
-            the metric stream.
-            Matching is case-sensitive. Values are evaluated to match as follows:
-            - If the value exactly matches.
-            - If the value matches the wildcard pattern, where '?' matches any single
-              character and '*' matches any number of characters including none.
 
         aggregation_cardinality_limit: This is a metric stream customizing
             attribute: the maximum number of distinct attribute sets the
@@ -158,31 +162,10 @@ class View:
             if any(c in instrument_name for c in "*?["):
                 # pylint: disable=broad-exception-raised
                 raise Exception(f"View {name} declared with wildcard characters in instrument_name")
-                
-        attribute_keys = frozenset(attribute_keys) if attribute_keys is not None else None
 
-        exclude_attribute_keys = frozenset(exclude_attribute_keys) if exclude_attribute_keys is not None else None
-
-        if attribute_keys is not None and exclude_attribute_keys is not None:
-            overlap = [
-                (attribute_key, exclude_attribute_key)
-                for attribute_key in attribute_keys
-                for exclude_attribute_key in exclude_attribute_keys
-                if (
-                    fnmatchcase(attribute_key, exclude_attribute_key)
-                    or fnmatchcase(
-                        exclude_attribute_key,
-                        attribute_key,
-                    )
-                )
-            ]
-
-            if overlap:
-                # pylint: disable=broad-exception-raised
-                raise ValueError(f"attribute_keys and exclude_attribute_keys contain overlapping patterns: {overlap}")
         # _name, _description, _aggregation, _exemplar_reservoir_factory,
-        # _attribute_keys and _aggregation_cardinality_limit will be accessed
-        # when instantiating a _ViewInstrumentMatch.
+        # _attribute_keys, _exclude_attribute_keys and _aggregation_cardinality_limit
+        # will be accessed when instantiating a _ViewInstrumentMatch.
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
@@ -192,10 +175,10 @@ class View:
         self._meter_schema_url = meter_schema_url
 
         self._description = description
-        self._attribute_keys = attribute_keys
+        self._attribute_keys = _normalize_attribute_keys(attribute_keys)
+        self._exclude_attribute_keys = _normalize_attribute_keys(exclude_attribute_keys)
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
-        self._exclude_attribute_keys = exclude_attribute_keys
         self._aggregation_cardinality_limit = aggregation_cardinality_limit
 
     # pylint: disable=too-many-return-statements
