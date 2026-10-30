@@ -5,6 +5,7 @@
 from collections.abc import Callable, Iterable
 from fnmatch import fnmatchcase
 from logging import getLogger
+import re
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -31,6 +32,22 @@ def _normalize_attribute_keys(keys: Iterable[str] | None) -> frozenset[str] | No
     if isinstance(keys, str):
         return frozenset({keys})
     return frozenset(keys)
+
+
+def _attribute_key_matches(key: str, pattern: str) -> bool:
+    """Match attribute keys with exact semantics plus * and ? wildcards.
+
+    Brackets, backslashes, and other regex metacharacters are treated as literal
+    characters rather than glob syntax. This preserves the declarative matching
+    contract for literal keys such as ``header[0]`` while still allowing the
+    explicit wildcard operators ``*`` and ``?``.
+    """
+    if pattern == key:
+        return True
+    expression = "".join(
+        ".*" if char == "*" else "." if char == "?" else re.escape(char) for char in pattern
+    )
+    return re.fullmatch(expression, key) is not None
 
 
 def _default_reservoir_factory(
