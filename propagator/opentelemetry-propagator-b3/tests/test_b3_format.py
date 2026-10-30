@@ -6,7 +6,7 @@ from abc import abstractmethod
 from unittest.mock import Mock
 
 import opentelemetry.trace as trace_api
-from opentelemetry.context import Context, get_current, get_value
+from opentelemetry.context import Context, attach, detach, get_current, get_value
 from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,import-error
     _DEBUG_FLAG_KEY,
     B3MultiFormat,
@@ -197,13 +197,14 @@ class AbstractB3FormatTestCase:
         self.assertDebug(new_carrier)
 
     def test_flags_and_sampling(self):
-        """Propagate the debug flag if b3 flags and sampling are set."""
+        """x-b3-flags set to "1" wins over x-b3-sampled set to "0"."""
         propagator = self.get_propagator()
         _, _, new_carrier = self.get_child_parent_new_carrier(
             {
                 propagator.TRACE_ID_KEY: self.serialized_trace_id,
                 propagator.SPAN_ID_KEY: self.serialized_span_id,
                 propagator.FLAGS_KEY: "1",
+                propagator.SAMPLED_KEY: "0",
             }
         )
 
@@ -331,6 +332,26 @@ class AbstractB3FormatTestCase:
         propagator.inject(new_carrier, context=new_ctx)
 
         self.assertNotDebug(new_carrier)
+
+    def test_inject_debug_flag_from_attached_context(self):
+        """The debug flag survives the extracted context being attached rather than passed."""
+        propagator = self.get_propagator()
+        token = attach(
+            propagator.extract(
+                {
+                    propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                    propagator.SPAN_ID_KEY: self.serialized_span_id,
+                    propagator.FLAGS_KEY: "1",
+                }
+            )
+        )
+        try:
+            new_carrier = {}
+            propagator.inject(new_carrier)
+        finally:
+            detach(token)
+
+        self.assertDebug(new_carrier)
 
     def test_derived_ctx_is_returned_for_success(self):
         """Ensure returned context is derived from the given context."""
