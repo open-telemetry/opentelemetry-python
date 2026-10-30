@@ -248,5 +248,20 @@ dev = [
     "pre-commit",
     "datamodel-code-generator[http]",
     "datamodel-code-generator[ruff]",
+    { include-group = "towncrier" },
+]
+build = [
+    "build",
+    "pip",
+    "setuptools",
+    "wheel",
+]
+toml = [
+    "toml",
+]
+towncrier = [
     "towncrier",
+]
+twine = [
+    "twine",
 ]
