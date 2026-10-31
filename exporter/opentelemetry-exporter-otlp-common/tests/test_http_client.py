@@ -129,7 +129,6 @@ class TestOTLPHTTPClient(unittest.TestCase):
         cases = (
             (200, "OK"),
             (204, "No Content"),
-            (302, "Found"),
         )
 
         for status_code, reason in cases:
@@ -143,6 +142,28 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 self.assertEqual(result.status_code, status_code)
                 self.assertEqual(result.reason, reason)
                 self.assertIsNone(result.error)
+
+    def test_export_redirect_status_codes_are_failures(self):
+        cases = (
+            (302, "Found"),
+            (308, "Permanent Redirect"),
+        )
+
+        for status_code, reason in cases:
+            with self.subTest(status_code=status_code):
+                transport = _TestHTTPTransport(_TestHTTPResult(status_code=status_code, reason=reason))
+                client = self._client(transport)
+
+                with self.assertLogs("opentelemetry.exporter.otlp.common.http", level="ERROR") as logs:
+                    result = client.export(b"payload")
+
+                self.assertFalse(result.success)
+                self.assertEqual(result.status_code, status_code)
+                self.assertEqual(result.reason, reason)
+                self.assertIsNone(result.error)
+                self.assertEqual(len(transport.requests), 1)
+                self.assertIn(f"Failed to export spans batch code: {status_code}", logs.output[0])
+                self.assertIn(reason, logs.output[0])
 
     @patch(
         "opentelemetry.exporter.otlp.common.http.time.time",
