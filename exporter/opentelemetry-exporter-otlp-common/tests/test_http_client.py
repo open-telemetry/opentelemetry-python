@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from email.utils import format_datetime
+from logging import DEBUG
 from unittest.mock import Mock, patch
 
 # pylint: disable-next=import-error
@@ -58,10 +59,13 @@ def _mock_clock(
 @dataclass(frozen=True, slots=True)
 class _TestHTTPResult(BaseHTTPResult):
     response_headers: dict = field(default_factory=dict)
+    body: bytes = b""
+    content_error: Exception | None = None
 
-    # pylint: disable-next=no-self-use
     def content(self) -> bytes:
-        return b""
+        if self.content_error is not None:
+            raise self.content_error
+        return self.body
 
     def headers(self):
         return self.response_headers
@@ -106,6 +110,7 @@ class _TestHTTPTransport(BaseHTTPTransport):
         self.closed = True
 
 
+# pylint: disable-next=too-many-public-methods
 class TestOTLPHTTPClient(unittest.TestCase):
     @staticmethod
     def _client(
@@ -143,6 +148,38 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 self.assertEqual(result.status_code, status_code)
                 self.assertEqual(result.reason, reason)
                 self.assertIsNone(result.error)
+
+    def test_export_success_exposes_the_response_body(self):
+        transport = _TestHTTPTransport(_TestHTTPResult(status_code=200, reason="OK", body=b"partial-success"))
+        client = self._client(transport)
+
+        result = client.export(b"payload")
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.content, b"partial-success")
+
+    def test_export_success_survives_an_unreadable_response_body(self):
+        for error in (ValueError("truncated"), OSError("connection broken"), RuntimeError("stream closed")):
+            with self.subTest(error=type(error).__name__):
+                transport = _TestHTTPTransport(_TestHTTPResult(status_code=200, reason="OK", content_error=error))
+                client = self._client(transport)
+
+                with self.assertLogs(level="DEBUG") as logs:
+                    result = client.export(b"payload")
+
+                self.assertTrue(result.success)
+                self.assertEqual(result.content, b"")
+                self.assertEqual([record.levelno for record in logs.records], [DEBUG])
+                self.assertIn("Failed to read the spans export response body", logs.records[0].getMessage())
+
+    def test_export_failure_has_no_response_body(self):
+        transport = _TestHTTPTransport(_TestHTTPResult(status_code=400, reason="Bad Request", body=b"ignored"))
+        client = self._client(transport)
+
+        result = client.export(b"payload")
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.content, b"")
 
     @patch(
         "opentelemetry.exporter.otlp.common.http.time.time",
