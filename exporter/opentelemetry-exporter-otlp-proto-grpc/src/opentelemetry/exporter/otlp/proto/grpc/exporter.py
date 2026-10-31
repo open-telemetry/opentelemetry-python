@@ -50,6 +50,10 @@ from opentelemetry.exporter.otlp.common._exporter_metrics import (
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
 )
+from opentelemetry.exporter.otlp.proto.common._internal._partial_success import (
+    _partial_success_detail,
+    _warning_format,
+)
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
     _timeout_from_env,
@@ -430,11 +434,19 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                 try:
                     if self._client is None:
                         return self._result.FAILURE
-                    self._client.Export(
+                    response = self._client.Export(
                         request=self._translate_data(data),
                         metadata=self._headers,
                         timeout=deadline_sec - time(),
                     )
+                    try:
+                        detail = _partial_success_detail(response)
+                    # pylint: disable-next=broad-exception-caught
+                    except Exception as error:
+                        logger.debug("Failed to read the OTLP export response: %s", error)
+                        detail = None
+                    if detail is not None:
+                        logger.warning(_warning_format(self._exporting), self._endpoint, detail)
                     return self._result.SUCCESS  # type: ignore [reportReturnType]
                 except RpcError as error:
                     retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
