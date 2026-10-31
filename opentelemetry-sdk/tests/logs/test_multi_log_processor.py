@@ -261,6 +261,7 @@ class MultiLogRecordProcessorTestBase(ABC):
         self.assertTrue(ret_value)
         for mock_processor in mocks:
             self.assertEqual(1, mock_processor.force_flush.call_count)
+        multi_log_record_processor.shutdown()
 
 
 class TestSynchronousMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, unittest.TestCase):

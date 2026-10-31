@@ -504,6 +504,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         # iterating through it on "emit".
         self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
+        self._shutdown = False
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
 
     def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:
@@ -554,7 +555,11 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         return False
 
     def shutdown(self) -> None:
+        if self._shutdown:
+            return
+        self._shutdown = True
         self._submit_and_wait(lambda lp: lp.shutdown)
+        self._executor.shutdown(wait=True)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors in parallel.
@@ -567,6 +572,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             True if all the log processors flushes the logs within timeout,
             False otherwise.
         """
+        if self._shutdown:
+            return False
         futures = []
         for lp in self._log_record_processors:
             future = self._executor.submit(lp.force_flush, timeout_millis)
