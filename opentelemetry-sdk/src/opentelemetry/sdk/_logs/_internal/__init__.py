@@ -88,6 +88,9 @@ _ENV_VALUE_UNSET = ""
 
 _logger = logging.getLogger(__name__)
 
+_propagate_false_logger = logging.getLogger(__name__ + ".propagate.false")
+_propagate_false_logger.propagate = False
+
 
 class BytesEncoder(json.JSONEncoder):
     def default(self, o):
@@ -433,7 +436,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
             try:
                 lp.on_emit(log_record)
             except Exception:  # pylint: disable=broad-exception-caught
-                _logger.exception("Exception while calling on_emit on %s.", lp)
+                _propagate_false_logger.exception("Exception while calling on_emit on %s.", lp)
 
     def enabled(
         self,
@@ -526,7 +529,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
                 try:
                     lp.on_emit(record)
                 except Exception:  # pylint: disable=broad-exception-caught
-                    _logger.exception("Exception while calling on_emit on %s.", lp)
+                    _propagate_false_logger.exception("Exception while calling on_emit on %s.", lp)
 
             return _call
 

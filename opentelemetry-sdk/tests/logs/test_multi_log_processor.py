@@ -19,6 +19,27 @@ from opentelemetry.sdk._logs._internal import (
     ReadWriteLogRecord,
     SynchronousMultiLogRecordProcessor,
 )
+from opentelemetry.sdk._logs.export import (
+    InMemoryLogRecordExporter,
+    SimpleLogRecordProcessor,
+)
+
+_PROPAGATE_FALSE_LOGGER = "opentelemetry.sdk._logs._internal.propagate.false"
+
+
+class FailingLogRecordProcessor(LogRecordProcessor):
+    def __init__(self):
+        self.emit_count = 0
+
+    def on_emit(self, log_record: ReadWriteLogRecord):
+        self.emit_count += 1
+        raise RuntimeError("Exporter queue error")
+
+    def shutdown(self):
+        pass
+
+    def force_flush(self, timeout_millis=30000):
+        return True
 
 
 class AnotherLogRecordProcessor(LogRecordProcessor):
@@ -128,7 +149,7 @@ class MultiLogRecordProcessorTestBase(ABC):
         multi_log_record_processor.add_log_record_processor(after)
 
         record = self.make_record()
-        with self.assertLogs("opentelemetry.sdk._logs._internal", level="ERROR") as logs:
+        with self.assertLogs(_PROPAGATE_FALSE_LOGGER, level="ERROR") as logs:
             multi_log_record_processor.on_emit(record)
 
         before.on_emit.assert_called_once_with(record)
@@ -136,6 +157,90 @@ class MultiLogRecordProcessorTestBase(ABC):
         after.on_emit.assert_called_once_with(record)
         self.assertTrue(any("Exception while calling on_emit" in message for message in logs.output))
         multi_log_record_processor.shutdown()
+
+    def test_on_emit_exception_logger_provider_integration(self):
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        provider = LoggerProvider(
+            multi_log_record_processor=multi_log_record_processor,
+            shutdown_on_exit=False,
+        )
+        before_exporter = InMemoryLogRecordExporter()
+        after_exporter = InMemoryLogRecordExporter()
+        failing_processor = FailingLogRecordProcessor()
+
+        provider.add_log_record_processor(SimpleLogRecordProcessor(before_exporter))
+        provider.add_log_record_processor(failing_processor)
+        provider.add_log_record_processor(SimpleLogRecordProcessor(after_exporter))
+
+        otel_logger = provider.get_logger("test.integration")
+        with self.assertLogs(_PROPAGATE_FALSE_LOGGER, level="ERROR"):
+            otel_logger.emit(
+                LogRecord(
+                    body="otel body",
+                    severity_text="INFO",
+                    severity_number=SeverityNumber.INFO,
+                    attributes={"integration.key": "otel"},
+                )
+            )
+
+        py_logger = logging.getLogger("test.integration.handler")
+        py_logger.propagate = False
+        handler = LoggingHandler(logger_provider=provider)
+        py_logger.addHandler(handler)
+        try:
+            with self.assertLogs(_PROPAGATE_FALSE_LOGGER, level="ERROR"):
+                py_logger.warning("handler body", extra={"integration.key": "handler"})
+        finally:
+            py_logger.removeHandler(handler)
+
+        before_logs = before_exporter.get_finished_logs()
+        after_logs = after_exporter.get_finished_logs()
+        self.assertEqual(len(before_logs), 2)
+        self.assertEqual(len(after_logs), 2)
+
+        self.assertEqual(before_logs[0].log_record.body, "otel body")
+        self.assertEqual(before_logs[0].log_record.attributes["integration.key"], "otel")
+        self.assertEqual(before_logs[1].log_record.body, "handler body")
+        self.assertEqual(before_logs[1].log_record.attributes["integration.key"], "handler")
+
+        self.assertEqual(after_logs[0].log_record.body, "otel body")
+        self.assertEqual(after_logs[0].log_record.attributes["integration.key"], "otel")
+        self.assertEqual(after_logs[1].log_record.body, "handler body")
+        self.assertEqual(after_logs[1].log_record.attributes["integration.key"], "handler")
+
+        self.assertEqual(failing_processor.emit_count, 2)
+        provider.shutdown()
+
+    def test_on_emit_exception_does_not_reenter_root_logging_handler(self):
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        provider = LoggerProvider(
+            multi_log_record_processor=multi_log_record_processor,
+            shutdown_on_exit=False,
+        )
+        failing_processor = FailingLogRecordProcessor()
+        provider.add_log_record_processor(failing_processor)
+
+        root_logger = logging.getLogger()
+        handler = LoggingHandler(logger_provider=provider)
+        root_logger.addHandler(handler)
+        try:
+
+            def emit_once():
+                with self.assertLogs(_PROPAGATE_FALSE_LOGGER, level="ERROR"):
+                    root_logger.warning("once")
+
+            if isinstance(multi_log_record_processor, ConcurrentMultiLogRecordProcessor):
+                thread = threading.Thread(target=emit_once)
+                thread.start()
+                thread.join(timeout=5)
+                self.assertFalse(thread.is_alive(), "on_emit error logging deadlocked")
+            else:
+                emit_once()
+
+            self.assertEqual(failing_processor.emit_count, 1)
+        finally:
+            root_logger.removeHandler(handler)
+            provider.shutdown()
 
     def test_on_shutdown(self):
         multi_log_record_processor = self._get_multi_log_record_processor()
