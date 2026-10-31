@@ -1,6 +1,17 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""The reservoirs that hold exemplars between collections.
+
+A reservoir receives the measurements an exemplar filter let through and
+keeps a bounded number of them until a metric reader collects. Each
+aggregation owns one, built by the factory in
+``opentelemetry.sdk.metrics._internal.view``. Two implementations are
+provided: ``SimpleFixedSizeExemplarReservoir``, which samples uniformly,
+and ``AlignedHistogramBucketExemplarReservoir``, which keeps one
+measurement per explicit histogram bucket.
+"""
+
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
@@ -70,7 +81,20 @@ class ExemplarReservoir(ABC):
 
 
 class ExemplarBucket:
+    """One cell of a reservoir, holding at most one measurement.
+
+    A cell keeps the last measurement offered to it. The span id and trace
+    id are read out of the context only when a span is current, and are
+    never cleared, so after an offer made outside any span the cell still
+    carries the ids of the last offer that was made inside one. The
+    reservoir decides which cell a measurement goes to, so overwriting is
+    how a cell is reused rather than a loss to be avoided. ``collect``
+    turns what the cell holds into an ``Exemplar`` and empties the cell, so
+    a cell offered nothing during a collection cycle contributes nothing.
+    """
+
     def __init__(self) -> None:
+        """Build an empty cell, which collects nothing until it is offered."""
         self.__value: int | float = 0
         self.__attributes: Attributes = None
         self.__time_unix_nano: int = 0
@@ -105,7 +129,24 @@ class ExemplarBucket:
         self.__offered = True
 
     def collect(self, point_attributes: Attributes) -> Exemplar | None:
-        """May return an Exemplar and resets the bucket for the next sampling period."""
+        """May return an Exemplar and resets the bucket for the next sampling period.
+
+        Args:
+            point_attributes: The attributes of the metric point the
+                exemplar will hang off. Any attribute of the measurement
+                that also appears here is left out of the exemplar, since
+                the point already carries it.
+
+        Returns:
+            An ``Exemplar`` holding the value, the timestamp, the
+            attributes that survived the filtering above and the span id
+            and trace id captured by ``offer``, or ``None`` when nothing
+            has been offered since the last collection. Those two are the
+            ids of the most recent offer that was made inside a span since
+            the last collection, which is not necessarily the offer whose
+            value is reported. They are ``None`` only when no offer since
+            the last collection had a span current.
+        """
         if not self.__offered:
             return None
 
@@ -141,9 +182,32 @@ class BucketIndexError(ValueError):
 
 
 class FixedSizeExemplarReservoirABC(ExemplarReservoir):
-    """Abstract class for a reservoir with fixed size."""
+    """Abstract class for a reservoir with fixed size.
+
+    The reservoir holds at most ``size`` cells, each an
+    ``ExemplarBucket``, created on first use by a ``defaultdict``.
+    ``offer`` asks ``_find_bucket_index`` which cell a measurement belongs
+    in and a subclass answers that; a subclass that wants to drop the
+    measurement raises ``BucketIndexError``, which ``offer`` swallows. One
+    lock guards both ``offer`` and ``collect``, since measurements arrive
+    on application threads while a metric reader collects on its own.
+
+    Args:
+        size: How many cells the reservoir has, which is the largest
+            number of exemplars one collection can produce.
+        kwargs: Further aggregation parameters. They are handed to the
+            parent class, which defines no ``__init__``, so a parameter
+            that no class in the chain consumes ends up at
+            ``object.__init__`` and raises ``TypeError``. The reservoirs
+            in this module are built with none.
+    """
 
     def __init__(self, size: int, **kwargs) -> None:
+        """Build the reservoir.
+
+        Every parameter is documented on the class itself, since that is
+        the form the API reference renders.
+        """
         super().__init__(**kwargs)
         self._size: int = size
         self._reservoir_storage: Mapping[int, ExemplarBucket] = defaultdict(ExemplarBucket)
@@ -220,7 +284,13 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         """
 
     def _reset(self) -> None:
-        """Reset the reservoir by resetting any stateful logic after a collection cycle."""
+        """Reset the reservoir by resetting any stateful logic after a collection cycle.
+
+        This implementation does nothing, because the cells have already
+        been emptied by ``collect`` before it is called. A subclass that
+        keeps state of its own beyond the cells overrides it. ``collect``
+        calls it while holding the lock.
+        """
 
 
 class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
@@ -228,15 +298,38 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
     of samples the reservoir has seen so far to determine if the offered measurements
     should be sampled.
 
+    The count of measurements seen is kept per collection cycle and
+    cleared by ``_reset``, so the sampling starts over after each
+    collection rather than letting early measurements of the process
+    crowd out later ones.
+
+    Args:
+        size: How many cells the reservoir has, which is the largest
+            number of exemplars one collection can produce. One cell by
+            default, which is what the specification asks for on a
+            non-histogram aggregation.
+        kwargs: Further aggregation parameters, handed on to
+            ``FixedSizeExemplarReservoirABC``.
+
     Reference:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#simplefixedsizeexemplarreservoir
     """
 
     def __init__(self, size: int = 1, **kwargs) -> None:
+        """Build the reservoir.
+
+        Every parameter is documented on the class itself, since that is
+        the form the API reference renders.
+        """
         super().__init__(size, **kwargs)
         self._measurements_seen: int = 0
 
     def _reset(self) -> None:
+        """Clear the measurement count along with the cell contents.
+
+        ``collect`` calls this once it has emptied the cells, so the next
+        collection cycle samples from scratch.
+        """
         super()._reset()
         self._measurements_seen = 0
 
@@ -247,6 +340,31 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
         attributes: Attributes,
         context: Context,
     ) -> int:
+        """Pick the cell for a measurement, giving each one equal odds.
+
+        The first ``size`` measurements of a collection cycle fill the
+        cells in order. Every measurement after that is placed in a cell
+        drawn uniformly from the range ``0`` to ``m - 1``, where ``m``
+        counts every measurement the cycle has seen including this one, and
+        is dropped when the draw lands outside the cells. The ``m``-th
+        measurement is therefore kept with probability ``size / m``, which
+        leaves every measurement of the cycle with the same chance of being
+        one of the kept ones.
+
+        Args:
+            value: Measured value. The choice does not depend on it.
+            time_unix_nano: Measurement instant, unused here.
+            attributes: Measurement attributes, unused here.
+            context: Measurement context, unused here.
+
+        Returns:
+            The index of the cell to store the measurement in, between 0
+            and ``size - 1``.
+
+        Raises:
+            BucketIndexError: If the draw landed outside the cells, which
+                means this measurement is dropped. ``offer`` catches it.
+        """
         if self._measurements_seen < self._size:
             self._measurements_seen += 1
             return self._measurements_seen - 1
@@ -264,11 +382,29 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
     configuration of a Histogram. This implementation keeps the last seen measurement
     that falls within a histogram bucket.
 
+    There is one cell per histogram bucket, so the reservoir size is one
+    more than the number of boundaries. Nothing is ever dropped: every
+    measurement that reaches the reservoir overwrites the cell of its
+    bucket.
+
+    Args:
+        boundaries: The explicit bucket boundaries of the histogram, in
+            ascending order. They come from the aggregation, which binds
+            them to the reservoir class with ``functools.partial`` before
+            the reservoir is built.
+        kwargs: Further aggregation parameters, handed on to
+            ``FixedSizeExemplarReservoirABC``.
+
     Reference:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#alignedhistogrambucketexemplarreservoir
     """
 
     def __init__(self, boundaries: Sequence[float], **kwargs) -> None:
+        """Build the reservoir.
+
+        Every parameter is documented on the class itself, since that is
+        the form the API reference renders.
+        """
         super().__init__(len(boundaries) + 1, **kwargs)
         self._boundaries: Sequence[float] = boundaries
 
@@ -279,6 +415,27 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
         attributes: Attributes,
         context: Context,
     ) -> int:
+        """Pick the cell that matches the histogram bucket of the value.
+
+        The boundaries are scanned in ascending order and the first one
+        that ``value`` does not exceed decides the cell, which lands on
+        the same bucket the explicit bucket histogram aggregation counts
+        the measurement in. Since the cell is overwritten on every offer,
+        what survives a collection cycle is the last measurement that fell
+        in each bucket.
+
+        Args:
+            value: Measured value, compared against the boundaries.
+            time_unix_nano: Measurement instant, unused here.
+            attributes: Measurement attributes, unused here.
+            context: Measurement context, unused here.
+
+        Returns:
+            The position of the first boundary that is at least ``value``,
+            or the number of boundaries when ``value`` is above all of
+            them. ``BucketIndexError`` is never raised here, so no
+            measurement is dropped.
+        """
         for index, boundary in enumerate(self._boundaries):
             if value <= boundary:
                 return index
