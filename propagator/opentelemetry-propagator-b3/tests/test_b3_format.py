@@ -247,6 +247,28 @@ class AbstractB3FormatTestCase:
 
         self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
 
+    def test_extract_without_debug_flag_for_an_explicit_zero(self):
+        """An x-b3-flags of "0" is not a debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "0",
+            }
+        )
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_without_debug_flag_for_a_single_header_accept(self):
+        """A single header sampling state of "1" is not a debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-1"}
+        )
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
     def test_extract_multi_header_sampled_d_is_not_debug(self):
         """In the multi header form only x-b3-flags carries the debug flag."""
         propagator = self.get_propagator()
