@@ -7,7 +7,7 @@ from re import compile as re_compile
 from typing_extensions import deprecated
 
 from opentelemetry import trace
-from opentelemetry.context import Context
+from opentelemetry.context import Context, create_key, get_value, set_value
 from opentelemetry.propagators.textmap import (
     CarrierT,
     Getter,
@@ -17,6 +17,8 @@ from opentelemetry.propagators.textmap import (
     default_setter,
 )
 from opentelemetry.trace import format_span_id, format_trace_id
+
+_DEBUG_FLAG_KEY = create_key("b3-debug-flag")
 
 
 class B3MultiFormat(TextMapPropagator):
@@ -32,6 +34,8 @@ class B3MultiFormat(TextMapPropagator):
     SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = {"1", "True", "true", "d"}
+    _DEBUG_SAMPLED_VALUE = "d"
+    _DEBUG_FLAGS_VALUE = "1"
     _trace_id_regex = re_compile(r"[\da-fA-F]{16}|[\da-fA-F]{32}")
     _span_id_regex = re_compile(r"[\da-fA-F]{16}")
 
@@ -64,11 +68,15 @@ class B3MultiFormat(TextMapPropagator):
                 trace_id, span_id, sampled = fields
             elif len(fields) == 4:
                 trace_id, span_id, sampled, _ = fields
+
+            debug = sampled == self._DEBUG_SAMPLED_VALUE
         else:
             trace_id = _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY)) or trace_id
             span_id = _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY)) or span_id
             sampled = _extract_first_element(getter.get(carrier, self.SAMPLED_KEY)) or sampled
             flags = _extract_first_element(getter.get(carrier, self.FLAGS_KEY)) or flags
+
+            debug = flags == self._DEBUG_FLAGS_VALUE
 
         if (
             trace_id == trace.INVALID_TRACE_ID
@@ -76,6 +84,8 @@ class B3MultiFormat(TextMapPropagator):
             or self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
+            if debug and trace_id == trace.INVALID_TRACE_ID and span_id == trace.INVALID_SPAN_ID:
+                context = set_value(_DEBUG_FLAG_KEY, True, context)
             return context
 
         trace_id = int(trace_id, 16)
@@ -87,6 +97,8 @@ class B3MultiFormat(TextMapPropagator):
         # header is set to allow.
         if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceFlags.SAMPLED
+
+        context = set_value(_DEBUG_FLAG_KEY, debug, context)
 
         return trace.set_span_in_context(
             trace.NonRecordingSpan(
@@ -115,13 +127,16 @@ class B3MultiFormat(TextMapPropagator):
             return
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
+        debug = get_value(_DEBUG_FLAG_KEY, context) is True
         setter.set(
             carrier,
             self.TRACE_ID_KEY,
             format_trace_id(span_context.trace_id),
         )
         setter.set(carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id))
-        setter.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
+        if debug:
+            setter.set(carrier, self.FLAGS_KEY, self._DEBUG_FLAGS_VALUE)
+        setter.set(carrier, self.SAMPLED_KEY, "1" if sampled or debug else "0")
 
     @property
     def fields(self) -> set[str]:
@@ -129,6 +144,7 @@ class B3MultiFormat(TextMapPropagator):
             self.TRACE_ID_KEY,
             self.SPAN_ID_KEY,
             self.SAMPLED_KEY,
+            self.FLAGS_KEY,
         }
 
 
@@ -153,10 +169,15 @@ class B3SingleFormat(B3MultiFormat):
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
 
+        if get_value(_DEBUG_FLAG_KEY, context) is True:
+            sampling_state = self._DEBUG_SAMPLED_VALUE
+        else:
+            sampling_state = "1" if sampled else "0"
+
         fields = [
             format_trace_id(span_context.trace_id),
             format_span_id(span_context.span_id),
-            "1" if sampled else "0",
+            sampling_state,
         ]
 
         setter.set(carrier, self.SINGLE_HEADER_KEY, "-".join(fields))
