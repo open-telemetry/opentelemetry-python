@@ -1,6 +1,12 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""The exemplar record that a reservoir hands to an exporter.
+
+``Exemplar`` is frozen, so a reservoir builds one at collection time and
+never edits it afterwards.
+"""
+
 import dataclasses
 
 from opentelemetry.util.types import Attributes
