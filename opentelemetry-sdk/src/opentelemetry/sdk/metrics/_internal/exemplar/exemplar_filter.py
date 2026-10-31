@@ -1,6 +1,14 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""The filters that decide which measurements may become exemplars.
+
+A filter is consulted before a reservoir is, and answers from the
+measurement alone without keeping any state. Three are provided here, and
+``opentelemetry.sdk.metrics._internal.MeterProvider`` picks one from the
+``OTEL_METRICS_EXEMPLAR_FILTER`` environment variable.
+"""
+
 from abc import ABC, abstractmethod
 
 from opentelemetry import trace
@@ -32,9 +40,19 @@ class ExemplarFilter(ABC):
 
         Args:
             value: The value of the measurement
-            timestamp: A timestamp that best represents when the measurement was taken
+            time_unix_nano: A timestamp that best represents when the
+                measurement was taken
             attributes: The complete set of measurement attributes
             context: The Context of the measurement
+
+        Returns:
+            ``True`` when the measurement may be offered to a reservoir.
+            An answer of ``True`` does not mean the measurement will be
+            kept: the reservoir still decides that.
+
+        Raises:
+            NotImplementedError: Always, since this is the interface. A
+                subclass overrides it.
         """
         raise NotImplementedError("ExemplarFilter.should_sample is not implemented")
 
@@ -57,9 +75,13 @@ class AlwaysOnExemplarFilter(ExemplarFilter):
 
         Args:
             value: The value of the measurement
-            timestamp: A timestamp that best represents when the measurement was taken
+            time_unix_nano: A timestamp that best represents when the
+                measurement was taken
             attributes: The complete set of measurement attributes
             context: The Context of the measurement
+
+        Returns:
+            ``True``, whatever the arguments are. No argument is read.
         """
         return True
 
@@ -84,9 +106,14 @@ class AlwaysOffExemplarFilter(ExemplarFilter):
 
         Args:
             value: The value of the measurement
-            timestamp: A timestamp that best represents when the measurement was taken
+            time_unix_nano: A timestamp that best represents when the
+                measurement was taken
             attributes: The complete set of measurement attributes
             context: The Context of the measurement
+
+        Returns:
+            ``False``, whatever the arguments are. No argument is read and
+            no reservoir is ever offered a measurement.
         """
         return False
 
@@ -110,9 +137,20 @@ class TraceBasedExemplarFilter(ExemplarFilter):
 
         Args:
             value: The value of the measurement
-            timestamp: A timestamp that best represents when the measurement was taken
+            time_unix_nano: A timestamp that best represents when the
+                measurement was taken
             attributes: The complete set of measurement attributes
-            context: The Context of the measurement
+            context: The Context of the measurement. This is the only
+                argument read; the other three are ignored.
+
+        Returns:
+            ``True`` when a span is current in ``context`` and the
+            ``sampled`` bit of its trace flags is set. ``False`` when no
+            span is current, which ``get_current_span`` reports by handing
+            back ``INVALID_SPAN``, and ``False`` when the current span is
+            not sampled. The decision is the span's own sampling decision,
+            so a measurement recorded outside any span never becomes an
+            exemplar under this filter.
         """
         span = trace.get_current_span(context)
         if span == INVALID_SPAN:
