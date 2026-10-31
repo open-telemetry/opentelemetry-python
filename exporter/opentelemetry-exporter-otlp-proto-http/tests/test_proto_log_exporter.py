@@ -35,12 +35,17 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     OTLPLogExporter,
 )
+from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+    _logger as _log_exporter_logger,
+)
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
+    ExportLogsServiceResponse,
 )
 from opentelemetry.sdk._logs import ReadWriteLogRecord
 from opentelemetry.sdk._logs.export import LogRecordExportResult
+from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -100,6 +105,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         self.metric_reader = InMemoryMetricReader()
         self.meter_provider = MeterProvider(metric_readers=[self.metric_reader])
+
+        for log_filter in _log_exporter_logger.filters:
+            if isinstance(log_filter, DuplicateFilter):
+                log_filter.__dict__.pop("last_log", None)
 
     @staticmethod
     def _mocked_shutdown_event() -> Mock:
@@ -224,6 +233,46 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 exporter = OTLPLogExporter(compression=compression)
                 self.assertIs(exporter._compression, expected)
                 self.assertIs(exporter._client._compression, expected)
+
+    @mocketize
+    def test_partial_success_is_logged(self):
+        response = ExportLogsServiceResponse()
+        response.partial_success.rejected_log_records = 3
+        response.partial_success.error_message = "quota exceeded"
+        Entry.single_register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            status=200,
+            body=response.SerializeToString(),
+        )
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertLogs(level="WARNING") as logs:
+            result = exporter.export([_make_log_record()])
+
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        self.assertEqual(
+            logs.records[0].getMessage(),
+            "OTLP partial success exporting logs to "
+            f"{_TEST_ENDPOINT}: the server rejected 3 log records: quota exceeded",
+        )
+
+    @mocketize
+    def test_full_success_logs_nothing(self):
+        zeroed = ExportLogsServiceResponse()
+        zeroed.partial_success.rejected_log_records = 0
+        Entry.single_register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            status=200,
+            body=zeroed.SerializeToString(),
+        )
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertNoLogs(level="WARNING"):
+            result = exporter.export([_make_log_record()])
+
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
 
     @mocketize
     def test_export_single_log(self):
