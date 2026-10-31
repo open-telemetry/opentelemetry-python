@@ -1,5 +1,23 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+
+# pylint: disable=too-many-lines
+"""Getting metrics out of the SDK.
+
+Two roles meet here. A metric reader drives collection: it asks the SDK for
+the current state of every metric stream and decides when that happens. A
+metric exporter turns a collected batch into whatever an endpoint wants and
+sends it. ``PeriodicExportingMetricReader`` is the pairing of the two that
+most applications run, collecting on a timer and handing each batch to the
+exporter it was built with. The reader owns the aggregation settings as
+well: the temporality, the aggregation and the cardinality limit, each per
+instrument class. An exporter states its preferences for the first two, and
+``PeriodicExportingMetricReader`` adopts them.
+
+The classes here are re-exported from ``opentelemetry.sdk.metrics.export``,
+which is where they should be imported from.
+"""
+
 from __future__ import annotations
 
 import math
@@ -75,7 +93,11 @@ _logger = getLogger(__name__)
 class MetricExportResult(Enum):
     """Result of exporting a metric
 
-    Can be any of the following values:"""
+    Can be any of the following values:
+
+    ``SUCCESS`` means the batch reached the endpoint and ``FAILURE`` that it
+    did not and has been lost. Nothing in the SDK retries on ``FAILURE``, and
+    ``PeriodicExportingMetricReader`` does not read the value at all."""
 
     SUCCESS = 0
     FAILURE = 1
@@ -86,6 +108,10 @@ class MetricExporter(ABC):
 
     Interface to be implemented by services that want to export metrics received
     in their own format.
+
+    A subclass implements ``export``, ``force_flush`` and ``shutdown``. The two
+    preferences below are read by a reader at construction and never again, so
+    changing them on an exporter already paired with a reader does nothing.
 
     Args:
         preferred_temporality: Used by `opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader` to
@@ -101,6 +127,11 @@ class MetricExporter(ABC):
         preferred_temporality: dict[type, AggregationTemporality] | None = None,
         preferred_aggregation: dict[type, opentelemetry.sdk.metrics.view.Aggregation] | None = None,
     ) -> None:
+        """Build the exporter.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         self._preferred_temporality = preferred_temporality
         self._preferred_aggregation = preferred_aggregation
 
@@ -113,8 +144,17 @@ class MetricExporter(ABC):
     ) -> MetricExportResult:
         """Exports a batch of telemetry data.
 
+        ``PeriodicExportingMetricReader`` holds a lock across this call, so an
+        implementation never sees two exports at once from that reader, and a
+        slow export delays the next collection.
+
         Args:
-            metrics: The list of `opentelemetry.sdk.metrics.export.Metric` objects to be exported
+            metrics_data: The collected batch, holding one ``ResourceMetrics``
+                per resource, each holding ``ScopeMetrics`` and ``Metric``.
+            timeout_millis: How long the export may take, in milliseconds.
+                Enforcing it is left to the implementation.
+            **kwargs: Ignored by the exporters in this package, and there for
+                a caller to pass something an individual exporter understands.
 
         Returns:
             The result of the export
@@ -125,13 +165,27 @@ class MetricExporter(ABC):
         """
         Ensure that export of any metrics currently received by the exporter
         are completed as soon as possible.
+
+        An exporter that sends on the calling thread has nothing to flush and
+        returns ``True`` at once.
+
+        Args:
+            timeout_millis: How long the flush may take, in milliseconds.
+
+        Returns:
+            Whether everything held was exported within the timeout.
         """
 
     @abstractmethod
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         """Shuts down the exporter.
 
-        Called when the SDK is shut down.
+        Called when the SDK is shut down. An implementation is expected to
+        tolerate a second call rather than raise.
+
+        Args:
+            timeout_millis: How long the shutdown may take, in milliseconds.
+            **kwargs: Accepted and ignored by the exporters in this package.
         """
 
 
@@ -141,6 +195,28 @@ class ConsoleMetricExporter(MetricExporter):
 
     This class can be used for diagnostic purposes. It prints the exported
     metrics to the console STDOUT.
+
+    Nothing is buffered beyond the write itself, so there is nothing to flush
+    and nothing to release on shutdown.
+
+    Args:
+        out: Where to write. The default is bound when this module is imported
+            rather than when an exporter is built, so replacing ``sys.stdout``
+            at any point after that import does not redirect an exporter built
+            with the default. Pass the stream explicitly to write anywhere
+            else.
+        formatter: Turns one batch into the text to write. The default emits
+            the indented JSON of ``MetricsData.to_json``, which spans several
+            lines, followed by a line separator. Pass a formatter calling
+            ``to_json(indent=None)`` for the single-line form a line-delimited
+            consumer wants. The text is written as given, so a formatter that
+            appends no separator runs batches together.
+        preferred_temporality: The temporality per instrument class a reader
+            built with this exporter adopts. ``None`` leaves that reader on
+            its own defaults.
+        preferred_aggregation: The aggregation per instrument class a reader
+            built with this exporter adopts. ``None`` leaves that reader on
+            its own defaults.
     """
 
     def __init__(
@@ -150,6 +226,11 @@ class ConsoleMetricExporter(MetricExporter):
         preferred_temporality: dict[type, AggregationTemporality] | None = None,
         preferred_aggregation: dict[type, opentelemetry.sdk.metrics.view.Aggregation] | None = None,
     ):
+        """Build the exporter.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         super().__init__(
             preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
@@ -163,14 +244,42 @@ class ConsoleMetricExporter(MetricExporter):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
+        """Format the batch and write it to the stream.
+
+        The stream is flushed before returning, so the batch is visible even
+        when the process is killed straight afterwards.
+
+        Args:
+            metrics_data: The batch to write.
+            timeout_millis: Ignored. The write is not bounded by a timeout.
+            **kwargs: Ignored.
+
+        Returns:
+            Always ``MetricExportResult.SUCCESS``. An error raised by the
+            stream or by the formatter propagates instead of being turned into
+            a failure result.
+        """
         self.out.write(self.formatter(metrics_data))
         self.out.flush()
         return MetricExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        """Do nothing, leaving the stream open since it was not opened here.
+
+        Args:
+            timeout_millis: Ignored.
+            **kwargs: Ignored.
+        """
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Do nothing, since ``export`` already flushed every batch.
+
+        Args:
+            timeout_millis: Ignored.
+
+        Returns:
+            Always ``True``.
+        """
         return True
 
 
@@ -198,7 +307,25 @@ _CARDINALITY_INSTRUMENT_CLASSES: dict[type, type] = {
 
 
 def _validate_cardinality_limit(typ: type, limit: int) -> type:
-    """Return the SDK instrument class for ``typ`` after validating ``limit``."""
+    """Return the SDK instrument class for ``typ`` after validating ``limit``.
+
+    A reader is configured with the API instrument classes, while the limits
+    it stores are keyed by the SDK subclasses the meter creates, which is why
+    a limit given for ``Counter`` has to be translated here.
+
+    Args:
+        typ: One of the seven API instrument classes. Anything else, including
+            an SDK subclass, is rejected.
+        limit: The number of distinct attribute sets to keep. ``True`` is
+            rejected even though Python treats it as the integer 1.
+
+    Returns:
+        The SDK instrument class corresponding to ``typ``.
+
+    Raises:
+        ValueError: If ``typ`` is not one of the seven API instrument classes,
+            or if ``limit`` is not an integer of at least 1.
+    """
     if typ not in _CARDINALITY_INSTRUMENT_CLASSES:
         raise ValueError(f"Invalid instrument class found {typ}")
     if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
@@ -237,6 +364,13 @@ class MetricReader(ABC):
     """
     Base class for all metric readers
 
+    A subclass implements ``_receive_metrics``, which is handed each collected
+    batch, and ``shutdown``. It decides for itself when collection happens by
+    calling ``collect``, which is final and cannot be overridden. Each of the
+    three mappings below is filled in for all seven instrument classes at
+    construction and then updated from what the caller passed, so a class left
+    out of an argument keeps its default rather than going missing.
+
     Args:
         preferred_temporality: A mapping between instrument classes and
             aggregation temporality. By default uses CUMULATIVE for all instrument
@@ -266,11 +400,19 @@ class MetricReader(ABC):
             the SDK's own metrics whenever this reader collects.
         cardinality_limits: A dictionary mapping instrument classes to the
             maximum number of distinct attribute sets a metric stream of that
-            instrument class aggregates per collection cycle. Instrument
-            classes not included use a limit of 2000. A limit defined by a view
-            takes precedence. Measurements with further attribute sets are
-            aggregated into one additional point identified by the attribute
-            ``otel.metric.overflow=true``.
+            instrument class holds at once. They are released on collection
+            only for a synchronous instrument collected with delta
+            temporality, so under the default cumulative preference the limit
+            is spent over the life of the stream rather than per collection
+            cycle. Instrument classes not included use a limit of 2000. A
+            limit defined by a view takes precedence. Measurements with
+            further attribute sets are aggregated into one additional point
+            identified by the attribute ``otel.metric.overflow=true``.
+        otel_component_type: The value reported as ``otel.component.type`` by
+            the metrics the SDK emits about this reader. Defaults to the
+            qualified name of the reader class, which is what a reader outside
+            this package gets unless it names a value from the semantic
+            conventions.
 
     .. document protected _receive_metrics which is a intended to be overridden by subclass
     .. automethod:: _receive_metrics
@@ -285,6 +427,21 @@ class MetricReader(ABC):
         metric_producers: Sequence[MetricProducer] = (),
         otel_component_type: OtelComponentTypeValues | None = None,
     ) -> None:
+        """Build the reader.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+
+        Raises:
+            Exception: If ``preferred_temporality`` holds a value that is
+                neither ``CUMULATIVE`` nor ``DELTA``, or if
+                ``preferred_temporality`` or ``preferred_aggregation`` is
+                keyed by something other than the seven API instrument
+                classes.
+            ValueError: If ``cardinality_limits`` is keyed by something other
+                than the seven API instrument classes, or holds a value that
+                is not an integer of at least 1.
+        """
         self._metric_producers: tuple[MetricProducer, ...] = tuple(metric_producers)
         self._collect: (
             Callable[
@@ -390,6 +547,15 @@ class MetricReader(ABC):
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
 
+        Until the reader is registered on a ``MeterProvider`` there is nothing
+        to collect from, and the call logs a warning and returns without
+        raising, before the timing starts, so nothing is recorded on the SDK's
+        own metrics for it. Once the reader is registered the duration is
+        recorded whether or not a batch came back. A collection that yields
+        nothing does not reach ``_receive_metrics``, so an exporter sees no
+        batch at all rather than an empty one, except for the producer case
+        described on ``_receive_metrics``.
+
         Args:
             timeout_millis: Amount of time in milliseconds before this function
               raises a timeout error.
@@ -426,7 +592,15 @@ class MetricReader(ABC):
         ]
         | None,
     ) -> None:
-        """This function is internal to the SDK. It should not be called or overridden by users"""
+        """This function is internal to the SDK. It should not be called or overridden by users
+
+        A ``MeterProvider`` passes its measurement consumer's ``collect`` here
+        on registration, and ``None`` on detachment, which leaves ``collect``
+        warning and doing nothing again.
+
+        Args:
+            func: What ``collect`` delegates to, or ``None`` to detach.
+        """
         self._collect = func
 
     @abstractmethod
@@ -436,9 +610,34 @@ class MetricReader(ABC):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
-        """Called by `MetricReader.collect` when it receives a batch of metrics"""
+        """Called by `MetricReader.collect` when it receives a batch of metrics
+
+        This is where a subclass does whatever it exists to do with a batch.
+        It runs on the thread that called ``collect``, so a reader that blocks
+        here blocks its own collection loop.
+
+        Args:
+            metrics_data: The collected batch, which is never ``None``. It
+                holds at least one metric whenever the SDK's own state
+                produced the batch, but a ``MetricProducer`` returning a
+                ``ScopeMetrics`` whose ``metrics`` list is empty produces a
+                batch carrying no metric at all.
+            timeout_millis: Whatever budget the caller of ``collect`` gave, in
+                milliseconds, not reduced by the collection just paid for.
+            **kwargs: Nothing is passed here by ``collect``.
+        """
 
     def _set_meter_provider(self, meter_provider: MeterProvider) -> None:
+        """Point the SDK's own metrics about this reader at a real provider.
+
+        A reader measures itself on a ``NoOpMeterProvider`` until this is
+        called, which discards those measurements. The replacement builds a new
+        instrument and, while those metrics are switched on, takes the next
+        instance number for the reader's component type.
+
+        Args:
+            meter_provider: The provider the reader was just registered on.
+        """
         self._metrics = create_metric_reader_metrics(
             self._otel_component_type,
             meter_provider,
@@ -446,6 +645,18 @@ class MetricReader(ABC):
         )
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Collect once, right now, instead of waiting for the next cycle.
+
+        A subclass that owns an exporter is expected to override this and
+        flush the exporter as well, since this base version only collects.
+
+        Args:
+            timeout_millis: The budget for the collection, in milliseconds.
+
+        Returns:
+            Always ``True``, including when the reader is not registered on a
+            ``MeterProvider`` and nothing was collected.
+        """
         self.collect(timeout_millis=timeout_millis)
         return True
 
@@ -460,6 +671,11 @@ class MetricReader(ABC):
         :class:`~opentelemetry.sdk.metrics.MeterProvider`,
         :meth:`~opentelemetry.sdk.metrics.MeterProvider.shutdown` will invoke this
         automatically.
+
+        Args:
+            timeout_millis: The budget for the whole shutdown, in
+                milliseconds, final collection and thread join included.
+            **kwargs: Accepted and ignored by the readers in this package.
         """
 
 
@@ -467,6 +683,19 @@ class InMemoryMetricReader(MetricReader):
     """Implementation of `MetricReader` that returns its metrics from :func:`get_metrics_data`.
 
     This is useful for e.g. unit tests.
+
+    Nothing collects on its own here: a batch exists only because
+    ``get_metrics_data`` was called. There is no exporter and no thread.
+
+    Args:
+        preferred_temporality: The temporality per instrument class, as on
+            ``MetricReader``.
+        preferred_aggregation: The aggregation per instrument class, as on
+            ``MetricReader``.
+        cardinality_limits: The attribute set limit per instrument class, as
+            on ``MetricReader``.
+        metric_producers: Producers whose metrics are collected together with
+            the SDK's own on every ``get_metrics_data`` call.
     """
 
     def __init__(
@@ -477,6 +706,11 @@ class InMemoryMetricReader(MetricReader):
         *,
         metric_producers: Sequence[MetricProducer] = (),
     ) -> None:
+        """Build the reader.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         super().__init__(
             preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
@@ -489,7 +723,19 @@ class InMemoryMetricReader(MetricReader):
     def get_metrics_data(
         self,
     ) -> MetricsData | None:
-        """Reads and returns current metrics from the SDK"""
+        """Reads and returns current metrics from the SDK
+
+        The call collects first, so it reports what has been recorded up to
+        this moment rather than the result of an earlier collection. The held
+        batch is then cleared, which means two calls in a row with nothing
+        recorded in between return a batch and then ``None`` on a reader
+        configured for delta temporality, while a cumulative reader keeps
+        reporting the running totals.
+
+        Returns:
+            The batch just collected, or ``None`` when it yielded nothing,
+            which covers a reader not registered on a ``MeterProvider``.
+        """
         with self._lock:
             self.collect()
             metrics_data = self._metrics_data
@@ -502,11 +748,29 @@ class InMemoryMetricReader(MetricReader):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
+        """Hold on to the batch for ``get_metrics_data`` to pick up.
+
+        A batch that is still held is overwritten, so collecting twice without
+        reading in between loses the first batch.
+
+        Args:
+            metrics_data: The batch just collected.
+            timeout_millis: Ignored, since storing a reference takes no time.
+            **kwargs: Ignored.
+        """
         with self._lock:
             self._metrics_data = metrics_data
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        """Do nothing.
+
+        There is no thread to stop and no connection to close, and the reader
+        is not marked as spent, so ``get_metrics_data`` keeps collecting.
+
+        Args:
+            timeout_millis: Ignored.
+            **kwargs: Ignored.
+        """
 
 
 class PeriodicExportingMetricReader(MetricReader):
@@ -517,6 +781,33 @@ class PeriodicExportingMetricReader(MetricReader):
 
     The configured exporter's :py:meth:`~MetricExporter.export` method will not be called
     concurrently.
+
+    The interval is a delay between cycles and not a period: the reader waits
+    the full interval, collects, exports, and only then starts waiting again,
+    so a cycle longer than the interval pushes the following ones back rather
+    than overlapping with them. An exception raised by the exporter is logged
+    and swallowed, so a failing endpoint stops nothing and the batch is lost.
+
+    Args:
+        exporter: Where each collected batch is sent. Its preferred
+            temporality and preferred aggregation become this reader's.
+        export_interval_millis: How long to wait between cycles, in
+            milliseconds. ``None`` reads ``OTEL_METRIC_EXPORT_INTERVAL`` and
+            falls back to 60000 when that variable is unset or unparsable.
+            ``math.inf`` starts no thread at all, which leaves
+            ``force_flush`` as the only thing that collects, since
+            ``shutdown`` collects nothing of its own.
+        export_timeout_millis: The budget for one scheduled collection and its
+            export, in milliseconds. ``None`` reads
+            ``OTEL_METRIC_EXPORT_TIMEOUT`` and falls back to 30000 when that
+            variable is unset or unparsable. A collection that exceeds it is
+            abandoned with a warning. It bounds only the collections the
+            interval triggers: the one final collection the thread runs after
+            ``shutdown`` is given ``export_interval_millis`` instead.
+        cardinality_limits: The attribute set limit per instrument class, as
+            on ``MetricReader``.
+        metric_producers: Producers whose metrics are collected together with
+            the SDK's own on every cycle.
     """
 
     def __init__(
@@ -528,6 +819,17 @@ class PeriodicExportingMetricReader(MetricReader):
         *,
         metric_producers: Sequence[MetricProducer] = (),
     ) -> None:
+        """Build the reader and start its thread.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders. The thread started here is a daemon,
+        so it does not keep the process alive, and it is started again in the
+        child after a fork where ``os.register_at_fork`` exists.
+
+        Raises:
+            ValueError: If the interval or the timeout, whether passed here or
+                read from the environment, is zero or negative.
+        """
         # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
             preferred_temporality=exporter._preferred_temporality,
@@ -581,12 +883,25 @@ class PeriodicExportingMetricReader(MetricReader):
                 weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
 
                 def _after_in_child() -> None:
+                    """Restart the exporting thread in a forked child.
+
+                    The reader is held weakly, so a reader collected before
+                    the fork leaves this doing nothing rather than keeping the
+                    reader alive for the life of the process.
+                    """
                     if at_fork := weak_at_fork():
                         at_fork()
 
                 os.register_at_fork(after_in_child=_after_in_child)
 
     def _at_fork_reinit(self):
+        """Start a fresh exporting thread in a child process after a fork.
+
+        Only the forking thread survives a fork, so the child inherits a reader
+        whose thread object is there but dead, and a new one is started over
+        the old reference. The aggregated state is inherited as it was, so the
+        first batch the child exports covers what the parent recorded.
+        """
         self._daemon_thread = Thread(
             name="OtelPeriodicExportingMetricReader",
             target=self._ticker,
@@ -595,6 +910,20 @@ class PeriodicExportingMetricReader(MetricReader):
         self._daemon_thread.start()
 
     def _ticker(self) -> None:
+        """Run the collection loop until shutdown, then collect once more.
+
+        Each pass waits for the interval to elapse or for the shutdown event,
+        whichever comes first, and collects when it was the interval. A
+        collection that times out is logged at warning level and the loop
+        carries on, so one slow cycle costs one batch rather than the thread.
+        Any other exception leaves the loop and ends the thread, which stops
+        the reader exporting for the rest of the process. One final collection
+        runs after ``shutdown`` has set the event, so whatever was recorded
+        since the last cycle is still exported. That final collection is given
+        ``export_interval_millis`` as its budget rather than
+        ``export_timeout_millis``, so a reader configured with a long interval
+        and a short timeout lets it run for the length of the interval.
+        """
         interval_secs = self._export_interval_millis / 1e3
         while not self._shutdown_event.wait(interval_secs):
             try:
@@ -620,6 +949,22 @@ class PeriodicExportingMetricReader(MetricReader):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
+        """Export one batch, swallowing whatever the exporter raises.
+
+        Instrumentation is suppressed for the duration of the call, so an
+        exporter built on an instrumented HTTP client does not generate
+        telemetry about its own export. A lock held across the call keeps two
+        exports from overlapping, as the specification requires. An exception
+        from the exporter is logged with its traceback and the batch is
+        dropped, with no retry and no change to the schedule.
+
+        Args:
+            metrics_data: The batch to export.
+            timeout_millis: Passed to the exporter unchanged, and not reduced
+                by the time the collection itself took. The caller is
+                ``collect``, which forwards whatever budget it was given.
+            **kwargs: Ignored.
+        """
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         # pylint: disable=broad-exception-caught,invalid-name
         try:
@@ -630,9 +975,31 @@ class PeriodicExportingMetricReader(MetricReader):
         detach(token)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        """Stop the exporting thread and shut the exporter down.
+
+        The exporting thread wakes up, runs one last collection and exports
+        it, and ends. This call waits for it, then shuts the exporter down.
+        Nothing is collected here when the reader was built with an infinite
+        export interval, because there is no thread to run that collection.
+
+        The timeout bounds the wait for the thread and nothing else. The
+        remaining budget is passed to the exporter under the keyword
+        ``timeout``, while ``MetricExporter.shutdown`` declares the parameter
+        as ``timeout_millis``, so the value lands in ``**kwargs`` and the
+        exporter shuts down on its own default instead.
+
+        A second call logs a warning and returns at once, leaving the first
+        call to finish on its own.
+
+        Args:
+            timeout_millis: The budget for the wait on the exporting thread,
+                in milliseconds, counted from entry.
+            **kwargs: Ignored.
+        """
         deadline_ns = time_ns() + timeout_millis * 10**6
 
         def _shutdown():
+            """Mark the reader as shut down, under the ``Once`` guard."""
             self._shutdown = True
 
         did_set = self._shutdown_once.do_once(_shutdown)
@@ -646,6 +1013,18 @@ class PeriodicExportingMetricReader(MetricReader):
         self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Collect and export right now, then flush the exporter.
+
+        The timer is left alone, so the next scheduled cycle still happens at
+        its usual time rather than an interval after this call.
+
+        Args:
+            timeout_millis: Given in full to the collection and then in full
+                again to the exporter's flush, so this can take twice as long.
+
+        Returns:
+            Always ``True``. What the exporter's flush reported is discarded.
+        """
         super().force_flush(timeout_millis=timeout_millis)
         self._exporter.force_flush(timeout_millis=timeout_millis)
         return True
