@@ -12,6 +12,9 @@ from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.common._exporter_metrics import (
     create_exporter_metrics,
 )
+from opentelemetry.exporter.otlp.proto.common._internal._partial_success import (
+    _log_partial_success,
+)
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._common import (
@@ -27,6 +30,9 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _resolve_timeout,
 )
 from opentelemetry.metrics import MeterProvider
+from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsServiceResponse,
+)
 from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
     LogRecordExporter,
@@ -209,6 +215,7 @@ class OTLPLogExporter(LogRecordExporter):
                     else None
                 )
                 return LogRecordExportResult.FAILURE
+            _log_partial_success(export_result.content, ExportLogsServiceResponse, _logger, "logs", self._endpoint)
         return LogRecordExportResult.SUCCESS
 
     def force_flush(self, timeout_millis: int = 10_000) -> bool:
