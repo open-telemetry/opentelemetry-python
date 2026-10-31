@@ -51,7 +51,6 @@ class B3MultiFormat(TextMapPropagator):
         span_id = trace.INVALID_SPAN_ID
         sampled = "0"
         flags = None
-        debug = False
 
         single_header = _extract_first_element(getter.get(carrier, self.SINGLE_HEADER_KEY))
         if single_header:
