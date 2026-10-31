@@ -2,7 +2,7 @@ colorama>=0.4.6
 iniconfig>=2.0.0
 packaging>=24.0
 pluggy>=1.6.0
-protobuf>=5.29.5
+protobuf>=5.29.6
 pytest>=9.0.3
 -e opentelemetry-api
 -e tests/opentelemetry-test-utils
