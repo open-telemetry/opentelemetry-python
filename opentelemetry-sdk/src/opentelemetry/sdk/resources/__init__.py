@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# pylint: disable=too-many-lines
 """
 This package implements `OpenTelemetry Resources
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#resource-sdk>`_:
@@ -171,6 +172,20 @@ class Resource:
     _schema_url_conflict: bool
 
     def __init__(self, attributes: Attributes, schema_url: str | None = None):
+        """Build a resource directly, without running any detector.
+
+        Only a `ResourceDetector` should call this. Everything else goes
+        through `Resource.create`, which also applies the detectors and the
+        default ``service.name``.
+
+        Args:
+            attributes: The attributes of the entity. They are copied into an
+                immutable ``BoundedAttributes``, so the mapping passed in can
+                be changed afterwards without affecting the resource.
+            schema_url: The url of the semantic convention schema the
+                attributes follow. ``None`` is stored as the empty string, so
+                ``schema_url`` never reads back as ``None``.
+        """
         # Immutable set to true so attributes cannot be added or removed after creation.
         self._attributes = BoundedAttributes(attributes=attributes, immutable=True)
         if schema_url is None:
@@ -186,6 +201,20 @@ class Resource:
         """Creates a new `Resource` from attributes.
 
         `ResourceDetector` instances should not call this method.
+
+        Three sources are merged, in increasing order of priority: the
+        default resource holding the ``telemetry.sdk.*`` attributes, then
+        every detector returned by ``_build_resource_detectors`` in order,
+        then ``attributes``. ``OTEL_RESOURCE_ATTRIBUTES`` and
+        ``OTEL_SERVICE_NAME`` are read by ``OTELResourceDetector``, which runs
+        last unless ``OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`` names ``otel``
+        at an earlier position, so by default they beat the other detectors
+        and lose to ``attributes``.
+
+        When nothing has supplied a non-empty ``service.name``, one is
+        invented: ``unknown_service``, with the base name of
+        ``sys.executable`` appended after a colon when the interpreter
+        reports one.
 
         Args:
             attributes: Optional zero or more key-value pairs.
@@ -211,14 +240,34 @@ class Resource:
 
     @staticmethod
     def get_empty() -> "Resource":
+        """Return the shared resource that carries no attributes.
+
+        Returns:
+            One module-level instance with no attributes and an empty schema
+            url, reused by every caller. It is immutable, so sharing it is
+            safe, and merging it into another resource changes nothing.
+        """
         return _EMPTY_RESOURCE
 
     @property
     def attributes(self) -> Attributes:
+        """The attributes describing the entity.
+
+        Returns:
+            The immutable ``BoundedAttributes`` built at construction.
+            Assigning into it raises ``TypeError``, so a caller that wants to
+            add an attribute builds another resource and merges it.
+        """
         return self._attributes
 
     @property
     def schema_url(self) -> str:
+        """The semantic convention schema url of the attributes.
+
+        Returns:
+            The url, or the empty string when none was given and when a merge
+            found two resources claiming different schema urls.
+        """
         return self._schema_url
 
     def merge(self, other: "Resource") -> "Resource":
@@ -268,6 +317,20 @@ class Resource:
         return merged_resource
 
     def __eq__(self, other: object) -> bool:
+        """Compare the attributes, the schema url and the conflict flag.
+
+        The conflict flag takes part, so a resource whose schema url was
+        cleared by a merge is not equal to one built with an empty schema url
+        even though both report ``""``.
+
+        Args:
+            other: The object to compare against. Anything that is not a
+                `Resource` compares unequal rather than yielding
+                ``NotImplemented``.
+
+        Returns:
+            ``True`` when all three agree.
+        """
         if not isinstance(other, Resource):
             return False
         return (
@@ -277,12 +340,35 @@ class Resource:
         )
 
     def __hash__(self) -> int:
+        """Hash the JSON rendering of the attributes with the schema url.
+
+        The attributes are serialised with sorted keys, so two resources
+        holding the same pairs hash alike whatever order they were built in.
+        A value that JSON cannot encode goes through ``_json_default``, which
+        renders ``bytes`` as hexadecimal, so a bytes value and the matching
+        hexadecimal string collide here while still comparing unequal.
+
+        Returns:
+            A hash over the attributes, the schema url and the conflict flag.
+        """
         return hash(
             f"{dumps(self._attributes.copy(), sort_keys=True, default=_json_default)}"
             f"|{self._schema_url}|{self._schema_url_conflict}"
         )
 
     def to_json(self, indent: int | None = 4) -> str:
+        """Serialise the resource to JSON, for a console exporter or a log line.
+
+        Args:
+            indent: The number of spaces to indent each nesting level by, as
+                ``json.dumps`` takes it. Pass ``None`` for the compact
+                single-line form.
+
+        Returns:
+            A JSON object with ``attributes`` and ``schema_url``. The
+            conflict flag is left out, so a resource whose schema url was
+            cleared by a merge renders the same as one that never had any.
+        """
         return dumps(
             {
                 "attributes": dict(self.attributes),
@@ -300,6 +386,15 @@ def _json_default(value: object) -> str:
     as hex keeps `to_json` readable and keeps `__hash__` working; `__eq__`
     still distinguishes `b"\x01"` from the string `"01"`, so the resulting
     hash collision is harmless.
+
+    Args:
+        value: The attribute value ``json`` refused to encode. It reaches
+            here only through the ``default`` argument of ``json.dumps``, so
+            an encodable value never does.
+
+    Returns:
+        The hexadecimal rendering for ``bytes`` and ``bytearray``, and the
+        ``str`` of the object for anything else.
     """
     if isinstance(value, (bytes, bytearray)):
         return value.hex()
@@ -323,12 +418,44 @@ _service_instance_id_lock = threading.Lock()
 
 
 class ResourceDetector(abc.ABC):
+    """Source of resource attributes read from the surrounding environment.
+
+    A detector is registered under the ``opentelemetry_resource_detector``
+    entry point group and named in ``OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`` to
+    be used. ``get_aggregated_resources`` runs each one on a worker thread and
+    merges what they return, later detectors overriding earlier ones.
+
+    Args:
+        raise_on_error: What to do when ``detect`` raises or runs past the
+            per-detector timeout. ``False``, the default, logs a warning and
+            contributes no attributes. ``True`` lets the exception out of
+            ``get_aggregated_resources``, which fails the construction of the
+            whole resource.
+    """
+
     def __init__(self, raise_on_error: bool = False) -> None:
+        """Build the detector.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         self.raise_on_error = raise_on_error
 
     @abc.abstractmethod
     def detect(self) -> "Resource":
-        """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly"""
+        """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly
+
+        The method runs on a worker thread of ``get_aggregated_resources``
+        and is given a few seconds, so an implementation that reads a file or
+        runs a command has to bound its own waiting.
+
+        Returns:
+            A resource holding whatever this detector found. Return an empty
+            resource rather than raising when there is nothing to report.
+
+        Raises:
+            NotImplementedError: Always, on this base.
+        """
         raise NotImplementedError()
 
     # pylint: disable-next=no-self-use
@@ -348,8 +475,35 @@ class ResourceDetector(abc.ABC):
 
 
 class OTELResourceDetector(ResourceDetector):
+    """Reads the resource attributes the operator put in the environment.
+
+    This detector runs last, so what the operator set beats what the other
+    detectors found. Only ``Resource.create`` arguments beat it in turn. That
+    holds while ``OTEL_EXPERIMENTAL_RESOURCE_DETECTORS`` does not name
+    ``otel`` itself: ``_build_resource_detectors`` appends ``otel`` at the end
+    only when the list does not already contain it, so naming it earlier puts
+    the detectors listed after it in a position to override the environment.
+    """
+
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
+        """Read ``OTEL_RESOURCE_ATTRIBUTES`` and ``OTEL_SERVICE_NAME``.
+
+        ``OTEL_RESOURCE_ATTRIBUTES`` is a comma separated list of ``key=value``
+        pairs. Whitespace around a key and around a value is stripped, the
+        value is percent decoded so that a comma or an equals sign can be
+        carried in it, and an entry with no equals sign is logged at
+        ``WARNING`` level and skipped rather than failing the whole variable.
+        An entry whose value itself contains an equals sign keeps everything
+        after the first one as the value.
+
+        ``OTEL_SERVICE_NAME`` is applied after the list, so it wins over a
+        ``service.name`` set there. An empty ``OTEL_SERVICE_NAME`` is ignored.
+
+        Returns:
+            A resource holding every pair that parsed. It is empty when
+            neither variable is set.
+        """
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map: dict[str, AnyValue] = {}
 
@@ -389,14 +543,44 @@ class ProcessResourceDetector(ResourceDetector):
         *,
         include_command_args: bool = False,
     ) -> None:
+        """Build the detector.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         super().__init__(raise_on_error=raise_on_error)
         self._include_command_args = include_command_args
 
     # pylint: disable=no-self-use
     def is_process_dependent(self) -> bool:
+        """Report that these attributes go stale after a fork.
+
+        Returns:
+            ``True`` always. ``process.pid`` and ``process.parent_pid``
+            describe the process that ran the detector, so a provider re-runs
+            this detector in the child after a fork.
+        """
         return True
 
     def detect(self) -> "Resource":
+        """Collect the runtime, the process ids and the command.
+
+        The command is taken from ``sys.orig_argv`` rather than ``sys.argv``,
+        which is what lets ``process.command_line`` and
+        ``process.command_args`` show ``python -m module`` as it was typed.
+        Only element 0 is reported unless ``include_command_args`` was set,
+        since the remaining arguments often carry secrets, and element 0 of
+        ``sys.orig_argv`` is the interpreter path, so ``process.command``
+        alone names the interpreter and not the module.
+
+        ``process.parent_pid`` is omitted where ``os.getppid`` is absent,
+        which is the case on PyPy. ``process.owner`` is omitted when
+        ``psutil`` is not installed.
+
+        Returns:
+            A resource with the ``process.*`` attributes that this
+            interpreter could report.
+        """
         _runtime_version = ".".join(
             map(
                 str,
@@ -504,6 +688,12 @@ class OsResourceDetector(ResourceDetector):
             >>> platform.version()
             '11.4.0.15.0'
 
+        Returns:
+            A resource with ``os.type`` lower cased, and ``os.version`` taken
+            from ``platform.release`` on most systems but from
+            ``platform.version`` on Windows and on Solaris, where the release
+            string is not the version number a reader expects. ``SunOS`` is
+            reported as ``solaris`` to match the semantic conventions.
         """
 
         os_type = platform.system().lower()
@@ -539,6 +729,18 @@ _COMMAND_TIMEOUT_SECONDS = 2
 
 
 def _read_machine_id_file(path: str) -> str | None:
+    """Read a machine id out of a file, tolerating its absence.
+
+    Args:
+        path: The file to read. It is expected to hold the id on one line,
+            possibly with trailing whitespace.
+
+    Returns:
+        The stripped contents, or ``None`` when the file does not exist,
+        cannot be read or is empty. The failure is logged at ``DEBUG`` level,
+        because a missing file is the normal case on a system that keeps its
+        machine id somewhere else.
+    """
     try:
         with open(path, encoding="utf8") as machine_id_file:
             return machine_id_file.read().strip() or None
@@ -552,6 +754,21 @@ def _run_command(command: tuple[str, ...]) -> str:
 
     A non-zero exit or a missing binary means this host has no machine id to
     offer.
+
+    Args:
+        command: The program and its arguments, already split. It is run
+            without a shell and is given ``_COMMAND_TIMEOUT_SECONDS``, which
+            is deliberately shorter than the per-detector timeout of
+            ``get_aggregated_resources``.
+
+    Returns:
+        Whatever the command wrote to standard output, as text, or the empty
+        string when it exited non-zero or could not be found. Both failures
+        are logged at ``DEBUG`` level.
+
+    Raises:
+        subprocess.TimeoutExpired: If the command outlives the timeout. It is
+            not caught here, so the caller decides.
     """
     try:
         completed = subprocess.run(
@@ -568,6 +785,13 @@ def _run_command(command: tuple[str, ...]) -> str:
 
 
 def _get_linux_machine_id() -> str | None:
+    """Read the machine id from the usual Linux locations.
+
+    Returns:
+        The contents of the first readable and non-empty file among
+        ``/etc/machine-id`` and ``/var/lib/dbus/machine-id``, or ``None``
+        when neither can be read.
+    """
     for path in _LINUX_MACHINE_ID_PATHS:
         machine_id = _read_machine_id_file(path)
         if machine_id:
@@ -576,10 +800,23 @@ def _get_linux_machine_id() -> str | None:
 
 
 def _get_bsd_machine_id() -> str | None:
+    """Read the machine id from ``/etc/hostid``, falling back to ``kenv``.
+
+    Returns:
+        The host id file contents when it holds something, otherwise the
+        SMBIOS system uuid that ``kenv`` reports, otherwise ``None``.
+    """
     return _read_machine_id_file(_BSD_HOSTID_PATH) or _run_command(_BSD_KENV_COMMAND).strip() or None
 
 
 def _get_macos_machine_id() -> str | None:
+    """Read the platform uuid out of the ``ioreg`` output.
+
+    Returns:
+        The value of the first ``IOPlatformUUID`` line, with its surrounding
+        quotes removed, or ``None`` when ``ioreg`` could not be run or
+        printed no such line.
+    """
     for line in _run_command(_MACOS_IOREG_COMMAND).splitlines():
         # The line looks like: `    "IOPlatformUUID" = "AAAAAAAA-BBBB-..."`
         key, separator, value = line.partition("=")
@@ -593,6 +830,20 @@ def _get_macos_machine_id() -> str | None:
 
 
 def _get_windows_machine_id() -> str | None:
+    """Read ``MachineGuid`` from the registry.
+
+    The 64-bit view of the key is requested explicitly, so a 32-bit
+    interpreter on a 64-bit system reads the same value as a 64-bit one
+    rather than being redirected to the WOW6432Node copy.
+
+    Returns:
+        The machine guid as a string, or ``None`` when ``winreg`` is absent,
+        which is the case off Windows, and when the value is empty.
+
+    Raises:
+        OSError: If the key or the value is missing, or cannot be read. The
+            caller catches it.
+    """
     if winreg is None:
         logger.debug("winreg is unavailable, cannot detect %s", HOST_ID)
         return None
@@ -606,6 +857,17 @@ def _get_windows_machine_id() -> str | None:
 
 
 def _get_host_id() -> str | None:
+    """Read the non-privileged machine id of this host.
+
+    The source depends on the operating system: a file on Linux, ``ioreg`` on
+    macOS, the registry on Windows, and ``/etc/hostid`` or ``kenv`` on BSD
+    and DragonFly.
+
+    Returns:
+        The machine id, or ``None`` when the operating system is not one of
+        those, which is logged at ``DEBUG`` level, and when the lookup for a
+        known operating system found nothing.
+    """
     system = platform.system()
     if system == "Linux":
         return _get_linux_machine_id()
@@ -632,6 +894,22 @@ class _HostResourceDetector(ResourceDetector):  # type: ignore[reportUnusedClass
     """
 
     def detect(self) -> "Resource":
+        """Collect the host name, the architecture and the machine id.
+
+        The machine id lookup is guarded here rather than relying on
+        ``get_aggregated_resources``, because this method is also called
+        directly, and a failed lookup must not cost the caller the other two
+        attributes.
+
+        Returns:
+            A resource with ``host.name`` and ``host.arch``, plus ``host.id``
+            when the machine id could be read.
+
+        Raises:
+            Exception: Whatever the machine id lookup raised, but only when
+                this detector was built with ``raise_on_error=True``. The
+                failure is logged at ``WARNING`` level either way.
+        """
         resource_info: dict[str, AnyValue] = {
             HOST_NAME: socket.gethostname(),
             HOST_ARCH: platform.machine(),
@@ -670,9 +948,26 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
     """
 
     def is_process_dependent(self) -> bool:
+        """Report that the instance id has to be redrawn after a fork.
+
+        Returns:
+            ``True`` always. Two processes sharing one ``service.instance.id``
+            would be indistinguishable to a backend, so a provider re-runs
+            this detector in the child.
+        """
         return True
 
     def detect(self) -> "Resource":
+        """Return the instance id of this process, drawing one if needed.
+
+        The id is held in a module-level variable alongside the process id it
+        was drawn for, under a lock, so every detector instance in one
+        process reports the same value and a fork causes exactly one redraw.
+
+        Returns:
+            A resource holding ``service.instance.id`` as the string form of
+            a version 4 UUID.
+        """
         # pylint: disable-next=global-statement
         global _service_instance_id, _service_instance_id_pid
         with _service_instance_id_lock:
@@ -695,6 +990,17 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
     that OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME take highest merge
     priority, but an explicit position in
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS is respected for either name.
+
+    A name of ``*`` in OTEL_EXPERIMENTAL_RESOURCE_DETECTORS expands in place
+    to every registered detector name that was not already listed, sorted,
+    with ``otel`` left out so that it keeps its position at the end. A name
+    that matches no entry point, or whose entry point fails to load or to
+    construct, is logged with its traceback and skipped, so one broken
+    detector package does not stop the resource from being built.
+
+    Returns:
+        The detector instances to run, in merge order, each already
+        constructed with no arguments.
     """
     configured_detector_names = [
         name.strip() for name in environ.get(OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "").split(",") if name.strip()
@@ -743,6 +1049,16 @@ def _build_resource_detectors() -> list["ResourceDetector"]:
 
 
 def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnusedFunction]
+    """Re-run only the detectors whose attributes a fork invalidates.
+
+    A provider calls this in the child after a fork and merges the result on
+    top of the resource it already holds.
+
+    Returns:
+        A resource holding the attributes of the process-dependent detectors
+        alone, starting from the empty resource rather than the default one,
+        so that nothing else is re-asserted.
+    """
     return get_aggregated_resources(
         [detector for detector in _build_resource_detectors() if detector.is_process_dependent()],
         Resource.get_empty(),
@@ -756,10 +1072,33 @@ def get_aggregated_resources(
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
-    :param detectors: List of resources in order of priority
-    :param initial_resource: Static resource. This has highest priority
-    :param timeout: Number of seconds to wait for each detector to return
-    :return:
+    Every detector runs on a thread pool of four workers, but the results are
+    merged in the order the detectors were given, so a later detector
+    overrides an earlier one whatever order they finished in.
+
+    A detector that exceeds ``timeout`` is skipped and logged at ``WARNING``
+    level, unless it was built with ``raise_on_error=True``, in which case
+    the error is raised and the detectors that have not started yet are
+    cancelled. The pool is always joined before this function returns, so a
+    detector that blocks forever blocks this call forever.
+
+    Args:
+        detectors: The detectors to run, in increasing order of priority.
+        initial_resource: The resource every detected resource is merged on
+            top of, which gives it the lowest priority of all. Pass ``None``
+            to start from ``Resource.create()``, which runs the whole
+            detection over again.
+        timeout: How long to wait for each detector, in seconds. The budget
+            is per detector rather than for the whole call.
+
+    Returns:
+        One resource holding the merged attributes.
+
+    Raises:
+        concurrent.futures.TimeoutError: If a detector built with
+            ``raise_on_error=True`` exceeded ``timeout``.
+        Exception: Whatever a detector built with ``raise_on_error=True``
+            raised.
     """
     detectors_merged_resource = initial_resource or Resource.create()
 
