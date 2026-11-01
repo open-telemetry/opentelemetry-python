@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-ancestors
+# pylint: disable=too-many-lines
 
 """
 The OpenTelemetry metrics API  describes the classes used to generate
@@ -124,6 +125,10 @@ class MeterProvider(ABC):
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
             attributes: Optional. Attributes that are associated with the emitted telemetry.
+
+        Returns:
+            A `Meter` that creates instruments attributed to the named
+            instrumenting module.
         """
 
 
@@ -137,12 +142,37 @@ class NoOpMeterProvider(MeterProvider):
         schema_url: str | None = None,
         attributes: Attributes = None,
     ) -> "Meter":
-        """Returns a NoOpMeter."""
+        """Returns a NoOpMeter.
+
+        Args:
+            name: The name of the instrumenting module.
+            version: Optional. The version string of the instrumenting
+                library.
+            schema_url: Optional. Specifies the Schema URL of the emitted
+                telemetry.
+            attributes: Optional. Accepted and discarded: the `NoOpMeter` is
+                built without them.
+
+        Returns:
+            A `NoOpMeter`, which discards every measurement made through the
+            instruments it creates.
+        """
         return NoOpMeter(name, version=version, schema_url=schema_url)
 
 
 class _ProxyMeterProvider(MeterProvider):
+    """The meter provider in use before a real one is set.
+
+    Every meter this meter provider hands out before a real meter provider is
+    set is a `_ProxyMeter`. When a real meter provider is finally set,
+    `on_set_meter_provider` gives each of those proxy meters a real backing
+    meter, so instruments created before the SDK was installed start recording
+    from that moment on. Every meter handed out after that call comes from the
+    real meter provider directly.
+    """
+
     def __init__(self) -> None:
+        """Build the proxy meter provider with no real one behind it yet."""
         self._lock = Lock()
         self._meters: list[_ProxyMeter] = []
         self._real_meter_provider: MeterProvider | None = None
@@ -154,6 +184,23 @@ class _ProxyMeterProvider(MeterProvider):
         schema_url: str | None = None,
         attributes: Attributes = None,
     ) -> "Meter":
+        """Return a meter, proxying until a real meter provider is set.
+
+        Args:
+            name: The name of the instrumenting module.
+            version: Optional. The version string of the instrumenting
+                library.
+            schema_url: Optional. Specifies the Schema URL of the emitted
+                telemetry.
+            attributes: Optional. Accepted and discarded: neither the
+                `_ProxyMeter` nor the real meter provider is given them, so a
+                scope attribute supplied here never reaches the telemetry.
+
+        Returns:
+            A meter from the real meter provider when one has been set, and a
+            `_ProxyMeter` otherwise. The proxy is remembered so that it can be
+            given a real backing meter later.
+        """
         with self._lock:
             if self._real_meter_provider is not None:
                 return self._real_meter_provider.get_meter(name, version, schema_url)
@@ -163,6 +210,11 @@ class _ProxyMeterProvider(MeterProvider):
             return meter
 
     def on_set_meter_provider(self, meter_provider: MeterProvider) -> None:
+        """Give every meter handed out so far a real backing meter.
+
+        Args:
+            meter_provider: The real meter provider that has just been set.
+        """
         with self._lock:
             self._real_meter_provider = meter_provider
             for meter in self._meters:
@@ -171,6 +223,19 @@ class _ProxyMeterProvider(MeterProvider):
 
 @dataclass
 class _InstrumentRegistrationStatus:
+    """What a meter's instrument registry held for one identity before a call.
+
+    Args:
+        instrument_id: The identity the instrument was registered under,
+            built from its name, type, unit and description.
+        already_registered: Whether an instrument of this identity had been
+            created on the same meter before.
+        conflict: Whether that earlier instrument carried a different
+            advisory from the one now requested.
+        current_advisory: The advisory the earlier instrument was registered
+            with, when there is a conflict.
+    """
+
     instrument_id: str
     already_registered: bool
     conflict: bool
@@ -182,6 +247,12 @@ class Meter(ABC):
 
     This class provides methods for creating instruments which are then
     used to produce measurements.
+
+    Args:
+        name: The name of the instrumenting module.
+        version: The version string of the instrumenting library, or
+            ``None`` when it has none.
+        schema_url: The Schema URL of the emitted telemetry, or ``None``.
     """
 
     def __init__(
@@ -190,6 +261,11 @@ class Meter(ABC):
         version: str | None = None,
         schema_url: str | None = None,
     ) -> None:
+        """Build the meter.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         super().__init__()
         self._name = name
         self._version = version
@@ -201,6 +277,9 @@ class Meter(ABC):
     def name(self) -> str:
         """
         The name of the instrumenting module.
+
+        Returns:
+            The name this meter was created with.
         """
         return self._name
 
@@ -208,6 +287,10 @@ class Meter(ABC):
     def version(self) -> str | None:
         """
         The version string of the instrumenting library.
+
+        Returns:
+            The version this meter was created with, or ``None`` when it was
+            created without one.
         """
         return self._version
 
@@ -215,6 +298,10 @@ class Meter(ABC):
     def schema_url(self) -> str | None:
         """
         Specifies the Schema URL of the emitted telemetry
+
+        Returns:
+            The Schema URL this meter was created with, or ``None`` when it
+            was created without one.
         """
         return self._schema_url
 
@@ -230,12 +317,22 @@ class Meter(ABC):
         Register an instrument with the name, type, unit and description as
         identifying keys and the advisory as value.
 
-        Returns a tuple. The first value is the instrument id.
-        The second value is an `_InstrumentRegistrationStatus` where
-        `already_registered` is `True` if the instrument has been registered
-        already.
-        If `conflict` is set to True the `current_advisory` attribute contains
-        the registered instrument advisory.
+        Args:
+            name: The name of the instrument being created.
+            type_: The class of the instrument being created.
+            unit: The unit of the instrument being created.
+            description: The description of the instrument being created.
+            advisory: The advisory of the instrument being created, for the
+                instrument types that take one.
+
+        Returns:
+            An `_InstrumentRegistrationStatus` describing what the registry
+            held for this identity before the call. Its ``instrument_id``
+            attribute carries the identity the registry keyed on. Its
+            ``already_registered`` attribute is ``True`` when an instrument
+            with that identity was registered before. When its ``conflict``
+            attribute is ``True``, its ``current_advisory`` attribute carries
+            the advisory of the instrument that was already registered.
         """
 
         instrument_id = ",".join([name.strip().lower(), type_.__name__, unit, description])
@@ -268,6 +365,20 @@ class Meter(ABC):
         description: str,
         status: _InstrumentRegistrationStatus,
     ) -> None:
+        """Warn that an instrument of this identity already exists.
+
+        The instrument that was registered first keeps its advisory, and the
+        advisory passed to the later call is ignored.
+
+        Args:
+            name: The name of the instrument being created.
+            instrumentation_type: The name of the class of the instrument
+                being created.
+            unit: The unit of the instrument being created.
+            description: The description of the instrument being created.
+            status: The status returned by `_register_instrument` for the
+                instrument being created.
+        """
         _logger.warning(
             "An instrument with name %s, type %s, unit %s and "
             "description %s has been created already with a "
@@ -293,6 +404,10 @@ class Meter(ABC):
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
+        Returns:
+            A :class:`~opentelemetry.metrics.Counter`. Which implementation is
+            returned depends on the meter: a recording one when an SDK is
+            installed, a no-op one otherwise.
         """
 
     @abstractmethod
@@ -309,6 +424,10 @@ class Meter(ABC):
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
+        Returns:
+            A :class:`~opentelemetry.metrics.UpDownCounter`. Which implementation is
+            returned depends on the meter: a recording one when an SDK is
+            installed, a no-op one otherwise.
         """
 
     @abstractmethod
@@ -453,6 +572,10 @@ class Meter(ABC):
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
+        Returns:
+            A :class:`~opentelemetry.metrics.ObservableCounter`. Which implementation is
+            returned depends on the meter: a recording one when an SDK is
+            installed, a no-op one otherwise.
         """
 
     @abstractmethod
@@ -471,6 +594,15 @@ class Meter(ABC):
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
+            explicit_bucket_boundaries_advisory: The bucket boundaries this
+                instrument suggests to the SDK, in ascending order. ``None``
+                leaves the choice to the SDK, and a view configured on the SDK
+                overrides the suggestion either way.
+
+        Returns:
+            A :class:`~opentelemetry.metrics.Histogram`. Which implementation
+            is returned depends on the meter: a recording one when an SDK is
+            installed, a no-op one otherwise.
         """
 
     def create_gauge(  # type: ignore # pylint: disable=no-self-use
@@ -486,6 +618,13 @@ class Meter(ABC):
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
+
+        Returns:
+            A :class:`~opentelemetry.metrics.Gauge` from a meter that
+            overrides this method. This method is not abstract and its own
+            body only emits a warning, so a meter that inherits it returns
+            ``None`` and a caller that goes on to record a measurement raises
+            :exc:`AttributeError`.
         """
         warnings.warn("create_gauge() is not implemented and will be a no-op")
 
@@ -507,6 +646,10 @@ class Meter(ABC):
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
+        Returns:
+            A :class:`~opentelemetry.metrics.ObservableGauge`. Which implementation is
+            returned depends on the meter: a recording one when an SDK is
+            installed, a no-op one otherwise.
         """
 
     @abstractmethod
@@ -527,16 +670,40 @@ class Meter(ABC):
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
+        Returns:
+            A :class:`~opentelemetry.metrics.ObservableUpDownCounter`. Which implementation is
+            returned depends on the meter: a recording one when an SDK is
+            installed, a no-op one otherwise.
         """
 
 
 class _ProxyMeter(Meter):
+    """The meter a `_ProxyMeterProvider` hands out before a real one is set.
+
+    Every instrument this meter creates before a real meter is set is a proxy
+    instrument that records nothing. When `on_set_meter_provider` is called,
+    this meter acquires a real backing meter and each of those proxy
+    instruments acquires a real backing instrument. Every instrument this meter
+    creates after that call comes from the real meter directly.
+
+    Args:
+        name: The name of the instrumenting module.
+        version: The version string of the instrumenting library, or
+            ``None`` when it has none.
+        schema_url: The Schema URL of the emitted telemetry, or ``None``.
+    """
+
     def __init__(
         self,
         name: str,
         version: str | None = None,
         schema_url: str | None = None,
     ) -> None:
+        """Build the proxy meter with no real meter behind it yet.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         super().__init__(name, version=version, schema_url=schema_url)
         self._lock = Lock()
         self._instruments: list[_ProxyInstrumentT] = []
@@ -547,6 +714,9 @@ class _ProxyMeter(Meter):
 
         Creates a real backing meter for this instance and notifies all created
         instruments so they can create real backing instruments.
+
+        Args:
+            meter_provider: The real meter provider that has just been set.
         """
         real_meter = meter_provider.get_meter(self._name, self._version, self._schema_url)
 
@@ -563,6 +733,19 @@ class _ProxyMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> Counter:
+        """Create a counter, proxying until a real meter is set.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A counter from the real meter when one has been set, and a proxy
+            counter otherwise. The proxy is remembered so that it can be given
+            a real backing instrument later.
+        """
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_counter(name, unit, description)
@@ -576,6 +759,19 @@ class _ProxyMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> UpDownCounter:
+        """Create a up-down counter, proxying until a real meter is set.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A up-down counter from the real meter when one has been set, and a proxy
+            up-down counter otherwise. The proxy is remembered so that it can be given
+            a real backing instrument later.
+        """
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_up_down_counter(name, unit, description)
@@ -590,6 +786,21 @@ class _ProxyMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> ObservableCounter:
+        """Create a observable counter, proxying until a real meter is set.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A observable counter from the real meter when one has been set, and a proxy
+            observable counter otherwise. The proxy is remembered so that it can be given
+            a real backing instrument later.
+        """
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_counter(name, callbacks, unit, description)
@@ -605,6 +816,21 @@ class _ProxyMeter(Meter):
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> Histogram:
+        """Create a histogram, proxying until a real meter is set.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            explicit_bucket_boundaries_advisory: The bucket boundaries this
+                instrument suggests to the SDK, in ascending order.
+
+        Returns:
+            A histogram from the real meter when one has been set, and a proxy
+            histogram otherwise. The proxy is remembered so that it can be given
+            a real backing instrument later.
+        """
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_histogram(
@@ -623,6 +849,19 @@ class _ProxyMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> Gauge:
+        """Create a gauge, proxying until a real meter is set.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A gauge from the real meter when one has been set, and a proxy
+            gauge otherwise. The proxy is remembered so that it can be given
+            a real backing instrument later.
+        """
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_gauge(name, unit, description)
@@ -637,6 +876,21 @@ class _ProxyMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> ObservableGauge:
+        """Create a observable gauge, proxying until a real meter is set.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A observable gauge from the real meter when one has been set, and a proxy
+            observable gauge otherwise. The proxy is remembered so that it can be given
+            a real backing instrument later.
+        """
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_gauge(name, callbacks, unit, description)
@@ -651,6 +905,21 @@ class _ProxyMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> ObservableUpDownCounter:
+        """Create a observable up-down counter, proxying until a real meter is set.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A observable up-down counter from the real meter when one has been set, and a proxy
+            observable up-down counter otherwise. The proxy is remembered so that it can be given
+            a real backing instrument later.
+        """
         with self._lock:
             if self._real_meter:
                 return self._real_meter.create_observable_up_down_counter(
@@ -676,7 +945,18 @@ class NoOpMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> Counter:
-        """Returns a no-op Counter."""
+        """Returns a no-op Counter.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A `NoOpCounter`, which discards every measurement made
+            through it.
+        """
         status = self._register_instrument(name, NoOpCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -695,7 +975,18 @@ class NoOpMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> Gauge:
-        """Returns a no-op Gauge."""
+        """Returns a no-op Gauge.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A `NoOpGauge`, which discards every measurement made
+            through it.
+        """
         status = self._register_instrument(name, NoOpGauge, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -713,7 +1004,18 @@ class NoOpMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> UpDownCounter:
-        """Returns a no-op UpDownCounter."""
+        """Returns a no-op UpDownCounter.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A `NoOpUpDownCounter`, which discards every measurement made
+            through it.
+        """
         status = self._register_instrument(name, NoOpUpDownCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -732,7 +1034,20 @@ class NoOpMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> ObservableCounter:
-        """Returns a no-op ObservableCounter."""
+        """Returns a no-op ObservableCounter.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A `NoOpObservableCounter`, which discards every measurement made
+            through it.
+        """
         status = self._register_instrument(name, NoOpObservableCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -757,7 +1072,20 @@ class NoOpMeter(Meter):
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> Histogram:
-        """Returns a no-op Histogram."""
+        """Returns a no-op Histogram.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            explicit_bucket_boundaries_advisory: The bucket boundaries this
+                instrument suggests to the SDK, in ascending order.
+
+        Returns:
+            A `NoOpHistogram`, which discards every measurement made
+            through it.
+        """
         status = self._register_instrument(
             name,
             NoOpHistogram,
@@ -787,7 +1115,20 @@ class NoOpMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> ObservableGauge:
-        """Returns a no-op ObservableGauge."""
+        """Returns a no-op ObservableGauge.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A `NoOpObservableGauge`, which discards every measurement made
+            through it.
+        """
         status = self._register_instrument(name, NoOpObservableGauge, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -811,7 +1152,20 @@ class NoOpMeter(Meter):
         unit: str = "",
         description: str = "",
     ) -> ObservableUpDownCounter:
-        """Returns a no-op ObservableUpDownCounter."""
+        """Returns a no-op ObservableUpDownCounter.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+
+        Returns:
+            A `NoOpObservableUpDownCounter`, which discards every measurement made
+            through it.
+        """
         status = self._register_instrument(name, NoOpObservableUpDownCounter, unit, description)
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -847,6 +1201,22 @@ def get_meter(
     `opentelemetry.metrics.MeterProvider.get_meter`.
 
     If meter_provider is omitted the current configured one is used.
+
+    Args:
+        name: The name of the instrumenting module. See
+            `opentelemetry.metrics.MeterProvider.get_meter` for how to choose
+            it.
+        version: The version string of the instrumenting library.
+        meter_provider: The meter provider to ask. If ``None``, the globally
+            configured one is used.
+        schema_url: Optional. Specifies the Schema URL of the emitted
+            telemetry.
+        attributes: Optional. Attributes that are associated with the emitted
+            telemetry.
+
+    Returns:
+        A `Meter` that creates instruments attributed to the named
+        instrumenting module.
     """
     if meter_provider is None:
         meter_provider = get_meter_provider()
@@ -854,7 +1224,18 @@ def get_meter(
 
 
 def _set_meter_provider(meter_provider: MeterProvider, log: bool) -> None:
+    """Set the global meter provider, the first call winning.
+
+    Args:
+        meter_provider: The meter provider to make global.
+        log: Whether to log a warning when a provider has already been set, so
+            that this call has no effect. The call that loads a provider from
+            :envvar:`OTEL_PYTHON_METER_PROVIDER` passes ``False``, since it
+            races with an explicit `set_meter_provider` by design.
+    """
+
     def set_mp() -> None:
+        """Store the meter provider and hand every proxy a real backing one."""
         global _METER_PROVIDER  # pylint: disable=global-statement
         _METER_PROVIDER = meter_provider
 
@@ -872,12 +1253,32 @@ def set_meter_provider(meter_provider: MeterProvider) -> None:
 
     This can only be done once, a warning will be logged if any further attempt
     is made.
+
+    Args:
+        meter_provider: The meter provider to make global.
     """
     _set_meter_provider(meter_provider, log=True)
 
 
 def get_meter_provider() -> MeterProvider:
-    """Gets the current global :class:`~.MeterProvider` object."""
+    """Gets the current global :class:`~.MeterProvider` object.
+
+    When none has been set, the provider named by
+    :envvar:`OTEL_PYTHON_METER_PROVIDER` is loaded and set, if that
+    environment variable is present.
+
+    Returns:
+        The global meter provider. When none has been set and the environment
+        variable is absent, a proxy meter provider is returned instead, so
+        that instruments created before an SDK is installed start recording
+        once one is.
+
+    Raises:
+        Exception: Whatever loading the entry point named by the environment
+            variable raised, since ``_load_provider`` logs it and re-raises. A
+            name that matches no installed entry point surfaces as
+            :exc:`StopIteration`.
+    """
 
     if _METER_PROVIDER is None:
         if OTEL_PYTHON_METER_PROVIDER not in environ:
