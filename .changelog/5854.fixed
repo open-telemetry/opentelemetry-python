@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: fix `container` and `host` resource detectors and warn instead of failing on unloadable detectors

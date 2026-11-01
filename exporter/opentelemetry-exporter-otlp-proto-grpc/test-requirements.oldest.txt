@@ -70,7 +70,7 @@ pluggy==1.6.0
     # via
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   pytest
-protobuf==5.29.5
+protobuf==5.29.6
     # via
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   googleapis-common-protos
