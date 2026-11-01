@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: prevent log processor exceptions from escaping emission
