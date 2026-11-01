@@ -565,7 +565,7 @@ class ProxyTracer(Tracer):
         type_: str | None = None,
         options: _SpanOptions | None = None,
     ) -> Span:
-        return self._tracer._start_span_with_options(
+        return self._tracer._start_span_with_options(  # pylint: disable=protected-access
             name,
             context,
             kind,
@@ -594,7 +594,7 @@ class ProxyTracer(Tracer):
         type_: str | None = None,
         options: _SpanOptions | None = None,
     ) -> Iterator[Span]:
-        with self._tracer._start_as_current_span_with_options(
+        with self._tracer._start_as_current_span_with_options(  # pylint: disable=protected-access
             name,
             context,
             kind,
