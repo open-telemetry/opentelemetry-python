@@ -29,7 +29,7 @@ from typing import (
 )
 from warnings import filterwarnings
 
-from typing_extensions import Unpack, deprecated
+from typing_extensions import deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry import metrics as metrics_api
@@ -94,10 +94,6 @@ def _checked_span_type(span_type: str) -> str | None:
         return span_type
     logger.error(_SPAN_TYPE_ERROR_MESSAGE, span_type)
     return None
-
-
-def _warn_unknown_span_options(kwargs: Mapping[str, Any]) -> None:
-    logger.warning("Ignoring unknown span start options: %s", sorted(kwargs))
 
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
@@ -1245,7 +1241,7 @@ class Tracer(trace_api.Tracer):
             None,
         )
 
-    def _start_typed_span(
+    def _start_span_with_options(
         self,
         name: str,
         context: context_api.Context | None = None,
@@ -1257,12 +1253,10 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
         *,
         type_: str | None = None,
-        **kwargs: Unpack[_SpanOptions],
+        options: _SpanOptions | None = None,
     ) -> trace_api.Span:
         if type_ is not None:
             type_ = _checked_span_type(type_)
-        if kwargs:
-            _warn_unknown_span_options(kwargs)
         return self._new_span(
             name,
             context,
@@ -1276,7 +1270,7 @@ class Tracer(trace_api.Tracer):
         )
 
     @_agnosticcontextmanager  # pylint: disable=protected-access
-    def _start_as_current_typed_span(
+    def _start_as_current_span_with_options(
         self,
         name: str,
         context: context_api.Context | None = None,
@@ -1289,12 +1283,10 @@ class Tracer(trace_api.Tracer):
         end_on_exit: bool = True,
         *,
         type_: str | None = None,
-        **kwargs: Unpack[_SpanOptions],
+        options: _SpanOptions | None = None,
     ) -> Iterator[trace_api.Span]:
         if type_ is not None:
             type_ = _checked_span_type(type_)
-        if kwargs:
-            _warn_unknown_span_options(kwargs)
         span = self._new_span(
             name,
             context,

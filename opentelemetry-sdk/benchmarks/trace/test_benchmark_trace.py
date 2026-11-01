@@ -161,14 +161,14 @@ def _record_mean_alloc_bytes(benchmark, func, *args):
     benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
 
 
-def _start_typed_span_no_type():
-    span = tracer._start_typed_span("benchmarkedSpan", attributes={"long.attribute": -10000000001000000000})
+def _start_span_with_options_no_type():
+    span = tracer._start_span_with_options("benchmarkedSpan", attributes={"long.attribute": -10000000001000000000})
     span.add_event("benchmarkEvent")
     span.end()
 
 
-def _start_typed_span_type():
-    span = tracer._start_typed_span(
+def _start_span_with_options_type():
+    span = tracer._start_span_with_options(
         "benchmarkedSpan",
         type_="http.client.request",
         attributes={"long.attribute": -10000000001000000000},
@@ -177,8 +177,8 @@ def _start_typed_span_type():
     span.end()
 
 
-def _start_typed_span_type_with_option():
-    span = tracer._start_typed_span(
+def _start_span_with_options_type_with_option():
+    span = tracer._start_span_with_options(
         "benchmarkedSpan",
         type_="http.client.request",
         attributes={"long.attribute": -10000000001000000000},
@@ -188,15 +188,15 @@ def _start_typed_span_type_with_option():
     span.end()
 
 
-def _start_as_current_typed_span_no_type():
-    with tracer._start_as_current_typed_span(
+def _start_as_current_span_with_options_no_type():
+    with tracer._start_as_current_span_with_options(
         "benchmarkedSpan", attributes={"long.attribute": -10000000001000000000}
     ) as span:
         span.add_event("benchmarkEvent")
 
 
-def _start_as_current_typed_span_type():
-    with tracer._start_as_current_typed_span(
+def _start_as_current_span_with_options_type():
+    with tracer._start_as_current_span_with_options(
         "benchmarkedSpan",
         type_="http.client.request",
         attributes={"long.attribute": -10000000001000000000},
@@ -204,8 +204,8 @@ def _start_as_current_typed_span_type():
         span.add_event("benchmarkEvent")
 
 
-def _start_as_current_typed_span_type_with_option():
-    with tracer._start_as_current_typed_span(
+def _start_as_current_span_with_options_type_with_option():
+    with tracer._start_as_current_span_with_options(
         "benchmarkedSpan",
         type_="http.client.request",
         attributes={"long.attribute": -10000000001000000000},
@@ -216,10 +216,10 @@ def _start_as_current_typed_span_type_with_option():
 
 @pytest.mark.parametrize(
     "func",
-    [_start_typed_span_no_type, _start_typed_span_type, _start_typed_span_type_with_option],
+    [_start_span_with_options_no_type, _start_span_with_options_type, _start_span_with_options_type_with_option],
     ids=["no_type", "type", "type_with_option"],
 )
-def test_simple_start_typed_span(benchmark, func):
+def test_simple_start_span_with_options(benchmark, func):
     _record_mean_alloc_bytes(benchmark, func)
     benchmark(func)
 
@@ -227,13 +227,13 @@ def test_simple_start_typed_span(benchmark, func):
 @pytest.mark.parametrize(
     "func",
     [
-        _start_as_current_typed_span_no_type,
-        _start_as_current_typed_span_type,
-        _start_as_current_typed_span_type_with_option,
+        _start_as_current_span_with_options_no_type,
+        _start_as_current_span_with_options_type,
+        _start_as_current_span_with_options_type_with_option,
     ],
     ids=["no_type", "type", "type_with_option"],
 )
-def test_simple_start_as_current_typed_span(benchmark, func):
+def test_simple_start_as_current_span_with_options(benchmark, func):
     _record_mean_alloc_bytes(benchmark, func)
     benchmark(func)
 
