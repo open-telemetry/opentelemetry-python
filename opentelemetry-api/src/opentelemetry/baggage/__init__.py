@@ -1,6 +1,23 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Name/value pairs that travel alongside a trace.
+
+Baggage is a set of name/value pairs carried in the current
+:class:`~opentelemetry.context.Context` and propagated across process
+boundaries by :class:`~opentelemetry.baggage.propagation.W3CBaggagePropagator`.
+It lets a value set early in a request, such as an account identifier, be read
+much later without threading it through every call.
+
+Every function here that changes the baggage returns a new
+:class:`~opentelemetry.context.Context` rather than modifying one, matching the
+immutability of the context API. The reading functions, :func:`get_all` and
+:func:`get_baggage`, return the pairs themselves.
+
+Baggage is not added to spans automatically, and it is sent to every service
+downstream, so a value that is sensitive or large does not belong in it.
+"""
+
 from collections.abc import Mapping
 from logging import getLogger
 from string import ascii_letters, digits
@@ -92,6 +109,18 @@ def clear(context: Context | None = None) -> Context:
 
 
 def _get_baggage_value(context: Context | None = None) -> dict[str, object]:
+    """Read the raw baggage dict out of a context.
+
+    Args:
+        context: The context to read from. If ``None``, the current context is
+            used.
+
+    Returns:
+        The baggage dict stored in the context, or an empty dict when the
+        context holds no baggage or holds something that is not a dict. The
+        returned dict is the stored one, so callers that intend to modify it
+        must copy it first.
+    """
     baggage = get_value(_BAGGAGE_KEY, context=context)
     if isinstance(baggage, dict):
         return baggage
@@ -99,19 +128,60 @@ def _get_baggage_value(context: Context | None = None) -> dict[str, object]:
 
 
 def _is_valid_key(name: str) -> bool:
+    """Report whether ``name`` is usable as a baggage name.
+
+    Args:
+        name: The candidate baggage name.
+
+    Returns:
+        ``True`` when ``name`` is non-empty and made up only of RFC 7230 token
+        characters, which is what the W3C Baggage header format permits.
+    """
     return bool(name) and _KEY_CHARS.issuperset(name)
 
 
 def _is_valid_property(property: str) -> bool:
+    """Report whether ``property`` is a valid baggage list-member property.
+
+    A property is the optional metadata that may follow a baggage value after
+    a semicolon. It is either a bare key or a ``key=value`` pair.
+
+    Args:
+        property: One property, with no leading semicolon.
+
+    Returns:
+        ``True`` when the key half is a valid baggage name and the value half,
+        if present, holds only permitted characters.
+    """
     key, separator, value = property.partition("=")
     return _is_valid_key(key.strip(" \t")) and (not separator or _VALUE_CHARS.issuperset(value.strip(" \t")))
 
 
 def _is_valid_value(value: object) -> bool:
+    """Report whether ``value`` is usable as a baggage value.
+
+    Args:
+        value: The candidate baggage value. It is converted with :func:`str`
+            before being checked, and any semicolon-delimited property that
+            follows it is checked too.
+
+    Returns:
+        ``True`` when the value holds only printable US-ASCII characters other
+        than the delimiters, and every property following it is valid.
+    """
     value, *properties = str(value).split(";")
     # W3C Baggage allows optional whitespace between the value and ";"
     return _VALUE_CHARS.issuperset(value.rstrip(" \t")) and all(map(_is_valid_property, properties))
 
 
 def _is_valid_pair(key: str, value: str) -> bool:
+    """Report whether a name/value pair may be put in a baggage header.
+
+    Args:
+        key: The candidate baggage name.
+        value: The candidate baggage value.
+
+    Returns:
+        ``True`` when both halves are valid on their own.
+    """
     return _is_valid_key(key) and _is_valid_value(value)
