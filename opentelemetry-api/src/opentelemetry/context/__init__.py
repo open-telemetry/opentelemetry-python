@@ -1,6 +1,27 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Storage for the values that travel with the current execution.
+
+The context API lets a cross-cutting concern, such as tracing or baggage, keep
+its own state without passing it through every function signature. A value is
+stored under a key obtained from :func:`create_key`, read with
+:func:`get_value` and replaced with :func:`set_value`, which returns a new
+:class:`Context` rather than modifying the existing one.
+
+:func:`attach` makes a context current and returns a token, and :func:`detach`
+restores what was current before. The pair is normally used through a context
+manager rather than called directly.
+
+The implementation backing :func:`get_current` is chosen once at import time.
+It is ``ContextVarsRuntimeContext``
+unless the ``OTEL_PYTHON_CONTEXT`` environment variable names a different
+``opentelemetry_context`` entry point. A named entry point that cannot be
+found or cannot be constructed is logged and falls back to
+``ContextVarsRuntimeContext`` as well, so setting the variable is not by itself
+proof that the named implementation is in use.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -48,8 +69,10 @@ def create_key(keyname: str) -> str:
     """To allow cross-cutting concern to control access to their local state,
     the RuntimeContext API provides a function which takes a keyname as input,
     and returns a unique key.
+
     Args:
         keyname: The key name is for debugging purposes and is not required to be unique.
+
     Returns:
         A unique string representing the newly created key.
     """
