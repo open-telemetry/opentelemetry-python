@@ -3,6 +3,24 @@
 
 # pyright: reportUnnecessaryIsInstance=false
 
+"""Validation and size-limiting of telemetry attributes.
+
+The OpenTelemetry specification restricts which Python values may be used as
+an attribute value, and lets an SDK cap both the number of attributes and the
+length of each string. This module holds the two pieces that enforce those
+rules: ``_clean_attribute_value``, which coerces or drops an invalid
+value, and :class:`BoundedAttributes`, the mapping that spans, log records and
+metric measurements store their attributes in.
+
+A value that cannot be represented is coerced to :class:`str` when the object
+defines ``__str__`` or ``__repr__``, and is replaced with ``None`` otherwise.
+The pair stays in the mapping either way and ``dropped`` is not incremented. A
+key is treated differently: a key of a nested mapping that cannot be converted
+is dropped along with its value. A warning is logged in every case. Note that
+coercion calls ``__str__`` on the object, so a ``__str__`` that raises does
+propagate to the caller.
+"""
+
 import copy
 import logging
 import threading
@@ -21,6 +39,19 @@ _logger = logging.getLogger(__name__)
 # If neither is defined it uses the base class's `object.__repr__` method, which returns a string that is hard to understand.
 # So in that case we drop the key/value pair.
 def _is_non_custom_str(key: Any) -> bool:
+    """Report whether converting ``key`` to a string would produce something useful.
+
+    Args:
+        key: The object about to be converted with :func:`str`. It is an
+            attribute key or an attribute value.
+
+    Returns:
+        ``True`` when the type of ``key`` overrides ``__str__`` or
+        ``__repr__``, so :func:`str` yields a meaningful result. ``False`` when
+        neither is overridden, in which case :func:`str` would return the
+        default ``<module.Class object at 0x...>`` form and the caller should
+        drop the object instead.
+    """
     return type(key).__str__ is not object.__str__ or type(key).__repr__ is not object.__repr__
 
 
@@ -48,6 +79,17 @@ def _clean_attribute_value(
     Anything that isn't of `types.AnyValue`, we attempt to cast to `str`.
     If this fails, the value is replaced with None. Sequence's are converted to tuples and mappings
     are copied into new dicts.
+
+    A mapping key that is empty, or that is not a string and cannot be
+    converted to one, is dropped from the result and a warning is logged.
+
+    Args:
+        value: The attribute value to clean. Any Python object is accepted;
+            one that is not a ``AnyValue`` is
+            coerced or replaced rather than rejected.
+        max_string_value_length: Maximum length of a string value, in
+            characters. A longer string is truncated to this length and a
+            warning is logged. Pass ``None`` to apply no limit.
 
     Returns:
         The recursively cleaned AnyValue.
@@ -144,6 +186,14 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
         max_value_len: int | None = None,
         extended_attributes: bool = False,
     ) -> None:
+        """Build the mapping and store ``attributes`` in it.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+
+        Raises:
+            ValueError: If ``maxlen`` or ``max_value_len`` is negative.
+        """
         if maxlen is not None and maxlen < 0:
             raise ValueError("maxlen must be valid int greater or equal to 0")
         if max_value_len is not None and max_value_len < 0:
@@ -163,16 +213,52 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
         self._immutable = immutable
 
     def __repr__(self) -> str:
+        """Render the stored attributes as a plain dict literal.
+
+        Returns:
+            The current attributes formatted as a :class:`dict` would be. The
+            count of dropped attributes is not included.
+        """
         return f"{dict(self._dict)}"
 
     def __getitem__(self, key: str) -> types.AnyValue:
+        """Return the value stored under ``key``.
+
+        Args:
+            key: The attribute name to look up.
+
+        Returns:
+            The cleaned value stored under ``key``.
+
+        Raises:
+            KeyError: If ``key`` is absent, which includes the case where it
+                was dropped for exceeding the capacity.
+        """
         return self._dict[key]
 
     def _raise_if_immutable(self) -> None:
+        """Reject a mutation when this instance was created immutable.
+
+        Raises:
+            TypeError: If this instance is immutable.
+        """
         if self._immutable:
             raise TypeError("Cannot mutate immutable BoundedAttributes")
 
     def __setitem__(self, key: str, value: types.AnyValue) -> None:
+        """Clean ``value`` and store it under ``key`` if there is capacity.
+
+        An invalid key, or a key that does not fit within the capacity, is
+        counted in ``dropped`` rather than stored, and no exception is raised.
+
+        Args:
+            key: The attribute name. It must be a non-empty :class:`str`.
+            value: The attribute value, cleaned by
+                ``_clean_attribute_value`` before being stored.
+
+        Raises:
+            TypeError: If this instance is immutable.
+        """
         self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
@@ -191,6 +277,16 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
             self._setitem_locked(key, cleaned)
 
     def _set_items(self, attributes: Mapping[str, types.AnyValue]) -> None:
+        """Clean and store several attributes under a single lock acquisition.
+
+        Args:
+            attributes: The attributes to store. Each pair is cleaned by
+                ``_clean_attribute_value``, and any pair dropped during
+                cleaning is counted in ``dropped``.
+
+        Raises:
+            TypeError: If this instance is immutable.
+        """
         self._raise_if_immutable()
         if self.maxlen is not None and self.maxlen == 0:
             with self._lock:
@@ -203,6 +299,18 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
                 self._setitem_locked(key, value)
 
     def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
+        """Store an already cleaned pair, assuming the lock is held.
+
+        Re-setting a key that is already present moves it to the end and never
+        counts against the capacity. Adding a new key once the mapping is full
+        increments ``dropped`` and stores nothing. The full-mapping warning is
+        logged at most once per instance.
+
+        Args:
+            key: The attribute name, already validated as a non-empty
+                :class:`str`.
+            value: The attribute value, already cleaned.
+        """
         if key in self._dict:
             del self._dict[key]
         elif self.maxlen is not None and len(self._dict) >= self.maxlen:
@@ -217,19 +325,56 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
         self._dict[key] = value
 
     def __delitem__(self, key: str) -> None:
+        """Remove the attribute stored under ``key``.
+
+        Args:
+            key: The attribute name to remove.
+
+        Raises:
+            TypeError: If this instance is immutable.
+            KeyError: If ``key`` is absent.
+        """
         self._raise_if_immutable()
         del self._dict[key]
 
     def __iter__(self):
+        """Iterate over the attribute names.
+
+        A mutable instance is iterated over a snapshot of the names taken
+        under the lock, so adding an attribute from another thread during
+        iteration does not disturb it.
+
+        Returns:
+            An iterator over the attribute names, in insertion order.
+        """
         if self._immutable:
             return iter(self._dict)
         with self._lock:
             return iter(list(self._dict))
 
     def __len__(self) -> int:
+        """Return how many attributes are stored.
+
+        Returns:
+            The number of attributes currently held. Dropped attributes are
+            not counted; read ``dropped`` for those.
+        """
         return len(self._dict)
 
     def __deepcopy__(self, memo: dict[int, Any]) -> "BoundedAttributes":
+        """Return a deep copy carrying the same limits and dropped count.
+
+        The stored values are copied directly rather than re-cleaned, since
+        they were cleaned when they were first stored.
+
+        Args:
+            memo: The memo dict :func:`copy.deepcopy` uses to track objects it
+                has already copied.
+
+        Returns:
+            A new instance holding deep copies of the values, with the same
+            ``maxlen``, ``max_value_len``, immutability and ``dropped`` count.
+        """
         copy_ = BoundedAttributes(
             maxlen=self.maxlen,
             immutable=self._immutable,
@@ -244,4 +389,12 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
         return copy_
 
     def copy(self) -> MutableMapping[str, types.AnyValue]:
+        """Return the stored attributes as an ordinary mutable mapping.
+
+        The result is a shallow copy and carries no capacity limit, so writing
+        to it neither affects this instance nor drops anything.
+
+        Returns:
+            A plain :class:`dict` holding the current attributes.
+        """
         return self._dict.copy()
