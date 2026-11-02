@@ -974,25 +974,25 @@ class TestCreateViews(unittest.TestCase):
         self.assertIsNone(view._attribute_keys)
 
         def test_stream_attribute_keys_exact_overlap_is_allowed(self):
-        view = self._get_view(
-            self._make_view_config(
-                stream_kwargs={
-                    "attribute_keys": IncludeExclude(
-                        included=["region"],
-                        excluded=["region"],
-                    )
-                }
+            view = self._get_view(
+                self._make_view_config(
+                    stream_kwargs={
+                        "attribute_keys": IncludeExclude(
+                            included=["region"],
+                            excluded=["region"],
+                        )
+                    }
+                )
             )
-        )
-
-        self.assertEqual(
-            view._attribute_keys,
-            frozenset({"region"}),
-        )
-        self.assertEqual(
-            view._exclude_attribute_keys,
-            frozenset({"region"}),
-        )
+    
+            self.assertEqual(
+                view._attribute_keys,
+                frozenset({"region"}),
+            )
+            self.assertEqual(
+                view._exclude_attribute_keys,
+                frozenset({"region"}),
+            )
 
     def test_stream_attribute_key_pattern_intersection_is_allowed(
         self,
