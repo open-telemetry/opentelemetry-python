@@ -191,40 +191,40 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                     },
                 )
         def test_consume_measurement_without_filter_preserves_attributes(self):
-        instrument = Mock(name="instrument1")
-        instrument.instrumentation_scope = (
-            self.mock_instrumentation_scope
-        )
-        view_instrument_match = _ViewInstrumentMatch(
-            view=View(
-                instrument_name="instrument1",
-                name="name",
-                aggregation=self.mock_aggregation_factory,
-            ),
-            instrument=instrument,
-            instrument_class_aggregation=MagicMock(
-                **{"__getitem__.return_value": DefaultAggregation()}
-            ),
-        )
-
-        for region in ("us", "eu"):
-            view_instrument_match.consume_measurement(
-                Measurement(
-                    value=1,
-                    time_unix_nano=time_ns(),
-                    instrument=instrument,
-                    context=Context(),
-                    attributes={"region": region},
-                )
+            instrument = Mock(name="instrument1")
+            instrument.instrumentation_scope = (
+                self.mock_instrumentation_scope
             )
-
-        self.assertEqual(
-            set(view_instrument_match._attributes_aggregation),
-            {
-                _hash_attributes({"region": "us"}),
-                _hash_attributes({"region": "eu"}),
-            },
-        )
+            view_instrument_match = _ViewInstrumentMatch(
+                view=View(
+                    instrument_name="instrument1",
+                    name="name",
+                    aggregation=self.mock_aggregation_factory,
+                ),
+                instrument=instrument,
+                instrument_class_aggregation=MagicMock(
+                    **{"__getitem__.return_value": DefaultAggregation()}
+                ),
+            )
+    
+            for region in ("us", "eu"):
+                view_instrument_match.consume_measurement(
+                    Measurement(
+                        value=1,
+                        time_unix_nano=time_ns(),
+                        instrument=instrument,
+                        context=Context(),
+                        attributes={"region": region},
+                    )
+                )
+    
+            self.assertEqual(
+                set(view_instrument_match._attributes_aggregation),
+                {
+                    _hash_attributes({"region": "us"}),
+                    _hash_attributes({"region": "eu"}),
+                },
+            )
 
     def test_consume_measurement_applies_exclusion_after_inclusion(
         self,
