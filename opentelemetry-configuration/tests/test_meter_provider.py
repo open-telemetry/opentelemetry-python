@@ -973,6 +973,67 @@ class TestCreateViews(unittest.TestCase):
         self.assertEqual(view._exclude_attribute_keys, frozenset({"key1"}))
         self.assertIsNone(view._attribute_keys)
 
+        def test_stream_attribute_keys_exact_overlap_is_allowed(self):
+        view = self._get_view(
+            self._make_view_config(
+                stream_kwargs={
+                    "attribute_keys": IncludeExclude(
+                        included=["region"],
+                        excluded=["region"],
+                    )
+                }
+            )
+        )
+
+        self.assertEqual(
+            view._attribute_keys,
+            frozenset({"region"}),
+        )
+        self.assertEqual(
+            view._exclude_attribute_keys,
+            frozenset({"region"}),
+        )
+
+    def test_stream_attribute_key_pattern_intersection_is_allowed(
+        self,
+    ):
+        view = self._get_view(
+            self._make_view_config(
+                stream_kwargs={
+                    "attribute_keys": IncludeExclude(
+                        included=["http.*"],
+                        excluded=["*.status"],
+                    )
+                }
+            )
+        )
+
+        self.assertEqual(
+            view._attribute_keys,
+            frozenset({"http.*"}),
+        )
+        self.assertEqual(
+            view._exclude_attribute_keys,
+            frozenset({"*.status"}),
+        )
+
+    def test_stream_empty_exclusion_list_is_allowed(self):
+        view = self._get_view(
+            self._make_view_config(
+                stream_kwargs={
+                    "attribute_keys": IncludeExclude(
+                        excluded=[],
+                    )
+                }
+            )
+        )
+
+        self.assertIsNone(view._attribute_keys)
+        self.assertEqual(
+            view._exclude_attribute_keys,
+            frozenset(),
+        )
+
     def test_stream_aggregation_drop(self):
         view = self._get_view(self._make_view_config(stream_kwargs={"aggregation": AggregationConfig(drop={})}))
         self.assertIsInstance(view._aggregation, DropAggregation)
