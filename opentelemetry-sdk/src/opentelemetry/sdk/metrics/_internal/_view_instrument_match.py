@@ -96,8 +96,9 @@ class _ViewInstrumentMatch:
         self._description = self._view._description or self._instrument.description
         advisory = getattr(self._instrument, "_advisory", None)
         opt_in = getattr(advisory, "opt_in", None) is True
+        self._aggregation_factory: Aggregation
         if self._view._enabled is False or (opt_in and self._view._enabled is not True):
-            self._aggregation_factory: Aggregation = DropAggregation()
+            self._aggregation_factory = DropAggregation()
         elif not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation_factory = self._view._aggregation
         else:
@@ -181,20 +182,12 @@ class _ViewInstrumentMatch:
 
         start_time_unix_nano = self._previous_collection_start_nanos or time_ns()
         # pylint: disable=protected-access
-        if not isinstance(self._view._aggregation, DefaultAggregation):
-            aggregation = self._view._aggregation._create_aggregation(
-                self._instrument,
-                attributes,
-                self._view._exemplar_reservoir_factory,
-                start_time_unix_nano,
-            )
-        else:
-            aggregation = self._instrument_class_aggregation[self._instrument.__class__]._create_aggregation(
-                self._instrument,
-                attributes,
-                self._view._exemplar_reservoir_factory,
-                start_time_unix_nano,
-            )
+        aggregation = self._aggregation_factory._create_aggregation(
+            self._instrument,
+            attributes,
+            self._view._exemplar_reservoir_factory,
+            start_time_unix_nano,
+        )
         self._attributes_aggregation[aggr_key] = aggregation
         return aggregation
 
