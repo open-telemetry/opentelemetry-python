@@ -182,10 +182,7 @@ class View:
                 return False
 
         if self._instrument_unit is not None:
-            # The unit selection criterion is an exact, case-sensitive match:
-            # the Metrics SDK specification defines no wildcard matching for
-            # units. Comparing literally also keeps UCUM annotated units such
-            # as "[degF]" from being read as fnmatch character classes.
+            # Unit comparison is performed in an exact case-sensitive manner.
             if instrument.unit != self._instrument_unit:
                 return False
 
