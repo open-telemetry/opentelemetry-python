@@ -13,6 +13,7 @@ import opentelemetry.metrics._internal as metrics_internal
 from opentelemetry import metrics
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics import (
+    InstrumentOptions,
     NoOpMeter,
     NoOpMeterProvider,
     get_meter_provider,
@@ -232,7 +233,9 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_meter: Mock = real_meter_provider.get_meter()
         real_meter.create_counter.assert_called_once_with(name, unit, description)
         real_meter.create_up_down_counter.assert_called_once_with(name, unit, description)
-        real_meter.create_histogram.assert_called_once_with(name, unit, description)
+        real_meter.create_histogram.assert_called_once_with(
+            name, unit, description, explicit_bucket_boundaries_advisory=None
+        )
         real_meter.create_gauge.assert_called_once_with(name, unit, description)
         real_meter.create_observable_counter.assert_called_once_with(name, [callback], unit, description)
         real_meter.create_observable_up_down_counter.assert_called_once_with(name, [callback], unit, description)
@@ -303,77 +306,56 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         unit = "s"
         description = "Foobar"
         callback = Mock()
-        attributes_advisory = ["a"]
-        bucket_boundaries_advisory = [1.0]
+        options = InstrumentOptions(_attributes_advisory=["a"])
+        sync_args = (name, unit, description)
+        async_args = (name, [callback], unit, description)
 
         cases = [
-            (
-                "create_counter",
-                (name, unit, description),
-                {"_attributes_advisory": attributes_advisory},
-            ),
-            (
-                "create_up_down_counter",
-                (name, unit, description),
-                {"_attributes_advisory": attributes_advisory},
-            ),
-            (
-                "create_gauge",
-                (name, unit, description),
-                {"_attributes_advisory": attributes_advisory},
-            ),
+            ("create_counter", sync_args, {}),
+            ("create_up_down_counter", sync_args, {}),
+            ("create_gauge", sync_args, {}),
             (
                 "create_histogram",
-                (name, unit, description),
-                {
-                    "_attributes_advisory": attributes_advisory,
-                    "explicit_bucket_boundaries_advisory": bucket_boundaries_advisory,
-                },
+                sync_args,
+                {"explicit_bucket_boundaries_advisory": [1.0]},
             ),
-            (
-                "create_observable_counter",
-                (name, [callback], unit, description),
-                {"_attributes_advisory": attributes_advisory},
-            ),
-            (
-                "create_observable_up_down_counter",
-                (name, [callback], unit, description),
-                {"_attributes_advisory": attributes_advisory},
-            ),
-            (
-                "create_observable_gauge",
-                (name, [callback], unit, description),
-                {"_attributes_advisory": attributes_advisory},
-            ),
+            ("create_observable_counter", async_args, {}),
+            ("create_observable_up_down_counter", async_args, {}),
+            ("create_observable_gauge", async_args, {}),
         ]
 
-        for method_name, args, options in cases:
+        for method_name, args, kwargs in cases:
+            with_options = f"{method_name}_with_options"
+
             with self.subTest(method_name, real_meter_set="before"):
                 proxy_meter = _ProxyMeterProvider().get_meter("foo")
                 real_meter_provider = Mock()
                 proxy_meter.on_set_meter_provider(real_meter_provider)
 
-                getattr(proxy_meter, method_name)(*args, **options)
+                getattr(proxy_meter, with_options)(*args, options=options, **kwargs)
 
                 real_meter = real_meter_provider.get_meter()
-                getattr(real_meter, method_name).assert_called_once_with(*args, **options)
+                getattr(real_meter, with_options).assert_called_once_with(*args, options=options, **kwargs)
+                getattr(real_meter, method_name).assert_not_called()
 
             with self.subTest(method_name, real_meter_set="after"):
                 proxy_meter = _ProxyMeterProvider().get_meter("foo")
-                getattr(proxy_meter, method_name)(*args, **options)
+                getattr(proxy_meter, with_options)(*args, options=options, **kwargs)
 
                 real_meter_provider = Mock()
                 proxy_meter.on_set_meter_provider(real_meter_provider)
 
                 real_meter = real_meter_provider.get_meter()
-                getattr(real_meter, method_name).assert_called_once_with(*args, **options)
+                getattr(real_meter, with_options).assert_called_once_with(*args, options=options, **kwargs)
+                getattr(real_meter, method_name).assert_not_called()
 
             with self.subTest(method_name, options="unset"):
                 proxy_meter = _ProxyMeterProvider().get_meter("foo")
-                getattr(proxy_meter, method_name)(*args)
+                getattr(proxy_meter, method_name)(*args, **kwargs)
 
                 real_meter_provider = Mock()
                 proxy_meter.on_set_meter_provider(real_meter_provider)
 
                 real_meter = real_meter_provider.get_meter()
-                getattr(real_meter, method_name).assert_called_once_with(*args)
+                getattr(real_meter, method_name).assert_called_once_with(*args, **kwargs)
+                getattr(real_meter, with_options).assert_not_called()
