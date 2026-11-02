@@ -29,8 +29,12 @@ _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 
 
 @dataclass(frozen=True)
-class _MetricsAdvisory:
+class _InstrumentAdvisory:
     attributes: frozenset[str] | None = None
+
+
+@dataclass(frozen=True)
+class _HistogramAdvisory(_InstrumentAdvisory):
     explicit_bucket_boundaries: tuple[float, ...] | None = None
 
 
@@ -85,16 +89,32 @@ def _validate_explicit_bucket_boundaries_advisory(
     return None
 
 
-def _metrics_advisory_from_options(
+def _attributes_advisory_from_options(
     options: InstrumentOptions | None,
-    explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
-) -> _MetricsAdvisory:
+) -> frozenset[str] | None:
+    """Returns the validated attributes advisory for the given instrument options."""
+
+    return _validate_attributes_advisory(
+        None if options is None else options._attributes_advisory  # pylint: disable=protected-access
+    )
+
+
+def _instrument_advisory_from_options(
+    options: InstrumentOptions | None,
+) -> _InstrumentAdvisory:
     """Returns the validated advisory for the given instrument options."""
 
-    return _MetricsAdvisory(
-        attributes=_validate_attributes_advisory(
-            None if options is None else options._attributes_advisory  # pylint: disable=protected-access
-        ),
+    return _InstrumentAdvisory(attributes=_attributes_advisory_from_options(options))
+
+
+def _histogram_advisory_from_options(
+    options: InstrumentOptions | None,
+    explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+) -> _HistogramAdvisory:
+    """Returns the validated advisory for the given histogram options."""
+
+    return _HistogramAdvisory(
+        attributes=_attributes_advisory_from_options(options),
         explicit_bucket_boundaries=_validate_explicit_bucket_boundaries_advisory(explicit_bucket_boundaries_advisory),
     )
 

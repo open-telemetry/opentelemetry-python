@@ -29,7 +29,7 @@ from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import (
     CallbackOptions,
-    _MetricsAdvisory,
+    _InstrumentAdvisory,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.util.types import Attributes
@@ -68,7 +68,7 @@ class _Synchronous(_Instrument, Synchronous):
         unit: str = "",
         description: str = "",
         *,
-        _advisory: _MetricsAdvisory | None = None,
+        _advisory: _InstrumentAdvisory | None = None,
         _meter_config: _ProxyMeterConfig | None = None,
     ):
         # pylint: disable=no-member
@@ -91,7 +91,7 @@ class _Synchronous(_Instrument, Synchronous):
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
-        self._advisory = _advisory or _MetricsAdvisory()
+        self._advisory = _advisory or _InstrumentAdvisory()
         self._meter_config = _meter_config
         super().__init__(name, unit=unit, description=description)
 
@@ -109,7 +109,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         unit: str = "",
         description: str = "",
         *,
-        _advisory: _MetricsAdvisory | None = None,
+        _advisory: _InstrumentAdvisory | None = None,
         _meter_config: _ProxyMeterConfig | None = None,
     ):
         # pylint: disable=no-member
@@ -132,7 +132,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         self.description = description
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
-        self._advisory = _advisory or _MetricsAdvisory()
+        self._advisory = _advisory or _InstrumentAdvisory()
         self._meter_config = _meter_config
         super().__init__(name, callbacks, unit=unit, description=description)
 

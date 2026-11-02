@@ -10,8 +10,9 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.context import Context
-from opentelemetry.metrics._internal.instrument import _MetricsAdvisory
+from opentelemetry.metrics._internal.instrument import _HistogramAdvisory, _InstrumentAdvisory
 from opentelemetry.sdk.metrics._internal.aggregation import (
+    _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES,
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
     _SumAggregation,
@@ -677,7 +678,7 @@ class TestDefaultAggregation(TestCase):
                 "name",
                 Mock(),
                 Mock(),
-                _advisory=_MetricsAdvisory(explicit_bucket_boundaries=boundaries),
+                _advisory=_HistogramAdvisory(explicit_bucket_boundaries=boundaries),
             ),
             Mock(),
             _default_reservoir_factory,
@@ -685,6 +686,24 @@ class TestDefaultAggregation(TestCase):
         )
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
         self.assertEqual(aggregation._boundaries, tuple(boundaries))
+
+    def test_explicit_bucket_aggregation_on_non_histogram_uses_default_boundaries(self):
+        aggregation = ExplicitBucketHistogramAggregation()._create_aggregation(
+            _Counter(
+                "name",
+                Mock(),
+                Mock(),
+                _advisory=_InstrumentAdvisory(attributes=frozenset({"a"})),
+            ),
+            Mock(),
+            _default_reservoir_factory,
+            0,
+        )
+        self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
+        self.assertEqual(
+            aggregation._boundaries,
+            tuple(_DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES),
+        )
 
     def test_gauge(self):
         aggregation = self.default_aggregation._create_aggregation(

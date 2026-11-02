@@ -26,7 +26,8 @@ from opentelemetry.metrics import (
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics import _Gauge as APIGauge
 from opentelemetry.metrics._internal.instrument import (
-    _metrics_advisory_from_options,
+    _histogram_advisory_from_options,
+    _instrument_advisory_from_options,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_METRICS_EXEMPLAR_FILTER,
@@ -130,7 +131,7 @@ class Meter(APIMeter):
         *,
         options: InstrumentOptions | None = None,
     ) -> APICounter:
-        advisory = _metrics_advisory_from_options(options)
+        advisory = _instrument_advisory_from_options(options)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Counter, unit, description, advisory)
@@ -170,7 +171,7 @@ class Meter(APIMeter):
         *,
         options: InstrumentOptions | None = None,
     ) -> APIUpDownCounter:
-        advisory = _metrics_advisory_from_options(options)
+        advisory = _instrument_advisory_from_options(options)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _UpDownCounter, unit, description, advisory)
@@ -211,7 +212,7 @@ class Meter(APIMeter):
         *,
         options: InstrumentOptions | None = None,
     ) -> APIObservableCounter:
-        advisory = _metrics_advisory_from_options(options)
+        advisory = _instrument_advisory_from_options(options)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableCounter, unit, description, advisory)
@@ -268,7 +269,7 @@ class Meter(APIMeter):
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
         options: InstrumentOptions | None = None,
     ) -> APIHistogram:
-        advisory = _metrics_advisory_from_options(options, explicit_bucket_boundaries_advisory)
+        advisory = _histogram_advisory_from_options(options, explicit_bucket_boundaries_advisory)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(
@@ -314,7 +315,7 @@ class Meter(APIMeter):
         *,
         options: InstrumentOptions | None = None,
     ) -> APIGauge:
-        advisory = _metrics_advisory_from_options(options)
+        advisory = _instrument_advisory_from_options(options)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Gauge, unit, description, advisory)
@@ -355,7 +356,7 @@ class Meter(APIMeter):
         *,
         options: InstrumentOptions | None = None,
     ) -> APIObservableGauge:
-        advisory = _metrics_advisory_from_options(options)
+        advisory = _instrument_advisory_from_options(options)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableGauge, unit, description, advisory)
@@ -402,7 +403,7 @@ class Meter(APIMeter):
         *,
         options: InstrumentOptions | None = None,
     ) -> APIObservableUpDownCounter:
-        advisory = _metrics_advisory_from_options(options)
+        advisory = _instrument_advisory_from_options(options)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableUpDownCounter, unit, description, advisory)

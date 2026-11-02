@@ -56,8 +56,9 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
-    _metrics_advisory_from_options,
-    _MetricsAdvisory,
+    _histogram_advisory_from_options,
+    _instrument_advisory_from_options,
+    _InstrumentAdvisory,
     _ProxyCounter,
     _ProxyGauge,
     _ProxyHistogram,
@@ -176,7 +177,7 @@ class _InstrumentRegistrationStatus:
     instrument_id: str
     already_registered: bool
     conflict: bool
-    current_advisory: _MetricsAdvisory | None
+    current_advisory: _InstrumentAdvisory | None
 
 
 class Meter(ABC):
@@ -196,7 +197,7 @@ class Meter(ABC):
         self._name = name
         self._version = version
         self._schema_url = schema_url
-        self._instrument_ids: dict[str, _MetricsAdvisory | None] = {}
+        self._instrument_ids: dict[str, _InstrumentAdvisory | None] = {}
         self._instrument_ids_lock = Lock()
 
     @property
@@ -226,7 +227,7 @@ class Meter(ABC):
         type_: type,
         unit: str,
         description: str,
-        advisory: _MetricsAdvisory | None = None,
+        advisory: _InstrumentAdvisory | None = None,
     ) -> _InstrumentRegistrationStatus:
         """
         Register an instrument with the name, type, unit and description as
@@ -1025,7 +1026,7 @@ class NoOpMeter(Meter):
             NoOpCounter,
             unit,
             description,
-            _metrics_advisory_from_options(options),
+            _instrument_advisory_from_options(options),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -1060,7 +1061,7 @@ class NoOpMeter(Meter):
             NoOpGauge,
             unit,
             description,
-            _metrics_advisory_from_options(options),
+            _instrument_advisory_from_options(options),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -1095,7 +1096,7 @@ class NoOpMeter(Meter):
             NoOpUpDownCounter,
             unit,
             description,
-            _metrics_advisory_from_options(options),
+            _instrument_advisory_from_options(options),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -1132,7 +1133,7 @@ class NoOpMeter(Meter):
             NoOpObservableCounter,
             unit,
             description,
-            _metrics_advisory_from_options(options),
+            _instrument_advisory_from_options(options),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -1180,7 +1181,7 @@ class NoOpMeter(Meter):
             NoOpHistogram,
             unit,
             description,
-            _metrics_advisory_from_options(options, explicit_bucket_boundaries_advisory),
+            _histogram_advisory_from_options(options, explicit_bucket_boundaries_advisory),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -1222,7 +1223,7 @@ class NoOpMeter(Meter):
             NoOpObservableGauge,
             unit,
             description,
-            _metrics_advisory_from_options(options),
+            _instrument_advisory_from_options(options),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -1264,7 +1265,7 @@ class NoOpMeter(Meter):
             NoOpObservableUpDownCounter,
             unit,
             description,
-            _metrics_advisory_from_options(options),
+            _instrument_advisory_from_options(options),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(

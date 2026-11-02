@@ -10,7 +10,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.context import Context
-from opentelemetry.metrics._internal.instrument import _MetricsAdvisory
+from opentelemetry.metrics._internal.instrument import _HistogramAdvisory, _InstrumentAdvisory
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _hash_attributes,
     _ViewInstrumentMatch,
@@ -230,11 +230,12 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                     view_attribute_keys=view_attribute_keys,
                     advisory_attributes=advisory_attributes,
                 ):
+                    advisory_class = _HistogramAdvisory if instrument_class is _Histogram else _InstrumentAdvisory
                     instrument = instrument_class(
                         "instrument",
                         self.mock_instrumentation_scope,
                         Mock(),
-                        _advisory=_MetricsAdvisory(
+                        _advisory=advisory_class(
                             attributes=None if advisory_attributes is None else frozenset(advisory_attributes)
                         ),
                     )

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, cast
 
 from typing_extensions import assert_never
 
-from opentelemetry.metrics._internal.instrument import _MetricsAdvisory
+from opentelemetry.metrics._internal.instrument import _InstrumentAdvisory
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
@@ -99,7 +99,7 @@ class _ViewInstrumentMatch:
         self._attribute_keys = self._view._attribute_keys
         if self._attribute_keys is None:
             advisory = getattr(self._instrument, "_advisory", None)
-            if isinstance(advisory, _MetricsAdvisory):
+            if isinstance(advisory, _InstrumentAdvisory):
                 self._attribute_keys = advisory.attributes
         if not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation = self._view._aggregation._create_aggregation(
