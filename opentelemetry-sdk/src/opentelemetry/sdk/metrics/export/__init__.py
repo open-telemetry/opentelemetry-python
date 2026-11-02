@@ -6,8 +6,10 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
 )
 from opentelemetry.sdk.metrics._internal.export import (
+    CardinalityLimits,
     ConsoleMetricExporter,
     InMemoryMetricReader,
+    InstrumentCardinalityKey,
     MetricExporter,
     MetricExportResult,
     MetricProducer,
@@ -36,6 +38,7 @@ from opentelemetry.sdk.metrics._internal.point import (
 __all__ = [
     "AggregationTemporality",
     "Buckets",
+    "CardinalityLimits",
     "ConsoleMetricExporter",
     "DataPointT",
     "DataT",
@@ -45,6 +48,7 @@ __all__ = [
     "Histogram",
     "HistogramDataPoint",
     "InMemoryMetricReader",
+    "InstrumentCardinalityKey",
     "Metric",
     "MetricExportResult",
     "MetricExporter",
