@@ -189,20 +189,12 @@ class _ViewInstrumentMatch:
 
         start_time_unix_nano = self._previous_collection_start_nanos or time_ns()
         # pylint: disable=protected-access
-        if not isinstance(self._view._aggregation, DefaultAggregation):
-            aggregation = self._view._aggregation._create_aggregation(
-                self._instrument,
-                attributes,
-                self._view._exemplar_reservoir_factory,
-                start_time_unix_nano,
-            )
-        else:
-            aggregation = self._instrument_class_aggregation[self._instrument.__class__]._create_aggregation(
-                self._instrument,
-                attributes,
-                self._view._exemplar_reservoir_factory,
-                start_time_unix_nano,
-            )
+        aggregation = self._aggregation_factory._create_aggregation(
+            self._instrument,
+            attributes,
+            self._view._exemplar_reservoir_factory,
+            start_time_unix_nano,
+        )
         self._attributes_aggregation[aggr_key] = aggregation
         return aggregation
 
