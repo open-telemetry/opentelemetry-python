@@ -199,7 +199,6 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             _DropAggregation,
         )
 
-
     def test_disabled_stream_uses_drop_aggregation(self):
         # A view that disables the stream
         view = View(instrument_name="instrument", enabled=False)
@@ -210,12 +209,12 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 instrumentation_scope=Mock(),
                 measurement_consumer=Mock(),
             ),
-            instrument_class_aggregation={
-                _Counter: DefaultAggregation()
-            }
+            instrument_class_aggregation={_Counter: DefaultAggregation()},
         )
 
-        measurement = Measurement(value=1, time_unix_nano=time_ns(), instrument=Mock(), context=Context(), attributes={})
+        measurement = Measurement(
+            value=1, time_unix_nano=time_ns(), instrument=Mock(), context=Context(), attributes={}
+        )
         match.consume_measurement(measurement)
 
         aggregation = match._attributes_aggregation[_hash_attributes({})]
