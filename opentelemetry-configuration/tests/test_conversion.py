@@ -5,12 +5,12 @@
 # pylint: disable=protected-access
 
 import unittest
-from dataclasses import dataclass
-from typing import Any, ClassVar
+from dataclasses import dataclass, field
+from typing import Any
 
 from opentelemetry.configuration._common import _additional_properties
 from opentelemetry.configuration._conversion import _dict_to_dataclass
-from opentelemetry.configuration.models import ExemplarFilter
+from opentelemetry.configuration.models import ExemplarFilter, OpenTelemetryConfiguration
 from opentelemetry.configuration.models import Sampler as SamplerConfig
 
 
@@ -35,7 +35,7 @@ class _Outer:
 @dataclass
 class _WithExtras:
     known: str | None = None
-    additional_properties: ClassVar[dict[str, Any]]
+    additional_properties: dict[str, dict[str, Any] | None] = field(default_factory=dict, init=False)
 
 
 @dataclass
@@ -51,6 +51,11 @@ class _WithMapping:
 
 
 class TestDictToDataclass(unittest.TestCase):
+    def test_root_configuration_preserves_unrestricted_extras(self):
+        extras = {"vendor_label": "prod", "vendor_flags": [True], "vendor_count": 3, "vendor_option": None}
+        obj = _dict_to_dataclass({"file_format": "1.0", **extras}, OpenTelemetryConfiguration)
+        self.assertEqual(obj.additional_properties, extras)
+
     def test_raises_on_non_dataclass(self):
         # _dict_to_dataclass is internal and assumes cls is a dataclass.
         with self.assertRaises(TypeError) as ctx:
