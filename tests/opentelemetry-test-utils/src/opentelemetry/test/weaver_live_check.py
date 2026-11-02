@@ -1,6 +1,31 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Checking emitted telemetry against the OpenTelemetry semantic conventions.
+
+Weaver is the OpenTelemetry tool that reads the semantic convention registry and
+checks telemetry against it. Its ``registry live-check`` subcommand runs as a
+server: it accepts OTLP over gRPC, accumulates what it is sent, and reports on
+request which attributes and signals departed from the registry.
+
+:class:`WeaverLiveCheck` runs that subcommand as a subprocess and exposes it to
+a test. A test points an OTLP exporter at ``otlp_endpoint``, emits telemetry,
+then calls :meth:`WeaverLiveCheck.end_and_check` to assert that weaver found
+nothing, or :meth:`WeaverLiveCheck.end` to get the report and assert on it
+directly. :class:`LiveCheckReport` wraps the JSON report and
+:class:`LiveCheckError` is what a failed check raises.
+
+The ``weaver`` binary has to be on ``PATH``, and constructing
+:class:`WeaverLiveCheck` raises ``RuntimeError`` when no binary of that name is
+found. Version 0.27 or later is required, and nothing checks the version: an
+older weaver is accepted by the constructor and rejects one of the managed flags
+later, which surfaces as a ``RuntimeError`` out of
+:meth:`WeaverLiveCheck.start` naming only the exit status.
+Downloads are at https://github.com/open-telemetry/weaver/releases
+
+This module is experimental and its API may change without notice.
+"""
+
 import functools
 import json
 import logging
@@ -25,6 +50,14 @@ logger = logging.getLogger(__name__)
 
 
 def _find_free_port() -> int:
+    """Ask the operating system for a port that is free right now.
+
+    Returns:
+        A TCP port number. Binding to port ``0`` and reading back the assigned
+        port is the only portable way to get one, and the socket is closed
+        before the number is handed over, so another process can take the port
+        between this call and weaver binding to it.
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("", 0))
         return sock.getsockname()[1]
@@ -40,10 +73,36 @@ def _extract_violations(report: dict) -> list:
       | group_by(.id, .message, .context, .signal_name, .signal_type)
       | map({ ..., count: length })
       | sort_by(-.count, .message)
+
+    The same violation is reported by weaver once per sample that triggered it,
+    so a single wrong attribute on a thousand spans produces a thousand
+    entries. Grouping them turns that into one entry with a count.
+
+    Args:
+        report: The full report as weaver returned it, already parsed from
+            JSON. It is searched recursively, so the shape below the top level
+            does not have to be known.
+
+    Returns:
+        One dict per distinct violation, with the keys ``id``, ``message``,
+        ``context``, ``signal_name``, ``signal_type`` and ``count``, sorted by
+        descending count and then by message. ``context`` is the original dict
+        from weaver, not the JSON string used to group by it. A report with no
+        violation gives an empty list.
     """
     raw: list[dict] = []
 
     def _collect(obj: Any) -> list[dict]:
+        """Walk a parsed JSON value and gather every violation under it.
+
+        Args:
+            obj: Any value from the parsed report: a dict, a list, or a scalar.
+
+        Returns:
+            Every advice entry at level ``violation`` found anywhere below
+            ``obj``, in traversal order and with duplicates kept. A scalar
+            gives an empty list, which is what ends the recursion.
+        """
         if isinstance(obj, dict):
             result: list[dict] = []
             lcr = obj.get("live_check_result")
@@ -88,7 +147,17 @@ def _extract_violations(report: dict) -> list:
 
 
 def _format_violations(violations: list) -> str:
-    """Format violations list as human-readable text."""
+    """Format violations list as human-readable text.
+
+    Args:
+        violations: The grouped violations produced by ``_extract_violations``.
+
+    Returns:
+        One line per violation, newline separated, each naming the violation
+        id, the message, the occurrence count and the signal it was seen on.
+        The signal part is omitted when weaver reported neither a signal type
+        nor a signal name. An empty list gives an empty string.
+    """
     lines = []
     for violation in violations:
         signal = ""
@@ -109,10 +178,10 @@ def _format_violations(violations: list) -> str:
 class LiveCheckError(AssertionError):
     """Raised by :meth:`WeaverLiveCheck.end_and_check` when semconv violations are found.
 
-    Captured process output is available as :attr:`stdout` and :attr:`stderr`,
+    Captured process output is available as ``stdout`` and ``stderr``,
     including after the live-check context has closed.
 
-    The full :class:`LiveCheckReport` is attached as :attr:`report` for
+    The full :class:`LiveCheckReport` is attached as ``report`` for
     structured inspection beyond the human-readable message::
 
         with pytest.raises(LiveCheckError) as exc_info:
@@ -123,9 +192,19 @@ class LiveCheckError(AssertionError):
             v["id"] == "my_policy_check" and v["context"]["attribute_name"] == "my.attribute"
             for v in err.report.violations
         )
+
+    Args:
+        message: The failure message, which :meth:`WeaverLiveCheck.end_and_check`
+            builds from the formatted violation list.
+        report: The full report the violations came from, kept as ``report``.
+        stdout: Everything weaver wrote to stdout up to the failure, kept as
+            ``stdout``.
+        stderr: Everything weaver wrote to stderr up to the failure, kept as
+            ``stderr``.
     """
 
     def __init__(self, message: str, report: "LiveCheckReport", stdout: str = "", stderr: str = "") -> None:
+        """Parameters are documented on the class docstring."""
         super().__init__(message)
         self.report = report
         self.stdout = stdout
@@ -152,23 +231,54 @@ class LiveCheckReport:
         assert any(
             v["id"] == "my_policy_check" and v["context"]["attribute_name"] == "my.attribute" for v in report.violations
         )
+
+    Args:
+        report: The report as weaver returned it, already parsed from JSON. It
+            is stored, not copied, so the caller should not keep editing it.
     """
 
     def __init__(self, report: dict[str, Any]) -> None:
+        """Parameters are documented on the class docstring."""
         self._report = report
 
     def to_dict(self) -> dict[str, Any]:
-        """Return a deep copy of the full report for inspection or JSON serialization."""
+        """Return a deep copy of the full report for inspection or JSON serialization.
+
+        Returns:
+            A deep copy, so editing it does not affect this report or any later
+            call. Use ``__getitem__`` or ``get`` to read one key without
+            copying the whole report.
+        """
         return deepcopy(self._report)
 
     @property
     def samples(self) -> list[dict[str, Any]]:
-        """Return a deep copy of the samples, or an empty list if absent."""
+        """Return a deep copy of the samples, or an empty list if absent.
+
+        A sample is one span, metric or log record as weaver received it,
+        annotated with the advice weaver attached to it.
+
+        Returns:
+            A deep copy of the ``samples`` entry of the report, or an empty
+            list when weaver recorded none. A fresh copy is built on every
+            access, so bind it to a name rather than indexing the property
+            repeatedly.
+        """
         return deepcopy(self._report.get("samples", []))
 
     @property
     def statistics(self) -> dict[str, Any]:
-        """Return a deep copy of the statistics, or an empty dict if absent."""
+        """Return a deep copy of the statistics, or an empty dict if absent.
+
+        The statistics count what weaver saw, for example which registry
+        metrics appeared and how often, which is how a test asserts that an
+        instrument fired without inspecting individual samples.
+
+        Returns:
+            A deep copy of the ``statistics`` entry of the report, or an empty
+            dict when weaver recorded none. A fresh copy is built on every
+            access.
+        """
         return deepcopy(self._report.get("statistics", {}))
 
     @functools.cached_property
@@ -178,19 +288,69 @@ class LiveCheckReport:
         Each item is a dict with keys: ``id``, ``message``, ``context``
         (the raw context dict from weaver, e.g. ``{"attribute_name": "foo"}``),
         ``signal_name``, ``signal_type``, ``count``.
+
+        Returns:
+            The violations, most frequent first and then by message. The list
+            is computed once and cached on the instance, and it is the cached
+            list itself rather than a copy, so editing it changes what later
+            reads return. A report with no violation gives an empty list, which
+            is not the same as :meth:`WeaverLiveCheck.end_and_check` passing:
+            that method
+            decides on weaver's exit status, so weaver can exit non-zero for a
+            reason that produces no violation entry and raise
+            :class:`LiveCheckError` with an empty list in the message.
         """
         return _extract_violations(self._report)
 
     def __getitem__(self, key: str) -> Any:
+        """Read a top-level key of the raw report.
+
+        Args:
+            key: Top-level key of the weaver report, for example
+                ``"statistics"``.
+
+        Returns:
+            The value as weaver returned it, not copied, so editing a dict or
+            list obtained this way changes the report this object holds.
+
+        Raises:
+            KeyError: When the report has no such key, which is what happens
+                for a section weaver omits when it is empty.
+        """
         return self._report[key]
 
     def get(self, key: str, default: Any = None) -> Any:
+        """Read a top-level key of the raw report, with a fallback.
+
+        Args:
+            key: Top-level key of the weaver report.
+            default: Returned when the key is absent.
+
+        Returns:
+            The value as weaver returned it, not copied, or ``default`` when
+            the key is absent.
+        """
         return self._report.get(key, default)
 
     def __contains__(self, key: object) -> bool:
+        """Report whether the raw report has a given top-level key.
+
+        Args:
+            key: Key to look for. Only top-level keys are considered.
+
+        Returns:
+            ``True`` when the report has that key.
+        """
         return key in self._report
 
     def __repr__(self) -> str:
+        """Return a short description naming the number of violations.
+
+        Returns:
+            A string such as ``LiveCheckReport(3 violations)``. Computing it
+            extracts the violations, so the first ``repr`` of a report does the
+            grouping work that :attr:`violations` caches.
+        """
         num_violations = len(self.violations)
         return f"LiveCheckReport({num_violations} violation{'s' if num_violations != 1 else ''})"
 
@@ -215,8 +375,9 @@ class WeaverLiveCheck:
                 # ... configure provider, emit telemetry ...
                 provider.force_flush()
 
-                # Signals weaver to stop, raises LiveCheckError listing violations
-                # if any, or returns a LiveCheckReport on success.
+                # Signals weaver to stop, returns a LiveCheckReport when weaver
+                # exits zero, and raises LiveCheckError with the violations
+                # listed in the message when it does not.
                 report = weaver.end_and_check()
             # __exit__ calls close(), which is idempotent if end_and_check() was already called
 
@@ -235,9 +396,11 @@ class WeaverLiveCheck:
     Lifecycle:
         - :meth:`start` — launches weaver and waits for it to become ready.
         - :attr:`otlp_endpoint` — gRPC OTLP endpoint to point exporters at.
-        - :meth:`end` — signals weaver to stop and always returns a
-          :class:`LiveCheckReport`.  Never raises for semconv violations; use
-          this when you want to write your own assertions.
+        - :meth:`end` — signals weaver to stop and returns the
+          :class:`LiveCheckReport` whether or not it holds violations.  Never
+          raises for semconv violations, which is why you write your own
+          assertions against it; see the method itself for the three ways it
+          raises instead of returning.
         - :meth:`end_and_check` — signals weaver to stop and raises
           :class:`LiveCheckError` with a human-readable violation list and the
           full report attached if weaver exits non-zero.  Returns a
@@ -245,6 +408,46 @@ class WeaverLiveCheck:
         - :meth:`close` — stops weaver if not already stopped and terminates the
           process.  Never raises for semconv violations.  Idempotent; safe to
           call even if :meth:`end_and_check` or :meth:`end` was already called.
+
+    Args:
+        registry: Semantic convention registry to check against, as a
+            directory, an archive URL or any other value weaver's
+            ``--registry`` accepts. An existing local directory is made
+            absolute. ``None`` downloads the published registry archive for
+            ``schema_version`` from GitHub, which means the constructor
+            configures a network download that ``start`` then performs.
+        schema_version: Version of the published registry to download, for
+            example ``"1.37.0"``. ``None`` takes the newest version known to
+            ``opentelemetry.semconv.schemas.Schemas``, so the check follows the
+            semantic conventions the installed SDK was built against. Ignored
+            when ``registry`` is given.
+        policies_dir: Directory of extra advice policies, passed to weaver's
+            ``--advice-policies`` and made absolute. ``None`` runs only the
+            policies built into weaver.
+        inactivity_timeout: Seconds weaver waits without receiving telemetry
+            before stopping on its own. A test slower than this between
+            ``start`` and the first export finds weaver already gone.
+        otlp_port: Port for weaver's OTLP gRPC listener. ``0`` picks a free one,
+            which is what lets several of these run at once.
+        admin_port: Port for weaver's admin HTTP listener, which serves the
+            health, stop, report and shutdown endpoints this class calls.
+            ``0`` picks a free one.
+        extra_args: Further weaver arguments, appended verbatim after the
+            managed flags, for example ``["--quiet"]``. ``None`` adds none.
+        startup_timeout: Seconds to wait for weaver's health endpoint to answer
+            before giving up.
+        config: Weaver TOML configuration file, made absolute and passed to
+            ``--config``. The managed flags above take precedence over values
+            in it.
+        advice_data: Value for weaver's ``--advice-data``, which loads JSON or
+            YAML data for advice policies. An existing local path is made
+            absolute; a URL or a glob is passed unchanged.
+
+    Raises:
+        ValueError: When ``startup_timeout`` is not positive and finite.
+        RuntimeError: When no ``weaver`` binary is on ``PATH``. Nothing is
+            started by the constructor, so this is raised before any
+            subprocess exists.
     """
 
     def __init__(
@@ -262,18 +465,11 @@ class WeaverLiveCheck:
     ):
         """Build the ``weaver registry live-check`` command.
 
-        ``extra_args`` is appended verbatim to the weaver command after the
-        managed flags (``--registry``, ``--otlp-grpc-port``, etc.) and lets
-        callers pass additional weaver options — for example ``["--quiet"]``
-        or ``["--skip-policies"]`` — without subclassing.
-
-        ``config`` selects a Weaver TOML configuration file. Managed command
-        flags take precedence over values in that file.
-        ``advice_data`` is passed to Weaver's ``--advice-data`` option to load
-        JSON/YAML data for advice policies. Existing local paths are made
-        absolute; other values (URLs, globs) are passed unchanged.
-        ``startup_timeout`` controls how long to wait for the health endpoint,
-        in seconds. It defaults to 30 seconds.
+        Parameters are documented on the class docstring. No subprocess is
+        started here: the command is assembled and the port numbers are chosen,
+        and :meth:`start` runs it. Choosing a port does not hold it, as
+        ``_find_free_port`` explains, so another process can take it before
+        weaver binds.
         """
         if not isfinite(startup_timeout) or startup_timeout <= 0:
             raise ValueError("startup_timeout must be positive and finite")
@@ -332,14 +528,45 @@ class WeaverLiveCheck:
         logger.debug("Weaver command: %s", command)
 
     def __enter__(self) -> "WeaverLiveCheck":
+        """Start weaver for the duration of the block.
+
+        Returns:
+            This instance, with weaver running and ready to receive telemetry.
+        """
         return self.start()
 
     def __exit__(self, exc_type: Any, *_: object) -> None:
+        """Close weaver, whether the block completed or raised.
+
+        When the block raised, the instance is marked stopped before closing,
+        so no report is requested. That keeps the original exception visible
+        instead of replacing it with whatever the report request would fail
+        with.
+
+        Args:
+            exc_type: Class of the exception raised in the block, or ``None``.
+            *_: The exception value and traceback, which are not needed.
+        """
         if exc_type is not None:
             self._stopped = True
         self.close()
 
     def start(self) -> "WeaverLiveCheck":
+        """Launch weaver and wait for its health endpoint to answer.
+
+        Weaver's stdout and stderr are redirected to temporary files, which
+        :attr:`stdout` and :attr:`stderr` read and :meth:`close` deletes.
+
+        Returns:
+            This instance, so the call can be chained, as ``__enter__`` does.
+
+        Raises:
+            RuntimeError: When weaver exits before becoming ready. The
+                collected output is logged at error level first, and the
+                process is killed while collecting it.
+            TimeoutError: When weaver is still running but has not answered the
+                health endpoint within ``startup_timeout``.
+        """
         logger.debug("Starting WeaverLiveCheck process...")
         # Redirect weaver's stdout/stderr to tempfiles
         stdout_fd, self._stdout_path = tempfile.mkstemp(prefix="weaver-stdout-", suffix=".log")
@@ -363,6 +590,19 @@ class WeaverLiveCheck:
         return self
 
     def _wait_for_ready(self) -> None:
+        """Poll weaver's health endpoint until it answers or the deadline passes.
+
+        Polls roughly four times a second. A connection error is expected while
+        weaver is still binding its listener, so it is kept as the cause of
+        whichever exception is eventually raised rather than reported at once.
+
+        Raises:
+            RuntimeError: When the weaver process exited, which is checked
+                before each poll so a crash is reported straight away instead
+                of after the full timeout.
+            TimeoutError: When the deadline passes with weaver still running
+                and still not answering.
+        """
         deadline = time.monotonic() + self._startup_timeout
         last_error: RequestException | None = None
         while True:
@@ -389,6 +629,14 @@ class WeaverLiveCheck:
 
     @property
     def otlp_endpoint(self) -> str:
+        """Return the endpoint to configure an OTLP exporter with.
+
+        Returns:
+            The endpoint of weaver's OTLP gRPC listener. The port is fixed at
+            construction, so this is readable before :meth:`start`, but nothing
+            listens there until weaver is running. It is plain gRPC with no
+            TLS, so an exporter pointed at it has to be configured insecure.
+        """
         return f"http://localhost:{self._otlp_port}"
 
     def _do_stop(self, timeout: int) -> tuple["LiveCheckReport", int]:
@@ -396,6 +644,23 @@ class WeaverLiveCheck:
 
         Raises for infrastructure errors (HTTP failure, process communication).
         Never raises for semconv violations.
+
+        Args:
+            timeout: Seconds allowed for each admin HTTP request and for the
+                process to exit, not for the sequence as a whole.
+
+        Returns:
+            A tuple of the parsed report and the exit status of the weaver
+            process. The status is the one ``_shutdown`` returns and means what
+            that method documents: non-zero is any failure weaver reports,
+            usually violations. It is returned rather than raised on.
+
+        Raises:
+            RuntimeError: When weaver never became ready, so there is nothing
+                to stop.
+            requests.RequestException: When an admin request fails or answers
+                with an error status. Shutdown is still attempted in that case,
+                and the collected weaver output is logged at error level.
         """
         if not self._ready:
             raise RuntimeError("WeaverLiveCheck process did not start successfully")
@@ -420,12 +685,44 @@ class WeaverLiveCheck:
         return report, exit_code
 
     def _shutdown(self, timeout: int) -> int:
+        """Ask weaver to exit and wait for the process to do so.
+
+        Args:
+            timeout: Seconds allowed for the shutdown request and, separately,
+                for the process to exit.
+
+        Returns:
+            The exit status of the weaver process. Non-zero is how weaver
+            reports a failed check, which is usually violations but covers any
+            failure it reports, and is negative when a signal killed it.
+
+        Raises:
+            requests.RequestException: When the shutdown request fails or
+                answers with an error status.
+            subprocess.TimeoutExpired: When the process has not exited within
+                ``timeout`` after being asked to.
+        """
         response = post(f"http://localhost:{self._admin_port}/shutdown", timeout=timeout)
         response.raise_for_status()
         assert self._process is not None
         return self._process.wait(timeout=timeout)
 
     def _end(self, timeout: int) -> tuple[LiveCheckReport, int]:
+        """Stop weaver once and return the cached outcome on every later call.
+
+        Args:
+            timeout: Seconds passed on to ``_do_stop``, used only on the call
+                that actually stops weaver.
+
+        Returns:
+            The tuple of report and exit status produced by the first call.
+
+        Raises:
+            RuntimeError: When weaver was already stopped without a report
+                having been collected, which is the state :meth:`close` leaves
+                behind and the state ``__exit__`` forces after the block
+                raised.
+        """
         if not self._stopped:
             self._stopped = True
             self._result = self._do_stop(timeout)
@@ -444,11 +741,21 @@ class WeaverLiveCheck:
         Raises :exc:`RuntimeError` if closed without requesting a report or if
         an earlier report request or shutdown failed.
 
-        Raises :exc:`RuntimeError` for infrastructure problems (weaver failed
-        to start, HTTP communication error, etc.).
+        Raises :exc:`RuntimeError` when weaver never became ready, so there is
+        nothing to stop. An admin request that fails or answers with an error
+        status is not turned into a :exc:`RuntimeError`: the
+        ``requests.RequestException`` raised by ``_do_stop`` propagates.
 
         See https://github.com/open-telemetry/weaver/tree/main/crates/weaver_live_check#output
         for the report structure.
+
+        Args:
+            timeout: Seconds allowed for each step of stopping weaver: the stop
+                request, the report request, the shutdown request and the
+                process exit.
+
+        Returns:
+            The report, whether or not it holds violations.
         """
         report, _ = self._end(timeout)
         return report
@@ -462,15 +769,23 @@ class WeaverLiveCheck:
         Does **not** return if weaver exits with a non-zero status — raises
         :exc:`LiveCheckError` (a subclass of :exc:`AssertionError`) with a
         human-readable list of violations and the full :class:`LiveCheckReport`
-        attached as :attr:`LiveCheckError.report`.
+        attached as ``LiveCheckError.report``.
         Use :meth:`end` if you need the report regardless of violations.
 
         Repeated calls check the cached result and raise again for violations.
         Raises :exc:`RuntimeError` if closed without requesting a report or if
         an earlier report request or shutdown failed.
 
-        Raises :exc:`RuntimeError` for infrastructure problems (weaver failed
-        to start, HTTP communication error, etc.).
+        Raises :exc:`RuntimeError` when weaver never became ready, so there is
+        nothing to stop. An admin request that fails or answers with an error
+        status is not turned into a :exc:`RuntimeError`: the
+        ``requests.RequestException`` raised by ``_do_stop`` propagates.
+
+        Args:
+            timeout: Seconds allowed for each step of stopping weaver.
+
+        Returns:
+            The report, when weaver exited with status zero.
         """
         report, exit_code = self._end(timeout)
         if exit_code == 0:
@@ -485,6 +800,20 @@ class WeaverLiveCheck:
 
     @staticmethod
     def _read_output(path: str | None, cached: str) -> str:
+        """Read one of weaver's output files, falling back to what was cached.
+
+        Args:
+            path: The temporary file to read, or ``None`` once :meth:`close`
+                has deleted it.
+            cached: The text captured before the file was deleted, returned
+                when the file cannot be read.
+
+        Returns:
+            The file contents decoded as UTF-8, with undecodable bytes replaced
+            rather than raising, since weaver output is read for a human. When
+            ``path`` is ``None`` or the file cannot be opened, ``cached`` is
+            returned and the failure is logged at debug level.
+        """
         if path is None:
             return cached
         try:
@@ -496,17 +825,39 @@ class WeaverLiveCheck:
 
     @property
     def stdout(self) -> str:
-        """Captured stdout so far, retained after close. Reading does not stop Weaver."""
+        """Captured stdout so far, retained after close. Reading does not stop Weaver.
+
+        Returns:
+            Everything weaver has written to stdout. Reading re-reads the
+            temporary file while weaver is running, so the value grows between
+            calls, and returns the text captured at close afterwards.
+        """
         self._stdout = self._read_output(self._stdout_path, self._stdout)
         return self._stdout
 
     @property
     def stderr(self) -> str:
-        """Captured stderr so far, retained after close. Reading does not stop Weaver."""
+        """Captured stderr so far, retained after close. Reading does not stop Weaver.
+
+        Returns:
+            Everything weaver has written to stderr, under the same rules as
+            :attr:`stdout`.
+        """
         self._stderr = self._read_output(self._stderr_path, self._stderr)
         return self._stderr
 
     def _read_weaver_logs(self) -> str | None:
+        """Kill weaver and return everything it wrote, for a failure message.
+
+        This is called on the error paths of :meth:`start` and ``_do_stop``,
+        where weaver is not going to be asked politely again. It kills the
+        process first so that the output files are complete.
+
+        Returns:
+            The stdout and stderr captured so far, joined by a newline.
+            ``None`` when weaver was never started, and also ``None`` when
+            reading failed, in which case the failure is logged at error level.
+        """
         if self._process is None:
             return None
         try:
