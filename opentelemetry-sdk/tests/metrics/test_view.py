@@ -7,6 +7,9 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics._internal.view import (
+    _attribute_key_matches,
+)
 from opentelemetry.sdk.metrics.view import View
 
 
@@ -137,7 +140,7 @@ class TestView(TestCase):
         self.assertEqual(view._name, "name")
         self.assertEqual(view._instrument_name, "instrument_name_1")
 
-    def test_attribute_keys_and_exclude_attribute_keys_overlap(self):
+        def test_attribute_keys_and_exclude_attribute_keys_overlap(self):
         test_cases = [
             {
                 "name": "exact overlap",
@@ -145,31 +148,97 @@ class TestView(TestCase):
                 "exclude_attribute_keys": ("method", "user_id"),
             },
             {
-                "name": "wildcard include overlaps exact exclude",
-                "attribute_keys": ("k8s.*",),
-                "exclude_attribute_keys": ("k8s.node",),
+                "name": "intersecting wildcard patterns",
+                "attribute_keys": ("http.*",),
+                "exclude_attribute_keys": ("*.status",),
             },
             {
-                "name": "exact include overlaps wildcard exclude",
-                "attribute_keys": ("k8s.node",),
-                "exclude_attribute_keys": ("k8s.*",),
+                "name": "intersecting question mark patterns",
+                "attribute_keys": ("a?",),
+                "exclude_attribute_keys": ("?b",),
             },
             {
-                "name": "wildcard overlaps wildcard",
-                "attribute_keys": ("k8s.*",),
-                "exclude_attribute_keys": ("k8s.n*",),
+                "name": "literal brackets do not overlap",
+                "attribute_keys": ("header0",),
+                "exclude_attribute_keys": ("header[0]",),
             },
         ]
 
         for case in test_cases:
             with self.subTest(case=case["name"]):
-                with self.assertRaises(ValueError):
-                    View(
-                        instrument_name="instrument_name",
-                        attribute_keys=case["attribute_keys"],
-                        exclude_attribute_keys=case["exclude_attribute_keys"],
-                    )
+                view = View(
+                    instrument_name="instrument_name",
+                    attribute_keys=case["attribute_keys"],
+                    exclude_attribute_keys=case[
+                        "exclude_attribute_keys"
+                    ],
+                )
 
+                self.assertEqual(
+                    view._attribute_keys,
+                    frozenset(case["attribute_keys"]),
+                )
+                self.assertEqual(
+                    view._exclude_attribute_keys,
+                    frozenset(case["exclude_attribute_keys"]),
+                )
+
+    def test_attribute_key_matching_semantics(self):
+        test_cases = [
+            ("exact match", "region", "region", True),
+            ("star wildcard", "http.status", "http.*", True),
+            ("question mark wildcard", "ab", "a?", True),
+            (
+                "question mark one character only",
+                "abc",
+                "a?",
+                False,
+            ),
+            (
+                "literal bracket match",
+                "header[0]",
+                "header[0]",
+                True,
+            ),
+            (
+                "brackets are not character class",
+                "header0",
+                "header[0]",
+                False,
+            ),
+            (
+                "literal backslash match",
+                r"header\0",
+                r"header\0",
+                True,
+            ),
+            (
+                "backslash is not discarded",
+                "header0",
+                r"header\0",
+                False,
+            ),
+            (
+                "regex dot remains literal",
+                "metric.value",
+                "metric.value",
+                True,
+            ),
+            (
+                "literal dot mismatch",
+                "metricXvalue",
+                "metric.value",
+                False,
+            ),
+        ]
+
+        for name, key, pattern, expected in test_cases:
+            with self.subTest(case=name):
+                self.assertIs(
+                    _attribute_key_matches(key, pattern),
+                    expected,
+                )
+                
     def test_attribute_keys_and_exclude_attribute_keys_disjoint(self):
         view = View(
             instrument_name="instrument_name",
