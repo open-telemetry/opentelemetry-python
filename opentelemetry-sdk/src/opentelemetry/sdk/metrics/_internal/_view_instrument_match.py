@@ -140,6 +140,9 @@ class _ViewInstrumentMatch:
 
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement, should_sample_exemplar: bool = True) -> None:
+        if isinstance(self._aggregation, _DropAggregation):
+            return
+
         attributes = {}
         if measurement.attributes:
             # Make a shallow copy since the user can mutate the dict after the fact.
@@ -196,6 +199,9 @@ class _ViewInstrumentMatch:
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nanos: int,
     ) -> Sequence[DataPointT] | None:
+        if isinstance(self._aggregation, _DropAggregation):
+            return None
+
         data_points: list[DataPointT] = []
         with self._lock:
             aggregations = self._attributes_aggregation

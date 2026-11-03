@@ -103,7 +103,7 @@ class View:
             metric stream will be enabled (including for instruments with
             `_opt_in_advisory=True`). If `None`, instruments with
             `_opt_in_advisory=True` will use `DropAggregation` and all other
-            instruments will be enabled.
+            instruments will be enabled. Must be a bool.
 
     This class is not intended to be subclassed by the user.
     """
@@ -134,6 +134,9 @@ class View:
             raise ValueError(
                 f"aggregation_cardinality_limit must be a positive integer, got {aggregation_cardinality_limit!r}"
             )
+
+        if enabled is not None and not isinstance(enabled, bool):
+            raise ValueError(f"enabled must be a bool, got {enabled!r}")
 
         if (
             instrument_type

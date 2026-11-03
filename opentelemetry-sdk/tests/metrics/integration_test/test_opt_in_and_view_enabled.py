@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+# pylint: disable=protected-access
+
 from logging import WARNING
 from unittest import TestCase
 
@@ -214,3 +216,30 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
         self.assertEqual(len(metrics), 1)
         self.assertEqual(metrics[0].name, "test_counter")
         self.assertEqual(metrics[0].data.data_points[0].value, 3)
+
+    def test_disabled_streams_do_not_retain_per_attribute_aggregations(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+            views=[View(instrument_name="view_disabled_counter", enabled=False)],
+        )
+        meter = meter_provider.get_meter("testmeter")
+        opt_in_counter = meter.create_counter("opt_in_counter", _opt_in_advisory=True)
+        view_disabled_counter = meter.create_counter("view_disabled_counter")
+
+        for idx in range(10):
+            attrs = {"key": f"value_{idx}"}
+            opt_in_counter.add(1, attrs)
+            view_disabled_counter.add(1, attrs)
+
+        self.assertIsNone(reader.get_metrics_data())
+
+        reader_storage = meter_provider._measurement_consumer._reader_storages[reader]
+        matches_by_name = {
+            instrument.name: matches
+            for instrument, matches in reader_storage._instrument_view_instrument_matches.items()
+        }
+        self.assertEqual(len(matches_by_name["opt_in_counter"]), 1)
+        self.assertEqual(matches_by_name["opt_in_counter"][0]._attributes_aggregation, {})
+        self.assertEqual(len(matches_by_name["view_disabled_counter"]), 1)
+        self.assertEqual(matches_by_name["view_disabled_counter"][0]._attributes_aggregation, {})
