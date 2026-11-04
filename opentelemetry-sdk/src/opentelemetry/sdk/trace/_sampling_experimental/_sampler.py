@@ -69,11 +69,14 @@ def _update_trace_state(
     ot_trace_state: OtelTraceState,
     intent: SamplingIntent,
 ) -> TraceState | None:
-    otts = ot_trace_state.serialize()
     # Apply the sampler's own update even when there is no incoming tracestate,
     # otherwise a composable sampler that stamps tracestate is silently skipped
     # for every root span.
     new_trace_state = intent.update_trace_state(trace_state or TraceState())
+    # Preserve the callback's non-sampling subkeys while keeping the sampler's
+    # threshold and original explicit randomness.
+    ot_trace_state.rest = OtelTraceState.parse(new_trace_state).rest
+    otts = ot_trace_state.serialize()
     if not new_trace_state:
         if otts:
             return TraceState(((OTEL_TRACE_STATE_KEY, otts),))

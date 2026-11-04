@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 import pytest
 
@@ -16,7 +17,7 @@ from opentelemetry.sdk.trace._sampling_experimental import (
     composable_parent_threshold,
     composite_sampler,
 )
-from opentelemetry.sdk.trace._sampling_experimental._util import MIN_THRESHOLD
+from opentelemetry.sdk.trace._sampling_experimental._util import INVALID_THRESHOLD, MIN_THRESHOLD
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON, Decision, ParentBased, Sampler, SamplingResult
 from opentelemetry.trace import Link, SpanKind, TraceState, set_span_in_context
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
@@ -114,6 +115,64 @@ def test_root_span_applies_tracestate_update() -> None:
             assert dict(span.get_span_context().trace_state.items()) == {"vendorb": "beta", "ot": "th:0"}
     finally:
         provider.shutdown()
+
+
+@dataclass
+class _OtelUpdatingSampler(ComposableSampler):
+    threshold: int
+    ot_value: str | None
+
+    def sampling_intent(
+        self,
+        parent_ctx: Context | None,
+        name: str,
+        span_kind: SpanKind | None,
+        attributes: Attributes,
+        links: Sequence[Link] | None,
+        trace_state: TraceState | None,
+    ) -> SamplingIntent:
+        return SamplingIntent(
+            threshold=self.threshold,
+            update_trace_state=lambda ts: (
+                ts.update("ot", self.ot_value) if self.ot_value is not None else ts.delete("ot")
+            ),
+        )
+
+    def get_description(self) -> str:
+        return "OtelUpdating"
+
+
+@pytest.mark.parametrize(
+    "threshold,incoming,updated,outgoing",
+    [
+        (INVALID_THRESHOLD, "th:8", "x:1", "x:1"),
+        (MIN_THRESHOLD, "th:8", "x:1", "th:0;x:1"),
+        (
+            INVALID_THRESHOLD,
+            "th:8;rv:0123456789abcd;old:1",
+            "th:0;rv:ffffffffffffff;x:1",
+            "rv:0123456789abcd;x:1",
+        ),
+        (
+            MIN_THRESHOLD,
+            "th:8;rv:0123456789abcd;old:1",
+            "th:8;rv:ffffffffffffff;x:1",
+            "th:0;rv:0123456789abcd;x:1",
+        ),
+        (INVALID_THRESHOLD, "th:8;old:1", None, None),
+        (INVALID_THRESHOLD, "th:8;rv:0123456789abcd;old:1", None, "rv:0123456789abcd"),
+    ],
+)
+def test_callback_updates_ot_data(threshold: int, incoming: str, updated: str | None, outgoing: str | None) -> None:
+    result = composite_sampler(_OtelUpdatingSampler(threshold, updated)).should_sample(
+        Context(), 1, "span", trace_state=TraceState([("ot", incoming), ("vendor", "value")])
+    )
+    assert result.decision is (Decision.DROP if threshold == INVALID_THRESHOLD else Decision.RECORD_AND_SAMPLE)
+    assert result.trace_state is not None
+    expected = {"vendor": "value"}
+    if outgoing is not None:
+        expected["ot"] = outgoing
+    assert dict(result.trace_state.items()) == expected
 
 
 class _SixArgumentSampler(Sampler):
