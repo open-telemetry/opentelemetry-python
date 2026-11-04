@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace.sampling import Decision, Sampler, SamplingResult
+from opentelemetry.sdk.trace.sampling import Decision, Sampler, SamplingResult, _get_parent_trace_state
 from opentelemetry.trace import Link, SpanKind, TraceState
 from opentelemetry.util.types import Attributes
 
@@ -29,6 +29,8 @@ class _CompositeSampler(Sampler):
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
+        if trace_state is None:
+            trace_state = _get_parent_trace_state(parent_context)
         ot_trace_state = OtelTraceState.parse(trace_state)
 
         intent = self._delegate.sampling_intent(parent_context, name, kind, attributes, links, trace_state)
@@ -78,6 +80,11 @@ def _update_trace_state(
         return None
     if otts:
         return new_trace_state.update(OTEL_TRACE_STATE_KEY, otts)
+    # CompositeSampler must remove `th` after a negative sampling decision.
+    # If nothing remains in `ot`, delete the incoming entry to avoid retaining a stale threshold.
+    # https://opentelemetry.io/docs/specs/otel/trace/sdk/#compositesampler
+    if OTEL_TRACE_STATE_KEY in new_trace_state:
+        return new_trace_state.delete(OTEL_TRACE_STATE_KEY)
     return new_trace_state
 
 
