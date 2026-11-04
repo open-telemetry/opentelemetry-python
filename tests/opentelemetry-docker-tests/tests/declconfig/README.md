@@ -43,6 +43,20 @@ config must enable `health_check` on `0.0.0.0:13133` and export with
 
 The app doesn't inherit `OTEL_*` variables from the test environment.
 
+## TLS
+
+Each test session generates a throwaway CA plus server and client
+certificates into `certs/<xdist worker>/`, which is gitignored. Collectors see
+them under `/etc/otelcol/certs` (`ca.crt`, `server.crt`, `server.key`), and
+apps see them under `${TLS_CERTS_DIR}` (`ca.crt`, `client.crt`, `client.key`).
+
+The server certificate is issued for `otel-collector.test`, because the
+collector's IP isn't known until it has started. TLS scenarios dial
+`https://otel-collector.test:<port>`. Their `run.py` patches
+`urllib3.util.connection.create_connection` to connect that name to
+`OTEL_COLLECTOR_ENDPOINT`, and the certificate is still verified against
+`otel-collector.test`.
+
 ## `scenario.yaml`
 
 The full format is in [`scenario.schema.json`](scenario.schema.json).
