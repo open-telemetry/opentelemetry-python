@@ -14,11 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
-      - name: Install dependencies
-        run: pip install toml towncrier
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - run: |
           if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x-0\.[0-9]+bx$ ]]; then
@@ -28,8 +27,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          stable_version=$(./scripts/eachdist.py version --mode stable)
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          stable_version=$(uv run --no-project --exclude-newer 3d --with toml ./scripts/eachdist.py version --mode stable)
+          unstable_version=$(uv run --no-project --exclude-newer 3d --with toml ./scripts/eachdist.py version --mode prerelease)
 
           if [[ $stable_version =~ ^([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
             stable_major_minor="${BASH_REMATCH[1]}"
@@ -61,7 +60,7 @@ jobs:
         run: .github/scripts/update-version-patch.sh $STABLE_VERSION $UNSTABLE_VERSION $STABLE_VERSION_PREV $UNSTABLE_VERSION_PREV
 
       - name: Generate changelog
-        run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
+        run: uv run --no-project --exclude-newer 3d --with towncrier towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -76,15 +75,17 @@ jobs:
       - name: Create pull request
         id: create_pr
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # not using secrets.GITHUB_TOKEN for pr create since pull requests from that token do not run workflows
+          PR_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Prepare release ${STABLE_VERSION}/${UNSTABLE_VERSION}"
           branch="otelbot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
 
           git commit -a -m "$message"
+          gh auth setup-git
           git push origin HEAD:$branch
-          pr_url=$(gh pr create --title "[$GITHUB_REF_NAME] $message" \
+          pr_url=$(GH_TOKEN="${PR_TOKEN}" gh pr create --title "[$GITHUB_REF_NAME] $message" \
                        --body "$message." \
                        --head $branch \
                        --base $GITHUB_REF_NAME)
@@ -101,8 +102,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -110,7 +110,8 @@ jobs:
       - name: Backport patch release changelog to main
         id: backport_pr
         env:
-          GITHUB_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           release_branch="otelbot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
           message="Backport ${STABLE_VERSION}/${UNSTABLE_VERSION} changelog"
@@ -123,8 +124,9 @@ jobs:
           git checkout FETCH_HEAD -- CHANGELOG.md
           git commit -m "$message"
 
+          gh auth setup-git
           git push origin HEAD:$branch
-          pr_url=$(gh pr create --title "$message" \
+          pr_url=$(GH_TOKEN="${PR_TOKEN}" gh pr create --title "$message" \
                                 --body "$body" \
                                 --head $branch \
                                 --base main)
