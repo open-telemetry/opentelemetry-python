@@ -370,7 +370,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         attributes: Attributes,
         reservoir_builder: ExemplarReservoirBuilder,
         instrument_is_synchronous: bool,
-        start_time_unix_nano: int = 0,
+        start_time_unix_nano: int | None = None,
     ):
         super().__init__(attributes, reservoir_builder)
         self._instrument_is_synchronous = instrument_is_synchronous

@@ -216,6 +216,7 @@ class TestLastValueAggregation(TestCase):
             _default_reservoir_factory(_LastValueAggregation),
             instrument_is_synchronous=True,
         )
+        self.assertIsNone(last_value_aggregation._start_time_unix_nano)
 
         last_value_aggregation.aggregate(measurement(1))
         self.assertEqual(last_value_aggregation._value, 1)
@@ -285,6 +286,7 @@ class TestLastValueAggregation(TestCase):
             _default_reservoir_factory(_LastValueAggregation),
             instrument_is_synchronous=True,
         )
+        self.assertIsNone(last_value_aggregation._start_time_unix_nano)
 
         last_value_aggregation.aggregate(measurement(1))
 
