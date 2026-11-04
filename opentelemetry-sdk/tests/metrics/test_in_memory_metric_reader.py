@@ -142,3 +142,48 @@ class TestInMemoryMetricReader(TestCase):
             number_data_point_1.time_unix_nano,
             number_data_point_0.time_unix_nano,
         )
+
+    def test_synchronous_gauge_cumulative_multiple_collect(self):
+        reader = InMemoryMetricReader()
+        meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")
+        gauge = meter.create_gauge("gauge1")
+        gauge.set(5, attributes={"key": "value"})
+
+        first_metrics_data = reader.get_metrics_data()
+        second_metrics_data = reader.get_metrics_data()
+
+        self.assertIsNotNone(second_metrics_data)
+
+        first_gauge_data = first_metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data
+        second_gauge_data = second_metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data
+
+        self.assertEqual(
+            [(point.attributes, point.value) for point in first_gauge_data.data_points],
+            [({"key": "value"}, 5)],
+        )
+        self.assertEqual(
+            [(point.attributes, point.value) for point in second_gauge_data.data_points],
+            [({"key": "value"}, 5)],
+        )
+
+
+class TestInMemoryMetricReaderCardinalityLimits(TestCase):
+    def test_default_limit(self):
+        reader = InMemoryMetricReader()
+        self.assertEqual(set(reader._instrument_class_cardinality_limit.values()), {2000})
+        self.assertEqual(len(reader._instrument_class_cardinality_limit), 7)
+
+    def test_override_limit_per_instrument_class(self):
+        reader = InMemoryMetricReader(cardinality_limits={Counter: 5})
+        limits = reader._instrument_class_cardinality_limit
+        self.assertEqual(sorted(limits.values()), [5] + [2000] * 6)
+
+    def test_invalid_limit(self):
+        for limit in (0, -1, 1.5, "5", True):
+            with self.subTest(limit=limit):
+                with self.assertRaises(ValueError):
+                    InMemoryMetricReader(cardinality_limits={Counter: limit})
+
+    def test_invalid_instrument_class(self):
+        with self.assertRaises(ValueError):
+            InMemoryMetricReader(cardinality_limits={int: 5})

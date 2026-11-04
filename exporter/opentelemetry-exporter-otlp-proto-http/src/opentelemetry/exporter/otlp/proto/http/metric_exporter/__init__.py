@@ -11,7 +11,6 @@ from typing import (  # noqa: F401
     Optional,
     overload,
 )
-from urllib.parse import urlparse
 
 from typing_extensions import deprecated
 
@@ -20,7 +19,7 @@ from opentelemetry.exporter.otlp.common._aggregation import (
     _get_aggregation,
     _get_temporality,
 )
-from opentelemetry.exporter.otlp.proto.common._exporter_metrics import (
+from opentelemetry.exporter.otlp.common._exporter_metrics import (
     create_exporter_metrics,
 )
 from opentelemetry.exporter.otlp.proto.common._internal import (
@@ -164,7 +163,9 @@ class OTLPMetricExporter(MetricExporter):
         """OTLP HTTP metrics exporter
 
         Args:
-            endpoint: Target URL to which the exporter is going to send metrics
+            endpoint: Full URL of the OTLP/HTTP signal endpoint, including the signal
+                path. Example: ``http://collector:4318/v1/metrics``. For a base URL without a
+                signal path, set the ``OTEL_EXPORTER_OTLP_ENDPOINT`` environment variable.
             certificate_file: Path to the certificate file to use for any TLS
             client_key_file: Path to the client key file to use for any TLS
             client_certificate_file: Path to the client certificate file to use for any TLS
@@ -224,7 +225,7 @@ class OTLPMetricExporter(MetricExporter):
         self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
-            urlparse(self._endpoint),
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )
@@ -302,7 +303,7 @@ class OTLPMetricExporter(MetricExporter):
         self._metrics = create_exporter_metrics(
             OtelComponentTypeValues.OTLP_HTTP_METRIC_EXPORTER,
             "metrics",
-            urlparse(self._endpoint),
+            self._endpoint,
             meter_provider,
             os.environ.get(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED, "").strip().lower() == "true",
         )

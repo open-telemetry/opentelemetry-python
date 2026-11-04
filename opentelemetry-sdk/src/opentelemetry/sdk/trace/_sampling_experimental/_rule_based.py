@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from fnmatch import fnmatchcase
 from typing import Protocol
 
@@ -129,12 +129,20 @@ class AttributeValuesPredicate:
 
 
 class AttributePatternsPredicate:
+    """Match attribute values using a callable receiving a value and a pattern.
+
+    By default, patterns use case-sensitive ``fnmatchcase`` semantics.
+    """
+
     def __init__(
         self,
         key: str,
         included: Sequence[str] | None = None,
         excluded: Sequence[str] | None = None,
+        *,
+        matcher: Callable[[str, str], bool] = fnmatchcase,
     ):
+        self._matcher = matcher
         self._key = key
         self._included = tuple(included or ())
         self._excluded = tuple(excluded or ())
@@ -153,8 +161,8 @@ class AttributePatternsPredicate:
         return any(self._matches_value(str(value)) for value in _attribute_values(attributes[self._key]))
 
     def _matches_value(self, value: str) -> bool:
-        included = not self._included or any(fnmatchcase(value, pattern) for pattern in self._included)
-        excluded = any(fnmatchcase(value, pattern) for pattern in self._excluded)
+        included = not self._included or any(self._matcher(value, pattern) for pattern in self._included)
+        excluded = any(self._matcher(value, pattern) for pattern in self._excluded)
         return included and not excluded
 
     def __str__(self) -> str:

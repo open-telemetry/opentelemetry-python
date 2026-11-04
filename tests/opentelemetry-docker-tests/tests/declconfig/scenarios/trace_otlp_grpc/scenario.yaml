@@ -1,0 +1,9 @@
+description: >
+  Exports a span over OTLP/gRPC with gzip compression, headers and a timeout.
+until:
+  - spans:
+      name: grpc-span
+expect:
+  - spans:
+      name: grpc-span
+      count: 1

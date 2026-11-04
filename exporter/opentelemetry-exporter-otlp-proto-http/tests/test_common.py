@@ -14,9 +14,6 @@ import requests
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
 )
-from opentelemetry.exporter.http.transport._urllib3 import (
-    Urllib3HTTPTransport,
-)
 from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._common import (
@@ -339,7 +336,7 @@ class TestResolveCommon(unittest.TestCase):
 
 class TestBuildTransport(unittest.TestCase):
     @patch.dict(os.environ, {}, clear=True)
-    def test_default_transport_is_urllib3(self):
+    def test_default_transport_is_requests(self):
         result = _build_transport(
             None,
             None,
@@ -349,7 +346,24 @@ class TestBuildTransport(unittest.TestCase):
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
             session=None,
         )
-        self.assertIsInstance(result, Urllib3HTTPTransport)
+        self.assertIsInstance(result, RequestsHTTPTransport)
+
+    @patch.dict(os.environ, {"HTTPS_PROXY": "http://proxy.invalid:3129"}, clear=True)
+    def test_default_transport_honors_proxy_env(self):
+        result = _build_transport(
+            None,
+            None,
+            None,
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
+            OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
+            session=None,
+        )
+        # pylint: disable-next=protected-access
+        settings = result._session.merge_environment_settings(
+            "https://collector.invalid/v1/traces", {}, None, None, None
+        )
+        self.assertEqual(settings["proxies"]["https"], "http://proxy.invalid:3129")
 
     @patch.dict(os.environ, {}, clear=True)
     def test_session_forces_requests_transport(self):
@@ -454,7 +468,7 @@ class TestBuildTransport(unittest.TestCase):
             expected_cert,
         ) in cases:
             with self.subTest(label), patch.dict(os.environ, env, clear=True):
-                with patch("opentelemetry.exporter.otlp.proto.http._common.Urllib3HTTPTransport") as mock_transport:
+                with patch("opentelemetry.exporter.otlp.proto.http._common.RequestsHTTPTransport") as mock_transport:
                     result = _build_transport(
                         certificate_file,
                         client_key_file,
@@ -464,7 +478,7 @@ class TestBuildTransport(unittest.TestCase):
                         OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
                         session=None,
                     )
-                mock_transport.assert_called_once_with(verify=expected_verify, cert=expected_cert)
+                mock_transport.assert_called_once_with(verify=expected_verify, cert=expected_cert, session=None)
                 self.assertIs(result, mock_transport.return_value)
 
     def test_build_transport_passes_verify_and_cert_to_requests(self):
@@ -499,7 +513,4 @@ class TestLoadSessionFromEnvvar(unittest.TestCase):
     def test_missing_requests_raises_helpful_error(self):
         with self.assertRaises(ImportError) as cm:
             _load_session_from_envvar(_OTEL_PYTHON_EXPORTER_OTLP_HTTP_METRICS_CREDENTIAL_PROVIDER)
-        self.assertIn(
-            "opentelemetry-exporter-otlp-proto-http[requests]",
-            str(cm.exception),
-        )
+        self.assertIn("pip install requests", str(cm.exception))

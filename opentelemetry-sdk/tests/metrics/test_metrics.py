@@ -101,7 +101,9 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         mock_exporter._preferred_temporality = None
         mock_exporter._preferred_aggregation = None
         metric_reader_0 = PeriodicExportingMetricReader(mock_exporter)
+        self.addCleanup(metric_reader_0.shutdown)
         metric_reader_1 = PeriodicExportingMetricReader(mock_exporter)
+        self.addCleanup(metric_reader_1.shutdown)
 
         with self.assertNotRaises(Exception):
             MeterProvider(metric_readers=(metric_reader_0,))
@@ -812,6 +814,22 @@ class TestMeter(TestCase):
 
     def test_scope_name_matches_glob_no_match(self):
         predicate = _scope_name_matches_glob("no.match")
+        self.assertFalse(predicate(InstrumentationScope("my.meter", "1.0")))
+
+    def test_scope_name_matches_glob_is_case_sensitive_on_every_platform(self):
+        # fnmatch normcases both operands, which lower-cases them on Windows.
+        # Scope name matching must stay case-sensitive everywhere.
+        exact = _scope_name_matches_glob("my.meter")
+        self.assertTrue(exact(InstrumentationScope("my.meter", "1.0")))
+        self.assertFalse(exact(InstrumentationScope("My.Meter", "1.0")))
+
+        wildcard = _scope_name_matches_glob("my.*")
+        self.assertTrue(wildcard(InstrumentationScope("my.meter", "1.0")))
+        self.assertFalse(wildcard(InstrumentationScope("MY.meter", "1.0")))
+
+    def test_scope_name_matches_glob_pattern_case_is_not_normalized(self):
+        predicate = _scope_name_matches_glob("MY.*")
+        self.assertTrue(predicate(InstrumentationScope("MY.meter", "1.0")))
         self.assertFalse(predicate(InstrumentationScope("my.meter", "1.0")))
 
     @patch("opentelemetry.sdk.metrics._internal.SynchronousMeasurementConsumer")

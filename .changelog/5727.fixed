@@ -1,0 +1,1 @@
+`opentelemetry-api`: log the ``BoundedAttributes`` drop warning only once per record

@@ -12,6 +12,7 @@ from grpc import ChannelCredentials, Compression, StatusCode
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
+from opentelemetry.exporter.otlp.proto.grpc import _timeout_from_env
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
     OTLPExporterMixin,
     _get_credentials,
@@ -104,8 +105,7 @@ class OTLPSpanExporter(
                 OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
             )
 
-        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
-        environ_timeout = float(environ_timeout) if environ_timeout is not None else None
+        environ_timeout = _timeout_from_env(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
 
         compression = (
             environ_to_compression(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION) if compression is None else compression

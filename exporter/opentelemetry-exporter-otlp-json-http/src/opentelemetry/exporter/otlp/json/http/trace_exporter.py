@@ -76,6 +76,13 @@ class OTLPSpanExporter(SpanExporter):
         *,
         _transport: BaseHTTPTransport | None = None,
     ) -> None:
+        """OTLP HTTP JSON span exporter.
+
+        Args:
+            endpoint: Full URL of the OTLP/HTTP signal endpoint, including the signal
+                path. Example: ``http://collector:4318/v1/traces``. For a base URL without a
+                signal path, set the ``OTEL_EXPORTER_OTLP_ENDPOINT`` environment variable.
+        """
         transport = _transport or _build_transport(
             certificate_file,
             client_key_file,

@@ -3,8 +3,8 @@ Basic Trace
 
 These examples show how to use OpenTelemetry to create and export Spans. There are two different examples:
 
-* basic_trace: Shows how to configure a SpanProcessor and Exporter, and how to create a tracer and span.
-* resources: Shows how to add resource information to a Provider.
+* :scm_web:`basic_trace.py <docs/examples/basic_tracer/basic_trace.py>`: Shows how to configure a SpanProcessor and Exporter, and how to create a tracer and span.
+* :scm_web:`resources.py <docs/examples/basic_tracer/resources.py>`: Shows how to add resource information to a Provider.
 
 The source files of these examples are available :scm_web:`here <docs/examples/basic_tracer/>`.
 

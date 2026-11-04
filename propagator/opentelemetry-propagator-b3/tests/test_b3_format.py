@@ -415,6 +415,23 @@ class AbstractB3FormatTestCase:
         new_ctx = self.get_propagator().extract(carrier, old_ctx)
         self.assertDictEqual(Context(), new_ctx)
 
+    def test_inject_invalid_span_context(self):
+        """Do not inject when SpanContext is invalid even if not equal to INVALID_SPAN_CONTEXT."""
+        invalid_contexts = [
+            trace_api.SpanContext(trace_id=0, span_id=0, is_remote=True),
+            trace_api.SpanContext(trace_id=0, span_id=123, is_remote=False),
+            trace_api.SpanContext(trace_id=123, span_id=0, is_remote=False),
+            trace_api.SpanContext(trace_id=0, span_id=0, is_remote=True, trace_flags=trace_api.TraceFlags(1)),
+        ]
+        propagator = self.get_propagator()
+        for span_context in invalid_contexts:
+            with self.subTest(span_context=span_context):
+                carrier: dict[str, str] = {}
+                span = trace_api.NonRecordingSpan(span_context)
+                ctx = trace_api.set_span_in_context(span)
+                propagator.inject(carrier, context=ctx)
+                self.assertEqual(carrier, {})
+
 
 class TestB3MultiFormat(AbstractB3FormatTestCase, unittest.TestCase):
     @classmethod

@@ -95,6 +95,13 @@ class OTLPMetricExporter(MetricExporter):
         *,
         _transport: BaseHTTPTransport | None = None,
     ) -> None:
+        """OTLP HTTP JSON metric exporter.
+
+        Args:
+            endpoint: Full URL of the OTLP/HTTP signal endpoint, including the signal
+                path. Example: ``http://collector:4318/v1/metrics``. For a base URL without a
+                signal path, set the ``OTEL_EXPORTER_OTLP_ENDPOINT`` environment variable.
+        """
         MetricExporter.__init__(
             self,
             preferred_temporality=_get_temporality(preferred_temporality),

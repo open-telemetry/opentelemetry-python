@@ -123,7 +123,7 @@ class LogRecordLimits:
     This class does not enforce any limits itself. It only provides a way to read limits from env,
     default values and from user provided arguments.
 
-    All limit arguments must be either a non-negative integer or ``None``.
+    All limit arguments must be either a non-negative integer, ``None`` or ``LogRecordLimits.UNSET``.
 
     - All limit arguments are optional.
     - If a limit argument is not set, the class will try to read its value from the corresponding
@@ -150,6 +150,8 @@ class LogRecordLimits:
             Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT``
             Falls back to ``max_attribute_length`` when unset.
     """
+
+    UNSET = -1
 
     def __init__(
         self,
@@ -193,6 +195,9 @@ class LogRecordLimits:
 
     @classmethod
     def _from_env_if_absent(cls, value: int | None, env_var: str, default: int | None = None) -> int | None:
+        if value == cls.UNSET:
+            return None
+
         err_msg = "{} must be a non-negative integer but got {}"
 
         # if no value is provided for the limit, try to load it from env
@@ -220,7 +225,7 @@ class LogLimits(LogRecordLimits):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class ReadableLogRecord:
     """Readable LogRecord should be kept exactly in-sync with ReadWriteLogRecord, only difference is the frozen=True param."""
 
@@ -264,7 +269,7 @@ class ReadableLogRecord:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class ReadWriteLogRecord:
     """A ReadWriteLogRecord instance represents an event being logged.
     ReadWriteLogRecord instances are created and emitted via `Logger`
@@ -295,7 +300,12 @@ class ReadWriteLogRecord:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ReadWriteLogRecord):
             return NotImplemented
-        return self.__dict__ == other.__dict__
+        return (
+            self.log_record == other.log_record
+            and self.resource == other.resource
+            and self.instrumentation_scope == other.instrumentation_scope
+            and self.limits == other.limits
+        )
 
     @property
     def dropped_attributes(self) -> int:
@@ -310,11 +320,13 @@ class ReadWriteLogRecord:
         record: LogRecord,
         resource: Resource,
         instrumentation_scope: InstrumentationScope | None = None,
+        limits: LogRecordLimits | None = None,
     ) -> ReadWriteLogRecord:
         return cls(
             log_record=record,
             resource=resource,
             instrumentation_scope=instrumentation_scope,
+            **({} if limits is None else {"limits": limits}),
         )
 
 
@@ -362,6 +374,21 @@ class LogRecordProcessor(abc.ABC):
         on error handling expectations.
         """
 
+    def enabled(  # pylint: disable=no-self-use,unused-argument
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        """Returns whether this processor would emit a record for the given arguments.
+
+        Processors that support filtering MAY override this method. The default
+        implementation returns ``True``.
+        """
+        return True
+
     @abc.abstractmethod
     def shutdown(self) -> None:
         """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
@@ -390,7 +417,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     added.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
         self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
@@ -404,6 +431,24 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         for lp in self._log_record_processors:
             lp.on_emit(log_record)
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        for lp in self._log_record_processors:
+            if lp.enabled(
+                context=context,
+                instrumentation_scope=instrumentation_scope,
+                severity_number=severity_number,
+                event_name=event_name,
+            ):
+                return True
+        return False
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
@@ -448,14 +493,14 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             and thus defining how many log processors can work in parallel.
     """
 
-    def __init__(self, max_workers: int = 2):
+    def __init__(self, max_workers: int = 2) -> None:
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
         self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
 
-    def add_log_record_processor(self, log_record_processor: LogRecordProcessor):
+    def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
@@ -474,6 +519,24 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
+
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        instrumentation_scope: InstrumentationScope | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        for lp in self._log_record_processors:
+            if lp.enabled(
+                context=context,
+                instrumentation_scope=instrumentation_scope,
+                severity_number=severity_number,
+                event_name=event_name,
+            ):
+                return True
+        return False
 
     def shutdown(self) -> None:
         self._submit_and_wait(lambda lp: lp.shutdown)
@@ -682,6 +745,7 @@ class Logger(APILogger):
         instrumentation_scope: InstrumentationScope,
         *,
         logger_metrics: LoggerMetricsT,
+        log_record_limits: LogRecordLimits | None = None,
         _logger_config: _LoggerConfig,
     ):
         super().__init__(
@@ -695,9 +759,23 @@ class Logger(APILogger):
         self._instrumentation_scope = instrumentation_scope
         self._logger_metrics = logger_metrics
         self._logger_config = _logger_config
+        self._log_record_limits = log_record_limits or LogRecordLimits()
 
-    def _is_enabled(self) -> bool:
-        return self._logger_config.is_enabled
+    def enabled(
+        self,
+        *,
+        context: Context | None = None,
+        severity_number: SeverityNumber | None = None,
+        event_name: str | None = None,
+    ) -> bool:
+        if not self._logger_config.is_enabled:
+            return False
+        return self._multi_log_record_processor.enabled(
+            context=context,
+            instrumentation_scope=self._instrumentation_scope,
+            severity_number=severity_number,
+            event_name=event_name,
+        )
 
     def _set_logger_config(self, logger_config: _LoggerConfig) -> None:
         self._logger_config = logger_config
@@ -731,7 +809,28 @@ class Logger(APILogger):
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
         """
-        if not self._is_enabled():
+        if not self._logger_config.is_enabled:
+            return
+        self._logger_metrics.emit_log()
+        instrumentation_scope = self._instrumentation_scope
+        if record is not None:
+            if isinstance(record, ReadWriteLogRecord):
+                instrumentation_scope = record.instrumentation_scope
+                api_record = record.log_record
+            else:
+                api_record = record
+            context = api_record.context
+            severity_number = api_record.severity_number
+            event_name = api_record.event_name
+        else:
+            context = context or get_current()
+        # Skip building the record when no processor would accept it.
+        if not self._multi_log_record_processor.enabled(
+            context=context,
+            instrumentation_scope=instrumentation_scope,
+            severity_number=severity_number,
+            event_name=event_name,
+        ):
             return
         # If a record is provided, use it directly
         if record is not None:
@@ -743,6 +842,7 @@ class Logger(APILogger):
                     record=record,
                     resource=self._resource,
                     instrumentation_scope=self._instrumentation_scope,
+                    limits=self._log_record_limits,
                 )
             else:
                 _set_log_record_exception_attributes(record.log_record)
@@ -765,9 +865,9 @@ class Logger(APILogger):
                 record=log_record,
                 resource=self._resource,
                 instrumentation_scope=self._instrumentation_scope,
+                limits=self._log_record_limits,
             )
 
-        self._logger_metrics.emit_log()
         self._multi_log_record_processor.on_emit(writable_record)
 
 
@@ -797,6 +897,7 @@ class LoggerProvider(APILoggerProvider):
         | None = None,
         *,
         meter_provider: MeterProvider | None = None,
+        log_record_limits: LogRecordLimits | None = None,
         _logger_configurator: _LoggerConfiguratorT | None = None,
     ):
         if resource is None:
@@ -811,6 +912,7 @@ class LoggerProvider(APILoggerProvider):
         disabled = environ.get(OTEL_SDK_DISABLED, "")
         self._disabled = disabled.lower().strip() == "true"
         self._logger_configurator = _logger_configurator or _default_logger_configurator
+        self._log_record_limits = log_record_limits or LogRecordLimits()
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
@@ -858,6 +960,7 @@ class LoggerProvider(APILoggerProvider):
             scope,
             logger_metrics=self._logger_metrics,
             _logger_config=self._apply_logger_configurator(scope),
+            log_record_limits=self._log_record_limits,
         )
 
     def _get_logger_cached(

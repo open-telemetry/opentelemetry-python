@@ -10,6 +10,7 @@ from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _scope_name_matches_glob,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -20,10 +21,19 @@ from opentelemetry.configuration.models import (
     Aggregation as AggregationConfig,
 )
 from opentelemetry.configuration.models import (
+    CardinalityLimits as CardinalityLimitsConfig,
+)
+from opentelemetry.configuration.models import (
     ConsoleMetricExporter as ConsoleMetricExporterConfig,
 )
 from opentelemetry.configuration.models import (
     ExemplarFilter as ExemplarFilterConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalMeterConfig as MeterConfigConfig,
+)
+from opentelemetry.configuration.models import (
+    ExperimentalMeterConfigurator as MeterConfiguratorConfig,
 )
 from opentelemetry.configuration.models import (
     ExperimentalOtlpFileMetricExporter as ExperimentalOtlpFileMetricExporterConfig,
@@ -35,6 +45,7 @@ from opentelemetry.configuration.models import (
     ExporterDefaultHistogramAggregation,
     ExporterTemporalityPreference,
     InstrumentType,
+    OtlpHttpEncoding,
 )
 from opentelemetry.configuration.models import (
     MeterProvider as MeterProviderConfig,
@@ -76,8 +87,13 @@ from opentelemetry.sdk.metrics import (
     UpDownCounter,
     _Gauge,
 )
+from opentelemetry.sdk.metrics._internal import (
+    _MeterConfig,
+    _RuleBasedMeterConfigurator,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    CardinalityLimits,
     ConsoleMetricExporter,
     MetricExporter,
     MetricReader,
@@ -243,6 +259,7 @@ def _create_view(config: ViewConfig) -> View:
         description=stream.description,
         attribute_keys=attribute_keys,
         aggregation=aggregation,
+        aggregation_cardinality_limit=stream.aggregation_cardinality_limit,
     )
 
 
@@ -262,34 +279,64 @@ def _create_otlp_http_metric_exporter(
     config: OtlpHttpMetricExporterConfig,
 ) -> MetricExporter:
     """Create an OTLP HTTP metric exporter from config."""
-    try:
-        # pylint: disable=import-outside-toplevel,no-name-in-module
-        from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415  # type: ignore[import-untyped]
-            Compression,
-        )
-        from opentelemetry.exporter.otlp.proto.http.metric_exporter import (  # noqa: PLC0415  # type: ignore[import-untyped]
-            OTLPMetricExporter,
-        )
-    except ImportError as exc:
-        raise MissingDependencyError(
-            package="opentelemetry-exporter-otlp-proto-http",
-            feature="otlp_http metric exporter",
-        ) from exc
-
-    compression = _map_compression(config.compression, Compression, allow_deflate=True)
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
-    return OTLPMetricExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
-        headers=headers,
-        timeout=timeout,
-        compression=compression,  # type: ignore[arg-type]
-        preferred_temporality=preferred_temporality,
-        preferred_aggregation=preferred_aggregation,
-    )
+    match config.encoding:
+        case None | OtlpHttpEncoding.protobuf:
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415
+                    Compression,
+                )
+                from opentelemetry.exporter.otlp.proto.http.metric_exporter import (  # noqa: PLC0415
+                    OTLPMetricExporter,
+                )
+            except ImportError as exc:
+                raise MissingDependencyError(
+                    package="opentelemetry-exporter-otlp-proto-http",
+                    feature="otlp_http metric exporter",
+                ) from exc
+
+            compression = _map_compression(config.compression, Compression, allow_deflate=True)
+            return OTLPMetricExporter(
+                endpoint=config.endpoint,
+                headers=headers,
+                timeout=timeout,
+                compression=compression,
+                preferred_temporality=preferred_temporality,
+                preferred_aggregation=preferred_aggregation,
+            )
+        case OtlpHttpEncoding.json:
+            try:
+                # pylint: disable=import-outside-toplevel,no-name-in-module
+                from opentelemetry.exporter.otlp.common.http import (  # noqa: PLC0415
+                    Compression as JsonCompression,
+                )
+                from opentelemetry.exporter.otlp.json.http.metric_exporter import (  # noqa: PLC0415
+                    OTLPMetricExporter as JsonOTLPMetricExporter,
+                )
+            except ImportError as exc:
+                raise MissingDependencyError(
+                    package="opentelemetry-exporter-otlp-json-http",
+                    feature="otlp_http JSON metric exporter",
+                ) from exc
+
+            compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
+            return JsonOTLPMetricExporter(
+                endpoint=config.endpoint,
+                headers=headers,
+                timeout=timeout,
+                compression=compression,
+                preferred_temporality=preferred_temporality,
+                preferred_aggregation=preferred_aggregation,
+            )
+        case _:
+            raise ConfigurationError(
+                f"Unsupported OTLP HTTP encoding '{config.encoding}'. Supported values: protobuf, json."
+            )
 
 
 def _create_otlp_grpc_metric_exporter(
@@ -357,14 +404,6 @@ def _create_otlp_file_development_metric_exporter(
     )
 
 
-_METRIC_EXPORTER_REGISTRY: dict = {
-    "otlp_http": _create_otlp_http_metric_exporter,
-    "otlp_grpc": _create_otlp_grpc_metric_exporter,
-    "console": _create_console_metric_exporter,
-    "otlp_file_development": _create_otlp_file_development_metric_exporter,
-}
-
-
 def _create_push_metric_exporter(
     config: PushMetricExporterConfig,
 ) -> MetricExporter:
@@ -375,17 +414,47 @@ def _create_push_metric_exporter(
     by the @_additional_properties decorator are loaded via the
     ``opentelemetry_metrics_exporter`` entry point group.
     """
-    for name, factory in _METRIC_EXPORTER_REGISTRY.items():
-        value = getattr(config, name, None)
-        if value is not None:
-            return factory(value)
-    if config.additional_properties:
-        name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_metrics_exporter", name)(**(plugin_config or {}))
-    raise ConfigurationError(
-        "No exporter type specified in push metric exporter config. "
-        "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
-    )
+    match config:
+        case PushMetricExporterConfig(otlp_http=exporter_config) if exporter_config is not None:
+            return _create_otlp_http_metric_exporter(exporter_config)
+        case PushMetricExporterConfig(otlp_grpc=exporter_config) if exporter_config is not None:
+            return _create_otlp_grpc_metric_exporter(exporter_config)
+        case PushMetricExporterConfig(console=exporter_config) if exporter_config is not None:
+            return _create_console_metric_exporter(exporter_config)
+        case PushMetricExporterConfig(otlp_file_development=exporter_config) if exporter_config is not None:
+            return _create_otlp_file_development_metric_exporter(exporter_config)
+        case PushMetricExporterConfig(additional_properties=additional_properties) if additional_properties:
+            name, plugin_config = next(iter(additional_properties.items()))
+            return load_entry_point("opentelemetry_metrics_exporter", name)(**(plugin_config or {}))
+        case _:
+            raise ConfigurationError(
+                "No exporter type specified in push metric exporter config. "
+                "Supported types: console, otlp_http, otlp_grpc, otlp_file_development."
+            )
+
+
+def _create_cardinality_limits(config: CardinalityLimitsConfig | None) -> CardinalityLimits | None:
+    """Create the SDK per-instrument cardinality limits from config.
+
+    Each instrument type uses its own limit and falls back to ``default``.
+    Instrument types left out of the result use the SDK default limit.
+    """
+    if config is None:
+        return None
+    limits: CardinalityLimits = {}
+    for instrument_class, limit in (
+        (Counter, config.counter),
+        (UpDownCounter, config.up_down_counter),
+        (Histogram, config.histogram),
+        (_Gauge, config.gauge),
+        (ObservableCounter, config.observable_counter),
+        (ObservableUpDownCounter, config.observable_up_down_counter),
+        (ObservableGauge, config.observable_gauge),
+    ):
+        limit = limit if limit is not None else config.default
+        if limit is not None:
+            limits[instrument_class] = limit
+    return limits
 
 
 def _create_periodic_metric_reader(
@@ -402,11 +471,13 @@ def _create_periodic_metric_reader(
         exporter=exporter,
         export_interval_millis=float(interval),
         export_timeout_millis=float(timeout),
+        cardinality_limits=_create_cardinality_limits(config.cardinality_limits),
     )
 
 
 def _create_prometheus_metric_reader(
     config: PrometheusMetricExporterConfig,
+    cardinality_limits: CardinalityLimits | None = None,
 ) -> MetricReader:
     """Create a PrometheusMetricReader from config.
 
@@ -439,6 +510,7 @@ def _create_prometheus_metric_reader(
 
     reader = PrometheusMetricReader(
         disable_target_info=disable_target_info,
+        cardinality_limits=cardinality_limits,
     )
 
     port = config.port if config.port is not None else 9464
@@ -450,6 +522,7 @@ def _create_prometheus_metric_reader(
 
 def _create_pull_metric_exporter(
     config: PullMetricExporterConfig,
+    cardinality_limits: CardinalityLimits | None = None,
 ) -> MetricReader:
     """Create a pull metric exporter (which is itself a MetricReader) from config.
 
@@ -461,9 +534,13 @@ def _create_pull_metric_exporter(
     entry point group.
     """
     if config.prometheus_development is not None:
-        return _create_prometheus_metric_reader(config.prometheus_development)
+        return _create_prometheus_metric_reader(config.prometheus_development, cardinality_limits)
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
+        if cardinality_limits is not None:
+            _logger.warning(
+                "cardinality_limits is not yet supported for pull metric exporter plugins and will be ignored."
+            )
         return load_entry_point("opentelemetry_pull_metric_exporter", name)(**(plugin_config or {}))
     raise ConfigurationError(
         "No exporter type specified in pull metric exporter config. Supported types: prometheus_development."
@@ -476,15 +553,13 @@ def _create_pull_metric_reader(
     """Create a pull MetricReader from config.
 
     The pull reader's exporter is itself a MetricReader (combined reader+exporter).
-    producers and cardinality_limits are not yet supported.
+    producers are not yet supported.
     """
     if config.producers:
         _logger.warning(
             "MetricProducer configuration is not yet supported for pull metric readers and will be ignored."
         )
-    if config.cardinality_limits is not None:
-        _logger.warning("cardinality_limits is not yet supported for pull metric readers and will be ignored.")
-    return _create_pull_metric_exporter(config.exporter)
+    return _create_pull_metric_exporter(config.exporter, _create_cardinality_limits(config.cardinality_limits))
 
 
 def _create_metric_reader(config: MetricReaderConfig) -> MetricReader:
@@ -508,6 +583,39 @@ def _create_exemplar_filter(
         return TraceBasedExemplarFilter()
     raise ConfigurationError(
         f"Unknown exemplar filter value: {value!r}. Supported values: always_on, always_off, trace_based."
+    )
+
+
+def _to_meter_config(config: MeterConfigConfig | None) -> _MeterConfig:
+    """Map an experimental per-meter config to an SDK ``_MeterConfig``.
+
+    Only ``enabled`` is honored — it is the sole field the SDK
+    ``_MeterConfig`` exposes. An absent ``enabled`` leaves the meter enabled.
+    """
+    if config is None or config.enabled is None:
+        return _MeterConfig.default()
+    return _MeterConfig(is_enabled=config.enabled)
+
+
+def _create_meter_configurator(
+    config: MeterConfiguratorConfig,
+) -> _RuleBasedMeterConfigurator:
+    """Build a rule-based meter configurator from experimental config.
+
+    Each entry in ``meters`` maps an instrumentation-scope name glob to a
+    per-meter config; ``default_config`` applies to scopes matching no glob.
+    Rules are evaluated in order, so earlier entries take precedence.
+    """
+    rules = [
+        (
+            _scope_name_matches_glob(matcher.name),
+            _to_meter_config(matcher.config),
+        )
+        for matcher in (config.meters or [])
+    ]
+    return _RuleBasedMeterConfigurator(
+        rules=rules,
+        default_config=_to_meter_config(config.default_config),
     )
 
 
@@ -544,11 +652,18 @@ def create_meter_provider(
             for view_config in config.views:
                 views.append(_create_view(view_config))
 
+    meter_configurator = (
+        _create_meter_configurator(config.meter_configurator_development)
+        if config is not None and config.meter_configurator_development is not None
+        else None
+    )
+
     return MeterProvider(
         resource=resource,
         metric_readers=readers,
         exemplar_filter=exemplar_filter,  # type: ignore[arg-type]
         views=views,
+        _meter_configurator=meter_configurator,
     )
 
 

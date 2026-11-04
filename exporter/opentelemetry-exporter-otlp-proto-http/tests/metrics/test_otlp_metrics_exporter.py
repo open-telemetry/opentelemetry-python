@@ -282,12 +282,12 @@ class TestOTLPMetricExporter(TestCase):
         total = sum(dp.value for dp in exported.data.data_points)
         self.assertEqual(total, 3)
 
-    def test_default_transport_is_urllib3(self):
+    def test_default_transport_is_requests(self):
         exporter = OTLPMetricExporter()
 
         self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_METRICS_EXPORT_PATH)
         self.assertIs(exporter._compression, _http.Compression.NONE)
-        self.assertIsInstance(exporter._client._transport, Urllib3HTTPTransport)
+        self.assertIsInstance(exporter._client._transport, RequestsHTTPTransport)
 
     def test_session_uses_requests_transport(self):
         session = requests.Session()
@@ -453,8 +453,9 @@ class TestOTLPMetricExporter(TestCase):
             session=None,
         )
 
-        result = exporter.export(self.metrics["sum_int"])
-        self.assertEqual(result, MetricExportResult.SUCCESS)
+        transport_session = exporter._client._transport._session
+        self.assertEqual(transport_session.verify, "ca.pem")
+        self.assertEqual(transport_session.cert, ("client-cert.pem", "client-key.pem"))
 
     @mocketize
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter._build_transport")

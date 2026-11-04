@@ -157,12 +157,12 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
 
-    def test_default_transport_is_urllib3(self):
+    def test_default_transport_is_requests(self):
         exporter = OTLPLogExporter()
 
         self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH)
         self.assertIs(exporter._compression, _http.Compression.NONE)
-        self.assertIsInstance(exporter._client._transport, Urllib3HTTPTransport)
+        self.assertIsInstance(exporter._client._transport, RequestsHTTPTransport)
 
     def test_session_uses_requests_transport(self):
         session = requests.Session()
@@ -430,8 +430,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             session=None,
         )
 
-        result = exporter.export([_make_log_record()])
-        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        transport_session = exporter._client._transport._session
+        self.assertEqual(transport_session.verify, "ca.pem")
+        self.assertEqual(transport_session.cert, ("client-cert.pem", "client-key.pem"))
 
     def test_compression_options(self):
         cases = (

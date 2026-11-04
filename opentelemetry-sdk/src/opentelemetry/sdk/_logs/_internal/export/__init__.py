@@ -116,7 +116,7 @@ class LogRecordExporter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Hint to ensure that the export of any ``ReadableLogRecord`` objects
         the exporter has received prior to the call to ``force_flush`` SHOULD be
         completed as soon as possible, preferably before returning from this method.
@@ -161,7 +161,7 @@ class ConsoleLogRecordExporter(LogRecordExporter):
     def shutdown(self):
         pass
 
-    def force_flush(self, timeout_millis: int = 10_000) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
 
 
@@ -208,6 +208,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             _propagate_false_logger.warning(
                 "SimpleLogRecordProcessor.on_emit has entered a recursive loop. Dropping log and exiting the loop."
             )
+            self._metrics.drop_items(1, "recursion")
             return
         token = attach(
             set_value(
@@ -283,7 +284,12 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         if export_timeout_millis is None:
             export_timeout_millis = BatchLogRecordProcessor._default_export_timeout_millis()
 
-        BatchLogRecordProcessor._validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size)
+        BatchLogRecordProcessor._validate_arguments(
+            max_queue_size,
+            schedule_delay_millis,
+            max_export_batch_size,
+            export_timeout_millis,
+        )
         # Initializes BatchProcessor
         self._batch_processor = BatchProcessor(
             exporter,
@@ -321,7 +327,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     def shutdown(self):
         return self._batch_processor.shutdown()
 
-    def force_flush(self, timeout_millis: int | None = None) -> bool:
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
@@ -378,15 +384,23 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             return _DEFAULT_EXPORT_TIMEOUT_MILLIS
 
     @staticmethod
-    def _validate_arguments(max_queue_size, schedule_delay_millis, max_export_batch_size):
+    def _validate_arguments(
+        max_queue_size,
+        schedule_delay_millis,
+        max_export_batch_size,
+        export_timeout_millis=None,
+    ):
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
 
-        if schedule_delay_millis <= 0:
-            raise ValueError("schedule_delay_millis must be positive.")
+        if schedule_delay_millis < 0:
+            raise ValueError("schedule_delay_millis must be non-negative.")
 
         if max_export_batch_size <= 0:
             raise ValueError("max_export_batch_size must be a positive integer.")
 
         if max_export_batch_size > max_queue_size:
             raise ValueError("max_export_batch_size must be less than or equal to max_queue_size.")
+
+        if export_timeout_millis is not None and export_timeout_millis <= 0:
+            raise ValueError("export_timeout_millis must be positive.")

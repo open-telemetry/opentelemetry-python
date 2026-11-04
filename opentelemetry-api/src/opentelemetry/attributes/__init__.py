@@ -108,7 +108,7 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
         max_value_len: The maximum length of string values, use None for no limit.
         extended_attributes: Deprecated. Kept for backwards compatibility. Extended attributes are now always used for attributes everywhere.
 
-    When the dict is full and a new element is added, the oldest element is dropped. Attributes are made to be immutable when set in this container.
+    When the dict is full, a new key is dropped; existing keys can still be updated. Attributes are made to be immutable when set in this container.
     So passing a mutable list as an attribute value, and then mutating it after will not change it's value in this container.
     """
 
@@ -146,11 +146,16 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
     ) -> None:
         if maxlen is not None and maxlen < 0:
             raise ValueError("maxlen must be valid int greater or equal to 0")
+        if max_value_len is not None and max_value_len < 0:
+            raise ValueError("max_value_len must be valid int greater or equal to 0")
         self._dict: dict[str, types.AnyValue] = {}
         self.maxlen = maxlen
         self.dropped = 0
         self.max_value_len = max_value_len
         self._lock = threading.Lock()
+        # The spec allows the limit log to be emitted at most once per record, so track
+        # it separately from ``dropped``, which also counts other kinds of drops.
+        self._dropped_logged = False
         # setting False before adding items
         self._immutable = False
         if attributes:
@@ -200,13 +205,14 @@ class BoundedAttributes(MutableMapping[str, types.AnyValue]):
     def _setitem_locked(self, key: str, value: types.AnyValue) -> None:
         if key in self._dict:
             del self._dict[key]
-        if self.maxlen is not None and len(self._dict) >= self.maxlen:
-            _logger.warning(
-                "Attributes dict is full. Dropping the oldest key-value pair from attributes to make space for the new key-value pair.",
-            )
-            # Dictionaries are insertion ordered in Python, this is the recommended way to get the oldest value.
-            del self._dict[next(iter(self._dict.keys()))]
+        elif self.maxlen is not None and len(self._dict) >= self.maxlen:
+            if not self._dropped_logged:
+                self._dropped_logged = True
+                _logger.warning(
+                    "Attributes dict is full. Dropping new key-value pairs.",
+                )
             self.dropped += 1
+            return
 
         self._dict[key] = value
 
