@@ -9,8 +9,10 @@ from opentelemetry import trace
 from opentelemetry.configuration._common import (
     _grpc_credentials_from_tls,
     _map_compression,
+    _matches_glob,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _scope_name_matches_glob,
     _validate_mtls_pair,
     load_entry_point,
 )
@@ -112,7 +114,6 @@ from opentelemetry.sdk.trace.sampling import (
     Sampler,
     TraceIdRatioBased,
 )
-from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 from opentelemetry.trace import SpanKind as TraceSpanKind
 
 _logger = logging.getLogger(__name__)
@@ -335,6 +336,7 @@ def _create_rule_based_sampler_rule_predicate(
                 config.attribute_patterns.key,
                 config.attribute_patterns.included,
                 config.attribute_patterns.excluded,
+                matcher=_matches_glob,
             )
         )
     if config.span_kinds is not None:

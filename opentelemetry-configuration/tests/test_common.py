@@ -6,15 +6,16 @@ import os
 import sys
 import tempfile
 import unittest
-from dataclasses import dataclass
+from dataclasses import dataclass, field, fields
 from types import SimpleNamespace
-from typing import Any, ClassVar
+from typing import Any, get_type_hints
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.configuration._common import (
     _additional_properties,
     _grpc_credentials_from_tls,
     _map_compression,
+    _matches_glob,
     _parse_headers,
     _parse_otlp_file_output_stream,
     _read_tls_file,
@@ -27,6 +28,7 @@ from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
     GrpcTls,
     LogRecordExporter,
+    OpenTelemetryConfiguration,
     PushMetricExporter,
     Sampler,
     SpanExporter,
@@ -311,7 +313,7 @@ class TestAdditionalPropertiesSupport(unittest.TestCase):
         class _SampleConfig:
             known_field: dict | None = None
             another_field: str | None = None
-            additional_properties: ClassVar[dict[str, Any]]
+            additional_properties: dict[str, dict[str, Any] | None] = field(default_factory=dict, init=False)
 
         self.cls = _SampleConfig
 
@@ -361,11 +363,33 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
     def _assert_supports_additional_properties(self, model_cls):
         # pylint: disable=unexpected-keyword-arg
         obj = model_cls(_test_plugin_key={})
+        other = model_cls()
         self.assertTrue(
             hasattr(obj, "additional_properties"),
             f"{model_cls.__name__} missing additional_properties attribute",
         )
         self.assertIn("_test_plugin_key", obj.additional_properties)
+        self.assertEqual(other.additional_properties, {})
+        self.assertIsNot(obj.additional_properties, other.additional_properties)
+
+        additional_properties_field = next(
+            field for field in fields(model_cls) if field.name == "additional_properties"
+        )
+        self.assertFalse(additional_properties_field.init)
+        self.assertEqual(
+            get_type_hints(model_cls)["additional_properties"],
+            dict[str, dict[str, Any] | None],
+        )
+
+    def test_root_configuration_allows_unrestricted_extras(self):
+        # pylint: disable=unexpected-keyword-arg
+        extras = {"vendor_label": "prod", "vendor_flags": [True], "vendor_count": 3, "vendor_option": None}
+        obj = OpenTelemetryConfiguration(file_format="1.0", **extras)
+        self.assertEqual(obj.additional_properties, extras)
+        self.assertEqual(
+            get_type_hints(OpenTelemetryConfiguration)["additional_properties"],
+            dict[str, Any],
+        )
 
     def test_sampler(self):
         self._assert_supports_additional_properties(Sampler)
@@ -393,7 +417,7 @@ class TestResolveComponent(unittest.TestCase):
         class _Config:
             builtin_a: dict | None = None
             builtin_b: str | None = None
-            additional_properties: ClassVar[dict[str, Any]]
+            additional_properties: dict[str, dict[str, Any] | None] = field(default_factory=dict, init=False)
 
         self.cls = _Config
         self.registry = {
@@ -524,3 +548,52 @@ class TestGrpcCredentialsFromTls(unittest.TestCase):
             self.assertRaises(ConfigurationError),
         ):
             _grpc_credentials_from_tls(GrpcTls(ca_file=os.path.join(tmp_dir, "missing.pem")))
+
+
+class TestMatchesGlob(unittest.TestCase):
+    def test_exact_and_wildcard_matches(self):
+        cases = [
+            ("a[bc]", "a[bc]", True),
+            ("ab", "a[bc]", False),
+            ("ac", "a[bc]", False),
+            ("a[bc]def", "a[bc]*", True),
+            ("abdef", "a[bc]*", False),
+            ("a[bc]d", "a[bc]?", True),
+            ("a[bcd]", "a[bc?]", True),
+            ("a[bc]", "a[bc?]", False),
+            ("[a-z]", "[a-z]", True),
+            ("b", "[a-z]", False),
+            ("[!a]", "[!a]", True),
+            ("b", "[!a]", False),
+            ("a[[b]]c", "a[[b]]*", True),
+            ("a[", "a[", True),
+            ("a[tail", "a[*", True),
+            ("a]tail", "a]*", True),
+            ("a\\tail", "a\\*", True),
+            ("a*", "a\\*", False),
+            ("a.c+($)^|{}", "a.c+($)^|{}", True),
+            ("prefix.value", "value", False),
+            ("value.suffix", "value", False),
+            ("value", "value", True),
+            ("VALUE", "value", False),
+            ("value", "V*", False),
+            ("VALUE", "v*", False),
+            ("value", "v*", True),
+            ("ab", "a*b", True),
+            ("a\nb", "a*b", True),
+            ("a\nb", "a?b", True),
+            ("ab", "a?b", False),
+            ("ab", "a?", True),
+            ("abc", "a?", False),
+            ("aéb", "a?b", True),
+            ("a😀b", "a?b", True),
+            ("abc", "**a**?**c**", True),
+            ("", "", True),
+            ("", "*", True),
+            ("", "**", True),
+            ("", "?", False),
+            ("a", "", False),
+        ]
+        for value, pattern, expected in cases:
+            with self.subTest(value=value, pattern=pattern):
+                self.assertEqual(_matches_glob(value, pattern), expected)
