@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: support configuring the internal logger with `OTEL_LOG_LEVEL`
