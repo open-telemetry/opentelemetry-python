@@ -1,0 +1,1 @@
+`opentelemetry-api`: add `SignatureCompatABC` to wrap subclass methods without `**kwargs`
