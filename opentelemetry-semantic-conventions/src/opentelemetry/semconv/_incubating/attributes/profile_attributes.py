@@ -37,3 +37,5 @@ class ProfileFrameTypeValues(Enum):
     """[Rust](https://wikipedia.org/wiki/Rust_(programming_language))."""
     LUAJIT = "luajit"
     """[LuaJIT](https://en.wikipedia.org/wiki/LuaJIT)."""
+    CUDA = "cuda"
+    """[CUDA](https://wikipedia.org/wiki/CUDA)."""
