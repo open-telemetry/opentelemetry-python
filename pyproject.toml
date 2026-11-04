@@ -248,5 +248,7 @@ dev = [
     "pre-commit",
     "datamodel-code-generator[http]",
     "datamodel-code-generator[ruff]",
+    "toml",
     "towncrier",
+    "twine",
 ]
