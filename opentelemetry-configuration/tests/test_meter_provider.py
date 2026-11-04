@@ -180,7 +180,7 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
             self.assertIsInstance(arg, MeterProvider)
 
 
-class TestCreateMetricReaders(unittest.TestCase):
+class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-public-methods
     @staticmethod
     def _make_periodic_config(exporter_config, interval=None, timeout=None):
         return MeterProviderConfig(
@@ -454,6 +454,26 @@ class TestCreateMetricReaders(unittest.TestCase):
                 self.assertEqual(kwargs["certificate_file"], "/certs/ca.pem")
                 self.assertEqual(kwargs["client_key_file"], "/certs/client.key")
                 self.assertEqual(kwargs["client_certificate_file"], "/certs/client.pem")
+
+    def test_otlp_grpc_http_endpoint_overrides_tls_insecure(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules, {"grpc": MagicMock(), "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": mock_module}
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_grpc=OtlpGrpcMetricExporterConfig(
+                        endpoint="http://collector:4317", tls=GrpcTlsConfig(insecure=False)
+                    )
+                )
+            )
+            create_meter_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertTrue(kwargs["insecure"])
 
     def test_otlp_grpc_tls_files_build_credentials(self):
         mock_exporter_cls = MagicMock()

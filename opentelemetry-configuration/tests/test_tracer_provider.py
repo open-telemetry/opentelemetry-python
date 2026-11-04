@@ -964,6 +964,26 @@ class TestCreateSpanExporterTls(unittest.TestCase):
         self.assertIsNone(kwargs["credentials"])
         mock_grpc.ssl_channel_credentials.assert_not_called()
 
+    def test_otlp_grpc_http_endpoint_overrides_tls_insecure(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules, {"grpc": MagicMock(), "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module}
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_grpc=OtlpGrpcExporterConfig(
+                        endpoint="http://collector:4317", tls=GrpcTlsConfig(insecure=False)
+                    )
+                )
+            )
+            create_tracer_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertTrue(kwargs["insecure"])
+
     def test_otlp_grpc_tls_files_build_credentials(self):
         mock_exporter_cls = MagicMock()
         mock_grpc = MagicMock()

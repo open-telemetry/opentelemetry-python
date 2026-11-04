@@ -8,6 +8,7 @@ import logging
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.configuration._common import (
     _grpc_credentials_from_tls,
+    _grpc_insecure_from_tls,
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
@@ -176,7 +177,7 @@ def _create_otlp_grpc_log_exporter(
 
     return OTLPLogExporter(  # type: ignore[return-value]
         endpoint=config.endpoint,
-        insecure=config.tls.insecure if config.tls is not None else None,
+        insecure=_grpc_insecure_from_tls(config.endpoint, config.tls),
         credentials=_grpc_credentials_from_tls(config.tls),
         headers=headers,
         timeout=timeout,

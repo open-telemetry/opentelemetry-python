@@ -528,6 +528,22 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 self.assertEqual(call_kwargs["client_key_file"], "/certs/client.key")
                 self.assertEqual(call_kwargs["client_certificate_file"], "/certs/client.pem")
 
+    def test_otlp_grpc_http_endpoint_overrides_tls_insecure(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc_log_module = MagicMock()
+        mock_grpc_log_module.OTLPLogExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {"grpc": MagicMock(), "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_grpc_log_module},
+        ):
+            config = LogRecordExporterConfig(
+                otlp_grpc=OtlpGrpcExporterConfig(endpoint="http://collector:4317", tls=GrpcTlsConfig(insecure=False))
+            )
+            _create_log_record_exporter(config)
+
+        self.assertTrue(mock_exporter_cls.call_args.kwargs["insecure"])
+
     def test_otlp_grpc_exporter_tls(self):
         mock_exporter_cls = MagicMock()
         mock_grpc = MagicMock()

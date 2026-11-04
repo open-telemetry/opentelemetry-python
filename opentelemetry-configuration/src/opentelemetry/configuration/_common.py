@@ -266,6 +266,19 @@ def _grpc_credentials_from_tls(tls: GrpcTls | None) -> grpc.ChannelCredentials |
     )
 
 
+def _grpc_insecure_from_tls(endpoint: str | None, tls: GrpcTls | None) -> bool | None:
+    """Resolve the ``insecure`` flag for a gRPC exporter.
+
+    ``tls.insecure`` only applies to endpoints without an ``http``/``https``
+    scheme, so an explicit ``http://`` endpoint always yields a plaintext
+    connection. Otherwise ``tls.insecure`` is returned as-is and the exporter
+    applies its own defaults when it is None.
+    """
+    if endpoint is not None and urlparse(endpoint).scheme == "http":
+        return True
+    return tls.insecure if tls is not None else None
+
+
 def _parse_otlp_file_output_stream(output_stream: str | None) -> str | None:
     """Resolve an output_stream value to a file path, or None for stdout.
 

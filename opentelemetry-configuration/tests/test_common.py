@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 from opentelemetry.configuration._common import (
     _additional_properties,
     _grpc_credentials_from_tls,
+    _grpc_insecure_from_tls,
     _map_compression,
     _matches_glob,
     _parse_headers,
@@ -508,6 +509,27 @@ class TestReadTlsFile(unittest.TestCase):
                 _read_tls_file(path, "ca_file")
         self.assertIn("tls.ca_file", str(ctx.exception))
         self.assertIn(path, str(ctx.exception))
+
+
+class TestGrpcInsecureFromTls(unittest.TestCase):
+    def test_resolves_insecure(self):
+        cases = [
+            ("http://collector:4317", GrpcTls(insecure=False), True),
+            ("http://collector:4317", GrpcTls(insecure=True), True),
+            ("http://collector:4317", GrpcTls(), True),
+            ("http://collector:4317", None, True),
+            ("collector:4317", GrpcTls(insecure=False), False),
+            ("collector:4317", GrpcTls(insecure=True), True),
+            ("collector:4317", GrpcTls(), None),
+            ("collector:4317", None, None),
+            ("https://collector:4317", GrpcTls(insecure=True), True),
+            ("https://collector:4317", GrpcTls(insecure=False), False),
+            (None, GrpcTls(insecure=False), False),
+            (None, None, None),
+        ]
+        for endpoint, tls, expected in cases:
+            with self.subTest(endpoint=endpoint, tls=tls):
+                self.assertEqual(_grpc_insecure_from_tls(endpoint, tls), expected)
 
 
 class TestGrpcCredentialsFromTls(unittest.TestCase):
