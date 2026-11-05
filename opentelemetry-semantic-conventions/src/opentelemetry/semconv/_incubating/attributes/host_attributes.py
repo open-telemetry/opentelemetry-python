@@ -42,7 +42,65 @@ Note: [CPUID](https://wiki.osdev.org/CPUID) command returns the vendor ID string
 
 HOST_ID: Final = "host.id"
 """
-Unique host ID. For Cloud, this must be the instance_id assigned by the cloud provider. For non-containerized systems, this should be the `machine-id`. See the table below for the sources to use to determine the `machine-id` based on operating system.
+Unique host ID, determined by the first matching source in the priority order.
+Note: SHOULD be determined using the first available source from the following priority tiers:
+
+1. Known cloud vendors - cloud instance ID
+2. Known VM vendors - provider VM ID
+3. OS-dependent machine ID
+4. User-provided value
+
+The value SHOULD conform to the following properties:
+
+* **Unique** within a given context;
+* **[Repeatable](https://opentelemetry.io/docs/specs/otel/entities/data-model/#repeatable-identity)** - multiple observers on the same host come up with the same value;
+* **Persistent** - survives host restarts and software updates.
+
+**Collecting `host.id` From Known Environments:** When `host.id` is derived from a
+cloud vendor instance ID, the resource SHOULD also carry the corresponding
+`cloud.provider` and `cloud.platform` attributes so that the source of the `host.id`
+value can be unambiguously determined.
+
+The following cloud environments are currently recognized:
+
+| Environment | `host.id` source | `cloud.provider` | `cloud.platform` |
+| --- | --- | --- | --- |
+| AWS EC2 | EC2 instance ID | `aws` | `aws_ec2` |
+| AWS EKS (node) | EC2 instance ID | `aws` | `aws_eks` |
+| Azure VM | `vmId` | `azure` | `azure.vm` |
+| GCP Compute Engine | GCE instance ID | `gcp` | `gcp_compute_engine` |
+| GCP GKE (node) | GCE instance ID | `gcp` | `gcp_kubernetes_engine` |
+
+The listed `cloud.provider`/`cloud.platform` values are for example only. Refer to the
+[`cloud`](/docs/registry/attributes/cloud.md) attribute definitions for the relevant set of values.
+
+**Non-privileged Machine ID Lookup:** When collecting `host.id` for non-containerized
+systems, non-privileged lookups of the machine ID are preferred. SDK detector
+implementations MUST use the sources listed below to obtain the machine ID.
+
+| OS | Primary | Fallback |
+| --- | --- | --- |
+| Linux | contents of `/etc/machine-id` | contents of `/var/lib/dbus/machine-id` |
+| BSD | contents of `/etc/hostid` | output of `/bin/kenv -q smbios.system.uuid` |
+| macOS | `IOPlatformUUID` line from the output of `/usr/sbin/ioreg -rd1 -c "IOPlatformExpertDevice"` | - |
+| Windows | `MachineGuid` from registry `HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography` | - |
+
+**Privileged Machine ID Lookup:** The `host.id` can be looked up using privileged
+sources. For example, Linux systems can use the output of `dmidecode -t system`,
+`dmidecode -t baseboard`,
+`dmidecode -t chassis`, or read the corresponding data from the filesystem
+(e.g. `cat /sys/devices/virtual/dmi/id/product_id`,
+`cat /sys/devices/virtual/dmi/id/product_uuid`, etc), however, SDK resource
+detector implementations MUST NOT collect `host.id` from privileged sources. If
+privileged lookup of `host.id` is required, the value SHOULD be injected via the
+`OTEL_RESOURCE_ATTRIBUTES` environment variable.
+
+**Collecting `host.id` From User Configuration:** If none of the above sources yields
+a non-empty value, the implementation MAY be unable to determine `host.id`
+automatically and SHOULD omit the attribute.
+In that case, the `host.id` can only be provided through user configuration
+or other available manual options. Users SHOULD ensure that the `host.id` value
+conforms to the properties stated above.
 """
 
 HOST_IMAGE_ID: Final = "host.image.id"
