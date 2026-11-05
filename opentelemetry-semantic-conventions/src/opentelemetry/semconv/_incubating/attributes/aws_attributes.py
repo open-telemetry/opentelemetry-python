@@ -131,7 +131,7 @@ The ARN of an [ECS cluster](https://docs.aws.amazon.com/AmazonECS/latest/develop
 
 AWS_ECS_CONTAINER_ARN: Final = "aws.ecs.container.arn"
 """
-The Amazon Resource Name (ARN) of an [ECS container instance](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html).
+The Amazon Resource Name (ARN) of an [ECS container](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v4-response.html).
 """
 
 AWS_ECS_LAUNCHTYPE: Final = "aws.ecs.launchtype"
