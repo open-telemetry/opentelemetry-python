@@ -110,9 +110,9 @@ As a result, when preparing a release branch that contains a different set of in
   * The version number for unstable components in the `main` branch will be bumped to the next version,
     e.g. `0.{Y+1}b0.dev`.
 
-## Releasing dev version of new packages to claim namespace
+## Reserving new packages to claim namespace
 
-When a contribution introduces a new package, in order to mitigate name-squatting incidents, release the current development version of the new package under the `opentelemetry` user to simply claim the namespace. This should be done shortly after the PR that introduced this package has been merged into `main`.
+When a contribution introduces a new package, in order to mitigate name-squatting incidents, reserve the package name under the `opentelemetry` organization on PyPI to simply claim the namespace (rather than releasing a dev version). This should be done shortly after the PR that introduced this package has been merged into `main` by navigating to <https://pypi.org/manage/organization/opentelemetry/projects/>, scrolling to the bottom (**Add project to organization**), and using the form.
 
 ## Troubleshooting
 

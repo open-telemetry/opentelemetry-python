@@ -1,0 +1,36 @@
+# Adapted from the OpenTelemetry Demo's shared otel-config.yml, with the
+# exporter endpoints pointed at the test collector.
+file_format: "1.0"
+disabled: false
+log_level: info
+logger_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_grpc:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4317
+meter_provider:
+  readers:
+    - periodic:
+        exporter:
+          otlp_grpc:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4317
+            temporality_preference: ${OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE:-cumulative}
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_grpc:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4317
+propagator:
+  composite:
+    - tracecontext:
+    - baggage:
+resource:
+  attributes_list: ${OTEL_RESOURCE_ATTRIBUTES}
+  detection/development:
+    detectors:
+      - container:
+      - host:
+      - process:
+      - service:

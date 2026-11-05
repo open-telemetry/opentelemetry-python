@@ -6,7 +6,7 @@
     # via
     #   -r exporter/opentelemetry-exporter-http-transport/test-requirements.in
     #   opentelemetry-exporter-http-transport
-certifi==2026.4.22
+certifi==2026.10.19
     # via requests
 charset-normalizer==3.4.7
     # via requests
@@ -40,6 +40,8 @@ puremagic==2.2.0 ; python_full_version >= '3.12'
     # via mocket
 pygments==2.20.0
     # via pytest
+pysocks==1.7.1
+    # via -r exporter/opentelemetry-exporter-http-transport/test-requirements.in
 pytest==9.0.3
     # via -r exporter/opentelemetry-exporter-http-transport/test-requirements.in
 requests==2.34.0

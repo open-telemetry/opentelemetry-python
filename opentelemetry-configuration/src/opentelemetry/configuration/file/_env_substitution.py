@@ -6,6 +6,17 @@
 import os
 import re
 
+from opentelemetry.configuration._exceptions import ConfigurationError
+
+# SUBSTITUTION-REF: ``${`` followed by at least one character other than ``}``,
+# then ``}``. The content is validated against ENV-SUBSTITUTION separately.
+_SUBSTITUTION_REF = re.compile(r"\$\{([^}]+)\}")
+
+# ENV-SUBSTITUTION: an env var name, optionally followed by ``:-default``.
+_ENV_SUBSTITUTION = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)(?::-(.*))?", re.DOTALL)
+
+_ENV_PREFIX = "env:"
+
 
 def substitute_env_vars(text: str) -> str:
     """Substitute environment variables within a configuration value.
@@ -26,10 +37,18 @@ def substitute_env_vars(text: str) -> str:
 
     Supports the following syntax:
 
-    - ${VAR}: Substitute with environment variable VAR, or an empty value if
-      VAR is not set.
-    - ${VAR:-default}: Substitute with VAR if set, otherwise use default value.
+    - ${VAR} / ${env:VAR}: Substitute with environment variable VAR, or an
+      empty value if VAR is not set.
+    - ${VAR:-default} / ${env:VAR:-default}: Substitute with VAR if it is set
+      and non-empty, otherwise use default value.
     - $$: Escape sequence for literal $.
+
+    Escape sequences are identified first, scanning left to right, and a ``$``
+    produced by an escape is never part of a substitution reference. For
+    example ``$${VAR}`` resolves to ``${VAR}``, and
+    ``${VAR:-$${VAR}}`` resolves to ``${VAR:-${VAR}}`` because neither
+    ``${VAR:-`` nor ``{VAR}}`` is a reference on its own. Substituted values
+    are inserted verbatim and never re-scanned.
 
     Per the declarative configuration specification, a referenced environment
     variable that is not set and has no default is replaced with an empty
@@ -43,40 +62,50 @@ def substitute_env_vars(text: str) -> str:
     Returns:
         The configuration value with environment variables substituted.
 
+    Raises:
+        ConfigurationError: If the value contains a substitution reference
+            that is not a valid env var reference, e.g. ``${VAR:?error}``,
+            ``${1VAR}`` or one with an unsupported prefix like ``${sys:x}``.
+
     Examples:
         >>> os.environ["SERVICE_NAME"] = "my-service"
         >>> substitute_env_vars("${SERVICE_NAME}")
+        'my-service'
+        >>> substitute_env_vars("${env:SERVICE_NAME}")
         'my-service'
         >>> substitute_env_vars("${MISSING:-default}")
         'default'
         >>> substitute_env_vars("$$100")
         '$100'
     """
-    # Pattern matches $$ (escape sequence) or ${VAR_NAME} / ${VAR_NAME:-default_value}
-    # Handling both in a single pass ensures $$ followed by ${VAR} works correctly
-    pattern = r"\$\$|\$\{([A-Za-z_][A-Za-z0-9_]*)(:-([^}]*))?\}"
 
-    def replace_var(match) -> str:
-        if match.group(1) is None:
-            # Matched $$, return literal $
-            return "$"
+    def replace_ref(match: re.Match[str]) -> str:
+        content = match.group(1)
+        env_match = _ENV_SUBSTITUTION.fullmatch(content)
+        # Try the unprefixed form first so ``${VAR:-default}`` is not read as
+        # prefix ``VAR``, and ``${env:-x}`` is the variable ``env``.
+        if env_match is None and content.startswith(_ENV_PREFIX):
+            env_match = _ENV_SUBSTITUTION.fullmatch(content[len(_ENV_PREFIX) :])
+        if env_match is None:
+            raise ConfigurationError(
+                f"Invalid substitution reference {match.group(0)!r}: expected "
+                "${NAME}, ${NAME:-default}, ${env:NAME} or ${env:NAME:-default}"
+            )
 
-        var_name = match.group(1)
-        has_default = match.group(2) is not None
-        default_value = match.group(3) if has_default else None
-
+        var_name, default_value = env_match.groups()
         value = os.environ.get(var_name)
 
-        if value is None:
-            # An unset variable is replaced with its default if one is
-            # provided, otherwise with an empty value, per the spec.
-            return default_value or ""
+        if not value and default_value is not None:
+            # The default applies when the variable is unset or empty.
+            return default_value
 
         # Substitution runs on an already-parsed configuration value, so the
         # result cannot inject new YAML structure regardless of its contents
         # (a newline in the value stays a literal character within this one
         # value). Type interpretation for standalone references is handled by
         # the loader, which re-resolves the node tag after substitution.
-        return value
+        return value or ""
 
-    return re.sub(pattern, replace_var, text)
+    # ``str.split`` finds ``$$`` escapes left to right without overlap, so
+    # references are only matched within the text between escapes.
+    return "$".join(_SUBSTITUTION_REF.sub(replace_ref, segment) for segment in text.split("$$"))
