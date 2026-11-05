@@ -81,7 +81,7 @@ def _update_trace_state(
         return None
     if otts:
         return new_trace_state.update(OTEL_TRACE_STATE_KEY, otts)
-    # CompositeSampler must remove `th` after a negative sampling decision.
+    # CompositeSampler removes `th` for dropped spans or unreliable thresholds.
     # If nothing remains in `ot`, delete the incoming entry to avoid retaining a stale threshold.
     # https://opentelemetry.io/docs/specs/otel/trace/sdk/#compositesampler
     if OTEL_TRACE_STATE_KEY in new_trace_state:

@@ -35,6 +35,20 @@ from opentelemetry.util.types import Attributes
             "ot=rv:00000000000000,vendora=alpha",
         ),
         ("vendora=alpha,ot=th:8;x:1", False, "ot=x:1,vendora=alpha"),
+        ("ot=th:8", True, None),
+        ("vendora=alpha,ot=th:8", True, "vendora=alpha"),
+        ("vendora=alpha,ot=th:8;x:1", True, "ot=x:1,vendora=alpha"),
+        ("vendora=alpha,ot=th:8;rv:000000000000", True, "vendora=alpha"),
+        (
+            "vendora=alpha,ot=th:8;rv:00000000000000",
+            True,
+            "ot=rv:00000000000000,vendora=alpha",
+        ),
+        (
+            "vendora=alpha,ot=th:8;rv:ffffffffffffff",
+            False,
+            "ot=rv:ffffffffffffff,vendora=alpha",
+        ),
         (
             "vendora=alpha,ot=th:8;rv:ffffffffffffff",
             True,
@@ -46,13 +60,13 @@ def test_parent_threshold_propagation(incoming: str, sampled: bool, outgoing: st
     propagator = TraceContextTextMapPropagator()
     parent = propagator.extract(
         {
-            "traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+            "traceparent": f"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-{int(sampled):02x}",
             "tracestate": incoming,
         }
     )
     sampler = composite_sampler(composable_parent_threshold(composable_always_on()))
     if parent_based:
-        sampler = ParentBased(root=ALWAYS_ON, remote_parent_sampled=sampler)
+        sampler = ParentBased(root=ALWAYS_ON, remote_parent_sampled=sampler, remote_parent_not_sampled=sampler)
     provider = TracerProvider(sampler=sampler, shutdown_on_exit=False)
     try:
         with provider.get_tracer(__name__).start_span("child", context=parent) as span:
