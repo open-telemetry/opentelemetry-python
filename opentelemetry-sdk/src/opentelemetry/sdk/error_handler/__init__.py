@@ -57,10 +57,30 @@ logger = getLogger(__name__)
 
 
 class ErrorHandler(ABC):
+    """Base class every registered error handler inherits from.
+
+    A handler also inherits from each exception class it wants to handle, and
+    ``GlobalErrorHandler`` selects it by testing that inheritance against the
+    exception that was raised. A handler that inherits only from this class
+    therefore handles nothing.
+    """
+
     @abstractmethod
     def _handle(self, error: Exception, *args, **kwargs):
         """
         Handle an exception
+
+        A handler is built with no arguments and this method is called once
+        per matching handler. Returning normally counts as having handled the
+        exception, which stops the default handler from also logging it.
+
+        Args:
+            error: The exception that was raised inside the
+                ``GlobalErrorHandler`` block.
+            *args: Accepted so that a handler can take extra positional
+                arguments. ``GlobalErrorHandler`` passes none.
+            **kwargs: Accepted so that a handler can take extra keyword
+                arguments. ``GlobalErrorHandler`` passes none.
         """
 
 
@@ -73,6 +93,19 @@ class _DefaultErrorHandler(ErrorHandler):
 
     # pylint: disable=useless-return
     def _handle(self, error: Exception, *args, **kwargs):
+        """Log the exception and its traceback, then swallow it.
+
+        The message is written at ``ERROR`` level to the logger of this
+        module, so it reaches whatever handlers the application configured.
+        The exception is not re-raised.
+
+        Args:
+            error: The exception that was raised. It is not formatted into
+                the message; ``logger.exception`` takes the traceback from
+                the exception being handled instead.
+            *args: Ignored.
+            **kwargs: Ignored.
+        """
         logger.exception("Error handled by default error handler: ")
 
 
@@ -88,16 +121,56 @@ class GlobalErrorHandler:
     _instance = None
 
     def __new__(cls) -> "GlobalErrorHandler":
+        """Return the one instance, creating it on the first call.
+
+        Returns:
+            The single instance, so that every ``with GlobalErrorHandler():``
+            in the process shares one object. The class carries no state, so
+            sharing it costs nothing and nesting two blocks is safe.
+        """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
 
         return cls._instance
 
     def __enter__(self):
-        pass
+        """Enter the block, doing nothing.
+
+        Returns:
+            ``None``. There is nothing useful to bind with ``as``.
+        """
 
     # pylint: disable=no-self-use
     def __exit__(self, exc_type, exc_value, traceback):
+        """Dispatch an escaping exception to the registered handlers.
+
+        Every entry point in the ``opentelemetry_error_handler`` group is
+        loaded on each exception, and a handler class is selected when it is a
+        subclass of the class of the raised exception, which is what the
+        module docstring means by a handler inheriting from the exceptions it
+        handles. A handler for a base class is therefore not selected for a
+        derived exception. Several handlers can match one exception and all
+        of them run. An exception raised by a handler is logged and the
+        remaining handlers still run, but that handler does not count as
+        having handled anything.
+
+        When no handler matched, or every handler that matched raised, the
+        default handler logs the exception.
+
+        Args:
+            exc_type: The class of the escaping exception, or ``None`` when
+                the block finished normally. It is not used; the dispatch
+                reads the class off ``exc_value``.
+            exc_value: The escaping exception, or ``None`` when the block
+                finished normally.
+            traceback: The traceback of the escaping exception. It is not
+                used.
+
+        Returns:
+            ``None`` when the block finished normally. ``True`` when an
+            exception escaped, which suppresses it, so an exception raised
+            inside the block never reaches the surrounding code.
+        """
         if exc_value is None:
             return None
 

@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""The mapping used for exponential histogram scales of 0 and below."""
+
 from math import ldexp
 from threading import Lock
 
@@ -22,6 +24,23 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.ieee_754 
 
 
 class ExponentMapping(Mapping):
+    """Maps a value to a bucket index by reading its IEEE 754 exponent.
+
+    This mapping covers scales -10 through 0. At scale 0 a bucket holds
+    exactly one power of two, so the index is the exponent of the value,
+    and each step down merges two neighbouring buckets, which is a right
+    shift of the exponent by ``-scale``. No logarithm is computed.
+
+    Scales of 1 and above belong to ``LogarithmMapping``, where a power of
+    two is split across several buckets and the exponent alone no longer
+    determines the index.
+
+    Args:
+        scale: Resolution of the mapping, from -10 to 0.
+            ``Mapping.__new__`` returns the single cached instance for
+            that scale.
+    """
+
     # Reference implementation here:
     # https://github.com/open-telemetry/opentelemetry-go/blob/0e6f9c29c10d6078e8131418e1d1d166c7195d61/sdk/metric/aggregator/exponential/mapping/exponent/exponent.go
 
@@ -32,17 +51,48 @@ class ExponentMapping(Mapping):
     _max_scale = 0
 
     def _get_min_scale(self):
+        """Return the lowest scale this mapping serves.
+
+        Returns:
+            -10, below which the mapping stops being useful for 64-bit
+            floats: at scale -10 every normal value already falls into one
+            of the two buckets with index -1 or 0, and
+            ``get_lower_boundary(1)`` raises ``MappingOverflowError``.
+        """
         # _min_scale defines the point at which the exponential mapping
         # function becomes useless for 64-bit floats. With scale -10, ignoring
         # subnormal values, bucket indices range from -1 to 1.
         return -10
 
     def _get_max_scale(self):
+        """Return the highest scale this mapping serves.
+
+        Returns:
+            0. A positive scale splits one power of two across several
+            buckets, which reading the exponent cannot express, so those
+            scales go to ``LogarithmMapping``.
+        """
         # _max_scale is the largest scale supported by exponential mapping. Use
         # a logarithm mapping for larger scales.
         return 0
 
     def _init(self, scale: int):
+        """Precompute the lowest and highest usable bucket indexes.
+
+        ``Mapping._init`` runs first and rejects a scale outside -10 to 0.
+        ``_min_normal_lower_boundary_index`` ends up as the index of the
+        bucket that contains the smallest normal float, and
+        ``_max_normal_lower_boundary_index`` as the index of the bucket
+        containing the largest one. At scales -1 and 0 the smallest normal
+        float is itself a bucket boundary, so the index is lowered by one
+        to keep that value inside the bucket rather than at its edge.
+
+        Args:
+            scale: Resolution of the mapping, from -10 to 0.
+
+        Raises:
+            Exception: If ``scale`` is outside that range.
+        """
         # pylint: disable=attribute-defined-outside-init
 
         super()._init(scale)
@@ -74,6 +124,24 @@ class ExponentMapping(Mapping):
         self._max_normal_lower_boundary_index = MAX_NORMAL_EXPONENT >> -self._scale
 
     def map_to_index(self, value: float) -> int:
+        """Return the index of the bucket that holds ``value``.
+
+        The IEEE 754 exponent of ``value`` is read directly, then a
+        correction of -1 is applied when ``value`` is an exact power of
+        two, so that a boundary belongs to the bucket below it. The result
+        is right shifted by ``-scale``, which merges ``2 ** -scale``
+        neighbouring powers of two into one bucket.
+
+        Args:
+            value: A finite, positive measurement. Anything below the
+                smallest normal float, zero and the subnormal values
+                included, returns ``_min_normal_lower_boundary_index``.
+                +inf and NaN get past that guard and produce a
+                meaningless index, so the caller screens them out.
+
+        Returns:
+            The index of the bucket holding ``value``.
+        """
         if value < MIN_NORMAL_VALUE:
             return self._min_normal_lower_boundary_index
 
@@ -132,6 +200,21 @@ class ExponentMapping(Mapping):
         return (exponent + correction) >> -self._scale
 
     def get_lower_boundary(self, index: int) -> float:
+        """Return the lower boundary of the bucket with this index.
+
+        Args:
+            index: The bucket index to get the lower boundary of.
+
+        Returns:
+            ``2 ** (index << -scale)``, built with ``ldexp`` so that the
+            result is exact and no rounding enters.
+
+        Raises:
+            MappingUnderflowError: If ``index`` is below
+                ``_min_normal_lower_boundary_index``.
+            MappingOverflowError: If ``index`` is above
+                ``_max_normal_lower_boundary_index``.
+        """
         if index < self._min_normal_lower_boundary_index:
             raise MappingUnderflowError()
 
@@ -142,4 +225,11 @@ class ExponentMapping(Mapping):
 
     @property
     def scale(self) -> int:
+        """Return the scale this instance was built for.
+
+        Returns:
+            A value between -10 and 0, fixed when the instance was
+            created. An aggregation that needs a coarser mapping asks for
+            another instance rather than changing this one.
+        """
         return self._scale

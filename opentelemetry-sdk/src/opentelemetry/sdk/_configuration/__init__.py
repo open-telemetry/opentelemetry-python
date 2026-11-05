@@ -2,8 +2,27 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# pylint: disable=too-many-lines
 """
 OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
+
+This module builds and installs the three global providers from environment
+variables alone, so that an application needs no setup code of its own. It is
+what the ``opentelemetry-instrument`` command runs, through the
+``opentelemetry_configurator`` entry point, and what a distribution subclasses
+when it wants different defaults.
+
+Each component is named in an environment variable and resolved through an
+entry point group: an exporter through ``opentelemetry_traces_exporter`` and
+its metric and log counterparts, a sampler through
+``opentelemetry_traces_sampler``, an id generator through
+``opentelemetry_id_generator``. A name that no entry point provides is a
+``RuntimeError``, except where a function below says it logs a warning and
+falls back instead.
+
+Everything here is private to the SDK. A distribution should subclass
+``_OTelSDKConfigurator`` rather than call these functions, and the names may
+change without a deprecation period.
 """
 
 from __future__ import annotations
@@ -103,14 +122,67 @@ ExporterArgsMap = Mapping[
 
 
 class _ConfigurationExporterSpanProcessorT(Protocol):
-    def __call__(self, span_exporter: SpanExporter, *args, **kwargs) -> SpanProcessor: ...
+    """What ``_init_tracing`` accepts in place of ``BatchSpanProcessor``.
+
+    A distribution passes something matching this to wrap each configured
+    span exporter in a processor of its own choosing.
+    """
+
+    def __call__(self, span_exporter: SpanExporter, *args, **kwargs) -> SpanProcessor:
+        """Wrap one span exporter in a span processor.
+
+        Args:
+            span_exporter: The exporter to wrap, already constructed.
+            *args: Extra positional arguments. ``_init_tracing`` passes none.
+            **kwargs: Extra keyword arguments. ``_init_tracing`` passes none.
+
+        Returns:
+            The processor to register on the tracer provider.
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 class _ConfigurationExporterLogRecordProcessorT(Protocol):
-    def __call__(self, exporter: LogRecordExporter, *args, **kwargs) -> LogRecordProcessor: ...
+    """What ``_init_logging`` accepts in place of ``BatchLogRecordProcessor``.
+
+    A distribution passes something matching this to wrap each configured log
+    record exporter in a processor of its own choosing.
+    """
+
+    def __call__(self, exporter: LogRecordExporter, *args, **kwargs) -> LogRecordProcessor:
+        """Wrap one log record exporter in a log record processor.
+
+        Args:
+            exporter: The exporter to wrap, already constructed.
+            *args: Extra positional arguments. ``_init_logging`` passes none.
+            **kwargs: Extra keyword arguments. ``_init_logging`` passes none.
+
+        Returns:
+            The processor to register on the logger provider.
+        """
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 def _import_config_components(selected_components: Sequence[str], entry_point_name: str) -> list[tuple[str, type]]:
+    """Load each named component from one entry point group.
+
+    Args:
+        selected_components: The entry point names to load, in order. Each
+            one is looked up as it is given, so a caller that accepts
+            whitespace around a name has to strip it first.
+        entry_point_name: The entry point group to look in, for example
+            ``opentelemetry_traces_exporter``.
+
+    Returns:
+        One pair per requested name, in the order requested, holding the name
+        and the object the entry point loaded. The object is not checked
+        against any interface here; the caller does that.
+
+    Raises:
+        RuntimeError: If the group does not exist, or if a requested name is
+            not in it. A name that resolves to several entry points takes the
+            first.
+    """
     component_implementations = []
 
     for selected_component in selected_components:
@@ -133,26 +205,84 @@ def _import_config_components(selected_components: Sequence[str], entry_point_na
 
 
 def _get_sampler() -> str | None:
+    """Read the configured sampler name.
+
+    Returns:
+        The value of ``OTEL_TRACES_SAMPLER``, or ``None`` when it is unset,
+        which leaves the tracer provider on its own default sampler.
+    """
     return environ.get(OTEL_TRACES_SAMPLER, None)
 
 
 def _get_id_generator() -> str:
+    """Read the configured id generator name.
+
+    Returns:
+        The value of ``OTEL_PYTHON_ID_GENERATOR``, or ``"random"`` when it is
+        unset.
+    """
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
 def _get_tracer_configurator() -> str | None:
+    """Read the configured tracer configurator name.
+
+    Returns:
+        The value of ``OTEL_PYTHON_TRACER_CONFIGURATOR``, or ``None`` when it
+        is unset, which gives every tracer the same configuration.
+    """
     return environ.get(OTEL_PYTHON_TRACER_CONFIGURATOR, None)
 
 
 def _get_meter_configurator() -> str | None:
+    """Read the configured meter configurator name.
+
+    Returns:
+        The value of ``OTEL_PYTHON_METER_CONFIGURATOR``, or ``None`` when it
+        is unset, which gives every meter the same configuration.
+    """
     return environ.get(OTEL_PYTHON_METER_CONFIGURATOR, None)
 
 
 def _get_logger_configurator() -> str | None:
+    """Read the configured logger configurator name.
+
+    Returns:
+        The value of ``OTEL_PYTHON_LOGGER_CONFIGURATOR``, or ``None`` when it
+        is unset, which gives every logger the same configuration.
+    """
     return environ.get(OTEL_PYTHON_LOGGER_CONFIGURATOR, None)
 
 
 def _get_exporter_entry_point(exporter_name: str, signal_type: Literal["traces", "metrics", "logs"]):
+    """Resolve an OTLP exporter name to the entry point of one transport.
+
+    The name ``otlp`` does not name an entry point on its own, because the
+    OTLP exporter ships one implementation per transport. The transport is
+    taken from the signal-specific protocol variable when it is set, and from
+    ``OTEL_EXPORTER_OTLP_PROTOCOL`` otherwise. With neither set, ``otlp``
+    becomes the gRPC implementation.
+
+    A name that already states the transport, ``otlp_proto_grpc`` or
+    ``otlp_proto_http``, keeps it. When a protocol variable asks for the other
+    transport, the name wins and the disagreement is logged at ``WARNING``
+    level.
+
+    Args:
+        exporter_name: The exporter name as configured, already stripped.
+        signal_type: Which signal this exporter is for, which selects the
+            signal-specific protocol variable to read.
+
+    Returns:
+        The entry point name to load. A name that is not one of the three
+        OTLP spellings is returned unchanged, so this function is safe to
+        call on every configured exporter.
+
+    Raises:
+        RuntimeError: If ``exporter_name`` is ``otlp`` and the protocol
+            variable holds something other than ``grpc`` or
+            ``http/protobuf``.
+    """
     if exporter_name not in (
         _EXPORTER_OTLP,
         _EXPORTER_OTLP_PROTO_GRPC,
@@ -193,6 +323,24 @@ def _get_exporter_entry_point(exporter_name: str, signal_type: Literal["traces",
 def _get_exporter_names(
     signal_type: Literal["traces", "metrics", "logs"],
 ) -> list[str]:
+    """Read the exporters configured for one signal.
+
+    Args:
+        signal_type: Which signal to read, which selects between
+            ``OTEL_TRACES_EXPORTER``, ``OTEL_METRICS_EXPORTER`` and
+            ``OTEL_LOGS_EXPORTER``.
+
+    Returns:
+        The entry point names to load, in the order given, with each OTLP
+        name already resolved to a transport. The list is empty when the
+        variable is unset, when it is empty, and when it holds the sentinel
+        ``none`` in any case with surrounding whitespace, which is how an
+        operator turns a signal off.
+
+    Raises:
+        RuntimeError: If an ``otlp`` entry is configured and the protocol
+            variable holds an unsupported value.
+    """
     names = environ.get(_EXPORTER_ENV_BY_SIGNAL_TYPE.get(signal_type, ""))
 
     if not names or names.lower().strip() == "none":
@@ -211,6 +359,33 @@ def _init_tracing(
     export_span_processor: _ConfigurationExporterSpanProcessorT | None = None,
     tracer_configurator: _TracerConfiguratorT | None = None,
 ):
+    """Build a tracer provider, install it globally and attach the exporters.
+
+    The provider is set as the global one before the processors are added, so
+    a tracer taken during this call already belongs to it. The provider is
+    installed even when there are no exporters, which is what makes spans
+    record without being sent anywhere.
+
+    Args:
+        exporters: The span exporter classes to attach, keyed by the entry
+            point name they were loaded under. The key is not used; the
+            classes are what matter, and each is constructed here.
+        id_generator: The generator of trace and span ids, or ``None`` to let
+            the provider use its own default.
+        sampler: The sampler, or ``None`` to let the provider use its own
+            default.
+        resource: The resource every span is attributed to, or ``None`` to
+            let the provider build one.
+        exporter_args_map: Keyword arguments to construct a given exporter
+            class with, keyed by the class. A class that is absent is built
+            with no arguments. Pass ``None`` for no arguments at all.
+        span_processors: Processors to register before the exporting ones, so
+            they see a span first. Pass ``None`` for none.
+        export_span_processor: What to wrap each exporter in, or ``None`` to
+            use ``BatchSpanProcessor``.
+        tracer_configurator: The per-scope tracer configuration, or ``None``
+            to configure every tracer alike.
+    """
     provider = TracerProvider(
         id_generator=id_generator,
         sampler=sampler,
@@ -237,6 +412,25 @@ def _init_metrics(
     exporter_args_map: ExporterArgsMap | None = None,
     meter_configurator: _MeterConfiguratorT | None = None,
 ):
+    """Build a meter provider from the configured exporters and install it.
+
+    The metrics entry point group holds two kinds of thing. A class that is a
+    ``MetricReader`` is used as it is, which is how a pull-based exporter
+    such as the Prometheus one works. Anything else is treated as a
+    ``MetricExporter`` and wrapped in a ``PeriodicExportingMetricReader``,
+    which is what makes a push-based exporter run on a timer.
+
+    Args:
+        exporters_or_readers: The classes to attach, keyed by the entry point
+            name they were loaded under. The key is not used.
+        resource: The resource every metric is attributed to, or ``None`` to
+            let the provider build one.
+        exporter_args_map: Keyword arguments to construct a given class with,
+            keyed by the class. A class that is absent is built with no
+            arguments. Pass ``None`` for no arguments at all.
+        meter_configurator: The per-scope meter configuration, or ``None`` to
+            configure every meter alike.
+    """
     metric_readers = []
 
     exporter_args_map = exporter_args_map or {}
@@ -265,6 +459,36 @@ def _init_logging(
     export_log_record_processor: _ConfigurationExporterLogRecordProcessorT | None = None,
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
+    """Build a logger provider, install it globally and attach the exporters.
+
+    When ``setup_logging_handler`` is true, a ``LoggingHandler`` is added to
+    the root logger of the standard library, which is what sends ordinary
+    ``logging`` calls through OpenTelemetry. That path is deprecated in
+    favour of the ``opentelemetry-instrumentation-logging`` package, so a
+    ``DeprecationWarning`` is raised when it is taken.
+
+    Taking that path also replaces ``logging.config.fileConfig``,
+    ``logging.config.dictConfig`` and ``logging.basicConfig`` at module level
+    with wrappers that preserve the handler, since each of those would
+    otherwise remove it.
+
+    Args:
+        exporters: The log record exporter classes to attach, keyed by the
+            entry point name they were loaded under. The key is not used.
+        resource: The resource every log record is attributed to, or ``None``
+            to let the provider build one.
+        setup_logging_handler: Whether to attach the handler to the root
+            logger, as described above.
+        exporter_args_map: Keyword arguments to construct a given exporter
+            class with, keyed by the class. A class that is absent is built
+            with no arguments. Pass ``None`` for no arguments at all.
+        log_record_processors: Processors to register before the exporting
+            ones, so they see a record first. Pass ``None`` for none.
+        export_log_record_processor: What to wrap each exporter in, or
+            ``None`` to use ``BatchLogRecordProcessor``.
+        logger_configurator: The per-scope logger configuration, or ``None``
+            to configure every logger alike.
+    """
     provider = LoggerProvider(resource=resource, _logger_configurator=logger_configurator)
     set_logger_provider(provider)
 
@@ -294,10 +518,45 @@ def _init_logging(
 
 
 def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
+    """Keep ``handler`` on the root logger across a logging reconfiguration.
+
+    ``logging.config.fileConfig``, ``logging.config.dictConfig`` and
+    ``logging.basicConfig`` each replace or clear the handlers of the root
+    logger, which would silently stop the OpenTelemetry handler from
+    receiving anything. All three are replaced here by wrappers that take the
+    handler off before the call and put it back afterwards.
+
+    The replacement is global and permanent for the process, and calling this
+    twice wraps the wrappers.
+
+    Args:
+        handler: The handler to preserve. It is captured by the wrappers, so
+            it stays alive for as long as the ``logging`` module does.
+    """
     root = logging.getLogger()
 
     def wrapper(config_fn: Callable) -> Callable:
+        """Wrap one logging configuration function.
+
+        Args:
+            config_fn: The function to wrap, one of the three named above.
+
+        Returns:
+            A function with the same signature that preserves the handler.
+        """
+
         def overwritten_config_fn(*args, **kwargs):
+            """Run the wrapped function with the handler detached.
+
+            The handler is put back in a ``finally`` block, so it survives a
+            configuration function that raises. It is only put back when it
+            was actually present beforehand, so this does not re-add a
+            handler the application had already removed on purpose.
+
+            Args:
+                *args: Passed through to the wrapped function.
+                **kwargs: Passed through to the wrapped function.
+            """
             removed_handler = False
             # We don't want the OTLP handler to be modified or deleted by the logging config functions.
             # So we remove it and then add it back after the function call.
@@ -321,6 +580,20 @@ def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
 def _import_logger_configurator(
     logger_configurator_name: str | None,
 ) -> _LoggerConfiguratorT | None:
+    """Load the per-scope logger configuration named by ``OTEL_PYTHON_LOGGER_CONFIGURATOR``.
+
+    Args:
+        logger_configurator_name: The entry point name in the
+            ``_opentelemetry_logger_configurator`` group, or ``None`` or the
+            empty string to ask for no configurator. Surrounding whitespace
+            is stripped.
+
+    Returns:
+        The loaded configurator, or ``None`` when none was asked for and when
+        the named one could not be loaded. A failure is logged at ``WARNING``
+        level and is never raised, so a broken configurator leaves the SDK
+        running with every logger configured alike.
+    """
     if not logger_configurator_name:
         return None
 
@@ -342,6 +615,20 @@ def _import_logger_configurator(
 def _import_tracer_configurator(
     tracer_configurator_name: str | None,
 ) -> _TracerConfiguratorT | None:
+    """Load the per-scope tracer configuration named by ``OTEL_PYTHON_TRACER_CONFIGURATOR``.
+
+    Args:
+        tracer_configurator_name: The entry point name in the
+            ``_opentelemetry_tracer_configurator`` group, or ``None`` or the
+            empty string to ask for no configurator. Surrounding whitespace
+            is stripped.
+
+    Returns:
+        The loaded configurator, or ``None`` when none was asked for and when
+        the named one could not be loaded. A failure is logged at ``WARNING``
+        level and is never raised, so a broken configurator leaves the SDK
+        running with every tracer configured alike.
+    """
     if not tracer_configurator_name:
         return None
 
@@ -363,6 +650,20 @@ def _import_tracer_configurator(
 def _import_meter_configurator(
     meter_configurator_name: str | None,
 ) -> _MeterConfiguratorT | None:
+    """Load the per-scope meter configuration named by ``OTEL_PYTHON_METER_CONFIGURATOR``.
+
+    Args:
+        meter_configurator_name: The entry point name in the
+            ``_opentelemetry_meter_configurator`` group, or ``None`` or the
+            empty string to ask for no configurator. Surrounding whitespace
+            is stripped.
+
+    Returns:
+        The loaded configurator, or ``None`` when none was asked for and when
+        the named one could not be loaded. A failure is logged at ``WARNING``
+        level and is never raised, so a broken configurator leaves the SDK
+        running with every meter configured alike.
+    """
     if not meter_configurator_name:
         return None
 
@@ -390,6 +691,29 @@ def _import_exporters(
     dict[str, type[MetricExporter | MetricReader]],
     dict[str, type[LogRecordExporter]],
 ]:
+    """Load the exporter classes of all three signals and check their types.
+
+    Nothing is constructed here; the classes are returned for the
+    ``_init_*`` functions to build.
+
+    Args:
+        trace_exporter_names: Entry point names in the
+            ``opentelemetry_traces_exporter`` group.
+        metric_exporter_names: Entry point names in the
+            ``opentelemetry_metrics_exporter`` group. An entry there may be a
+            ``MetricExporter`` or a ``MetricReader``, since a pull-based
+            exporter is registered as a reader.
+        log_exporter_names: Entry point names in the
+            ``opentelemetry_logs_exporter`` group.
+
+    Returns:
+        Three mappings from entry point name to class, for traces, metrics
+        and logs in that order.
+
+    Raises:
+        RuntimeError: If a name is not in its group, or if what it loads is
+            not of the type that group is supposed to hold.
+    """
     trace_exporters = {}
     metric_exporters = {}
     log_exporters = {}
@@ -429,11 +753,47 @@ def _import_exporters(
 def _import_sampler_factory(
     sampler_name: str,
 ) -> Callable[[float | str | None], Sampler]:
+    """Load the factory registered for one sampler name.
+
+    The entry point holds a factory rather than a sampler class, because a
+    sampler is built from the single argument ``OTEL_TRACES_SAMPLER_ARG``
+    carries and each sampler reads that argument differently.
+
+    Args:
+        sampler_name: The entry point name in the
+            ``opentelemetry_traces_sampler`` group. Surrounding whitespace is
+            stripped.
+
+    Returns:
+        The factory, which takes the sampler argument and returns a sampler.
+
+    Raises:
+        RuntimeError: If the name is not in the group.
+    """
     _, sampler_impl = _import_config_components([sampler_name.strip()], _OTEL_SAMPLER_ENTRY_POINT_GROUP)[0]
     return sampler_impl
 
 
 def _import_sampler(sampler_name: str | None) -> Sampler | None:
+    """Build the sampler named by ``OTEL_TRACES_SAMPLER``.
+
+    For ``traceidratio`` and ``parentbased_traceidratio`` the argument is
+    parsed as a float; anything that does not parse, including an unset
+    variable, is logged at ``WARNING`` level and becomes 1.0, which samples
+    every trace. For every other sampler the argument is passed through as a
+    string, or as ``None`` when the variable is unset.
+
+    Args:
+        sampler_name: The entry point name, or ``None`` or the empty string
+            to ask for no sampler.
+
+    Returns:
+        The sampler, or ``None`` when none was asked for and when building
+        one failed, which leaves the tracer provider on its own default.
+        Every failure is logged at ``WARNING`` level and swallowed: an
+        unknown name, a factory that raises, and a factory that returns
+        something which is not a ``Sampler``.
+    """
     if not sampler_name:
         return None
     try:
@@ -465,6 +825,23 @@ def _import_sampler(sampler_name: str | None) -> Sampler | None:
 
 
 def _import_id_generator(id_generator_name: str) -> IdGenerator:
+    """Build the id generator named by ``OTEL_PYTHON_ID_GENERATOR``.
+
+    Unlike the sampler and the configurators, a failure here is raised rather
+    than logged, so a misconfigured id generator stops the SDK from starting.
+
+    Args:
+        id_generator_name: The entry point name in the
+            ``opentelemetry_id_generator`` group. Surrounding whitespace is
+            stripped.
+
+    Returns:
+        A new instance, built with no arguments.
+
+    Raises:
+        RuntimeError: If the name is not in the group, or if what it loads is
+            not an ``IdGenerator`` subclass.
+    """
     id_generator_name, id_generator_impl = _import_config_components(
         [id_generator_name.strip()], "opentelemetry_id_generator"
     )[0]
@@ -484,6 +861,22 @@ def _import_opamp(
     the resource and instantiate an OpAMP agent.
     Since configuration is not specified every implementer may have its own.
     Refer to the opentelemetry-opamp-client package on how to setup the OpAMP agent.
+
+    Args:
+        name: Which of the two hooks to load from the
+            ``_opentelemetry_opamp`` entry point group.
+            ``pre_sdk_init_function`` runs before any provider is built, so it
+            can block until a remote configuration arrives.
+            ``post_sdk_init_function`` runs once all three providers are
+            installed.
+
+    Returns:
+        The callable, which takes the resource, or ``None`` when no entry
+        point is registered under that name, which is the usual case, and
+        when loading one raised ``AttributeError``. The first is logged at
+        ``DEBUG`` level and the second at ``WARNING`` level. Any other
+        exception from loading the entry point, ``ImportError`` in
+        particular, is left to propagate.
     """
     entry_point = None
     try:
@@ -519,6 +912,62 @@ def _initialize_components(
     meter_configurator: _MeterConfiguratorT | None = None,
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
+    """Build and install the tracer, meter and logger providers.
+
+    This is the whole environment-driven startup. Every parameter exists so
+    that a distribution can override one decision while leaving the rest to
+    the environment: a parameter that is left ``None`` is read from the
+    environment instead, and the exporter name lists are added to what the
+    environment asks for rather than replacing it.
+
+    The resource is built once and shared by all three providers.
+
+    Args:
+        auto_instrumentation_version: The version of the auto instrumentation
+            that started the process, recorded as the
+            ``telemetry.auto.version`` resource attribute. Pass ``None`` when
+            the SDK was started by hand.
+        trace_exporter_names: Span exporter entry point names to add to those
+            in ``OTEL_TRACES_EXPORTER``.
+        metric_exporter_names: Metric exporter entry point names to add to
+            those in ``OTEL_METRICS_EXPORTER``.
+        log_exporter_names: Log exporter entry point names to add to those in
+            ``OTEL_LOGS_EXPORTER``.
+        sampler: The sampler to use, or ``None`` to read
+            ``OTEL_TRACES_SAMPLER``.
+        resource_attributes: Attributes to put on the resource, merged with
+            the detected ones and with ``OTEL_RESOURCE_ATTRIBUTES``. The
+            mapping is written into, so a caller that reuses it sees
+            ``telemetry.auto.version`` appear in it.
+        id_generator: The id generator to use, or ``None`` to read
+            ``OTEL_PYTHON_ID_GENERATOR``.
+        setup_logging_handler: Whether to route the standard library
+            ``logging`` through OpenTelemetry, or ``None`` to read
+            ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED``, which is
+            off unless it holds ``true``.
+        exporter_args_map: Keyword arguments to construct a given exporter
+            class with, keyed by the class. It is shared by all three
+            signals.
+        span_processors: Span processors to register before the exporting
+            ones.
+        export_span_processor: What to wrap each span exporter in, or
+            ``None`` for ``BatchSpanProcessor``.
+        log_record_processors: Log record processors to register before the
+            exporting ones.
+        export_log_record_processor: What to wrap each log record exporter
+            in, or ``None`` for ``BatchLogRecordProcessor``.
+        tracer_configurator: Per-scope tracer configuration, or ``None`` to
+            read ``OTEL_PYTHON_TRACER_CONFIGURATOR``.
+        meter_configurator: Per-scope meter configuration, or ``None`` to
+            read ``OTEL_PYTHON_METER_CONFIGURATOR``.
+        logger_configurator: Per-scope logger configuration, or ``None`` to
+            read ``OTEL_PYTHON_LOGGER_CONFIGURATOR``.
+
+    Raises:
+        RuntimeError: If a configured exporter or id generator name cannot be
+            resolved. A sampler or a configurator that cannot be resolved is
+            logged and skipped instead.
+    """
     # pylint: disable=too-many-locals,too-many-branches
     if resource_attributes is None:
         resource_attributes = {}
@@ -616,6 +1065,23 @@ class _BaseConfigurator(ABC):
     _is_instrumented = False
 
     def __new__(cls, *args, **kwargs):
+        """Return the one instance of ``cls``, creating it on the first call.
+
+        The instance is cached as the ``_instance`` attribute of the class it
+        was first built for, and that attribute is looked up through the
+        inheritance chain, so a subclass of a class that has already been
+        instantiated receives that class's instance rather than one of its
+        own. Arguments are accepted and ignored, which means a second
+        construction with different arguments silently returns the first
+        instance.
+
+        Args:
+            *args: Ignored.
+            **kwargs: Ignored.
+
+        Returns:
+            The single instance of ``cls``.
+        """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
 
@@ -623,10 +1089,25 @@ class _BaseConfigurator(ABC):
 
     @abstractmethod
     def _configure(self, **kwargs):
-        """Configure the SDK"""
+        """Configure the SDK
+
+        This is what a subclass implements. ``configure`` is its only
+        caller, and it holds no guard, so calling ``configure`` twice runs
+        this twice.
+
+        Args:
+            **kwargs: Whatever the caller of ``configure`` passed. The
+                meaning is up to the implementation;
+                ``_OTelSDKConfigurator`` forwards them to
+                ``_initialize_components``.
+        """
 
     def configure(self, **kwargs):
-        """Configure the SDK"""
+        """Configure the SDK
+
+        Args:
+            **kwargs: Forwarded unchanged to ``_configure``.
+        """
         self._configure(**kwargs)
 
 
@@ -643,6 +1124,28 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
+        """Start the SDK, from a configuration file when one is named.
+
+        Setting ``OTEL_CONFIG_FILE`` switches to declarative configuration,
+        which reads the whole SDK out of that file instead of out of the
+        environment variables this module otherwise consults. The file is
+        not sealed off from the environment: the loader resolves a
+        ``${VAR}`` reference in any value it reads, so a configured value
+        may still come from an environment variable. The file is handled by
+        the separate
+        ``opentelemetry-configuration`` distribution, imported only on this
+        path so that the SDK does not depend on it at runtime. Any ``kwargs``
+        are then ignored, with a warning naming them, since the file is the
+        only source.
+
+        Args:
+            **kwargs: Forwarded to ``_initialize_components`` when no
+                configuration file is set, and ignored when one is.
+
+        Raises:
+            RuntimeError: If ``OTEL_CONFIG_FILE`` is set and
+                ``opentelemetry-configuration`` is not installed.
+        """
         if config_file := environ.get(OTEL_CONFIG_FILE):
             # Declarative configuration lives in the separate
             # ``opentelemetry-configuration`` package. Import lazily so the

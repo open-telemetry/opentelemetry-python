@@ -1,6 +1,17 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Reading the parts of an IEEE 754 binary64 float.
+
+A Python float is one of these: a sign bit, ``EXPONENT_WIDTH`` exponent
+bits and ``MANTISSA_WIDTH`` mantissa bits. The constants here name the
+widths, the masks that isolate each field, and the ends of the normal
+value range. ``get_ieee_754_exponent`` and ``get_ieee_754_mantissa`` pull
+two of the fields out, which is how ``ExponentMapping`` finds a bucket
+index without computing a logarithm and how ``LogarithmMapping`` detects
+an exact power of two.
+"""
+
 from ctypes import c_double, c_uint64
 from sys import float_info
 
@@ -52,6 +63,17 @@ MAX_NORMAL_VALUE = float_info.max
 def get_ieee_754_exponent(value: float) -> int:
     """
     Gets the exponent of the IEEE 754 representation of a float.
+
+    Args:
+        value: The float to read. The sign bit is masked away, so a
+            negative value gives the same answer as its magnitude.
+
+    Returns:
+        The exponent with the bias already subtracted. A normal value
+        gives a result from -1022 to 1023. Zero and the subnormal values
+        give -1023, since their exponent bits are all 0, and +inf and NaN
+        give 1024, since theirs are all 1. Neither -1023 nor 1024 can come
+        from a normal value.
     """
 
     return (
@@ -97,6 +119,19 @@ def get_ieee_754_exponent(value: float) -> int:
 
 
 def get_ieee_754_mantissa(value: float) -> int:
+    """Get the mantissa bits of the IEEE 754 representation of a float.
+
+    Args:
+        value: The float to read. The sign and exponent bits are masked
+            away.
+
+    Returns:
+        The 52 mantissa bits as an integer, without the leading 1 that a
+        normal value carries implicitly. A normal value gives 0 here
+        exactly when it is an integer power of two, and that is the test
+        both mappings use to decide whether a measurement sits on a bucket
+        boundary.
+    """
     return (
         c_uint64.from_buffer(c_double(value)).value
         # This step isolates the mantissa bits. There is no need to do any

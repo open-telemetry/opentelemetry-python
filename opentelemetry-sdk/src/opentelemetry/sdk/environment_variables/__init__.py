@@ -1,6 +1,20 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""The names of the environment variables the SDK reads.
+
+Each constant here holds the name of a variable, not its value, and carries a
+docstring with an ``.. envvar::`` directive so that the variable appears in
+the documentation and can be cross-referenced from elsewhere. Importing a
+constant from this module rather than writing the string gives one spelling
+that the whole code base shares.
+
+Reading a variable happens in the code that needs it, mostly in
+``opentelemetry.sdk._configuration`` and in the processors and exporters, so
+changing one of these constants changes the name that is read but not when it
+is read.
+"""
+
 OTEL_SDK_DISABLED = "OTEL_SDK_DISABLED"
 """
 .. envvar:: OTEL_SDK_DISABLED
