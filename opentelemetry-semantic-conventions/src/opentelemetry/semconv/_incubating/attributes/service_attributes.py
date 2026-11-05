@@ -10,6 +10,18 @@ The operational criticality of the service.
 Note: Application developers are encouraged to set `service.criticality` to express the operational importance of their services. Telemetry consumers MAY use this attribute to optimize telemetry collection or improve user experience.
 """
 
+SERVICE_INSTANCE_COST_CENTER_ID: Final = "service.instance.cost_center.id"
+"""
+Identifier of the cost center associated with the service instance.
+Note: The cost center identifier enables tracking and attribution of service resource costs to organizational units, billing accounts, or teams. It is typically a string identifier such as a billing account ID, cost allocation code, or internal accounting ID.
+"""
+
+SERVICE_INSTANCE_COST_CENTER_NAME: Final = "service.instance.cost_center.name"
+"""
+Name of the cost center associated with the service instance.
+Note: A human-readable name of the cost center, department, or organizational unit responsible for the service instance costs.
+"""
+
 SERVICE_INSTANCE_ID: Final = "service.instance.id"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.service_attributes.SERVICE_INSTANCE_ID`.
@@ -27,12 +39,12 @@ Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.servic
 
 SERVICE_PEER_NAME: Final = "service.peer.name"
 """
-Logical name of the service on the other side of the connection. SHOULD be equal to the actual [`service.name`](/docs/resource/README.md#service) resource attribute of the remote service if any.
+Deprecated: Use `server.service.name` on the client side or `client.service.name` on the server side.
 """
 
 SERVICE_PEER_NAMESPACE: Final = "service.peer.namespace"
 """
-Logical namespace of the service on the other side of the connection. SHOULD be equal to the actual [`service.namespace`](/docs/resource/README.md#service) resource attribute of the remote service if any.
+Deprecated: Use `server.service.namespace` on the client side or `client.service.namespace` on the server side.
 """
 
 SERVICE_VERSION: Final = "service.version"
