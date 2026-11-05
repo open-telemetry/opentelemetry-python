@@ -43,7 +43,7 @@ Deprecated: Replaced by `db.collection.name`.
 
 DB_CLIENT_CONNECTION_POOL_NAME: Final = "db.client.connection.pool.name"
 """
-The name of the connection pool; unique within the instrumented application. In case the connection pool implementation doesn't provide a name, instrumentation SHOULD use a combination of parameters that would make the name unique, for example, combining attributes `server.address`, `server.port`, and `db.namespace`, formatted as `server.address:server.port/db.namespace`. Instrumentations that generate connection pool name following different patterns SHOULD document it.
+The name of the connection pool. If the connection pool does not have a name, instrumentation SHOULD use `db.namespace`; otherwise `server.address`, with `server.port` appended using `:` if set. When appending a port to an IPv6 address, instrumentation MUST enclose the address in square brackets. If `server.address` is not available, instrumentation SHOULD use `db.system.name`; otherwise the connection pool library name.
 """
 
 DB_CLIENT_CONNECTION_STATE: Final = "db.client.connection.state"
@@ -533,7 +533,7 @@ class DbSystemNameValues(Enum):
     HSQLDB = "hsqldb"
     """[HyperSQL Database](https://hsqldb.org/)."""
     IBM_DB2 = "ibm.db2"
-    """[IBM Db2](https://www.ibm.com/db2)."""
+    """[IBM Db2](https://www.ibm.com/products/db2)."""
     IBM_INFORMIX = "ibm.informix"
     """[IBM Informix](https://www.ibm.com/products/informix)."""
     IBM_NETEZZA = "ibm.netezza"

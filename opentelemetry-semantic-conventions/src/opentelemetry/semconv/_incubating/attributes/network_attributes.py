@@ -57,9 +57,60 @@ NETWORK_LOCAL_ADDRESS: Final = "network.local.address"
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_LOCAL_ADDRESS`.
 """
 
+NETWORK_LOCAL_AS_NUMBER: Final = "network.local.as.number"
+"""
+The [Autonomous System Number (ASN)](https://www.iana.org/assignments/as-numbers/as-numbers.xhtml) associated with the local IP address.
+Note: This attribute SHOULD only be set when the local address is an IP address and the ASN is available from routing, enrichment, or lookup data. The value SHOULD be represented as an integer without the `AS` prefix.
+"""
+
+NETWORK_LOCAL_AS_ORGANIZATION: Final = "network.local.as.organization"
+"""
+The name of the organization associated with the autonomous system of the local IP address.
+Note: This attribute SHOULD only be set when `network.local.as.number` is set and the organization name is available. The value SHOULD be the organization name as provided by the lookup or enrichment source, not the AS name or short code.
+"""
+
+NETWORK_LOCAL_MAC_ADDRESS: Final = "network.local.mac.address"
+"""
+Local Media Access Control (MAC) address of the network connection.
+Note: MAC addresses MUST be represented in [IEEE RA hexadecimal form](https://standards.ieee.org/wp-content/uploads/import/documents/tutorials/eui.pdf):
+as hyphen-separated octets in uppercase hexadecimal form from most to least significant.
+
+> [!WARNING]
+>
+> This attribute may contain sensitive (PII) information.
+"""
+
 NETWORK_LOCAL_PORT: Final = "network.local.port"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_LOCAL_PORT`.
+"""
+
+NETWORK_LOCAL_PREFIX: Final = "network.local.prefix"
+"""
+The IP prefix associated with the local IP address, in CIDR notation.
+Note: > [!WARNING]
+>
+> This attribute may contain sensitive (PII) information. A `/32` IPv4 prefix
+> or `/128` IPv6 prefix preserves the complete endpoint IP address.
+> Using CIDR notation does not guarantee that the data is anonymous.
+
+The value MUST be an IPv4 or IPv6 network prefix in CIDR notation, as defined in
+[RFC 4632](https://www.rfc-editor.org/rfc/rfc4632.html) for IPv4 and
+[RFC 4291](https://www.rfc-editor.org/rfc/rfc4291.html#section-2.3) for IPv6.
+IPv4 prefixes MUST use a dotted-decimal address followed by `/` and a decimal
+prefix length from 0 to 32. IPv6 prefixes MUST use the canonical address text
+representation defined in [RFC 5952](https://www.rfc-editor.org/rfc/rfc5952.html),
+followed by `/` and a decimal prefix length from 0 to 128. All host bits in
+the address MUST be set to zero. The value MUST NOT contain a domain name,
+UNIX domain socket name, or IPv6 zone identifier.
+
+Instrumentation or Collector receivers that populate this attribute MUST
+convert native representations, such as an address and subnet mask or an
+address and prefix length, to equivalent CIDR notation before emitting it.
+
+This attribute MAY be set whether or not `network.local.address` is set. If
+`network.local.address` is also set to an IP address, it MUST use the same IP version
+and be contained in this prefix.
 """
 
 NETWORK_PEER_ADDRESS: Final = "network.peer.address"
@@ -67,9 +118,60 @@ NETWORK_PEER_ADDRESS: Final = "network.peer.address"
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PEER_ADDRESS`.
 """
 
+NETWORK_PEER_AS_NUMBER: Final = "network.peer.as.number"
+"""
+The [Autonomous System Number (ASN)](https://www.iana.org/assignments/as-numbers/as-numbers.xhtml) associated with the peer IP address.
+Note: This attribute SHOULD only be set when the peer address is an IP address and the ASN is available from routing, enrichment, or lookup data. The value SHOULD be represented as an integer without the `AS` prefix.
+"""
+
+NETWORK_PEER_AS_ORGANIZATION: Final = "network.peer.as.organization"
+"""
+The name of the organization associated with the autonomous system of the peer IP address.
+Note: This attribute SHOULD only be set when `network.peer.as.number` is set and the organization name is available. The value SHOULD be the organization name as provided by the lookup or enrichment source, not the AS name or short code.
+"""
+
+NETWORK_PEER_MAC_ADDRESS: Final = "network.peer.mac.address"
+"""
+Peer Media Access Control (MAC) address of the network connection.
+Note: MAC addresses MUST be represented in [IEEE RA hexadecimal form](https://standards.ieee.org/wp-content/uploads/import/documents/tutorials/eui.pdf):
+as hyphen-separated octets in uppercase hexadecimal form from most to least significant.
+
+> [!WARNING]
+>
+> This attribute may contain sensitive (PII) information.
+"""
+
 NETWORK_PEER_PORT: Final = "network.peer.port"
 """
 Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.network_attributes.NETWORK_PEER_PORT`.
+"""
+
+NETWORK_PEER_PREFIX: Final = "network.peer.prefix"
+"""
+The IP prefix associated with the peer IP address, in CIDR notation.
+Note: > [!WARNING]
+>
+> This attribute may contain sensitive (PII) information. A `/32` IPv4 prefix
+> or `/128` IPv6 prefix preserves the complete endpoint IP address.
+> Using CIDR notation does not guarantee that the data is anonymous.
+
+The value MUST be an IPv4 or IPv6 network prefix in CIDR notation, as defined in
+[RFC 4632](https://www.rfc-editor.org/rfc/rfc4632.html) for IPv4 and
+[RFC 4291](https://www.rfc-editor.org/rfc/rfc4291.html#section-2.3) for IPv6.
+IPv4 prefixes MUST use a dotted-decimal address followed by `/` and a decimal
+prefix length from 0 to 32. IPv6 prefixes MUST use the canonical address text
+representation defined in [RFC 5952](https://www.rfc-editor.org/rfc/rfc5952.html),
+followed by `/` and a decimal prefix length from 0 to 128. All host bits in
+the address MUST be set to zero. The value MUST NOT contain a domain name,
+UNIX domain socket name, or IPv6 zone identifier.
+
+Instrumentation or Collector receivers that populate this attribute MUST
+convert native representations, such as an address and subnet mask or an
+address and prefix length, to equivalent CIDR notation before emitting it.
+
+This attribute MAY be set whether or not `network.peer.address` is set. If
+`network.peer.address` is also set to an IP address, it MUST use the same IP version
+and be contained in this prefix.
 """
 
 NETWORK_PROTOCOL_NAME: Final = "network.protocol.name"
