@@ -71,10 +71,8 @@ CONTAINER_FILESYSTEM_AVAILABLE: Final = "container.filesystem.available"
 Container filesystem available bytes
 Instrument: updowncounter
 Unit: By
-Note: In K8s, this metric is derived from the
-[FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#ContainerStats)
-of the Kubelet's stats API.
+Note: Available filesystem space for the container's `rootfs`.
+In K8s, this metric is derived from the [FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
 """
 
 
@@ -92,10 +90,9 @@ CONTAINER_FILESYSTEM_CAPACITY: Final = "container.filesystem.capacity"
 Container filesystem capacity
 Instrument: updowncounter
 Unit: By
-Note: In K8s, this metric is derived from the
-[FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#ContainerStats)
-of the Kubelet's stats API.
+Note: Total filesystem capacity for the container's `rootfs`.
+In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_fs_limit_bytes` metric for the container's `rootfs` device.
+In K8s, this metric is derived from the [FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
 """
 
 
@@ -113,12 +110,10 @@ CONTAINER_FILESYSTEM_USAGE: Final = "container.filesystem.usage"
 Container filesystem usage
 Instrument: updowncounter
 Unit: By
-Note: This may not equal capacity - available.
-
-In K8s, this metric is derived from the
-[FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#ContainerStats)
-of the Kubelet's stats API.
+Note: Filesystem space used by the container's `rootfs`.
+In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_fs_usage_bytes` metric for the container's `rootfs` device.
+In K8s, this metric is derived from the [FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field of the [ContainerStats.Rootfs](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
+Capacity and available are reported for the backing filesystem, which may be shared with other workloads; therefore, usage may not equal `capacity - available`.
 """
 
 
@@ -210,7 +205,7 @@ CONTAINER_MEMORY_WORKING_SET: Final = "container.memory.working_set"
 Container memory working set
 Instrument: updowncounter
 Unit: By
-Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_working_set_bytes` metric.
+Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_working_set_bytes` metric. When derived from cAdvisor on Linux, the working set is calculated by excluding inactive file-backed memory from memory usage (`inactive_file` on cgroup v2, `total_inactive_file` on cgroup v1), so active file-backed memory remains included.
 In K8s, this metric is derived from the [MemoryStats.WorkingSetBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [ContainerStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
 """
 
@@ -247,8 +242,8 @@ CONTAINER_PAGING_FAULTS: Final = "container.paging.faults"
 Container memory paging faults
 Instrument: counter
 Unit: {fault}
-Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics) and specifically the `container_memory_failures_total{failure_type=pgfault, scope=container}` and `container_memory_failures_total{failure_type=pgmajfault, scope=container}`metric.
-In K8s, this metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [ContainerStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API.
+Note: In general, this metric can be derived from [cadvisor](https://github.com/google/cadvisor/blob/v0.53.0/docs/storage/prometheus.md#prometheus-container-metrics). The `container_memory_failures_total{failure_type=pgfault, scope=container}` counter reports the total page faults (minor + major), while `container_memory_failures_total{failure_type=pgmajfault, scope=container}` reports only major faults. The minor page faults MUST be derived as the difference between the two.
+In K8s, this metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) fields of the [ContainerStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#ContainerStats) of the Kubelet's stats API. `MemoryStats.PageFaults` reports the total number of page faults (equivalent to `pgfault` in the cgroup `memory.stat`), with minor and major combined. The minor page faults MUST therefore be derived as `MemoryStats.PageFaults - MemoryStats.MajorPageFaults`, so that summing the metric over `system.paging.fault.type` yields the total number of page faults.
 """
 
 
@@ -266,8 +261,8 @@ CONTAINER_UPTIME: Final = "container.uptime"
 The time the container has been running
 Instrument: gauge
 Unit: s
-Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
-The actual accuracy would depend on the instrumentation and operating system.
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available. The actual accuracy would depend on the instrumentation and operating system.
+In K8s environments, this metric can be derived from Kubelet's stats API and specifically from the [ContainerStats.StartTime](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L161) field, where `StartTime` represents the container creation time as [noted in the Kubelet source](https://github.com/kubernetes/kubernetes/blob/v1.36.3/pkg/kubelet/stats/cri_stats_provider.go#L776). This value resets on every container restart and aligns with [ContainerStateRunning.startedAt](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#ContainerStateRunning) from the K8s API.
 """
 
 
