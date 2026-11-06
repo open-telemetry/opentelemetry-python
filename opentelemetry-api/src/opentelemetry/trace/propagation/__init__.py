@@ -1,6 +1,14 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Storage of the active span inside a context.
+
+A span becomes current by being stored in a
+:class:`~opentelemetry.context.Context` under a private key. These two
+functions are the only supported way to read and write that slot, and they are
+re-exported from :mod:`opentelemetry.trace`.
+"""
+
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
 from opentelemetry.trace.span import INVALID_SPAN, Span
@@ -16,6 +24,10 @@ def set_span_in_context(span: Span, context: Context | None = None) -> Context:
         span: The Span to set.
         context: a Context object. if one is not passed, the
             default current context is used instead.
+
+    Returns:
+        A new Context holding ``span`` as the current span. The context passed
+        in is not modified.
     """
     ctx = set_value(_SPAN_KEY, span, context=context)
     return ctx

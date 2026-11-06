@@ -1,6 +1,21 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 #
+"""Serialization of baggage into the W3C ``baggage`` HTTP header.
+
+:class:`W3CBaggagePropagator` writes the baggage held in a context into the
+``baggage`` header when a request is sent, and reads it back out when one is
+received, following https://www.w3.org/TR/baggage/.
+
+The format caps the size of the header, of each list-member, and the number of
+list-members. Nothing here raises, so oversized baggage degrades the telemetry
+instead of the request. Which entries go is not uniform: an entry that holds a
+non-ASCII character, fails validation or exceeds the per-entry limit is dropped
+on its own with a warning, while exceeding the entry count or the total header
+length stops processing there and discards every remaining entry, including
+entries that would have fitted.
+"""
+
 from collections.abc import Iterable, Iterator, Mapping
 from logging import getLogger
 from urllib.parse import quote, unquote
@@ -22,6 +37,18 @@ def _filter_valid_entries(
     entries: Iterable[str],
     max_pair_length: int,
 ) -> Iterator[str]:
+    """Drop the baggage entries that cannot appear in a header.
+
+    An empty entry is skipped silently. An entry holding a non-ASCII character
+    or exceeding ``max_pair_length`` is skipped with a warning naming its key.
+
+    Args:
+        entries: The candidate entries, each one a ``key=value`` string.
+        max_pair_length: Maximum length of a single entry, in characters.
+
+    Yields:
+        Each entry that passes every check, in the order received.
+    """
     for entry in entries:
         if not entry:
             continue
@@ -51,6 +78,20 @@ def _apply_baggage_limits(
 
     Yields entries that fit within the W3C specification limits.
     Logs warnings when entries are dropped.
+
+    Iteration stops at the first entry that would exceed ``max_pairs`` or
+    ``max_header_length``, so every later entry is dropped as well even if it
+    would have fitted on its own.
+
+    Args:
+        entries: The candidate entries, each one a ``key=value`` string.
+        max_pairs: Maximum number of entries to yield.
+        max_pair_length: Maximum length of a single entry, in characters.
+        max_header_length: Maximum combined length of the entries, counting
+            the comma that joins them.
+
+    Yields:
+        Each entry that fits within every limit, in the order received.
     """
     length = 0
     for index, entry in enumerate(_filter_valid_entries(entries, max_pair_length)):
@@ -83,6 +124,24 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.extract`
+
+        A list-member that does not parse, that fails validation, that
+        holds a non-ASCII character or that is longer than the per-entry
+        limit is skipped on its own, so the rest of the header still
+        extracts. Exceeding the entry count or the total header length is
+        different: extraction stops there and every remaining entry is
+        discarded, including entries that would have fitted.
+
+        Args:
+            carrier: The object holding the incoming headers, for example the
+                header mapping of an HTTP request.
+            context: The context to add the extracted baggage to. If ``None``,
+                the current context is used.
+            getter: Reads the ``baggage`` header values out of ``carrier``.
+
+        Returns:
+            A new context holding the baggage found in ``carrier``. When the
+            header is absent or empty, the context is returned unchanged.
         """
 
         if context is None:
@@ -134,6 +193,17 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.inject`
+
+        Nothing is written when the context holds no baggage, and nothing is
+        written when every entry was dropped, whether for carrying a key that
+        is not a valid baggage token or for breaking a size limit.
+
+        Args:
+            carrier: The object to write the outgoing header into, for example
+                the header mapping of an outbound HTTP request.
+            context: The context to read the baggage from. If ``None``, the
+                current context is used.
+            setter: Writes the ``baggage`` header into ``carrier``.
         """
         baggage_entries = get_all(context=context)
         if not baggage_entries:
@@ -153,12 +223,29 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
     @property
     def fields(self) -> set[str]:
-        """Returns a set with the fields set in `inject`."""
+        """Returns a set with the fields set in `inject`.
+
+        Returns:
+            A set holding the single name ``"baggage"``. A caller clearing a
+            carrier before injecting into it should remove these names.
+        """
         return {self._BAGGAGE_HEADER_NAME}
 
 
 def _split_baggage_entries(headers: Iterable[str]) -> Iterator[str]:
-    """Yield the list-members of all baggage headers, combined as a single baggage string."""
+    """Yield the list-members of all baggage headers, combined as a single baggage string.
+
+    Several ``baggage`` headers on one message are treated as one list, which
+    is what the header format requires. Surrounding whitespace is stripped
+    from each list-member.
+
+    Args:
+        headers: The raw values of every ``baggage`` header received.
+
+    Yields:
+        Each comma-separated list-member, stripped of surrounding whitespace.
+        An empty header yields one empty string, which the caller filters out.
+    """
     for header in headers:
         start = 0
         while True:
@@ -173,7 +260,21 @@ def _split_baggage_entries(headers: Iterable[str]) -> Iterator[str]:
 def _encode_baggage_pairs(
     baggage_entries: Mapping[str, object],
 ) -> Iterator[str]:
-    """Yield 'key=value' pairs with percent-encoded values from baggage entries."""
+    """Yield 'key=value' pairs with percent-encoded values from baggage entries.
+
+    A pair whose key is not a valid baggage name is skipped with a warning.
+    Values are percent-encoded, so a value containing a comma, a semicolon or
+    an equals sign survives the round trip.
+
+    Args:
+        baggage_entries: The baggage held in a context, as returned by
+            :func:`opentelemetry.baggage.get_all`. Each value is converted
+            with :func:`str` before being encoded.
+
+    Yields:
+        One ``key=value`` string per valid entry, with the value
+        percent-encoded.
+    """
     for key, value in baggage_entries.items():
         if not _is_valid_key(key):
             _logger.warning("Baggage key `%s` is not a valid token", key)

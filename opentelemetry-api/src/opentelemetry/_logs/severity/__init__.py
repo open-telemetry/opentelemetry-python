@@ -1,6 +1,15 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Severity levels of a log record.
+
+:class:`SeverityNumber` holds the numeric severity scale of the OpenTelemetry
+log data model. The scale is ordered, so a larger value is a more severe
+event, and it is finer grained than the levels of the standard :mod:`logging`
+module: each familiar level has ``2``, ``3`` and ``4`` variants, for example
+:attr:`~SeverityNumber.ERROR`, :attr:`~SeverityNumber.ERROR2`.
+"""
+
 import enum
 
 

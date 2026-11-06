@@ -1,6 +1,19 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""The interface a cross-process propagator implements.
+
+A propagator serializes part of a :class:`~opentelemetry.context.Context` into
+a carrier when a request leaves the process, and reads it back when one
+arrives. The carrier is whatever the transport exposes, most often a mapping
+of HTTP headers.
+
+A propagator never touches the carrier directly. It reads through a
+:class:`Getter` and writes through a :class:`Setter`, so one propagator works
+with any carrier shape as long as a getter and a setter exist for it.
+``default_getter`` and ``default_setter`` cover a plain mapping.
+"""
+
 import abc
 import typing
 from collections.abc import Iterable, Mapping, MutableMapping
@@ -27,8 +40,10 @@ class Getter(abc.ABC, typing.Generic[CarrierT]):
             carrier: An object which contains values that are used to
                     construct a Context.
             key: key of a field in carrier.
-        Returns: first value of the propagation key or None if the key doesn't
-                exist.
+
+        Returns:
+            Every value stored under ``key``, or ``None`` when the key does not
+            exist in the carrier.
         """
 
     @abc.abstractmethod
@@ -38,6 +53,7 @@ class Getter(abc.ABC, typing.Generic[CarrierT]):
         Args:
             carrier: An object which contains values that are
                 used to construct a Context.
+
         Returns:
             list of keys from the carrier.
         """
@@ -50,7 +66,7 @@ class Setter(abc.ABC, typing.Generic[CarrierT]):
 
     @abc.abstractmethod
     def set(self, carrier: CarrierT, key: str, value: str) -> None:
-        """Function that can set a value into a carrier""
+        """Function that can set a value into a carrier.
 
         Args:
             carrier: An object which contains values that are used to
@@ -61,14 +77,24 @@ class Setter(abc.ABC, typing.Generic[CarrierT]):
 
 
 class DefaultGetter(Getter[Mapping[str, CarrierValT]]):
+    """A :class:`Getter` for a carrier that is a plain mapping.
+
+    This is the getter used when a caller passes HTTP headers as a dict and
+    supplies no getter of their own. ``default_getter`` is a ready-made
+    instance.
+    """
+
     def get(self, carrier: Mapping[str, CarrierValT], key: str) -> list[str] | None:
         """Getter implementation to retrieve a value from a dictionary.
 
         Args:
             carrier: dictionary in which to get value
             key: the key used to get the value
+
         Returns:
             A list with a single string with the value if it exists, else None.
+            A value that is itself a non-string iterable is returned as a list
+            of its items, which is how a repeated header is handled.
         """
         val = carrier.get(key, None)
         if val is None:
@@ -78,7 +104,14 @@ class DefaultGetter(Getter[Mapping[str, CarrierValT]]):
         return [val]
 
     def keys(self, carrier: Mapping[str, CarrierValT]) -> list[str]:
-        """Keys implementation that returns all keys from a dictionary."""
+        """Keys implementation that returns all keys from a dictionary.
+
+        Args:
+            carrier: dictionary whose keys to return
+
+        Returns:
+            Every key in the carrier, in iteration order.
+        """
         return list(carrier.keys())
 
 
@@ -86,6 +119,12 @@ default_getter: Getter[CarrierT] = DefaultGetter()  # type: ignore
 
 
 class DefaultSetter(Setter[MutableMapping[str, CarrierValT]]):
+    """A :class:`Setter` for a carrier that is a plain mutable mapping.
+
+    Setting a key that is already present replaces it. ``default_setter``
+    is a ready-made instance.
+    """
+
     def set(
         self,
         carrier: MutableMapping[str, CarrierValT],
@@ -137,9 +176,9 @@ class TextMapPropagator(abc.ABC):
                 which understands how to extract a value from it.
             context: an optional Context to use. Defaults to root
                 context if not set.
+
         Returns:
             A Context with configuration found in the carrier.
-
         """
 
     @abc.abstractmethod

@@ -1,5 +1,16 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+"""A propagator that chains several other propagators together.
+
+An application usually needs more than one wire format at once, for example
+W3C trace context together with W3C baggage.
+:class:`CompositePropagator` presents several propagators as one. It is what
+:func:`opentelemetry.propagate.get_global_textmap` returns in every case, since
+``OTEL_PROPAGATORS`` naming a single propagator still produces a
+:class:`CompositePropagator` wrapping that one, and naming ``none`` produces
+one wrapping no propagator at all.
+"""
+
 import collections.abc
 import logging
 
@@ -20,6 +31,11 @@ class CompositePropagator(textmap.TextMapPropagator):
     """
 
     def __init__(self, propagators: collections.abc.Sequence[textmap.TextMapPropagator]) -> None:
+        """Store the propagators to run, in the order given.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         self._propagators = propagators
 
     def extract(
@@ -34,6 +50,21 @@ class CompositePropagator(textmap.TextMapPropagator):
         will override previous propagators.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
+
+        Args:
+            carrier: The object holding the incoming values, passed unchanged
+                to every configured propagator.
+            context: The context to add the extracted values to. ``None`` is
+                handed to the first configured propagator only, which decides
+                what to use in its place. Every later propagator receives the
+                context the previous propagator returned.
+            getter: Reads values out of ``carrier``, passed unchanged to every
+                configured propagator.
+
+        Returns:
+            The context returned by the last configured propagator, having
+            been threaded through each one in turn. When no propagator is
+            configured, ``context`` is returned unchanged.
         """
         for propagator in self._propagators:
             context = propagator.extract(carrier, context, getter=getter)
@@ -51,6 +82,14 @@ class CompositePropagator(textmap.TextMapPropagator):
         will override previous propagators.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.inject`
+
+        Args:
+            carrier: The object to write the outgoing values into, passed
+                unchanged to every configured propagator.
+            context: The context to read the values from. If ``None``, each
+                propagator falls back to the current context.
+            setter: Writes values into ``carrier``, passed unchanged to every
+                configured propagator.
         """
         for propagator in self._propagators:
             propagator.inject(carrier, context, setter=setter)
@@ -61,6 +100,9 @@ class CompositePropagator(textmap.TextMapPropagator):
 
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.fields`
+
+        Returns:
+            The union of the fields of every configured propagator.
         """
         composite_fields = set()
 
