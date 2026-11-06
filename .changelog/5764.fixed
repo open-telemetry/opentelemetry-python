@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: aggregate callbacks from duplicate observable instrument registrations instead of discarding them
