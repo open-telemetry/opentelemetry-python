@@ -54,6 +54,7 @@ above example.
 
 import abc
 import concurrent.futures
+import functools
 import logging
 import os
 import platform
@@ -182,6 +183,8 @@ class Resource:
     def create(
         attributes: Attributes | None = None,
         schema_url: str | None = None,
+        *,
+        _use_thread_pool: bool = True,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -198,9 +201,11 @@ class Resource:
         if not attributes:
             attributes = {}
 
-        resource = get_aggregated_resources(_build_resource_detectors(), _DEFAULT_RESOURCE).merge(
-            Resource(attributes, schema_url)
-        )
+        resource = get_aggregated_resources(
+            _build_resource_detectors(),
+            _DEFAULT_RESOURCE,
+            _use_thread_pool=_use_thread_pool,
+        ).merge(Resource(attributes, schema_url))
 
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
@@ -746,6 +751,7 @@ def _get_process_dependent_resource() -> Resource:  # pyright: ignore[reportUnus
     return get_aggregated_resources(
         [detector for detector in _build_resource_detectors() if detector.is_process_dependent()],
         Resource.get_empty(),
+        _use_thread_pool=False,
     )
 
 
@@ -753,6 +759,8 @@ def get_aggregated_resources(
     detectors: Sequence["ResourceDetector"],
     initial_resource: Resource | None = None,
     timeout: int = 5,
+    *,
+    _use_thread_pool: bool = True,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
@@ -761,20 +769,26 @@ def get_aggregated_resources(
     :param timeout: Number of seconds to wait for each detector to return
     :return:
     """
-    detectors_merged_resource = initial_resource or Resource.create()
+    detectors_merged_resource = (
+        initial_resource if initial_resource is not None else Resource.create(_use_thread_pool=_use_thread_pool)
+    )
 
-    # A detector that exceeds `timeout` is skipped, but shutdown still joins
-    # its worker so no threads outlive this call. A detector that blocks
-    # indefinitely therefore blocks this call. `cancel_futures=True` drops
-    # detectors that have not started yet if a `raise_on_error` detector raises.
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+    executor: concurrent.futures.ThreadPoolExecutor | None = None
     try:
-        futures = [executor.submit(detector.detect) for detector in detectors]
-        for detector_ind, future in enumerate(futures):
-            detector = detectors[detector_ind]
+        if _use_thread_pool:
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+            futures = [executor.submit(detector.detect) for detector in detectors]
+            tasks = [
+                (detector, functools.partial(future.result, timeout=timeout))
+                for detector, future in zip(detectors, futures)
+            ]
+        else:
+            tasks = [(detector, detector.detect) for detector in detectors]
+
+        for detector, get_result in tasks:
             detected_resource: Resource = _EMPTY_RESOURCE
             try:
-                detected_resource = future.result(timeout=timeout)
+                detected_resource = get_result()
             except concurrent.futures.TimeoutError as ex:
                 if detector.raise_on_error:
                     raise ex
@@ -791,6 +805,7 @@ def get_aggregated_resources(
             finally:
                 detectors_merged_resource = detectors_merged_resource.merge(detected_resource)
     finally:
-        executor.shutdown(wait=True, cancel_futures=True)
+        if executor is not None:
+            executor.shutdown(wait=True, cancel_futures=True)
 
     return detectors_merged_resource
