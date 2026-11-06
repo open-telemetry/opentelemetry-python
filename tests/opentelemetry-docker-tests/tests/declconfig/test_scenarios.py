@@ -55,7 +55,13 @@ def _drain_until_quiet(received: Received, sink: OtlpProtoTestServer) -> None:
 
 
 @pytest.mark.parametrize("scenario", _SCENARIOS, ids=[path.name for path in _SCENARIOS])
-def test_scenario(scenario: Path, collector: str, otlp_sink: OtlpProtoTestServer, tmp_path: Path) -> None:
+def test_scenario(
+    scenario: Path,
+    collector: str,
+    otlp_sink: OtlpProtoTestServer,
+    tls_certs_dir: Path,
+    tmp_path: Path,
+) -> None:
     spec = load_scenario(scenario / "scenario.yaml")
     instrument = shutil.which("opentelemetry-instrument")
     assert instrument is not None, "opentelemetry-instrument is not installed"
@@ -77,6 +83,7 @@ def test_scenario(scenario: Path, collector: str, otlp_sink: OtlpProtoTestServer
                 **spec.env,
                 "OTEL_CONFIG_FILE": str(_get_otel_config(scenario)),
                 "OTEL_COLLECTOR_ENDPOINT": collector,
+                "TLS_CERTS_DIR": str(tls_certs_dir),
             },
             stdout=stdout,
             stderr=stderr,

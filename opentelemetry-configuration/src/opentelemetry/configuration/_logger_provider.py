@@ -7,10 +7,13 @@ import logging
 
 from opentelemetry._logs import set_logger_provider
 from opentelemetry.configuration._common import (
+    _grpc_credentials_from_tls,
+    _grpc_insecure_from_tls,
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
     _scope_name_matches_glob,
+    _validate_mtls_pair,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -88,6 +91,9 @@ def _create_otlp_http_log_exporter(
     config: OtlpHttpExporterConfig,
 ) -> LogRecordExporter:
     """Create an OTLP HTTP log exporter from config."""
+    tls = config.tls
+    if tls is not None:
+        _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = (config.timeout / 1000.0) if config.timeout is not None else None
 
@@ -110,6 +116,9 @@ def _create_otlp_http_log_exporter(
             compression = _map_compression(config.compression, Compression, allow_deflate=True)
             return OTLPLogExporter(
                 endpoint=config.endpoint,
+                certificate_file=tls.ca_file if tls is not None else None,
+                client_key_file=tls.key_file if tls is not None else None,
+                client_certificate_file=tls.cert_file if tls is not None else None,
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -132,6 +141,9 @@ def _create_otlp_http_log_exporter(
             compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
             return JsonOTLPLogExporter(
                 endpoint=config.endpoint,
+                certificate_file=tls.ca_file if tls is not None else None,
+                client_key_file=tls.key_file if tls is not None else None,
+                client_certificate_file=tls.cert_file if tls is not None else None,
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -165,6 +177,8 @@ def _create_otlp_grpc_log_exporter(
 
     return OTLPLogExporter(  # type: ignore[return-value]
         endpoint=config.endpoint,
+        insecure=_grpc_insecure_from_tls(config.endpoint, config.tls),
+        credentials=_grpc_credentials_from_tls(config.tls),
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]

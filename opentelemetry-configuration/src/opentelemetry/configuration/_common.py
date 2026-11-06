@@ -8,12 +8,18 @@ import inspect
 import logging
 from collections.abc import Callable
 from fnmatch import fnmatchcase
-from typing import Any, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar
 from urllib.parse import urlparse
 
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._importlib_metadata import entry_points
+
+if TYPE_CHECKING:
+    # pylint: disable-next=import-error
+    import grpc
+
+    from opentelemetry.configuration.models import GrpcTls
 
 _logger = logging.getLogger(__name__)
 
@@ -217,6 +223,60 @@ def _map_compression(
     raise ConfigurationError(
         f"Unsupported compression value '{value}'. Supported values: {', '.join(supported_values)}."
     )
+
+
+def _validate_mtls_pair(
+    key_file: str | None,
+    cert_file: str | None,
+    exporter: str,
+) -> None:
+    """Ensure mTLS key_file and cert_file are either both set or both unset."""
+    if (key_file is None) != (cert_file is None):
+        raise ConfigurationError(
+            f"Invalid tls config for {exporter} exporter: key_file and cert_file must be set together."
+        )
+
+
+def _read_tls_file(path: str, field: str) -> bytes:
+    """Read a PEM file referenced by a tls config field."""
+    try:
+        with open(path, "rb") as file:
+            return file.read()
+    except OSError as exc:
+        raise ConfigurationError(f"Failed to read tls.{field} '{path}': {exc}") from exc
+
+
+def _grpc_credentials_from_tls(tls: GrpcTls | None) -> grpc.ChannelCredentials | None:
+    """Build gRPC channel credentials from a GrpcTls config.
+
+    Returns None if no certificate files are configured, letting the
+    exporter fall back to its default credentials.
+    """
+    if tls is None or (tls.ca_file is None and tls.key_file is None and tls.cert_file is None):
+        return None
+    _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_grpc")
+
+    # pylint: disable-next=import-outside-toplevel,import-error
+    import grpc  # noqa: PLC0415
+
+    return grpc.ssl_channel_credentials(
+        root_certificates=_read_tls_file(tls.ca_file, "ca_file") if tls.ca_file is not None else None,
+        private_key=_read_tls_file(tls.key_file, "key_file") if tls.key_file is not None else None,
+        certificate_chain=_read_tls_file(tls.cert_file, "cert_file") if tls.cert_file is not None else None,
+    )
+
+
+def _grpc_insecure_from_tls(endpoint: str | None, tls: GrpcTls | None) -> bool | None:
+    """Resolve the ``insecure`` flag for a gRPC exporter.
+
+    ``tls.insecure`` only applies to endpoints without an ``http``/``https``
+    scheme, so an explicit ``http://`` endpoint always yields a plaintext
+    connection. Otherwise ``tls.insecure`` is returned as-is and the exporter
+    applies its own defaults when it is None.
+    """
+    if endpoint is not None and urlparse(endpoint).scheme == "http":
+        return True
+    return tls.insecure if tls is not None else None
 
 
 def _parse_otlp_file_output_stream(output_stream: str | None) -> str | None:
