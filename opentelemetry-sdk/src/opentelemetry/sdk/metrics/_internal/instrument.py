@@ -57,6 +57,7 @@ class _Instrument(Protocol):
     unit: str
     description: str
     instrumentation_scope: InstrumentationScope
+    _creation_time_unix_nano: int
 
 
 class _Synchronous(_Instrument, Synchronous):
@@ -88,6 +89,7 @@ class _Synchronous(_Instrument, Synchronous):
         self.name = name.lower()
         self.unit = unit
         self.description = description
+        self._creation_time_unix_nano = time_ns()
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         self._meter_config = _meter_config
@@ -127,6 +129,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         self.name = name.lower()
         self.unit = unit
         self.description = description
+        self._creation_time_unix_nano = time_ns()
         self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         self._meter_config = _meter_config
