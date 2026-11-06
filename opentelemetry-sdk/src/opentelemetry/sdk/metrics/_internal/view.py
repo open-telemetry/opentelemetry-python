@@ -208,9 +208,8 @@ class View:
                 return False
 
         if self._instrument_unit is not None:
-            # Units are case-sensitive; fnmatchcase keeps matching consistent
-            # across platforms.
-            if not fnmatchcase(instrument.unit, self._instrument_unit):
+            # Unit comparison is performed in an exact case-sensitive manner.
+            if instrument.unit != self._instrument_unit:
                 return False
 
         if self._meter_name is not None:
