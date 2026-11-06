@@ -9,6 +9,8 @@ jobs:
   release:
     permissions:
       contents: write # required for creating GitHub releases
+      id-token: write # required for generating OIDC token for attestation
+      attestations: write # required for persisting build provenance attestations
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -19,6 +21,7 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Install toml
@@ -64,18 +67,6 @@ jobs:
             fi
           fi
 
-      # check out main branch to verify there won't be problems with merging the change log
-      # at the end of this workflow
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: main
-
-        # back to the release branch
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
         # next few steps publish to pypi
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -83,6 +74,11 @@ jobs:
 
       - name: Build wheels
         run: ./scripts/build.sh
+
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: "dist/*"
 
       - name: Install twine
         run: |
@@ -134,8 +130,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create --target $GITHUB_REF_NAME \
+          # Always tag the exact immutable commit SHA that was built, never a mutable branch ref
+          release_target=$(git rev-parse HEAD)
+          gh release create --target "$release_target" \
                             --title "Version ${STABLE_VERSION}/${UNSTABLE_VERSION}" \
                             --notes-file /tmp/release-notes.txt \
                             --discussion-category announcements \
-                            v$STABLE_VERSION
+                            v$STABLE_VERSION \
+                            dist/*
