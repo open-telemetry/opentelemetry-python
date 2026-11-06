@@ -25,6 +25,9 @@ from opentelemetry.exporter.otlp.common._exporter_metrics import (
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
 )
+from opentelemetry.exporter.otlp.proto.common._internal._partial_success import (
+    _log_partial_success,
+)
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
@@ -44,6 +47,7 @@ from opentelemetry.exporter.otlp.proto.http._common import (
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
+    ExportMetricsServiceResponse,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
@@ -257,6 +261,9 @@ class OTLPMetricExporter(MetricExporter):
                     else None
                 )
                 return MetricExportResult.FAILURE
+            _log_partial_success(
+                export_result.content, ExportMetricsServiceResponse, _logger, "metrics", self._endpoint
+            )
         return MetricExportResult.SUCCESS
 
     def export(

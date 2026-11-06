@@ -95,12 +95,18 @@ class Compression(enum.Enum):
 
 @dataclass(slots=True, frozen=True)
 class _ExportResult:
-    """Outcome of an OTLP export attempt, including retry exhaustion."""
+    """Outcome of an OTLP export attempt, including retry exhaustion.
+
+    ``content`` holds the raw response body of a successful export, which
+    carries the ``partial_success`` the server reports. It is empty when the
+    export failed or when the body could not be read.
+    """
 
     success: bool
     status_code: int | None
     reason: str | None
     error: Exception | None
+    content: bytes = b""
 
 
 class _OTLPHTTPClient:
@@ -201,7 +207,17 @@ class _OTLPHTTPClient:
                 status_code = result.status_code
                 reason = result.reason
                 if status_code is not None and 200 <= status_code < 400:
-                    return _ExportResult(True, status_code, reason, None)
+                    try:
+                        content = result.content()
+                    # pylint: disable-next=broad-exception-caught
+                    except Exception as error:
+                        self._logger.debug(
+                            "Failed to read the %s export response body: %s",
+                            self._kind,
+                            error,
+                        )
+                        content = b""
+                    return _ExportResult(True, status_code, reason, None, content)
                 export_error = result.error
                 retryable = (
                     _is_retryable(status_code) if status_code else self._transport.is_connection_error(result.error)

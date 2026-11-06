@@ -41,6 +41,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
+    ExportTraceServiceResponse,
 )
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
@@ -273,6 +274,45 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(request.path, "/v1/traces")
         sent_data = mock_request.call_args.kwargs["data"]
         self.assertEqual(_decode_body(sent_data), encode_spans(spans))
+
+    @mocketize
+    def test_partial_success_is_logged(self):
+        response = ExportTraceServiceResponse()
+        response.partial_success.rejected_spans = 2
+        response.partial_success.error_message = "quota exceeded"
+        Entry.single_register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            status=200,
+            body=response.SerializeToString(),
+        )
+        exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertLogs(level="WARNING") as logs:
+            result = exporter.export(self._make_span())
+
+        self.assertEqual(result, SpanExportResult.SUCCESS)
+        self.assertEqual(
+            logs.records[0].getMessage(),
+            f"OTLP partial success exporting spans to {_TEST_ENDPOINT}: the server rejected 2 spans: quota exceeded",
+        )
+
+    @mocketize
+    def test_full_success_logs_nothing(self):
+        zeroed = ExportTraceServiceResponse()
+        zeroed.partial_success.rejected_spans = 0
+        Entry.single_register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            status=200,
+            body=zeroed.SerializeToString(),
+        )
+        exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertNoLogs(level="WARNING"):
+            result = exporter.export(self._make_span())
+
+        self.assertEqual(result, SpanExportResult.SUCCESS)
 
     @mocketize
     def test_export_spans_different_resources(self):

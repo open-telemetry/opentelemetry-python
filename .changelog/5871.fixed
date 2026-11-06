@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`, `opentelemetry-exporter-otlp-proto-http`: report the `partial_success` field of OTLP export responses

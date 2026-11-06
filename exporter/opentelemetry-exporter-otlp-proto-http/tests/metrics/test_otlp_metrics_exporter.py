@@ -40,6 +40,7 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
+    ExportMetricsServiceResponse,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope,
@@ -204,6 +205,46 @@ class TestOTLPMetricExporter(TestCase):
         result = exporter.export(self.metrics["sum_int"])
         self.assertEqual(result, MetricExportResult.SUCCESS)
         self.assertEqual(len(Mocket.request_list()), 1)
+
+    @mocketize
+    def test_partial_success_is_logged(self):
+        response = ExportMetricsServiceResponse()
+        response.partial_success.rejected_data_points = 4
+        response.partial_success.error_message = "quota exceeded"
+        Entry.single_register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            status=200,
+            body=response.SerializeToString(),
+        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertLogs(level="WARNING") as logs:
+            result = exporter.export(self.metrics["sum_int"])
+
+        self.assertEqual(result, MetricExportResult.SUCCESS)
+        self.assertEqual(
+            logs.records[0].getMessage(),
+            "OTLP partial success exporting metrics to "
+            f"{_TEST_ENDPOINT}: the server rejected 4 data points: quota exceeded",
+        )
+
+    @mocketize
+    def test_full_success_logs_nothing(self):
+        zeroed = ExportMetricsServiceResponse()
+        zeroed.partial_success.rejected_data_points = 0
+        Entry.single_register(
+            Entry.POST,
+            _TEST_ENDPOINT,
+            status=200,
+            body=zeroed.SerializeToString(),
+        )
+        exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertNoLogs(level="WARNING"):
+            result = exporter.export(self.metrics["sum_int"])
+
+        self.assertEqual(result, MetricExportResult.SUCCESS)
 
     @mocketize
     def test_oversized_payload_dropped_with_batch_splitting(self):
