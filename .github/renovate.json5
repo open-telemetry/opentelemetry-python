@@ -5,6 +5,9 @@
       "helpers:pinGitHubActionDigestsToSemver",
       ":semanticCommits"
     ],
+    // Wait 3 days before proposing updates to allow PyPI / upstream registries
+    // to quarantine compromised releases (e.g. LiteLLM v1.107.0).
+    "minimumReleaseAge": "3 days",
     constraints: {
       python: "==3.10"
     },
