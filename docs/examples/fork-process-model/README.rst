@@ -22,9 +22,6 @@ For signal-specific auto-instrumentation support and workarounds, see the
 `Python auto-instrumentation troubleshooting guide
 <https://opentelemetry.io/docs/zero-code/python/troubleshooting/#pre-fork-server-issues>`_.
 
-Please see http://bugs.python.org/issue6721 for the problems about Python locks in (multi)threaded
-context with fork.
-
 The source code for the examples with Flask app are available :scm_web:`here <docs/examples/fork-process-model/>`.
 
 Gunicorn post_fork hook
