@@ -10,7 +10,6 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from opentelemetry._logs import get_logger_provider
 from opentelemetry.configuration._logger_provider import (
     _DEFAULT_EXPORT_TIMEOUT_MILLIS,
     _DEFAULT_MAX_EXPORT_BATCH_SIZE,
@@ -20,7 +19,6 @@ from opentelemetry.configuration._logger_provider import (
     _create_log_record_exporter,
     _create_log_record_processor,
     _create_simple_log_record_processor,
-    configure_logger_provider,
     create_logger_provider,
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
@@ -91,11 +89,6 @@ class TestCreateLoggerProviderBasic(unittest.TestCase):
         provider = create_logger_provider(config)
         self.assertIsInstance(provider, LoggerProvider)
 
-    def test_configure_none_is_noop(self):
-        original = get_logger_provider()
-        configure_logger_provider(None)
-        self.assertIs(get_logger_provider(), original)
-
 
 class TestCreateLogRecordProcessors(unittest.TestCase):
     @staticmethod
@@ -117,85 +110,84 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         )
 
     def test_batch_processor_default_schedule_delay(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(self._make_batch_config(), None)
         self.assertEqual(
             processor._batch_processor._schedule_delay_millis,
             _DEFAULT_SCHEDULE_DELAY_MILLIS,
         )
 
     def test_batch_processor_default_export_timeout(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(self._make_batch_config(), None)
         self.assertEqual(
             processor._batch_processor._export_timeout_millis,
             _DEFAULT_EXPORT_TIMEOUT_MILLIS,
         )
 
     def test_batch_processor_default_max_queue_size(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(self._make_batch_config(), None)
         self.assertEqual(
             processor._batch_processor._max_queue_size,
             _DEFAULT_MAX_QUEUE_SIZE,
         )
 
     def test_batch_processor_default_max_export_batch_size(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(self._make_batch_config(), None)
         self.assertEqual(
             processor._batch_processor._max_export_batch_size,
             _DEFAULT_MAX_EXPORT_BATCH_SIZE,
         )
 
     def test_batch_processor_explicit_schedule_delay(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=2000))
+        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=2000), None)
         self.assertEqual(processor._batch_processor._schedule_delay_millis, 2000.0)
 
     def test_batch_processor_zero_schedule_delay(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=0))
+        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=0), None)
         self.assertEqual(processor._batch_processor._schedule_delay_millis, 0)
         processor.shutdown()
 
     def test_batch_processor_explicit_export_timeout(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config(export_timeout=5000))
+        processor = _create_batch_log_record_processor(self._make_batch_config(export_timeout=5000), None)
         self.assertEqual(processor._batch_processor._export_timeout_millis, 5000.0)
 
     def test_batch_processor_explicit_max_queue_size(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config(max_queue_size=512))
+        processor = _create_batch_log_record_processor(self._make_batch_config(max_queue_size=512), None)
         self.assertEqual(processor._batch_processor._max_queue_size, 512)
 
     def test_batch_processor_explicit_max_export_batch_size(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config(max_export_batch_size=128))
+        processor = _create_batch_log_record_processor(self._make_batch_config(max_export_batch_size=128), None)
         self.assertEqual(processor._batch_processor._max_export_batch_size, 128)
 
     def test_batch_processor_uses_console_exporter(self):
-        processor = _create_batch_log_record_processor(self._make_batch_config())
+        processor = _create_batch_log_record_processor(self._make_batch_config(), None)
         self.assertIsInstance(processor._batch_processor._exporter, ConsoleLogRecordExporter)
 
     def test_simple_processor_uses_console_exporter(self):
         config = SimpleLogRecordProcessorConfig(exporter=LogRecordExporterConfig(console={}))
-        processor = _create_simple_log_record_processor(config)
+        processor = _create_simple_log_record_processor(config, None)
         self.assertIsInstance(processor, SimpleLogRecordProcessor)
         self.assertIsInstance(processor._exporter, ConsoleLogRecordExporter)
 
     def test_batch_processor_dispatched_from_processor_config(self):
         config = LogRecordProcessorConfig(batch=self._make_batch_config())
-        processor = _create_log_record_processor(config)
+        processor = _create_log_record_processor(config, None)
         self.assertIsInstance(processor, BatchLogRecordProcessor)
 
     def test_simple_processor_dispatched_from_processor_config(self):
         config = LogRecordProcessorConfig(
             simple=SimpleLogRecordProcessorConfig(exporter=LogRecordExporterConfig(console={}))
         )
-        processor = _create_log_record_processor(config)
+        processor = _create_log_record_processor(config, None)
         self.assertIsInstance(processor, SimpleLogRecordProcessor)
 
     def test_no_processor_type_raises(self):
-        config = LogRecordProcessorConfig()
-        with self.assertRaises(ConfigurationError):
-            _create_log_record_processor(config)
+        with self.assertRaises(ValueError):
+            LogRecordProcessorConfig()
 
     def test_batch_processor_suppresses_env_var(self):
         """schedule_delay default must not read OTEL_BLRP_SCHEDULE_DELAY."""
         with patch.dict("os.environ", {"OTEL_BLRP_SCHEDULE_DELAY": "9999"}):
-            processor = _create_batch_log_record_processor(self._make_batch_config())
+            processor = _create_batch_log_record_processor(self._make_batch_config(), None)
         self.assertEqual(
             processor._batch_processor._schedule_delay_millis,
             _DEFAULT_SCHEDULE_DELAY_MILLIS,
@@ -205,13 +197,12 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
 class TestCreateLogRecordExporters(unittest.TestCase):
     def test_console_exporter(self):
         config = LogRecordExporterConfig(console={})
-        exporter = _create_log_record_exporter(config)
+        exporter = _create_log_record_exporter(config, None)
         self.assertIsInstance(exporter, ConsoleLogRecordExporter)
 
     def test_no_exporter_type_raises(self):
-        config = LogRecordExporterConfig()
-        with self.assertRaises(ConfigurationError):
-            _create_log_record_exporter(config)
+        with self.assertRaises(ValueError):
+            LogRecordExporterConfig()
 
     def test_plugin_log_exporter_loaded_via_entry_point(self):
         mock_exporter = MagicMock()
@@ -221,7 +212,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             return_value=[MagicMock(**{"load.return_value": mock_class})],
         ):
             # pylint: disable=unexpected-keyword-arg
-            result = _create_log_record_exporter(LogRecordExporterConfig(my_custom_exporter={}))
+            result = _create_log_record_exporter(LogRecordExporterConfig(my_custom_exporter={}), None)
         self.assertIs(result, mock_exporter)
 
     def test_unknown_log_exporter_raises_configuration_error(self):
@@ -233,7 +224,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             self.assertRaises(ConfigurationError),
         ):
             # pylint: disable=unexpected-keyword-arg
-            _create_log_record_exporter(LogRecordExporterConfig(no_such_exporter={}))
+            _create_log_record_exporter(LogRecordExporterConfig(no_such_exporter={}), None)
 
     def test_otlp_http_missing_package_raises(self):
         config = LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(endpoint="http://localhost:4318"))
@@ -247,7 +238,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             ),
             self.assertRaises(ConfigurationError),
         ):
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
     def test_otlp_http_json_missing_package_raises(self):
         config = LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(encoding=OtlpHttpEncoding.json))
@@ -261,7 +252,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             ),
             self.assertRaises(ConfigurationError) as ctx,
         ):
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
         self.assertIn("opentelemetry-exporter-otlp-json-http", str(ctx.exception))
 
     def test_otlp_grpc_missing_package_raises(self):
@@ -276,7 +267,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             ),
             self.assertRaises(ConfigurationError),
         ):
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
     def test_otlp_file_development_missing_package_raises(self):
         config = LogRecordExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig())
@@ -289,7 +280,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             ),
             self.assertRaises(ConfigurationError) as ctx,
         ):
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
         self.assertIn("opentelemetry-exporter-otlp-json-file", str(ctx.exception))
 
     def test_otlp_file_development_default_stdout(self):
@@ -304,7 +295,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             },
         ):
             config = LogRecordExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig())
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
         mock_exporter_cls.assert_called_once()
         self.assertEqual(mock_exporter_cls.call_args.args, ())
@@ -324,7 +315,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             config = LogRecordExporterConfig(
                 otlp_file_development=ExperimentalOtlpFileExporterConfig(output_stream="file:///tmp/logs.jsonl")
             )
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
         mock_exporter_cls.assert_called_once()
         self.assertEqual(mock_exporter_cls.call_args.args, ("/tmp/logs.jsonl",))
@@ -344,7 +335,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                 otlp_file_development=ExperimentalOtlpFileExporterConfig(output_stream="http://example")
             )
             with self.assertRaises(ConfigurationError) as ctx:
-                _create_log_record_exporter(config)
+                _create_log_record_exporter(config, None)
         self.assertIn("output_stream", str(ctx.exception))
         mock_exporter_cls.assert_not_called()
 
@@ -372,7 +363,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                     encoding=OtlpHttpEncoding.protobuf,
                 )
             )
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
         mock_exporter_cls.assert_called_once()
         call_kwargs = mock_exporter_cls.call_args.kwargs
@@ -404,7 +395,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                     encoding=OtlpHttpEncoding.json,
                 )
             )
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
         mock_exporter_cls.assert_called_once_with(
             endpoint="http://collector:4318/v1/logs",
@@ -431,7 +422,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             config = LogRecordExporterConfig(
                 otlp_http=OtlpHttpExporterConfig(headers=[NameStringValuePair(name="x-api-key", value="secret")])
             )
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
         call_kwargs = mock_exporter_cls.call_args.kwargs
         self.assertEqual(call_kwargs["headers"], {"x-api-key": "secret"})
@@ -453,7 +444,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             },
         ):
             config = LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(compression="deflate"))
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
         call_kwargs = mock_exporter_cls.call_args.kwargs
         self.assertEqual(call_kwargs["compression"], "deflate")
@@ -478,7 +469,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):
                     timeout=10000,
                 )
             )
-            _create_log_record_exporter(config)
+            _create_log_record_exporter(config, None)
 
         mock_exporter_cls.assert_called_once()
         call_kwargs = mock_exporter_cls.call_args.kwargs

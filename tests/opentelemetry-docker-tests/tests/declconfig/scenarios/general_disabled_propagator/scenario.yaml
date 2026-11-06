@@ -1,0 +1,15 @@
+description: >
+  `disabled: true` installs no-op providers but keeps the configured
+  propagator: only baggage is extracted, the incoming traceparent is not, and
+  nothing is exported.
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stdout
+      pattern: "(?m)^baggage\\.user\\.id=u-123$"
+  - output:
+      stream: stdout
+      pattern: "(?m)^remote_span_valid=False$"
+  - spans:
+      count: 0

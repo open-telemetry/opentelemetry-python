@@ -1,0 +1,20 @@
+description: >
+  Omitted `meter_provider` and `logger_provider` sections install no-op
+  providers, so `OTEL_PYTHON_*_PROVIDER` doesn't select SDK providers instead.
+env:
+  OTEL_PYTHON_METER_PROVIDER: sdk_meter_provider
+  OTEL_PYTHON_LOGGER_PROVIDER: sdk_logger_provider
+until:
+  - spans:
+      name: omitted-providers-span
+  - exited: {}
+expect:
+  - output:
+      stream: stdout
+      pattern: "(?m)^meter_provider=NoOpMeterProvider$"
+  - output:
+      stream: stdout
+      pattern: "(?m)^logger_provider=NoOpLoggerProvider$"
+  - spans:
+      name: omitted-providers-span
+      count: 1

@@ -656,7 +656,7 @@ class _OTelSDKConfigurator(_BaseConfigurator):
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.configuration import (  # noqa: PLC0415
                     configure_sdk,
-                    load_config_file,
+                    load_config,
                 )
             except ImportError as exc:
                 raise RuntimeError(
@@ -671,6 +671,6 @@ class _OTelSDKConfigurator(_BaseConfigurator):
                     OTEL_CONFIG_FILE,
                     sorted(kwargs),
                 )
-            configure_sdk(load_config_file(config_file))
+            configure_sdk(load_config(config_file))
             return
         _initialize_components(**kwargs)
