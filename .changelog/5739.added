@@ -1,0 +1,2 @@
+`opentelemetry-test-utils`: expose live-check reports and retained stdout/stderr,
+and add named Weaver configuration and advice-data options.

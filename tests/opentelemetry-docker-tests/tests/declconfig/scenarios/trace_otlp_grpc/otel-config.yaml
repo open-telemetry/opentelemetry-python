@@ -1,0 +1,16 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-trace-otlp-grpc
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_grpc:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4317
+            compression: gzip
+            timeout: 5000
+            headers:
+              - name: x-declconfig
+                value: header

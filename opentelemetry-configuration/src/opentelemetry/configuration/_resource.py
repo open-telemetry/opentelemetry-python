@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import dataclasses
-import fnmatch
 import logging
 import os
 import sys
@@ -12,7 +11,8 @@ from collections.abc import Callable
 from typing import Any
 from urllib import parse
 
-from opentelemetry.configuration._common import load_entry_point
+from opentelemetry.configuration._common import _matches_glob, load_entry_point
+from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration.models import (
     AttributeNameValue,
     AttributeType,
@@ -24,6 +24,7 @@ from opentelemetry.sdk.environment_variables import OTEL_SERVICE_NAME
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     SERVICE_NAME,
+    OsResourceDetector,
     ProcessResourceDetector,
     Resource,
     ServiceInstanceIdResourceDetector,
@@ -157,9 +158,34 @@ def _detect_service(_config: Any) -> dict[str, AnyValue]:
 
 _RESOURCE_DETECTOR_REGISTRY: dict[str, Callable[[Any], dict[str, AnyValue]]] = {
     "service": _detect_service,
-    "host": lambda _: dict(_HostResourceDetector().detect().attributes),
+    "host": lambda _: dict(_HostResourceDetector().detect().merge(OsResourceDetector().detect()).attributes),
     "process": lambda _: dict(ProcessResourceDetector().detect().attributes),
 }
+
+# Schema detector names whose providers register under a different entry point name.
+_DETECTOR_ENTRY_POINT_NAMES: dict[str, str] = {
+    "container": "containerid",
+}
+
+
+def _load_detector(name: str) -> type | None:
+    """Load a resource detector class by its config name.
+
+    Returns None, after logging a warning, when the detector cannot be loaded,
+    so that an unrecognized detector does not fail SDK construction.
+    """
+    try:
+        return load_entry_point(
+            "opentelemetry_resource_detector",
+            _DETECTOR_ENTRY_POINT_NAMES.get(name, name),
+        )
+    except ConfigurationError as exc:
+        _logger.warning(
+            "Resource detector '%s' could not be loaded and will be ignored: %s",
+            name,
+            exc,
+        )
+        return None
 
 
 def _run_detectors(
@@ -173,29 +199,32 @@ def _run_detectors(
     schema fields like container that require contrib packages, and
     unknown plugin detectors captured in additional_properties — are
     loaded via the ``opentelemetry_resource_detector`` entry point group.
+    Detectors that cannot be loaded are skipped with a warning.
 
     The detected_attrs dict is updated in-place; later detectors overwrite
     earlier ones for the same key.
     """
-    for name in dataclasses.fields(detector_config):
-        value = getattr(detector_config, name.name, None)
+    for field in dataclasses.fields(detector_config):
+        if not field.init:
+            continue
+
+        value = getattr(detector_config, field.name, None)
         if value is None:
             continue
-        if name.name in _RESOURCE_DETECTOR_REGISTRY:
-            detected_attrs.update(_RESOURCE_DETECTOR_REGISTRY[name.name](value))
-        else:
-            cls = load_entry_point("opentelemetry_resource_detector", name.name)
+        if field.name in _RESOURCE_DETECTOR_REGISTRY:
+            detected_attrs.update(_RESOURCE_DETECTOR_REGISTRY[field.name](value))
+        elif (cls := _load_detector(field.name)) is not None:
             detected_attrs.update(cls(**(value or {})).detect().attributes)
 
     for name, plugin_config in detector_config.additional_properties.items():
-        cls = load_entry_point("opentelemetry_resource_detector", name)
-        detected_attrs.update(cls(**(plugin_config or {})).detect().attributes)
+        if (cls := _load_detector(name)) is not None:
+            detected_attrs.update(cls(**(plugin_config or {})).detect().attributes)
 
 
 def _filter_attributes(attrs: dict[str, object], filter_config: IncludeExclude | None) -> dict[str, object]:
     """Filter detected attribute keys using include/exclude glob patterns.
 
-    Mirrors other SDK IncludeExcludePredicate.createPatternMatching behaviour:
+    Mirrors other SDK IncludeExcludePredicate.createPatternMatching behavior:
     - No filter config (attributes absent) → include all detected attributes.
     - included patterns are checked first; excluded patterns are applied after.
     - An empty included list is treated as "include everything".
@@ -211,9 +240,9 @@ def _filter_attributes(attrs: dict[str, object], filter_config: IncludeExclude |
 
     result: dict[str, object] = {}
     for key, value in attrs.items():
-        if included and not any(fnmatch.fnmatch(key, pat) for pat in included):
+        if included and not any(_matches_glob(key, pat) for pat in included):
             continue
-        if excluded and any(fnmatch.fnmatch(key, pat) for pat in excluded):
+        if excluded and any(_matches_glob(key, pat) for pat in excluded):
             continue
         result[key] = value
     return result

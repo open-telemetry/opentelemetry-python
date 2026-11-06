@@ -1,15 +1,22 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import os
+import sys
 import unittest
+from base64 import b64encode
 from json import JSONDecodeError
 from unittest.mock import MagicMock, patch
 
+import certifi
 import urllib3
 import urllib3.exceptions
 from mocket import Mocket, Mocketizer, mocketize
 from mocket.mocks.mockhttp import Entry
 from urllib3._collections import HTTPHeaderDict
+
+# pylint: disable-next=import-error
+from opentelemetry.exporter.http.transport._proxy import _get_environ_proxy
 
 # pylint: disable-next=import-error
 from opentelemetry.exporter.http.transport._urllib3 import (
@@ -19,7 +26,11 @@ from opentelemetry.exporter.http.transport._urllib3 import (
 
 _TEST_URL = "http://example.test/v1/traces"
 
+# Keep proxies from the developer's environment or system settings out of the tests.
+_NO_PROXY_ENV = {"NO_PROXY": "*"}
 
+
+@patch.dict(os.environ, _NO_PROXY_ENV, clear=True)
 class TestUrllib3HTTPResult(unittest.TestCase):
     @mocketize
     def test_content_returns_body(self):
@@ -126,7 +137,8 @@ class TestUrllib3HTTPResult(unittest.TestCase):
         self.assertEqual(result.headers()["X-Multi"], "value1, value2")
 
 
-# pylint: disable=protected-access,no-self-use
+# pylint: disable=protected-access,no-self-use,too-many-public-methods
+@patch.dict(os.environ, _NO_PROXY_ENV, clear=True)
 class TestUrllib3HTTPTransport(unittest.TestCase):
     def test_request_returns_status_code_and_reason(self):
         cases = [
@@ -197,10 +209,11 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
             (urllib3.exceptions.NewConnectionError(None, "error"), True),
             (urllib3.exceptions.ConnectTimeoutError(None, "error"), True),
             (urllib3.exceptions.MaxRetryError(None, "http://x"), True),
+            (urllib3.exceptions.ProxyError("error", OSError("error")), True),
             (urllib3.exceptions.HTTPError("error"), False),
             (
                 urllib3.exceptions.ReadTimeoutError(None, "http://x", "timeout"),
-                False,
+                True,
             ),
             (RuntimeError("error"), False),
             (ValueError("error"), False),
@@ -234,7 +247,7 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
 
     def test_verify_sets_pool_manager_kwargs(self):
         cases = [
-            (True, "CERT_REQUIRED", None),
+            (True, "CERT_REQUIRED", certifi.where()),
             (False, "CERT_NONE", None),
             ("/path/to/ca.pem", "CERT_REQUIRED", "/path/to/ca.pem"),
         ]
@@ -248,6 +261,17 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
                     self.assertEqual(kwargs["ca_certs"], expected_ca_certs)
                 else:
                     self.assertNotIn("ca_certs", kwargs)
+
+    @patch.dict(sys.modules, {"certifi": None})
+    def test_verify_true_without_certifi_uses_system_trust_store(self):
+        with patch("urllib3.PoolManager") as mock_pm:
+            Urllib3HTTPTransport(verify=True)
+        self.assertNotIn("ca_certs", mock_pm.call_args.kwargs)
+
+    def test_pool_maxsize(self):
+        with patch("urllib3.PoolManager") as mock_pm:
+            Urllib3HTTPTransport()
+        self.assertEqual(mock_pm.call_args.kwargs["maxsize"], 10)
 
     def test_cert_none_does_not_set_cert_file(self):
         with patch("urllib3.PoolManager") as mock_pm:
@@ -287,3 +311,117 @@ class TestUrllib3HTTPTransport(unittest.TestCase):
             transport = Urllib3HTTPTransport()
             transport.close()
         mock_pm.return_value.clear.assert_called_once()
+
+    @patch.dict(os.environ, {"HTTP_PROXY": "http://proxy.test:3128"}, clear=True)
+    def test_close_clears_proxy_managers(self):
+        with patch("urllib3.proxy_from_url") as mock_proxy_from_url:
+            transport = Urllib3HTTPTransport()
+            transport.request("POST", _TEST_URL)
+            transport.close()
+        mock_proxy_from_url.return_value.clear.assert_called_once()
+        self.assertEqual(transport._proxy_managers, {})
+        self.assertEqual(transport._get_proxy.cache_info().currsize, 0)
+
+    @patch.dict(os.environ, {"HTTP_PROXY": "http://proxy.test:3128"}, clear=True)
+    def test_proxy_lookup_is_cached(self):
+        with (
+            patch(
+                "opentelemetry.exporter.http.transport._urllib3._get_environ_proxy",
+                wraps=_get_environ_proxy,
+            ) as mock_get_environ_proxy,
+            patch("urllib3.proxy_from_url"),
+        ):
+            transport = Urllib3HTTPTransport()
+            transport.request("POST", _TEST_URL)
+            transport.request("POST", _TEST_URL)
+            transport.request("POST", "http://example.test/v1/logs")
+        self.assertEqual(mock_get_environ_proxy.call_count, 2)
+
+    def test_request_uses_proxy_from_environment(self):
+        cases = [
+            ({"HTTP_PROXY": "http://proxy.test:3128"}, _TEST_URL, "http://proxy.test:3128"),
+            (
+                {"HTTPS_PROXY": "https://proxy.test:3129"},
+                "https://example.test/v1/traces",
+                "https://proxy.test:3129",
+            ),
+            ({"ALL_PROXY": "proxy.test:3128"}, _TEST_URL, "http://proxy.test:3128"),
+        ]
+        for env, url, expected_proxy in cases:
+            with self.subTest(env=env):
+                with (
+                    patch.dict(os.environ, env, clear=True),
+                    patch("urllib3.proxy_from_url") as mock_proxy_from_url,
+                ):
+                    transport = Urllib3HTTPTransport(verify="/path/to/ca.pem")
+                    result = transport.request("POST", url)
+                self.assertIsNone(result.error)
+                mock_proxy_from_url.assert_called_once()
+                args, kwargs = mock_proxy_from_url.call_args
+                self.assertEqual(args, (expected_proxy,))
+                self.assertIsNone(kwargs["proxy_headers"])
+                self.assertEqual(kwargs["cert_reqs"], "CERT_REQUIRED")
+                self.assertEqual(kwargs["ca_certs"], "/path/to/ca.pem")
+                self.assertIsInstance(kwargs["retries"], urllib3.Retry)
+                mock_proxy_from_url.return_value.request.assert_called_once()
+
+    @patch.dict(os.environ, {"HTTP_PROXY": "http://us%40er:p%3Ass@proxy.test:3128"}, clear=True)
+    def test_request_sends_proxy_authorization(self):
+        with patch("urllib3.proxy_from_url") as mock_proxy_from_url:
+            Urllib3HTTPTransport().request("POST", _TEST_URL)
+        expected = "Basic " + b64encode(b"us@er:p:ss").decode()
+        self.assertEqual(
+            mock_proxy_from_url.call_args.kwargs["proxy_headers"],
+            {"proxy-authorization": expected},
+        )
+
+    @patch.dict(os.environ, {"ALL_PROXY": "socks5h://us%40er:p%3Ass@proxy.test:1080"}, clear=True)
+    def test_request_uses_socks_proxy(self):
+        with patch("urllib3.contrib.socks.SOCKSProxyManager") as mock_socks:
+            transport = Urllib3HTTPTransport(verify=False)
+            result = transport.request("POST", _TEST_URL)
+        self.assertIsNone(result.error)
+        args, kwargs = mock_socks.call_args
+        self.assertEqual(args, ("socks5h://us%40er:p%3Ass@proxy.test:1080",))
+        self.assertEqual(kwargs["username"], "us@er")
+        self.assertEqual(kwargs["password"], "p:ss")
+        self.assertEqual(kwargs["cert_reqs"], "CERT_NONE")
+        mock_socks.return_value.request.assert_called_once()
+
+    @patch.dict(os.environ, {"ALL_PROXY": "socks5://proxy.test:1080"}, clear=True)
+    def test_socks_proxy_uses_real_manager(self):
+        # pylint: disable-next=import-outside-toplevel
+        from urllib3.contrib.socks import SOCKSProxyManager  # noqa: PLC0415
+
+        transport = Urllib3HTTPTransport()
+        self.assertIsInstance(transport._get_pool_manager(_TEST_URL), SOCKSProxyManager)
+
+    @patch.dict(os.environ, {"ALL_PROXY": "socks5://proxy.test:1080"}, clear=True)
+    def test_socks_proxy_without_pysocks_returns_error(self):
+        with patch.dict(sys.modules, {"urllib3.contrib.socks": None}):
+            result = Urllib3HTTPTransport().request("POST", _TEST_URL)
+        self.assertIsInstance(result.error, ImportError)
+        self.assertIn("PySocks", str(result.error))
+
+    @patch.dict(os.environ, {"HTTP_PROXY": "http://proxy.test:3128"}, clear=True)
+    def test_proxy_manager_is_reused(self):
+        with patch("urllib3.proxy_from_url") as mock_proxy_from_url:
+            transport = Urllib3HTTPTransport()
+            transport.request("POST", _TEST_URL)
+            transport.request("POST", _TEST_URL)
+        mock_proxy_from_url.assert_called_once()
+        self.assertEqual(mock_proxy_from_url.return_value.request.call_count, 2)
+
+    @patch.dict(
+        os.environ,
+        {"HTTP_PROXY": "http://proxy.test:3128", "NO_PROXY": "example.test"},
+        clear=True,
+    )
+    def test_no_proxy_uses_direct_pool(self):
+        with patch("urllib3.proxy_from_url") as mock_proxy_from_url:
+            transport = Urllib3HTTPTransport()
+            with patch.object(transport._pool, "request") as mock_request:
+                mock_request.return_value = MagicMock(status=200, reason="OK")
+                transport.request("POST", _TEST_URL)
+        mock_proxy_from_url.assert_not_called()
+        mock_request.assert_called_once()

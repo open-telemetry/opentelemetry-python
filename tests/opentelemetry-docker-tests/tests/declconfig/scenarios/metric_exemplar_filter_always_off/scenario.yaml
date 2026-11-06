@@ -1,0 +1,14 @@
+description: >
+  `exemplar_filter: always_off` records no exemplars, even in a sampled span.
+until:
+  - metric:
+      name: inside.requests
+      min: 1
+  - metric:
+      name: outside.requests
+      min: 1
+expect:
+  - metric:
+      name: inside.requests
+      data_point: {exemplar_count: {gte: 1}}
+      count: 0
