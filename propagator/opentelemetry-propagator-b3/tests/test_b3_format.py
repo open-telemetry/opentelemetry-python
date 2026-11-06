@@ -6,8 +6,9 @@ from abc import abstractmethod
 from unittest.mock import Mock
 
 import opentelemetry.trace as trace_api
-from opentelemetry.context import Context, get_current
+from opentelemetry.context import Context, attach, detach, get_current, get_value
 from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,import-error
+    _DEBUG_FLAG_KEY,
     B3MultiFormat,
     B3SingleFormat,
 )
@@ -35,7 +36,7 @@ def get_child_parent_new_carrier(old_carrier, propagator):
     )
 
     new_carrier = {}
-    ctx = trace_api.set_span_in_context(child)
+    ctx = trace_api.set_span_in_context(child, ctx)
     propagator.inject(new_carrier, context=ctx)
 
     return child, parent, new_carrier
@@ -74,6 +75,12 @@ class AbstractB3FormatTestCase:
         pass
 
     def assertNotSampled(self, carrier):
+        pass
+
+    def assertDebug(self, carrier):
+        pass
+
+    def assertNotDebug(self, carrier):
         pass
 
     def test_extract_multi_header(self):
@@ -177,9 +184,9 @@ class AbstractB3FormatTestCase:
             self.assertNotSampled(new_carrier)
 
     def test_flags(self):
-        """x-b3-flags set to "1" should result in propagation."""
+        """x-b3-flags set to "1" should result in propagation of the debug flag."""
         propagator = self.get_propagator()
-        _, _, new_carrier = self.get_child_parent_new_carrier(
+        _, parent, new_carrier = self.get_child_parent_new_carrier(
             {
                 propagator.TRACE_ID_KEY: self.serialized_trace_id,
                 propagator.SPAN_ID_KEY: self.serialized_span_id,
@@ -187,12 +194,28 @@ class AbstractB3FormatTestCase:
             }
         )
 
-        self.assertSampled(new_carrier)
+        self.assertTrue(parent.context.trace_flags.sampled)
+        self.assertDebug(new_carrier)
 
     def test_flags_and_sampling(self):
-        """Propagate if b3 flags and sampling are set."""
+        """x-b3-flags set to "1" wins over x-b3-sampled set to "0"."""
         propagator = self.get_propagator()
-        _, _, new_carrier = self.get_child_parent_new_carrier(
+        _, parent, new_carrier = self.get_child_parent_new_carrier(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
+                propagator.SAMPLED_KEY: "0",
+            }
+        )
+
+        self.assertTrue(parent.context.trace_flags.sampled)
+        self.assertDebug(new_carrier)
+
+    def test_extract_debug_flag_from_multi_header(self):
+        """A received x-b3-flags of "1" is stored in the extracted context."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
             {
                 propagator.TRACE_ID_KEY: self.serialized_trace_id,
                 propagator.SPAN_ID_KEY: self.serialized_span_id,
@@ -200,7 +223,187 @@ class AbstractB3FormatTestCase:
             }
         )
 
+        self.assertTrue(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_debug_flag_from_single_header(self):
+        """A received sampling state of "d" is stored in the extracted context."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-d"}
+        )
+
+        self.assertTrue(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_without_debug_flag(self):
+        """A sampled trace carrying no debug flag leaves none in the extracted context."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.SAMPLED_KEY: "1",
+            }
+        )
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_without_debug_flag_for_an_explicit_zero(self):
+        """An x-b3-flags of "0" is not a debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "0",
+            }
+        )
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_without_debug_flag_for_a_single_header_accept(self):
+        """A single header sampling state of "1" is not a debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-1"}
+        )
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_multi_header_sampled_d_is_not_debug(self):
+        """In the multi header form only x-b3-flags carries the debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.SAMPLED_KEY: "d",
+            }
+        )
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+        self.assertTrue(trace_api.get_current_span(new_ctx).get_span_context().trace_flags.sampled)
+
+    def test_inject_debug_flag_received_in_single_header(self):
+        """A debug flag received as the sampling state "d" is re-propagated on inject."""
+        propagator = self.get_propagator()
+        _, _, new_carrier = self.get_child_parent_new_carrier(
+            {propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-d"}
+        )
+
+        self.assertDebug(new_carrier)
+
+    def test_inject_without_debug_flag(self):
+        """A sampled trace with no received debug flag is injected without one."""
+        propagator = self.get_propagator()
+        _, _, new_carrier = self.get_child_parent_new_carrier(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.SAMPLED_KEY: "1",
+            }
+        )
+
+        self.assertNotDebug(new_carrier)
         self.assertSampled(new_carrier)
+
+    def test_inject_debug_flag_for_unsampled_span(self):
+        """A received debug flag forces the injected sampling decision to accept."""
+        propagator = self.get_propagator()
+        ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
+            }
+        )
+        child = trace._Span(
+            "child",
+            trace_api.SpanContext(
+                int(self.serialized_trace_id, 16),
+                id_generator.RandomIdGenerator().generate_span_id(),
+                is_remote=False,
+                trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.DEFAULT),
+            ),
+        )
+
+        new_carrier = {}
+        propagator.inject(new_carrier, context=trace_api.set_span_in_context(child, ctx))
+
+        self.assertDebug(new_carrier)
+
+    def test_extract_debug_flag_from_single_header_without_ids(self):
+        """A sampling state of "d" sent on its own still carries the debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract({propagator.SINGLE_HEADER_KEY: "d"})
+
+        self.assertTrue(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_debug_flag_from_multi_header_without_ids(self):
+        """An x-b3-flags of "1" sent on its own still carries the debug flag."""
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract({propagator.FLAGS_KEY: "1"})
+
+        self.assertTrue(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_clears_a_debug_flag_left_by_an_earlier_carrier(self):
+        """The debug flag in the returned context comes from the carrier being extracted."""
+        propagator = self.get_propagator()
+        debug_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
+            }
+        )
+        new_ctx = propagator.extract(
+            {
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.SAMPLED_KEY: "1",
+            },
+            debug_ctx,
+        )
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+        new_carrier = {}
+        propagator.inject(new_carrier, context=new_ctx)
+
+        self.assertNotDebug(new_carrier)
+
+    def test_inject_debug_flag_received_without_ids(self):
+        """A debug flag received with no ids is re-propagated onto the span that follows it."""
+        propagator = self.get_propagator()
+        tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
+        token = attach(propagator.extract({propagator.SINGLE_HEADER_KEY: "d"}))
+        try:
+            new_carrier = {}
+            with tracer.start_as_current_span("server"):
+                propagator.inject(new_carrier)
+        finally:
+            detach(token)
+
+        self.assertDebug(new_carrier)
+
+    def test_inject_debug_flag_from_attached_context(self):
+        """The debug flag survives the extracted context being attached rather than passed."""
+        propagator = self.get_propagator()
+        token = attach(
+            propagator.extract(
+                {
+                    propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                    propagator.SPAN_ID_KEY: self.serialized_span_id,
+                    propagator.FLAGS_KEY: "1",
+                }
+            )
+        )
+        try:
+            new_carrier = {}
+            propagator.inject(new_carrier)
+        finally:
+            detach(token)
+
+        self.assertDebug(new_carrier)
 
     def test_derived_ctx_is_returned_for_success(self):
         """Ensure returned context is derived from the given context."""
@@ -400,6 +603,18 @@ class AbstractB3FormatTestCase:
             with tracer.start_as_current_span("child"):
                 propagator.inject({}, setter=mock_setter)
 
+        propagator.inject(
+            {},
+            context=propagator.extract(
+                {
+                    propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                    propagator.SPAN_ID_KEY: self.serialized_span_id,
+                    propagator.FLAGS_KEY: "1",
+                }
+            ),
+            setter=mock_setter,
+        )
+
         inject_fields = set()
 
         for call in mock_setter.mock_calls:
@@ -448,6 +663,14 @@ class TestB3MultiFormat(AbstractB3FormatTestCase, unittest.TestCase):
     def assertNotSampled(self, carrier):
         self.assertEqual(carrier[self.get_propagator().SAMPLED_KEY], "0")
 
+    def assertDebug(self, carrier):
+        propagator = self.get_propagator()
+        self.assertEqual(carrier[propagator.FLAGS_KEY], "1")
+        self.assertEqual(carrier[propagator.SAMPLED_KEY], "1")
+
+    def assertNotDebug(self, carrier):
+        self.assertNotIn(self.get_propagator().FLAGS_KEY, carrier)
+
 
 class TestB3SingleFormat(AbstractB3FormatTestCase, unittest.TestCase):
     @classmethod
@@ -463,3 +686,9 @@ class TestB3SingleFormat(AbstractB3FormatTestCase, unittest.TestCase):
 
     def assertNotSampled(self, carrier):
         self.assertEqual(carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "0")
+
+    def assertDebug(self, carrier):
+        self.assertEqual(carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "d")
+
+    def assertNotDebug(self, carrier):
+        self.assertNotEqual(carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "d")
