@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from opentelemetry.context import Context
-from opentelemetry.sdk.trace.sampling import Decision, Sampler, SamplingResult
+from opentelemetry.sdk.trace.sampling import Decision, Sampler, SamplingResult, _get_parent_trace_state
 from opentelemetry.trace import Link, SpanKind, TraceState
 from opentelemetry.util.types import Attributes
 
@@ -29,6 +29,8 @@ class _CompositeSampler(Sampler):
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
+        if trace_state is None:
+            trace_state = _get_parent_trace_state(parent_context)
         ot_trace_state = OtelTraceState.parse(trace_state)
 
         intent = self._delegate.sampling_intent(parent_context, name, kind, attributes, links, trace_state)
@@ -67,14 +69,23 @@ def _update_trace_state(
     ot_trace_state: OtelTraceState,
     intent: SamplingIntent,
 ) -> TraceState | None:
+    # The composite sampler owns `ot`; callbacks may update other tracestate keys.
     otts = ot_trace_state.serialize()
-    if not trace_state:
+    # Apply the sampler's own update even when there is no incoming tracestate,
+    # otherwise a composable sampler that stamps tracestate is silently skipped
+    # for every root span.
+    new_trace_state = intent.update_trace_state(trace_state or TraceState())
+    if not new_trace_state:
         if otts:
             return TraceState(((OTEL_TRACE_STATE_KEY, otts),))
         return None
-    new_trace_state = intent.update_trace_state(trace_state)
     if otts:
         return new_trace_state.update(OTEL_TRACE_STATE_KEY, otts)
+    # CompositeSampler removes `th` for dropped spans or unreliable thresholds.
+    # If nothing remains in `ot`, delete the incoming entry to avoid retaining a stale threshold.
+    # https://opentelemetry.io/docs/specs/otel/trace/sdk/#compositesampler
+    if OTEL_TRACE_STATE_KEY in new_trace_state:
+        return new_trace_state.delete(OTEL_TRACE_STATE_KEY)
     return new_trace_state
 
 
