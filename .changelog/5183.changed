@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: tighten `ReadableSpan.attributes` return type to non-Optional `Mapping`
