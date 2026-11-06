@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # required for pushing changes
+      pull-requests: write # required for adding labels to PRs
     steps:
       - run: |
           if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x-0\.[0-9]+bx$ ]]; then
