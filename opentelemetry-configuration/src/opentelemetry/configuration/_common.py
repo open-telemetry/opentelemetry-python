@@ -6,6 +6,7 @@ from __future__ import annotations
 import dataclasses
 import inspect
 import logging
+import math
 from collections.abc import Callable
 from fnmatch import fnmatchcase
 from typing import Any, Protocol, TypeVar
@@ -152,6 +153,21 @@ def _resolve_component(
         name, plugin_config = next(iter(config.additional_properties.items()))
         return load_entry_point(entry_point_group, name)(**(plugin_config or {}))
     raise ConfigurationError(f"No {component_type} type specified in config.")
+
+
+def _resolve_export_timeout(timeout: int | None) -> float | None:
+    """Convert a config export timeout in milliseconds to seconds.
+
+    Returns None if unset, letting the exporter read env vars. A value of 0
+    means no limit and maps to ``math.inf``.
+    """
+    match timeout:
+        case None:
+            return None
+        case 0:
+            return math.inf
+        case _:
+            return timeout / 1000.0
 
 
 def _parse_headers(
