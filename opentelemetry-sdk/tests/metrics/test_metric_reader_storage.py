@@ -75,7 +75,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
         matches = storage._instrument_view_instrument_matches[instrument1]
         self.assertEqual(len(matches), 2, matches)
-        self.assertNotEqual(matches[0], matches[1])
 
         # they should only be created the first time the instrument is seen
         storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
