@@ -111,7 +111,7 @@ class _ViewInstrumentMatch:
         # pylint: disable=protected-access
 
         result = (
-            self._name == other._name
+            self._name.lower() == other._name.lower()
             and self._instrument.unit == other._instrument.unit
             # The aggregation class is being used here instead of data point
             # type since they are functionally equivalent.

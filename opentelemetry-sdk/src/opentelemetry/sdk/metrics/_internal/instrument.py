@@ -85,7 +85,7 @@ class _Synchronous(_Instrument, Synchronous):
         unit = result["unit"]
         description = cast(str, result["description"])
 
-        self.name = name.lower()
+        self.name = name
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
@@ -124,7 +124,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         unit = result["unit"]
         description = cast(str, result["description"])
 
-        self.name = name.lower()
+        self.name = name
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
