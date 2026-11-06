@@ -1,0 +1,1 @@
+`opentelemetry-api`, `opentelemetry-sdk`: Add experimental span creation methods with `_SpanOptions`, preserving existing tracer implementations; the SDK validates span type and exposes it on `ReadableSpan._type`
