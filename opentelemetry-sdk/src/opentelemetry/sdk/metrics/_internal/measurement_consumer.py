@@ -3,6 +3,8 @@
 
 # pylint: disable=unused-import
 
+import os
+import weakref
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
 from logging import getLogger
@@ -67,6 +69,22 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             for reader in metric_readers
         }
         self._async_instruments: list[opentelemetry.sdk.metrics._internal.instrument._Asynchronous] = []
+
+        if hasattr(os, "register_at_fork"):
+            weak_at_fork = weakref.WeakMethod(self._at_fork_reinit)
+
+            def _after_in_child() -> None:
+                if at_fork := weak_at_fork():
+                    at_fork()
+
+            os.register_at_fork(after_in_child=_after_in_child)
+
+    def _at_fork_reinit(self) -> None:
+        # A lock held by another thread at fork time stays locked in the child.
+        self._lock = Lock()
+        for reader_storage in self._reader_storages.values():
+            # pylint: disable-next=protected-access
+            reader_storage._at_fork_reinit()
 
     def consume_measurement(self, measurement: Measurement) -> None:
         should_sample_exemplar = self._sdk_config.exemplar_filter.should_sample(
