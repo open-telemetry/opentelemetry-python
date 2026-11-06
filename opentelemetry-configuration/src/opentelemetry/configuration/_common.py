@@ -19,6 +19,13 @@ _logger = logging.getLogger(__name__)
 
 _CompressionT = TypeVar("_CompressionT")
 
+# Attribute where ``load_config_file`` stashes the mapping it parsed from the
+# configuration file, on the model it returns. The typed model cannot express
+# the difference between a key the file omitted and a key the file wrote as
+# null, since both end up as ``None``, so readers of schemaless nodes such as
+# ``instrumentation/development`` use this mapping instead.
+_RAW_MAPPING_ATTRIBUTE = "_raw_mapping"
+
 
 def _matches_glob(value: str, pattern: str) -> bool:
     """Match exactly or using the configuration schema's case-sensitive wildcards.
