@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add a shutdown lifecycle for samplers
