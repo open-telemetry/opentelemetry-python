@@ -140,48 +140,48 @@ class TestView(TestCase):
         self.assertEqual(view._name, "name")
         self.assertEqual(view._instrument_name, "instrument_name_1")
 
-        def test_attribute_keys_and_exclude_attribute_keys_overlap(self):
-            test_cases = [
-                {
-                    "name": "exact overlap",
-                    "attribute_keys": ("method", "status_code"),
-                    "exclude_attribute_keys": ("method", "user_id"),
-                },
-                {
-                    "name": "intersecting wildcard patterns",
-                    "attribute_keys": ("http.*",),
-                    "exclude_attribute_keys": ("*.status",),
-                },
-                {
-                    "name": "intersecting question mark patterns",
-                    "attribute_keys": ("a?",),
-                    "exclude_attribute_keys": ("?b",),
-                },
-                {
-                    "name": "literal brackets do not overlap",
-                    "attribute_keys": ("header0",),
-                    "exclude_attribute_keys": ("header[0]",),
-                },
-        ]
+    def test_attribute_keys_and_exclude_attribute_keys_overlap(self):
+        test_cases = [
+            {
+                "name": "exact overlap",
+                "attribute_keys": ("method", "status_code"),
+                "exclude_attribute_keys": ("method", "user_id"),
+            },
+            {
+                "name": "intersecting wildcard patterns",
+                "attribute_keys": ("http.*",),
+                "exclude_attribute_keys": ("*.status",),
+            },
+            {
+                "name": "intersecting question mark patterns",
+                "attribute_keys": ("a?",),
+                "exclude_attribute_keys": ("?b",),
+            },
+            {
+                "name": "literal brackets do not overlap",
+                "attribute_keys": ("header0",),
+                "exclude_attribute_keys": ("header[0]",),
+            },
+    ]
 
-        for case in test_cases:
-            with self.subTest(case=case["name"]):
-                view = View(
-                    instrument_name="instrument_name",
-                    attribute_keys=case["attribute_keys"],
-                    exclude_attribute_keys=case[
-                        "exclude_attribute_keys"
-                    ],
-                )
+    for case in test_cases:
+        with self.subTest(case=case["name"]):
+            view = View(
+                instrument_name="instrument_name",
+                attribute_keys=case["attribute_keys"],
+                exclude_attribute_keys=case[
+                    "exclude_attribute_keys"
+                ],
+            )
 
-                self.assertEqual(
-                    view._attribute_keys,
-                    frozenset(case["attribute_keys"]),
-                )
-                self.assertEqual(
-                    view._exclude_attribute_keys,
-                    frozenset(case["exclude_attribute_keys"]),
-                )
+            self.assertEqual(
+                view._attribute_keys,
+                frozenset(case["attribute_keys"]),
+            )
+            self.assertEqual(
+                view._exclude_attribute_keys,
+                frozenset(case["exclude_attribute_keys"]),
+            )
 
     def test_attribute_key_matching_semantics(self):
         test_cases = [
