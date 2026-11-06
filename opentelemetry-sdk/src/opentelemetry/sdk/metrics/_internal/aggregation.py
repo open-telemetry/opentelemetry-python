@@ -28,6 +28,7 @@ from opentelemetry.metrics import (
     UpDownCounter,
     _Gauge,
 )
+from opentelemetry.metrics._internal.instrument import _HistogramAdvisory
 from opentelemetry.sdk.metrics._internal.exemplar import (
     Exemplar,
     ExemplarReservoirBuilder,
@@ -427,6 +428,16 @@ _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES: Sequence[float] = (
     7500.0,
     10000.0,
 )
+
+
+def _explicit_bucket_boundaries_from_advisory(
+    instrument: _Instrument,
+) -> Sequence[float] | None:
+    """Returns the advised boundaries, or `None` for instruments without a
+    histogram advisory, such as non-histogram instruments selected by a view."""
+
+    advisory = getattr(instrument, "_advisory", None)
+    return advisory.explicit_bucket_boundaries if isinstance(advisory, _HistogramAdvisory) else None
 
 
 class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
@@ -1164,7 +1175,7 @@ class DefaultAggregation(Aggregation):
             )
 
         if isinstance(instrument, Histogram):
-            boundaries = instrument._advisory.explicit_bucket_boundaries
+            boundaries = _explicit_bucket_boundaries_from_advisory(instrument)
             return _ExplicitBucketHistogramAggregation(
                 attributes,
                 reservoir_builder=reservoir_factory(_ExplicitBucketHistogramAggregation),
@@ -1277,9 +1288,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         if self._boundaries is not None:
             boundaries = self._boundaries
         else:
-            # guard for usage with instruments without advisory
-            advisory = getattr(instrument, "_advisory", None)
-            boundaries = advisory.explicit_bucket_boundaries if advisory is not None else None
+            boundaries = _explicit_bucket_boundaries_from_advisory(instrument)
 
         return _ExplicitBucketHistogramAggregation(
             attributes,

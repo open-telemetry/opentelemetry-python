@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# pylint: disable=too-many-ancestors
+# pylint: disable=too-many-ancestors,too-many-lines
 
 """
 The OpenTelemetry metrics API  describes the classes used to generate
@@ -44,6 +44,7 @@ from opentelemetry.metrics._internal.instrument import (
     Counter,
     Gauge,
     Histogram,
+    InstrumentOptions,
     NoOpCounter,
     NoOpGauge,
     NoOpHistogram,
@@ -55,7 +56,9 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
-    _MetricsHistogramAdvisory,
+    _histogram_advisory_from_options,
+    _instrument_advisory_from_options,
+    _InstrumentAdvisory,
     _ProxyCounter,
     _ProxyGauge,
     _ProxyHistogram,
@@ -174,7 +177,7 @@ class _InstrumentRegistrationStatus:
     instrument_id: str
     already_registered: bool
     conflict: bool
-    current_advisory: _MetricsHistogramAdvisory | None
+    current_advisory: _InstrumentAdvisory | None
 
 
 class Meter(ABC):
@@ -194,7 +197,7 @@ class Meter(ABC):
         self._name = name
         self._version = version
         self._schema_url = schema_url
-        self._instrument_ids: dict[str, _MetricsHistogramAdvisory | None] = {}
+        self._instrument_ids: dict[str, _InstrumentAdvisory | None] = {}
         self._instrument_ids_lock = Lock()
 
     @property
@@ -224,7 +227,7 @@ class Meter(ABC):
         type_: type,
         unit: str,
         description: str,
-        advisory: _MetricsHistogramAdvisory | None = None,
+        advisory: _InstrumentAdvisory | None = None,
     ) -> _InstrumentRegistrationStatus:
         """
         Register an instrument with the name, type, unit and description as
@@ -529,6 +532,193 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
+    def create_counter_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> Counter:
+        """Creates a `Counter` instrument with extensible options
+
+        The default implementation calls :meth:`create_counter` and ignores
+        ``options``. Implementations supporting these options should override
+        this method.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            options: Additional instrument creation options. Unsupported options
+                are ignored.
+        """
+        return self.create_counter(name, unit, description)
+
+    def create_up_down_counter_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> UpDownCounter:
+        """Creates an `UpDownCounter` instrument with extensible options
+
+        The default implementation calls :meth:`create_up_down_counter` and ignores
+        ``options``. Implementations supporting these options should override
+        this method.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            options: Additional instrument creation options. Unsupported options
+                are ignored.
+        """
+        return self.create_up_down_counter(name, unit, description)
+
+    def create_histogram_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        options: InstrumentOptions | None = None,
+    ) -> Histogram:
+        """Creates a :class:`~opentelemetry.metrics.Histogram` instrument with extensible options
+
+        The default implementation calls :meth:`create_histogram` and ignores
+        ``options``. Implementations supporting these options should override
+        this method.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            explicit_bucket_boundaries_advisory: Suggested bucket boundaries for this histogram.
+            options: Additional instrument creation options. Unsupported options
+                are ignored.
+        """
+        return self.create_histogram(
+            name,
+            unit,
+            description,
+            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
+        )
+
+    def create_gauge_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> Gauge:
+        """Creates a ``Gauge`` instrument with extensible options
+
+        The default implementation calls :meth:`create_gauge` and ignores
+        ``options``. Implementations supporting these options should override
+        this method.
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            options: Additional instrument creation options. Unsupported options
+                are ignored.
+        """
+        return self.create_gauge(name, unit, description)
+
+    def create_observable_counter_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableCounter:
+        """Creates an `ObservableCounter` instrument with extensible options
+
+        The default implementation calls :meth:`create_observable_counter` and
+        ignores ``options``. Implementations supporting these options should
+        override this method.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`. Alternatively, can be a generator that yields iterables
+                of :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            options: Additional instrument creation options. Unsupported options
+                are ignored.
+        """
+        return self.create_observable_counter(name, callbacks, unit, description)
+
+    def create_observable_gauge_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableGauge:
+        """Creates an `ObservableGauge` instrument with extensible options
+
+        The default implementation calls :meth:`create_observable_gauge` and
+        ignores ``options``. Implementations supporting these options should
+        override this method.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`. Alternatively, can be a generator that yields iterables
+                of :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            options: Additional instrument creation options. Unsupported options
+                are ignored.
+        """
+        return self.create_observable_gauge(name, callbacks, unit, description)
+
+    def create_observable_up_down_counter_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableUpDownCounter:
+        """Creates an `ObservableUpDownCounter` instrument with extensible options
+
+        The default implementation calls :meth:`create_observable_up_down_counter` and
+        ignores ``options``. Implementations supporting these options should
+        override this method.
+
+        Args:
+            name: The name of the instrument to be created
+            callbacks: A sequence of callbacks that return an iterable of
+                :class:`~opentelemetry.metrics.Observation`. Alternatively, can be a generator that yields iterables
+                of :class:`~opentelemetry.metrics.Observation`.
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+            options: Additional instrument creation options. Unsupported options
+                are ignored.
+        """
+        return self.create_observable_up_down_counter(name, callbacks, unit, description)
+
 
 class _ProxyMeter(Meter):
     def __init__(
@@ -570,6 +760,21 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    def create_counter_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> Counter:
+        with self._lock:
+            if self._real_meter:
+                return self._real_meter.create_counter_with_options(name, unit, description, options=options)
+            proxy = _ProxyCounter(name, unit, description, options=options)
+            self._instruments.append(proxy)
+            return proxy
+
     def create_up_down_counter(
         self,
         name: str,
@@ -583,6 +788,21 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    def create_up_down_counter_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> UpDownCounter:
+        with self._lock:
+            if self._real_meter:
+                return self._real_meter.create_up_down_counter_with_options(name, unit, description, options=options)
+            proxy = _ProxyUpDownCounter(name, unit, description, options=options)
+            self._instruments.append(proxy)
+            return proxy
+
     def create_observable_counter(
         self,
         name: str,
@@ -592,8 +812,35 @@ class _ProxyMeter(Meter):
     ) -> ObservableCounter:
         with self._lock:
             if self._real_meter:
-                return self._real_meter.create_observable_counter(name, callbacks, unit, description)
+                return self._real_meter.create_observable_counter(
+                    name,
+                    callbacks,
+                    unit,
+                    description,
+                )
             proxy = _ProxyObservableCounter(name, callbacks, unit=unit, description=description)
+            self._instruments.append(proxy)
+            return proxy
+
+    def create_observable_counter_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableCounter:
+        with self._lock:
+            if self._real_meter:
+                return self._real_meter.create_observable_counter_with_options(
+                    name,
+                    callbacks,
+                    unit,
+                    description,
+                    options=options,
+                )
+            proxy = _ProxyObservableCounter(name, callbacks, unit=unit, description=description, options=options)
             self._instruments.append(proxy)
             return proxy
 
@@ -617,6 +864,28 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    def create_histogram_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        options: InstrumentOptions | None = None,
+    ) -> Histogram:
+        with self._lock:
+            if self._real_meter:
+                return self._real_meter.create_histogram_with_options(
+                    name,
+                    unit,
+                    description,
+                    explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
+                    options=options,
+                )
+            proxy = _ProxyHistogram(name, unit, description, explicit_bucket_boundaries_advisory, options=options)
+            self._instruments.append(proxy)
+            return proxy
+
     def create_gauge(
         self,
         name: str,
@@ -630,6 +899,21 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    def create_gauge_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> Gauge:
+        with self._lock:
+            if self._real_meter:
+                return self._real_meter.create_gauge_with_options(name, unit, description, options=options)
+            proxy = _ProxyGauge(name, unit, description, options=options)
+            self._instruments.append(proxy)
+            return proxy
+
     def create_observable_gauge(
         self,
         name: str,
@@ -639,8 +923,35 @@ class _ProxyMeter(Meter):
     ) -> ObservableGauge:
         with self._lock:
             if self._real_meter:
-                return self._real_meter.create_observable_gauge(name, callbacks, unit, description)
+                return self._real_meter.create_observable_gauge(
+                    name,
+                    callbacks,
+                    unit,
+                    description,
+                )
             proxy = _ProxyObservableGauge(name, callbacks, unit=unit, description=description)
+            self._instruments.append(proxy)
+            return proxy
+
+    def create_observable_gauge_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableGauge:
+        with self._lock:
+            if self._real_meter:
+                return self._real_meter.create_observable_gauge_with_options(
+                    name,
+                    callbacks,
+                    unit,
+                    description,
+                    options=options,
+                )
+            proxy = _ProxyObservableGauge(name, callbacks, unit=unit, description=description, options=options)
             self._instruments.append(proxy)
             return proxy
 
@@ -663,6 +974,28 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    def create_observable_up_down_counter_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableUpDownCounter:
+        with self._lock:
+            if self._real_meter:
+                return self._real_meter.create_observable_up_down_counter_with_options(
+                    name,
+                    callbacks,
+                    unit,
+                    description,
+                    options=options,
+                )
+            proxy = _ProxyObservableUpDownCounter(name, callbacks, unit=unit, description=description, options=options)
+            self._instruments.append(proxy)
+            return proxy
+
 
 class NoOpMeter(Meter):
     """The default Meter used when no Meter implementation is available.
@@ -677,7 +1010,24 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> Counter:
         """Returns a no-op Counter."""
-        status = self._register_instrument(name, NoOpCounter, unit, description)
+        return self.create_counter_with_options(name, unit, description)
+
+    def create_counter_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> Counter:
+        """Returns a no-op Counter."""
+        status = self._register_instrument(
+            name,
+            NoOpCounter,
+            unit,
+            description,
+            _instrument_advisory_from_options(options),
+        )
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -686,7 +1036,6 @@ class NoOpMeter(Meter):
                 description,
                 status,
             )
-
         return NoOpCounter(name, unit=unit, description=description)
 
     def create_gauge(
@@ -696,7 +1045,24 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> Gauge:
         """Returns a no-op Gauge."""
-        status = self._register_instrument(name, NoOpGauge, unit, description)
+        return self.create_gauge_with_options(name, unit, description)
+
+    def create_gauge_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> Gauge:
+        """Returns a no-op Gauge."""
+        status = self._register_instrument(
+            name,
+            NoOpGauge,
+            unit,
+            description,
+            _instrument_advisory_from_options(options),
+        )
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -714,7 +1080,24 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
-        status = self._register_instrument(name, NoOpUpDownCounter, unit, description)
+        return self.create_up_down_counter_with_options(name, unit, description)
+
+    def create_up_down_counter_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> UpDownCounter:
+        """Returns a no-op UpDownCounter."""
+        status = self._register_instrument(
+            name,
+            NoOpUpDownCounter,
+            unit,
+            description,
+            _instrument_advisory_from_options(options),
+        )
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -733,7 +1116,25 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
-        status = self._register_instrument(name, NoOpObservableCounter, unit, description)
+        return self.create_observable_counter_with_options(name, callbacks, unit, description)
+
+    def create_observable_counter_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableCounter:
+        """Returns a no-op ObservableCounter."""
+        status = self._register_instrument(
+            name,
+            NoOpObservableCounter,
+            unit,
+            description,
+            _instrument_advisory_from_options(options),
+        )
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -758,12 +1159,29 @@ class NoOpMeter(Meter):
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> Histogram:
         """Returns a no-op Histogram."""
+        return self.create_histogram_with_options(
+            name,
+            unit,
+            description,
+            explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
+        )
+
+    def create_histogram_with_options(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+        *,
+        explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        options: InstrumentOptions | None = None,
+    ) -> Histogram:
+        """Returns a no-op Histogram."""
         status = self._register_instrument(
             name,
             NoOpHistogram,
             unit,
             description,
-            _MetricsHistogramAdvisory(explicit_bucket_boundaries=explicit_bucket_boundaries_advisory),
+            _histogram_advisory_from_options(options, explicit_bucket_boundaries_advisory),
         )
         if status.conflict:
             self._log_instrument_registration_conflict(
@@ -788,7 +1206,25 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
-        status = self._register_instrument(name, NoOpObservableGauge, unit, description)
+        return self.create_observable_gauge_with_options(name, callbacks, unit, description)
+
+    def create_observable_gauge_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableGauge:
+        """Returns a no-op ObservableGauge."""
+        status = self._register_instrument(
+            name,
+            NoOpObservableGauge,
+            unit,
+            description,
+            _instrument_advisory_from_options(options),
+        )
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
@@ -812,7 +1248,25 @@ class NoOpMeter(Meter):
         description: str = "",
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
-        status = self._register_instrument(name, NoOpObservableUpDownCounter, unit, description)
+        return self.create_observable_up_down_counter_with_options(name, callbacks, unit, description)
+
+    def create_observable_up_down_counter_with_options(
+        self,
+        name: str,
+        callbacks: Sequence[CallbackT] | None = None,
+        unit: str = "",
+        description: str = "",
+        *,
+        options: InstrumentOptions | None = None,
+    ) -> ObservableUpDownCounter:
+        """Returns a no-op ObservableUpDownCounter."""
+        status = self._register_instrument(
+            name,
+            NoOpObservableUpDownCounter,
+            unit,
+            description,
+            _instrument_advisory_from_options(options),
+        )
         if status.conflict:
             self._log_instrument_registration_conflict(
                 name,
