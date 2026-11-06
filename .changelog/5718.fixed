@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: add return type annotations to `ConsoleLogRecordExporter.__init__`, `export`, and `shutdown`
