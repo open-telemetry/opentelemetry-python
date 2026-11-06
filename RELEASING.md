@@ -123,7 +123,8 @@ Users can cryptographically verify that a downloaded wheel or sdist was built by
 ```bash
 gh attestation verify <wheel-or-sdist-file> \
   --repo open-telemetry/opentelemetry-python \
-  --signer-workflow open-telemetry/opentelemetry-python/.github/workflows/release.yml
+  --signer-workflow open-telemetry/opentelemetry-python/.github/workflows/release.yml \
+  --source-digest "$(git rev-parse v<version>^{commit})"
 ```
 
 ## Troubleshooting
