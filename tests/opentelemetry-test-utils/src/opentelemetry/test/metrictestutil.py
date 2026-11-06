@@ -57,7 +57,7 @@ def _generate_sum(
     )
 
 
-def _generate_gauge(name, value, attributes=None, description=None, unit=None) -> Metric:
+def _generate_gauge(name, value, attributes=None, description=None, unit=None, start_time_unix_nano=None) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})
     return _generate_metric(
@@ -66,7 +66,7 @@ def _generate_gauge(name, value, attributes=None, description=None, unit=None) -
             data_points=[
                 NumberDataPoint(
                     attributes=attributes,
-                    start_time_unix_nano=None,
+                    start_time_unix_nano=start_time_unix_nano,
                     time_unix_nano=1641946016139533244,
                     value=value,
                 )

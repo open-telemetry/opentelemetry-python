@@ -21,6 +21,7 @@ from opentelemetry.sdk.metrics.export import (
 )
 from tests import (
     SPAN_ID,
+    START_TIME,
     TIME,
     TRACE_ID,
     assert_proto_json_equal,
@@ -80,6 +81,7 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
 
                 dp = encoded.gauge.data_points[0]
                 self.assertIsNotNone(dp.time_unix_nano)
+                self.assertEqual(dp.start_time_unix_nano, START_TIME)
                 if is_int:
                     self.assertEqual(dp.as_int, value)
                 else:
