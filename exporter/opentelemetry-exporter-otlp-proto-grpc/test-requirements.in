@@ -4,6 +4,8 @@ packaging>=24.0
 pluggy>=1.6.0
 protobuf>=5.29.6
 pytest>=9.0.3
+# typing-extensions < 4.14.0 does not import on Python 3.15
+typing-extensions>=4.14.0 ; python_version >= '3.15'
 -e opentelemetry-api
 -e tests/opentelemetry-test-utils
 -e exporter/opentelemetry-exporter-otlp-proto-common

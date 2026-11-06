@@ -54,7 +54,9 @@ grpcio==1.63.2 ; python_full_version < '3.13'
     # via opentelemetry-exporter-otlp-proto-grpc
 grpcio==1.66.2 ; python_full_version == '3.13.*'
     # via opentelemetry-exporter-otlp-proto-grpc
-grpcio==1.75.1 ; python_full_version >= '3.14'
+grpcio==1.75.1 ; python_full_version == '3.14.*'
+    # via opentelemetry-exporter-otlp-proto-grpc
+grpcio==1.84.0 ; python_full_version >= '3.15'
     # via opentelemetry-exporter-otlp-proto-grpc
 idna==2.5
     # via requests
@@ -89,13 +91,23 @@ tomli==1.0.0 ; python_full_version < '3.11'
     # via pytest
 typing-extensions==4.6.0 ; python_full_version < '3.14'
     # via
+    #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   asgiref
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-typing-extensions==4.12.0 ; python_full_version >= '3.14'
+typing-extensions==4.12.0 ; python_full_version == '3.14.*'
     # via
+    #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
+    #   grpcio
+    #   opentelemetry-api
+    #   opentelemetry-exporter-otlp-proto-grpc
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+typing-extensions==4.14.0 ; python_full_version >= '3.15'
+    # via
+    #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   grpcio
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-grpc
