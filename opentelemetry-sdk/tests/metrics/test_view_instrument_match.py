@@ -10,6 +10,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.context import Context
+from opentelemetry.metrics._internal.instrument import _MetricsAdvisory
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _hash_attributes,
     _ViewInstrumentMatch,
@@ -171,8 +172,8 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             {_hash_attributes({}): self.mock_created_aggregation},
         )
 
-        # Test that a drop aggregation is handled in the same way as any
-        # other aggregation.
+        # Test that a drop aggregation short-circuits without creating
+        # per-attribute aggregations.
         drop_aggregation = DropAggregation()
 
         view_instrument_match = _ViewInstrumentMatch(
@@ -185,6 +186,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             instrument=instrument1,
             instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
+        self.assertIsInstance(view_instrument_match._aggregation, _DropAggregation)
         view_instrument_match.consume_measurement(
             Measurement(
                 value=0,
@@ -194,10 +196,54 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
                 attributes=None,
             )
         )
-        self.assertIsInstance(
-            view_instrument_match._attributes_aggregation[_hash_attributes({})],
-            _DropAggregation,
+        self.assertEqual(view_instrument_match._attributes_aggregation, {})
+        self.assertIsNone(view_instrument_match.collect(AggregationTemporality.CUMULATIVE, 0))
+
+    def test_disabled_stream_uses_drop_aggregation(self):
+        cases = (
+            (
+                "view_enabled_false",
+                View(instrument_name="instrument", enabled=False),
+                _Counter(
+                    name="instrument",
+                    instrumentation_scope=Mock(),
+                    measurement_consumer=Mock(),
+                ),
+            ),
+            (
+                "opt_in_default_disabled",
+                View(instrument_name="instrument"),
+                _Counter(
+                    name="instrument",
+                    instrumentation_scope=Mock(),
+                    measurement_consumer=Mock(),
+                    _advisory=_MetricsAdvisory(opt_in=True),
+                ),
+            ),
         )
+        for case_name, view, instrument in cases:
+            with self.subTest(case=case_name):
+                match = _ViewInstrumentMatch(
+                    view=view,
+                    instrument=instrument,
+                    instrument_class_aggregation={_Counter: DefaultAggregation()},
+                )
+                self.assertIsInstance(match._aggregation, _DropAggregation)
+
+                for idx in range(5):
+                    match.consume_measurement(
+                        Measurement(
+                            value=1,
+                            time_unix_nano=time_ns(),
+                            instrument=instrument,
+                            context=Context(),
+                            attributes={"key": f"val_{idx}"},
+                        )
+                    )
+
+                self.assertEqual(match._attributes_aggregation, {})
+                self.assertIsNone(match.collect(AggregationTemporality.CUMULATIVE, 0))
+                self.assertIsNone(match.collect(AggregationTemporality.DELTA, 0))
 
     def test_collect(self):
         instrument1 = _Counter(
