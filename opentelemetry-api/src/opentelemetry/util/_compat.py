@@ -30,8 +30,8 @@ def _signature(fn: Callable[..., Any]) -> inspect.Signature:
 def make_signature_compat_wrapper(fn: Callable[..., Any]) -> Callable[..., Any] | None:
     """Wrap ``fn`` so that it also accepts, and ignores, unknown keyword arguments.
 
-    The wrapper has ``fn``'s signature plus a trailing ``**_kwargs``. It passes
-    arguments to ``fn`` by name rather than through ``*args``/``**kwargs``,
+    The wrapper has ``fn``'s signature plus a trailing ``**_kwargs``. It forwards
+    each declared parameter individually rather than through ``*args``/``**kwargs``,
     which keeps the forwarding call cheap.
 
     Returns ``None`` if ``fn`` already accepts ``**kwargs``.
@@ -71,13 +71,13 @@ def make_signature_compat_wrapper(fn: Callable[..., Any]) -> Callable[..., Any] 
         def _compat_fn{definition}:
             return {fn_name}({", ".join(call_parts)})
         """)
-    # The only caller-controlled text in ``src`` is parameter names, which
-    # inspect.Parameter guarantees are identifiers (defaults and annotations, whose
-    # repr would be arbitrary text, were stripped above).
     filename = f"<compat {fn.__module__}.{fn.__qualname__}>"
     # Make the generated source visible in tracebacks
     linecache.cache[filename] = (len(src), None, src.splitlines(True), filename)
     namespace: dict[str, Any] = {}
+    # The only caller-controlled text in ``src`` is parameter names, which
+    # inspect.Parameter guarantees are identifiers (defaults and annotations, whose
+    # repr would be arbitrary text, were stripped above).
     exec(  # noqa: S102  # pylint: disable=exec-used
         compile(src, filename, "exec"),
         {"__builtins__": {}, fn_name: fn},

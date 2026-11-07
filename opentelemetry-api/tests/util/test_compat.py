@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pyright: reportIncompatibleMethodOverride=false
-# pylint: disable=arguments-differ,unexpected-keyword-arg,missing-kwoa,no-self-use,too-many-public-methods,too-many-function-args
+# pylint: disable=arguments-differ,unexpected-keyword-arg,missing-kwoa,no-self-use,too-many-function-args
 
 import linecache
 import sys
