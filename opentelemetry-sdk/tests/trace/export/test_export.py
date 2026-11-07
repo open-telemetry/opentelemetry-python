@@ -8,6 +8,7 @@ import time
 import unittest
 from unittest import mock
 
+from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.metrics import NoOpMeterProvider
@@ -20,9 +21,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics._internal.instrument import ObservableUpDownCounter
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    InMemoryMetricReader,
+)
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export import logger
+from opentelemetry.test.test_base import reset_metrics_globals
 
 # pylint: disable=protected-access
 
@@ -543,6 +549,75 @@ class TestBatchSpanProcessor(unittest.TestCase):
         self.assertTrue(queue_size_data_point.attributes["otel.component.name"].startswith("batching_span_processor/"))
 
         provider.shutdown()
+
+    @mock.patch.dict(os.environ, {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    def test_queue_capacity_with_proxy_meter_provider(self):
+        reset_metrics_globals()
+        exporter = mock.MagicMock()
+        span_processor = export.BatchSpanProcessor(
+            exporter,
+            max_queue_size=1024,
+            max_export_batch_size=256,
+        )
+
+        metric_reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+        metrics_api.set_meter_provider(meter_provider)
+
+        metrics_data = metric_reader.get_metrics_data()
+        scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
+        capacity_metric = next(
+            (m for m in scope_metrics.metrics if m.name == "otel.sdk.processor.span.queue.capacity"),
+            None,
+        )
+        self.assertIsNotNone(capacity_metric)
+        data_point = capacity_metric.data.data_points[0]
+        self.assertEqual(data_point.value, 1024)
+        self.assertEqual(
+            data_point.attributes["otel.component.type"],
+            "batching_span_processor",
+        )
+        self.assertTrue(data_point.attributes["otel.component.name"].startswith("batching_span_processor/"))
+        span_processor.shutdown()
+        reset_metrics_globals()
+
+    @mock.patch.dict(os.environ, {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    def test_queue_capacity_delta_temporality(self):
+        metric_reader = InMemoryMetricReader(
+            preferred_temporality={
+                ObservableUpDownCounter: AggregationTemporality.DELTA,
+            }
+        )
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+        exporter = mock.MagicMock()
+        span_processor = export.BatchSpanProcessor(
+            exporter,
+            meter_provider=meter_provider,
+            max_queue_size=1024,
+            max_export_batch_size=512,
+        )
+
+        # First collection
+        metrics_data_1 = metric_reader.get_metrics_data()
+        scope_metrics_1 = metrics_data_1.resource_metrics[0].scope_metrics[0]
+        capacity_metric_1 = next(
+            (m for m in scope_metrics_1.metrics if m.name == "otel.sdk.processor.span.queue.capacity"),
+            None,
+        )
+        self.assertIsNotNone(capacity_metric_1)
+        self.assertEqual(capacity_metric_1.data.data_points[0].value, 1024)
+
+        # Second collection - verify capacity is not lost under delta temporality
+        metrics_data_2 = metric_reader.get_metrics_data()
+        scope_metrics_2 = metrics_data_2.resource_metrics[0].scope_metrics[0]
+        capacity_metric_2 = next(
+            (m for m in scope_metrics_2.metrics if m.name == "otel.sdk.processor.span.queue.capacity"),
+            None,
+        )
+        self.assertIsNotNone(capacity_metric_2)
+        self.assertEqual(capacity_metric_2.data.data_points[0].value, 0)
+
+        span_processor.shutdown()
 
 
 class TestConsoleSpanExporter(unittest.TestCase):
