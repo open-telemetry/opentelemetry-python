@@ -21,7 +21,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics._internal.instrument import ObservableUpDownCounter
+from opentelemetry.sdk.metrics._internal.instrument import (
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
@@ -553,15 +556,18 @@ class TestBatchSpanProcessor(unittest.TestCase):
     @mock.patch.dict(os.environ, {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_queue_capacity_with_proxy_meter_provider(self):
         reset_metrics_globals()
+        self.addCleanup(reset_metrics_globals)
         exporter = mock.MagicMock()
         span_processor = export.BatchSpanProcessor(
             exporter,
             max_queue_size=1024,
             max_export_batch_size=256,
         )
+        self.addCleanup(span_processor.shutdown)
 
         metric_reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[metric_reader])
+        self.addCleanup(meter_provider.shutdown)
         metrics_api.set_meter_provider(meter_provider)
 
         metrics_data = metric_reader.get_metrics_data()
@@ -578,17 +584,19 @@ class TestBatchSpanProcessor(unittest.TestCase):
             "batching_span_processor",
         )
         self.assertTrue(data_point.attributes["otel.component.name"].startswith("batching_span_processor/"))
-        span_processor.shutdown()
-        reset_metrics_globals()
 
     @mock.patch.dict(os.environ, {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_queue_capacity_delta_temporality(self):
+        # When MetricReader uses Delta aggregation temporality for UpDownCounter (#5891),
+        # the capacity metric is not dropped on subsequent collections because it is now
+        # an asynchronous ObservableUpDownCounter (which retains cumulative temporality by default).
         metric_reader = InMemoryMetricReader(
             preferred_temporality={
-                ObservableUpDownCounter: AggregationTemporality.DELTA,
+                UpDownCounter: AggregationTemporality.DELTA,
             }
         )
         meter_provider = MeterProvider(metric_readers=[metric_reader])
+        self.addCleanup(meter_provider.shutdown)
         exporter = mock.MagicMock()
         span_processor = export.BatchSpanProcessor(
             exporter,
@@ -596,6 +604,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             max_queue_size=1024,
             max_export_batch_size=512,
         )
+        self.addCleanup(span_processor.shutdown)
 
         # First collection
         metrics_data_1 = metric_reader.get_metrics_data()
@@ -607,7 +616,49 @@ class TestBatchSpanProcessor(unittest.TestCase):
         self.assertIsNotNone(capacity_metric_1)
         self.assertEqual(capacity_metric_1.data.data_points[0].value, 1024)
 
-        # Second collection - verify capacity is not lost under delta temporality
+        # Second collection - verify capacity metric is still reported with full capacity
+        metrics_data_2 = metric_reader.get_metrics_data()
+        scope_metrics_2 = metrics_data_2.resource_metrics[0].scope_metrics[0]
+        capacity_metric_2 = next(
+            (m for m in scope_metrics_2.metrics if m.name == "otel.sdk.processor.span.queue.capacity"),
+            None,
+        )
+        self.assertIsNotNone(capacity_metric_2)
+        self.assertEqual(capacity_metric_2.data.data_points[0].value, 1024)
+
+    @mock.patch.dict(os.environ, {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    def test_queue_capacity_observable_delta_temporality(self):
+        # When MetricReader explicitly configures ObservableUpDownCounter to DELTA,
+        # _SumAggregation converts cumulative observations to deltas (value - previous).
+        # Cycle 1 delta: 1024 - 0 = 1024.
+        # Cycle 2 delta: 1024 - 1024 = 0 (capacity unchanged between collections).
+        metric_reader = InMemoryMetricReader(
+            preferred_temporality={
+                ObservableUpDownCounter: AggregationTemporality.DELTA,
+            }
+        )
+        meter_provider = MeterProvider(metric_readers=[metric_reader])
+        self.addCleanup(meter_provider.shutdown)
+        exporter = mock.MagicMock()
+        span_processor = export.BatchSpanProcessor(
+            exporter,
+            meter_provider=meter_provider,
+            max_queue_size=1024,
+            max_export_batch_size=512,
+        )
+        self.addCleanup(span_processor.shutdown)
+
+        # First collection
+        metrics_data_1 = metric_reader.get_metrics_data()
+        scope_metrics_1 = metrics_data_1.resource_metrics[0].scope_metrics[0]
+        capacity_metric_1 = next(
+            (m for m in scope_metrics_1.metrics if m.name == "otel.sdk.processor.span.queue.capacity"),
+            None,
+        )
+        self.assertIsNotNone(capacity_metric_1)
+        self.assertEqual(capacity_metric_1.data.data_points[0].value, 1024)
+
+        # Second collection - delta of unchanged capacity is 0
         metrics_data_2 = metric_reader.get_metrics_data()
         scope_metrics_2 = metrics_data_2.resource_metrics[0].scope_metrics[0]
         capacity_metric_2 = next(
@@ -616,8 +667,6 @@ class TestBatchSpanProcessor(unittest.TestCase):
         )
         self.assertIsNotNone(capacity_metric_2)
         self.assertEqual(capacity_metric_2.data.data_points[0].value, 0)
-
-        span_processor.shutdown()
 
 
 class TestConsoleSpanExporter(unittest.TestCase):
