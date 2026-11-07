@@ -642,6 +642,8 @@ class MeterProvider(APIMeterProvider):
             self._measurement_consumer.add_metric_reader(metric_reader)
             # pylint: disable-next=protected-access
             metric_reader._set_collect_callback(self._measurement_consumer.collect)
+            # pylint: disable-next=protected-access
+            metric_reader._set_meter_provider(self)
             self._all_metric_readers.add(metric_reader)
 
     def remove_metric_reader(
