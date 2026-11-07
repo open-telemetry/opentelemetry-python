@@ -574,6 +574,34 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             503,
         )
 
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    @mocketize
+    def test_success_records_response_status_code(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200)
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT, meter_provider=self.meter_provider)
+
+        self.assertEqual(exporter.export([_make_log_record()]), LogRecordExportResult.SUCCESS)
+
+        scope_metrics = self.metric_reader.get_metrics_data().resource_metrics[0].scope_metrics[0]
+        attrs = {m.name: m.data.data_points[0].attributes for m in scope_metrics.metrics}
+        self.assertEqual(attrs["otel.sdk.exporter.operation.duration"]["http.response.status_code"], 200)
+        self.assertNotIn("error.type", attrs["otel.sdk.exporter.operation.duration"])
+        self.assertNotIn("error.type", attrs["otel.sdk.exporter.log.exported"])
+
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    @mocketize
+    def test_http_error_status_records_error_type(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=400)
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT, meter_provider=self.meter_provider)
+
+        self.assertEqual(exporter.export([_make_log_record()]), LogRecordExportResult.FAILURE)
+
+        scope_metrics = self.metric_reader.get_metrics_data().resource_metrics[0].scope_metrics[0]
+        attrs = {m.name: m.data.data_points[0].attributes for m in scope_metrics.metrics}
+        self.assertEqual(attrs["otel.sdk.exporter.operation.duration"]["error.type"], "400")
+        self.assertEqual(attrs["otel.sdk.exporter.operation.duration"]["http.response.status_code"], 400)
+        self.assertEqual(attrs["otel.sdk.exporter.log.exported"]["error.type"], "400")
+
     @mocketize
     def test_export_after_shutdown(self):
         exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
