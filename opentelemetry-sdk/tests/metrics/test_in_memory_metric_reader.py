@@ -5,10 +5,17 @@
 
 from time import sleep
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.metrics import Observation
+from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
 from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics._internal.export._metric_reader_metrics import (
+    MetricReaderMetrics,
+    NoOpMetricReaderMetrics,
+)
 from opentelemetry.sdk.metrics._internal.point import (
     MetricsData,
     ResourceMetrics,
@@ -165,6 +172,49 @@ class TestInMemoryMetricReader(TestCase):
             [(point.attributes, point.value) for point in second_gauge_data.data_points],
             [({"key": "value"}, 5)],
         )
+
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    def test_add_metric_reader_wires_meter_provider(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider()
+        self.addCleanup(meter_provider.shutdown)
+        self.addCleanup(reader.shutdown)
+
+        # Before registration, reader metrics is a no-op and component ID is not allocated
+        self.assertIsInstance(reader._metrics, NoOpMetricReaderMetrics)
+        self.assertIsNone(reader._otel_component_id)
+
+        meter_provider.add_metric_reader(reader)
+
+        # After registration via add_metric_reader, reader metrics is wired and component ID is allocated once
+        self.assertIsInstance(reader._metrics, MetricReaderMetrics)
+        self.assertEqual(reader._otel_component_id, 0)
+        self.assertEqual(
+            reader._metrics._standard_attrs["otel.component.name"],
+            "InMemoryMetricReader/0",
+        )
+
+        # First collection records duration
+        reader.collect()
+        # Second collection captures the recorded duration metric
+        metrics_data = reader.get_metrics_data()
+        self.assertIsNotNone(metrics_data)
+        found_duration_metric = False
+        for rm in metrics_data.resource_metrics:
+            for sm in rm.scope_metrics:
+                for m in sm.metrics:
+                    if m.name == "otel.sdk.metric_reader.collection.duration":
+                        found_duration_metric = True
+                        data_point = m.data.data_points[0]
+                        self.assertEqual(
+                            data_point.attributes["otel.component.name"],
+                            "InMemoryMetricReader/0",
+                        )
+                        self.assertEqual(
+                            data_point.attributes["otel.component.type"],
+                            "InMemoryMetricReader",
+                        )
+        self.assertTrue(found_duration_metric)
 
 
 class TestInMemoryMetricReaderCardinalityLimits(TestCase):

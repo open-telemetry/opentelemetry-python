@@ -4,7 +4,7 @@
 from collections import Counter
 from typing import Protocol
 
-from opentelemetry.metrics import MeterProvider
+from opentelemetry.metrics import MeterProvider, NoOpMeterProvider
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_COMPONENT_NAME,
     OTEL_COMPONENT_TYPE,
@@ -26,12 +26,21 @@ class NoOpMetricReaderMetrics:
 
 
 class MetricReaderMetrics:
-    def __init__(self, component_type: str, meter_provider: MeterProvider) -> None:
+    def __init__(
+        self,
+        component_type: str,
+        meter_provider: MeterProvider,
+        component_id: int | None = None,
+    ) -> None:
         meter = meter_provider.get_meter("opentelemetry-sdk")
 
-        count = _component_counter[component_type]
-        _component_counter[component_type] = count + 1
+        if component_id is None:
+            count = _component_counter[component_type]
+            _component_counter[component_type] = count + 1
+        else:
+            count = component_id
 
+        self._component_id = count
         self._standard_attrs = {
             OTEL_COMPONENT_TYPE: component_type,
             OTEL_COMPONENT_NAME: f"{component_type}/{count}",
@@ -47,8 +56,9 @@ def create_metric_reader_metrics(
     component_type: str,
     meter_provider: MeterProvider,
     enabled: bool,
+    component_id: int | None = None,
 ) -> MetricReaderMetricsT:
-    if not enabled:
+    if not enabled or isinstance(meter_provider, NoOpMeterProvider):
         return NoOpMetricReaderMetrics()
 
-    return MetricReaderMetrics(component_type, meter_provider)
+    return MetricReaderMetrics(component_type, meter_provider, component_id=component_id)
