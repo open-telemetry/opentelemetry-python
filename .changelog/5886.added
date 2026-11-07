@@ -1,4 +1,4 @@
-`opentelemetry-api`: allow adding optional keyword parameters to methods of the `Tracer`, `Meter`,
+`opentelemetry-api`: tolerate future unknown keyword parameters in methods of the `Tracer`, `Meter`,
 `Logger`, `TracerProvider`, `MeterProvider` and `LoggerProvider` base classes without breaking existing
 implementations.
 
