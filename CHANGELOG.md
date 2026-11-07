@@ -20,6 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- changelog start -->
 
+## Version 1.45.2/0.66b2 (2026-10-29)
+
+### Added
+
+- `opentelemetry-sdk`, `opentelemetry-configuration`,
+  `opentelemetry-exporter-prometheus`: enforce metric cardinality limits
+  (default 2000) with the `otel.metric.overflow` attribute, configurable
+  through `View(aggregation_cardinality_limit=...)`, reader
+  `cardinality_limits` and declarative configuration
+  ([#5809](https://github.com/open-telemetry/opentelemetry-python/pull/5809))
+
+### Fixed
+
+- `opentelemetry-api`: limit `traceparent` header length to 512 characters in
+  `TraceContextTextMapPropagator` during extraction
+  ([#5818](https://github.com/open-telemetry/opentelemetry-python/pull/5818))
+
 ## Version 1.45.1/0.66b1 (2026-10-06)
 
 ### Fixed
