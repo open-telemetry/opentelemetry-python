@@ -18,11 +18,11 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
 from opentelemetry.semconv._incubating.metrics.otel_metrics import (
+    OTEL_SDK_EXPORTER_OPERATION_DURATION,
     create_otel_sdk_exporter_log_exported,
     create_otel_sdk_exporter_log_inflight,
     create_otel_sdk_exporter_metric_data_point_exported,
     create_otel_sdk_exporter_metric_data_point_inflight,
-    create_otel_sdk_exporter_operation_duration,
     create_otel_sdk_exporter_span_exported,
     create_otel_sdk_exporter_span_inflight,
 )
@@ -110,7 +110,12 @@ class ExporterMetrics:
         meter = meter_provider.get_meter("opentelemetry-sdk")
         self._inflight = create_inflight(meter)
         self._exported = create_exported(meter)
-        self._duration = create_otel_sdk_exporter_operation_duration(meter)
+        self._duration = meter.create_histogram(
+            name=OTEL_SDK_EXPORTER_OPERATION_DURATION,
+            description="The duration of exporting a batch of telemetry records.",
+            unit="s",
+            explicit_bucket_boundaries_advisory=[],
+        )
 
     @contextmanager
     def export_operation(self, num_items: int) -> Iterator[ExportResult]:

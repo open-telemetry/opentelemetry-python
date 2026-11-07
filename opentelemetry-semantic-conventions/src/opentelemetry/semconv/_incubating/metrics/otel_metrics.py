@@ -110,7 +110,6 @@ def create_otel_sdk_exporter_operation_duration(meter: Meter) -> Histogram:
         name=OTEL_SDK_EXPORTER_OPERATION_DURATION,
         description="The duration of exporting a batch of telemetry records.",
         unit="s",
-        explicit_bucket_boundaries_advisory=[],
     )
 
 
@@ -224,7 +223,6 @@ def create_otel_sdk_metric_reader_collection_duration(meter: Meter) -> Histogram
         name=OTEL_SDK_METRIC_READER_COLLECTION_DURATION,
         description="The duration of the collect operation of the metric reader.",
         unit="s",
-        explicit_bucket_boundaries_advisory=[],
     )
 
 
