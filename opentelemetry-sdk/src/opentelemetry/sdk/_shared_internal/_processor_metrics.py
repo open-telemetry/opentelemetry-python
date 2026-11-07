@@ -106,7 +106,9 @@ class ProcessorMetrics:
             queue_size_unit = "{span}"
         else:
             queue_size_name = OTEL_SDK_PROCESSOR_LOG_QUEUE_SIZE
-            queue_size_description = "The number of log records in the queue of a given instance of an SDK log processor."
+            queue_size_description = (
+                "The number of log records in the queue of a given instance of an SDK log processor."
+            )
             queue_size_unit = "{log_record}"
 
         self._meter.create_observable_up_down_counter(
