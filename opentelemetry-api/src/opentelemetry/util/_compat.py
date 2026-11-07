@@ -3,10 +3,12 @@
 
 import functools
 import inspect
+import linecache
 import logging
 import sys
+import textwrap
 from abc import ABC
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from inspect import Parameter, Signature
 from typing import Any
 
@@ -25,29 +27,17 @@ def _signature(fn: Callable[..., Any]) -> inspect.Signature:
     return inspect.signature(fn)
 
 
-def _unused_name(base: str, taken: Mapping[str, Any]) -> str:
-    """Return ``base``, suffixed with underscores until it is not a key of ``taken``."""
-    name = base
-    while name in taken:
-        name += "_"
-    return name
+def make_signature_compat_wrapper(fn: Callable[..., Any]) -> Callable[..., Any] | None:
+    """Wrap ``fn`` so that it also accepts, and ignores, unknown keyword arguments.
 
-
-def make_signature_compat_wrapper(
-    sub_fn: Callable[..., Any],
-    *,
-    qualname: str | None = None,
-) -> Callable[..., Any] | None:
-    """Wrap ``sub_fn`` so that it also accepts, and ignores, unknown keyword arguments.
-
-    The wrapper has ``sub_fn``'s signature plus a trailing ``**_kwargs``. It passes
-    arguments to ``sub_fn`` by name rather than through ``*args``/``**kwargs``,
+    The wrapper has ``fn``'s signature plus a trailing ``**_kwargs``. It passes
+    arguments to ``fn`` by name rather than through ``*args``/``**kwargs``,
     which keeps the forwarding call cheap.
 
-    Returns ``None`` if ``sub_fn`` already accepts ``**kwargs``.
+    Returns ``None`` if ``fn`` already accepts ``**kwargs``.
     """
-    parameters = _signature(sub_fn).parameters
-    if any(param.kind is Parameter.VAR_KEYWORD for param in parameters.values()):
+    parameters = _signature(fn).parameters
+    if any(param.kind is Parameter.VAR_KEYWORD for param in parameters.values()):  # already accepts **kwargs
         return None
 
     # Let inspect.Signature render the ``def`` line (including ``/`` and ``*``
@@ -72,35 +62,42 @@ def make_signature_compat_wrapper(
             if param.default is not Parameter.empty:
                 positional_defaults.append(param.default)
 
-    # The generated function's own parameters shadow the closed-over name, so the
-    # reference to ``sub_fn`` must not collide with any of its parameter names.
-    sub_fn_name = _unused_name("_sub_fn", parameters)
-    target_qualname = qualname or getattr(sub_fn, "__qualname__", "_compat_fn")
-    src = (
-        f"def __create_compat_fn__({sub_fn_name}):\n"
-        f"    def _compat_fn{definition}:\n"
-        f"        return {sub_fn_name}({', '.join(call_parts)})\n"
-        f"    return _compat_fn\n"
-    )
+    # The generated function's own parameters shadow globals, so the name used to
+    # reference ``fn`` must not collide with any of its parameter names.
+    fn_name = "_fn"
+    while fn_name in parameters:
+        fn_name += "_"
+    src = textwrap.dedent(f"""\
+        def _compat_fn{definition}:
+            return {fn_name}({", ".join(call_parts)})
+        """)
+    # The only caller-controlled text in ``src`` is parameter names, which
+    # inspect.Parameter guarantees are identifiers (defaults and annotations, whose
+    # repr would be arbitrary text, were stripped above).
+    filename = f"<compat {fn.__module__}.{fn.__qualname__}>"
+    # Make the generated source visible in tracebacks
+    linecache.cache[filename] = (len(src), None, src.splitlines(True), filename)
     namespace: dict[str, Any] = {}
-    exec(compile(src, f"<compat {target_qualname}>", "exec"), {"__builtins__": {}}, namespace)  # noqa: S102  # pylint: disable=exec-used
-    wrapper: Callable[..., Any] = namespace["__create_compat_fn__"](sub_fn)
+    exec(  # noqa: S102  # pylint: disable=exec-used
+        compile(src, filename, "exec"),
+        {"__builtins__": {}, fn_name: fn},
+        namespace,
+    )
+    wrapper: Callable[..., Any] = namespace["_compat_fn"]
     wrapper.__defaults__ = tuple(positional_defaults) or None
     wrapper.__kwdefaults__ = keyword_defaults or None
-    functools.update_wrapper(wrapper, sub_fn)
+    functools.update_wrapper(wrapper, fn)
     return wrapper
 
 
-def _overrides_api_method(cls: type, name: str, fn: object) -> bool:
-    """Whether ``fn``, defined on ``cls`` as ``name``, implements a public API method."""
-    if name.startswith("_") or not inspect.isfunction(fn) or getattr(fn, "__isabstractmethod__", False):
+def _is_public_api_method(cls: type, name: str, fn: object) -> bool:
+    if name.startswith("_") or not inspect.isfunction(fn):
         return False
-    return any(
-        base is not SignatureCompatABC
-        and issubclass(base, SignatureCompatABC)
-        and inspect.isfunction(base.__dict__.get(name))
-        for base in cls.__mro__[1:]
-    )
+    if getattr(fn, "__isabstractmethod__", False):
+        # fn is itself an abstract re-declaration (intermediate ABC): nothing to forward to
+        return False
+    # Some class further up the MRO defines a method with this name
+    return any(inspect.isfunction(vars(base).get(name)) for base in cls.__mro__[1:])
 
 
 class SignatureCompatABC(ABC):
@@ -108,7 +105,7 @@ class SignatureCompatABC(ABC):
 
     When a subclass implements a public method of the base without accepting
     ``**kwargs``, the method is replaced on the subclass with a generated wrapper
-    that accepts ``sub_fn``'s exact signature plus ``**_kwargs`` and forwards the
+    that accepts the method's exact signature plus ``**_kwargs`` and forwards the
     declared parameters directly. Subclasses that accept ``**kwargs`` are left
     untouched.
 
@@ -133,14 +130,13 @@ class SignatureCompatABC(ABC):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
 
-        for name, sub_fn in list(vars(cls).items()):
-            qualname = f"{cls.__qualname__}.{name}"
+        for name, fn in list(vars(cls).items()):
             try:
-                if not _overrides_api_method(cls, name, sub_fn):
+                if not _is_public_api_method(cls, name, fn):
                     continue
-                wrapper = make_signature_compat_wrapper(sub_fn, qualname=qualname)
+                wrapper = make_signature_compat_wrapper(fn)
                 if wrapper is not None:
                     setattr(cls, name, wrapper)
             except Exception:  # pylint: disable=broad-exception-caught
                 # Best effort: never let the shim itself break defining a subclass.
-                _logger.debug("Not adapting %s", qualname, exc_info=True)
+                _logger.debug("Not adapting %s.%s", cls.__qualname__, name, exc_info=True)
