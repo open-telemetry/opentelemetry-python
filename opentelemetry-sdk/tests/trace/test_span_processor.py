@@ -548,10 +548,12 @@ class MultiSpanProcessorTestBase(abc.ABC):
 
         tracer_provider.add_span_processor(multi_processor)
 
+        # pylint: disable=no-member
         with self.assertRaises(ValueError) as ctx:
             with tracer.start_as_current_span("app_span"):
                 raise ValueError("application failed")
 
+        # pylint: disable=no-member
         self.assertEqual(str(ctx.exception), "application failed")
         multi_processor.shutdown()
 
@@ -567,6 +569,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
 
         flushed = multi_processor.force_flush(1000)
 
+        # pylint: disable=no-member
         self.assertFalse(flushed)
         raising_proc.force_flush.assert_called_once()
         normal_proc.force_flush.assert_called_once()
