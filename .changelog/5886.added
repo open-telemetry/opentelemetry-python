@@ -1,0 +1,8 @@
+`opentelemetry-api`: allow adding optional keyword parameters to methods of the `Tracer`, `Meter`,
+`Logger`, `TracerProvider`, `MeterProvider` and `LoggerProvider` base classes without breaking existing
+implementations.
+
+These ABCs now derive from `SignatureCompatABC`, which wraps overrides that don't accept `**kwargs` at
+class-definition time so that keyword arguments they don't declare are dropped instead of being passed
+through. Implementations should add `**kwargs` to their overrides: those are left unwrapped and have no
+overhead.
