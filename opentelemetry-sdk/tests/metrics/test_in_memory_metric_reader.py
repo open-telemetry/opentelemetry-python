@@ -5,7 +5,7 @@
 
 from time import sleep
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.metrics import Observation
 from opentelemetry.sdk.metrics import Counter, MeterProvider
@@ -164,6 +164,21 @@ class TestInMemoryMetricReader(TestCase):
         self.assertEqual(
             [(point.attributes, point.value) for point in second_gauge_data.data_points],
             [({"key": "value"}, 5)],
+        )
+
+    @patch.dict("os.environ", {"OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED": "true"})
+    def test_metric_reader_metrics(self):
+        reader = InMemoryMetricReader()
+        meter_provider = Mock()
+        meter = Mock()
+        meter_provider.get_meter.return_value = meter
+        reader._set_meter_provider(meter_provider)
+        meter_provider.get_meter.assert_called_once_with("opentelemetry-sdk")
+        meter.create_histogram.assert_called_once_with(
+            name="otel.sdk.metric_reader.collection.duration",
+            description="The duration of the collect operation of the metric reader.",
+            unit="s",
+            explicit_bucket_boundaries_advisory=[],
         )
 
 
