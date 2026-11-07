@@ -376,6 +376,21 @@ class TestOTLPExporterMixin(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    def test_success_records_rpc_response_status_code(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerWithExportParams(StatusCode.OK),
+            self.server,
+        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, meter_provider=self.meter_provider)
+        self.assertEqual(exporter.export([self.span]), SpanExportResult.SUCCESS)
+
+        scope_metrics = self.metric_reader.get_metrics_data().resource_metrics[0].scope_metrics[0]
+        attrs = {m.name: m.data.data_points[0].attributes for m in scope_metrics.metrics}
+        self.assertEqual(attrs["otel.sdk.exporter.operation.duration"]["rpc.response.status_code"], "OK")
+        self.assertNotIn("error.type", attrs["otel.sdk.exporter.operation.duration"])
+        self.assertNotIn("rpc.response.status_code", attrs["otel.sdk.exporter.span.exported"])
+
     @unittest.skipIf(
         system() == "Windows",
         "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",

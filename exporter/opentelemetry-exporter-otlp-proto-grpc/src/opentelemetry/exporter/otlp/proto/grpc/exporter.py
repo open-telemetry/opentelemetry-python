@@ -435,6 +435,7 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                         metadata=self._headers,
                         timeout=deadline_sec - time(),
                     )
+                    result.response_attrs = {RPC_RESPONSE_STATUS_CODE: StatusCode.OK.name}
                     return self._result.SUCCESS  # type: ignore [reportReturnType]
                 except RpcError as error:
                     retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
@@ -481,7 +482,7 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                             exc_info=error.code() == StatusCode.UNKNOWN,  # type: ignore [reportAttributeAccessIssue]
                         )
                         result.error = error
-                        result.error_attrs = {RPC_RESPONSE_STATUS_CODE: error.code().name}
+                        result.response_attrs = {RPC_RESPONSE_STATUS_CODE: error.code().name}
                         return self._result.FAILURE  # type: ignore [reportReturnType]
                     logger.warning(
                         "Transient error %s encountered while exporting %s to %s, retrying in %.2fs. Error details: %s",
