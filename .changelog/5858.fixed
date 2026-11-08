@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: apply declarative BatchSpanProcessor defaults explicitly instead of inheriting ambient `OTEL_BSP_*` environment variables

@@ -119,6 +119,12 @@ _logger = logging.getLogger(__name__)
 # Default sampler per the OTel spec: parent_based with always_on root.
 _DEFAULT_SAMPLER = ParentBased(root=ALWAYS_ON)
 
+# BatchSpanProcessor defaults per the OTel spec (milliseconds).
+_DEFAULT_BSP_SCHEDULE_DELAY_MILLIS = 5000
+_DEFAULT_BSP_EXPORT_TIMEOUT_MILLIS = 30000
+_DEFAULT_BSP_MAX_QUEUE_SIZE = 2048
+_DEFAULT_BSP_MAX_EXPORT_BATCH_SIZE = 512
+
 
 def _create_otlp_http_span_exporter(
     config: OtlpHttpExporterConfig,
@@ -259,12 +265,32 @@ def _create_span_processor(
     """Create a span processor from config."""
     if config.batch is not None:
         exporter = _create_span_exporter(config.batch.exporter)
+        schedule_delay = (
+            config.batch.schedule_delay
+            if config.batch.schedule_delay is not None
+            else _DEFAULT_BSP_SCHEDULE_DELAY_MILLIS
+        )
+        export_timeout = (
+            config.batch.export_timeout
+            if config.batch.export_timeout is not None
+            else _DEFAULT_BSP_EXPORT_TIMEOUT_MILLIS
+        )
+        max_queue_size = (
+            config.batch.max_queue_size
+            if config.batch.max_queue_size is not None
+            else _DEFAULT_BSP_MAX_QUEUE_SIZE
+        )
+        max_export_batch_size = (
+            config.batch.max_export_batch_size
+            if config.batch.max_export_batch_size is not None
+            else _DEFAULT_BSP_MAX_EXPORT_BATCH_SIZE
+        )
         return BatchSpanProcessor(
             exporter,
-            max_queue_size=config.batch.max_queue_size,
-            schedule_delay_millis=config.batch.schedule_delay,
-            max_export_batch_size=config.batch.max_export_batch_size,
-            export_timeout_millis=config.batch.export_timeout,
+            max_queue_size=max_queue_size,
+            schedule_delay_millis=schedule_delay,
+            max_export_batch_size=max_export_batch_size,
+            export_timeout_millis=export_timeout,
         )
     if config.simple is not None:
         return SimpleSpanProcessor(_create_span_exporter(config.simple.exporter))

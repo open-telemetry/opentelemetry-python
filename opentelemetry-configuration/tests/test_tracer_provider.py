@@ -14,6 +14,10 @@ from unittest.mock import MagicMock, patch
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._tracer_provider import (
+    _DEFAULT_BSP_EXPORT_TIMEOUT_MILLIS,
+    _DEFAULT_BSP_MAX_EXPORT_BATCH_SIZE,
+    _DEFAULT_BSP_MAX_QUEUE_SIZE,
+    _DEFAULT_BSP_SCHEDULE_DELAY_MILLIS,
     configure_tracer_provider,
     create_tracer_provider,
 )
@@ -588,6 +592,26 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         provider = create_tracer_provider(config)
         procs = provider._active_span_processor._span_processors
         self.assertEqual(procs[0]._batch_processor._schedule_delay_millis, 0)
+        provider.shutdown()
+
+    def test_batch_processor_suppresses_environment_defaults(self):
+        config = self._make_batch_config(SpanExporterConfig(console={}))
+        with patch.dict(
+            "os.environ",
+            {
+                "OTEL_BSP_MAX_QUEUE_SIZE": "9999",
+                "OTEL_BSP_SCHEDULE_DELAY": "88888",
+                "OTEL_BSP_MAX_EXPORT_BATCH_SIZE": "777",
+                "OTEL_BSP_EXPORT_TIMEOUT": "66666",
+            },
+        ):
+            provider = create_tracer_provider(config)
+
+        processor = provider._active_span_processor._span_processors[0]._batch_processor
+        self.assertEqual(processor._max_queue_size, _DEFAULT_BSP_MAX_QUEUE_SIZE)
+        self.assertEqual(processor._schedule_delay_millis, _DEFAULT_BSP_SCHEDULE_DELAY_MILLIS)
+        self.assertEqual(processor._max_export_batch_size, _DEFAULT_BSP_MAX_EXPORT_BATCH_SIZE)
+        self.assertEqual(processor._export_timeout_millis, _DEFAULT_BSP_EXPORT_TIMEOUT_MILLIS)
         provider.shutdown()
 
     def test_console_exporter_simple(self):
