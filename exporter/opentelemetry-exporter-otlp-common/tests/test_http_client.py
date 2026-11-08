@@ -129,7 +129,6 @@ class TestOTLPHTTPClient(unittest.TestCase):
         cases = (
             (200, "OK"),
             (204, "No Content"),
-            (302, "Found"),
         )
 
         for status_code, reason in cases:
@@ -140,6 +139,26 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 result = client.export(b"payload")
 
                 self.assertTrue(result.success)
+                self.assertEqual(result.status_code, status_code)
+                self.assertEqual(result.reason, reason)
+                self.assertIsNone(result.error)
+
+    def test_export_redirect_status_codes(self):
+        cases = (
+            (300, "Multiple Choices"),
+            (302, "Found"),
+            (308, "Permanent Redirect"),
+        )
+        for status_code, reason in cases:
+            with self.subTest(status_code=status_code):
+                transport = _TestHTTPTransport(
+                    _TestHTTPResult(status_code=status_code, reason=reason)
+                )
+                client = self._client(transport)
+
+                result = client.export(b"payload")
+
+                self.assertFalse(result.success)
                 self.assertEqual(result.status_code, status_code)
                 self.assertEqual(result.reason, reason)
                 self.assertIsNone(result.error)

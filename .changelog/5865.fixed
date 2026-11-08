@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-common`: report HTTP 3xx responses as failed exports when redirects are disabled
