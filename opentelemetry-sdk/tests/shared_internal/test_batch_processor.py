@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=protected-access
+import ctypes
 import gc
 import logging
 import multiprocessing
@@ -233,6 +234,47 @@ class TestBatchProcessor:
         # Single export for the telemetry we emitted at the start of the test.
         assert exporter.export.call_count == 1
         batch_processor.shutdown()
+
+    @unittest.skipUnless(
+        hasattr(os, "fork") and hasattr(os, "register_at_fork"),
+        "needs fork and register_at_fork",
+    )
+    def test_raw_fork_recovery_can_repeat(self, batch_processor_class, telemetry):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=10,
+            max_export_batch_size=2,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+
+        libc = ctypes.CDLL(None)
+        libc.fork.restype = ctypes.c_int
+        read_fd, write_fd = os.pipe()
+        first_child = libc.fork()
+        if first_child == 0:
+            os.close(read_fd)
+            batch_processor._batch_processor.emit(telemetry)
+            batch_processor.force_flush()
+
+            second_child = libc.fork()
+            if second_child == 0:
+                batch_processor._batch_processor.emit(telemetry)
+                batch_processor.force_flush()
+                os.write(write_fd, str(exporter.export.call_count).encode())
+                os._exit(0)
+
+            os.waitpid(second_child, 0)
+            os._exit(0)
+
+        os.close(write_fd)
+        os.waitpid(first_child, 0)
+        exported = os.read(read_fd, 16)
+        os.close(read_fd)
+        batch_processor.shutdown()
+
+        assert exported == b"2"
 
     def test_record_processor_is_garbage_collected(self, batch_processor_class, telemetry):
         exporter = Mock()

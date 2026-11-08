@@ -150,6 +150,9 @@ class BatchProcessor(Generic[Telemetry]):
         )
         self._worker_thread.start()
         self._pid = os.getpid()
+        # The fallback in ``emit`` must be able to recover from every fork that
+        # bypasses ``os.register_at_fork``, not just the first one.
+        self._bsp_reset_once = Once()
 
     def worker(self):
         while not self._shutdown:
