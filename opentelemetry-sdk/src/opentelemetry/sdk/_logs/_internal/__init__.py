@@ -430,7 +430,10 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         for lp in self._log_record_processors:
-            lp.on_emit(log_record)
+            try:
+                lp.on_emit(log_record)
+            except Exception:
+                _logger.exception("Exception while calling LogRecordProcessor.on_emit.")
 
     def enabled(
         self,
@@ -453,7 +456,10 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
         for lp in self._log_record_processors:
-            lp.shutdown()
+            try:
+                lp.shutdown()
+            except Exception:
+                _logger.exception("Exception while calling LogRecordProcessor.shutdown.")
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors one by one
@@ -474,7 +480,11 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
             if current_ts >= deadline_ns:
                 return False
 
-            if lp.force_flush((deadline_ns - current_ts) // 1000000) is False:
+            try:
+                if lp.force_flush((deadline_ns - current_ts) // 1000000) is False:
+                    all_flushed = False
+            except Exception:
+                _logger.exception("Exception while calling LogRecordProcessor.force_flush.")
                 all_flushed = False
 
         return all_flushed
@@ -507,6 +517,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     def _submit_and_wait(
         self,
         func: Callable[[LogRecordProcessor], Callable[..., None]],
+        operation: str,
         *args: Any,
         **kwargs: Any,
     ):
@@ -515,10 +526,13 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             future = self._executor.submit(func(lp), *args, **kwargs)
             futures.append(future)
         for future in futures:
-            future.result()
+            try:
+                future.result()
+            except Exception:
+                _logger.exception("Exception while calling LogRecordProcessor.%s.", operation)
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
-        self._submit_and_wait(lambda lp: lp.on_emit, log_record)
+        self._submit_and_wait(lambda lp: lp.on_emit, "on_emit", log_record)
 
     def enabled(
         self,
@@ -539,7 +553,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         return False
 
     def shutdown(self) -> None:
-        self._submit_and_wait(lambda lp: lp.shutdown)
+        self._submit_and_wait(lambda lp: lp.shutdown, "shutdown")
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors in parallel.
@@ -563,7 +577,11 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             return False
 
         for future in done_futures:
-            if future.result() is False:
+            try:
+                if future.result() is False:
+                    return False
+            except Exception:
+                _logger.exception("Exception while calling LogRecordProcessor.force_flush.")
                 return False
 
         return True

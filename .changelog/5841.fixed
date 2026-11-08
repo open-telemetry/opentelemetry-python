@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: isolate log record processor failures so one faulty processor cannot crash the host application or suppress subsequent processors

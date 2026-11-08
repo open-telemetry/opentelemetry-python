@@ -117,6 +117,27 @@ class MultiLogRecordProcessorTestBase(ABC):
             mock.on_emit.assert_called_with(record)
         multi_log_record_processor.shutdown()
 
+    def test_processor_exceptions_are_isolated(self):
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        failing = Mock(spec=LogRecordProcessor)
+        failing.on_emit.side_effect = RuntimeError("emit failed")
+        failing.shutdown.side_effect = RuntimeError("shutdown failed")
+        failing.force_flush.side_effect = RuntimeError("flush failed")
+        succeeding = Mock(spec=LogRecordProcessor)
+        succeeding.force_flush.return_value = True
+        multi_log_record_processor.add_log_record_processor(failing)
+        multi_log_record_processor.add_log_record_processor(succeeding)
+        record = self.make_record()
+
+        with self.assertLogs("opentelemetry.sdk._logs._internal", level="ERROR"):
+            multi_log_record_processor.on_emit(record)
+            multi_log_record_processor.shutdown()
+            self.assertFalse(multi_log_record_processor.force_flush())
+
+        succeeding.on_emit.assert_called_once_with(record)
+        succeeding.shutdown.assert_called_once_with()
+        succeeding.force_flush.assert_called_once()
+
     def test_on_shutdown(self):
         multi_log_record_processor = self._get_multi_log_record_processor()
         mocks = [Mock(spec=LogRecordProcessor) for _ in range(5)]
