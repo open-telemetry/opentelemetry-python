@@ -1,4 +1,4 @@
-iniconfig==2.3.0
+iniconfig==2.3.1
 mocket==3.14.1
 packaging==26.2
 pluggy==1.6.0
