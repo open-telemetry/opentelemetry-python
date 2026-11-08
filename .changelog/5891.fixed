@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: preserve processor queue capacity metrics across collections
