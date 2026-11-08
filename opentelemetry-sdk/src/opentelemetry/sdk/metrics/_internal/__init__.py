@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import math
 import os
 import weakref
 from atexit import register, unregister
@@ -222,7 +223,16 @@ class Meter(APIMeter):
                     invalid_advisory = not (
                         all(isinstance(e, (float, int)) for e in explicit_bucket_boundaries_advisory)
                     )
-                except (KeyError, TypeError):
+                    if not invalid_advisory:
+                        invalid_advisory = any(
+                            not math.isfinite(bound)
+                            or (
+                                index > 0
+                                and explicit_bucket_boundaries_advisory[index - 1] >= bound
+                            )
+                            for index, bound in enumerate(explicit_bucket_boundaries_advisory)
+                        )
+                except (KeyError, TypeError, OverflowError):
                     invalid_advisory = True
             else:
                 invalid_advisory = True

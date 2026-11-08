@@ -3,6 +3,7 @@
 
 # pylint: disable=protected-access,no-self-use,too-many-lines
 import json
+import math
 import os
 import subprocess
 import sys
@@ -690,16 +691,21 @@ class TestMeter(TestCase):
         advisories = [
             {"explicit_bucket_boundaries_advisory": "hello"},
             {"explicit_bucket_boundaries_advisory": ["1"]},
+            {"explicit_bucket_boundaries_advisory": [2, 1]},
+            {"explicit_bucket_boundaries_advisory": [math.nan]},
+            {"explicit_bucket_boundaries_advisory": [math.inf]},
         ]
-        for advisory in advisories:
+        for index, advisory in enumerate(advisories):
             with self.subTest(advisory=advisory):
                 with self.assertLogs(level=WARNING):
-                    self.meter.create_histogram(
-                        "name",
+                    histogram = self.meter.create_histogram(
+                        f"name-{index}",
                         unit="unit",
                         description="description",
                         **advisory,
                     )
+                self.assertIsNone(histogram._advisory.explicit_bucket_boundaries)
+                histogram.record(1)
 
     def test_create_observable_gauge(self):
         observable_gauge = self.meter.create_observable_gauge(

@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: validate histogram explicit bucket boundary advisories for finite, strictly increasing values before registration
