@@ -22,10 +22,12 @@ from opentelemetry.configuration.file._env_substitution import (
 from opentelemetry.configuration.models import OpenTelemetryConfiguration
 
 try:
-    import yaml
+    from ruamel.yaml import YAML, YAMLError
+    from ruamel.yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
+    from ruamel.yaml.resolver import BaseResolver
 except ImportError as exc:
     raise MissingDependencyError(
-        package="pyyaml",
+        package="ruamel.yaml",
         feature="File configuration",
         install_name="opentelemetry-sdk",
         extras="file-configuration",
@@ -73,10 +75,10 @@ _STANDALONE_ENV_REF = re.compile(r"\A\$\{(?:env:)?[A-Za-z_][A-Za-z0-9_]*(?::-[^}
 
 
 def _substitute_env_in_yaml_node(
-    node: yaml.Node,
-    loader: yaml.SafeLoader,
+    node: Node,
+    resolver: BaseResolver,
     visited: set[int] | None = None,
-):
+) -> None:
     """Apply env-var substitution to string configuration values in a node tree.
 
     Substitution runs after parsing on configuration values only, so comments
@@ -87,7 +89,8 @@ def _substitute_env_in_yaml_node(
 
     Args:
         node: Root of the node tree to walk. Substitution happens in place.
-        loader: The loader that composed ``node``; used to re-resolve tags.
+        resolver: The resolver of the loader that composed ``node``; used to
+            re-resolve tags with YAML 1.2 rules.
         visited: Ids of nodes already processed in this traversal. Callers pass
             nothing; the walker creates and threads one set through the whole
             tree.
@@ -120,7 +123,7 @@ def _substitute_env_in_yaml_node(
     # The parser hands this function the value node of attribute_count_limit,
     # which has value="${LIMIT}", tag=str, style=None (plain/unquoted). Then:
     #
-    #   1. isinstance(node, yaml.ScalarNode) -> True: it is a leaf value.
+    #   1. isinstance(node, ScalarNode) -> True: it is a leaf value.
     #   2. node.tag == _YAML_STR_TAG -> True: "${LIMIT}" is not a number or
     #      bool, so the parser tagged it str. We substitute in place, giving
     #      node.value = "100".
@@ -131,7 +134,7 @@ def _substitute_env_in_yaml_node(
     #
     # Counter-cases that reach check 3 but stop there: "${LIMIT}" quoted fails
     # the style test; x${LIMIT} fails the regex. Both keep the str tag.
-    if isinstance(node, yaml.ScalarNode):
+    if isinstance(node, ScalarNode):
         # A ``ScalarNode`` is a leaf -- one configuration value. Only a
         # ``str``-tagged one can hold a ``${VAR}`` reference (nodes the parser
         # already typed as int, float, bool or null cannot), so those are the
@@ -153,18 +156,18 @@ def _substitute_env_in_yaml_node(
                 # str) YAML would assign to ``node.value``; the ``(True, False)``
                 # implicit-flag pair marks it as a plain scalar so that
                 # type-guessing applies, exactly as during normal parsing.
-                node.tag = loader.resolve(yaml.ScalarNode, node.value, (True, False))
-    elif isinstance(node, yaml.SequenceNode):
+                node.tag = resolver.resolve(ScalarNode, node.value, (True, False))
+    elif isinstance(node, SequenceNode):
         # A sequence (list): each item is itself a value node -- recurse.
         for item in node.value:
-            _substitute_env_in_yaml_node(item, loader, visited)
-    elif isinstance(node, yaml.MappingNode):
+            _substitute_env_in_yaml_node(item, resolver, visited)
+    elif isinstance(node, MappingNode):
         # A mapping (dict): recurse into values only; keys are not
         # substitution candidates per the spec. A merge key (``<<: *base``)
         # appears here as an ordinary pair whose value node is the anchored
         # mapping itself, so ``visited`` also covers the merged-in values.
         for _key_node, value_node in node.value:
-            _substitute_env_in_yaml_node(value_node, loader, visited)
+            _substitute_env_in_yaml_node(value_node, resolver, visited)
 
 
 def _substitute_env_in_json_value(value: Any) -> Any:
@@ -197,16 +200,19 @@ def _parse_config_content(content: str, suffix: str, file_path: str | os.PathLik
     try:
         if suffix == ".json":
             return _substitute_env_in_json_value(json.loads(content))
-        yaml_loader = yaml.SafeLoader(content)
+        # ``pure=True`` keeps the pure-Python parser, which implements YAML
+        # 1.2 as required by the configuration spec.
+        yaml = YAML(typ="safe", pure=True)
+        constructor, parser = yaml.get_constructor_parser(content)
         try:
-            root_node = yaml_loader.get_single_node()
+            root_node = constructor.composer.get_single_node()
             if root_node is None:
                 return None
-            _substitute_env_in_yaml_node(root_node, yaml_loader)
-            return yaml_loader.construct_document(root_node)
+            _substitute_env_in_yaml_node(root_node, yaml.resolver)
+            return constructor.construct_document(root_node)
         finally:
-            yaml_loader.dispose()
-    except yaml.YAMLError as exc:
+            parser.dispose()
+    except YAMLError as exc:
         _logger.exception("Failed to parse YAML from %s", file_path)
         raise ConfigurationError(f"Failed to parse YAML: {exc}") from exc
     except json.JSONDecodeError as exc:

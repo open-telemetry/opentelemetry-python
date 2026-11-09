@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import yaml
+from ruamel.yaml import YAML
 
 from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
@@ -415,13 +415,40 @@ def _substitute_yaml(text: str):
     This is what ``_parse_config_content`` does for YAML, without the schema
     validation, so walker behavior can be asserted on any document shape.
     """
-    loader = yaml.SafeLoader(text)
+    yaml = YAML(typ="safe", pure=True)
+    constructor, parser = yaml.get_constructor_parser(text)
     try:
-        node = loader.get_single_node()
-        _substitute_env_in_yaml_node(node, loader)
-        return loader.construct_document(node)
+        node = constructor.composer.get_single_node()
+        _substitute_env_in_yaml_node(node, yaml.resolver)
+        return constructor.construct_document(node)
     finally:
-        loader.dispose()
+        parser.dispose()
+
+
+class TestYaml12Semantics(unittest.TestCase):
+    """YAML is parsed with YAML 1.2 rules, as the configuration spec requires."""
+
+    def test_yaml_11_only_literals_stay_strings(self):
+        # YAML 1.1 resolves these to bools/ints; YAML 1.2 keeps them strings.
+        for literal in ("yes", "no", "on", "off", "y", "n", "1:20"):
+            with self.subTest(literal=literal):
+                self.assertEqual(_substitute_yaml(f"key: {literal}")["key"], literal)
+
+    def test_yaml_12_booleans(self):
+        for literal, expected in (("true", True), ("false", False)):
+            with self.subTest(literal=literal):
+                self.assertIs(_substitute_yaml(f"key: {literal}")["key"], expected)
+
+    @patch.dict(os.environ, {"VAL": "on"})
+    def test_standalone_reference_is_resolved_with_yaml_12_rules(self):
+        self.assertEqual(_substitute_yaml("key: ${VAL}")["key"], "on")
+
+    def test_load_config_file_keeps_yaml_11_only_literals(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as fh:
+            fh.write('file_format: "1.0"\nresource:\n  attributes:\n    - name: flag\n      value: on\n')
+        self.addCleanup(os.unlink, fh.name)
+        config = load_config_file(fh.name)
+        self.assertEqual(config.resource.attributes[0].value, "on")
 
 
 class TestEnvVarSubstitutionScope(unittest.TestCase):

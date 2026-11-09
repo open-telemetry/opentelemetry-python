@@ -5,7 +5,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-import yaml
+from ruamel.yaml import YAML
 
 from opentelemetry.configuration.file import (
     ConfigurationError,
@@ -50,7 +50,7 @@ class TestEnvSubstitution(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             result = substitute_env_vars("name: ${MISSING_VAR}")
             self.assertEqual(result, "name: ")
-            self.assertIsNone(yaml.safe_load(result)["name"])
+            self.assertIsNone(YAML(typ="safe", pure=True).load(result)["name"])
 
     def test_dollar_sign_escape(self):
         """Test $$ escapes to literal $."""
@@ -132,8 +132,8 @@ line2: value2"""
     def test_type_coercion_preserved_for_simple_values(self):
         """Simple values without newlines still undergo YAML type coercion per spec."""
         with patch.dict(os.environ, {"BOOL_VAL": "true", "INT_VAL": "42"}):
-            bool_result = yaml.safe_load(substitute_env_vars("key: ${BOOL_VAL}"))
-            int_result = yaml.safe_load(substitute_env_vars("key: ${INT_VAL}"))
+            bool_result = YAML(typ="safe", pure=True).load(substitute_env_vars("key: ${BOOL_VAL}"))
+            int_result = YAML(typ="safe", pure=True).load(substitute_env_vars("key: ${INT_VAL}"))
         self.assertIs(bool_result["key"], True)
         self.assertEqual(int_result["key"], 42)
 
