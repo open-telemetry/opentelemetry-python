@@ -13,13 +13,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING, getLogger
 
-from opentelemetry.configuration._common import _RAW_MAPPING_ATTRIBUTE
-from opentelemetry.configuration._config_provider import (
+from opentelemetry._configuration import (
     ConfigProperties,
     ConfigProvider,
-    _node_to_mapping,
     set_config_provider,
 )
+from opentelemetry._configuration._internal import _node_to_mapping
+from opentelemetry.configuration._common import _RAW_MAPPING_ATTRIBUTE
 from opentelemetry.configuration._logger_provider import (
     configure_logger_provider,
 )
@@ -80,7 +80,8 @@ def configure_sdk(config: OpenTelemetryConfiguration) -> None:
     logger provider, and text map propagator from their respective config
     sections. Sections absent from the config (``None``) leave the
     corresponding global untouched — matching the spec's "noop default"
-    behavior. When not disabled, the global :class:`ConfigProvider` is set,
+    behavior. When not disabled, the global
+    :class:`opentelemetry._configuration.ConfigProvider` is set,
     exposing the ``instrumentation/development`` config node as a read view
     (empty when absent) for instrumentation libraries to consume. That view
     holds the node as the file wrote it, so a caller can tell a key the file

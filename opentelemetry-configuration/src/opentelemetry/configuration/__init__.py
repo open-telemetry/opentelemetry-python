@@ -27,32 +27,23 @@ Construct a configuration programmatically and apply it:
 ... )
 >>> configure_sdk(OpenTelemetryConfiguration(file_format="1.0-rc.1"))
 
+An instrumentation library reads its own configuration through
+``opentelemetry._configuration`` in the ``opentelemetry-api`` package, which
+``configure_sdk`` populates. An instrumentation library does not depend on this
+package, which requires the SDK.
+
 This package is **experimental**. The API surface, type names, and
 behaviour may change between minor versions.
 """
 
-from opentelemetry.configuration._config_provider import (
-    ConfigProperties,
-    ConfigProvider,
-    NoOpConfigProvider,
-    ProxyConfigProvider,
-    get_config_provider,
-    set_config_provider,
-)
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration._sdk import configure_sdk
 from opentelemetry.configuration.file._loader import load_config_file
 from opentelemetry.configuration.models import OpenTelemetryConfiguration
 
 __all__ = [
-    "ConfigProperties",
-    "ConfigProvider",
     "ConfigurationError",
-    "NoOpConfigProvider",
     "OpenTelemetryConfiguration",
-    "ProxyConfigProvider",
     "configure_sdk",
-    "get_config_provider",
     "load_config_file",
-    "set_config_provider",
 ]

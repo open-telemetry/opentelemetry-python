@@ -10,11 +10,11 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import opentelemetry.configuration._config_provider as config_provider_module
-from opentelemetry.configuration._config_provider import (
+from opentelemetry._configuration import (
     ConfigProperties,
     get_config_provider,
 )
+from opentelemetry._configuration import _internal as config_provider_module
 from opentelemetry.configuration._sdk import configure_sdk
 from opentelemetry.configuration.file import load_config_file
 from opentelemetry.configuration.models import (

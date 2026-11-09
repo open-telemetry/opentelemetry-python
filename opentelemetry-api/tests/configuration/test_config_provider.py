@@ -1,24 +1,33 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import unittest
+from dataclasses import dataclass
 from unittest.mock import patch
 
-import opentelemetry.configuration._config_provider as config_provider_module
-from opentelemetry.configuration._config_provider import (
+from opentelemetry._configuration import (
     ConfigProperties,
     ConfigProvider,
     NoOpConfigProvider,
     ProxyConfigProvider,
-    _node_to_mapping,
     get_config_provider,
     set_config_provider,
 )
-from opentelemetry.configuration.models import (
-    ExperimentalGeneralInstrumentation,
-    ExperimentalInstrumentation,
-)
+from opentelemetry._configuration import _internal as config_provider_module
+from opentelemetry._configuration._internal import _node_to_mapping
 from opentelemetry.util._once import Once
+
+
+@dataclass
+class _GeneralNode:
+    stability_opt_in_list: str | None = None
+
+
+@dataclass
+class _InstrumentationNode:
+    general: _GeneralNode | None = None
 
 
 class TestConfigPropertiesScalars(unittest.TestCase):
@@ -93,19 +102,19 @@ class TestConfigPropertiesScalars(unittest.TestCase):
 
 
 class TestConfigPropertiesTypeMismatch(unittest.TestCase):
-    @patch("opentelemetry.configuration._config_provider._logger")
+    @patch("opentelemetry._configuration._internal._logger")
     def test_present_wrong_type_logs_warning(self, mock_logger):
         props = ConfigProperties({"count": "not-a-number"})
         self.assertIsNone(props.get_int("count"))
         mock_logger.warning.assert_called_once()
 
-    @patch("opentelemetry.configuration._config_provider._logger")
+    @patch("opentelemetry._configuration._internal._logger")
     def test_missing_key_does_not_log(self, mock_logger):
         props = ConfigProperties({})
         self.assertIsNone(props.get_int("count"))
         mock_logger.warning.assert_not_called()
 
-    @patch("opentelemetry.configuration._config_provider._logger")
+    @patch("opentelemetry._configuration._internal._logger")
     def test_get_int_rejecting_bool_logs(self, mock_logger):
         props = ConfigProperties({"count": True})
         self.assertIsNone(props.get_int("count"))
@@ -143,7 +152,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
         self.assertEqual(result[0].keys(), set())
         self.assertEqual(result[1].get_string("host"), "a")
 
-    @patch("opentelemetry.configuration._config_provider._logger")
+    @patch("opentelemetry._configuration._internal._logger")
     def test_get_config_list_null_element_logs_and_returns_none(self, mock_logger):
         props = ConfigProperties({"servers": [{"host": "a"}, None]})
         self.assertIsNone(props.get_config_list("servers"))
@@ -151,7 +160,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
         # The warning names the offending element, not the whole list.
         self.assertIn("servers[1]", mock_logger.warning.call_args.args)
 
-    @patch("opentelemetry.configuration._config_provider._logger")
+    @patch("opentelemetry._configuration._internal._logger")
     def test_get_config_list_scalar_element_logs_and_returns_none(self, mock_logger):
         props = ConfigProperties({"servers": [5]})
         self.assertIsNone(props.get_config_list("servers"))
@@ -178,7 +187,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
     def test_get_string_list_missing_returns_none(self):
         self.assertIsNone(ConfigProperties({}).get_string_list("x"))
 
-    @patch("opentelemetry.configuration._config_provider._logger")
+    @patch("opentelemetry._configuration._internal._logger")
     def test_get_string_list_non_sequence_logs_and_returns_none(self, mock_logger):
         props = ConfigProperties({"names": "not-a-list"})
         self.assertIsNone(props.get_string_list("names"))
@@ -187,7 +196,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
 
 class TestNodeToMapping(unittest.TestCase):
     def test_dataclass_node_converted_recursively(self):
-        node = ExperimentalInstrumentation(general=ExperimentalGeneralInstrumentation(stability_opt_in_list="http"))
+        node = _InstrumentationNode(general=_GeneralNode(stability_opt_in_list="http"))
         mapping = _node_to_mapping(node)
         self.assertEqual(mapping["general"]["stability_opt_in_list"], "http")
 
@@ -195,7 +204,7 @@ class TestNodeToMapping(unittest.TestCase):
         self.assertEqual(_node_to_mapping(None), {})
 
     def test_config_properties_over_instrumentation_node(self):
-        node = ExperimentalInstrumentation(general=ExperimentalGeneralInstrumentation(stability_opt_in_list="http"))
+        node = _InstrumentationNode(general=_GeneralNode(stability_opt_in_list="http"))
         props = ConfigProperties(_node_to_mapping(node))
         general = props.get_config("general")
         self.assertIsInstance(general, ConfigProperties)
@@ -241,7 +250,7 @@ class TestGlobalConfigProvider(unittest.TestCase):
             "v",
         )
 
-    @patch("opentelemetry.configuration._config_provider._logger")
+    @patch("opentelemetry._configuration._internal._logger")
     def test_set_is_once_only(self, mock_logger):
         first = ConfigProvider(ConfigProperties({"k": "first"}))
         second = ConfigProvider(ConfigProperties({"k": "second"}))
