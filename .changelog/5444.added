@@ -1,1 +1,1 @@
-`opentelemetry-api`, `opentelemetry-sdk`: add `Meter.create_*_with_options` instrument creation methods and `InstrumentOptions`, and add support for advisory attributes on metric instruments. Existing `Meter` implementations inherit defaults that ignore the options.
+`opentelemetry-api`, `opentelemetry-sdk`: add experimental support for advisory attributes on metric instruments via the private `_attributes_advisory` keyword argument of `Meter.create_*` methods.

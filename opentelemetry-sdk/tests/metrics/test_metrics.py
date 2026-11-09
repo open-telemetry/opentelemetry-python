@@ -725,6 +725,24 @@ class TestMeter(TestCase):
         self.assertIsInstance(observable_up_down_counter, ObservableUpDownCounter)
         self.assertEqual(observable_up_down_counter.name, "name")
 
+    def test_create_methods_ignore_unknown_kwargs(self):
+        # pylint: disable=unexpected-keyword-arg
+        for instrument_name in ["counter", "up_down_counter", "histogram", "gauge"]:
+            with self.subTest(instrument_name=instrument_name):
+                instrument = getattr(self.meter, f"create_{instrument_name}")(instrument_name, unknown=1)
+                self.assertEqual(instrument.name, instrument_name)
+
+        for instrument_name in [
+            "observable_counter",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.subTest(instrument_name=instrument_name):
+                instrument = getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name, callbacks=[Mock()], unknown=1
+                )
+                self.assertEqual(instrument.name, instrument_name)
+
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_meter_with_sdk_disabled(self):
         meter_provider = MeterProvider()
