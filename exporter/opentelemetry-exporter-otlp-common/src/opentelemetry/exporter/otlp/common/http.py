@@ -200,7 +200,7 @@ class _OTLPHTTPClient:
             else:
                 status_code = result.status_code
                 reason = result.reason
-                if status_code is not None and 200 <= status_code < 400:
+                if status_code is not None and 200 <= status_code < 300:
                     return _ExportResult(True, status_code, reason, None)
                 export_error = result.error
                 retryable = (

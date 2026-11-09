@@ -128,8 +128,8 @@ class TestOTLPHTTPClient(unittest.TestCase):
     def test_export_success_status_codes(self):
         cases = (
             (200, "OK"),
+            (201, "Created"),
             (204, "No Content"),
-            (302, "Found"),
         )
 
         for status_code, reason in cases:
@@ -258,6 +258,12 @@ class TestOTLPHTTPClient(unittest.TestCase):
                 _TestHTTPResult(status_code=500, reason="Internal Server Error"),
                 500,
                 "Internal Server Error",
+                None,
+            ),
+            (
+                _TestHTTPResult(status_code=302, reason="Found"),
+                302,
+                "Found",
                 None,
             ),
             (
