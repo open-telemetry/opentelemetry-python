@@ -1,14 +1,1 @@
-`opentelemetry-api`: implement the declarative configuration Instrumentation
-Configuration API in `opentelemetry._configuration`, so an instrumentation
-library can read its own configuration without depending on the SDK.
-Add `ConfigProperties`, a typed read view over the `instrumentation` config node
-providing `get_string`/`get_bool`/`get_int`/`get_float`,
-`get_config`/`get_config_list`, the typed sequence getters
-`get_string_list`/`get_bool_list`/`get_int_list`/`get_float_list`, and `keys`.
-Add a global `ConfigProvider` with `get_config_provider`/`set_config_provider`
-following the set-once, proxy-default semantics of
-`set_tracer_provider`/`get_tracer_provider`, where `get_config_provider` returns
-a forwarding `ProxyConfigProvider` until one is set.
-In `opentelemetry-configuration`, `configure_sdk` now installs that global
-`ConfigProvider`, built from the `instrumentation` config node as the
-configuration file wrote it.
+`opentelemetry-api`: implement the declarative configuration Instrumentation Configuration API in `opentelemetry._configuration`, so an instrumentation library can read its own configuration without depending on the SDK. `ConfigProperties` is a typed read view over a configuration node, with `get_string`/`get_bool`/`get_int`/`get_float`, `get_config`/`get_config_list`, the sequence getters `get_string_list`/`get_bool_list`/`get_int_list`/`get_float_list`, and `keys`. `get_config_provider`/`set_config_provider` hold the global `ConfigProvider`, following the set-once, proxy-default semantics of `get_tracer_provider`/`set_tracer_provider`. In `opentelemetry-configuration`, `configure_sdk` installs that provider, built from the `instrumentation/development` node as the configuration file wrote it.
