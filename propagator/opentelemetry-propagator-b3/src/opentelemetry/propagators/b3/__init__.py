@@ -90,8 +90,8 @@ class B3MultiFormat(TextMapPropagator):
             or self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
-            if sampling_state_alone and debug:
-                context = set_value(_DEBUG_FLAG_KEY, True, context)
+            if sampling_state_alone:
+                context = set_value(_DEBUG_FLAG_KEY, debug, context)
             return context
 
         trace_id = int(trace_id, 16)

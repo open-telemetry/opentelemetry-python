@@ -371,6 +371,22 @@ class AbstractB3FormatTestCase:
 
         self.assertNotDebug(new_carrier)
 
+    def test_extract_clears_a_debug_flag_for_a_single_header_sampling_state_sent_alone(self):
+        """A sampling state of "0" sent on its own clears a debug flag left by an earlier carrier."""
+        propagator = self.get_propagator()
+        debug_ctx = propagator.extract({propagator.SINGLE_HEADER_KEY: "d"})
+        new_ctx = propagator.extract({propagator.SINGLE_HEADER_KEY: "0"}, debug_ctx)
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
+    def test_extract_clears_a_debug_flag_for_a_multi_header_sampling_state_sent_alone(self):
+        """An x-b3-sampled sent on its own clears a debug flag left by an earlier carrier."""
+        propagator = self.get_propagator()
+        debug_ctx = propagator.extract({propagator.FLAGS_KEY: "1"})
+        new_ctx = propagator.extract({propagator.SAMPLED_KEY: "1"}, debug_ctx)
+
+        self.assertFalse(get_value(_DEBUG_FLAG_KEY, new_ctx))
+
     def test_inject_debug_flag_received_without_ids(self):
         """A debug flag received with no ids is re-propagated onto the span that follows it."""
         propagator = self.get_propagator()
