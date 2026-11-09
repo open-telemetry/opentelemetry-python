@@ -43,7 +43,10 @@ _RETRYABLE_STATUS_CODES: Final[frozenset[int]] = frozenset(
 
 
 def _transport_timeout(timeout: float) -> float | None:
-    """Map an infinite timeout to ``None``, which transports treat as no timeout."""
+    """Map an infinite timeout to ``None``, which transports treat as no timeout.
+    The declarative configuration package maps timeouts of 0 (i.e. no limit) to
+    ``math.inf``.
+    """
     return None if math.isinf(timeout) else timeout
 
 
