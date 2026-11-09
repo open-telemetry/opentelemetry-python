@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: parse YAML 1.2 with `ruamel.yaml` instead of PyYAML
