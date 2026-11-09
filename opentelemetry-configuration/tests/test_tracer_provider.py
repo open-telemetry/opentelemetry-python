@@ -590,6 +590,26 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertEqual(procs[0]._batch_processor._schedule_delay_millis, 0)
         provider.shutdown()
 
+    def test_batch_processor_defaults_ignore_ambient_environment(self):
+        config = self._make_batch_config(SpanExporterConfig(console={}))
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_BSP_MAX_QUEUE_SIZE": "9999",
+                "OTEL_BSP_SCHEDULE_DELAY": "88888",
+                "OTEL_BSP_MAX_EXPORT_BATCH_SIZE": "777",
+                "OTEL_BSP_EXPORT_TIMEOUT": "66666",
+            },
+        ):
+            provider = create_tracer_provider(config)
+
+        batch_processor = provider._active_span_processor._span_processors[0]._batch_processor
+        self.assertEqual(batch_processor._max_queue_size, 2048)
+        self.assertEqual(batch_processor._schedule_delay_millis, 5000)
+        self.assertEqual(batch_processor._max_export_batch_size, 512)
+        self.assertEqual(batch_processor._export_timeout_millis, 30000)
+        provider.shutdown()
+
     def test_console_exporter_simple(self):
         config = self._make_simple_config(SpanExporterConfig(console={}))
         provider = create_tracer_provider(config)
