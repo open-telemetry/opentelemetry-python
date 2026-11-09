@@ -125,6 +125,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
     def test_get_config_returns_sub_view(self):
         props = ConfigProperties({"peer": {"host": "localhost", "port": 8080}})
         sub = props.get_config("peer")
+        assert sub is not None
         self.assertIsInstance(sub, ConfigProperties)
         self.assertEqual(sub.get_string("host"), "localhost")
         self.assertEqual(sub.get_int("port"), 8080)
@@ -138,6 +139,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
     def test_get_config_list(self):
         props = ConfigProperties({"servers": [{"host": "a"}, {"host": "b"}]})
         result = props.get_config_list("servers")
+        assert result is not None
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].get_string("host"), "a")
         self.assertEqual(result[1].get_string("host"), "b")
@@ -148,6 +150,7 @@ class TestConfigPropertiesStructured(unittest.TestCase):
     def test_get_config_list_accepts_empty_mapping_element(self):
         props = ConfigProperties({"servers": [{}, {"host": "a"}]})
         result = props.get_config_list("servers")
+        assert result is not None
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].keys(), set())
         self.assertEqual(result[1].get_string("host"), "a")
@@ -207,6 +210,7 @@ class TestNodeToMapping(unittest.TestCase):
         node = _InstrumentationNode(general=_GeneralNode(stability_opt_in_list="http"))
         props = ConfigProperties(_node_to_mapping(node))
         general = props.get_config("general")
+        assert general is not None
         self.assertIsInstance(general, ConfigProperties)
         self.assertEqual(general.get_string("stability_opt_in_list"), "http")
 

@@ -239,7 +239,7 @@ class ConfigProperties:
         """Return the set of property keys present in this view."""
         return set(self._properties.keys())
 
-    def __contains__(self, name: str) -> bool:
+    def __contains__(self, name: object) -> bool:
         return name in self._properties
 
     def __repr__(self) -> str:
