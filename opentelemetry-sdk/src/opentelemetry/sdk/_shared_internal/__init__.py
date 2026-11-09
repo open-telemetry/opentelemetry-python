@@ -140,6 +140,7 @@ class BatchProcessor(Generic[Telemetry]):
         return False
 
     def _at_fork_reinit(self):
+        self._bsp_reset_once = Once()
         self._export_lock = threading.Lock()
         self._worker_awaken = threading.Event()
         self._queue.clear()

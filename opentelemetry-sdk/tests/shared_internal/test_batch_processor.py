@@ -234,6 +234,30 @@ class TestBatchProcessor:
         assert exporter.export.call_count == 1
         batch_processor.shutdown()
 
+    def test_batch_telemetry_record_processor_recovers_after_multiple_pid_changes(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        batch_processor = batch_processor_class(
+            exporter,
+            max_queue_size=200,
+            max_export_batch_size=10,
+            schedule_delay_millis=30000,
+            export_timeout_millis=500,
+        )
+        processor = batch_processor._batch_processor
+        original_once = processor._bsp_reset_once
+
+        processor._pid = os.getpid() - 1
+        processor.emit(telemetry)
+        assert processor._bsp_reset_once is not original_once
+        first_recovery_once = processor._bsp_reset_once
+
+        processor._pid = os.getpid() - 1
+        processor.emit(telemetry)
+        assert processor._bsp_reset_once is not first_recovery_once
+        batch_processor.shutdown()
+
     def test_record_processor_is_garbage_collected(self, batch_processor_class, telemetry):
         exporter = Mock()
         processor = batch_processor_class(exporter)
