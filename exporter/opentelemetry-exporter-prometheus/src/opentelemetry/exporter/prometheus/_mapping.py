@@ -111,8 +111,8 @@ def map_unit(unit: str) -> str:
     if len(ratio_unit_subparts) == 2:
         bottom = _sanitize_name(ratio_unit_subparts[1])
         if bottom:
-            top = _sanitize_name(ratio_unit_subparts[0])
-            top = _UNIT_MAPPINGS.get(top, top)
+            top = ratio_unit_subparts[0]
+            top = _UNIT_MAPPINGS.get(top, _sanitize_name(top))
             bottom = _PER_UNIT_MAPPINGS.get(bottom, bottom)
             return f"{top}_per_{bottom}" if top else f"per_{bottom}"
 

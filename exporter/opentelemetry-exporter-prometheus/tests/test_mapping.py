@@ -71,6 +71,9 @@ class TestMapping(TestCase):
         # conversion of per units
         self.assertEqual(map_unit("km/h"), "km_per_hour")
         self.assertEqual(map_unit("m/s"), "meters_per_second")
+        self.assertEqual(map_unit("%/s"), "percent_per_second")
+        self.assertEqual(map_unit("%/min"), "percent_per_min")
+        self.assertEqual(map_unit("%/h"), "percent_per_hour")
         self.assertEqual(map_unit("{foo}/s"), "per_second")
         self.assertEqual(map_unit("foo/bar"), "foo_per_bar")
         self.assertEqual(map_unit("2fer/store"), "2fer_per_store")
