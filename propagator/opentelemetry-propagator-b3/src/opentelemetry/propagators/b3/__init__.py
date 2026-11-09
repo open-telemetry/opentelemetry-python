@@ -70,13 +70,19 @@ class B3MultiFormat(TextMapPropagator):
                 trace_id, span_id, sampled, _ = fields
 
             debug = sampled == self._DEBUG_SAMPLED_VALUE
+            sampling_state_alone = len(fields) == 1
         else:
-            trace_id = _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY)) or trace_id
-            span_id = _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY)) or span_id
-            sampled = _extract_first_element(getter.get(carrier, self.SAMPLED_KEY)) or sampled
-            flags = _extract_first_element(getter.get(carrier, self.FLAGS_KEY)) or flags
+            trace_id = _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY))
+            span_id = _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY))
+            sampled = _extract_first_element(getter.get(carrier, self.SAMPLED_KEY))
+            flags = _extract_first_element(getter.get(carrier, self.FLAGS_KEY))
 
             debug = flags == self._DEBUG_FLAGS_VALUE
+            sampling_state_alone = trace_id is None and span_id is None and bool(sampled or flags)
+
+            trace_id = trace.INVALID_TRACE_ID if trace_id is None else trace_id
+            span_id = trace.INVALID_SPAN_ID if span_id is None else span_id
+            sampled = "0" if sampled is None else sampled
 
         if (
             trace_id == trace.INVALID_TRACE_ID
@@ -84,7 +90,7 @@ class B3MultiFormat(TextMapPropagator):
             or self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
-            if debug and trace_id == trace.INVALID_TRACE_ID and span_id == trace.INVALID_SPAN_ID:
+            if sampling_state_alone and debug:
                 context = set_value(_DEBUG_FLAG_KEY, True, context)
             return context
 

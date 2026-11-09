@@ -465,6 +465,23 @@ class AbstractB3FormatTestCase:
 
         self.assertDictEqual(Context(), new_ctx)
 
+    def test_extract_invalid_single_header_ids_to_explicit_ctx(self):
+        """Given a single header whose IDs are unparsable, do not modify context"""
+        old_ctx = Context({"k1": "v1"})
+        propagator = self.get_propagator()
+
+        carrier = {propagator.SINGLE_HEADER_KEY: "abc123-def456"}
+        new_ctx = propagator.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_invalid_single_header_ids_to_implicit_ctx(self):
+        propagator = self.get_propagator()
+        carrier = {propagator.SINGLE_HEADER_KEY: "abc123-def456"}
+        new_ctx = propagator.extract(carrier)
+
+        self.assertDictEqual(Context(), new_ctx)
+
     def test_extract_missing_trace_id_to_explicit_ctx(self):
         """Given no trace ID, do not modify context"""
         old_ctx = Context({"k1": "v1"})
@@ -555,6 +572,31 @@ class AbstractB3FormatTestCase:
         propagator = self.get_propagator()
         carrier = {
             propagator.TRACE_ID_KEY: self.serialized_trace_id,
+            propagator.FLAGS_KEY: "1",
+        }
+        new_ctx = propagator.extract(carrier)
+
+        self.assertDictEqual(Context(), new_ctx)
+
+    def test_extract_empty_ids_to_explicit_ctx(self):
+        """Given empty trace and span IDs, do not modify context"""
+        old_ctx = Context({"k1": "v1"})
+        propagator = self.get_propagator()
+
+        carrier = {
+            propagator.TRACE_ID_KEY: "",
+            propagator.SPAN_ID_KEY: "",
+            propagator.FLAGS_KEY: "1",
+        }
+        new_ctx = propagator.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_empty_ids_to_implicit_ctx(self):
+        propagator = self.get_propagator()
+        carrier = {
+            propagator.TRACE_ID_KEY: "",
+            propagator.SPAN_ID_KEY: "",
             propagator.FLAGS_KEY: "1",
         }
         new_ctx = propagator.extract(carrier)
