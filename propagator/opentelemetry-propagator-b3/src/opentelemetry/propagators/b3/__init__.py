@@ -133,16 +133,16 @@ class B3MultiFormat(TextMapPropagator):
             return
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
-        debug = get_value(_DEBUG_FLAG_KEY, context) is True
         setter.set(
             carrier,
             self.TRACE_ID_KEY,
             format_trace_id(span_context.trace_id),
         )
         setter.set(carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id))
-        if debug:
+        if get_value(_DEBUG_FLAG_KEY, context) is True:
             setter.set(carrier, self.FLAGS_KEY, self._DEBUG_FLAGS_VALUE)
-        setter.set(carrier, self.SAMPLED_KEY, "1" if sampled or debug else "0")
+        else:
+            setter.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
     @property
     def fields(self) -> set[str]:

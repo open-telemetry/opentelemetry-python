@@ -307,7 +307,7 @@ class AbstractB3FormatTestCase:
         self.assertSampled(new_carrier)
 
     def test_inject_debug_flag_for_unsampled_span(self):
-        """A received debug flag forces the injected sampling decision to accept."""
+        """A received debug flag is injected in place of the span's unsampled decision."""
         propagator = self.get_propagator()
         ctx = propagator.extract(
             {
@@ -724,7 +724,7 @@ class TestB3MultiFormat(AbstractB3FormatTestCase, unittest.TestCase):
     def assertDebug(self, carrier):
         propagator = self.get_propagator()
         self.assertEqual(carrier[propagator.FLAGS_KEY], "1")
-        self.assertEqual(carrier[propagator.SAMPLED_KEY], "1")
+        self.assertNotIn(propagator.SAMPLED_KEY, carrier)
 
     def assertNotDebug(self, carrier):
         self.assertNotIn(self.get_propagator().FLAGS_KEY, carrier)
