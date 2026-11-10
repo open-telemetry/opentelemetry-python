@@ -19,31 +19,39 @@ Notice that these propagator classes are defined as
 ``opentelemetry_propagator`` entry points in the ``pyproject.toml`` file of
 ``opentelemetry``.
 
+See the `Propagation API Specification`_ for what a propagator has to do.
+
 Example::
 
     import flask
     import requests
     from opentelemetry import propagate
+    from opentelemetry.propagators.textmap import Getter, Setter
 
 
     PROPAGATOR = propagate.get_global_textmap()
 
 
-    def get_header_from_flask_request(request, key):
-        return request.headers.get_all(key)
+    class FlaskGetter(Getter[flask.Request]):
+        def get(self, carrier: flask.Request, key: str) -> list[str] | None:
+            return carrier.headers.get_all(key) or None
+
+        def keys(self, carrier: flask.Request) -> list[str]:
+            return list(carrier.headers.keys())
 
 
-    def set_header_into_requests_request(request: requests.Request, key: str, value: str):
-        request.headers[key] = value
+    class RequestsSetter(Setter[requests.Request]):
+        def set(self, carrier: requests.Request, key: str, value: str) -> None:
+            carrier.headers[key] = value
 
 
-    def example_route():
-        context = PROPAGATOR.extract(get_header_from_flask_request, flask.request)
+    def example_route() -> None:
+        context = PROPAGATOR.extract(flask.request, getter=FlaskGetter())
         request_to_downstream = requests.Request("GET", "http://httpbin.org/get")
         PROPAGATOR.inject(
-            set_header_into_requests_request,
             request_to_downstream,
             context=context,
+            setter=RequestsSetter(),
         )
         session = requests.Session()
         session.send(request_to_downstream.prepare())
@@ -80,6 +88,11 @@ def extract(
             which understands how to extract a value from it.
         context: an optional Context to use. Defaults to root
             context if not set.
+
+    Returns:
+        A Context holding whatever the globally configured propagator found in
+        the carrier. When the carrier holds nothing the propagator recognises,
+        ``context`` is returned unchanged.
     """
     return get_global_textmap().extract(carrier, context, getter=getter)
 
@@ -105,6 +118,25 @@ def inject(
 
 
 def _load_propagators() -> textmap.TextMapPropagator:
+    """Build the global propagator from the ``OTEL_PROPAGATORS`` variable.
+
+    Each comma-separated name is loaded as an ``opentelemetry_propagator``
+    entry point. When the variable is unset, W3C trace context and W3C baggage
+    are used. When a name is ``none``, propagation is disabled entirely and
+    every name after it is ignored. Every name before it is resolved first, so
+    a misspelled name ahead of ``none`` still raises :exc:`ValueError`.
+
+    Returns:
+        A :class:`~opentelemetry.propagators.composite.CompositePropagator`
+        wrapping the configured propagators, in the order they were named. It
+        wraps an empty list when propagation is disabled.
+
+    Raises:
+        ValueError: If a named propagator has no matching entry point, which
+            means it is misspelled or its package is not installed.
+        Exception: Re-raises whatever loading an entry point raised, after
+            logging it.
+    """
     configured = environ.get(OTEL_PROPAGATORS)
     if not configured:
         # pylint: disable=import-outside-toplevel,no-name-in-module
@@ -161,11 +193,27 @@ for propagator in environ_propagators.split(","):  # type: ignore[assignment]
 
 
 def get_global_textmap() -> textmap.TextMapPropagator:
+    """Return the propagator that :func:`extract` and :func:`inject` use.
+
+    Returns:
+        The globally configured propagator. Unless
+        :func:`set_global_textmap` has replaced it, this is the one built from
+        the ``OTEL_PROPAGATORS`` environment variable at import time.
+    """
     return _HTTP_TEXT_FORMAT
 
 
 def set_global_textmap(
     http_text_format: textmap.TextMapPropagator,
 ) -> None:
+    """Replace the propagator that :func:`extract` and :func:`inject` use.
+
+    This overrides whatever the ``OTEL_PROPAGATORS`` environment variable
+    selected. Call it before any instrumentation starts propagating, since a
+    propagator already captured by a caller is not replaced.
+
+    Args:
+        http_text_format: The propagator to install globally.
+    """
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
     _HTTP_TEXT_FORMAT = http_text_format

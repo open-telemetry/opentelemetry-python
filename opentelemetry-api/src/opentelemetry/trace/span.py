@@ -1,6 +1,20 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Spans and the identifiers that place them in a trace.
+
+A :class:`Span` covers one operation: it has a name, a start and end time, and
+may carry attributes, events and links. :class:`SpanContext` is the immutable
+identity of a span, the part that is serialized onto the wire so that a span
+created in another process joins the same trace. :class:`TraceFlags` and
+:class:`TraceState` are the two further fields the W3C trace context format
+carries alongside those identifiers.
+
+:class:`~opentelemetry.trace.NonRecordingSpan` is the span implementation the API uses on its own.
+It holds a :class:`SpanContext` so propagation keeps working, and discards
+everything else, so instrumentation runs unchanged when no SDK is installed.
+"""
+
 from __future__ import annotations
 
 import abc
@@ -49,6 +63,20 @@ _logger = logging.getLogger(__name__)
 
 
 def _is_valid_pair(key: str, value: str) -> bool:
+    """Report whether a pair may appear in a ``tracestate`` header.
+
+    Args:
+        key: The candidate trace state key. A key starting with a lowercase
+            letter needs no ``@``. A key starting with a digit is valid only
+            in the tenant ``@`` vendor form, whose vendor half must itself
+            start with a lowercase letter.
+        value: The candidate trace state value. It must hold only printable
+            ASCII other than comma and equals sign, and must not end with a
+            space.
+
+    Returns:
+        ``True`` when both halves match the W3C trace context grammar.
+    """
     return (
         isinstance(key, str)
         and _KEY_PATTERN.fullmatch(key) is not None
@@ -68,6 +96,12 @@ class Span(abc.ABC):
 
         Only the first call to `end` should modify the span, and
         implementations are free to ignore or raise on further calls.
+
+        Args:
+            end_time: When the operation finished, as nanoseconds since the
+                Unix epoch. Defaults to the time of the call. Pass it
+                explicitly only when the real end time differs from now, for
+                example when recording an operation that finished earlier.
         """
 
     @abc.abstractmethod
@@ -91,6 +125,10 @@ class Span(abc.ABC):
         strongly discouraged. It is also preferred to set attributes at span
         creation, instead of calling this method later since samplers can only
         consider information already present during span creation.
+
+        Args:
+            attributes: The name/value pairs to set. Each is validated and
+                may be truncated or dropped by the SDK limits.
         """
 
     @abc.abstractmethod
@@ -103,6 +141,10 @@ class Span(abc.ABC):
         strongly discouraged. It is also preferred to set attributes at span
         creation, instead of calling this method later since samplers can only
         consider information already present during span creation.
+
+        Args:
+            key: The attribute name. It must be a non-empty string.
+            value: The attribute value.
         """
 
     @abc.abstractmethod
@@ -117,6 +159,12 @@ class Span(abc.ABC):
         Adds a single `Event` with the name and, optionally, a timestamp and
         attributes passed as arguments. Implementations should generate a
         timestamp if the `timestamp` argument is omitted.
+
+        Args:
+            name: The name of the event.
+            attributes: Name/value pairs describing the event.
+            timestamp: When the event occurred, as nanoseconds since the Unix
+                epoch. Defaults to the time of the call.
         """
 
     def add_link(  # pylint: disable=no-self-use
@@ -134,6 +182,13 @@ class Span(abc.ABC):
         Note: It is preferred to add links at span creation, instead of calling
         this method later since samplers can only consider information already
         present during span creation.
+
+        This method is not abstract and its own body only emits a warning, so
+        a span that inherits it records no link at all.
+
+        Args:
+            context: The span context to link to.
+            attributes: Name/value pairs describing the link.
         """
         warnings.warn(
             "Span.add_link() not implemented and will be a no-op. "
@@ -148,6 +203,9 @@ class Span(abc.ABC):
 
         Upon this update, any sampling behavior based on Span name will depend
         on the implementation.
+
+        Args:
+            name: The new name of the span.
         """
 
     @abc.abstractmethod
@@ -156,6 +214,12 @@ class Span(abc.ABC):
 
         Returns true if this Span is active and recording information like
         events with the add_event operation and attributes using set_attribute.
+
+        Returns:
+            ``True`` when the span records what is set on it. ``False`` for a
+            span that has ended, for one that was not sampled, and for a
+            :class:`~opentelemetry.trace.NonRecordingSpan`. Instrumentation should check this
+            before doing expensive work to build an attribute value.
         """
 
     @abc.abstractmethod
@@ -166,6 +230,15 @@ class Span(abc.ABC):
     ) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status.
+
+        Args:
+            status: The status to set, either a
+                :class:`~opentelemetry.trace.Status` or a bare
+                :class:`~opentelemetry.trace.StatusCode`.
+            description: A description of the status. It is kept only when
+                ``status`` is or carries :attr:`~.StatusCode.ERROR`, and must
+                not be given when ``status`` is already a
+                :class:`~opentelemetry.trace.Status`.
         """
 
     @abc.abstractmethod
@@ -176,12 +249,29 @@ class Span(abc.ABC):
         timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
-        """Records an exception as a span event."""
+        """Records an exception as a span event.
+
+        Recording an exception does not set the span status. Set it with
+        :meth:`set_status` as well when the exception means the operation
+        failed.
+
+        Args:
+            exception: The exception to record. Its type, message and stack
+                trace are attached to the event.
+            attributes: Further name/value pairs describing the event.
+            timestamp: When the exception was recorded, as nanoseconds since
+                the Unix epoch. Defaults to the time of the call.
+            escaped: Whether the exception escaped the scope of the span,
+                meaning it was not caught before the span ended.
+        """
 
     def __enter__(self) -> Span:
         """Invoked when `Span` is used as a context manager.
 
         Returns the `Span` itself.
+
+        Returns:
+            This span, so that ``with span as s`` binds the span itself.
         """
         return self
 
@@ -191,7 +281,18 @@ class Span(abc.ABC):
         exc_val: BaseException | None,
         exc_tb: python_types.TracebackType | None,
     ) -> None:
-        """Ends context manager and calls `end` on the `Span`."""
+        """Ends context manager and calls `end` on the `Span`.
+
+        The span is ended whether or not the block raised. This method does
+        not set the span status or record the exception; a tracer that creates
+        the span is responsible for that.
+
+        Args:
+            exc_type: The type of the exception that left the block, or
+                ``None`` when it exited normally.
+            exc_val: The exception that left the block, or ``None``.
+            exc_tb: The traceback of that exception, or ``None``.
+        """
 
         self.end()
 
@@ -200,10 +301,11 @@ class TraceFlags(int):
     """A bitmask that represents options specific to the trace.
 
     Supported flags:
+
     - "sampled" (``0x01``): Indicates the trace may have been sampled upstream.
     - "random-trace-id" (``0x02``): Indicates the trace ID was generated
-    randomly, with at least the 7 rightmost bytes (56 bits) selected with
-    uniform distribution.
+      randomly, with at least the 7 rightmost bytes (56 bits) selected with
+      uniform distribution.
 
     See the `W3C Trace Context - Traceparent`_ spec for details.
 
@@ -217,14 +319,32 @@ class TraceFlags(int):
 
     @classmethod
     def get_default(cls) -> TraceFlags:
+        """Return the flags with every option off.
+
+        Returns:
+            Flags equal to :attr:`DEFAULT`, meaning not sampled and no
+            guarantee about how the trace id was generated.
+        """
         return cls(cls.DEFAULT)
 
     @property
     def sampled(self) -> bool:
+        """Whether the trace may have been sampled upstream.
+
+        Returns:
+            ``True`` when the :attr:`SAMPLED` bit is set.
+        """
         return bool(self & TraceFlags.SAMPLED)
 
     @property
     def random_trace_id(self) -> bool:
+        """Whether the trace id was generated randomly.
+
+        Returns:
+            ``True`` when the :attr:`RANDOM_TRACE_ID` bit is set, which
+            promises that at least the rightmost 56 bits of the trace id were
+            drawn with uniform distribution.
+        """
         return bool(self & TraceFlags.RANDOM_TRACE_ID)
 
 
@@ -238,6 +358,15 @@ class TraceState(Mapping[str, str]):
     Implementations should conform to the `W3C Trace Context - Tracestate`_
     spec, which describes additional restrictions on valid field values.
 
+    Construction drops anything the format forbids. An invalid pair and a
+    duplicate key are each skipped with a warning. Supplying more than 32
+    pairs discards all of them, leaving an empty trace state, because the
+    format defines no way to choose which to keep.
+
+    Args:
+        entries: The pairs to store, in order. ``None`` builds an empty
+            trace state.
+
     .. _W3C Trace Context - Tracestate:
         https://www.w3.org/TR/trace-context/#tracestate-field
     """
@@ -246,6 +375,11 @@ class TraceState(Mapping[str, str]):
         self,
         entries: Sequence[tuple[str, str]] | None = None,
     ) -> None:
+        """Build the trace state, dropping anything the format forbids.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         self._dict = {}  # type: dict[str, str]
         if entries is None:
             return
@@ -266,18 +400,55 @@ class TraceState(Mapping[str, str]):
                 _logger.warning("Invalid key/value pair (%s, %s) found.", key, value)
 
     def __contains__(self, item: object) -> bool:
+        """Report whether a key is present.
+
+        Args:
+            item: The key to look for.
+
+        Returns:
+            ``True`` when the key is present.
+        """
         return item in self._dict
 
     def __getitem__(self, key: str) -> str:
+        """Return the value stored under ``key``.
+
+        Args:
+            key: The trace state key to look up.
+
+        Returns:
+            The value stored under ``key``.
+
+        Raises:
+            KeyError: If the key is absent.
+        """
         return self._dict[key]
 
     def __iter__(self) -> Iterator[str]:
+        """Iterate over the keys.
+
+        Returns:
+            An iterator over the keys. The order is the one the pairs
+            were supplied to the constructor or parsed from the header in.
+            :meth:`add` and :meth:`update` put their new pair first.
+        """
         return iter(self._dict)
 
     def __len__(self) -> int:
+        """Return how many pairs are stored.
+
+        Returns:
+            The number of pairs, never more than 32.
+        """
         return len(self._dict)
 
     def __repr__(self) -> str:
+        """Render the pairs for debugging.
+
+        Returns:
+            A string listing each pair, which is not the ``tracestate`` header
+            format. Use :meth:`to_header` for that.
+        """
         pairs = [f"{{key={key}, value={value}}}" for key, value in self._dict.items()]
         return str(pairs)
 
@@ -419,15 +590,42 @@ class TraceState(Mapping[str, str]):
 
     @classmethod
     def get_default(cls) -> TraceState:
+        """Return an empty trace state.
+
+        Returns:
+            A trace state holding no pairs, which is what a span context
+            carries when no vendor has added anything.
+        """
         return cls()
 
     def keys(self) -> typing.KeysView[str]:
+        """Return a view of the keys.
+
+        Returns:
+            A view of the keys. The order is the one the pairs
+            were supplied to the constructor or parsed from the header in.
+            :meth:`add` and :meth:`update` put their new pair first.
+        """
         return self._dict.keys()
 
     def items(self) -> typing.ItemsView[str, str]:
+        """Return a view of the pairs.
+
+        Returns:
+            A view of the key/value pairs. The order is the one the pairs
+            were supplied to the constructor or parsed from the header in.
+            :meth:`add` and :meth:`update` put their new pair first.
+        """
         return self._dict.items()
 
     def values(self) -> typing.ValuesView[str]:
+        """Return a view of the values.
+
+        Returns:
+            A view of the values. The order is the one the pairs
+            were supplied to the constructor or parsed from the header in.
+            :meth:`add` and :meth:`update` put their new pair first.
+        """
         return self._dict.values()
 
 
@@ -448,6 +646,11 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
         is_remote: True if propagated from a remote parent.
         trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
+
+    A span context is a :class:`tuple` subclass and is immutable: assigning to
+    an attribute is ignored and logged at debug level rather than raising. A
+    context whose trace id or span id is zero, or out of range, is marked
+    invalid, which is how ``INVALID_SPAN_CONTEXT`` is built.
     """
 
     def __new__(
@@ -458,6 +661,16 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
         trace_flags: TraceFlags | None = DEFAULT_TRACE_OPTIONS,
         trace_state: TraceState | None = DEFAULT_TRACE_STATE,
     ) -> SpanContext:
+        """Build the span context and compute whether it is valid.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders. Passing ``None`` for ``trace_flags``
+        or ``trace_state`` substitutes the default rather than storing
+        ``None``.
+
+        Returns:
+            A new, immutable span context.
+        """
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
         if trace_state is None:
@@ -475,6 +688,12 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
     def __getnewargs__(
         self,
     ) -> tuple[int, int, bool, TraceFlags, TraceState]:
+        """Return the arguments needed to rebuild this context when unpickling.
+
+        Returns:
+            The five constructor arguments. The validity flag is left out
+            because :meth:`__new__` recomputes it.
+        """
         return (
             self.trace_id,
             self.span_id,
@@ -485,38 +704,96 @@ class SpanContext(tuple[int, int, bool, "TraceFlags", "TraceState", bool]):
 
     @property
     def trace_id(self) -> int:
+        """The id of the trace this span belongs to.
+
+        Returns:
+            A 128-bit integer. It is zero in ``INVALID_SPAN_CONTEXT``,
+            but a context can be invalid while this id is non-zero, because
+            :attr:`is_valid` requires both ids to be in range. Test
+            :attr:`is_valid` rather than comparing this against zero.
+        """
         return self[0]  # pylint: disable=unsubscriptable-object
 
     @property
     def span_id(self) -> int:
+        """The id of this span.
+
+        Returns:
+            A 64-bit integer. It is zero in ``INVALID_SPAN_CONTEXT``, but
+            a context can be invalid while this id is non-zero, because
+            :attr:`is_valid` requires both ids to be in range. Test
+            :attr:`is_valid` rather than comparing this against zero.
+        """
         return self[1]  # pylint: disable=unsubscriptable-object
 
     @property
     def is_remote(self) -> bool:
+        """Whether this context arrived from another process.
+
+        Returns:
+            ``True`` when the context was extracted from a carrier by a
+            propagator, ``False`` when the span was started in this process.
+        """
         return self[2]  # pylint: disable=unsubscriptable-object
 
     @property
     def trace_flags(self) -> TraceFlags:
+        """The trace options to propagate.
+
+        Returns:
+            The flags, including the sampled bit.
+        """
         return self[3]  # pylint: disable=unsubscriptable-object
 
     @property
     def trace_state(self) -> TraceState:
+        """The vendor-specific trace information to propagate.
+
+        Returns:
+            The trace state, empty when no vendor has added anything.
+        """
         return self[4]  # pylint: disable=unsubscriptable-object
 
     @property
     def is_valid(self) -> bool:
+        """Whether this context identifies a real span.
+
+        Returns:
+            ``True`` when both the trace id and the span id are non-zero and
+            in range. A propagator writes no header for an invalid context.
+        """
         return self[5]  # pylint: disable=unsubscriptable-object
 
     def __setattr__(self, *args: str) -> None:
+        """Ignore an attempt to set an attribute, since the type is immutable.
+
+        The call is logged at debug level rather than raising.
+
+        Args:
+            *args: The attribute name and value that were to be set.
+        """
         _logger.debug("Immutable type, ignoring call to set attribute", stack_info=True)
 
     def __delattr__(self, *args: str) -> None:
+        """Ignore an attempt to delete an attribute, since the type is immutable.
+
+        The call is logged at debug level rather than raising.
+
+        Args:
+            *args: The name of the attribute that was to be deleted.
+        """
         _logger.debug(
             "Immutable type, ignoring call to delete attribute",
             stack_info=True,
         )
 
     def __repr__(self) -> str:
+        """Render the context with its ids in hexadecimal.
+
+        Returns:
+            A string naming the trace id, span id, trace flags, trace state
+            and remote flag.
+        """
         return f"{type(self).__name__}(trace_id=0x{format_trace_id(self.trace_id)}, span_id=0x{format_span_id(self.span_id)}, trace_flags=0x{self.trace_flags:02x}, trace_state={self.trace_state!r}, is_remote={self.is_remote})"
 
 
@@ -524,25 +801,58 @@ class NonRecordingSpan(Span):
     """The Span that is used when no Span implementation is available.
 
     All operations are no-op except context propagation.
+
+    Args:
+        context: The span context to carry. It is the only state this
+            span holds.
     """
 
     def __init__(self, context: SpanContext) -> None:
+        """Wrap a span context so it can be made current and propagated.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         self._context = context
 
     def get_span_context(self) -> SpanContext:
+        """Return the wrapped span context.
+
+        Returns:
+            The context this span was built with, unchanged.
+        """
         return self._context
 
     def is_recording(self) -> bool:
+        """Report that nothing set on this span is recorded.
+
+        Returns:
+            Always ``False``, so instrumentation skips building attribute
+            values that would be discarded.
+        """
         return False
 
     def end(self, end_time: int | None = None) -> None:
-        pass
+        """Discard the call, since this span has no duration to record.
+
+        Args:
+            end_time: Ignored.
+        """
 
     def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
-        pass
+        """Discard the attributes.
+
+        Args:
+            attributes: Ignored.
+        """
 
     def set_attribute(self, key: str, value: types.AnyValue) -> None:
-        pass
+        """Discard the attribute.
+
+        Args:
+            key: Ignored.
+            value: Ignored.
+        """
 
     def add_event(
         self,
@@ -550,24 +860,44 @@ class NonRecordingSpan(Span):
         attributes: types.Attributes = None,
         timestamp: int | None = None,
     ) -> None:
-        pass
+        """Discard the event.
+
+        Args:
+            name: Ignored.
+            attributes: Ignored.
+            timestamp: Ignored.
+        """
 
     def add_link(
         self,
         context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
-        pass
+        """Discard the link.
+
+        Args:
+            context: Ignored.
+            attributes: Ignored.
+        """
 
     def update_name(self, name: str) -> None:
-        pass
+        """Discard the new name, since this span has none to update.
+
+        Args:
+            name: Ignored.
+        """
 
     def set_status(
         self,
         status: Status | StatusCode,
         description: str | None = None,
     ) -> None:
-        pass
+        """Discard the status.
+
+        Args:
+            status: Ignored.
+            description: Ignored.
+        """
 
     def record_exception(
         self,
@@ -576,9 +906,21 @@ class NonRecordingSpan(Span):
         timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
-        pass
+        """Discard the exception.
+
+        Args:
+            exception: Ignored.
+            attributes: Ignored.
+            timestamp: Ignored.
+            escaped: Ignored.
+        """
 
     def __repr__(self) -> str:
+        """Render the span and the context it carries.
+
+        Returns:
+            A string naming the class and the wrapped span context.
+        """
         return f"NonRecordingSpan({self._context!r})"
 
 
@@ -595,7 +937,8 @@ INVALID_SPAN = NonRecordingSpan(INVALID_SPAN_CONTEXT)
 
 
 def format_trace_id(trace_id: int) -> str:
-    """Convenience trace ID formatting method
+    """Convenience trace ID formatting method.
+
     Args:
         trace_id: Trace ID int
 
@@ -606,7 +949,8 @@ def format_trace_id(trace_id: int) -> str:
 
 
 def format_span_id(span_id: int) -> str:
-    """Convenience span ID formatting method
+    """Convenience span ID formatting method.
+
     Args:
         span_id: Span ID int
 

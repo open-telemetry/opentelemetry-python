@@ -16,6 +16,23 @@ from opentelemetry.propagators.textmap import Getter, Setter
 
 
 def _normalize_key(key: str) -> str:
+    """Convert a propagation field name into an environment variable name.
+
+    Every character that is not a letter, a digit or an underscore becomes an
+    underscore, and the result is uppercased, so ``traceparent`` becomes
+    ``TRACEPARENT``. A leading digit is prefixed with an underscore, because an
+    environment variable name may not start with one. An empty name becomes a
+    single underscore.
+
+    The mapping is not reversible: two different field names can normalize to
+    the same environment variable name.
+
+    Args:
+        key: The propagation field name to convert.
+
+    Returns:
+        The corresponding environment variable name.
+    """
     if not key:
         return "_"
     result = re.sub(r"[^A-Za-z0-9_]", "_", key).upper()
@@ -25,6 +42,16 @@ def _normalize_key(key: str) -> str:
 
 
 def _is_normalized_key(key: str) -> bool:
+    """Report whether ``key`` is already a normalized environment variable name.
+
+    Args:
+        key: The candidate environment variable name.
+
+    Returns:
+        ``True`` when ``key`` is non-empty, does not start with a digit, and
+        holds only uppercase letters, digits and underscores, which is exactly
+        what :func:`_normalize_key` produces.
+    """
     if not key:
         return False
     if "0" <= key[0] <= "9":

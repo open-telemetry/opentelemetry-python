@@ -1,6 +1,14 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 #
+"""Serialization of a span context into the W3C trace context headers.
+
+:class:`TraceContextTextMapPropagator` writes the ``traceparent`` and
+``tracestate`` headers when a request is sent and reads them back when one is
+received, following https://www.w3.org/TR/trace-context/. This is the format
+that makes a trace continue across a service boundary.
+"""
+
 import logging
 import re
 
@@ -37,6 +45,24 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         """Extracts SpanContext from the carrier.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
+
+        A ``traceparent`` header that is absent, too long, malformed, carries
+        an all-zero trace or span id, or names version ``ff`` is ignored and
+        the context is returned unchanged. A ``tracestate`` header that
+        exceeds the maximum length is dropped while the ``traceparent`` is
+        still honoured.
+
+        Args:
+            carrier: The object holding the incoming headers.
+            context: The context to add the extracted span to. If ``None``, an
+                empty context is used rather than the current one.
+            getter: Reads the header values out of ``carrier``.
+
+        Returns:
+            A context holding a
+            :class:`~opentelemetry.trace.NonRecordingSpan` built from the
+            headers, marked as remote. The context is returned unchanged when
+            no valid ``traceparent`` is present.
         """
         if context is None:
             context = Context()
@@ -105,6 +131,17 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         """Injects SpanContext into the carrier.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.inject`
+
+        Nothing is written when the current span context is invalid, so a
+        request made outside any span carries no trace context header. The
+        ``tracestate`` header is written only when the span context carries a
+        non-empty trace state.
+
+        Args:
+            carrier: The object to write the outgoing headers into.
+            context: The context to read the current span from. If ``None``,
+                the current context is used.
+            setter: Writes the headers into ``carrier``.
         """
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
@@ -122,5 +159,10 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.fields`
+
+        Returns:
+            A set holding ``"traceparent"`` and ``"tracestate"``. A caller
+            clearing a carrier before injecting into it should remove these
+            names.
         """
         return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}

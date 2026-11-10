@@ -31,7 +31,7 @@ can optionally become the new active span::
     with tracer.start_as_current_span("parent"):
         # Attach a new child and update the current span
         with tracer.start_as_current_span("child"):
-            do_work():
+            do_work()
         # Close child span, set parent as current
     # Close parent span, set default span as current
 
@@ -105,17 +105,41 @@ logger = getLogger(__name__)
 
 
 class _LinkBase(ABC):
+    """The span context half of a link, shared by every link implementation.
+
+    A link associates one span with another that is causally related but is
+    not its parent, for example the spans of the messages gathered into a
+    batch.
+
+    Args:
+        context: The span context of the span to link to.
+    """
+
     def __init__(self, context: "SpanContext") -> None:
+        """Store the context of the span being linked to.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         self._context = context
 
     @property
     def context(self) -> "SpanContext":
+        """The context of the span being linked to.
+
+        Returns:
+            The span context this link was built with.
+        """
         return self._context
 
     @property
     @abstractmethod
     def attributes(self) -> types.Attributes:
-        pass
+        """The attributes describing this link.
+
+        Returns:
+            The link attributes, or ``None`` when the link carries none.
+        """
 
 
 class Link(_LinkBase):
@@ -131,15 +155,32 @@ class Link(_LinkBase):
         context: "SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
+        """Build the link.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         super().__init__(context)
         self._attributes = attributes
 
     @property
     def attributes(self) -> types.Attributes:
+        """The attributes describing this link.
+
+        Returns:
+            The link attributes, or ``None`` when the link carries none.
+        """
         return self._attributes
 
     @property
     def dropped_attributes(self) -> int:
+        """How many attributes were discarded for exceeding the limits.
+
+        Returns:
+            The count reported by the underlying
+            :class:`~opentelemetry.attributes.BoundedAttributes`, or ``0``
+            when the attributes are a plain mapping with no limit applied.
+        """
         if isinstance(self._attributes, BoundedAttributes):
             return self._attributes.dropped
         return 0
@@ -178,6 +219,13 @@ class SpanKind(Enum):
 
 
 class TracerProvider(ABC):
+    """The entry point of the tracing API, which hands out tracers.
+
+    An application configures one provider, usually by installing an SDK, and
+    every library obtains its own :class:`Tracer` from it through
+    :meth:`get_tracer`.
+    """
+
     @abstractmethod
     def get_tracer(
         self,
@@ -213,6 +261,9 @@ class TracerProvider(ABC):
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
             attributes: Optional. Specifies the attributes of the emitted telemetry.
+
+        Returns:
+            A `Tracer` bound to the given instrumentation scope.
         """
 
 
@@ -229,6 +280,22 @@ class NoOpTracerProvider(TracerProvider):
         schema_url: str | None = None,
         attributes: types.Attributes = None,
     ) -> "Tracer":
+        """Return a tracer that creates only non-recording spans.
+
+        Args:
+            instrumenting_module_name: The uniquely identifiable name for the
+                instrumentation scope, not the name of the module being
+                instrumented.
+            instrumenting_library_version: The version string of the
+                instrumenting library.
+            schema_url: The Schema URL of the emitted telemetry.
+            attributes: The instrumentation scope attributes to associate with
+                emitted telemetry.
+
+        Returns:
+            A :class:`NoOpTracer`. The scope arguments are accepted and
+            ignored.
+        """
         # pylint:disable=no-self-use,unused-argument
         return NoOpTracer()
 
@@ -242,6 +309,17 @@ class _DefaultTracerProvider(NoOpTracerProvider):
 
 
 class ProxyTracerProvider(TracerProvider):
+    """The provider returned before a real one has been set globally.
+
+    Every tracer this tracer provider hands out before a real tracer provider
+    is set is a :class:`ProxyTracer`, which creates non-recording spans and
+    switches to the real tracer provider as soon as
+    :func:`set_tracer_provider` installs one. Every tracer handed out after
+    that call comes from the real tracer provider directly. This is what lets
+    a library call :func:`get_tracer` at import time, before the application
+    configures the SDK.
+    """
+
     def get_tracer(
         self,
         instrumenting_module_name: str,
@@ -249,6 +327,22 @@ class ProxyTracerProvider(TracerProvider):
         schema_url: str | None = None,
         attributes: types.Attributes = None,
     ) -> "Tracer":
+        """Return a tracer bound to the real provider once one exists.
+
+        Args:
+            instrumenting_module_name: The uniquely identifiable name for the
+                instrumentation scope, not the name of the module being
+                instrumented.
+            instrumenting_library_version: The version string of the
+                instrumenting library.
+            schema_url: The Schema URL of the emitted telemetry.
+            attributes: The instrumentation scope attributes to associate with
+                emitted telemetry.
+
+        Returns:
+            A tracer from the global provider when one has been set, and a
+            :class:`ProxyTracer` carrying the given scope otherwise.
+        """
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
                 instrumenting_module_name,
@@ -402,6 +496,23 @@ class Tracer(ABC):
 
 
 class ProxyTracer(Tracer):
+    """A tracer that stands in until a real provider is set globally.
+
+    Every span it creates is a :class:`~opentelemetry.trace.NonRecordingSpan` while no
+    :class:`TracerProvider` has been installed. Once one is, the proxy
+    resolves a real tracer for its instrumentation scope, caches it, and
+    forwards everything from then on.
+
+    Args:
+        instrumenting_module_name: The uniquely identifiable name for the
+            instrumentation scope.
+        instrumenting_library_version: The version string of the
+            instrumenting library.
+        schema_url: The Schema URL of the emitted telemetry.
+        attributes: The instrumentation scope attributes to associate with
+            emitted telemetry.
+    """
+
     # pylint: disable=W0222,signature-differs
     def __init__(
         self,
@@ -410,6 +521,11 @@ class ProxyTracer(Tracer):
         schema_url: str | None = None,
         attributes: types.Attributes = None,
     ):
+        """Record what to ask the global provider for once it exists.
+
+        Every parameter is documented on the class itself, since that is the
+        form the API reference renders.
+        """
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
         self._schema_url = schema_url
@@ -419,6 +535,14 @@ class ProxyTracer(Tracer):
 
     @property
     def _tracer(self) -> Tracer:
+        """Return the tracer to delegate to, resolving it on first use.
+
+        Returns:
+            The tracer obtained from the global :class:`TracerProvider` once
+            one is set, cached thereafter. A :class:`NoOpTracer` until then,
+            built once and returned on every call, which the proxy never
+            adopts as its real tracer, so a later provider is still picked up.
+        """
         if self._real_tracer:
             return self._real_tracer
 
@@ -433,10 +557,34 @@ class ProxyTracer(Tracer):
         return self._noop_tracer
 
     def start_span(self, *args, **kwargs) -> Span:  # type: ignore
+        """Start a span through the real tracer once one is available.
+
+        Args:
+            *args: Positional arguments forwarded to
+                :meth:`Tracer.start_span`.
+            **kwargs: Keyword arguments forwarded to
+                :meth:`Tracer.start_span`.
+
+        Returns:
+            The span the delegate created, which is a
+            :class:`~opentelemetry.trace.NonRecordingSpan` while no provider has been set.
+        """
         return self._tracer.start_span(*args, **kwargs)  # type: ignore
 
     @_agnosticcontextmanager  # type: ignore
     def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:
+        """Start a span and make it current, through the real tracer.
+
+        Args:
+            *args: Positional arguments forwarded to
+                :meth:`Tracer.start_as_current_span`.
+            **kwargs: Keyword arguments forwarded to
+                :meth:`Tracer.start_as_current_span`.
+
+        Yields:
+            The span the delegate created, which is a
+            :class:`~opentelemetry.trace.NonRecordingSpan` while no provider has been set.
+        """
         with self._tracer.start_as_current_span(*args, **kwargs) as span:  # type: ignore
             yield span
 
@@ -458,6 +606,31 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
+        """Return a non-recording span, creating no telemetry.
+
+        ``context`` is the only argument that has an effect. Every other one
+        is accepted so that the signature matches :meth:`Tracer.start_span`,
+        and discarded, because a non-recording span holds nothing but a span
+        context.
+
+        Args:
+            name: Ignored.
+            context: The Context to read the current span from. Defaults to
+                the current context.
+            kind: Ignored.
+            attributes: Ignored.
+            links: Ignored.
+            start_time: Ignored.
+            record_exception: Ignored.
+            set_status_on_exception: Ignored.
+
+        Returns:
+            The current span when it is already a
+            :class:`~opentelemetry.trace.NonRecordingSpan`, so the trace context is preserved.
+            Otherwise a new :class:`~opentelemetry.trace.NonRecordingSpan` carrying the current
+            span context, or :data:`INVALID_SPAN` when that context is not
+            usable.
+        """
         current_span = get_current_span(context)
         if isinstance(current_span, NonRecordingSpan):
             return current_span
@@ -485,6 +658,33 @@ class NoOpTracer(Tracer):
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
     ) -> Iterator["Span"]:
+        """Make a non-recording span current for the duration of the block.
+
+        ``context`` is the only argument that changes what happens. The rest
+        are accepted so that the signature matches
+        :meth:`Tracer.start_as_current_span`, and the three passed on to
+        :func:`use_span` change nothing there, because a non-recording span is
+        never recording and discards the call to :meth:`Span.end`.
+
+        Args:
+            name: Ignored.
+            context: The Context to read the current span from. Defaults to
+                the current context.
+            kind: Ignored.
+            attributes: Ignored.
+            links: Ignored.
+            start_time: Ignored.
+            record_exception: Passed on to :func:`use_span`, which records
+                nothing on a non-recording span.
+            set_status_on_exception: Passed on to :func:`use_span`, which sets
+                no status on a non-recording span.
+            end_on_exit: Passed on to :func:`use_span`, whose call to
+                :meth:`Span.end` a non-recording span discards.
+
+        Yields:
+            A :class:`~opentelemetry.trace.NonRecordingSpan`, which records nothing set on it but
+            keeps the trace context current so propagation still works.
+        """
         span = self.start_span(
             name=name,
             context=context,
@@ -530,6 +730,21 @@ def get_tracer(
     opentelemetry.trace.TracerProvider.get_tracer.
 
     If tracer_provider is omitted the current configured one is used.
+
+    Args:
+        instrumenting_module_name: The uniquely identifiable name for the
+            instrumentation scope, not the name of the module being
+            instrumented.
+        instrumenting_library_version: The version string of the instrumenting
+            library.
+        tracer_provider: The provider to obtain the tracer from. Defaults to
+            the globally configured one.
+        schema_url: The Schema URL of the emitted telemetry.
+        attributes: The instrumentation scope attributes to associate with
+            emitted telemetry.
+
+    Returns:
+        A `Tracer` bound to the given instrumentation scope.
     """
     if tracer_provider is None:
         tracer_provider = get_tracer_provider()
@@ -542,7 +757,16 @@ def get_tracer(
 
 
 def _set_tracer_provider(tracer_provider: TracerProvider, log: bool) -> None:
+    """Install the global provider, at most once per process.
+
+    Args:
+        tracer_provider: The provider to install.
+        log: Whether to log a warning when a provider is already installed and
+            this call therefore has no effect.
+    """
+
     def set_tp() -> None:
+        """Assign the global provider. Called at most once."""
         global _TRACER_PROVIDER  # pylint: disable=global-statement
         _TRACER_PROVIDER = tracer_provider
 
@@ -557,12 +781,28 @@ def set_tracer_provider(tracer_provider: TracerProvider) -> None:
 
     This can only be done once, a warning will be logged if any further attempt
     is made.
+
+    Args:
+        tracer_provider: The provider to install globally.
     """
     _set_tracer_provider(tracer_provider, log=True)
 
 
 def get_tracer_provider() -> TracerProvider:
-    """Gets the current global :class:`~.TracerProvider` object."""
+    """Gets the current global :class:`~.TracerProvider` object.
+
+    Returns:
+        The provider set by :func:`set_tracer_provider`, or the one named by
+        the ``OTEL_PYTHON_TRACER_PROVIDER`` environment variable. When neither
+        is present, a ``ProxyTracerProvider`` is returned, which starts
+        delegating as soon as a provider is set.
+
+    Raises:
+        Exception: Whatever loading the entry point named by the environment
+            variable raised, since ``_load_provider`` logs it and re-raises. A
+            name that matches no installed entry point surfaces as
+            :exc:`StopIteration`.
+    """
     if _TRACER_PROVIDER is None:
         # if a global tracer provider has not been set either via code or env
         # vars, return a proxy tracer provider
@@ -595,6 +835,16 @@ def use_span(
             be automatically set to ERROR when an uncaught exception is
             raised in the span with block. The span status won't be set by
             this mechanism if it was previously set manually.
+
+    Yields:
+        The span passed in, now current for the duration of the block.
+
+    Raises:
+        Exception: Re-raises whatever the block raised, after recording it on
+            the span when the span is recording and ``record_exception`` is
+            true. An exception inheriting directly from :exc:`BaseException`,
+            such as :exc:`GeneratorExit`, passes through without being
+            recorded, because it does not signal an error.
     """
     try:
         token = context_api.attach(context_api.set_value(_SPAN_KEY, span))

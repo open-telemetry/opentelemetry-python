@@ -27,6 +27,22 @@ from typing import Any
 
 
 def _as_entry_points(eps: Any) -> EntryPoints:
+    """Normalize the result of ``importlib.metadata.entry_points()``.
+
+    The standard library returns different types on different Python versions.
+    This flattens whichever form it receives into a single
+    :class:`importlib.metadata.EntryPoints` holding every entry point of every
+    group.
+
+    Args:
+        eps: The value returned by ``importlib.metadata.entry_points()``. It is
+            an :class:`~importlib.metadata.EntryPoints` on Python 3.12 and
+            later, and a dict-like ``SelectableGroups`` on Python 3.10 and 3.11.
+
+    Returns:
+        Every entry point from ``eps``, collected into one
+        :class:`~importlib.metadata.EntryPoints`.
+    """
     # Python versions greater than 3.11 return EntryPoints.
     if isinstance(eps, EntryPoints):
         return eps
@@ -42,10 +58,37 @@ def _as_entry_points(eps: Any) -> EntryPoints:
 
 @cache
 def _original_entry_points_cached() -> EntryPoints:
+    """Read every installed entry point and cache the result.
+
+    Reading entry points touches the filesystem, so the result is cached for
+    the lifetime of the process. A distribution installed after the first call
+    is therefore not visible.
+
+    :func:`functools.cache` holds no lock across the wrapped call, so threads
+    that arrive before the first call returns each perform the read, and the
+    last one to finish supplies the cached value.
+
+    Returns:
+        Every entry point installed in the current environment.
+    """
     return _as_entry_points(original_entry_points())
 
 
 def entry_points(**params) -> EntryPoints:
+    """Select installed entry points, reading them from cache.
+
+    This is a drop-in replacement for ``importlib.metadata.entry_points()``
+    that behaves the same on every supported Python version and avoids
+    re-reading the filesystem on each call.
+
+    Args:
+        **params: Selection criteria forwarded to
+            :meth:`importlib.metadata.EntryPoints.select`, typically ``group``
+            and ``name``. Passing none selects every entry point.
+
+    Returns:
+        The entry points matching ``params``, empty if none match.
+    """
     return _original_entry_points_cached().select(**params)
 
 

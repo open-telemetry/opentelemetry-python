@@ -1,6 +1,14 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Parsing of HTTP headers supplied through environment variables.
+
+Several ``OTEL_*`` environment variables carry a list of HTTP headers in one
+string, for example ``OTEL_EXPORTER_OTLP_HEADERS``. :func:`parse_env_headers`
+turns such a string into a mapping, following the header format of the
+OpenTelemetry protocol exporter specification.
+"""
+
 from collections.abc import Mapping
 from logging import getLogger
 from re import compile
@@ -43,17 +51,44 @@ _INVALID_HEADER_ERROR_MESSAGE_LIBERAL_TEMPLATE = (
 
 @deprecated("You should use parse_env_headers. Deprecated since version 1.15.0.")
 def parse_headers(s: str) -> Mapping[str, str]:
+    """Parse HTTP headers taken from an environment variable.
+
+    Args:
+        s: The raw environment variable value holding the headers.
+
+    Returns:
+        A mapping from lowercased header name to header value.
+
+    .. deprecated:: 1.15.0
+        Use :func:`parse_env_headers` instead.
+    """
     return parse_env_headers(s)
 
 
 def parse_env_headers(s: str, liberal: bool = False) -> Mapping[str, str]:
-    """
-    Parse ``s``, which is a ``str`` instance containing HTTP headers encoded
-    for use in ENV variables per the W3C Baggage HTTP header format at
-    https://www.w3.org/TR/baggage/#baggage-http-header-format, except that
-    additional semi-colon delimited metadata is not supported.
-    If ``liberal`` is True we try to parse ``s`` anyway to be more compatible
-    with other languages SDKs that accept non URL-encoded headers by default.
+    """Parse HTTP headers encoded for use in an environment variable.
+
+    ``s`` holds comma separated ``name=value`` pairs in the W3C Baggage HTTP
+    header format at https://www.w3.org/TR/baggage/#baggage-http-header-format,
+    except that the additional semi-colon delimited metadata is not supported.
+    Names are lowercased. Both halves are URL-decoded only for a pair that
+    matches the strict pattern above; a pair accepted only because ``liberal``
+    is set is taken verbatim, so a percent escape in it survives into the
+    result.
+
+    A pair that does not match the expected format is skipped and a warning is
+    logged, so a single malformed entry does not discard the rest.
+
+    Args:
+        s: The raw environment variable value holding the headers.
+        liberal: When ``True``, also accept values that are not URL-encoded,
+            which matches the behaviour of the SDKs of several other languages.
+            A space is permitted inside a value in this mode. Defaults to
+            ``False``, which accepts only the spec-conformant encoding.
+
+    Returns:
+        A mapping from lowercased header name to header value, holding one
+        entry per pair that parsed successfully.
     """
     headers: dict[str, str] = {}
     headers_list: list[str] = [header.strip(" \t") for header in s.split(",")]
