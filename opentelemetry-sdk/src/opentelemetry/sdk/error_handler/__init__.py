@@ -57,6 +57,8 @@ logger = getLogger(__name__)
 
 
 class ErrorHandler(ABC):
+    """Base class every registered error handler inherits from."""
+
     @abstractmethod
     def _handle(self, error: Exception, *args, **kwargs):
         """
