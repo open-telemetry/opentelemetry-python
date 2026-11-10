@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""View and aggregation configuration for the metrics SDK."""
+
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     DefaultAggregation,
