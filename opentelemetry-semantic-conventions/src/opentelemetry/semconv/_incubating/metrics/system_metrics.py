@@ -335,7 +335,7 @@ SYSTEM_MEMORY_LINUX_AVAILABLE: Final = "system.memory.linux.available"
 An estimate of how much memory is available for starting new applications, without causing swapping
 Instrument: updowncounter
 Unit: By
-Note: This is an alternative to `system.memory.usage` metric with `state=free`.
+Note: This is equivalent to the `system.memory.usage` metric with `state=available`.
 Linux starting from 3.14 exports "available" memory. It takes "free" memory as a baseline, and then factors in kernel-specific values.
 This is supposed to be more accurate than just "free" memory.
 For reference, see the calculations [here](https://superuser.com/a/980821).
@@ -519,35 +519,37 @@ def create_system_memory_shared(meter: Meter) -> UpDownCounter:
 
 SYSTEM_MEMORY_USAGE: Final = "system.memory.usage"
 """
-Reports memory in use by state
+Reports memory by state
 Instrument: updowncounter
 Unit: By
+Note: The sum of the `used` and `available` state values SHOULD be equal to `system.memory.limit`.
 """
 
 
 def create_system_memory_usage(meter: Meter) -> UpDownCounter:
-    """Reports memory in use by state"""
+    """Reports memory by state"""
     return meter.create_up_down_counter(
         name=SYSTEM_MEMORY_USAGE,
-        description="Reports memory in use by state.",
+        description="Reports memory by state.",
         unit="By",
     )
 
 
 SYSTEM_MEMORY_UTILIZATION: Final = "system.memory.utilization"
 """
-Percentage of memory bytes in use
+Fraction of memory bytes by state
 Instrument: gauge
 Unit: 1
+Note: The sum of the `used` and `available` state values SHOULD be equal to 1.
 """
 
 
 def create_system_memory_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
-    """Percentage of memory bytes in use"""
+    """Fraction of memory bytes by state"""
     return meter.create_observable_gauge(
         name=SYSTEM_MEMORY_UTILIZATION,
         callbacks=callbacks,
-        description="Percentage of memory bytes in use.",
+        description="Fraction of memory bytes by state.",
         unit="1",
     )
 

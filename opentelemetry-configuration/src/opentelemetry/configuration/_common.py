@@ -6,6 +6,7 @@ from __future__ import annotations
 import dataclasses
 import inspect
 import logging
+import math
 from collections.abc import Callable
 from fnmatch import fnmatchcase
 from typing import Any, Protocol, TypeVar
@@ -56,7 +57,7 @@ def _additional_properties(cls):
     """
     original_init = cls.__init__
     original_sig = inspect.signature(original_init)
-    known_fields = frozenset(f.name for f in dataclasses.fields(cls))
+    known_fields = frozenset(f.name for f in dataclasses.fields(cls) if f.init)
 
     def _init(self, **kwargs):
         known = {k: v for k, v in kwargs.items() if k in known_fields}
@@ -105,10 +106,8 @@ class _ComponentConfig(Protocol):
     for ``**kwargs`` splatting to the user-defined component class) or
     ``None`` (when the YAML uses ``my_plugin:`` or ``my_plugin: null``).
 
-    Note: the generated models declare ``additional_properties`` as a
-    ``ClassVar`` even though the decorator assigns it as an instance
-    attribute at runtime. This is tolerated by pyright in ``standard``
-    mode but flagged in ``strict`` mode. See #5268.
+    The generated models declare ``additional_properties`` as an instance
+    field to match the decorator's runtime assignment.
     """
 
     additional_properties: dict[str, dict[str, Any] | None]
@@ -154,6 +153,21 @@ def _resolve_component(
         name, plugin_config = next(iter(config.additional_properties.items()))
         return load_entry_point(entry_point_group, name)(**(plugin_config or {}))
     raise ConfigurationError(f"No {component_type} type specified in config.")
+
+
+def _resolve_export_timeout(timeout: int | None) -> float | None:
+    """Convert a config export timeout in milliseconds to seconds.
+
+    Returns None if unset, letting the exporter read env vars. A value of 0
+    means no limit and maps to ``math.inf``.
+    """
+    match timeout:
+        case None:
+            return None
+        case 0:
+            return math.inf
+        case _:
+            return timeout / 1000.0
 
 
 def _parse_headers(
