@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 from __future__ import annotations
 
 import collections
@@ -79,7 +80,29 @@ _logger.addFilter(DuplicateFilter())
 class BatchProcessor(Generic[Telemetry]):
     """This class can be used with exporter's that implement the above
     Exporter interface to buffer and send telemetry in batch through
-     the exporter."""
+     the exporter.
+
+    Args:
+        exporter: The exporter to hand each batch to. Its ``export`` is called
+            with instrumentation suppressed, so telemetry produced by the
+            export itself is not fed back into the queue.
+        schedule_delay_millis: How long the worker waits between passes, in
+            milliseconds. Pass 0 to remove the timeout, so that the worker
+            waits for an ``emit`` and then exports at once.
+        max_export_batch_size: The largest number of items handed to
+            ``export`` at once. Reaching this many queued items also wakes
+            the worker early.
+        export_timeout_millis: Stored and not used, because there is no way
+            to pass a timeout into ``export``. See
+            https://github.com/open-telemetry/opentelemetry-python/issues/4555
+        max_queue_size: The capacity of the queue, in items.
+        exporting: The word naming the telemetry being exported, for example
+            ``"span"``. It goes into the worker thread name and into the log
+            messages about dropped and failed items.
+        metrics: The object the processor reports its queue size, its
+            finished items and its dropped items to. Pass a
+            ``NoOpProcessorMetrics`` to report nothing.
+    """
 
     def __init__(
         self,
@@ -118,6 +141,13 @@ class BatchProcessor(Generic[Telemetry]):
             weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
 
             def _after_in_child() -> None:
+                """Rebuild the worker state in a freshly forked child.
+
+                The bound method is held weakly, so the hook does nothing once
+                the processor itself has been collected. That keeps a
+                discarded processor from being kept alive by the fork hook,
+                which ``os.register_at_fork`` never unregisters.
+                """
                 if reinit := weak_reinit():
                     reinit()
 
@@ -152,6 +182,7 @@ class BatchProcessor(Generic[Telemetry]):
         self._pid = os.getpid()
 
     def worker(self):
+        """Run the export loop until shutdown, then drain the queue once."""
         while not self._shutdown:
             # Lots of strategies in the spec for setting next timeout.
             # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#batching-processor.
@@ -195,6 +226,13 @@ class BatchProcessor(Generic[Telemetry]):
                 detach(token)
 
     def emit(self, data: Telemetry) -> None:
+        """Queue one item for export.
+
+        Args:
+            data: The span or log record to queue. It is stored as it is,
+                without copying, so a later mutation of a still-queued item
+                is visible to the exporter.
+        """
         if self._shutdown:
             _logger.info("Shutdown called, ignoring %s.", self._exporting)
             self._metrics.drop_items(1, "already_shutdown")
@@ -212,6 +250,13 @@ class BatchProcessor(Generic[Telemetry]):
             self._worker_awaken.set()
 
     def shutdown(self, timeout_millis: int = 30000):
+        """Stop accepting telemetry, drain what is queued, close the exporter.
+
+        Args:
+            timeout_millis: The budget for the join and the exporter shutdown
+                together, in milliseconds. Telemetry still queued when it runs
+                out is discarded without being exported.
+        """
         if self._shutdown:
             return
         shutdown_should_end = time.time() + (timeout_millis / 1000)
@@ -237,6 +282,18 @@ class BatchProcessor(Generic[Telemetry]):
 
     # TODO: Fix force flush so the timeout is used https://github.com/open-telemetry/opentelemetry-python/issues/4568.
     def force_flush(self, timeout_millis: int | None = None) -> bool:
+        """Export everything queued, blocking until the queue is empty.
+
+        Args:
+            timeout_millis: Ignored. The call blocks until the queue is
+                drained however long that takes. See
+                https://github.com/open-telemetry/opentelemetry-python/issues/4568
+
+        Returns:
+            ``True`` once the queue has been drained. ``False`` when the
+            processor has been shut down, in which case nothing was
+            exported.
+        """
         if self._shutdown:
             return False
         # Blocking call to export.
