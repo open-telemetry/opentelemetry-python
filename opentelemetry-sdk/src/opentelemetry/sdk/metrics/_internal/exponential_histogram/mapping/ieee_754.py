@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 from ctypes import c_double, c_uint64
 from sys import float_info
 
