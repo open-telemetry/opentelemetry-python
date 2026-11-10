@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -25,7 +26,7 @@ class TracerMetricsT(Protocol):
         self,
         parent_span_context: SpanContext | None,
         sampling_decision: Decision,
-    ) -> Callable[[], None]: ...
+    ) -> Callable[[], None]: ...  # pylint: disable=unnecessary-ellipsis
 
 
 # pylint: disable=no-self-use
@@ -68,6 +69,12 @@ class TracerMetrics:
         self._live_spans.add(1, live_span_attrs)
 
         def end_span() -> None:
+            """Subtract one from ``otel.sdk.span.live``.
+
+            The same attributes used when the span was counted as live are
+            reused, so the addition and the subtraction land on one time
+            series.
+            """
             self._live_spans.add(-1, live_span_attrs)
 
         return end_span
@@ -77,6 +84,18 @@ def create_tracer_metrics(
     meter_provider: metrics_api.MeterProvider,
     enabled: bool,
 ) -> TracerMetricsT:
+    """Build the metrics recorder a ``Tracer`` should use.
+
+    Args:
+        meter_provider: Provider the instruments are created from. Only read
+            when ``enabled`` is ``True``.
+        enabled: Whether self-observability metrics are turned on, as parsed
+            from ``OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED``.
+
+    Returns:
+        A ``TracerMetrics`` when ``enabled`` is ``True``, otherwise a
+        ``NoOpTracerMetrics`` that creates no instruments.
+    """
     if not enabled:
         return NoOpTracerMetrics()
 
