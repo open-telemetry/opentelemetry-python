@@ -11,6 +11,8 @@ from opentelemetry.configuration._common import (
     _parse_headers,
     _parse_otlp_file_output_stream,
     _resolve_export_timeout,
+    _resolve_otlp_grpc_endpoint,
+    _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
     load_entry_point,
 )
@@ -110,7 +112,7 @@ def _create_otlp_http_log_exporter(
 
             compression = _map_compression(config.compression, Compression, allow_deflate=True)
             return OTLPLogExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "logs"),
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -132,7 +134,7 @@ def _create_otlp_http_log_exporter(
 
             compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
             return JsonOTLPLogExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "logs"),
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -165,7 +167,7 @@ def _create_otlp_grpc_log_exporter(
     timeout = _resolve_export_timeout(config.timeout)
 
     return OTLPLogExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
+        endpoint=_resolve_otlp_grpc_endpoint(config.endpoint),
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]

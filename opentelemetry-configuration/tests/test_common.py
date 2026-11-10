@@ -17,6 +17,8 @@ from opentelemetry.configuration._common import (
     _parse_otlp_file_output_stream,
     _resolve_component,
     _resolve_export_timeout,
+    _resolve_otlp_grpc_endpoint,
+    _resolve_otlp_http_endpoint,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import ConfigurationError
@@ -96,9 +98,33 @@ class TestParseHeaders(unittest.TestCase):
 
 class TestResolveExportTimeout(unittest.TestCase):
     def test_conversion(self):
-        for timeout, expected in ((None, None), (0, math.inf), (5000, 5.0), (1, 0.001)):
+        for timeout, expected in ((None, 10.0), (0, math.inf), (5000, 5.0), (1, 0.001)):
             with self.subTest(timeout=timeout):
                 self.assertEqual(_resolve_export_timeout(timeout), expected)
+
+
+class TestResolveOtlpEndpoint(unittest.TestCase):
+    def test_http_absent_endpoint_uses_signal_default(self):
+        for signal in ("traces", "metrics", "logs"):
+            with self.subTest(signal=signal):
+                self.assertEqual(
+                    _resolve_otlp_http_endpoint(None, signal),
+                    f"http://localhost:4318/v1/{signal}",
+                )
+
+    def test_http_explicit_endpoint_is_kept(self):
+        self.assertEqual(
+            _resolve_otlp_http_endpoint("http://collector:4318/custom", "traces"),
+            "http://collector:4318/custom",
+        )
+
+    def test_grpc_endpoint(self):
+        for endpoint, expected in (
+            (None, "http://localhost:4317"),
+            ("http://collector:4317", "http://collector:4317"),
+        ):
+            with self.subTest(endpoint=endpoint):
+                self.assertEqual(_resolve_otlp_grpc_endpoint(endpoint), expected)
 
 
 class TestLoadEntryPoint(unittest.TestCase):
@@ -159,25 +185,28 @@ class TestLoadEntryPoint(unittest.TestCase):
 
 
 class _CompressionWithDeflate:
+    NoCompression = "none"
     Gzip = "gzip"
     Deflate = "deflate"
 
 
 class _CompressionWithoutDeflate:
+    NoCompression = "none"
     Gzip = "gzip"
 
 
 class _UppercaseCompressionWithDeflate:
+    NONE = "none"
     GZIP = "gzip"
     DEFLATE = "deflate"
 
 
 class TestMapCompression(unittest.TestCase):
-    def test_none_returns_none(self):
-        self.assertIsNone(_map_compression(None, _CompressionWithDeflate))
-
-    def test_none_string_returns_none(self):
-        self.assertIsNone(_map_compression("none", _CompressionWithDeflate))
+    def test_unset_and_none_map_to_no_compression(self):
+        for value in (None, "none", "NONE"):
+            for compression_enum in (_CompressionWithDeflate, _UppercaseCompressionWithDeflate):
+                with self.subTest(value=value, compression_enum=compression_enum.__name__):
+                    self.assertEqual(_map_compression(value, compression_enum), "none")
 
     def test_gzip_maps_to_gzip(self):
         self.assertEqual(_map_compression("gzip", _CompressionWithDeflate), "gzip")
