@@ -4,6 +4,7 @@
 # pyright: reportIncompatibleMethodOverride=false
 # pylint: disable=arguments-differ,unexpected-keyword-arg,missing-kwoa,no-self-use,too-many-function-args
 
+import functools
 import linecache
 import sys
 import textwrap
@@ -79,6 +80,25 @@ class TestSignatureCompatABC(unittest.TestCase):
             KwargsGreeter().say_hello(name="Alice", time=None, locale="es"),
             "Hello Alice (2 extras)",
         )
+
+    def test_decorated_functions(self) -> None:
+        def target(x: int) -> int:
+            return x
+
+        @functools.wraps(target)
+        def with_wraps(*args: Any, **kwargs: Any) -> int:
+            return target(*args, **kwargs)
+
+        def simple_wrapper(*args: Any, **kwargs: Any) -> int:
+            return target(*args, **kwargs)
+
+        # functools.wraps exposes target's signature via __wrapped__, so it is wrapped
+        wrapped = make_signature_compat_wrapper(with_wraps)
+        assert wrapped is not None
+        self.assertEqual(wrapped(1, unknown=2), 1)
+
+        # A bare (*args, **kwargs) wrapper already has VAR_KEYWORD, so it is left alone
+        self.assertIsNone(make_signature_compat_wrapper(simple_wrapper))
 
     def test_missing_required_and_excess_positional_args_still_raise_type_error(self) -> None:
         class LegacyGreeter(BaseGreeter):
