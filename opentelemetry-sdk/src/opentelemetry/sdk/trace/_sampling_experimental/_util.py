@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 RANDOM_VALUE_BITS = 56
 MAX_THRESHOLD = 1 << RANDOM_VALUE_BITS  # 0% sampling
 MIN_THRESHOLD = 0  # 100% sampling
