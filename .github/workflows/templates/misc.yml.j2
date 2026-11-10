@@ -158,4 +158,4 @@ jobs:
 
       - name: Run contrib typecheck
         working-directory: opentelemetry-python-contrib
-        run: uvx --with tox-uv tox -e typecheck
+        run: uv run --frozen --group tox tox -e typecheck
