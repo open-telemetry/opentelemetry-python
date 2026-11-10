@@ -211,14 +211,34 @@ class Resource:
 
     @staticmethod
     def get_empty() -> "Resource":
+        """Return the shared resource that carries no attributes.
+
+        Returns:
+            One module-level instance with no attributes and an empty schema
+            url, reused by every caller. It is immutable, so sharing it is
+            safe, and merging it into another resource changes nothing.
+        """
         return _EMPTY_RESOURCE
 
     @property
     def attributes(self) -> Attributes:
+        """The attributes describing the entity.
+
+        Returns:
+            The immutable ``BoundedAttributes`` built at construction.
+            Assigning into it raises ``TypeError``, so a caller that wants to
+            add an attribute builds another resource and merges it.
+        """
         return self._attributes
 
     @property
     def schema_url(self) -> str:
+        """The semantic convention schema url of the attributes.
+
+        Returns:
+            The url, or the empty string when none was given and when a merge
+            found two resources claiming different schema urls.
+        """
         return self._schema_url
 
     def merge(self, other: "Resource") -> "Resource":
@@ -283,6 +303,18 @@ class Resource:
         )
 
     def to_json(self, indent: int | None = 4) -> str:
+        """Serialise the resource to JSON, for a console exporter or a log line.
+
+        Args:
+            indent: The number of spaces to indent each nesting level by, as
+                ``json.dumps`` takes it. Pass ``None`` for the compact
+                single-line form.
+
+        Returns:
+            A JSON object with ``attributes`` and ``schema_url``. The
+            conflict flag is left out, so a resource whose schema url was
+            cleared by a merge renders the same as one that never had any.
+        """
         return dumps(
             {
                 "attributes": dict(self.attributes),
@@ -323,12 +355,30 @@ _service_instance_id_lock = threading.Lock()
 
 
 class ResourceDetector(abc.ABC):
+    """Source of resource attributes read from the surrounding environment.
+
+    Args:
+        raise_on_error: What to do when ``detect`` raises or runs past the
+            per-detector timeout. ``False``, the default, logs a warning and
+            contributes no attributes. ``True`` lets the exception out of
+            ``get_aggregated_resources``, which fails the construction of the
+            whole resource.
+    """
+
     def __init__(self, raise_on_error: bool = False) -> None:
         self.raise_on_error = raise_on_error
 
     @abc.abstractmethod
     def detect(self) -> "Resource":
-        """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly"""
+        """Don't call `Resource.create` here to avoid an infinite loop, instead instantiate `Resource` directly
+
+        Returns:
+            A resource holding whatever this detector found. Return an empty
+            resource rather than raising when there is nothing to report.
+
+        Raises:
+            NotImplementedError: Always, on this base.
+        """
         raise NotImplementedError()
 
     # pylint: disable-next=no-self-use
@@ -348,8 +398,16 @@ class ResourceDetector(abc.ABC):
 
 
 class OTELResourceDetector(ResourceDetector):
+    """Reads the resource attributes the operator put in the environment."""
+
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
+        """Read ``OTEL_RESOURCE_ATTRIBUTES`` and ``OTEL_SERVICE_NAME``.
+
+        Returns:
+            A resource holding every pair that parsed. It is empty when
+            neither variable is set.
+        """
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map: dict[str, AnyValue] = {}
 
@@ -394,9 +452,22 @@ class ProcessResourceDetector(ResourceDetector):
 
     # pylint: disable=no-self-use
     def is_process_dependent(self) -> bool:
+        """Report that these attributes go stale after a fork.
+
+        Returns:
+            ``True`` always. ``process.pid`` and ``process.parent_pid``
+            describe the process that ran the detector, so a provider re-runs
+            this detector in the child after a fork.
+        """
         return True
 
     def detect(self) -> "Resource":
+        """Collect the runtime, the process ids and the command.
+
+        Returns:
+            A resource with the ``process.*`` attributes that this
+            interpreter could report.
+        """
         _runtime_version = ".".join(
             map(
                 str,
@@ -504,6 +575,13 @@ class OsResourceDetector(ResourceDetector):
             >>> platform.version()
             '11.4.0.15.0'
 
+
+        Returns:
+            A resource with ``os.type`` lower cased, and ``os.version`` taken
+            from ``platform.release`` on most systems but from
+            ``platform.version`` on Windows and on Solaris, where the release
+            string is not the version number a reader expects. ``SunOS`` is
+            reported as ``solaris`` to match the semantic conventions.
         """
 
         os_type = platform.system().lower()
@@ -670,9 +748,22 @@ class ServiceInstanceIdResourceDetector(ResourceDetector):
     """
 
     def is_process_dependent(self) -> bool:
+        """Report that the instance id has to be redrawn after a fork.
+
+        Returns:
+            ``True`` always. Two processes sharing one ``service.instance.id``
+            would be indistinguishable to a backend, so a provider re-runs
+            this detector in the child.
+        """
         return True
 
     def detect(self) -> "Resource":
+        """Return the instance id of this process, drawing one if needed.
+
+        Returns:
+            A resource holding ``service.instance.id`` as the string form of
+            a version 4 UUID.
+        """
         # pylint: disable-next=global-statement
         global _service_instance_id, _service_instance_id_pid
         with _service_instance_id_lock:
@@ -756,10 +847,33 @@ def get_aggregated_resources(
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
-    :param detectors: List of resources in order of priority
-    :param initial_resource: Static resource. This has highest priority
-    :param timeout: Number of seconds to wait for each detector to return
-    :return:
+    Every detector runs on a thread pool of four workers, but the results are
+    merged in the order the detectors were given, so a later detector
+    overrides an earlier one whatever order they finished in.
+
+    A detector that exceeds ``timeout`` is skipped and logged at ``WARNING``
+    level, unless it was built with ``raise_on_error=True``, in which case
+    the error is raised and the detectors that have not started yet are
+    cancelled. The pool is always joined before this function returns, so a
+    detector that blocks forever blocks this call forever.
+
+    Args:
+        detectors: The detectors to run, in increasing order of priority.
+        initial_resource: The resource every detected resource is merged on
+            top of, which gives it the lowest priority of all. Pass ``None``
+            to start from ``Resource.create()``, which runs the whole
+            detection over again.
+        timeout: How long to wait for each detector, in seconds. The budget
+            is per detector rather than for the whole call.
+
+    Returns:
+        One resource holding the merged attributes.
+
+    Raises:
+        concurrent.futures.TimeoutError: If a detector built with
+            ``raise_on_error=True`` exceeded ``timeout``.
+        Exception: Whatever a detector built with ``raise_on_error=True``
+            raised.
     """
     detectors_merged_resource = initial_resource or Resource.create()
 
