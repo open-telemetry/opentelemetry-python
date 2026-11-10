@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Span exporter that keeps the spans it receives in a deque."""
+
 import collections.abc
 import threading
 from collections import deque
@@ -33,12 +35,28 @@ class InMemorySpanExporter(SpanExporter):
             self._finished_spans.clear()
 
     def get_finished_spans(self) -> tuple[ReadableSpan, ...]:
-        """Get list of collected spans."""
+        """Get list of collected spans.
+
+        Returns:
+            A snapshot of the stored spans, oldest first, copied out of the
+            deque under the lock. Later exports do not change the returned
+            tuple.
+        """
         with self._lock:
             return tuple(self._finished_spans)
 
     def export(self, spans: collections.abc.Sequence[ReadableSpan]) -> SpanExportResult:
-        """Stores a list of spans in memory."""
+        """Stores a list of spans in memory.
+
+        Args:
+            spans: The spans to append to the stored ones. When appending
+                takes the deque past ``max_spans``, the oldest stored spans
+                are discarded to make room.
+
+        Returns:
+            ``SpanExportResult.FAILURE`` once ``shutdown`` has been called and
+            nothing is stored, ``SpanExportResult.SUCCESS`` otherwise.
+        """
         if self._stopped:
             return SpanExportResult.FAILURE
         with self._lock:
@@ -53,4 +71,13 @@ class InMemorySpanExporter(SpanExporter):
         self._stopped = True
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Do nothing, since ``export`` has already stored every span.
+
+        Args:
+            timeout_millis: Ignored. Accepted so that this exporter matches
+                the ``SpanExporter`` interface.
+
+        Returns:
+            ``True`` always.
+        """
         return True
