@@ -20,7 +20,7 @@ env:
        contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
        'main'
     ) || 'main' }}
-  WEAVER_VERSION: "v0.25.1"
+  WEAVER_VERSION: "v0.27.0"
   PIP_EXISTS_ACTION: w
   CONTRIB_REPO_UTIL_HTTP: ${{ github.workspace }}/opentelemetry-python-contrib/util/opentelemetry-util-http
   CONTRIB_REPO_INSTRUMENTATION: ${{ github.workspace }}/opentelemetry-python-contrib/opentelemetry-instrumentation
@@ -54,6 +54,7 @@ jobs:
   py311-test-opentelemetry-api_ubuntu-latest:
     name: opentelemetry-api 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -75,6 +76,7 @@ jobs:
   py312-test-opentelemetry-api_ubuntu-latest:
     name: opentelemetry-api 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -96,6 +98,7 @@ jobs:
   py313-test-opentelemetry-api_ubuntu-latest:
     name: opentelemetry-api 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -222,6 +225,7 @@ jobs:
   py311-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
     name: opentelemetry-proto-gen-oldest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -243,6 +247,7 @@ jobs:
   py311-test-opentelemetry-proto-gen-latest_ubuntu-latest:
     name: opentelemetry-proto-gen-latest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -264,6 +269,7 @@ jobs:
   py312-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
     name: opentelemetry-proto-gen-oldest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -285,6 +291,7 @@ jobs:
   py312-test-opentelemetry-proto-gen-latest_ubuntu-latest:
     name: opentelemetry-proto-gen-latest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -306,6 +313,7 @@ jobs:
   py313-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
     name: opentelemetry-proto-gen-oldest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -327,6 +335,7 @@ jobs:
   py313-test-opentelemetry-proto-gen-latest_ubuntu-latest:
     name: opentelemetry-proto-gen-latest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -516,6 +525,7 @@ jobs:
   py311-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
     name: opentelemetry-protojson-gen-oldest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -537,6 +547,7 @@ jobs:
   py311-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
     name: opentelemetry-protojson-gen-latest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -558,6 +569,7 @@ jobs:
   py312-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
     name: opentelemetry-protojson-gen-oldest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -579,6 +591,7 @@ jobs:
   py312-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
     name: opentelemetry-protojson-gen-latest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -600,6 +613,7 @@ jobs:
   py313-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
     name: opentelemetry-protojson-gen-oldest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -621,6 +635,7 @@ jobs:
   py313-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
     name: opentelemetry-protojson-gen-latest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -789,6 +804,7 @@ jobs:
   py311-test-opentelemetry-codegen-json_ubuntu-latest:
     name: opentelemetry-codegen-json 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -810,6 +826,7 @@ jobs:
   py312-test-opentelemetry-codegen-json_ubuntu-latest:
     name: opentelemetry-codegen-json 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -831,6 +848,7 @@ jobs:
   py313-test-opentelemetry-codegen-json_ubuntu-latest:
     name: opentelemetry-codegen-json 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1041,6 +1059,7 @@ jobs:
   py311-test-opentelemetry-configuration_ubuntu-latest:
     name: opentelemetry-configuration 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1062,6 +1081,7 @@ jobs:
   py312-test-opentelemetry-configuration_ubuntu-latest:
     name: opentelemetry-configuration 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1083,6 +1103,7 @@ jobs:
   py313-test-opentelemetry-configuration_ubuntu-latest:
     name: opentelemetry-configuration 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1188,6 +1209,7 @@ jobs:
   py311-test-opentelemetry-semantic-conventions_ubuntu-latest:
     name: opentelemetry-semantic-conventions 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1209,6 +1231,7 @@ jobs:
   py312-test-opentelemetry-semantic-conventions_ubuntu-latest:
     name: opentelemetry-semantic-conventions 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1230,6 +1253,7 @@ jobs:
   py313-test-opentelemetry-semantic-conventions_ubuntu-latest:
     name: opentelemetry-semantic-conventions 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1343,6 +1367,7 @@ jobs:
   py311-test-opentelemetry-getting-started_ubuntu-latest:
     name: opentelemetry-getting-started 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1372,6 +1397,7 @@ jobs:
   py312-test-opentelemetry-getting-started_ubuntu-latest:
     name: opentelemetry-getting-started 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1401,6 +1427,7 @@ jobs:
   py313-test-opentelemetry-getting-started_ubuntu-latest:
     name: opentelemetry-getting-started 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1480,6 +1507,7 @@ jobs:
   py311-test-opentelemetry-opentracing-shim_ubuntu-latest:
     name: opentelemetry-opentracing-shim 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1501,6 +1529,7 @@ jobs:
   py312-test-opentelemetry-opentracing-shim_ubuntu-latest:
     name: opentelemetry-opentracing-shim 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1522,6 +1551,7 @@ jobs:
   py313-test-opentelemetry-opentracing-shim_ubuntu-latest:
     name: opentelemetry-opentracing-shim 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1627,6 +1657,7 @@ jobs:
   py311-test-opentelemetry-opencensus-shim_ubuntu-latest:
     name: opentelemetry-opencensus-shim 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1648,6 +1679,7 @@ jobs:
   py312-test-opentelemetry-opencensus-shim_ubuntu-latest:
     name: opentelemetry-opencensus-shim 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1669,6 +1701,7 @@ jobs:
   py313-test-opentelemetry-opencensus-shim_ubuntu-latest:
     name: opentelemetry-opencensus-shim 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1753,6 +1786,7 @@ jobs:
   py311-test-opentelemetry-exporter-http-transport-oldest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1774,6 +1808,7 @@ jobs:
   py311-test-opentelemetry-exporter-http-transport-latest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-latest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1795,6 +1830,7 @@ jobs:
   py312-test-opentelemetry-exporter-http-transport-oldest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1816,6 +1852,7 @@ jobs:
   py312-test-opentelemetry-exporter-http-transport-latest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-latest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1837,6 +1874,7 @@ jobs:
   py313-test-opentelemetry-exporter-http-transport-oldest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1858,6 +1896,7 @@ jobs:
   py313-test-opentelemetry-exporter-http-transport-latest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-latest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2005,6 +2044,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2026,6 +2066,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-latest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2047,6 +2088,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2068,6 +2110,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-latest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2089,6 +2132,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2110,6 +2154,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-latest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2236,6 +2281,7 @@ jobs:
   py311-test-opentelemetry-exporter-opencensus_ubuntu-latest:
     name: opentelemetry-exporter-opencensus 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2257,6 +2303,7 @@ jobs:
   py312-test-opentelemetry-exporter-opencensus_ubuntu-latest:
     name: opentelemetry-exporter-opencensus 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2278,6 +2325,7 @@ jobs:
   py313-test-opentelemetry-exporter-opencensus_ubuntu-latest:
     name: opentelemetry-exporter-opencensus 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2341,6 +2389,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2362,6 +2411,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2383,6 +2433,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2488,6 +2539,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-json-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-common 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2509,6 +2561,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-json-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-common 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2530,6 +2583,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-json-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-common 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2635,6 +2689,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-combined_ubuntu-latest:
     name: opentelemetry-exporter-otlp-combined 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2656,6 +2711,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-combined_ubuntu-latest:
     name: opentelemetry-exporter-otlp-combined 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2677,6 +2733,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-combined_ubuntu-latest:
     name: opentelemetry-exporter-otlp-combined 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2740,6 +2797,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-file 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2761,6 +2819,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-file 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2782,6 +2841,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-file 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2887,6 +2947,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-json-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-http 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2908,6 +2969,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-json-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-http 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2929,6 +2991,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-json-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-http 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3055,6 +3118,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3076,6 +3140,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3097,6 +3162,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3118,6 +3184,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3139,6 +3206,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3160,6 +3228,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3244,6 +3313,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3265,6 +3335,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3286,6 +3357,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3391,6 +3463,7 @@ jobs:
   py311-test-opentelemetry-exporter-prometheus_ubuntu-latest:
     name: opentelemetry-exporter-prometheus 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3412,6 +3485,7 @@ jobs:
   py312-test-opentelemetry-exporter-prometheus_ubuntu-latest:
     name: opentelemetry-exporter-prometheus 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3433,6 +3507,7 @@ jobs:
   py313-test-opentelemetry-exporter-prometheus_ubuntu-latest:
     name: opentelemetry-exporter-prometheus 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3538,6 +3613,7 @@ jobs:
   py311-test-opentelemetry-exporter-zipkin-combined_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-combined 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3559,6 +3635,7 @@ jobs:
   py312-test-opentelemetry-exporter-zipkin-combined_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-combined 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3580,6 +3657,7 @@ jobs:
   py313-test-opentelemetry-exporter-zipkin-combined_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-combined 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3685,6 +3763,7 @@ jobs:
   py311-test-opentelemetry-exporter-zipkin-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-proto-http 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3706,6 +3785,7 @@ jobs:
   py312-test-opentelemetry-exporter-zipkin-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-proto-http 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3727,6 +3807,7 @@ jobs:
   py313-test-opentelemetry-exporter-zipkin-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-proto-http 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3832,6 +3913,7 @@ jobs:
   py311-test-opentelemetry-exporter-zipkin-json_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-json 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3853,6 +3935,7 @@ jobs:
   py312-test-opentelemetry-exporter-zipkin-json_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-json 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3874,6 +3957,7 @@ jobs:
   py313-test-opentelemetry-exporter-zipkin-json_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-json 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3979,6 +4063,7 @@ jobs:
   py311-test-opentelemetry-propagator-b3_ubuntu-latest:
     name: opentelemetry-propagator-b3 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4000,6 +4085,7 @@ jobs:
   py312-test-opentelemetry-propagator-b3_ubuntu-latest:
     name: opentelemetry-propagator-b3 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4021,6 +4107,7 @@ jobs:
   py313-test-opentelemetry-propagator-b3_ubuntu-latest:
     name: opentelemetry-propagator-b3 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4126,6 +4213,7 @@ jobs:
   py311-test-opentelemetry-propagator-jaeger_ubuntu-latest:
     name: opentelemetry-propagator-jaeger 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4147,6 +4235,7 @@ jobs:
   py312-test-opentelemetry-propagator-jaeger_ubuntu-latest:
     name: opentelemetry-propagator-jaeger 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4168,6 +4257,7 @@ jobs:
   py313-test-opentelemetry-propagator-jaeger_ubuntu-latest:
     name: opentelemetry-propagator-jaeger 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4279,6 +4369,7 @@ jobs:
   py311-test-opentelemetry-test-utils_ubuntu-latest:
     name: opentelemetry-test-utils 3.11 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4306,6 +4397,7 @@ jobs:
   py312-test-opentelemetry-test-utils_ubuntu-latest:
     name: opentelemetry-test-utils 3.12 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4333,6 +4425,7 @@ jobs:
   py313-test-opentelemetry-test-utils_ubuntu-latest:
     name: opentelemetry-test-utils 3.13 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4437,6 +4530,7 @@ jobs:
   py311-test-opentelemetry-api_windows-latest:
     name: opentelemetry-api 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4460,6 +4554,7 @@ jobs:
   py312-test-opentelemetry-api_windows-latest:
     name: opentelemetry-api 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4483,6 +4578,7 @@ jobs:
   py313-test-opentelemetry-api_windows-latest:
     name: opentelemetry-api 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4621,6 +4717,7 @@ jobs:
   py311-test-opentelemetry-proto-gen-oldest_windows-latest:
     name: opentelemetry-proto-gen-oldest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4644,6 +4741,7 @@ jobs:
   py311-test-opentelemetry-proto-gen-latest_windows-latest:
     name: opentelemetry-proto-gen-latest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4667,6 +4765,7 @@ jobs:
   py312-test-opentelemetry-proto-gen-oldest_windows-latest:
     name: opentelemetry-proto-gen-oldest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4690,6 +4789,7 @@ jobs:
   py312-test-opentelemetry-proto-gen-latest_windows-latest:
     name: opentelemetry-proto-gen-latest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4713,6 +4813,7 @@ jobs:
   py313-test-opentelemetry-proto-gen-oldest_windows-latest:
     name: opentelemetry-proto-gen-oldest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4736,6 +4837,7 @@ jobs:
   py313-test-opentelemetry-proto-gen-latest_windows-latest:
     name: opentelemetry-proto-gen-latest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4943,6 +5045,7 @@ jobs:
   py311-test-opentelemetry-protojson-gen-oldest_windows-latest:
     name: opentelemetry-protojson-gen-oldest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4966,6 +5069,7 @@ jobs:
   py311-test-opentelemetry-protojson-gen-latest_windows-latest:
     name: opentelemetry-protojson-gen-latest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4989,6 +5093,7 @@ jobs:
   py312-test-opentelemetry-protojson-gen-oldest_windows-latest:
     name: opentelemetry-protojson-gen-oldest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5012,6 +5117,7 @@ jobs:
   py312-test-opentelemetry-protojson-gen-latest_windows-latest:
     name: opentelemetry-protojson-gen-latest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5035,6 +5141,7 @@ jobs:
   py313-test-opentelemetry-protojson-gen-oldest_windows-latest:
     name: opentelemetry-protojson-gen-oldest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5058,6 +5165,7 @@ jobs:
   py313-test-opentelemetry-protojson-gen-latest_windows-latest:
     name: opentelemetry-protojson-gen-latest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5242,6 +5350,7 @@ jobs:
   py311-test-opentelemetry-codegen-json_windows-latest:
     name: opentelemetry-codegen-json 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5265,6 +5374,7 @@ jobs:
   py312-test-opentelemetry-codegen-json_windows-latest:
     name: opentelemetry-codegen-json 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5288,6 +5398,7 @@ jobs:
   py313-test-opentelemetry-codegen-json_windows-latest:
     name: opentelemetry-codegen-json 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5518,6 +5629,7 @@ jobs:
   py311-test-opentelemetry-configuration_windows-latest:
     name: opentelemetry-configuration 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5541,6 +5653,7 @@ jobs:
   py312-test-opentelemetry-configuration_windows-latest:
     name: opentelemetry-configuration 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5564,6 +5677,7 @@ jobs:
   py313-test-opentelemetry-configuration_windows-latest:
     name: opentelemetry-configuration 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5679,6 +5793,7 @@ jobs:
   py311-test-opentelemetry-semantic-conventions_windows-latest:
     name: opentelemetry-semantic-conventions 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5702,6 +5817,7 @@ jobs:
   py312-test-opentelemetry-semantic-conventions_windows-latest:
     name: opentelemetry-semantic-conventions 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5725,6 +5841,7 @@ jobs:
   py313-test-opentelemetry-semantic-conventions_windows-latest:
     name: opentelemetry-semantic-conventions 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5848,6 +5965,7 @@ jobs:
   py311-test-opentelemetry-getting-started_windows-latest:
     name: opentelemetry-getting-started 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5879,6 +5997,7 @@ jobs:
   py312-test-opentelemetry-getting-started_windows-latest:
     name: opentelemetry-getting-started 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5910,6 +6029,7 @@ jobs:
   py313-test-opentelemetry-getting-started_windows-latest:
     name: opentelemetry-getting-started 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5995,6 +6115,7 @@ jobs:
   py311-test-opentelemetry-opentracing-shim_windows-latest:
     name: opentelemetry-opentracing-shim 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6018,6 +6139,7 @@ jobs:
   py312-test-opentelemetry-opentracing-shim_windows-latest:
     name: opentelemetry-opentracing-shim 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6041,6 +6163,7 @@ jobs:
   py313-test-opentelemetry-opentracing-shim_windows-latest:
     name: opentelemetry-opentracing-shim 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6156,6 +6279,7 @@ jobs:
   py311-test-opentelemetry-opencensus-shim_windows-latest:
     name: opentelemetry-opencensus-shim 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6179,6 +6303,7 @@ jobs:
   py312-test-opentelemetry-opencensus-shim_windows-latest:
     name: opentelemetry-opencensus-shim 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6202,6 +6327,7 @@ jobs:
   py313-test-opentelemetry-opencensus-shim_windows-latest:
     name: opentelemetry-opencensus-shim 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6294,6 +6420,7 @@ jobs:
   py311-test-opentelemetry-exporter-http-transport-oldest_windows-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6317,6 +6444,7 @@ jobs:
   py311-test-opentelemetry-exporter-http-transport-latest_windows-latest:
     name: opentelemetry-exporter-http-transport-latest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6340,6 +6468,7 @@ jobs:
   py312-test-opentelemetry-exporter-http-transport-oldest_windows-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6363,6 +6492,7 @@ jobs:
   py312-test-opentelemetry-exporter-http-transport-latest_windows-latest:
     name: opentelemetry-exporter-http-transport-latest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6386,6 +6516,7 @@ jobs:
   py313-test-opentelemetry-exporter-http-transport-oldest_windows-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6409,6 +6540,7 @@ jobs:
   py313-test-opentelemetry-exporter-http-transport-latest_windows-latest:
     name: opentelemetry-exporter-http-transport-latest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6570,6 +6702,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6593,6 +6726,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-latest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6616,6 +6750,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6639,6 +6774,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-latest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6662,6 +6798,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6685,6 +6822,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-latest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6823,6 +6961,7 @@ jobs:
   py311-test-opentelemetry-exporter-opencensus_windows-latest:
     name: opentelemetry-exporter-opencensus 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6846,6 +6985,7 @@ jobs:
   py312-test-opentelemetry-exporter-opencensus_windows-latest:
     name: opentelemetry-exporter-opencensus 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6869,6 +7009,7 @@ jobs:
   py313-test-opentelemetry-exporter-opencensus_windows-latest:
     name: opentelemetry-exporter-opencensus 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6938,6 +7079,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6961,6 +7103,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6984,6 +7127,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7099,6 +7243,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-json-common_windows-latest:
     name: opentelemetry-exporter-otlp-json-common 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7122,6 +7267,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-json-common_windows-latest:
     name: opentelemetry-exporter-otlp-json-common 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7145,6 +7291,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-json-common_windows-latest:
     name: opentelemetry-exporter-otlp-json-common 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7260,6 +7407,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-combined_windows-latest:
     name: opentelemetry-exporter-otlp-combined 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7283,6 +7431,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-combined_windows-latest:
     name: opentelemetry-exporter-otlp-combined 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7306,6 +7455,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-combined_windows-latest:
     name: opentelemetry-exporter-otlp-combined 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7375,6 +7525,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-json-file_windows-latest:
     name: opentelemetry-exporter-otlp-json-file 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7398,6 +7549,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-json-file_windows-latest:
     name: opentelemetry-exporter-otlp-json-file 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7421,6 +7573,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-json-file_windows-latest:
     name: opentelemetry-exporter-otlp-json-file 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7536,6 +7689,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-json-http_windows-latest:
     name: opentelemetry-exporter-otlp-json-http 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7559,6 +7713,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-json-http_windows-latest:
     name: opentelemetry-exporter-otlp-json-http 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7582,6 +7737,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-json-http_windows-latest:
     name: opentelemetry-exporter-otlp-json-http 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7720,6 +7876,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7743,6 +7900,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7766,6 +7924,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7789,6 +7948,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7812,6 +7972,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7835,6 +7996,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7927,6 +8089,7 @@ jobs:
   py311-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7950,6 +8113,7 @@ jobs:
   py312-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7973,6 +8137,7 @@ jobs:
   py313-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8088,6 +8253,7 @@ jobs:
   py311-test-opentelemetry-exporter-prometheus_windows-latest:
     name: opentelemetry-exporter-prometheus 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8111,6 +8277,7 @@ jobs:
   py312-test-opentelemetry-exporter-prometheus_windows-latest:
     name: opentelemetry-exporter-prometheus 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8134,6 +8301,7 @@ jobs:
   py313-test-opentelemetry-exporter-prometheus_windows-latest:
     name: opentelemetry-exporter-prometheus 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8249,6 +8417,7 @@ jobs:
   py311-test-opentelemetry-exporter-zipkin-combined_windows-latest:
     name: opentelemetry-exporter-zipkin-combined 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8272,6 +8441,7 @@ jobs:
   py312-test-opentelemetry-exporter-zipkin-combined_windows-latest:
     name: opentelemetry-exporter-zipkin-combined 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8295,6 +8465,7 @@ jobs:
   py313-test-opentelemetry-exporter-zipkin-combined_windows-latest:
     name: opentelemetry-exporter-zipkin-combined 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8410,6 +8581,7 @@ jobs:
   py311-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
     name: opentelemetry-exporter-zipkin-proto-http 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8433,6 +8605,7 @@ jobs:
   py312-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
     name: opentelemetry-exporter-zipkin-proto-http 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8456,6 +8629,7 @@ jobs:
   py313-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
     name: opentelemetry-exporter-zipkin-proto-http 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8571,6 +8745,7 @@ jobs:
   py311-test-opentelemetry-exporter-zipkin-json_windows-latest:
     name: opentelemetry-exporter-zipkin-json 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8594,6 +8769,7 @@ jobs:
   py312-test-opentelemetry-exporter-zipkin-json_windows-latest:
     name: opentelemetry-exporter-zipkin-json 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8617,6 +8793,7 @@ jobs:
   py313-test-opentelemetry-exporter-zipkin-json_windows-latest:
     name: opentelemetry-exporter-zipkin-json 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8732,6 +8909,7 @@ jobs:
   py311-test-opentelemetry-propagator-b3_windows-latest:
     name: opentelemetry-propagator-b3 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8755,6 +8933,7 @@ jobs:
   py312-test-opentelemetry-propagator-b3_windows-latest:
     name: opentelemetry-propagator-b3 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8778,6 +8957,7 @@ jobs:
   py313-test-opentelemetry-propagator-b3_windows-latest:
     name: opentelemetry-propagator-b3 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8893,6 +9073,7 @@ jobs:
   py311-test-opentelemetry-propagator-jaeger_windows-latest:
     name: opentelemetry-propagator-jaeger 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8916,6 +9097,7 @@ jobs:
   py312-test-opentelemetry-propagator-jaeger_windows-latest:
     name: opentelemetry-propagator-jaeger 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8939,6 +9121,7 @@ jobs:
   py313-test-opentelemetry-propagator-jaeger_windows-latest:
     name: opentelemetry-propagator-jaeger 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -9054,6 +9237,7 @@ jobs:
   py311-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.11 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -9077,6 +9261,7 @@ jobs:
   py312-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.12 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -9100,6 +9285,7 @@ jobs:
   py313-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.13 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames

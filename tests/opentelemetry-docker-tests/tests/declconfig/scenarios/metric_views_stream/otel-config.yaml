@@ -1,0 +1,29 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-metric-views-stream
+meter_provider:
+  readers:
+    - periodic:
+        interval: 500
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/metrics
+  views:
+    - selector:
+        instrument_name: requests
+        instrument_type: counter
+        unit: "1"
+        meter_name: declconfig.views
+        meter_version: "1.0"
+      stream:
+        name: renamed.requests
+        description: Renamed by a view
+        attribute_keys:
+          included: [route]
+    - selector:
+        instrument_name: unmatched
+        meter_name: other.meter
+      stream:
+        name: should.not.apply

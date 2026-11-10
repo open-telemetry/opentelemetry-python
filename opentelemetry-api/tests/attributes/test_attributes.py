@@ -47,7 +47,23 @@ class TestBoundedAttributes(unittest.TestCase):
         for valid_primitive in valid_primitive_sequence:
             self.assertEqual(_clean_attribute_value(valid_primitive, None), valid_primitive)
 
-        self.assertEqual(_clean_attribute_value(b"hello", 4), b"hello")
+        # Byte array is not truncated when length <= limit.
+        self.assertEqual(_clean_attribute_value(b"hello", 5), b"hello")
+        self.assertEqual(_clean_attribute_value(b"hello", None), b"hello")
+
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            # Byte array is truncated.
+            self.assertEqual(_clean_attribute_value(b"hello", 4), b"hell")
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("Byte array attribute value exceeds max length", cm.output[0])
+
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            # Mutable bytearray is truncated and converted to immutable bytes.
+            cleaned_bytearray = _clean_attribute_value(bytearray(b"hello"), 4)
+            self.assertEqual(cleaned_bytearray, b"hell")
+            self.assertIsInstance(cleaned_bytearray, bytes)
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("Byte array attribute value exceeds max length", cm.output[0])
 
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             # String is truncated.
@@ -107,10 +123,33 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict = BoundedAttributes(1, {"first": "value"}, immutable=False)
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             bdict["second"] = "another"
-        self.assertIn("Attributes dict is full. Dropping the oldest", cm.output[0])
-        self.assertNotIn("first", bdict)
-        self.assertEqual(bdict["second"], "another")
+        self.assertIn("Attributes dict is full. Dropping new", cm.output[0])
+        self.assertEqual(bdict["first"], "value")
+        self.assertNotIn("second", bdict)
         self.assertEqual(bdict.dropped, 1)
+
+    def test_maxlen_reached_logs_warning_once(self):
+        bdict = BoundedAttributes(2, immutable=False)
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            for idx in range(5):
+                bdict[f"key-{idx}"] = idx
+
+        full_warnings = [warning for warning in cm.output if "Attributes dict is full" in warning]
+        self.assertEqual(len(full_warnings), 1)
+        self.assertEqual(len(bdict), 2)
+        self.assertEqual(bdict.dropped, 3)
+
+    def test_maxlen_reached_logs_warning_after_invalid_key_drop(self):
+        bdict = BoundedAttributes(2, immutable=False)
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            bdict[1] = 2
+            bdict["first"] = 1
+            bdict["second"] = 2
+            bdict["third"] = 3
+
+        full_warnings = [warning for warning in cm.output if "Attributes dict is full" in warning]
+        self.assertEqual(len(full_warnings), 1)
+        self.assertEqual(bdict.dropped, 2)
 
     def test_negative_maxlen_not_allowed(self):
         with self.assertRaises(ValueError):
@@ -161,23 +200,24 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict["name"] = "Bruno"
         self.assertEqual(bdict.dropped, 0)
 
-        # try to append more elements, old elements should be dropped
+        # try to append more elements, new elements should be dropped
         for key in self.base:
             bdict["new-" + key] = self.base[key]
 
         self.assertEqual(len(bdict), dic_len)
         self.assertEqual(bdict.dropped, dic_len)
 
-        # test that elements in the dict are the new ones
+        # test that elements in the dict are the old ones
         for key in self.base:
-            self.assertEqual(bdict["new-" + key], self.base[key])
+            self.assertIn(key, bdict)
+            self.assertNotIn("new-" + key, bdict)
 
         # delete an element
-        del bdict["new-name"]
+        del bdict["name"]
         self.assertEqual(len(bdict), dic_len - 1)
 
         with self.assertRaises(KeyError):
-            _ = bdict["new-name"]
+            _ = bdict["name"]
 
     def test_immutable(self):
         bdict = BoundedAttributes()
@@ -261,3 +301,30 @@ class TestBoundedAttributes(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             bdict_copy["invalid"] = "invalid"
+
+    def test_byte_array_truncation_in_bounded_attributes(self):
+        bdict = BoundedAttributes(immutable=False, max_value_len=4)
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            bdict["bytes_val"] = b"1234567"
+        self.assertEqual(bdict["bytes_val"], b"1234")
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("Byte array attribute value exceeds max length of 4, truncating.", cm.output[0])
+
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            bdict["bytearray_val"] = bytearray(b"abcdefg")
+        self.assertEqual(bdict["bytearray_val"], b"abcd")
+        self.assertIsInstance(bdict["bytearray_val"], bytes)
+
+    def test_byte_array_in_nested_structures_truncated(self):
+        # In sequences
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            cleaned_seq = _clean_attribute_value([b"abcdef", b"xy", bytearray(b"123456")], 3)
+            self.assertEqual(cleaned_seq, (b"abc", b"xy", b"123"))
+            self.assertIsInstance(cleaned_seq[2], bytes)
+        self.assertEqual(len(cm.output), 2)
+
+        # In mappings
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            cleaned_map = _clean_attribute_value({"payload": b"abcdef", "ok": b"12"}, 3)
+            self.assertEqual(cleaned_map, {"payload": b"abc", "ok": b"12"})
+        self.assertEqual(len(cm.output), 1)

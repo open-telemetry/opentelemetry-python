@@ -189,12 +189,12 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(attributes["server.address"], "localhost")
         self.assertEqual(attributes["server.port"], 4318)
 
-    def test_default_transport_is_urllib3(self):
+    def test_default_transport_is_requests(self):
         exporter = OTLPSpanExporter()
 
         self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH)
         self.assertIs(exporter._compression, _http.Compression.NONE)
-        self.assertIsInstance(exporter._client._transport, Urllib3HTTPTransport)
+        self.assertIsInstance(exporter._client._transport, RequestsHTTPTransport)
 
     def test_session_uses_requests_transport(self):
         session = requests.Session()
@@ -488,8 +488,9 @@ class TestOTLPSpanExporter(unittest.TestCase):
             session=None,
         )
 
-        result = exporter.export(self._make_span())
-        self.assertEqual(result, SpanExportResult.SUCCESS)
+        transport_session = exporter._client._transport._session
+        self.assertEqual(transport_session.verify, "ca.pem")
+        self.assertEqual(transport_session.cert, ("client-cert.pem", "client-key.pem"))
 
     def test_compression_options(self):
         cases = (

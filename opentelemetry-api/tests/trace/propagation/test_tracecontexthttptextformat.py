@@ -14,6 +14,7 @@ from opentelemetry.trace.span import TraceState
 FORMAT = tracecontext.TraceContextTextMapPropagator()
 
 
+# pylint: disable-next=too-many-public-methods
 class TestTraceContextFormat(unittest.TestCase):
     TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
     SPAN_ID = int("1234567890123456", 16)  # type:int
@@ -180,6 +181,85 @@ class TestTraceContextFormat(unittest.TestCase):
         )
         self.assertEqual(span.get_span_context().trace_state["foo"], "1")
 
+    def test_tracestate_header_exceeds_maximum_length(self):
+        """Discard tracestate exceeding the maximum combined length, but keep traceparent."""
+        cases = {
+            "single header": ["foo=1" + " " * 8188],
+            "combined headers": ["foo=1" + " " * 4091, "bar=2" + " " * 4091],
+        }
+        for name, tracestate in cases.items():
+            with self.subTest(name):
+                with self.assertLogs(tracecontext.__name__, level="WARNING"):
+                    span = trace.get_current_span(
+                        FORMAT.extract(
+                            {
+                                "traceparent": ["00-12345678901234567890123456789012-1234567890123456-00"],
+                                "tracestate": tracestate,
+                            },
+                        )
+                    )
+                span_context = span.get_span_context()
+                self.assertEqual(span_context.trace_id, self.TRACE_ID)
+                self.assertEqual(span_context.span_id, self.SPAN_ID)
+                self.assertEqual(len(span_context.trace_state), 0)
+
+    def test_tracestate_header_at_maximum_length(self):
+        """Accept tracestate with a combined length equal to the maximum."""
+        cases = {
+            "single header": ["foo=1" + " " * 8187],
+            "combined headers": ["foo=1" + " " * 4090, "bar=2" + " " * 4091],
+        }
+        for name, tracestate in cases.items():
+            with self.subTest(name):
+                span = trace.get_current_span(
+                    FORMAT.extract(
+                        {
+                            "traceparent": ["00-12345678901234567890123456789012-1234567890123456-00"],
+                            "tracestate": tracestate,
+                        },
+                    )
+                )
+                self.assertEqual(span.get_span_context().trace_state["foo"], "1")
+
+    def test_traceparent_header_exceeds_maximum_length(self):
+        """Discard a traceparent longer than the maximum length."""
+        prefix = "01-12345678901234567890123456789012-1234567890123456-00-"
+        traceparent = prefix + "a" * (513 - len(prefix))
+        with self.assertLogs(tracecontext.__name__, level="WARNING"):
+            span = trace.get_current_span(FORMAT.extract({"traceparent": [traceparent]}))
+        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+
+    def test_traceparent_header_at_maximum_length(self):
+        """Accept a future-version traceparent with a length equal to the maximum."""
+        prefix = "01-12345678901234567890123456789012-1234567890123456-00-"
+        traceparent = prefix + "a" * (512 - len(prefix))
+        span = trace.get_current_span(FORMAT.extract({"traceparent": [traceparent]}))
+        span_context = span.get_span_context()
+        self.assertEqual(span_context.trace_id, self.TRACE_ID)
+        self.assertEqual(span_context.span_id, self.SPAN_ID)
+
+    def test_traceparent_whitespace_and_suffix(self):
+        base = "-12345678901234567890123456789012-1234567890123456-01"
+        cases = [
+            ("00" + base, True),
+            ("00" + base + " \t ", True),
+            ("00" + base + "-x", False),
+            ("00" + base + "-" + " " * 100, False),
+            ("01" + base + "-x", True),
+            ("01" + base + "-" + " " * 100, True),
+            ("01" + base + " -x", False),
+            ("01" + base + "-" + " " * 100 + "\nx", False),
+        ]
+        for traceparent, valid in cases:
+            with self.subTest(traceparent=traceparent):
+                span = trace.get_current_span(FORMAT.extract({"traceparent": [traceparent]}))
+                span_context = span.get_span_context()
+                self.assertEqual(span_context.is_valid, valid)
+                if valid:
+                    self.assertEqual(span_context.trace_id, self.TRACE_ID)
+                    self.assertEqual(span_context.span_id, self.SPAN_ID)
+                    self.assertEqual(span_context.trace_flags, trace.TraceFlags.SAMPLED)
+
     def test_tracestate_keys(self):
         """Test for valid key patterns in the tracestate"""
         tracestate_value = ",".join(
@@ -277,3 +357,19 @@ class TestTraceContextFormat(unittest.TestCase):
 
                 ctx = FORMAT.extract(carrier)
                 self.assertDictEqual(Context(), ctx)
+
+    def test_inject_invalid_span_context(self):
+        """Do not inject when SpanContext is invalid even if not equal to INVALID_SPAN_CONTEXT."""
+        invalid_contexts = [
+            trace.SpanContext(trace_id=0, span_id=0, is_remote=True),
+            trace.SpanContext(trace_id=0, span_id=123, is_remote=False),
+            trace.SpanContext(trace_id=123, span_id=0, is_remote=False),
+            trace.SpanContext(trace_id=0, span_id=0, is_remote=True, trace_flags=trace.TraceFlags(1)),
+        ]
+        for span_context in invalid_contexts:
+            with self.subTest(span_context=span_context):
+                carrier: dict[str, str] = {}
+                span = trace.NonRecordingSpan(span_context)
+                ctx = trace.set_span_in_context(span)
+                FORMAT.inject(carrier, context=ctx)
+                self.assertEqual(carrier, {})

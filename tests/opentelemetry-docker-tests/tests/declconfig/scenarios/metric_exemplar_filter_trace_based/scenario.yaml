@@ -1,0 +1,17 @@
+description: >
+  `exemplar_filter: trace_based` records exemplars only for measurements in a sampled span.
+until:
+  - metric:
+      name: inside.requests
+      min: 1
+  - metric:
+      name: outside.requests
+      min: 1
+expect:
+  - metric:
+      name: inside.requests
+      data_point: {exemplar_count: {gte: 1}}
+  - metric:
+      name: outside.requests
+      data_point: {exemplar_count: {gte: 1}}
+      count: 0

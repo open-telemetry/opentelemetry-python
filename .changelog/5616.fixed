@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix `timeout_millis` in metrics collection so slow observable callbacks raise `MetricsTimeoutError`

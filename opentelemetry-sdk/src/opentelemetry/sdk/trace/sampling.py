@@ -126,6 +126,7 @@ from __future__ import annotations
 
 import abc
 import enum
+import math
 import os
 from collections.abc import Sequence
 from logging import getLogger
@@ -252,7 +253,7 @@ class TraceIdRatioBased(Sampler):
     """
 
     def __init__(self, rate: float):
-        if rate < 0.0 or rate > 1.0:
+        if math.isnan(rate) or rate < 0.0 or rate > 1.0:
             raise ValueError("Probability must be in range [0.0, 1.0].")
         self._rate = rate
         self._bound = self.get_bound_for_rate(self._rate)

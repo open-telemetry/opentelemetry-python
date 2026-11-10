@@ -1,0 +1,14 @@
+description: >
+  `composite: [b3]` propagates the span context in the single `b3` header, without baggage.
+until:
+  - spans:
+      name: incoming
+expect:
+  - spans:
+      name: incoming
+      parent: {name: outgoing}
+      attributes:
+        values:
+          carrier.keys: b3
+          baggage.user.id: <none>
+      count: 1

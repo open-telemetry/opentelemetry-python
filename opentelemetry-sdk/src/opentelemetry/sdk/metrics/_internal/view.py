@@ -68,6 +68,8 @@ class View:
 
         name: This is a metric stream customizing attribute: the name of the
             metric stream. If `None`, the name of the instrument will be used.
+            When `name` is specified, `instrument_name` must also be specified
+            and cannot contain wildcard characters.
 
         description: This is a metric stream customizing attribute: the
             description of the metric stream. If `None`, the description of the instrument will
@@ -88,6 +90,14 @@ class View:
         instrument_unit: This is an instrument matching attribute: the unit the
             instrument must have to match the view.
 
+        aggregation_cardinality_limit: This is a metric stream customizing
+            attribute: the maximum number of distinct attribute sets the
+            stream aggregates per collection cycle. Measurements with further
+            attribute sets are aggregated into one additional point identified
+            by the attribute ``otel.metric.overflow=true``. If `None` the
+            cardinality limit of the metric reader is used, which defaults to
+            2000. Must be a positive integer.
+
     This class is not intended to be subclassed by the user.
     """
 
@@ -106,7 +116,17 @@ class View:
         aggregation: Aggregation | None = None,
         exemplar_reservoir_factory: Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None = None,
         instrument_unit: str | None = None,
+        aggregation_cardinality_limit: int | None = None,
     ):
+        if aggregation_cardinality_limit is not None and (
+            isinstance(aggregation_cardinality_limit, bool)
+            or not isinstance(aggregation_cardinality_limit, int)
+            or aggregation_cardinality_limit < 1
+        ):
+            raise ValueError(
+                f"aggregation_cardinality_limit must be a positive integer, got {aggregation_cardinality_limit!r}"
+            )
+
         if (
             instrument_type
             is instrument_name
@@ -119,12 +139,19 @@ class View:
             # pylint: disable=broad-exception-raised
             raise Exception(f"Some instrument selection criteria must be provided for View {name}")
 
-        if name is not None and instrument_name is not None and ("*" in instrument_name or "?" in instrument_name):
-            # pylint: disable=broad-exception-raised
-            raise Exception(f"View {name} declared with wildcard characters in instrument_name")
+        if name is not None:
+            if instrument_name is None:
+                # pylint: disable=broad-exception-raised
+                raise Exception(
+                    f"View {name} specifies a name but no instrument_name, which may select multiple instruments"
+                )
+            if any(c in instrument_name for c in "*?["):
+                # pylint: disable=broad-exception-raised
+                raise Exception(f"View {name} declared with wildcard characters in instrument_name")
 
-        # _name, _description, _aggregation, _exemplar_reservoir_factory and
-        # _attribute_keys will be accessed when instantiating a _ViewInstrumentMatch.
+        # _name, _description, _aggregation, _exemplar_reservoir_factory,
+        # _attribute_keys and _aggregation_cardinality_limit will be accessed
+        # when instantiating a _ViewInstrumentMatch.
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
@@ -137,6 +164,7 @@ class View:
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
+        self._aggregation_cardinality_limit = aggregation_cardinality_limit
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
@@ -154,9 +182,8 @@ class View:
                 return False
 
         if self._instrument_unit is not None:
-            # Units are case-sensitive; fnmatchcase keeps matching consistent
-            # across platforms.
-            if not fnmatchcase(instrument.unit, self._instrument_unit):
+            # Unit comparison is performed in an exact case-sensitive manner.
+            if instrument.unit != self._instrument_unit:
                 return False
 
         if self._meter_name is not None:

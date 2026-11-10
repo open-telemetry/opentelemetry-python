@@ -1,0 +1,31 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-trace-sampler-composite-probability
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/traces
+  sampler:
+    composite/development:
+      rule_based:
+        rules:
+          - attribute_values:
+              key: sample
+              values: [never]
+            sampler:
+              probability:
+                ratio: 0
+          - attribute_values:
+              key: sample
+              values: [always]
+            sampler:
+              probability:
+                ratio: 1
+          - sampler:
+              parent_threshold:
+                root:
+                  always_off:

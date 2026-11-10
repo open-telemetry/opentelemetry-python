@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # pylint: disable=no-member
 
+import time
 import unittest
 
 from opentelemetry.trace.span import TraceState
@@ -128,3 +129,28 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertIsNone(state.get("bar"))
         with self.assertRaises(KeyError):
             state["bar"]  # pylint:disable=W0104
+
+    def test_tracestate_from_header_optional_whitespace(self):
+        cases = [
+            ("foo=1 , bar=2", {"foo": "1", "bar": "2"}),
+            ("\tfoo=1,\tbar=2\t", {"foo": "1", "bar": "2"}),
+            (" foo=1", {"foo": "1"}),
+            ("foo=1,  ,bar=2", {"foo": "1", "bar": "2"}),
+            ("foo=1,", {"foo": "1"}),
+            ("foo=a b", {"foo": "a b"}),
+        ]
+        for header, expected in cases:
+            with self.subTest(header=header):
+                state = TraceState.from_header([header])
+                self.assertEqual(dict(state), expected)
+
+    def test_tracestate_from_header_long_whitespace_run(self):
+        for whitespace in (" ", "\t"):
+            with self.subTest(whitespace=repr(whitespace)):
+                header = "a=b" + whitespace * 100_000 + "x"
+                start = time.perf_counter()
+                with self.assertLogs(level="WARNING"):
+                    state = TraceState.from_header([header])
+                elapsed = time.perf_counter() - start
+                self.assertEqual(len(state), 0)
+                self.assertLess(elapsed, 1)

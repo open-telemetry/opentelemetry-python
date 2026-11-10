@@ -6,10 +6,12 @@
 from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, patch
-from urllib.parse import quote_plus
 
 from opentelemetry.baggage import get_all, set_baggage
-from opentelemetry.baggage.propagation import W3CBaggagePropagator
+from opentelemetry.baggage.propagation import (
+    W3CBaggagePropagator,
+    _encode_baggage_pairs,
+)
 from opentelemetry.context import get_current
 
 
@@ -54,14 +56,16 @@ class TestW3CBaggagePropagator(TestCase):
             ),
             ("some_name = some_value", {"some_name": "some_value"}),
             ("key1\t=\tval1", {"key1": "val1"}),
-            ("key1 = val1;prop=1", {"key1": "val1;prop=1"}),
+            ("key1=val1 , ,\tkey2=val2", {"key1": "val1", "key2": "val2"}),
+            (" \tkey1=val1,,key2=val2\t ", {"key1": "val1", "key2": "val2"}),
+            ("key1 = val1;prop=1", {"key1": "val1"}),
             (
                 "key1 = val1 ; prop1 = 1 ; prop2 ;prop3= 2",
-                {"key1": "val1 ; prop1 = 1 ; prop2 ;prop3= 2"},
+                {"key1": "val1"},
             ),
             (
                 "key1=val1, key2 = val2;prop = 1;prop2",
-                {"key1": "val1", "key2": "val2;prop = 1;prop2"},
+                {"key1": "val1", "key2": "val2"},
             ),
         ):
             with self.subTest(header=header):
@@ -79,8 +83,35 @@ class TestW3CBaggagePropagator(TestCase):
 
     def test_valid_header_with_properties(self):
         header = "key1=val1,key2=val2;prop=1;prop2;prop3=2"
-        expected = {"key1": "val1", "key2": "val2;prop=1;prop2;prop3=2"}
+        expected = {"key1": "val1", "key2": "val2"}
         self.assertEqual(self._extract(header), expected)
+
+    def test_properties_not_propagated_as_value(self):
+        context = self.propagator.extract({"baggage": ["key1=val%201;prop=1"]})
+        carrier = {}
+        self.propagator.inject(carrier, context)
+        self.assertEqual(carrier, {"baggage": "key1=val%201"})
+
+    def test_extract_multiple_headers(self):
+        for headers, expected in (
+            (["key1=val1", "key2=val2"], {"key1": "val1", "key2": "val2"}),
+            (["key1=val1,key2=val2", "key3=val3"], {"key1": "val1", "key2": "val2", "key3": "val3"}),
+            (["", "key1=val1"], {"key1": "val1"}),
+            (["key1=val1", "key1=val2"], {"key1": "val2"}),
+        ):
+            with self.subTest(headers=headers):
+                self.assertEqual(get_all(self.propagator.extract({"baggage": headers})), expected)
+
+    def test_extract_multiple_headers_combined_limits(self):
+        half = W3CBaggagePropagator._MAX_PAIRS // 2 + 1
+        headers = [
+            ",".join(f"a{k}=val" for k in range(half)),
+            ",".join(f"b{k}=val" for k in range(half)),
+        ]
+        with self.assertLogs(level=WARNING) as warning:
+            result = get_all(self.propagator.extract({"baggage": headers}))
+            self.assertIn("exceeded the maximum number of list-members", warning.output[0])
+        self.assertEqual(len(result), W3CBaggagePropagator._MAX_PAIRS)
 
     def test_valid_header_with_url_escaped_values(self):
         header = "key1=val1,key2=val2%3Aval3,key3=val4%40%23%24val5"
@@ -110,9 +141,10 @@ class TestW3CBaggagePropagator(TestCase):
         self.assertEqual(self._extract(" = "), {})
 
     def test_header_too_long(self):
-        long_value = "s" * (W3CBaggagePropagator._MAX_HEADER_LENGTH + 1)
-        header = f"key1={long_value}"
-        expected = {}
+        # Three 3000 byte list-members: only the first two fit into the baggage string limit
+        value = "s" * 2995
+        header = f"key1={value},key2={value},key3={value}"
+        expected = {"key1": value, "key2": value}
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(self._extract(header), expected)
             self.assertIn(
@@ -132,7 +164,7 @@ class TestW3CBaggagePropagator(TestCase):
             )
 
     def test_extract_non_ascii_header_exceeds_byte_limit(self):
-        """A header under the char limit but over the byte limit when encoded should be rejected."""
+        """A non-ASCII entry over the byte limit when encoded should be rejected."""
         # Each \u00e9 encodes to 2 bytes in UTF-8, so we need fewer chars to exceed the byte limit
         non_ascii_value = "\u00e9" * (W3CBaggagePropagator._MAX_HEADER_LENGTH)
         header = f"key1={non_ascii_value}"
@@ -140,7 +172,7 @@ class TestW3CBaggagePropagator(TestCase):
             result = self._extract(header)
             self.assertEqual(result, {})
             self.assertIn(
-                "exceeded the maximum number of bytes per baggage-string",
+                "contains non-ASCII characters",
                 warning.output[0],
             )
 
@@ -160,12 +192,20 @@ class TestW3CBaggagePropagator(TestCase):
                 warning.output[0],
             )
 
-    def test_extract_unquote_plus(self):
-        self.assertEqual(self._extract("keykey=value%5Evalue"), {"keykey": "value^value"})
-        self.assertEqual(
-            self._extract("key%23key=value%23value"),
-            {"key#key": "value#value"},
-        )
+    def test_extract_percent_decoding(self):
+        for header, expected in (
+            ("keykey=value%5Evalue", {"keykey": "value^value"}),
+            ("key%23key=value%23value", {"key%23key": "value#value"}),
+            ("key=a+b", {"key": "a+b"}),
+            ("key=a%20b", {"key": "a b"}),
+            ("key=a%2Bb", {"key": "a+b"}),
+            ("key=%20val%20", {"key": " val "}),
+            ("key = %09val%09 ", {"key": "\tval\t"}),
+            ("key=%E2%82%AC", {"key": "\u20ac"}),
+            ("key=%FF", {"key": "\ufffd"}),
+        ):
+            with self.subTest(header=header):
+                self.assertEqual(self._extract(header), expected)
 
     def test_header_max_entries_skip_invalid_entry(self):
         # 181 entries where index 2 is too long: skipping it leaves exactly 180 valid entries
@@ -213,7 +253,17 @@ class TestW3CBaggagePropagator(TestCase):
         self.assertEqual(None, output)
 
     def test_inject_space_entries(self):
-        self.assertEqual("key=val+ue", self._inject({"key": "val ue"}))
+        self.assertEqual("key=val%20ue", self._inject({"key": "val ue"}))
+
+    def test_inject_plus_sign(self):
+        self.assertEqual("key=a%2Bb", self._inject({"key": "a+b"}))
+
+    def test_inject_invalid_key(self):
+        for key in ("key key", "key/key", "key,key", ""):
+            with self.subTest(key=key):
+                with self.assertLogs(level=WARNING) as warning:
+                    self.assertEqual("valid=val", self._inject({key: "val", "valid": "val"}))
+                    self.assertIn("is not a valid token", warning.output[0])
 
     def test_inject(self):
         values = {
@@ -258,13 +308,9 @@ class TestW3CBaggagePropagator(TestCase):
         self.assertEqual(inject_fields, self.propagator.fields)
 
     def test_encode_baggage_pairs(self):
-        def _format_baggage(entries):
-            return ",".join(quote_plus(str(k)) + "=" + quote_plus(str(v)) for k, v in entries.items())
-
-        self.assertEqual(_format_baggage({"key key": "value value"}), "key+key=value+value")
         self.assertEqual(
-            _format_baggage({"key/key": "value/value"}),
-            "key%2Fkey=value%2Fvalue",
+            list(_encode_baggage_pairs({"key": "value value", "key/key": "value", "k": "a/b;c,d=e%f\u20ac"})),
+            ["key=value%20value", "k=a%2Fb%3Bc%2Cd%3De%25f%E2%82%AC"],
         )
 
     def test_inject_too_many_entries(self):
@@ -347,6 +393,6 @@ class TestW3CBaggagePropagator(TestCase):
 
         context = self.propagator.extract(carrier)
 
-        self.assertEqual(carrier, {"baggage": "transaction=string+with+spaces"})
+        self.assertEqual(carrier, {"baggage": "transaction=string%20with%20spaces"})
 
         self.assertEqual(context, {"abc": {"transaction": "string with spaces"}})

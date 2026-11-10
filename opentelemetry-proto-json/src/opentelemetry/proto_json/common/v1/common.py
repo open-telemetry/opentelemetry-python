@@ -8,16 +8,13 @@ from __future__ import annotations
 
 import builtins
 import dataclasses
-import functools
 import typing
-
-_dataclass = functools.partial(dataclasses.dataclass, slots=True)
 
 import opentelemetry.proto_json._json_codec
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message AnyValue
@@ -96,7 +93,7 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class ArrayValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message ArrayValue
@@ -137,7 +134,7 @@ class ArrayValue(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class KeyValueList(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValueList
@@ -178,7 +175,7 @@ class KeyValueList(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message KeyValue
@@ -231,7 +228,7 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message InstrumentationScope
@@ -290,7 +287,7 @@ class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
 
 
 @typing.final
-@_dataclass
+@dataclasses.dataclass(slots=True)
 class EntityRef(opentelemetry.proto_json._json_codec.JsonMessage):
     """
     Generated from protobuf message EntityRef

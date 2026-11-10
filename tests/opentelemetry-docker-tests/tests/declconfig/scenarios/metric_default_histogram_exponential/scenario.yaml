@@ -1,0 +1,13 @@
+description: >
+  `default_histogram_aggregation: base2_exponential_bucket_histogram` exports histograms as
+  exponential histograms.
+until:
+  - metric:
+      name: latency
+      field: count
+      min: 2
+expect:
+  - metric:
+      name: latency
+      type: exponential_histogram
+      data_point: {count: 2, sum: 30, min: 10, max: 20}

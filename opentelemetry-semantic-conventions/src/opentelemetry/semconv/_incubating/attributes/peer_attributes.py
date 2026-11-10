@@ -5,5 +5,5 @@ from typing import Final
 
 PEER_SERVICE: Final = "peer.service"
 """
-Deprecated: Replaced by `service.peer.name`.
+Deprecated: Use `server.service.name` on the client side or `client.service.name` on the server side.
 """
