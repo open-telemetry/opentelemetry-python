@@ -1,0 +1,14 @@
+description: >
+  `composite: [tracecontext, baggage]` propagates the span context and baggage.
+until:
+  - spans:
+      name: incoming
+expect:
+  - spans:
+      name: incoming
+      parent: {name: outgoing}
+      attributes:
+        values:
+          carrier.keys: baggage,traceparent
+          baggage.user.id: u-123
+      count: 1

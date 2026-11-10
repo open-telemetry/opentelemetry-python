@@ -4,6 +4,7 @@
 # Tests access private members of SDK classes to assert correct configuration.
 # pylint: disable=protected-access
 
+import math
 import os
 import sys
 import unittest
@@ -147,6 +148,11 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
     def test_batch_processor_explicit_schedule_delay(self):
         processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=2000))
         self.assertEqual(processor._batch_processor._schedule_delay_millis, 2000.0)
+
+    def test_batch_processor_zero_schedule_delay(self):
+        processor = _create_batch_log_record_processor(self._make_batch_config(schedule_delay=0))
+        self.assertEqual(processor._batch_processor._schedule_delay_millis, 0)
+        processor.shutdown()
 
     def test_batch_processor_explicit_export_timeout(self):
         processor = _create_batch_log_record_processor(self._make_batch_config(export_timeout=5000))
@@ -480,6 +486,32 @@ class TestCreateLogRecordExporters(unittest.TestCase):
         self.assertEqual(call_kwargs["endpoint"], "http://collector:4317")
         self.assertAlmostEqual(call_kwargs["timeout"], 10.0)
 
+    def test_otlp_zero_timeout_is_unlimited(self):
+        mock_exporter_cls = MagicMock()
+        mock_exporter_module = MagicMock()
+        mock_exporter_module.OTLPLogExporter = mock_exporter_cls
+        cases = (
+            (
+                LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(timeout=0)),
+                {
+                    "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                    "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_exporter_module,
+                },
+            ),
+            (
+                LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(timeout=0)),
+                {
+                    "grpc": MagicMock(),
+                    "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_exporter_module,
+                },
+            ),
+        )
+        for config, modules in cases:
+            with self.subTest(config=config), patch.dict(sys.modules, modules):
+                mock_exporter_cls.reset_mock()
+                _create_log_record_exporter(config)
+                self.assertEqual(mock_exporter_cls.call_args.kwargs["timeout"], math.inf)
+
 
 class TestLogRecordLimits(unittest.TestCase):
     def test_default_limits(self):
@@ -613,6 +645,28 @@ class TestLoggerConfigurator(unittest.TestCase):
         provider = create_logger_provider(config)
         self.assertFalse(self._enabled(provider, "noisy.http"))
         self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_scope_patterns_treat_brackets_literally(self):
+        for pattern in ("noisy.[bc]", "noisy.[bc]*"):
+            with self.subTest(pattern=pattern):
+                config = LoggerProviderConfig(
+                    processors=[],
+                    logger_configurator_development=LoggerConfiguratorConfig(
+                        default_config=LoggerConfigConfig(enabled=True),
+                        loggers=[
+                            LoggerMatcherAndConfig(
+                                name=pattern,
+                                config=LoggerConfigConfig(enabled=False),
+                            )
+                        ],
+                    ),
+                )
+                provider = create_logger_provider(config)
+                self.assertFalse(self._enabled(provider, "noisy.[bc]"))
+                self.assertTrue(self._enabled(provider, "noisy.b"))
+                self.assertTrue(self._enabled(provider, "noisy.btail"))
+                self.assertTrue(self._enabled(provider, "Noisy.[bc]"))
+                self.assertEqual(self._enabled(provider, "noisy.[bc]tail"), pattern == "noisy.[bc]")
 
     def test_default_config_applies_to_unmatched_scopes(self):
         config = LoggerProviderConfig(

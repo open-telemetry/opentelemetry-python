@@ -1,0 +1,13 @@
+description: >
+  `temporality_preference: low_memory` exports synchronous counters and histograms as delta,
+  and everything else as cumulative.
+until:
+  - metric:
+      name: requests
+      min: 3
+expect:
+  - metric: {name: requests, temporality: DELTA}
+  - metric: {name: latency, temporality: DELTA}
+  - metric: {name: cpu.time, temporality: CUMULATIVE}
+  - metric: {name: queue.size, temporality: CUMULATIVE}
+  - metric: {name: connections, temporality: CUMULATIVE}

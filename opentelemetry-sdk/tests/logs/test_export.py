@@ -473,6 +473,12 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
 # before the end of the test, otherwise the worker thread will continue
 # to run after the end of the test.
 class TestBatchLogRecordProcessor(unittest.TestCase):
+    def test_invalid_export_timeout_millis(self):
+        with self.assertRaises(ValueError):
+            BatchLogRecordProcessor(InMemoryLogRecordExporter(), export_timeout_millis=0)
+        with self.assertRaises(ValueError):
+            BatchLogRecordProcessor(InMemoryLogRecordExporter(), export_timeout_millis=-500)
+
     def test_emit_call_log_record(self):
         exporter = InMemoryLogRecordExporter()
         log_record_processor = Mock(wraps=BatchLogRecordProcessor(exporter))
@@ -614,12 +620,6 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             ValueError,
             BatchLogRecordProcessor,
             exporter,
-            schedule_delay_millis=0,
-        )
-        self.assertRaises(
-            ValueError,
-            BatchLogRecordProcessor,
-            exporter,
             schedule_delay_millis=-1,
         )
         self.assertRaises(
@@ -641,6 +641,7 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             max_queue_size=100,
             max_export_batch_size=101,
         )
+        BatchLogRecordProcessor(exporter, schedule_delay_millis=0).shutdown()
 
     @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metrics_already_shutdown(self):

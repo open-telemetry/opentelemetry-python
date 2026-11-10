@@ -1,0 +1,24 @@
+description: >
+  A view selects an instrument by name, type, unit and meter name/version, and renames it,
+  sets its description and keeps only the included attribute keys. A view whose selector
+  doesn't match has no effect.
+until:
+  - metric:
+      name: renamed.requests
+      min: 1
+  - metric:
+      name: unmatched
+      min: 1
+expect:
+  - metric:
+      name: renamed.requests
+      type: sum
+      description: Renamed by a view
+      data_point:
+        attributes: {values: {route: /a}, strict: true}
+  - metric:
+      name: requests
+      count: 0
+  - metric:
+      name: should.not.apply
+      count: 0

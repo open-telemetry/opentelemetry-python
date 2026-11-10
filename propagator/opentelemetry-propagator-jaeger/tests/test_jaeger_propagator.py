@@ -66,6 +66,14 @@ class TestJaegerPropagator(TestCase):
         self.assertEqual(span_context.trace_id, self.trace_id)
         self.assertEqual(span_context.span_id, self.span_id)
 
+    def test_extract_url_encoded_span(self):
+        # some Jaeger clients URL-encode the ':' delimiter of uber-trace-id
+        old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id.replace(":", "%3A")}
+        ctx = FORMAT.extract(old_carrier)
+        span_context = trace_api.get_current_span(ctx).get_span_context()
+        self.assertEqual(span_context.trace_id, self.trace_id)
+        self.assertEqual(span_context.span_id, self.span_id)
+
     def test_missing_carrier(self):
         old_carrier = {}
         ctx = FORMAT.extract(old_carrier)

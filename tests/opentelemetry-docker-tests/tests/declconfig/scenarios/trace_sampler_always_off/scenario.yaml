@@ -1,0 +1,7 @@
+description: >
+  The `always_off` sampler drops every span.
+until:
+  - exited: {}
+expect:
+  - spans:
+      count: 0

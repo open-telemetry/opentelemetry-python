@@ -66,14 +66,26 @@ def _hash_attributes(value: Attributes | AnyValue) -> _HashedAttributes:
         assert_never(value)
 
 
+_DEFAULT_CARDINALITY_LIMIT = 2000
+
+_OVERFLOW_ATTRIBUTES: dict[str, AnyValue] = {"otel.metric.overflow": True}
+_OVERFLOW_KEY = _hash_attributes(_OVERFLOW_ATTRIBUTES)
+
+
 class _ViewInstrumentMatch:
     def __init__(
         self,
         view: View,
         instrument: _Instrument,
         instrument_class_aggregation: dict[type, Aggregation],
+        cardinality_limit: int = _DEFAULT_CARDINALITY_LIMIT,
+        reset_on_collect: bool = False,
     ):
         self._view = view
+        self._cardinality_limit = cardinality_limit
+        self._reset_on_collect = reset_on_collect
+        # Delta aggregations created after a collection continue from it.
+        self._previous_collection_start_nanos: int | None = None
         self._instrument = instrument
         self._attributes_aggregation: dict[_HashedAttributes, _Aggregation] = {}
         self._lock = Lock()
@@ -134,28 +146,53 @@ class _ViewInstrumentMatch:
 
         aggr_key = _hash_attributes(attributes)
 
-        if aggr_key not in self._attributes_aggregation:
+        if self._reset_on_collect:
+            # collect() discards the aggregations, so hold the lock until the
+            # measurement is aggregated to not lose it.
             with self._lock:
-                if aggr_key not in self._attributes_aggregation:
-                    if not isinstance(self._view._aggregation, DefaultAggregation):
-                        aggregation = self._view._aggregation._create_aggregation(
-                            self._instrument,
-                            attributes,
-                            self._view._exemplar_reservoir_factory,
-                            time_ns(),
-                        )
-                    else:
-                        aggregation = self._instrument_class_aggregation[
-                            self._instrument.__class__
-                        ]._create_aggregation(
-                            self._instrument,
-                            attributes,
-                            self._view._exemplar_reservoir_factory,
-                            time_ns(),
-                        )
-                    self._attributes_aggregation[aggr_key] = aggregation
+                self._get_or_create_aggregation(aggr_key, attributes).aggregate(measurement, should_sample_exemplar)
+            return
 
-        self._attributes_aggregation[aggr_key].aggregate(measurement, should_sample_exemplar)
+        aggregation = self._attributes_aggregation.get(aggr_key)
+        if aggregation is None:
+            with self._lock:
+                aggregation = self._get_or_create_aggregation(aggr_key, attributes)
+
+        aggregation.aggregate(measurement, should_sample_exemplar)
+
+    def _get_or_create_aggregation(self, aggr_key: _HashedAttributes, attributes: Attributes) -> _Aggregation:
+        """Must be called with ``self._lock`` held."""
+        aggregation = self._attributes_aggregation.get(aggr_key)
+        if aggregation is not None:
+            return aggregation
+
+        # Overflow is only used once the limit of distinct attribute sets is
+        # reached, so the overflow point is exported in addition to them.
+        if len(self._attributes_aggregation) >= self._cardinality_limit:
+            aggr_key = _OVERFLOW_KEY
+            attributes = dict(_OVERFLOW_ATTRIBUTES)
+            aggregation = self._attributes_aggregation.get(aggr_key)
+            if aggregation is not None:
+                return aggregation
+
+        start_time_unix_nano = self._previous_collection_start_nanos or time_ns()
+        # pylint: disable=protected-access
+        if not isinstance(self._view._aggregation, DefaultAggregation):
+            aggregation = self._view._aggregation._create_aggregation(
+                self._instrument,
+                attributes,
+                self._view._exemplar_reservoir_factory,
+                start_time_unix_nano,
+            )
+        else:
+            aggregation = self._instrument_class_aggregation[self._instrument.__class__]._create_aggregation(
+                self._instrument,
+                attributes,
+                self._view._exemplar_reservoir_factory,
+                start_time_unix_nano,
+            )
+        self._attributes_aggregation[aggr_key] = aggregation
+        return aggregation
 
     def collect(
         self,
@@ -164,7 +201,12 @@ class _ViewInstrumentMatch:
     ) -> Sequence[DataPointT] | None:
         data_points: list[DataPointT] = []
         with self._lock:
-            for aggregation in self._attributes_aggregation.values():
+            aggregations = self._attributes_aggregation
+            if self._reset_on_collect and collection_aggregation_temporality is AggregationTemporality.DELTA:
+                self._attributes_aggregation = {}
+                self._previous_collection_start_nanos = collection_start_nanos
+
+            for aggregation in aggregations.values():
                 data_point = aggregation.collect(collection_aggregation_temporality, collection_start_nanos)
                 if data_point is not None:
                     data_points.append(data_point)

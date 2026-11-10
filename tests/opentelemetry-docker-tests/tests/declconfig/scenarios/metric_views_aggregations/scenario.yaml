@@ -1,0 +1,35 @@
+description: >
+  Views apply drop, sum, last_value, explicit bucket histogram and base2 exponential bucket
+  histogram aggregations.
+until:
+  - metric:
+      name: summed
+      min: 30
+  - metric:
+      name: last
+      min: 2
+expect:
+  - metric:
+      name: dropped
+      count: 0
+  - metric:
+      name: summed
+      type: sum
+      data_point: {value: 30}
+  - metric:
+      name: last
+      type: gauge
+      data_point: {value: 2}
+  - metric:
+      name: bucketed
+      type: histogram
+      data_point:
+        count: 2
+        explicit_bounds: [10, 100]
+        bucket_counts: [1, 1, 0]
+        min: {exists: false}
+        max: {exists: false}
+  - metric:
+      name: exponential
+      type: exponential_histogram
+      data_point: {count: 2}
