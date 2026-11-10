@@ -1,0 +1,12 @@
+file_format: "1.0"
+resource:
+  schema_url: https://opentelemetry.io/schemas/1.26.0
+  attributes:
+    - name: service.name
+      value: declconfig-resource-schema-url
+tracer_provider:
+  processors:
+    - simple:
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/traces

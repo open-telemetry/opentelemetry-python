@@ -38,7 +38,7 @@ asgiref==3.7.2
     # via
     #   -c dev-requirements.txt
     #   opentelemetry-test-utils
-certifi==2023.5.7
+certifi==2026.10.19
     # via requests
 charset-normalizer==2.0.0
     # via requests
@@ -70,7 +70,7 @@ pluggy==1.6.0
     # via
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   pytest
-protobuf==5.29.5
+protobuf==5.29.6
     # via
     #   -r exporter/opentelemetry-exporter-otlp-proto-grpc/test-requirements.in
     #   googleapis-common-protos

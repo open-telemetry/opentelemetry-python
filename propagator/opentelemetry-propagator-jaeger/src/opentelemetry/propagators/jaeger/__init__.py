@@ -69,7 +69,7 @@ class JaegerPropagator(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if not span_context.is_valid:
             return
 
         # Non-recording spans do not have a parent; the API Span type does not
@@ -184,6 +184,11 @@ def _parse_trace_id_header(
     header = _extract_first_element(items)
     if header is None:
         return invalid_header_result
+
+    # some Jaeger clients URL-encode the header value, including the ":"
+    # delimiter, so decode it when no plain delimiter can be found
+    if ":" not in header:
+        header = urllib.parse.unquote(header)
 
     fields = header.split(":")
     if len(fields) != 4:

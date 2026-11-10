@@ -1,0 +1,1 @@
+`opentelemetry-api`: limit `traceparent` header length to 512 characters in `TraceContextTextMapPropagator` during extraction

@@ -19,13 +19,17 @@ from opentelemetry.configuration.file import (
 from opentelemetry.configuration.file._loader import (
     _SUPPORTED_SCHEMA_MAJOR,
     _SUPPORTED_SCHEMA_MINOR,
+    _parse_config_content,
     _substitute_env_in_json_value,
     _substitute_env_in_yaml_node,
 )
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
 )
-from opentelemetry.configuration.models import OpenTelemetryConfiguration
+from opentelemetry.configuration.models import (
+    OpenTelemetryConfiguration,
+    OtlpHttpEncoding,
+)
 from opentelemetry.configuration.models import (
     ParentBasedSampler as ParentBasedSamplerConfig,
 )
@@ -289,6 +293,22 @@ tracer_provider:
             BatchSpanProcessorConfig,
         )
 
+    def test_otlp_http_json_encoding_is_typed_enum(self):
+        config = self._load(
+            """
+file_format: '1.0'
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp_http:
+            encoding: json
+"""
+        )
+
+        exporter = config.tracer_provider.processors[0].batch.exporter.otlp_http
+        self.assertIs(exporter.encoding, OtlpHttpEncoding.json)
+
     # pylint: disable=protected-access
     def test_typed_config_feeds_factory_function(self):
         config = self._load()
@@ -445,6 +465,28 @@ class TestEnvVarSubstitutionScope(unittest.TestCase):
             result = _substitute_yaml("service_name: ${VAL}")
         self.assertEqual(list(result), ["service_name"])
         self.assertEqual(result["service_name"], "legit\nmalicious_key: injected")
+
+    @patch.dict(os.environ, {"N": "42"})
+    def test_env_prefixed_reference_is_type_coerced(self):
+        result = _substitute_yaml('count: ${env:N}\nquoted: "${env:N}"')
+        self.assertEqual(result["count"], 42)
+        self.assertIsInstance(result["count"], int)
+        self.assertEqual(result["quoted"], "42")
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_escape_inside_default_is_not_a_reference(self):
+        result = _substitute_yaml("key: ${UNDEFINED_KEY:-$${UNDEFINED_KEY}}")
+        self.assertEqual(result["key"], "${UNDEFINED_KEY:-${UNDEFINED_KEY}}")
+
+    @patch.dict(os.environ, {"STRING_VALUE": "value"})
+    def test_invalid_reference_fails_parsing(self):
+        for content, suffix in (
+            ("key: ${STRING_VALUE:?error}", ".yaml"),
+            ('{"key": "${STRING_VALUE:?error}"}', ".json"),
+        ):
+            with self.subTest(suffix=suffix):
+                with self.assertRaises(ConfigurationError):
+                    _parse_config_content(content, suffix, f"config{suffix}")
 
 
 class TestEnvVarSubstitutionWithAliases(unittest.TestCase):

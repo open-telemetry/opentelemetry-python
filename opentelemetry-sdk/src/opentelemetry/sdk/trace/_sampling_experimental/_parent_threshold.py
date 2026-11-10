@@ -14,6 +14,7 @@ from ._trace_state import OtelTraceState
 from ._util import (
     INVALID_THRESHOLD,
     MIN_THRESHOLD,
+    is_valid_random_value,
     is_valid_threshold,
 )
 
@@ -41,10 +42,16 @@ class _ComposableParentThreshold(ComposableSampler):
         ot_trace_state = OtelTraceState.parse(trace_state)
 
         if is_valid_threshold(ot_trace_state.threshold):
-            return SamplingIntent(
-                threshold=ot_trace_state.threshold,
-                threshold_reliable=True,
-            )
+            randomness = ot_trace_state.random_value
+            if not is_valid_random_value(randomness):
+                randomness = parent_span_ctx.trace_id & 0x00FFFFFFFFFFFFFF
+            # Preserve the parent's decision, but discard an inconsistent threshold.
+            # https://opentelemetry.io/docs/specs/otel/trace/tracestate-probability-sampling/#general-requirements
+            if parent_span_ctx.trace_flags.sampled == (randomness >= ot_trace_state.threshold):
+                return SamplingIntent(
+                    threshold=ot_trace_state.threshold,
+                    threshold_reliable=True,
+                )
 
         threshold = MIN_THRESHOLD if parent_span_ctx.trace_flags.sampled else INVALID_THRESHOLD
         return SamplingIntent(threshold=threshold, threshold_reliable=False)
@@ -61,9 +68,9 @@ def composable_parent_threshold(
 
     - For spans without a parent context, delegate to the root sampler
     - For spans with a parent context, returns a SamplingIntent that propagates the parent's sampling decision
-    - Returns the parent's threshold if available; otherwise, if the parent's sampled flag is set,
+    - Returns the parent's threshold if available and consistent with the sampled flag; otherwise, if the sampled flag is set,
     returns threshold=0; otherwise, if the parent's sampled flag is not set, no threshold is returned.
-    - Sets threshold_reliable to match the parent’s reliability, which is true if the parent had a threshold.
+    - Sets threshold_reliable to true only if the parent had a consistent threshold.
     - Does not add any attributes
 
     Args:

@@ -53,6 +53,21 @@ class LogRecord(ABC):
     pertinent to the event being logged.
     """
 
+    __slots__ = (
+        "timestamp",
+        "observed_timestamp",
+        "context",
+        "trace_id",
+        "span_id",
+        "trace_flags",
+        "severity_text",
+        "severity_number",
+        "body",
+        "attributes",
+        "event_name",
+        "exception",
+    )
+
     @overload
     def __init__(
         self,

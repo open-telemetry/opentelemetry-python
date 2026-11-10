@@ -91,6 +91,7 @@ from opentelemetry.sdk.metrics import (
 from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    CardinalityLimits,
     DataT,
     Gauge,
     Histogram,
@@ -112,6 +113,32 @@ _logger = getLogger(__name__)
 
 _TARGET_INFO_NAME = "target"
 _TARGET_INFO_DESCRIPTION = "Target metadata"
+
+_DEFAULT_PORT = 9464
+
+
+def _port_from_env() -> int:
+    """Return ``OTEL_EXPORTER_PROMETHEUS_PORT`` as an int, defaulting to
+    ``_DEFAULT_PORT`` when the variable is unset, empty, or not an integer.
+
+    An invalid value is logged and ignored instead of raising, mirroring the
+    OTLP/Zipkin exporters so a malformed environment variable cannot take
+    auto-instrumentation startup down.
+    """
+    raw = environ.get(OTEL_EXPORTER_PROMETHEUS_PORT)
+    if raw is None or not raw.strip():
+        return _DEFAULT_PORT
+    try:
+        return int(raw)
+    except ValueError:
+        _logger.warning(
+            "Invalid value %r for %s, using default port %s",
+            raw,
+            OTEL_EXPORTER_PROMETHEUS_PORT,
+            _DEFAULT_PORT,
+        )
+        return _DEFAULT_PORT
+
 
 _OTEL_SCOPE_NAME_LABEL = "otel_scope_name"
 _OTEL_SCOPE_VERSION_LABEL = "otel_scope_version"
@@ -256,6 +283,11 @@ class PrometheusMetricReader(MetricReader):
             that are copied as labels on exported metrics. The callback receives
             the original resource attribute key. Selected keys are sanitized to
             valid Prometheus label names.
+        cardinality_limits: A mapping between instrument classes and the
+            maximum number of metric points a metric stream of that class may
+            export per collection cycle. Classes not included in the mapping
+            use a limit of 2000. See
+            :class:`~opentelemetry.sdk.metrics.export.MetricReader` for details.
     """
 
     def __init__(
@@ -267,6 +299,7 @@ class PrometheusMetricReader(MetricReader):
         *,
         resource_attribute_filter: Callable[[str], bool] | None = None,
         registry: CollectorRegistry = REGISTRY,
+        cardinality_limits: CardinalityLimits | None = None,
     ) -> None:
         super().__init__(
             preferred_temporality={
@@ -278,6 +311,7 @@ class PrometheusMetricReader(MetricReader):
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             },
             preferred_aggregation=dict(preferred_aggregation) if preferred_aggregation is not None else None,
+            cardinality_limits=cardinality_limits,
             otel_component_type=OtelComponentTypeValues.PROMETHEUS_HTTP_TEXT_METRIC_EXPORTER,
         )
         self._collector = _CustomCollector(
@@ -518,6 +552,6 @@ class _AutoPrometheusMetricReader(PrometheusMetricReader):
         # Default values are specified in
         # https://github.com/open-telemetry/opentelemetry-specification/blob/v1.24.0/specification/configuration/sdk-environment-variables.md#prometheus-exporter
         start_http_server(
-            port=int(environ.get(OTEL_EXPORTER_PROMETHEUS_PORT, "9464")),
+            port=_port_from_env(),
             addr=environ.get(OTEL_EXPORTER_PROMETHEUS_HOST, "localhost"),
         )

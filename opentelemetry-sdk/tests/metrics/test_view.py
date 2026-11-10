@@ -15,6 +15,16 @@ class TestView(TestCase):
         with self.assertRaises(Exception):
             View()
 
+    def test_aggregation_cardinality_limit(self):
+        self.assertIsNone(View(instrument_name="a")._aggregation_cardinality_limit)
+        self.assertEqual(View(instrument_name="a", aggregation_cardinality_limit=5)._aggregation_cardinality_limit, 5)
+
+    def test_invalid_aggregation_cardinality_limit(self):
+        for limit in (0, -1, 1.5, "5", True):
+            with self.subTest(limit=limit):
+                with self.assertRaises(ValueError):
+                    View(instrument_name="a", aggregation_cardinality_limit=limit)
+
     def test_instrument_type(self):
         self.assertTrue(View(instrument_type=Mock)._match(Mock()))
 
@@ -40,6 +50,33 @@ class TestView(TestCase):
         mock_instrument.configure_mock(unit="instrument_unit")
 
         self.assertTrue(View(instrument_unit="instrument_unit")._match(mock_instrument))
+
+    def test_instrument_unit_ucum_annotated_units_match_exactly(self):
+        # UCUM annotated units use square brackets; selection must compare
+        # them literally rather than as fnmatch character classes.
+        for unit in ("[degF]", "[degC]", "[in_i]", "[ft_i]"):
+            with self.subTest(unit=unit):
+                mock_instrument = Mock()
+                mock_instrument.configure_mock(unit=unit)
+
+                self.assertTrue(View(instrument_unit=unit)._match(mock_instrument))
+
+    def test_instrument_unit_wildcard_characters_are_literal(self):
+        # The unit selection criterion is exact-match only per the Metrics
+        # SDK specification; '*', '?' and '[' must never act as wildcards.
+        cases = (
+            ("[degF]", "[degC]", False),
+            ("[degF]", "[*]", False),
+            ("[degF]", "[d?gF]", False),
+            ("request_count", "request_*", False),
+            ("request_count", "request_count", True),
+        )
+        for instrument_unit, pattern, expected in cases:
+            with self.subTest(instrument_unit=instrument_unit, pattern=pattern):
+                mock_instrument = Mock()
+                mock_instrument.configure_mock(unit=instrument_unit)
+
+                self.assertEqual(View(instrument_unit=pattern)._match(mock_instrument), expected)
 
     def test_instrument_unit_case_sensitive(self):
         # Units are case-sensitive and matching must not depend on the host

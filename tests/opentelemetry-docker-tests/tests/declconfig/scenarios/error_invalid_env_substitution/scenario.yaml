@@ -1,0 +1,15 @@
+description: >
+  An invalid substitution reference (`${VAR:?error}`) fails configuration with no partial result.
+env:
+  DECLCONFIG_SERVICE_NAME: declconfig-error-invalid-env-substitution
+until:
+  - exited: {}
+expect:
+  - output:
+      stream: stderr
+      pattern: Failed to auto initialize OpenTelemetry
+  - output:
+      stream: stderr
+      pattern: Invalid substitution reference
+  - spans:
+      count: 0

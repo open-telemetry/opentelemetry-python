@@ -21,9 +21,13 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     _TRACEPARENT_HEADER_NAME = "traceparent"
     _TRACESTATE_HEADER_NAME = "tracestate"
-    _TRACEPARENT_HEADER_FORMAT = "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})" + "(-.*)?[ \t]*$"
+    _TRACEPARENT_HEADER_FORMAT = (
+        "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})" + "(?:(-.*)|[ \t]*)$"
+    )
     _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
+    _TRACEPARENT_MAXIMUM_LENGTH = 512
 
+    # pylint: disable-next=too-many-return-statements
     def extract(
         self,
         carrier: textmap.CarrierT,
@@ -40,6 +44,13 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
 
         if not header:
+            return context
+
+        if len(header[0]) > self._TRACEPARENT_MAXIMUM_LENGTH:
+            _logger.warning(
+                "traceparent header exceeded the maximum length of %d characters",
+                self._TRACEPARENT_MAXIMUM_LENGTH,
+            )
             return context
 
         match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
@@ -97,7 +108,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         """
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if not span_context.is_valid:
             return
         traceparent_string = f"00-{format_trace_id(span_context.trace_id)}-{format_span_id(span_context.span_id)}-{span_context.trace_flags:02x}"
         setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
