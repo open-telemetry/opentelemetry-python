@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-lines
+"""Tracing implementation of the OpenTelemetry SDK."""
+
 import abc
 import atexit
 import concurrent.futures
@@ -168,7 +170,12 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         self._lock = threading.Lock()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
-        """Adds a SpanProcessor to the list handled by this instance."""
+        """Adds a SpanProcessor to the list handled by this instance.
+
+        Args:
+            span_processor: The processor to append to the list this instance
+                forwards to.
+        """
         with self._lock:
             self._span_processors += (span_processor,)
 
@@ -177,6 +184,13 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         span: "Span",
         parent_context: context_api.Context | None = None,
     ) -> None:
+        """Forward the start of ``span`` to each processor in turn.
+
+        Args:
+            span: The span that just started.
+            parent_context: The context the span was started in, passed on
+                unchanged. ``None`` means the current context was used.
+        """
         for sp in self._span_processors:
             sp.on_start(span, parent_context=parent_context)
 
@@ -189,6 +203,12 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
                 logger.exception("Exception while calling _on_ending on %s.", sp)
 
     def on_end(self, span: "ReadableSpan") -> None:
+        """Forward the ended ``span`` to each processor in turn.
+
+        Args:
+            span: The read-only snapshot taken when the span ended. Every
+                processor receives the same object.
+        """
         for sp in self._span_processors:
             sp.on_end(span)
 
@@ -253,6 +273,15 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             weak_reinit = weakref.WeakMethod(self._init_executor)
 
             def _after_in_child() -> None:
+                """Rebuild the thread pool in the freshly forked child.
+
+                A fork keeps only the calling thread, so the inherited pool has
+                no workers. ``os.register_at_fork`` keeps a strong reference to
+                whatever is handed to it, so this closure holds
+                ``_init_executor`` of this multi span processor only weakly. A
+                multi span processor that has been garbage collected leaves the
+                weak reference empty and the handler does nothing.
+                """
                 reinit = weak_reinit()
                 if reinit is not None:
                     reinit(num_threads)
@@ -263,7 +292,12 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=num_threads)
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
-        """Adds a SpanProcessor to the list handled by this instance."""
+        """Adds a SpanProcessor to the list handled by this instance.
+
+        Args:
+            span_processor: The processor to append to the list this instance
+                forwards to.
+        """
         with self._lock:
             self._span_processors += (span_processor,)
 
@@ -285,6 +319,13 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         span: "Span",
         parent_context: context_api.Context | None = None,
     ) -> None:
+        """Forward the start of ``span`` to every processor at once.
+
+        Args:
+            span: The span that just started.
+            parent_context: The context the span was started in, passed on
+                unchanged. ``None`` means the current context was used.
+        """
         self._submit_and_await(lambda sp: sp.on_start, span, parent_context=parent_context)
 
     def _on_ending(self, span: "Span") -> None:
@@ -299,6 +340,12 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
                 logger.exception("Exception while calling _on_ending on %s.", sp)
 
     def on_end(self, span: "ReadableSpan") -> None:
+        """Forward the ended ``span`` to every processor at once.
+
+        Args:
+            span: The read-only snapshot taken when the span ended. Every
+                processor receives the same object.
+        """
         self._submit_and_await(lambda sp: sp.on_end, span)
 
     def shutdown(self) -> None:
@@ -334,6 +381,14 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
 
 
 class EventBase(abc.ABC):
+    """Base class for a named, timestamped annotation on a span.
+
+    Args:
+        name: Name of the event.
+        timestamp: Time of the event in nanoseconds since the Unix epoch.
+            ``None`` reads the clock as the instance is built.
+    """
+
     def __init__(self, name: str, timestamp: int | None = None) -> None:
         self._name = name
         if timestamp is None:
@@ -343,16 +398,33 @@ class EventBase(abc.ABC):
 
     @property
     def name(self) -> str:
+        """Name the event was created with.
+
+        Returns:
+            The name, exactly as it was passed to the constructor. Nothing in
+            this package renames an event after the fact.
+        """
         return self._name
 
     @property
     def timestamp(self) -> int:
+        """Time of the event in nanoseconds since the Unix epoch.
+
+        Returns:
+            The timestamp given to the constructor, or the clock reading taken
+            when the instance was built.
+        """
         return self._timestamp
 
     @property
     @abc.abstractmethod
     def attributes(self) -> types.Attributes:
-        pass
+        """Attributes recorded on the event.
+
+        Returns:
+            The attributes, or ``None`` when the event carries none. Callers
+            are expected to read the result and not write to it.
+        """
 
 
 class Event(EventBase):
@@ -364,6 +436,10 @@ class Event(EventBase):
         attributes: Attributes of the event.
         timestamp: Timestamp of the event. If `None` it will filled
             automatically.
+        limit: Accepted and ignored, kept so that older callers keep working.
+            No cap is applied here. The attribute limit is applied by whoever
+            builds the attributes passed in, which for a span event is
+            ``Span.add_event``.
     """
 
     def __init__(
@@ -378,17 +454,44 @@ class Event(EventBase):
 
     @property
     def attributes(self) -> types.Attributes:
+        """Attributes recorded on the event, exactly as they were passed in.
+
+        Returns:
+            The attributes, or ``None`` when none were given.
+        """
         return self._attributes
 
     @property
     def dropped_attributes(self) -> int:
+        """Number of attributes the attribute limit kept out of this event.
+
+        Returns:
+            The number of dropped attributes, or ``0`` when the attributes
+            were not stored in a bounded mapping and therefore nothing could
+            have been dropped.
+        """
         if isinstance(self._attributes, BoundedAttributes):
             return self._attributes.dropped
         return 0
 
 
 def _check_span_ended(func):
+
     def wrapper(self, *args, **kwargs):
+        """Apply this mutation to the span while it is still recording.
+
+        ``_check_span_ended`` gives this body to ``Span.set_status``,
+        ``Span.update_name``, ``Span._add_event`` and ``Span._add_link``, so
+        the API reference shows this text, and the ``*args`` and ``**kwargs``
+        below, in place of the signature and the docstring each of those four
+        methods carries in the source. The call is made while the span lock is
+        held. On a span that has already ended nothing is applied, and a
+        warning naming the method is logged once the lock is released.
+
+        Args:
+            *args: The positional arguments of the method being called.
+            **kwargs: The keyword arguments of the method being called.
+        """
         already_ended = False
         with self._lock:  # pylint: disable=protected-access
             if self._is_mutable():  # pylint: disable=protected-access
@@ -412,6 +515,28 @@ class ReadableSpan:
     Users should NOT be creating these objects directly. `ReadableSpan`s are created as
     a direct result from using the tracing pipeline via the `Tracer`.
 
+
+    Args:
+        name: Name of the span.
+        context: Span context carrying the trace id, the span id, the flags and
+            the trace state. ``None`` for a span that was never given one.
+        parent: Span context of the parent, or ``None`` for a root span.
+        resource: Resource describing the entity that produced the span.
+            ``None`` builds one from the configured resource detectors.
+        attributes: Attributes recorded on the span, or ``None``.
+        events: Events recorded on the span, oldest first.
+        links: Links recorded on the span.
+        kind: Relationship between this span and its parent.
+        instrumentation_info: Deprecated description of the instrumenting
+            library. Pass ``instrumentation_scope`` instead.
+        status: Status of the operation the span represents. Defaults to a
+            status whose code is ``UNSET``.
+        start_time: Start of the span in nanoseconds since the Unix epoch, or
+            ``None`` for a span that was never started.
+        end_time: End of the span in nanoseconds since the Unix epoch, or
+            ``None`` for a span that has not ended.
+        instrumentation_scope: Name, version, schema URL and attributes of the
+            instrumenting library the span came from.
     """
 
     def __init__(
@@ -449,79 +574,194 @@ class ReadableSpan:
 
     @property
     def dropped_attributes(self) -> int:
+        """Number of attributes the attribute limit kept out of this span.
+
+        Returns:
+            The number of dropped attributes, or ``0`` when the attributes
+            were not stored in a bounded mapping, which is the case for a
+            ``ReadableSpan`` built directly.
+        """
         if isinstance(self._attributes, BoundedAttributes):
             return self._attributes.dropped
         return 0
 
     @property
     def dropped_events(self) -> int:
+        """Number of events the event limit kept out of this span.
+
+        Returns:
+            The number of dropped events, or ``0`` when the events were not
+            stored in a bounded list.
+        """
         if isinstance(self._events, BoundedList):
             return self._events.dropped
         return 0
 
     @property
     def dropped_links(self) -> int:
+        """Number of links the link limit kept out of this span.
+
+        Returns:
+            The number of dropped links, or ``0`` when the links were not
+            stored in a bounded list.
+        """
         if isinstance(self._links, BoundedList):
             return self._links.dropped
         return 0
 
     @property
     def name(self) -> str:
+        """Name of the span.
+
+        Returns:
+            The name the span was created with, or the one last given to
+            ``Span.update_name`` before it ended.
+        """
         return self._name
 
     def get_span_context(self) -> trace_api.SpanContext | None:
+        """Return the span context, the method form the tracing API declares.
+
+        Returns:
+            The same object the ``context`` property returns: the span context
+            carrying the trace id, the span id, the flags and the trace state,
+            or ``None`` when the span was built without one.
+        """
         return self._context
 
     @property
     def context(self):
+        """Span context of this span, also returned by ``get_span_context``.
+
+        Returns:
+            The span context, or ``None`` when the span was built without one.
+        """
         return self._context
 
     @property
     def kind(self) -> trace_api.SpanKind:
+        """Relationship between this span and its parent.
+
+        Returns:
+            The kind asked for when the span was created, which is
+            ``SpanKind.INTERNAL`` unless the caller said otherwise. It cannot
+            be changed afterwards.
+        """
         return self._kind
 
     @property
     def parent(self) -> trace_api.SpanContext | None:
+        """Span context of the span that started this one.
+
+        Returns:
+            The parent span context, or ``None`` for a root span.
+            ``Tracer.start_span`` records ``None`` both when there was no
+            current span and when the current span context was invalid, so
+            ``None`` does not mean the caller failed to propagate anything.
+        """
         return self._parent
 
     @property
     def start_time(self) -> int | None:
+        """Time the span started, in nanoseconds since the Unix epoch.
+
+        Returns:
+            The start timestamp, or ``None`` for a span on which ``start`` was
+            never called.
+        """
         return self._start_time
 
     @property
     def end_time(self) -> int | None:
+        """Time the span ended, in nanoseconds since the Unix epoch.
+
+        Returns:
+            The end timestamp, or ``None`` while the span has not ended.
+        """
         return self._end_time
 
     @property
     def status(self) -> trace_api.Status:
+        """Status of the operation the span represents.
+
+        Returns:
+            The status, carrying a code and an optional description.
+        """
         return self._status
 
     @property
     def attributes(self) -> types.Attributes:
+        """Attributes recorded on the span, behind a read-only view.
+
+        Returns:
+            A mapping proxy over the attributes, empty when the span has none.
+            Writing through it raises ``TypeError``.
+        """
         return MappingProxyType(self._attributes or {})
 
     @property
     def events(self) -> Sequence[Event]:
+        """Events recorded on the span, oldest first.
+
+        Returns:
+            A tuple of the events the span still holds, which excludes any the
+            event limit dropped.
+        """
         return tuple(self._events)
 
     @property
     def links(self) -> Sequence[trace_api.Link]:
+        """Links recorded on the span, oldest first.
+
+        Returns:
+            A tuple of the links the span still holds, which excludes any the
+            link limit dropped.
+        """
         return tuple(self._links)
 
     @property
     def resource(self) -> Resource:
+        """Resource describing the entity that produced the span.
+
+        Returns:
+            The resource. Never ``None``: a span built without one gets
+            whatever the configured resource detectors produce.
+        """
         return self._resource
 
     @property
     @deprecated("You should use instrumentation_scope. Deprecated since version 1.11.1.")
     def instrumentation_info(self) -> InstrumentationInfo | None:
+        """Deprecated description of the instrumenting library.
+
+        Returns:
+            The instrumentation info given at creation, or ``None``. Read
+            ``instrumentation_scope`` instead, which carries the same name,
+            version and schema URL plus the attributes of the scope.
+        """
         return self._instrumentation_info
 
     @property
     def instrumentation_scope(self) -> InstrumentationScope | None:
+        """Scope of the instrumenting library the span came from.
+
+        Returns:
+            The scope the tracer was obtained for, carrying its name, version,
+            schema URL and attributes, or ``None`` for a span built without
+            one.
+        """
         return self._instrumentation_scope
 
     def to_json(self, indent: int | None = 4):
+        """Render the span as a JSON document.
+
+        Args:
+            indent: Number of spaces to indent each nested level by. ``None``
+                produces the compact single-line form.
+
+        Returns:
+            The JSON document as a string.
+        """
         parent_id = None
         if self.parent is not None:
             parent_id = f"0x{trace_api.format_span_id(self.parent.span_id)}"
@@ -623,24 +863,30 @@ class SpanLimits:
     Args:
         max_attributes: Maximum number of attributes that can be added to a span, event, and link.
             Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
-            Default: {_DEFAULT_ATTRIBUTE_COUNT_LIMIT}
+            Default: 128
         max_events: Maximum number of events that can be added to a Span.
             Environment variable: OTEL_SPAN_EVENT_COUNT_LIMIT
-            Default: {_DEFAULT_SPAN_EVENT_COUNT_LIMIT}
+            Default: 128
         max_links: Maximum number of links that can be added to a Span.
             Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
-            Default: {_DEFAULT_SPAN_LINK_COUNT_LIMIT}
+            Default: 128
         max_span_attributes: Maximum number of attributes that can be added to a Span.
             Environment variable: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
-            Default: {_DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}
+            Default: the global attribute limit, 128 when that is unset too.
         max_event_attributes: Maximum number of attributes that can be added to an Event.
-            Default: {_DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT}
+            Environment variable: OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT
+            Default: the global attribute limit, 128 when that is unset too.
         max_link_attributes: Maximum number of attributes that can be added to a Link.
-            Default: {_DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT}
+            Environment variable: OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
+            Default: the global attribute limit, 128 when that is unset too.
         max_attribute_length: Maximum length an attribute value can have. Values longer than
             the specified length will be truncated.
+            Environment variable: OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
+            Default: no limit, so values are never truncated.
         max_span_attribute_length: Maximum length a span attribute value can have. Values longer than
             the specified length will be truncated.
+            Environment variable: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT
+            Default: whatever ``max_attribute_length`` resolved to.
     """
 
     UNSET = -1
@@ -773,6 +1019,22 @@ class Span(trace_api.Span, ReadableSpan):
         span_processor: `SpanProcessor` to invoke when starting and ending
             this `Span`.
         limits: `SpanLimits` instance that was passed to the `TracerProvider`
+        kind: Relationship between this span and its parent
+        instrumentation_info: Deprecated description of the instrumenting
+            library. Pass ``instrumentation_scope`` instead
+        record_exception: Whether leaving a ``with`` block over this span by
+            raising records the exception as an event on it. Only consulted by
+            ``__exit__``, so it does nothing for a span that is ended by hand
+        set_status_on_exception: Whether leaving a ``with`` block over this
+            span by raising sets its status to ``ERROR``. Only consulted by
+            ``__exit__``
+        instrumentation_scope: Name, version, schema URL and attributes of the
+            instrumenting library this span came from
+        record_end_metrics: Called once, with no arguments, at the start of
+            ``end``, to decrement the count of live spans. A tracer always
+            passes a callable, one that does nothing when the internal SDK
+            metrics are switched off. ``None`` counts nothing at all and is
+            what a span built outside a tracer gets
     """
 
     def __new__(cls, *args, **kwargs):
@@ -872,9 +1134,24 @@ class Span(trace_api.Span, ReadableSpan):
         return BoundedList.from_seq(self._limits.max_links, valid_links)
 
     def get_span_context(self) -> trace_api.SpanContext:
+        """Return the span context, which a span built by a tracer always has.
+
+        Returns:
+            The span context the tracer assigned at creation. The cast only
+            narrows the type the base class declares to one that cannot be
+            ``None``; no check is performed at runtime.
+        """
         return typing.cast(trace_api.SpanContext, self._context)
 
     def set_attributes(self, attributes: Mapping[str, types.AnyValue]) -> None:
+        """Record several attributes in one pass.
+
+        Args:
+            attributes: Mapping of attribute name to value. A string value
+                longer than the configured limit is truncated, and a value of a
+                type that cannot be used as an attribute is replaced with
+                ``None`` rather than dropped.
+        """
         with self._lock:
             if not self._is_mutable():
                 logger.warning("Setting attribute on ended span.")
@@ -883,6 +1160,14 @@ class Span(trace_api.Span, ReadableSpan):
             self._attributes._set_items(attributes)  # pylint: disable=protected-access
 
     def set_attribute(self, key: str, value: types.AnyValue) -> None:
+        """Record a single attribute.
+
+        Args:
+            key: Attribute name. Anything that is not a non-empty string is
+                rejected with a warning and counted as dropped.
+            value: Attribute value. A string longer than the configured limit
+                is truncated, which is not counted as a drop.
+        """
         with self._lock:
             if not self._is_mutable():
                 logger.warning("Setting attribute on ended span.")
@@ -900,6 +1185,16 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: int | None = None,
     ) -> None:
+        """Record a timestamped annotation on the span.
+
+        Args:
+            name: Name of the event. It is recorded as given, with no length
+                limit applied.
+            attributes: Attributes of the event, or ``None`` for none.
+            timestamp: Time of the event in nanoseconds since the Unix epoch.
+                ``None`` reads the clock as the ``Event`` is built, which is
+                after the attributes have been capped and frozen.
+        """
         # Immutable set to true so attributes cannot be added or removed after creation.
         attributes = BoundedAttributes(
             self._limits.max_event_attributes,
@@ -924,6 +1219,13 @@ class Span(trace_api.Span, ReadableSpan):
         context: SpanContext,
         attributes: types.Attributes = None,
     ) -> None:
+        """Record a link from this span to another one.
+
+        Args:
+            context: Span context of the span being linked to.
+            attributes: Attributes of the link, or ``None`` for none. They
+                count towards whether an invalid context is kept.
+        """
         if not _is_valid_link(context, attributes):
             return
         # Immutable set to true so attributes cannot be added or removed after creation.
@@ -962,6 +1264,14 @@ class Span(trace_api.Span, ReadableSpan):
         start_time: int | None = None,
         parent_context: context_api.Context | None = None,
     ) -> None:
+        """Record the start time and run the ``on_start`` callbacks.
+
+        Args:
+            start_time: Start of the span in nanoseconds since the Unix epoch.
+                ``None`` reads the clock now.
+            parent_context: Context the span was started in, handed to the
+                processors unchanged. ``None`` means the current context.
+        """
         with self._lock:
             if self._start_time is not None:
                 logger.warning("Calling start() on a started span.")
@@ -971,6 +1281,16 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor.on_start(self, parent_context=parent_context)
 
     def end(self, end_time: int | None = None) -> None:
+        """Record the end time of the span and run the end callbacks.
+
+        Args:
+            end_time: End of the span in nanoseconds since the Unix epoch.
+                ``None`` reads the clock now. No check is made that it is later
+                than the start time.
+
+        Raises:
+            RuntimeError: If ``start`` was never called on this span.
+        """
         with self._lock:
             if self._start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
@@ -996,12 +1316,24 @@ class Span(trace_api.Span, ReadableSpan):
 
     @_check_span_ended
     def update_name(self, name: str) -> None:
+        """Replace the name of the span.
+
+        Args:
+            name: The new name, recorded as given with no length limit
+                applied.
+        """
         self._name = name
 
     def _is_mutable(self) -> bool:
         return self._end_time is None or self._ending_thread == threading.get_ident()
 
     def is_recording(self) -> bool:
+        """Say whether anything recorded on the span would still be kept.
+
+        Returns:
+            ``True`` while the span accepts changes, which lasts until ``end``
+            has run its ``_on_ending`` callbacks.
+        """
         # Unlike the mutators, this check is deliberately not taken under
         # self._lock: it does not modify the span, and the answer can become
         # stale as soon as it is returned anyway, since another thread may
@@ -1014,6 +1346,15 @@ class Span(trace_api.Span, ReadableSpan):
         status: Status | StatusCode,
         description: str | None = None,
     ) -> None:
+        """Set the status of the operation the span represents.
+
+        Args:
+            status: Either a ready made ``Status``, or a ``StatusCode`` to be
+                paired with ``description``.
+            description: Message to attach. Used only when ``status`` is a
+                ``StatusCode``; passing it alongside a ``Status`` logs a
+                warning and drops the message.
+        """
         if isinstance(status, Status):
             if description is not None:
                 logger.warning(
@@ -1083,7 +1424,20 @@ class Span(trace_api.Span, ReadableSpan):
         timestamp: int | None = None,
         escaped: bool = False,
     ) -> None:
-        """Records an exception as a span event."""
+        """Records an exception as a span event.
+
+        Args:
+            exception: The exception to record. The traceback is read off the
+                exception, and one that was never raised has none, which
+                yields a one-line trace holding only the type and the message.
+            attributes: Extra attributes for the event, or ``None``. A key that
+                collides with one of the four exception attributes replaces it.
+            timestamp: Time of the event in nanoseconds since the Unix epoch.
+                ``None`` reads the clock now.
+            escaped: Recorded as the ``exception.escaped`` attribute, as the
+                string ``"True"`` or ``"False"``. ``True`` says the exception
+                ended the span by escaping its scope.
+        """
         stacktrace = "".join(traceback.format_exception(exception))
         module = type(exception).__module__
         qualname = type(exception).__qualname__
@@ -1117,7 +1471,27 @@ class _TracerConfig:
 
 
 class Tracer(trace_api.Tracer):
-    """See `opentelemetry.trace.Tracer`."""
+    """See `opentelemetry.trace.Tracer`.
+
+    Args:
+        sampler: Decides, for each new span, whether it records and whether it
+            is sampled. It may also add attributes and replace the trace state.
+        resource: Resource attached to every span this tracer creates.
+        span_processor: Told when a span of this tracer starts and ends. This
+            is the multi processor held by the provider, so processors
+            registered after the tracer was created are picked up as well.
+        id_generator: Produces the trace ids and span ids of new spans.
+        instrumentation_info: Deprecated description of the instrumenting
+            library, recorded on spans for backwards compatibility.
+        span_limits: Caps applied to the attributes, events and links of every
+            span this tracer creates.
+        instrumentation_scope: Scope recorded on every span this tracer
+            creates.
+        meter_provider: Provider for the internal SDK metrics. ``None`` reads
+            the global meter provider as the tracer is built.
+        _tracer_config: Configuration to start with. ``None`` leaves the tracer
+            enabled. The provider replaces it when its configurator changes.
+    """
 
     def __init__(
         self,
@@ -1170,6 +1544,30 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
     ) -> Iterator[trace_api.Span]:
+        """Start a span and make it current for the duration of the block.
+
+        Args:
+            name: Name of the span.
+            context: Context to take the parent span from. ``None`` uses the
+                current context.
+            kind: Relationship between this span and its parent.
+            attributes: Attributes to record on the span at creation. They are
+                also handed to the sampler.
+            links: Links to record on the span. ``None`` is treated as empty.
+            start_time: Start of the span in nanoseconds since the Unix epoch.
+                ``None`` reads the clock now.
+            record_exception: Whether an exception escaping the block is
+                recorded on the span as an event.
+            set_status_on_exception: Whether an exception escaping the block
+                sets the status of the span to ``ERROR``. A status recorded by
+                hand beforehand survives, unless it was an ``ERROR`` with no
+                description, which the one built here fills in.
+            end_on_exit: Whether leaving the block ends the span. Pass
+                ``False`` to end it yourself later.
+
+        Yields:
+            The span, already started and already current.
+        """
         span = self.start_span(
             name=name,
             context=context,
@@ -1199,6 +1597,31 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
+        """Create a span and start it, leaving the current context untouched.
+
+        Args:
+            name: Name of the span.
+            context: Context to take the parent span from. ``None`` uses the
+                current context.
+            kind: Relationship between this span and its parent.
+            attributes: Attributes to record on the span at creation. They are
+                handed to the sampler, and what reaches the span is what the
+                sampler returned, which may differ.
+            links: Links to record on the span. ``None`` is treated as empty.
+            start_time: Start of the span in nanoseconds since the Unix epoch.
+                ``None`` reads the clock now.
+            record_exception: Whether an exception escaping a ``with`` block
+                over the returned span is recorded on it as an event.
+            set_status_on_exception: Whether an exception escaping a ``with``
+                block over the returned span sets its status to ``ERROR``.
+
+        Returns:
+            The new span, already started. Ending it is left to the caller.
+
+        Raises:
+            TypeError: If the current span of ``context`` returns something
+                that is neither a span context nor ``None``.
+        """
         links = links or ()
         parent_span_context = trace_api.get_current_span(context).get_span_context()
 
@@ -1301,7 +1724,30 @@ def _disable_tracer_configurator(
 
 
 class TracerProvider(trace_api.TracerProvider):
-    """See `opentelemetry.trace.TracerProvider`."""
+    """See `opentelemetry.trace.TracerProvider`.
+
+    Args:
+        sampler: Decides which spans record and which are sampled. ``None``
+            reads the sampler out of the environment.
+        resource: Resource attached to every span. ``None`` builds one from
+            the configured resource detectors.
+        shutdown_on_exit: Whether to register ``shutdown`` with ``atexit``, so
+            that the processors get a chance to flush as the interpreter exits.
+        active_span_processor: The multi processor that registered processors
+            are added to. ``None`` builds a ``SynchronousMultiSpanProcessor``.
+            Pass a ``ConcurrentMultiSpanProcessor`` to have the processors run
+            in parallel instead.
+        id_generator: Produces trace ids and span ids. ``None`` builds a
+            ``RandomIdGenerator``.
+        span_limits: Caps applied while a span records. ``None`` builds limits
+            from the environment and the defaults.
+        meter_provider: Provider for the internal SDK metrics, passed to every
+            tracer. ``None`` makes each tracer read the global meter provider
+            as it is created.
+        _tracer_configurator: Maps an instrumentation scope to the
+            configuration its tracer starts with. ``None`` leaves every tracer
+            enabled.
+    """
 
     def __init__(
         self,
@@ -1343,6 +1789,13 @@ class TracerProvider(trace_api.TracerProvider):
             weak_at_fork = weakref.WeakMethod(self._handle_fork)
 
             def _after_in_child() -> None:
+                """Run the provider's fork handler in the freshly forked child.
+
+                ``os.register_at_fork`` keeps a strong reference to whatever is handed
+                to it, so this closure holds the provider only weakly. A provider that
+                has been garbage collected leaves the weak reference empty and the
+                handler does nothing.
+                """
                 if at_fork := weak_at_fork():
                     at_fork()
 
@@ -1367,6 +1820,13 @@ class TracerProvider(trace_api.TracerProvider):
 
     @property
     def resource(self) -> Resource:
+        """Resource attached to the spans of every tracer from this provider.
+
+        Returns:
+            The resource. It is replaced by a merged one after a fork, so a
+            caller holding the result from before the fork holds a resource
+            that is now out of date.
+        """
         return self._resource
 
     def _update_resource(self, resource: Resource) -> None:
@@ -1392,6 +1852,22 @@ class TracerProvider(trace_api.TracerProvider):
         schema_url: str | None = None,
         attributes: types.Attributes = None,
     ) -> "trace_api.Tracer":
+        """Return the tracer for an instrumentation scope, building it once.
+
+        Args:
+            instrumenting_module_name: Name of the instrumenting library, for
+                example ``opentelemetry.instrumentation.requests``.
+            instrumenting_library_version: Version of the instrumenting
+                library. ``None`` is stored as the empty string.
+            schema_url: URL of the semantic conventions schema the scope emits
+                against, or ``None``.
+            attributes: Attributes of the scope, recorded next to its name and
+                version. They are part of the cache key.
+
+        Returns:
+            A tracer for that scope, or the no-op tracer of the API when
+            ``OTEL_SDK_DISABLED`` was ``true`` as this provider was built.
+        """
         if self._disabled:
             return NoOpTracer()
         if not instrumenting_module_name:  # Reject empty strings too.
@@ -1443,7 +1919,15 @@ class TracerProvider(trace_api.TracerProvider):
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
 
-        The span processors are invoked in the same order they are registered.
+        The span processors are invoked in the same order they are registered,
+        unless the provider was built with a ``ConcurrentMultiSpanProcessor``,
+        which runs them in parallel. A processor registered after a tracer was
+        created still sees the spans of that tracer, since the tracer holds the
+        multi processor rather than a list of its own.
+
+        Args:
+            span_processor: The processor to register. Registering the same
+                one twice makes it run twice for every span.
         """
 
         # no lock here because add_span_processor is thread safe for both
