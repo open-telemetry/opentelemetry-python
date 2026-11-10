@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+import math
 
 from opentelemetry import metrics
 from opentelemetry.configuration._common import (
@@ -12,6 +13,7 @@ from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _resolve_export_timeout,
     _scope_name_matches_glob,
     _validate_mtls_pair,
     load_entry_point,
@@ -286,7 +288,7 @@ def _create_otlp_http_metric_exporter(
     if tls is not None:
         _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
@@ -370,7 +372,7 @@ def _create_otlp_grpc_metric_exporter(
 
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
@@ -481,10 +483,12 @@ def _create_periodic_metric_reader(
     exporter = _create_push_metric_exporter(config.exporter)
     interval = config.interval if config.interval is not None else _DEFAULT_EXPORT_INTERVAL_MILLIS
     timeout = config.timeout if config.timeout is not None else _DEFAULT_EXPORT_TIMEOUT_MILLIS
+    # A timeout of 0 means no limit.
+    export_timeout_millis = math.inf if timeout == 0 else float(timeout)
     return PeriodicExportingMetricReader(
         exporter=exporter,
         export_interval_millis=float(interval),
-        export_timeout_millis=float(timeout),
+        export_timeout_millis=export_timeout_millis,
         cardinality_limits=_create_cardinality_limits(config.cardinality_limits),
     )
 
