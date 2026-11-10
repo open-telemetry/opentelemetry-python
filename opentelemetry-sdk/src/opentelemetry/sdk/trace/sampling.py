@@ -146,6 +146,8 @@ _logger = getLogger(__name__)
 
 
 class Decision(enum.Enum):
+    """What a sampler decided about one span."""
+
     # IsRecording() == false, span will not be recorded and all events and attributes will be dropped.
     DROP = 0
     # IsRecording() == true, but Sampled flag MUST NOT be set.
@@ -154,9 +156,21 @@ class Decision(enum.Enum):
     RECORD_AND_SAMPLE = 2
 
     def is_recording(self):
+        """Report whether the SDK should build a recording span.
+
+        Returns:
+            ``True`` for ``RECORD_ONLY`` and ``RECORD_AND_SAMPLE``, ``False``
+            for ``DROP``.
+        """
         return self in (Decision.RECORD_ONLY, Decision.RECORD_AND_SAMPLE)
 
     def is_sampled(self):
+        """Report whether the sampled flag should be set on the span context.
+
+        Returns:
+            ``True`` only for ``RECORD_AND_SAMPLE``. ``RECORD_ONLY`` answers
+            ``False`` even though the span is recorded.
+        """
         return self is Decision.RECORD_AND_SAMPLE
 
 
@@ -189,6 +203,8 @@ class SamplingResult:
 
 
 class Sampler(abc.ABC):
+    """Base class every sampler derives from."""
+
     @abc.abstractmethod
     def should_sample(
         self,
@@ -200,15 +216,46 @@ class Sampler(abc.ABC):
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
-        pass
+        """Decide what should happen to a span that is about to be created.
+
+        Args:
+            parent_context: Context the span is being created in. ``None``
+                means the currently active context, which is what makes a
+                span with no explicit parent still pick one up.
+            trace_id: Trace id the span will carry. For a root span this is a
+                freshly generated id, for a child it is the trace id of the
+                parent.
+            name: Name the span is being created with. A sampler that reads
+                it sees the name at creation time, and a later rename does
+                not re-run sampling.
+            kind: Span kind, or ``None`` when the caller did not give one.
+            attributes: Attributes the caller passed at creation time. A
+                sampler returns them, possibly changed, in the result.
+            links: Links the caller passed at creation time, or ``None``.
+            trace_state: Trace state the caller passed, or ``None``.
+                Implementations are expected to take the trace state from
+                ``parent_context`` instead and put it in the result.
+
+        Returns:
+            The decision, the attributes the span should start with, and the
+            trace state the span context should carry.
+        """
 
     @abc.abstractmethod
     def get_description(self) -> str:
-        pass
+        """Describe the sampler and its settings.
+
+        Returns:
+            A description such as ``TraceIdRatioBased{0.001}``.
+        """
 
 
 class StaticSampler(Sampler):
-    """Sampler that always returns the same decision."""
+    """Sampler that always returns the same decision.
+
+    Args:
+        decision: Decision every call returns.
+    """
 
     def __init__(self, decision: Decision) -> None:
         self._decision = decision
@@ -223,6 +270,25 @@ class StaticSampler(Sampler):
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
+        """Return the fixed decision.
+
+        Args:
+            parent_context: Context the span is being created in. Read only
+                to copy the trace state of the parent into the result.
+            trace_id: Ignored.
+            name: Ignored.
+            kind: Ignored.
+            attributes: Returned as given, except under ``Decision.DROP``,
+                where they are replaced by ``None`` and therefore discarded.
+            links: Ignored.
+            trace_state: Ignored. The trace state in the result comes from
+                ``parent_context``.
+
+        Returns:
+            A result holding the fixed decision, the attributes, and the
+            trace state of the parent, or ``None`` when there is no valid
+            parent.
+        """
         if self._decision is Decision.DROP:
             attributes = None
         return SamplingResult(
@@ -232,6 +298,14 @@ class StaticSampler(Sampler):
         )
 
     def get_description(self) -> str:
+        """Describe the sampler by the decision it was built with.
+
+        Returns:
+            ``"AlwaysOffSampler"`` under ``Decision.DROP``, and
+            ``"AlwaysOnSampler"`` for both other decisions, so a sampler
+            built with ``Decision.RECORD_ONLY`` describes itself as if it
+            sampled.
+        """
         if self._decision is Decision.DROP:
             return "AlwaysOffSampler"
         return "AlwaysOnSampler"
@@ -264,14 +338,37 @@ class TraceIdRatioBased(Sampler):
 
     @classmethod
     def get_bound_for_rate(cls, rate: float) -> int:
+        """Convert a rate into the threshold the trace id is compared against.
+
+        Args:
+            rate: Probability in [0.0, 1.0]. The range is not checked here,
+                so a value outside it yields a bound that no 64-bit trace id
+                can reach, or one that every trace id is below.
+
+        Returns:
+            ``round(rate * 2 ** 64)``, the value a trace id must be strictly
+            below to be sampled.
+        """
         return round(rate * (cls.TRACE_ID_LIMIT + 1))
 
     @property
     def rate(self) -> float:
+        """Probability this sampler was built with.
+
+        Returns:
+            The rate passed to the constructor, unchanged. It cannot be
+            reassigned, so the bound can never fall out of step with it.
+        """
         return self._rate
 
     @property
     def bound(self) -> int:
+        """Threshold the 64 low-order bits of a trace id are compared against.
+
+        Returns:
+            The value computed from the rate in the constructor. A trace id
+            whose 64 low-order bits are strictly below it is sampled.
+        """
         return self._bound
 
     def should_sample(
@@ -284,6 +381,27 @@ class TraceIdRatioBased(Sampler):
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
+        """Compare the 64 low-order bits of the trace id against the bound.
+
+        Args:
+            parent_context: Context the span is being created in. Read only
+                to copy the trace state of the parent into the result. The
+                sampling decision of the parent is not consulted.
+            trace_id: Trace id the span will carry. Only its 64 low-order
+                bits are used, so the 64 high-order ones make no difference.
+            name: Ignored.
+            kind: Ignored.
+            attributes: Returned as given when the span is sampled, and
+                replaced by ``None`` when it is dropped.
+            links: Ignored.
+            trace_state: Ignored. The trace state in the result comes from
+                ``parent_context``.
+
+        Returns:
+            A result holding ``Decision.RECORD_AND_SAMPLE`` when the trace id
+            is below the bound and ``Decision.DROP`` otherwise, plus the
+            attributes and the trace state of the parent.
+        """
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
             decision = Decision.RECORD_AND_SAMPLE
@@ -296,6 +414,12 @@ class TraceIdRatioBased(Sampler):
         )
 
     def get_description(self) -> str:
+        """Describe the sampler by its rate.
+
+        Returns:
+            A string such as ``TraceIdRatioBased{0.001}``, built from the
+            rate given to the constructor rather than from the bound.
+        """
         return f"TraceIdRatioBased{{{self._rate}}}"
 
 
@@ -339,6 +463,26 @@ class ParentBased(Sampler):
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
+        """Pick a delegate from the parent span context and call it.
+
+        Args:
+            parent_context: Context the span is being created in. ``None``
+                means the currently active context. The span context taken
+                from it is what picks the delegate.
+            trace_id: Trace id the span will carry. Passed to the delegate
+                unchanged.
+            name: Span name. Passed to the delegate unchanged.
+            kind: Span kind, or ``None``. Passed to the delegate unchanged.
+            attributes: Attributes given at creation time. Passed to the
+                delegate unchanged.
+            links: Links given at creation time, or ``None``. Passed to the
+                delegate unchanged.
+            trace_state: Accepted and not forwarded to the delegate, which
+                therefore always sees ``None`` for it.
+
+        Returns:
+            Whatever the chosen delegate returns, unexamined and unchanged.
+        """
         parent_span_context = get_current_span(parent_context).get_span_context()
         # default to the root sampler
         sampler = self._root
@@ -365,6 +509,14 @@ class ParentBased(Sampler):
         )
 
     def get_description(self):
+        """Describe the sampler by the descriptions of all five delegates.
+
+        Returns:
+            A string such as
+            ``ParentBased{root:AlwaysOnSampler,remoteParentSampled:...}``,
+            naming each delegate in the order root, remote sampled, remote
+            not sampled, local sampled, local not sampled.
+        """
         return f"ParentBased{{root:{self._root.get_description()},remoteParentSampled:{self._remote_parent_sampled.get_description()},remoteParentNotSampled:{self._remote_parent_not_sampled.get_description()},localParentSampled:{self._local_parent_sampled.get_description()},localParentNotSampled:{self._local_parent_not_sampled.get_description()}}}"
 
 
@@ -380,6 +532,10 @@ class AlwaysRecordSampler(Sampler):
     processor without having an impact on the sampling rate. This may be desirable if a user wishes
     to count or otherwise measure all spans produced in a service, without incurring the cost of 100%
     sampling.
+
+    Args:
+        root: Sampler consulted for every span. Its result is passed through
+            untouched unless it decided ``Decision.DROP``.
     """
 
     def __init__(self, root: Sampler):
@@ -397,6 +553,26 @@ class AlwaysRecordSampler(Sampler):
         links: Sequence[Link] | None = None,
         trace_state: TraceState | None = None,
     ) -> SamplingResult:
+        """Delegate to the root sampler and turn a drop into a record.
+
+        Args:
+            parent_context: Context the span is being created in, forwarded
+                to the root sampler.
+            trace_id: Trace id the span will carry, forwarded.
+            name: Span name, forwarded.
+            kind: Span kind, or ``None``, forwarded.
+            attributes: Attributes given at creation time, forwarded.
+            links: Links given at creation time, or ``None``, forwarded.
+            trace_state: Trace state given at creation time, or ``None``,
+                forwarded.
+
+        Returns:
+            The result of the root sampler when its decision is not
+            ``Decision.DROP``. Otherwise a new result carrying
+            ``Decision.RECORD_ONLY`` with the attributes and trace state the
+            root sampler produced, which for the samplers in this module
+            means an empty attribute mapping.
+        """
         result: SamplingResult = self._root.should_sample(
             parent_context,
             trace_id,
@@ -412,6 +588,11 @@ class AlwaysRecordSampler(Sampler):
         return result
 
     def get_description(self):
+        """Describe the sampler by the description of its root sampler.
+
+        Returns:
+            A string such as ``AlwaysRecordSampler{AlwaysOnSampler}``.
+        """
         return f"AlwaysRecordSampler{{{self._root.get_description()}}}"
 
 
@@ -426,6 +607,9 @@ class ParentBasedTraceIdRatio(ParentBased):
     """
     Sampler that respects its parent span's sampling decision, but otherwise
     samples probabilistically based on `rate`.
+
+    Args:
+        rate: Probability in [0.0, 1.0] that a root span will be sampled.
     """
 
     def __init__(self, rate: float):
