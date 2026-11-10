@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Metric readers, metric exporters and the data they carry."""
 
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
