@@ -27,6 +27,11 @@ Construct a configuration programmatically and apply it:
 ... )
 >>> configure_sdk(OpenTelemetryConfiguration(file_format="1.0-rc.1"))
 
+An instrumentation library reads its own configuration through
+``opentelemetry._configuration`` in the ``opentelemetry-api`` package, which
+``configure_sdk`` populates. An instrumentation library does not depend on this
+package, which requires the SDK.
+
 This package is **experimental**. The API surface, type names, and
 behaviour may change between minor versions.
 """
