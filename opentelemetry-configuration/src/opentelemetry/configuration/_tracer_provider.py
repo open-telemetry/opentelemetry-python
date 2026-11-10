@@ -12,6 +12,8 @@ from opentelemetry.configuration._common import (
     _parse_headers,
     _parse_otlp_file_output_stream,
     _resolve_export_timeout,
+    _resolve_otlp_grpc_endpoint,
+    _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
     load_entry_point,
 )
@@ -100,6 +102,10 @@ from opentelemetry.sdk.trace._sampling_experimental._rule_based import (
     SpanKindPredicate,
 )
 from opentelemetry.sdk.trace.export import (
+    _DEFAULT_EXPORT_TIMEOUT_MILLIS,
+    _DEFAULT_MAX_EXPORT_BATCH_SIZE,
+    _DEFAULT_MAX_QUEUE_SIZE,
+    _DEFAULT_SCHEDULE_DELAY_MILLIS,
     BatchSpanProcessor,
     ConsoleSpanExporter,
     SimpleSpanProcessor,
@@ -146,7 +152,7 @@ def _create_otlp_http_span_exporter(
 
             compression = _map_compression(config.compression, Compression, allow_deflate=True)
             return OTLPSpanExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "traces"),
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -168,7 +174,7 @@ def _create_otlp_http_span_exporter(
 
             compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
             return JsonOTLPSpanExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "traces"),
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -201,7 +207,7 @@ def _create_otlp_grpc_span_exporter(
     timeout = _resolve_export_timeout(config.timeout)
 
     return OTLPSpanExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
+        endpoint=_resolve_otlp_grpc_endpoint(config.endpoint),
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
@@ -257,15 +263,24 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
 def _create_span_processor(
     config: SpanProcessorConfig,
 ) -> BatchSpanProcessor | SimpleSpanProcessor:
-    """Create a span processor from config."""
+    """Create a span processor from config, applying schema defaults to absent fields."""
     if config.batch is not None:
-        exporter = _create_span_exporter(config.batch.exporter)
+        batch = config.batch
+        exporter = _create_span_exporter(batch.exporter)
         return BatchSpanProcessor(
             exporter,
-            max_queue_size=config.batch.max_queue_size,
-            schedule_delay_millis=config.batch.schedule_delay,
-            max_export_batch_size=config.batch.max_export_batch_size,
-            export_timeout_millis=config.batch.export_timeout,
+            max_queue_size=(batch.max_queue_size if batch.max_queue_size is not None else _DEFAULT_MAX_QUEUE_SIZE),
+            schedule_delay_millis=(
+                batch.schedule_delay if batch.schedule_delay is not None else _DEFAULT_SCHEDULE_DELAY_MILLIS
+            ),
+            max_export_batch_size=(
+                batch.max_export_batch_size
+                if batch.max_export_batch_size is not None
+                else _DEFAULT_MAX_EXPORT_BATCH_SIZE
+            ),
+            export_timeout_millis=(
+                batch.export_timeout if batch.export_timeout is not None else _DEFAULT_EXPORT_TIMEOUT_MILLIS
+            ),
         )
     if config.simple is not None:
         return SimpleSpanProcessor(_create_span_exporter(config.simple.exporter))
@@ -417,10 +432,12 @@ def _create_span_limits(
     if attribute_value_length_limit is None and global_limits is not None:
         attribute_value_length_limit = global_limits.attribute_value_length_limit
 
+    resolved_attribute_count_limit = (
+        attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
+    )
     return SpanLimits(
-        max_span_attributes=(
-            attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
-        ),
+        max_attributes=resolved_attribute_count_limit,
+        max_span_attributes=resolved_attribute_count_limit,
         max_events=(
             config.event_count_limit if config.event_count_limit is not None else _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT
         ),

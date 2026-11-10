@@ -326,8 +326,8 @@ class TestCreateMetricReaders(unittest.TestCase):
         _, kwargs = mock_exporter_cls.call_args
         self.assertEqual(kwargs["endpoint"], "http://localhost:4318")
         self.assertIsNone(kwargs["headers"])
-        self.assertIsNone(kwargs["timeout"])
-        self.assertIsNone(kwargs["compression"])
+        self.assertEqual(kwargs["timeout"], 10.0)
+        self.assertEqual(kwargs["compression"], mock_compression_cls.NoCompression)
 
     def test_otlp_http_zero_timeout_is_unlimited(self):
         mock_exporter_cls = MagicMock()
