@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: preserve parent tracestate in composite sampling, remove stale thresholds, and apply tracestate updates for root spans

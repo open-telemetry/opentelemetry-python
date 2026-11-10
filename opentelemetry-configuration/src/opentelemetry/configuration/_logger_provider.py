@@ -10,6 +10,9 @@ from opentelemetry.configuration._common import (
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _resolve_export_timeout,
+    _resolve_otlp_grpc_endpoint,
+    _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
     load_entry_point,
 )
@@ -89,7 +92,7 @@ def _create_otlp_http_log_exporter(
 ) -> LogRecordExporter:
     """Create an OTLP HTTP log exporter from config."""
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
 
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
@@ -109,7 +112,7 @@ def _create_otlp_http_log_exporter(
 
             compression = _map_compression(config.compression, Compression, allow_deflate=True)
             return OTLPLogExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "logs"),
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -131,7 +134,7 @@ def _create_otlp_http_log_exporter(
 
             compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
             return JsonOTLPLogExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "logs"),
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -161,10 +164,10 @@ def _create_otlp_grpc_log_exporter(
 
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
 
     return OTLPLogExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
+        endpoint=_resolve_otlp_grpc_endpoint(config.endpoint),
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
