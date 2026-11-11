@@ -30,7 +30,7 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
 """
 
 import warnings
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass
 from logging import getLogger
@@ -64,6 +64,7 @@ from opentelemetry.metrics._internal.instrument import (
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
 )
+from opentelemetry.util._compat import SignatureCompatABC
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import (
@@ -85,7 +86,7 @@ _ProxyInstrumentT = (
 )
 
 
-class MeterProvider(ABC):
+class MeterProvider(SignatureCompatABC):
     """
     MeterProvider is the entry point of the API. It provides access to `Meter` instances.
     """
@@ -177,7 +178,7 @@ class _InstrumentRegistrationStatus:
     current_advisory: _MetricsHistogramAdvisory | None
 
 
-class Meter(ABC):
+class Meter(SignatureCompatABC):
     """Handles instrument creation.
 
     This class provides methods for creating instruments which are then

@@ -8,11 +8,16 @@ import math
 
 from opentelemetry import metrics
 from opentelemetry.configuration._common import (
+    _grpc_credentials_from_tls,
+    _grpc_insecure_from_tls,
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
     _resolve_export_timeout,
+    _resolve_otlp_grpc_endpoint,
+    _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
+    _validate_mtls_pair,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -281,6 +286,9 @@ def _create_otlp_http_metric_exporter(
     config: OtlpHttpMetricExporterConfig,
 ) -> MetricExporter:
     """Create an OTLP HTTP metric exporter from config."""
+    tls = config.tls
+    if tls is not None:
+        _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
@@ -304,7 +312,10 @@ def _create_otlp_http_metric_exporter(
 
             compression = _map_compression(config.compression, Compression, allow_deflate=True)
             return OTLPMetricExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "metrics"),
+                certificate_file=tls.ca_file if tls is not None else None,
+                client_key_file=tls.key_file if tls is not None else None,
+                client_certificate_file=tls.cert_file if tls is not None else None,
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -328,7 +339,10 @@ def _create_otlp_http_metric_exporter(
 
             compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
             return JsonOTLPMetricExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "metrics"),
+                certificate_file=tls.ca_file if tls is not None else None,
+                client_key_file=tls.key_file if tls is not None else None,
+                client_certificate_file=tls.cert_file if tls is not None else None,
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -360,12 +374,15 @@ def _create_otlp_grpc_metric_exporter(
 
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
+    endpoint = _resolve_otlp_grpc_endpoint(config.endpoint)
     timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
     return OTLPMetricExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
+        endpoint=endpoint,
+        insecure=_grpc_insecure_from_tls(endpoint, config.tls),
+        credentials=_grpc_credentials_from_tls(config.tls),
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]

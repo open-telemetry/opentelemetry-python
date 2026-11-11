@@ -2,3 +2,7 @@
 # runtime and tailed by the collector's otlp_json_file receiver (see
 # docker-compose.yml).
 otlpexporter/otlp-file-data/
+
+# Certificates the declconfig TLS scenarios generate at runtime (see
+# declconfig/README.md).
+declconfig/certs/
