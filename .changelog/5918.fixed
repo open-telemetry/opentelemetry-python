@@ -1,0 +1,1 @@
+`opentelemetry-exporter-prometheus`: align label sets across instruments sharing a metric family
