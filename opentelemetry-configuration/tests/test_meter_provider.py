@@ -256,6 +256,36 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
             create_meter_provider(config)
         mock_shutdown.assert_called_once()
 
+    def test_failed_cleanup_does_not_mask_configuration_error(self):
+        config = MeterProviderConfig(
+            readers=[
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
+                    )
+                ),
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig())
+                    )
+                ),
+            ]
+        )
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.metric_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            patch.object(PeriodicExportingMetricReader, "shutdown", side_effect=RuntimeError("shutdown failed")),
+            self.assertLogs("opentelemetry.configuration._common", level="ERROR") as logs,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_meter_provider(config)
+        self.assertIn("Failed to shut down MeterProvider", logs.output[0])
+
     def test_null_valued_console_exporter_from_parsed_config(self):
         # Regression test for #5451: a dataclass-typed exporter written as
         # ``console:`` (present, null) must behave like ``console: {}`` rather

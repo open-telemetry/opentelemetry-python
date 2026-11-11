@@ -22,6 +22,9 @@ if TYPE_CHECKING:
     import grpc
 
     from opentelemetry.configuration.models import GrpcTls
+    from opentelemetry.sdk._logs import LoggerProvider
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.trace import TracerProvider
 
 _logger = logging.getLogger(__name__)
 
@@ -343,6 +346,14 @@ def _grpc_insecure_from_tls(endpoint: str | None, tls: GrpcTls | None) -> bool:
         if scheme in ("http", "https"):
             return scheme == "http"
     return tls.insecure if tls is not None and tls.insecure is not None else False
+
+
+def _shutdown_quietly(provider: TracerProvider | MeterProvider | LoggerProvider) -> None:
+    """Shut down an SDK provider, logging rather than raising on failure."""
+    try:
+        provider.shutdown()
+    except Exception:  # pylint: disable=broad-except
+        _logger.exception("Failed to shut down %s", type(provider).__name__)
 
 
 def _parse_otlp_file_output_stream(output_stream: str | None) -> str | None:

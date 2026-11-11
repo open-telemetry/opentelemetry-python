@@ -16,6 +16,7 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
+    _shutdown_quietly,
     _validate_mtls_pair,
     load_entry_point,
 )
@@ -701,8 +702,7 @@ def create_meter_provider(
             for reader_config in config.readers:
                 provider.add_metric_reader(_create_metric_reader(reader_config, provider))
         except Exception:
-            # Shut down readers already added, e.g. a running periodic reader.
-            provider.shutdown()
+            _shutdown_quietly(provider)
             raise
 
     return provider

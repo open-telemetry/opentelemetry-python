@@ -203,7 +203,7 @@ class TestCreateSdk(_PatchedGlobalsTestCase):
                 side_effect=ConfigurationError("boom"),
             ),
         ):
-            with self.assertLogs("opentelemetry.configuration._sdk", level="ERROR"):
+            with self.assertLogs("opentelemetry.configuration._common", level="ERROR"):
                 with self.assertRaises(ConfigurationError):
                     create_sdk(
                         _config(

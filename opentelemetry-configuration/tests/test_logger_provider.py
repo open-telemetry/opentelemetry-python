@@ -97,6 +97,52 @@ class TestCreateLoggerProviderBasic(unittest.TestCase):
         provider = create_logger_provider(config)
         self.assertIsInstance(provider, LoggerProvider)
 
+    @staticmethod
+    def _make_partial_failure_config():
+        return LoggerProviderConfig(
+            processors=[
+                LogRecordProcessorConfig(
+                    batch=BatchLogRecordProcessorConfig(exporter=LogRecordExporterConfig(console={}))
+                ),
+                LogRecordProcessorConfig(
+                    batch=BatchLogRecordProcessorConfig(
+                        exporter=LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig())
+                    )
+                ),
+            ]
+        )
+
+    def test_failed_processor_shuts_down_created_processors(self):
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                    "opentelemetry.exporter.otlp.proto.http._log_exporter": None,
+                },
+            ),
+            patch.object(BatchLogRecordProcessor, "shutdown") as mock_shutdown,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_logger_provider(self._make_partial_failure_config())
+        mock_shutdown.assert_called_once()
+
+    def test_failed_cleanup_does_not_mask_configuration_error(self):
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                    "opentelemetry.exporter.otlp.proto.http._log_exporter": None,
+                },
+            ),
+            patch.object(BatchLogRecordProcessor, "shutdown", side_effect=RuntimeError("shutdown failed")),
+            self.assertLogs("opentelemetry.configuration._common", level="ERROR") as logs,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_logger_provider(self._make_partial_failure_config())
+        self.assertIn("Failed to shut down LoggerProvider", logs.output[0])
+
 
 class TestCreateLogRecordProcessors(unittest.TestCase):
     @staticmethod

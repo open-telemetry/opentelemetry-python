@@ -15,6 +15,7 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
+    _shutdown_quietly,
     _validate_mtls_pair,
     load_entry_point,
 )
@@ -421,7 +422,11 @@ def create_logger_provider(
     if config is None:
         return provider
 
-    for processor_config in config.processors:
-        provider.add_log_record_processor(_create_log_record_processor(processor_config, meter_provider))
+    try:
+        for processor_config in config.processors:
+            provider.add_log_record_processor(_create_log_record_processor(processor_config, meter_provider))
+    except Exception:
+        _shutdown_quietly(provider)
+        raise
 
     return provider

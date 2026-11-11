@@ -21,6 +21,7 @@ from opentelemetry._logs import (
     NoOpLoggerProvider,
     set_logger_provider,
 )
+from opentelemetry.configuration._common import _shutdown_quietly
 from opentelemetry.configuration._logger_provider import (
     create_logger_provider,
 )
@@ -107,12 +108,8 @@ def _shutdown_providers(
 ) -> None:
     """Shut down SDK providers, logging rather than raising on failure."""
     for provider in providers:
-        if not isinstance(provider, (SdkTracerProvider, SdkMeterProvider, SdkLoggerProvider)):
-            continue
-        try:
-            provider.shutdown()
-        except Exception:  # pylint: disable=broad-except
-            _logger.exception("Failed to shut down %s", type(provider).__name__)
+        if isinstance(provider, (SdkTracerProvider, SdkMeterProvider, SdkLoggerProvider)):
+            _shutdown_quietly(provider)
 
 
 def create_sdk(config: OpenTelemetryConfiguration) -> SdkComponents:

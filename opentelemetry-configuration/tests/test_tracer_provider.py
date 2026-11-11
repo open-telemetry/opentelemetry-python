@@ -551,7 +551,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         )
 
 
-class TestCreateSpanExporterAndProcessor(unittest.TestCase):
+class TestCreateSpanExporterAndProcessor(unittest.TestCase):  # pylint: disable=too-many-public-methods
     # pylint: disable=no-self-use
 
     @staticmethod
@@ -608,6 +608,48 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         ):
             create_tracer_provider(config)
         self.assertIn("otlp-proto-http", str(ctx.exception))
+
+    @staticmethod
+    def _make_partial_failure_config():
+        return TracerProviderConfig(
+            processors=[
+                SpanProcessorConfig(batch=BatchSpanProcessorConfig(exporter=SpanExporterConfig(console={}))),
+                SpanProcessorConfig(
+                    batch=BatchSpanProcessorConfig(exporter=SpanExporterConfig(otlp_http=OtlpHttpExporterConfig()))
+                ),
+            ]
+        )
+
+    def test_failed_processor_shuts_down_created_processors(self):
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            patch.object(BatchSpanProcessor, "shutdown") as mock_shutdown,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_tracer_provider(self._make_partial_failure_config())
+        mock_shutdown.assert_called_once()
+
+    def test_failed_cleanup_does_not_mask_configuration_error(self):
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            patch.object(BatchSpanProcessor, "shutdown", side_effect=RuntimeError("shutdown failed")),
+            self.assertLogs("opentelemetry.configuration._common", level="ERROR") as logs,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_tracer_provider(self._make_partial_failure_config())
+        self.assertIn("Failed to shut down TracerProvider", logs.output[0])
 
     def test_otlp_http_created_with_endpoint(self):
         mock_exporter_cls = MagicMock()
