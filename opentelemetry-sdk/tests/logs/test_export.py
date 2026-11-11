@@ -863,10 +863,16 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertTrue(data_point.attributes["otel.component.name"].startswith("batching_log_processor/"))
 
     @mock.patch.dict(os.environ, {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
-    def test_queue_capacity_delta_temporality(self):
-        # When MetricReader uses Delta aggregation temporality for UpDownCounter (#5891),
-        # the capacity metric is not dropped on subsequent collections because it is now
-        # an asynchronous ObservableUpDownCounter (which retains cumulative temporality by default).
+    def test_queue_capacity_ignores_up_down_counter_delta_temporality(self):
+        """Verify that setting DELTA temporality on UpDownCounter (as in #5891)
+        does not apply to the capacity metric now that it is an ObservableUpDownCounter.
+        The instrument ignores that setting and retains its default cumulative temporality,
+        ensuring the full capacity is reported across all collection cycles.
+        """
+        # When MetricReader sets DELTA temporality only for UpDownCounter (#5891),
+        # that setting does not apply to ObservableUpDownCounter. The capacity instrument
+        # therefore ignores the UpDownCounter DELTA setting and uses default CUMULATIVE
+        # temporality, ensuring the capacity value is not dropped on subsequent collections.
         metric_reader = InMemoryMetricReader(
             preferred_temporality={
                 UpDownCounter: AggregationTemporality.DELTA,
@@ -905,10 +911,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
 
     @mock.patch.dict(os.environ, {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_queue_capacity_observable_delta_temporality(self):
-        # When MetricReader explicitly configures ObservableUpDownCounter to DELTA,
-        # _SumAggregation converts cumulative observations to deltas (value - previous).
-        # Cycle 1 delta: 1024 - 0 = 1024.
-        # Cycle 2 delta: 1024 - 1024 = 0 (capacity unchanged between collections).
+        """When MetricReader explicitly configures ObservableUpDownCounter to DELTA,
+        _SumAggregation converts cumulative observations to deltas (value - previous).
+        Cycle 1 delta: 1024 - 0 = 1024.
+        Cycle 2 delta: 1024 - 1024 = 0 (capacity unchanged between collections).
+        """
         metric_reader = InMemoryMetricReader(
             preferred_temporality={
                 ObservableUpDownCounter: AggregationTemporality.DELTA,
