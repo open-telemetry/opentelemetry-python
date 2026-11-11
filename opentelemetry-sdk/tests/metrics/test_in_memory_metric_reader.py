@@ -173,6 +173,7 @@ class TestInMemoryMetricReader(TestCase):
         meter = Mock()
         meter_provider.get_meter.return_value = meter
         reader._set_meter_provider(meter_provider)
+        self.assertIsNotNone(reader._metrics)
         meter_provider.get_meter.assert_called_once_with("opentelemetry-sdk")
         meter.create_histogram.assert_called_once_with(
             name="otel.sdk.metric_reader.collection.duration",
