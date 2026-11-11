@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 from __future__ import annotations
 
 from collections import Counter
@@ -95,9 +96,21 @@ class ProcessorMetrics:
             self._queue_capacity.add(capacity, self._standard_attrs)
 
     def register_queue_size(self, get_queue_size: Callable[[], int]) -> None:
+
         def record_queue_size(
             _options: CallbackOptions,
         ) -> tuple[Observation]:
+            """Observe the queue size once, for one metric collection.
+
+            Args:
+                _options: The timeout and other collection options the metric
+                    reader passes in. They are ignored, since reading the
+                    queue size cannot block.
+
+            Returns:
+                A single observation of the current queue size, carrying the
+                component type and component name attributes.
+            """
             return (Observation(get_queue_size(), self._standard_attrs),)
 
         if self._signal == "traces":
@@ -138,6 +151,23 @@ def create_processor_metrics(
     capacity: int | None = None,
     enabled: bool,
 ) -> ProcessorMetricsT:
+    """Build the metrics object a processor should report through.
+
+    Args:
+        signal: Which telemetry the processor handles.
+        component_type: The semantic convention value naming the kind of
+            processor.
+        meter_provider: The provider the instruments are created from. It is
+            not touched when ``enabled`` is false.
+        capacity: The queue capacity to record once, in items, or ``None`` to
+            record no capacity.
+        enabled: Whether to record anything at all. It is keyword only and
+            has no default, so a caller has to state its choice.
+
+    Returns:
+        A ``ProcessorMetrics`` when ``enabled`` is true, which creates its
+        instruments right away. A ``NoOpProcessorMetrics`` otherwise.
+    """
     if not enabled:
         return NoOpProcessorMetrics()
 

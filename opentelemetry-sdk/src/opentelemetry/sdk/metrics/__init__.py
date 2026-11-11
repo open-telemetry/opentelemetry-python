@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Entry point of the metrics SDK."""
 
 from opentelemetry.sdk.metrics import export, view
 from opentelemetry.sdk.metrics._internal import Meter, MeterProvider

@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
@@ -228,6 +229,14 @@ class SimpleFixedSizeExemplarReservoir(FixedSizeExemplarReservoirABC):
     of samples the reservoir has seen so far to determine if the offered measurements
     should be sampled.
 
+    Args:
+        size: How many cells the reservoir has, which is the largest
+            number of exemplars one collection can produce. One cell by
+            default, which is what the specification asks for on a
+            non-histogram aggregation.
+        kwargs: Further aggregation parameters, handed on to
+            ``FixedSizeExemplarReservoirABC``.
+
     Reference:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#simplefixedsizeexemplarreservoir
     """
@@ -263,6 +272,14 @@ class AlignedHistogramBucketExemplarReservoir(FixedSizeExemplarReservoirABC):
     """This Exemplar reservoir takes a configuration parameter that is the
     configuration of a Histogram. This implementation keeps the last seen measurement
     that falls within a histogram bucket.
+
+    Args:
+        boundaries: The explicit bucket boundaries of the histogram, in
+            ascending order. They come from the aggregation, which binds
+            them to the reservoir class with ``functools.partial`` before
+            the reservoir is built.
+        kwargs: Further aggregation parameters, handed on to
+            ``FixedSizeExemplarReservoirABC``.
 
     Reference:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#alignedhistogrambucketexemplarreservoir

@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 from abc import ABC, abstractmethod
 from threading import Lock
 
@@ -78,11 +79,9 @@ class Mapping(ABC):
         expected to map onto a range that is at least partially inside the
         range of normal floating point values.  If the corresponding
         bucket's upper boundary is less than or equal to 2 ** -1022,
-        :class:`~opentelemetry.sdk.metrics.MappingUnderflowError`
-        will be raised. If the corresponding bucket's lower boundary is greater
-        than ``sys.float_info.max``,
-        :class:`~opentelemetry.sdk.metrics.MappingOverflowError`
-        will be raised.
+        ``MappingUnderflowError`` will be raised. If the corresponding
+        bucket's lower boundary is greater than ``sys.float_info.max``,
+        ``MappingOverflowError`` will be raised.
         """
 
     @property

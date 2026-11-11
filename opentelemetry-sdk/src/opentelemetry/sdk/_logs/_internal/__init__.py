@@ -1,5 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+
 from __future__ import annotations
 
 import abc
@@ -83,6 +84,7 @@ from opentelemetry.util.types import AnyValue, Attributes
 
 # pylint: disable=too-many-lines
 
+
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
@@ -112,7 +114,7 @@ warnings.simplefilter("once", LogRecordDroppedAttributesWarning)
     "Use LogRecordDroppedAttributesWarning. Since logs are not stable yet this WILL be removed in future releases."
 )
 class LogDroppedAttributesWarning(LogRecordDroppedAttributesWarning):
-    pass
+    """Deprecated alias of ``LogRecordDroppedAttributesWarning``."""
 
 
 class LogRecordLimits:
@@ -149,6 +151,32 @@ class LogRecordLimits:
         max_log_record_attribute_length: Maximum length a log record attribute value can have.
             Environment variable: ``OTEL_LOGRECORD_ATTRIBUTE_VALUE_LENGTH_LIMIT``
             Falls back to ``max_attribute_length`` when unset.
+
+    Only the two log record specific values are ever applied to a record.
+    ``ReadWriteLogRecord.__post_init__`` reads
+    ``max_log_record_attributes`` and ``max_log_record_attribute_length``;
+    ``max_attributes`` and ``max_attribute_length`` exist to supply their
+    fallbacks and are not consulted again afterwards. The four resolved values
+    are plain instance attributes, and changing one after construction has no
+    effect on a record already built.
+
+    Reaching the count limit drops attributes: once a record holds
+    ``max_log_record_attributes`` keys, a further new key is discarded, while
+    assigning to a key the record already has still works. Reaching the length
+    limit truncates instead: a string value longer than
+    ``max_log_record_attribute_length`` is cut to that many characters and the
+    attribute is kept. Only the drops are counted, by
+    ``ReadWriteLogRecord.dropped_attributes``. A truncation is reported through
+    the logger of ``opentelemetry.attributes`` and leaves no mark on the record
+    itself, so a consumer cannot tell a truncated value from a short one.
+
+    A limit of ``None`` means unlimited. A count limit of zero drops every
+    attribute, and a length limit of zero truncates every string value to the
+    empty string.
+
+    Raises:
+        ValueError: If a limit is negative, or if an environment variable that
+            had to be consulted does not parse as an integer.
     """
 
     UNSET = -1
@@ -222,12 +250,24 @@ class LogRecordLimits:
 
 @deprecated("Use LogRecordLimits. Since logs are not stable yet this WILL be removed in future releases.")
 class LogLimits(LogRecordLimits):
-    pass
+    """Deprecated alias of ``LogRecordLimits``."""
 
 
 @dataclass(frozen=True, slots=True)
 class ReadableLogRecord:
-    """Readable LogRecord should be kept exactly in-sync with ReadWriteLogRecord, only difference is the frozen=True param."""
+    """Readable LogRecord should be kept exactly in-sync with ReadWriteLogRecord, only difference is the frozen=True param.
+
+    Args:
+        log_record: The API record carrying the timestamps, the severity, the
+            body, the attributes and the trace correlation.
+        resource: The resource of the ``LoggerProvider`` the record came from.
+        instrumentation_scope: The scope of the ``Logger`` that emitted the
+            record, or ``None`` when none was supplied.
+        limits: The limits that were applied when the record was built, kept so
+            that a consumer can tell what shaped the attributes. ``None`` means
+            no limits travelled with the record, which does not mean none were
+            applied.
+    """
 
     log_record: LogRecord
     resource: Resource
@@ -236,11 +276,35 @@ class ReadableLogRecord:
 
     @property
     def dropped_attributes(self) -> int:
+        """Count the attributes the limits refused to keep.
+
+        Returns:
+            How many attributes were discarded while the record was being
+            built: keys refused because the record already held
+            ``max_log_record_attributes`` of them, and keys refused for being
+            empty or not a string. A value truncated for exceeding
+            ``max_log_record_attribute_length`` is not counted, because the
+            attribute itself was kept. Zero when the attribute mapping is not a
+            ``BoundedAttributes``, which is the case for a record built by hand
+            rather than by ``ReadWriteLogRecord``, and which means the count is
+            unknown rather than known to be zero.
+        """
         if isinstance(self.log_record.attributes, BoundedAttributes):
             return self.log_record.attributes.dropped
         return 0
 
     def to_json(self, indent: int | None = 4) -> str:
+        """Serialise the record to the JSON form the console exporter writes.
+
+        Args:
+            indent: Spaces per nesting level. ``None`` produces the compact
+                form, which puts the whole record on one line and is what a
+                line-oriented consumer wants.
+
+        Returns:
+            The JSON text, with no trailing newline. The console exporter adds
+            the line separator itself.
+        """
         return json.dumps(
             {
                 "body": self.log_record.body,
@@ -275,6 +339,23 @@ class ReadWriteLogRecord:
     ReadWriteLogRecord instances are created and emitted via `Logger`
     every time something is logged. They contain all the information
     pertinent to the event being logged.
+
+    Args:
+        log_record: The API record carrying the timestamps, the severity, the
+            body, the attributes and the trace correlation. It is stored by
+            reference and its ``attributes`` is replaced during construction,
+            so the caller's record is changed too.
+        resource: The resource to attach. The default is
+            ``Resource.create({})``, evaluated once at class definition time
+            and shared by every instance that does not pass one. It is not an
+            empty resource: the default detectors run, so it carries the
+            ``telemetry.sdk.*``, ``service.name`` and ``service.instance.id``
+            attributes.
+        instrumentation_scope: The scope of the ``Logger`` that emitted the
+            record, or ``None`` when none was supplied.
+        limits: The limits to apply to the attributes. The default is a fresh
+            ``LogRecordLimits``, built per instance, which reads the
+            environment at that moment.
     """
 
     log_record: LogRecord
@@ -309,6 +390,18 @@ class ReadWriteLogRecord:
 
     @property
     def dropped_attributes(self) -> int:
+        """Count the attributes the limits refused to keep.
+
+        Returns:
+            How many attributes were discarded, counting keys refused because
+            the record already held ``limits.max_log_record_attributes`` of
+            them and keys refused for being empty or not a string. A value
+            truncated for exceeding
+            ``limits.max_log_record_attribute_length`` is not counted,
+            because the attribute itself was kept. Zero when the
+            attribute mapping is not a ``BoundedAttributes``, which happens
+            only if something replaced the mapping after construction.
+        """
         if isinstance(self.log_record.attributes, BoundedAttributes):
             return self.log_record.attributes.dropped
         return 0
@@ -372,6 +465,11 @@ class LogRecordProcessor(abc.ABC):
         Implementers should handle any exceptions raised during log processing
         to prevent application crashes. See the class docstring for details
         on error handling expectations.
+
+        Args:
+            log_record: The record to process. Its attributes already have the
+                limits applied, and its ``resource`` may be ``None`` for a
+                record not built by ``Logger.emit``.
         """
 
     def enabled(  # pylint: disable=no-self-use,unused-argument
@@ -386,6 +484,21 @@ class LogRecordProcessor(abc.ABC):
 
         Processors that support filtering MAY override this method. The default
         implementation returns ``True``.
+
+        Args:
+            context: The context the record would carry, or ``None`` when the
+                caller has none and the current context would be used.
+            instrumentation_scope: The scope of the emitting ``Logger``, or
+                ``None`` when it has none.
+            severity_number: The severity the record would carry, or ``None``
+                when it is unset. Filtering by level is the usual reason to
+                override this method.
+            event_name: The event name the record would carry, or ``None`` for
+                an unnamed record.
+
+        Returns:
+            ``True`` when the record is worth building. The base implementation
+            ignores all four arguments and always answers ``True``.
         """
         return True
 
@@ -424,11 +537,21 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         self._lock = threading.Lock()
 
     def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:
-        """Adds a Logprocessor to the list of log processors handled by this instance"""
+        """Adds a Logprocessor to the list of log processors handled by this instance
+
+        Args:
+            log_record_processor: The processor to add. It takes its place at
+                the end, and processors run in the order they were added.
+        """
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
+        """Hand the record to each processor in turn, on the calling thread.
+
+        Args:
+            log_record: The record to forward.
+        """
         for lp in self._log_record_processors:
             lp.on_emit(log_record)
 
@@ -440,6 +563,21 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
     ) -> bool:
+        """Ask each processor in turn whether it wants such a record.
+
+        Args:
+            context: The context the record would carry, or ``None``.
+            instrumentation_scope: The scope of the emitting ``Logger``, or
+                ``None``.
+            severity_number: The severity the record would carry, or ``None``.
+            event_name: The event name the record would carry, or ``None``.
+
+        Returns:
+            ``True`` as soon as one processor answers ``True``, which leaves
+            the rest unasked. ``False`` when every processor declines, and also
+            ``False`` when no processor has been registered, so a provider with
+            an empty processor list discards everything emitted through it.
+        """
         for lp in self._log_record_processors:
             if lp.enabled(
                 context=context,
@@ -501,6 +639,11 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
 
     def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:
+        """Add a processor to the set this instance drives.
+
+        Args:
+            log_record_processor: The processor to add.
+        """
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
@@ -518,6 +661,11 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             future.result()
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
+        """Hand the record to every processor at once and wait for all of them.
+
+        Args:
+            log_record: The record to forward.
+        """
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
 
     def enabled(
@@ -528,6 +676,21 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
     ) -> bool:
+        """Ask each processor in turn whether it wants such a record.
+
+        Args:
+            context: The context the record would carry, or ``None``.
+            instrumentation_scope: The scope of the emitting ``Logger``, or
+                ``None``.
+            severity_number: The severity the record would carry, or ``None``.
+            event_name: The event name the record would carry, or ``None``.
+
+        Returns:
+            ``True`` as soon as one processor answers ``True``, which leaves
+            the rest unasked. ``False`` when every processor declines, and also
+            ``False`` when no processor has been registered, so a provider with
+            an empty processor list discards everything emitted through it.
+        """
         for lp in self._log_record_processors:
             if lp.enabled(
                 context=context,
@@ -539,6 +702,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         return False
 
     def shutdown(self) -> None:
+        """Shut every processor down at once and wait for all of them."""
         self._submit_and_wait(lambda lp: lp.shutdown)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
@@ -605,6 +769,15 @@ class LoggingHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
     a network destination or file. Supports signals from the `logging` module.
     https://docs.python.org/3/library/logging.html
+
+    Args:
+        level: The lowest level this handler accepts, as a ``logging`` level
+            number. ``logging.NOTSET``, the default, accepts whatever the
+            logger it is attached to passed on.
+        logger_provider: The provider to obtain a ``Logger`` from, one per
+            ``record.name``. ``None`` reads the globally configured provider
+            once, at construction, so configuring the global provider
+            afterwards does not reach a handler already built.
     """
 
     def __init__(
@@ -710,6 +883,9 @@ class LoggingHandler(logging.Handler):
         Emit a record. Skip emitting if logger is NoOp.
 
         The record is translated to OTel format, and then sent across the pipeline.
+
+        Args:
+            record: The ``logging.LogRecord`` to emit. It is not modified.
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
@@ -738,6 +914,26 @@ class _LoggerConfig:
 
 
 class Logger(APILogger):
+    """SDK implementation of the logs API ``Logger``.
+
+    Args:
+        resource: The resource attached to every record this logger emits. It
+            is replaced in place when the provider's resource changes, for
+            instance after a fork.
+        multi_log_record_processor: The provider's multiplexer, shared with
+            every other logger of the same provider. Emitting goes through it,
+            never to a processor directly.
+        instrumentation_scope: The scope identifying the library that logs
+            through this logger. It is what a configurator matches on.
+        logger_metrics: Where the count of created records is reported.
+        log_record_limits: The limits applied to the attributes of every record
+            this logger builds. ``None`` builds a fresh ``LogRecordLimits``,
+            which reads the environment at that moment.
+        _logger_config: The enabled switch for this scope, produced by the
+            provider's configurator. Replaced by the provider when the
+            configurator is changed.
+    """
+
     def __init__(
         self,
         resource: Resource,
@@ -768,6 +964,23 @@ class Logger(APILogger):
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
     ) -> bool:
+        """Report whether such a record would reach any processor.
+
+        Args:
+            context: The context the record would carry, or ``None`` when the
+                current context would be used.
+            severity_number: The severity the record would carry, or ``None``.
+            event_name: The event name the record would carry, or ``None``.
+
+        Returns:
+            ``False`` when a configurator disabled this logger's scope, or when
+            every registered processor declines, which includes the case of no
+            processor being registered at all. ``True`` otherwise.
+
+            The instrumentation scope passed to the processors is this logger's
+            own, which differs from what ``emit`` asks when it is handed a
+            ``ReadWriteLogRecord`` that carries a scope of its own.
+        """
         if not self._logger_config.is_enabled:
             return False
         return self._multi_log_record_processor.enabled(
@@ -785,10 +998,25 @@ class Logger(APILogger):
 
     @property
     def instrumentation_scope(self):
+        """The scope this logger was created for.
+
+        Returns:
+            The ``InstrumentationScope`` the provider built from the name,
+            version, schema URL and attributes passed to ``get_logger``. It is
+            fixed for the life of the logger, and it is what a configurator
+            matches on.
+        """
         return self._instrumentation_scope
 
     @property
     def resource(self):
+        """The resource attached to records this logger emits.
+
+        Returns:
+            The provider's resource as of now. Reading it again after a fork
+            returns a different object, because the provider merges the child
+            process's identity in and pushes the result here.
+        """
         return self._resource
 
     # pylint: disable=arguments-differ
@@ -808,6 +1036,30 @@ class Logger(APILogger):
     ) -> None:
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
+
+        Args:
+            record: A ready-made record, either an API ``LogRecord`` or a
+                ``ReadWriteLogRecord``. ``None`` selects the keyword argument
+                form.
+            timestamp: When the event happened, in nanoseconds since the Unix
+                epoch. ``None`` leaves it unset.
+            observed_timestamp: When the SDK saw the event, in nanoseconds
+                since the Unix epoch. ``None`` fills in the current time.
+            context: The context supplying the trace correlation. ``None`` uses
+                the current context.
+            severity_number: The severity, or ``None`` to leave it unset.
+            severity_text: The severity label of the originating logging
+                system, or ``None``.
+            body: The payload of the event. Any attribute value type is
+                accepted, including a mapping or a sequence.
+            attributes: Attributes to attach, before the limits are applied. A
+                key given here survives even when it collides with one of the
+                derived ``exception.*`` attributes.
+            event_name: The name identifying the class of event, or ``None``
+                for an unnamed record.
+            exception: An exception to render into ``exception.type``,
+                ``exception.message`` and ``exception.stacktrace``. ``None``
+                adds none of them.
         """
         if not self._logger_config.is_enabled:
             return
@@ -888,6 +1140,31 @@ def _disable_logger_configurator(
 
 
 class LoggerProvider(APILoggerProvider):
+    """SDK implementation of the logs API ``LoggerProvider``.
+
+    Args:
+        resource: The resource attached to every record. ``None`` builds an
+            empty one, which still picks up the default resource detectors.
+        shutdown_on_exit: Whether to register ``shutdown`` with ``atexit``, so
+            that a program that ends without shutting down still flushes.
+            ``False`` leaves flushing entirely to the caller.
+        multi_log_record_processor: The multiplexer that holds the registered
+            processors. ``None`` builds a ``SynchronousMultiLogRecordProcessor``,
+            which runs them one after another. Pass a
+            ``ConcurrentMultiLogRecordProcessor`` to run them in parallel.
+        meter_provider: Provider for the SDK's own counters about logging.
+            ``None`` uses the globally configured meter provider. Nothing is
+            recorded at all unless
+            ``OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED`` is set to true.
+        log_record_limits: The attribute limits applied to every record.
+            ``None`` builds a fresh ``LogRecordLimits``, which reads the
+            environment at that moment.
+        _logger_configurator: Decides, per instrumentation scope, whether its
+            logger emits. ``None`` enables every scope. It is called once per
+            logger created and again for every outstanding logger whenever a
+            new configurator is installed, so it has to return quickly.
+    """
+
     def __init__(
         self,
         resource: Resource | None = None,
@@ -924,6 +1201,13 @@ class LoggerProvider(APILoggerProvider):
             weak_at_fork = WeakMethod(self._handle_fork)
 
             def _after_in_child() -> None:
+                """Run the provider's fork handler in the freshly forked child.
+
+                ``os.register_at_fork`` keeps a strong reference to whatever is handed
+                to it, so this closure holds the provider only weakly. A provider that
+                has been garbage collected leaves the weak reference empty and the
+                handler does nothing.
+                """
                 if at_fork := weak_at_fork():
                     at_fork()
 
@@ -936,6 +1220,13 @@ class LoggerProvider(APILoggerProvider):
 
     @property
     def resource(self):
+        """The resource attached to every record from this provider.
+
+        Returns:
+            The current resource. It is replaced, not edited, when the process
+            identity is merged in after a fork, so a reference taken earlier
+            keeps the older contents.
+        """
         return self._resource
 
     def _update_resource(self, resource: Resource) -> None:
@@ -984,6 +1275,26 @@ class LoggerProvider(APILoggerProvider):
         schema_url: str | None = None,
         attributes: Attributes = None,
     ) -> APILogger:
+        """Obtain a ``Logger`` for one instrumented library.
+
+        Args:
+            name: Name of the instrumented library. Convention is the module or
+                package doing the logging.
+            version: Version of the instrumented library, or ``None``.
+            schema_url: URL of the schema the emitted records follow, or
+                ``None``.
+            attributes: Attributes describing the scope itself. Passing
+                anything other than ``None``, including an empty mapping, skips
+                the cache and returns a fresh logger on every call.
+
+        Returns:
+            A ``NoOpLogger`` when ``OTEL_SDK_DISABLED`` was true at the time
+            this provider was built, in which case nothing emitted through it
+            reaches a processor. Otherwise an SDK ``Logger``, the cached one
+            when ``attributes`` is ``None`` and a new one when it is not.
+            Either way the logger is tracked weakly, so later resource and
+            configuration changes reach it.
+        """
         if self._disabled:
             return NoOpLogger(
                 name,
@@ -1004,6 +1315,10 @@ class LoggerProvider(APILoggerProvider):
         """Registers a new :class:`LogRecordProcessor` for this `LoggerProvider` instance.
 
         The log processors are invoked in the same order they are registered.
+
+        Args:
+            log_record_processor: The processor to register. Registering the
+                same one twice makes it receive each record twice.
         """
         self._multi_log_record_processor.add_log_record_processor(log_record_processor)
 
@@ -1043,11 +1358,27 @@ class LoggerProvider(APILoggerProvider):
 
         Args:
             timeout_millis: The maximum amount of time to wait for logs to be
-                exported.
+                exported. The budget is shared: with a
+                ``SynchronousMultiLogRecordProcessor`` each processor is given
+                what the ones before it left, and once it is gone the remaining
+                processors are not flushed at all. A
+                ``ConcurrentMultiLogRecordProcessor`` gives the whole budget to
+                every processor at once. Either way the value is a request,
+                since ``BatchLogRecordProcessor`` ignores it and blocks until
+                its queue is empty.
 
         Returns:
             True if all the log processors flushes the logs within timeout,
             False otherwise.
+
+            ``False`` says a flush did not complete. It does not say which
+            processor, nor whether the records it held were exported, dropped
+            or are still queued. The three causes are a processor answering
+            ``False``, a processor not finishing in time, and a processor that
+            was already shut down, which is what a ``BatchLogRecordProcessor``
+            reports after ``shutdown``. ``True`` only means every processor
+            claimed to have handed its records to its exporter; an export that
+            failed is logged and still counts as a successful flush.
         """
         return self._multi_log_record_processor.force_flush(timeout_millis)
 

@@ -1,5 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+
 from __future__ import annotations
 
 import abc
@@ -63,12 +64,16 @@ _propagate_false_logger.propagate = False
 
 
 class LogRecordExportResult(enum.Enum):
+    """Outcome an exporter reports for one batch."""
+
     SUCCESS = 0
     FAILURE = 1
 
 
 @deprecated("Use LogRecordExportResult. Since logs are not stable yet this WILL be removed in future releases.")
 class LogExportResult(enum.Enum):
+    """Deprecated alias of ``LogRecordExportResult``."""
+
     SUCCESS = 0
     FAILURE = 1
 
@@ -133,7 +138,7 @@ class LogRecordExporter(abc.ABC):
 
 @deprecated("Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases.")
 class LogExporter(LogRecordExporter):
-    pass
+    """Deprecated alias of ``LogRecordExporter``."""
 
 
 class ConsoleLogRecordExporter(LogRecordExporter):
@@ -142,6 +147,17 @@ class ConsoleLogRecordExporter(LogRecordExporter):
 
     This class can be used for diagnostic purposes. It prints the exported
     log records to the console STDOUT.
+
+    Args:
+        out: The stream to write to. The default is bound when this module is
+            imported rather than when an exporter is built, so replacing
+            ``sys.stdout`` at any point after that import does not redirect an
+            exporter that was built with the default. Pass the stream
+            explicitly to write anywhere else.
+        formatter: Turns one record into the text written for it. The default
+            emits the indented JSON of ``ReadableLogRecord.to_json`` followed
+            by the platform line separator. A formatter that returns text
+            without a trailing separator runs its records together.
     """
 
     def __init__(
@@ -153,21 +169,40 @@ class ConsoleLogRecordExporter(LogRecordExporter):
         self.formatter = formatter
 
     def export(self, batch: Sequence[ReadableLogRecord]):
+        """Write each record to the stream and flush it.
+
+        Args:
+            batch: The records to write, in the order they are to appear.
+
+        Returns:
+            ``LogRecordExportResult.SUCCESS``, always. A write that fails
+            raises instead, and the calling processor is the one that has to
+            catch it.
+        """
         for log_record in batch:
             self.out.write(self.formatter(log_record))
         self.out.flush()
         return LogRecordExportResult.SUCCESS
 
     def shutdown(self):
-        pass
+        """Do nothing."""
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Do nothing, since ``export`` already flushed the stream.
+
+        Args:
+            timeout_millis: Ignored. Accepted so that the signature matches
+                ``LogRecordExporter``.
+
+        Returns:
+            ``True``, always.
+        """
         return True
 
 
 @deprecated("Use ConsoleLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases.")
 class ConsoleLogExporter(ConsoleLogRecordExporter):
-    pass
+    """Deprecated alias of ``ConsoleLogRecordExporter``."""
 
 
 class SimpleLogRecordProcessor(LogRecordProcessor):
@@ -180,6 +215,14 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
     demonstrating proper error handling. Note how the ``on_emit`` method wraps
     the exporter call in a try/except block to prevent exceptions from
     propagating to the application.
+
+    Args:
+        exporter: Where records are sent. ``shutdown`` is forwarded to it.
+        meter_provider: Provider for the processor's own self-observability
+            counters, which record how many records were submitted to the
+            exporter and how many were dropped. ``None`` uses the globally
+            configured meter provider. Nothing is recorded at all unless
+            ``OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED`` is set to true.
     """
 
     def __init__(
@@ -198,6 +241,16 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord):
+        """Export one record immediately, on the calling thread.
+
+        Args:
+            log_record: The record to export. Its ``resource`` is used as is,
+                and an unset one is replaced with ``Resource.create({})``
+                rather than treated as an error. That replacement is not
+                empty: the default detectors run, so it carries the
+                ``telemetry.sdk.*``, ``service.name`` and
+                ``service.instance.id`` attributes.
+        """
         # Prevent entering a recursive loop.
         cnt = get_value(_ON_EMIT_RECURSION_COUNT_KEY) or 0
         # Recursive depth of 3 is sort of arbitrary. It's possible that an Exporter.export call
@@ -240,10 +293,20 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
             detach(token)
 
     def shutdown(self):
+        """Stop accepting records and shut the exporter down."""
         self._shutdown = True
         self._exporter.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:  # pylint: disable=no-self-use
+        """Do nothing, since every record was exported as it was emitted.
+
+        Args:
+            timeout_millis: Ignored. Accepted so that the signature matches
+                ``LogRecordProcessor``.
+
+        Returns:
+            ``True``, always, including after ``shutdown``.
+        """
         return True
 
 
@@ -260,6 +323,36 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     - :envvar:`OTEL_BLRP_EXPORT_TIMEOUT`
 
     All the logic for emitting logs, shutting down etc. resides in the BatchProcessor class.
+
+    Args:
+        exporter: Where batches are sent. The worker thread calls its
+            ``export``, and an exception from it is caught and logged.
+        schedule_delay_millis: How long the worker waits between drains, in
+            milliseconds. ``None`` reads ``OTEL_BLRP_SCHEDULE_DELAY``,
+            falling back to 1000. Zero means export on every emit, which
+            removes the batching.
+        max_export_batch_size: Largest number of records handed to ``export``
+            in one call. ``None`` reads
+            ``OTEL_BLRP_MAX_EXPORT_BATCH_SIZE``, falling back to 512.
+        export_timeout_millis: Not used. No way currently exists to pass a
+            timeout to ``export``, so the value is validated and then ignored.
+            ``None`` reads ``OTEL_BLRP_EXPORT_TIMEOUT``, falling back to
+            30000.
+        max_queue_size: How many records may wait to be exported. ``None``
+            reads ``OTEL_BLRP_MAX_QUEUE_SIZE``, falling back to 2048.
+        meter_provider: Provider for the processor's own self-observability
+            instruments, which report the queue length and its capacity and
+            count submitted and dropped records. ``None`` uses the globally
+            configured meter provider. Nothing is recorded at all unless
+            ``OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED`` is set to true.
+
+    Raises:
+        ValueError: If ``max_queue_size`` or ``max_export_batch_size`` is not
+            positive, if ``schedule_delay_millis`` is negative, if
+            ``export_timeout_millis`` is not positive, or if
+            ``max_export_batch_size`` exceeds ``max_queue_size``. A value that
+            came from an environment variable and did not parse as an integer
+            does not raise: the default is used and the failure is logged.
     """
 
     def __init__(
@@ -308,6 +401,16 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         )
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
+        """Put one record on the queue, to be exported by the worker thread.
+
+        Args:
+            log_record: The record to queue. Its ``resource`` is used as is,
+                and an unset one is replaced with ``Resource.create({})``
+                rather than treated as an error. That replacement is not
+                empty: the default detectors run, so it carries the
+                ``telemetry.sdk.*``, ``service.name`` and
+                ``service.instance.id`` attributes.
+        """
         # Convert ReadWriteLogRecord to ReadableLogRecord before passing to BatchProcessor
         # Note: resource should not be None at this point as it's set during Logger.emit()
         resource = log_record.resource if log_record.resource is not None else Resource.create({})
@@ -325,9 +428,22 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         return self._batch_processor.emit(readable_log_record)
 
     def shutdown(self):
+        """Drain the queue, stop the worker thread and shut the exporter down."""
         return self._batch_processor.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Export everything queued, blocking until the queue is empty.
+
+        Args:
+            timeout_millis: Ignored. The flush runs to completion however long
+                it takes, so a slow exporter blocks the caller past this value.
+
+        Returns:
+            ``False`` when the processor has already been shut down, in which
+            case nothing is exported. ``True`` otherwise, once the queue has
+            been drained. ``True`` does not mean the exporter accepted the
+            records: a failing export is logged and still reports success here.
+        """
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod

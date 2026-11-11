@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 import os
 import weakref
 from atexit import register, unregister
@@ -90,7 +91,21 @@ class _ProxyMeterConfig:
 
 
 class Meter(APIMeter):
-    """See `opentelemetry.metrics.Meter`."""
+    """See `opentelemetry.metrics.Meter`.
+
+    Args:
+        instrumentation_scope: Identifies the library this meter was created
+            for. Every instrument created here carries it, and a ``View``
+            matches its ``meter_name``, ``meter_version`` and
+            ``meter_schema_url`` criteria against it.
+        measurement_consumer: Handed to every instrument created here, and
+            told about each asynchronous instrument so that collection can
+            call back into it.
+        _meter_config: The configuration this meter starts with. ``None``
+            means ``_MeterConfig.default()``, which is enabled. It is
+            wrapped in a ``_ProxyMeterConfig`` so that
+            ``MeterProvider._set_meter_configurator`` can replace it later.
+    """
 
     def __init__(
         self,
@@ -117,6 +132,25 @@ class Meter(APIMeter):
         self._meter_config.update(meter_config)
 
     def create_counter(self, name, unit="", description="") -> APICounter:
+        """Create or look up a counter on this meter.
+
+        Args:
+            name: The instrument name. It has to match
+                ``[a-zA-Z][-_./a-zA-Z0-9]{0,254}``, and the constructor of
+                the instrument raises if it does not. It is stripped and
+                lower-cased for the identity check and lower-cased on the
+                instrument itself.
+            unit: The unit of measure, an ASCII string of at most 63
+                characters. It is part of the instrument identity, so the
+                same name with a different unit is a different instrument.
+            description: Free-form text describing the instrument. It is
+                part of the instrument identity as well.
+
+        Returns:
+            A ``Counter``. The same object comes back on every later call
+            with the same name, unit and description, with no warning and
+            without a second instrument being built.
+        """
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Counter, unit, description)
             if not status.already_registered:
@@ -144,6 +178,24 @@ class Meter(APIMeter):
         return instrument
 
     def create_up_down_counter(self, name, unit="", description="") -> APIUpDownCounter:
+        """Create or look up an up-down counter on this meter.
+
+        Args:
+            name: The instrument name. It has to match
+                ``[a-zA-Z][-_./a-zA-Z0-9]{0,254}``, and the constructor of
+                the instrument raises if it does not. It is stripped and
+                lower-cased for the identity check and lower-cased on the
+                instrument itself.
+            unit: The unit of measure, an ASCII string of at most 63
+                characters. It is part of the instrument identity.
+            description: Free-form text describing the instrument. It is
+                part of the instrument identity as well.
+
+        Returns:
+            An ``UpDownCounter``. The same object comes back on every later
+            call with the same name, unit and description, with no warning
+            and without a second instrument being built.
+        """
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _UpDownCounter, unit, description)
             if not status.already_registered:
@@ -177,6 +229,28 @@ class Meter(APIMeter):
         unit="",
         description="",
     ) -> APIObservableCounter:
+        """Create or look up an observable counter on this meter.
+
+        Args:
+            name: The instrument name. It has to match
+                ``[a-zA-Z][-_./a-zA-Z0-9]{0,254}``, and the constructor of
+                the instrument raises if it does not.
+            callbacks: The callbacks the SDK invokes on every collection,
+                each a callable or a generator yielding
+                ``opentelemetry.metrics.Observation`` values. ``None``, the
+                default, means the instrument reports nothing. Callbacks do
+                not take part in the instrument identity, so the ones passed
+                to a repeated call are discarded with the rest of that call.
+            unit: The unit of measure, an ASCII string of at most 63
+                characters. It is part of the instrument identity.
+            description: Free-form text describing the instrument. It is
+                part of the instrument identity as well.
+
+        Returns:
+            An ``ObservableCounter``. The same object comes back on every
+            later call with the same name, unit and description, keeping the
+            callbacks it was first given.
+        """
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableCounter, unit, description)
             if not status.already_registered:
@@ -215,6 +289,33 @@ class Meter(APIMeter):
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
     ) -> APIHistogram:
+        """Create or look up a histogram on this meter.
+
+        Args:
+            name: The instrument name. It has to match
+                ``[a-zA-Z][-_./a-zA-Z0-9]{0,254}``, and the constructor of
+                the instrument raises if it does not.
+            unit: The unit of measure, an ASCII string of at most 63
+                characters. It is part of the instrument identity.
+            description: Free-form text describing the instrument. It is
+                part of the instrument identity as well.
+            explicit_bucket_boundaries_advisory: The bucket boundaries this
+                histogram suggests to whatever aggregates it, which a
+                ``View`` naming an explicit aggregation overrides. ``None``,
+                the default, means no suggestion. Anything that is not a
+                sequence of numbers is replaced by ``None`` and logged at
+                warning level, so a bad advisory does not stop the
+                instrument from being created. The advisory is not part of
+                the instrument identity.
+
+        Returns:
+            A ``Histogram``. The same object comes back on every later call
+            with the same name, unit and description, keeping the advisory
+            it was first given. A repeated call whose advisory differs from
+            the first logs a warning naming the advisory already in force,
+            which makes a histogram the only instrument kind where a
+            duplicate registration is reported at all.
+        """
         if explicit_bucket_boundaries_advisory is not None:
             invalid_advisory = False
             if isinstance(explicit_bucket_boundaries_advisory, Sequence):
@@ -265,6 +366,22 @@ class Meter(APIMeter):
         return instrument
 
     def create_gauge(self, name, unit="", description="") -> APIGauge:
+        """Create or look up a synchronous gauge on this meter.
+
+        Args:
+            name: The instrument name. It has to match
+                ``[a-zA-Z][-_./a-zA-Z0-9]{0,254}``, and the constructor of
+                the instrument raises if it does not.
+            unit: The unit of measure, an ASCII string of at most 63
+                characters. It is part of the instrument identity.
+            description: Free-form text describing the instrument. It is
+                part of the instrument identity as well.
+
+        Returns:
+            A ``Gauge``. The same object comes back on every later call with
+            the same name, unit and description, with no warning and without
+            a second instrument being built.
+        """
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Gauge, unit, description)
             if not status.already_registered:
@@ -292,6 +409,28 @@ class Meter(APIMeter):
         return instrument
 
     def create_observable_gauge(self, name, callbacks=None, unit="", description="") -> APIObservableGauge:
+        """Create or look up an observable gauge on this meter.
+
+        Args:
+            name: The instrument name. It has to match
+                ``[a-zA-Z][-_./a-zA-Z0-9]{0,254}``, and the constructor of
+                the instrument raises if it does not.
+            callbacks: The callbacks the SDK invokes on every collection,
+                each a callable or a generator yielding
+                ``opentelemetry.metrics.Observation`` values. ``None``, the
+                default, means the instrument reports nothing. Callbacks do
+                not take part in the instrument identity, so the ones passed
+                to a repeated call are discarded with the rest of that call.
+            unit: The unit of measure, an ASCII string of at most 63
+                characters. It is part of the instrument identity.
+            description: Free-form text describing the instrument. It is
+                part of the instrument identity as well.
+
+        Returns:
+            An ``ObservableGauge``. The same object comes back on every
+            later call with the same name, unit and description, keeping the
+            callbacks it was first given.
+        """
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableGauge, unit, description)
             if not status.already_registered:
@@ -325,6 +464,28 @@ class Meter(APIMeter):
     def create_observable_up_down_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
+        """Create or look up an observable up-down counter on this meter.
+
+        Args:
+            name: The instrument name. It has to match
+                ``[a-zA-Z][-_./a-zA-Z0-9]{0,254}``, and the constructor of
+                the instrument raises if it does not.
+            callbacks: The callbacks the SDK invokes on every collection,
+                each a callable or a generator yielding
+                ``opentelemetry.metrics.Observation`` values. ``None``, the
+                default, means the instrument reports nothing. Callbacks do
+                not take part in the instrument identity, so the ones passed
+                to a repeated call are discarded with the rest of that call.
+            unit: The unit of measure, an ASCII string of at most 63
+                characters. It is part of the instrument identity.
+            description: Free-form text describing the instrument. It is
+                part of the instrument identity as well.
+
+        Returns:
+            An ``ObservableUpDownCounter``. The same object comes back on
+            every later call with the same name, unit and description,
+            keeping the callbacks it was first given.
+        """
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableUpDownCounter, unit, description)
             if not status.already_registered:
@@ -393,9 +554,26 @@ class MeterProvider(APIMeterProvider):
             metrics. For push-based export, use
             :class:`opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader`.
         resource: The resource representing what the metrics emitted from the SDK pertain to.
+            If ``None``, ``Resource.create({})`` is used, which gathers the
+            detectors configured through the environment. The resource is
+            not frozen: a fork merges the process dependent attributes of
+            the child into it.
+        exemplar_filter: Decides which measurements are eligible to become
+            exemplars. If ``None``, the value of
+            ``OTEL_METRICS_EXEMPLAR_FILTER`` is read instead, defaulting to
+            ``trace_based``. That is the only moment the variable is
+            consulted.
         shutdown_on_exit: If true, registers an `atexit` handler to call
             `MeterProvider.shutdown`
-        views: The views to configure the metric output the SDK
+        views: The views to configure the metric output the SDK.
+            An instrument that matches no view is aggregated with the
+            default aggregation for its kind, and an instrument that matches
+            several of them feeds one metric stream per matching view.
+        _meter_configurator: Called with one ``InstrumentationScope`` and
+            returns the ``_MeterConfig`` for the meter of that scope, which
+            is how individual meters are turned off. If ``None``,
+            ``_default_meter_configurator`` is used and every meter is
+            enabled. Keep it fast: it runs while the meter lock is held.
 
     .. code-block:: python
         :caption: Push-based export with PeriodicExportingMetricReader
@@ -485,6 +663,13 @@ class MeterProvider(APIMeterProvider):
             weak_at_fork = weakref.WeakMethod(self._handle_fork)
 
             def _after_in_child() -> None:
+                """Run the provider's fork handler in the freshly forked child.
+
+                ``os.register_at_fork`` keeps a strong reference to whatever is handed
+                to it, so this closure holds the provider only weakly. A provider that
+                has been garbage collected leaves the weak reference empty and the
+                handler does nothing.
+                """
                 if at_fork := weak_at_fork():
                     at_fork()
 
@@ -525,6 +710,21 @@ class MeterProvider(APIMeterProvider):
             return _MeterConfig.default()
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Make every metric reader export what it is holding right now.
+
+        Args:
+            timeout_millis: Upper bound on the whole operation, in
+                milliseconds, shared by all the readers.
+
+        Returns:
+            ``True``. There is no return value meaning failure, since a
+            failure is raised instead.
+
+        Raises:
+            Exception: If any reader raised, or was reached after the
+                deadline. The message lists the class name and the ``repr``
+                of the error for each one.
+        """
         deadline_ns = time_ns() + timeout_millis * 10**6
 
         metric_reader_error = {}
@@ -557,9 +757,26 @@ class MeterProvider(APIMeterProvider):
         return True
 
     def shutdown(self, timeout_millis: float = 30_000):
+        """Shut the metric readers down and stop handing out real meters.
+
+        Args:
+            timeout_millis: Upper bound on the whole operation, in
+                milliseconds, shared by all the readers.
+
+        Raises:
+            Exception: If any reader raised, or was reached after the
+                deadline. Every reader is attempted first and the failures
+                are reported together, listing the class name and the
+                ``repr`` of the error for each one.
+        """
         deadline_ns = time_ns() + timeout_millis * 10**6
 
         def _shutdown():
+            """Mark the provider as shut down.
+
+            It runs through ``Once``, so only the first ``shutdown`` call on
+            this provider reaches it.
+            """
             self._shutdown = True
 
         did_shutdown = self._shutdown_once.do_once(_shutdown)
@@ -608,6 +825,29 @@ class MeterProvider(APIMeterProvider):
         schema_url: str | None = None,
         attributes: Attributes = None,
     ) -> APIMeter:
+        """Return the meter of an instrumentation scope, creating it once.
+
+        Args:
+            name: The name of the instrumenting library. An empty name, or
+                ``None``, is refused with a warning and gets a no-op meter.
+            version: The version of the instrumenting library. ``None``
+                means unversioned, and two versions of one library get two
+                meters.
+            schema_url: The schema URL of the telemetry this meter emits.
+                ``None`` means none was declared.
+            attributes: Further attributes describing the scope. ``None``
+                means none. They take part in the identity of the scope,
+                although not in its hash, so two scopes differing only in
+                attributes collide in the cache and are then told apart by
+                comparison.
+
+        Returns:
+            The ``Meter`` already held for this exact scope, or a new one
+            registered under it. A ``NoOpMeter`` comes back instead when
+            ``OTEL_SDK_DISABLED`` was true at construction, when this
+            provider has been shut down, or when ``name`` is empty. The last
+            two are logged at warning level; the disabled case is silent.
+        """
         if self._disabled:
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
@@ -632,6 +872,11 @@ class MeterProvider(APIMeterProvider):
             return self._meters[instrumentation_scope]
 
     def add_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader") -> None:
+        """Attach a metric reader to this provider after construction.
+
+        Args:
+            metric_reader: The reader to attach.
+        """
         with self._all_metric_readers_lock:
             if metric_reader in self._all_metric_readers:
                 _logger.warning(
@@ -648,6 +893,11 @@ class MeterProvider(APIMeterProvider):
         self,
         metric_reader: "opentelemetry.sdk.metrics.export.MetricReader",
     ) -> None:
+        """Detach a metric reader from this provider and shut it down.
+
+        Args:
+            metric_reader: The reader to detach.
+        """
         with self._all_metric_readers_lock:
             if metric_reader not in self._all_metric_readers:
                 _logger.warning("MetricReader '%s' has not been registered!", metric_reader)

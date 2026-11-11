@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 from __future__ import annotations
 
 import logging
@@ -30,9 +31,9 @@ class PredicateT(Protocol):
         attributes: Attributes,
         links: Sequence[Link] | None,
         trace_state: TraceState | None,
-    ) -> bool: ...
+    ) -> bool: ...  # pylint: disable=unnecessary-ellipsis
 
-    def __str__(self) -> str: ...
+    def __str__(self) -> str: ...  # pylint: disable=unnecessary-ellipsis
 
 
 class AttributePredicate:

@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 # pylint: disable=unused-import
 
 from collections.abc import Sequence

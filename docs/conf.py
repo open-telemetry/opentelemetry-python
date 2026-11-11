@@ -117,6 +117,34 @@ nitpick_ignore = [
         "py:class",
         "opentelemetry.sdk.metrics._internal.instrument._Asynchronous",
     ),
+    (
+        "py:class",
+        "opentelemetry.sdk.trace._TracerConfig",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal._MeterConfig",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal._ProxyMeterConfig",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.measurement_consumer.MeasurementConsumer",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk._logs._internal._LoggerConfig",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk._logs._internal._logger_metrics.LoggerMetricsT",
+    ),
+    (
+        "py:class",
+        "opentelemetry.semconv._incubating.attributes.otel_attributes.OtelComponentTypeValues",
+    ),
     # Even if wrapt is added to intersphinx_mapping, sphinx keeps failing
     # with "class reference target not found: ObjectProxy".
     ("py:class", "ObjectProxy"),

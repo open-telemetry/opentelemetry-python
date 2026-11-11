@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # pylint: disable=too-many-ancestors, unused-import
+
 from __future__ import annotations
 
 import math
@@ -144,6 +145,20 @@ class _Asynchronous(_Instrument, Asynchronous):
                         options: CallbackOptions,
                         callback=callback,
                     ) -> Iterable[Measurement]:
+                        """Resume the generator callback and return what it yields next.
+
+                        ``callback`` is bound as a default argument so that each iteration of
+                        the enclosing loop captures its own generator rather than the last one.
+
+                        Args:
+                            options: The collection options to send into the generator.
+                            callback: The generator to resume. Bound at definition time; a
+                                caller never passes it.
+
+                        Returns:
+                            The measurements the generator yields, or an empty list once the
+                            generator is exhausted.
+                        """
                         try:
                             return callback.send(options)
                         except StopIteration:
@@ -181,6 +196,8 @@ class _Asynchronous(_Instrument, Asynchronous):
 
 
 class Counter(_Synchronous, APICounter):
+    """Synchronous instrument for a quantity that only ever increases."""
+
     def __new__(cls, *args, **kwargs):
         if cls is Counter:
             raise TypeError("Counter must be instantiated via a meter.")
@@ -192,6 +209,17 @@ class Counter(_Synchronous, APICounter):
         attributes: Attributes = None,
         context: Context | None = None,
     ):
+        """Add a non-negative increment to the counter.
+
+        Args:
+            amount: How much to add. It has to be finite and non-negative.
+            attributes: Attributes to attach to the measurement, which decide
+                which time series within the metric stream it lands in.
+                ``None`` means no attributes.
+            context: The context to associate with the measurement, which is
+                what a trace-based exemplar filter inspects. ``None`` means
+                the context current at the moment of the call.
+        """
         if not self._is_enabled():
             super().add(amount, attributes=attributes, context=context)
             return
@@ -219,6 +247,8 @@ class Counter(_Synchronous, APICounter):
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
+    """Synchronous instrument for a quantity that rises and falls."""
+
     def __new__(cls, *args, **kwargs):
         if cls is UpDownCounter:
             raise TypeError("UpDownCounter must be instantiated via a meter.")
@@ -230,6 +260,18 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
         attributes: Attributes = None,
         context: Context | None = None,
     ):
+        """Add a signed delta to the counter.
+
+        Args:
+            amount: How much to add. It may be negative, and has to be
+                finite.
+            attributes: Attributes to attach to the measurement, which decide
+                which time series within the metric stream it lands in.
+                ``None`` means no attributes.
+            context: The context to associate with the measurement, which is
+                what a trace-based exemplar filter inspects. ``None`` means
+                the context current at the moment of the call.
+        """
         if not self._is_enabled():
             super().add(amount, attributes=attributes, context=context)
             return
@@ -254,6 +296,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
+    """Asynchronous instrument whose callbacks report a running total."""
+
     def __new__(cls, *args, **kwargs):
         if cls is ObservableCounter:
             raise TypeError("ObservableCounter must be instantiated via a meter.")
@@ -261,6 +305,8 @@ class ObservableCounter(_Asynchronous, APIObservableCounter):
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
+    """Asynchronous instrument whose callbacks report an additive total."""
+
     def __new__(cls, *args, **kwargs):
         if cls is ObservableUpDownCounter:
             raise TypeError("ObservableUpDownCounter must be instantiated via a meter.")
@@ -268,6 +314,30 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 
 class Histogram(_Synchronous, APIHistogram):
+    """Synchronous instrument for the distribution of recorded values.
+
+    Args:
+        name: The instrument name, validated and lower-cased exactly as
+            ``_Synchronous`` describes.
+        instrumentation_scope: The scope of the ``Meter`` that created this
+            instrument.
+        measurement_consumer: Receives every recorded measurement and passes
+            it to the views and metric readers of the ``MeterProvider``.
+        unit: The unit of measure, as an ASCII string of at most 63
+            characters.
+        description: Free-form text saying what the instrument measures.
+        explicit_bucket_boundaries_advisory: The bucket boundaries this
+            histogram suggests to whatever aggregates it. ``None``, the
+            default, means no suggestion, and the aggregation then picks its
+            own boundaries. ``Meter.create_histogram`` replaces a value that
+            is not a sequence of numbers with ``None`` and logs a warning, so
+            an instrument built through a meter never holds an invalid
+            advisory; constructing this class directly performs no such
+            check.
+        _meter_config: The configuration object shared with the creating
+            ``Meter``. ``None`` means the instrument is permanently enabled.
+    """
+
     def __init__(
         self,
         name: str,
@@ -300,6 +370,18 @@ class Histogram(_Synchronous, APIHistogram):
         attributes: Attributes = None,
         context: Context | None = None,
     ):
+        """Record one value into the distribution.
+
+        Args:
+            amount: The value to record. It has to be finite and
+                non-negative.
+            attributes: Attributes to attach to the measurement, which decide
+                which time series within the metric stream it lands in.
+                ``None`` means no attributes.
+            context: The context to associate with the measurement, which is
+                what a trace-based exemplar filter inspects. ``None`` means
+                the context current at the moment of the call.
+        """
         if not self._is_enabled():
             super().record(amount, attributes=attributes, context=context)
             return
@@ -365,6 +447,8 @@ class Gauge(_Synchronous, APIGauge):
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
+    """Asynchronous instrument whose callbacks report a current value."""
+
     def __new__(cls, *args, **kwargs):
         if cls is ObservableGauge:
             raise TypeError("ObservableGauge must be instantiated via a meter.")

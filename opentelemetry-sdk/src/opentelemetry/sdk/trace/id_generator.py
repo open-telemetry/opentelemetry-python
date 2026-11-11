@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""Generation of the trace and span identifiers the SDK puts on new spans."""
+
 import abc
 import random
 
@@ -8,6 +10,8 @@ from opentelemetry import trace
 
 
 class IdGenerator(abc.ABC):
+    """Source of the trace ids and span ids used for new spans."""
+
     @abc.abstractmethod
     def generate_span_id(self) -> int:
         """Get a new span ID.
@@ -57,16 +61,32 @@ class RandomIdGenerator(IdGenerator):
     """
 
     def generate_span_id(self) -> int:
+        """Draw 64 random bits for a span id.
+
+        Returns:
+            A 64-bit int for use as a span ID.
+        """
         span_id = random.getrandbits(64)
         while span_id == trace.INVALID_SPAN_ID:
             span_id = random.getrandbits(64)
         return span_id
 
     def generate_trace_id(self) -> int:
+        """Draw 128 random bits for a trace id.
+
+        Returns:
+            A 128-bit int for use as a trace ID.
+        """
         trace_id = random.getrandbits(128)
         while trace_id == trace.INVALID_TRACE_ID:
             trace_id = random.getrandbits(128)
         return trace_id
 
     def is_trace_id_random(self) -> bool:
+        """Report that the trace ids of this generator are random.
+
+        Returns:
+            ``True`` always, which makes the SDK set the random trace id flag
+            on the trace flags of spans whose trace id came from here.
+        """
         return True

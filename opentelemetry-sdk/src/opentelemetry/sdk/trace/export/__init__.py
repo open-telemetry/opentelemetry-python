@@ -1,5 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
+"""Span processors and span exporters."""
+
 from __future__ import annotations
 
 import collections.abc
@@ -48,6 +50,8 @@ logger = logging.getLogger(__name__)
 
 
 class SpanExportResult(Enum):
+    """Outcome of one call to ``SpanExporter.export``."""
+
     SUCCESS = 0
     FAILURE = 1
 
@@ -82,6 +86,13 @@ class SpanExporter:
         """Hint to ensure that the export of any spans the exporter has received
         prior to the call to ForceFlush SHOULD be completed as soon as possible, preferably
         before returning from this method.
+
+        Args:
+            timeout_millis: Upper bound on the flush, in milliseconds.
+
+        Returns:
+            ``True`` when everything held was flushed within the timeout,
+            ``False`` otherwise.
         """
 
 
@@ -90,6 +101,13 @@ class SimpleSpanProcessor(SpanProcessor):
 
     SimpleSpanProcessor is an implementation of `SpanProcessor` that
     passes ended spans directly to the configured `SpanExporter`.
+
+    Args:
+        span_exporter: Exporter each sampled span is handed to.
+        meter_provider: Provider used for the self-observability metrics of
+            this processor. ``None`` means the globally configured provider.
+            Whether those metrics are recorded at all is decided by
+            ``OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED``.
     """
 
     def __init__(
@@ -108,12 +126,23 @@ class SimpleSpanProcessor(SpanProcessor):
         )
 
     def on_start(self, span: Span, parent_context: Context | None = None) -> None:
-        pass
+        """Ignore the start of a span.
+
+        Args:
+            span: The span that just started. Ignored.
+            parent_context: Context the span was started in, or ``None`` for
+                the current context. Ignored.
+        """
 
     def _on_ending(self, span: Span) -> None:
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
+        """Export the span immediately, on the calling thread.
+
+        Args:
+            span: The span that just ended.
+        """
         if not (span.context and span.context.trace_flags.sampled):
             return
         if self._shutdown:
@@ -132,10 +161,20 @@ class SimpleSpanProcessor(SpanProcessor):
             detach(token)
 
     def shutdown(self) -> None:
+        """Stop accepting spans and shut the exporter down."""
         self._shutdown = True
         self.span_exporter.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Do nothing, since every span was already exported as it ended.
+
+        Args:
+            timeout_millis: Ignored. Accepted so that this processor matches
+                the ``SpanProcessor`` interface.
+
+        Returns:
+            ``True`` always, including after ``shutdown``.
+        """
         # pylint: disable=unused-argument
         return True
 
@@ -155,6 +194,28 @@ class BatchSpanProcessor(SpanProcessor):
     - :envvar:`OTEL_BSP_EXPORT_TIMEOUT`
 
     All the logic for emitting spans, shutting down etc. resides in the `BatchProcessor` class.
+
+    Args:
+        span_exporter: Exporter each batch is handed to.
+        max_queue_size: Number of spans the queue holds. ``None`` reads
+            ``OTEL_BSP_MAX_QUEUE_SIZE``, falling back to 2048 when that
+            variable is unset or does not parse as an integer. Must be
+            positive.
+        schedule_delay_millis: Time the worker thread waits between exports,
+            in milliseconds. ``None`` reads ``OTEL_BSP_SCHEDULE_DELAY``,
+            falling back to 5000. Must not be negative.
+        max_export_batch_size: Largest number of spans passed to the exporter
+            in one call. ``None`` reads ``OTEL_BSP_MAX_EXPORT_BATCH_SIZE``,
+            falling back to 512. Must be positive and no larger than
+            ``max_queue_size``.
+        export_timeout_millis: Budget for one export call, in milliseconds.
+            ``None`` reads ``OTEL_BSP_EXPORT_TIMEOUT``, falling back to 30000.
+            It is validated and stored, and the export path has no way to
+            apply it, so it currently bounds nothing.
+        meter_provider: Provider used for the self-observability metrics of
+            this processor. ``None`` means the globally configured provider.
+            Whether those metrics are recorded at all is decided by
+            ``OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED``.
     """
 
     def __init__(
@@ -206,23 +267,51 @@ class BatchSpanProcessor(SpanProcessor):
     # Added for backward compatibility. Not recommended to directly access/use underlying exporter.
     @property
     def span_exporter(self):
+        """The exporter passed to the constructor.
+
+        Returns:
+            The exporter held by the underlying batch processor.
+        """
         return self._batch_processor._exporter  # pylint: disable=protected-access
 
     def on_start(self, span: Span, parent_context: Context | None = None) -> None:
-        pass
+        """Ignore the start of a span.
+
+        Args:
+            span: The span that just started. Ignored.
+            parent_context: Context the span was started in, or ``None`` for
+                the current context. Ignored.
+        """
 
     def _on_ending(self, span: Span) -> None:
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
+        """Put the span on the queue for the worker thread.
+
+        Args:
+            span: The span that just ended.
+        """
         if not (span.context and span.context.trace_flags.sampled):
             return
         self._batch_processor.emit(span)
 
     def shutdown(self):
+        """Stop accepting spans, drain the queue and shut the exporter down."""
         return self._batch_processor.shutdown()
 
     def force_flush(self, timeout_millis: int | None = None) -> bool:
+        """Export everything queued, blocking until the queue is empty.
+
+        Args:
+            timeout_millis: Accepted and currently ignored, so the call
+                blocks for as long as draining the queue takes. ``None``
+                requests no particular bound.
+
+        Returns:
+            ``False`` if the processor has been shut down, in which case
+            nothing was exported, ``True`` otherwise.
+        """
         return self._batch_processor.force_flush(timeout_millis)
 
     @staticmethod
@@ -307,6 +396,23 @@ class ConsoleSpanExporter(SpanExporter):
 
     This class can be used for diagnostic purposes. It prints the exported
     spans to the console STDOUT.
+
+    Args:
+        service_name: Stored on the instance and read by nothing else here.
+            The service name that reaches a backend comes from the resource
+            of the tracer provider, so setting this does not change the
+            printed output.
+        out: Stream the formatted spans are written to. The default is bound
+            when this module is imported rather than when an exporter is
+            built, so replacing ``sys.stdout`` at any point after that import
+            does not redirect an exporter that was built with the default.
+            Pass the stream explicitly to write anywhere else.
+        formatter: Turns one span into the text written for it. The default
+            emits the indented JSON of ``ReadableSpan.to_json``, which spans
+            several lines, followed by the platform line separator. Pass a
+            formatter calling ``to_json(indent=None)`` to get one span per
+            line. A formatter that returns text without a trailing separator
+            runs the spans together.
     """
 
     def __init__(
@@ -320,10 +426,28 @@ class ConsoleSpanExporter(SpanExporter):
         self.service_name = service_name
 
     def export(self, spans: collections.abc.Sequence[ReadableSpan]) -> SpanExportResult:
+        """Write each span through the formatter and flush the stream.
+
+        Args:
+            spans: The spans to write, in the order given.
+
+        Returns:
+            ``SpanExportResult.SUCCESS`` always. A stream that raises on
+            write propagates the exception instead of reporting failure.
+        """
         for span in spans:
             self.out.write(self.formatter(span))
         self.out.flush()
         return SpanExportResult.SUCCESS
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Do nothing, since ``export`` already flushed the stream.
+
+        Args:
+            timeout_millis: Ignored. Accepted so that this exporter matches
+                the ``SpanExporter`` interface.
+
+        Returns:
+            ``True`` always.
+        """
         return True

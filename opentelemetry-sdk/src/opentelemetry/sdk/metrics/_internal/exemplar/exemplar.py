@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+
 import dataclasses
 
 from opentelemetry.util.types import Attributes

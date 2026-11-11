@@ -1,6 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+"""The names of the environment variables the SDK reads."""
+
 OTEL_SDK_DISABLED = "OTEL_SDK_DISABLED"
 """
 .. envvar:: OTEL_SDK_DISABLED

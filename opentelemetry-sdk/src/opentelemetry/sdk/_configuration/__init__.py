@@ -103,11 +103,11 @@ ExporterArgsMap = Mapping[
 
 
 class _ConfigurationExporterSpanProcessorT(Protocol):
-    def __call__(self, span_exporter: SpanExporter, *args, **kwargs) -> SpanProcessor: ...
+    def __call__(self, span_exporter: SpanExporter, *args, **kwargs) -> SpanProcessor: ...  # pylint: disable=unnecessary-ellipsis
 
 
 class _ConfigurationExporterLogRecordProcessorT(Protocol):
-    def __call__(self, exporter: LogRecordExporter, *args, **kwargs) -> LogRecordProcessor: ...
+    def __call__(self, exporter: LogRecordExporter, *args, **kwargs) -> LogRecordProcessor: ...  # pylint: disable=unnecessary-ellipsis
 
 
 def _import_config_components(selected_components: Sequence[str], entry_point_name: str) -> list[tuple[str, type]]:
@@ -297,7 +297,27 @@ def _overwrite_logging_config_fns(handler: LoggingHandler) -> None:
     root = logging.getLogger()
 
     def wrapper(config_fn: Callable) -> Callable:
+        """Wrap one logging configuration function.
+
+        Args:
+            config_fn: The function to wrap, one of the three named above.
+
+        Returns:
+            A function with the same signature that preserves the handler.
+        """
+
         def overwritten_config_fn(*args, **kwargs):
+            """Run the wrapped function with the handler detached.
+
+            The handler is put back in a ``finally`` block, so it survives a
+            configuration function that raises. It is only put back when it
+            was actually present beforehand, so this does not re-add a
+            handler the application had already removed on purpose.
+
+            Args:
+                *args: Passed through to the wrapped function.
+                **kwargs: Passed through to the wrapped function.
+            """
             removed_handler = False
             # We don't want the OTLP handler to be modified or deleted by the logging config functions.
             # So we remove it and then add it back after the function call.
