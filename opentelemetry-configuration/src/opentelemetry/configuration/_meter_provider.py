@@ -4,12 +4,19 @@
 from __future__ import annotations
 
 import logging
+import math
 
 from opentelemetry.configuration._common import (
+    _grpc_credentials_from_tls,
+    _grpc_insecure_from_tls,
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _resolve_export_timeout,
+    _resolve_otlp_grpc_endpoint,
+    _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
+    _validate_mtls_pair,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -283,8 +290,11 @@ def _create_otlp_http_metric_exporter(
     ``meter_provider`` receives the protobuf exporter's own metrics; the JSON
     exporter does not record any.
     """
+    tls = config.tls
+    if tls is not None:
+        _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
@@ -306,7 +316,10 @@ def _create_otlp_http_metric_exporter(
 
             compression = _map_compression(config.compression, Compression, allow_deflate=True)
             return OTLPMetricExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "metrics"),
+                certificate_file=tls.ca_file if tls is not None else None,
+                client_key_file=tls.key_file if tls is not None else None,
+                client_certificate_file=tls.cert_file if tls is not None else None,
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -331,7 +344,10 @@ def _create_otlp_http_metric_exporter(
 
             compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
             return JsonOTLPMetricExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "metrics"),
+                certificate_file=tls.ca_file if tls is not None else None,
+                client_key_file=tls.key_file if tls is not None else None,
+                client_certificate_file=tls.cert_file if tls is not None else None,
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -364,12 +380,15 @@ def _create_otlp_grpc_metric_exporter(
 
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    endpoint = _resolve_otlp_grpc_endpoint(config.endpoint)
+    timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
     return OTLPMetricExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
+        endpoint=endpoint,
+        insecure=_grpc_insecure_from_tls(endpoint, config.tls),
+        credentials=_grpc_credentials_from_tls(config.tls),
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
@@ -476,10 +495,12 @@ def _create_periodic_metric_reader(
     exporter = _create_push_metric_exporter(config.exporter, meter_provider)
     interval = config.interval if config.interval is not None else _DEFAULT_EXPORT_INTERVAL_MILLIS
     timeout = config.timeout if config.timeout is not None else _DEFAULT_EXPORT_TIMEOUT_MILLIS
+    # A timeout of 0 means no limit.
+    export_timeout_millis = math.inf if timeout == 0 else float(timeout)
     return PeriodicExportingMetricReader(
         exporter=exporter,
         export_interval_millis=float(interval),
-        export_timeout_millis=float(timeout),
+        export_timeout_millis=export_timeout_millis,
         cardinality_limits=_create_cardinality_limits(config.cardinality_limits),
     )
 
