@@ -94,10 +94,12 @@ def _exactly_one_property(cls):
     (e.g. a ``Sampler`` is one of ``always_on``, ``always_off``, ...) with
     ``minProperties: 1, maxProperties: 1``. Wraps ``__init__`` so that
     constructing such a model with zero or several choices raises
-    ``ValueError``.
+    ``ValueError``. Only ``__init__`` fields count as choices (non-init
+    fields such as ``additional_properties`` are ignored), and each captured
+    plugin key counts as one choice.
     """
     original_init = cls.__init__
-    field_names = tuple(f.name for f in dataclasses.fields(cls))
+    field_names = tuple(f.name for f in dataclasses.fields(cls) if f.init)
 
     @functools.wraps(original_init)
     def _init(self, *args, **kwargs):

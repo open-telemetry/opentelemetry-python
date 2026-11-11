@@ -405,7 +405,8 @@ class TestGeneratedModelsHaveAdditionalProperties(unittest.TestCase):
     def _assert_supports_additional_properties(self, model_cls):
         # pylint: disable=unexpected-keyword-arg
         obj = model_cls(_test_plugin_key={})
-        other = model_cls()
+        # Set one built-in choice; these models reject an empty selection.
+        other = model_cls(**{fields(model_cls)[0].name: {}})
         self.assertTrue(
             hasattr(obj, "additional_properties"),
             f"{model_cls.__name__} missing additional_properties attribute",
@@ -460,7 +461,7 @@ class TestExactlyOneProperty(unittest.TestCase):
         class _Choice:
             first: dict | None = None
             second: dict | None = None
-            additional_properties: ClassVar[dict[str, Any]]
+            additional_properties: dict[str, dict[str, Any] | None] = field(default_factory=dict, init=False)
 
         self.choice_cls = _Choice
 
@@ -531,6 +532,15 @@ class TestGeneratedModelsHaveExactlyOneProperty(unittest.TestCase):
             with self.subTest(model=model_cls.__name__):
                 field_name = fields(model_cls)[0].name
                 self.assertEqual(getattr(model_cls(**{field_name: {}}), field_name), {})
+
+    def test_accepts_plugin_only_choice(self):
+        for model_cls in self._one_of_model_classes():
+            if not any(field.name == "additional_properties" for field in fields(model_cls)):
+                continue
+            with self.subTest(model=model_cls.__name__):
+                # pylint: disable=unexpected-keyword-arg
+                obj = model_cls(_test_plugin_key={})
+                self.assertEqual(obj.additional_properties, {"_test_plugin_key": {}})
 
     def test_sampler_always_on_and_always_off_rejected(self):
         with self.assertRaises(ValueError) as ctx:
