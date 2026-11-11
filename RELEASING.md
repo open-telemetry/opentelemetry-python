@@ -114,19 +114,6 @@ As a result, when preparing a release branch that contains a different set of in
 
 When a contribution introduces a new package, in order to mitigate name-squatting incidents, reserve the package name under the `opentelemetry` organization on PyPI to simply claim the namespace (rather than releasing a dev version). This should be done shortly after the PR that introduced this package has been merged into `main` by navigating to <https://pypi.org/manage/organization/opentelemetry/projects/>, scrolling to the bottom (**Add project to organization**), and using the form.
 
-## Verifying Release Provenance
-
-Every release publishes a **GitHub SLSA Build Provenance Attestation** and attaches the exact `.whl` and `.tar.gz` files to the GitHub Release tag (`v<version>`).
-
-Users can cryptographically verify that a downloaded wheel or sdist was built by this repository's official workflow from the tagged commit SHA:
-
-```bash
-gh attestation verify <wheel-or-sdist-file> \
-  --repo open-telemetry/opentelemetry-python \
-  --signer-workflow open-telemetry/opentelemetry-python/.github/workflows/release.yml \
-  --source-digest "$(git rev-parse v<version>^{commit})"
-```
-
 ## Troubleshooting
 
 ### Publish failed
