@@ -158,8 +158,9 @@ Instrument: gauge
 Unit: 1
 Note: The current CPU request reflects the request applied to the running container, as reported by
 [ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core).
-The value range is [0.0,1.0]. A value of 1.0 means the container is using 100% of its actual CPU request.
-If the CPU request is not set, this metric SHOULD NOT be emitted for that container.
+A value of 1.0 means the container is using exactly its CPU request. Since a CPU request is a scheduling
+reservation and not a hard cap, values above 1.0 are possible and indicate the container is using more CPU
+than requested. If the CPU request is not set, this metric SHOULD NOT be emitted for that container.
 """
 
 
@@ -180,7 +181,7 @@ K8S_CONTAINER_EPHEMERAL_STORAGE_LIMIT: Final = "k8s.container.ephemeral_storage.
 Maximum ephemeral storage resource limit set for the container
 Instrument: updowncounter
 Unit: By
-Note: See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core for details.
+Note: See the [Kubernetes ResourceRequirements API](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) for details.
 """
 
 
@@ -198,7 +199,7 @@ K8S_CONTAINER_EPHEMERAL_STORAGE_REQUEST: Final = "k8s.container.ephemeral_storag
 Ephemeral storage resource requested for the container
 Instrument: updowncounter
 Unit: By
-Note: See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core for details.
+Note: See the [Kubernetes ResourceRequirements API](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) for details.
 """
 
 
@@ -288,6 +289,31 @@ def create_k8s_container_memory_limit_desired(meter: Meter) -> UpDownCounter:
     )
 
 
+K8S_CONTAINER_MEMORY_LIMIT_UTILIZATION: Final = "k8s.container.memory.limit.utilization"
+"""
+The ratio of container memory working set to its current memory limit
+Instrument: gauge
+Unit: 1
+Note: The numerator is the container memory working set, as reported by `container.memory.working_set`. The current memory limit
+reflects the actual resources applied to the container, as reported by
+[ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core).
+A value of 1.0 means the container is using 100% of its actual memory limit. Values above 1.0 can occur transiently, since memory usage can briefly exceed the limit.
+If the memory limit is not set, this metric SHOULD NOT be emitted for that container.
+"""
+
+
+def create_k8s_container_memory_limit_utilization(
+    meter: Meter, callbacks: Sequence[CallbackT] | None
+) -> ObservableGauge:
+    """The ratio of container memory working set to its current memory limit"""
+    return meter.create_observable_gauge(
+        name=K8S_CONTAINER_MEMORY_LIMIT_UTILIZATION,
+        callbacks=callbacks,
+        description="The ratio of container memory working set to its current memory limit.",
+        unit="1",
+    )
+
+
 K8S_CONTAINER_MEMORY_REQUEST: Final = "k8s.container.memory.request"
 """
 Deprecated: Replaced by `k8s.container.memory.request.desired`.
@@ -344,6 +370,33 @@ def create_k8s_container_memory_request_desired(meter: Meter) -> UpDownCounter:
         name=K8S_CONTAINER_MEMORY_REQUEST_DESIRED,
         description="Memory resource requested as defined by the container spec.",
         unit="By",
+    )
+
+
+K8S_CONTAINER_MEMORY_REQUEST_UTILIZATION: Final = "k8s.container.memory.request.utilization"
+"""
+The ratio of container memory working set to its current memory request
+Instrument: gauge
+Unit: 1
+Note: The numerator is the container memory working set, as reported by `container.memory.working_set`. The current memory request
+reflects the request applied to the running container, as reported by
+[ContainerStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#containerstatus-v1-core).
+A value of 1.0 means the container is using exactly its memory request. Since a memory request is a
+scheduling reservation and not a hard cap, values above 1.0 are possible and indicate the container is
+using more memory than requested. If the memory request is not set, this metric SHOULD NOT be emitted for
+that container.
+"""
+
+
+def create_k8s_container_memory_request_utilization(
+    meter: Meter, callbacks: Sequence[CallbackT] | None
+) -> ObservableGauge:
+    """The ratio of container memory working set to its current memory request"""
+    return meter.create_observable_gauge(
+        name=K8S_CONTAINER_MEMORY_REQUEST_UTILIZATION,
+        callbacks=callbacks,
+        description="The ratio of container memory working set to its current memory request.",
+        unit="1",
     )
 
 
@@ -431,7 +484,7 @@ K8S_CONTAINER_STORAGE_LIMIT: Final = "k8s.container.storage.limit"
 Maximum storage resource limit set for the container
 Instrument: updowncounter
 Unit: By
-Note: See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core for details.
+Note: See the [Kubernetes ResourceRequirements API](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) for details.
 """
 
 
@@ -449,7 +502,7 @@ K8S_CONTAINER_STORAGE_REQUEST: Final = "k8s.container.storage.request"
 Storage resource requested for the container
 Instrument: updowncounter
 Unit: By
-Note: See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core for details.
+Note: See the [Kubernetes ResourceRequirements API](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#resourcerequirements-v1-core) for details.
 """
 
 
@@ -1248,8 +1301,8 @@ Node filesystem available bytes
 Instrument: updowncounter
 Unit: By
 Note: This metric is derived from the
-[FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+[FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats)
 of the Kubelet's stats API.
 """
 
@@ -1269,8 +1322,8 @@ Node filesystem capacity
 Instrument: updowncounter
 Unit: By
 Note: This metric is derived from the
-[FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+[FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats)
 of the Kubelet's stats API.
 """
 
@@ -1290,8 +1343,8 @@ The total inodes in the node's root filesystem
 Instrument: updowncounter
 Unit: {inode}
 Note: This metric is derived from the
-[FsStats.Inodes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+[FsStats.Inodes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats)
 of the Kubelet's stats API.
 """
 
@@ -1311,8 +1364,8 @@ The free inodes in the node's root filesystem
 Instrument: updowncounter
 Unit: {inode}
 Note: This metric is derived from the
-[FsStats.InodesFree](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+[FsStats.InodesFree](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats)
 of the Kubelet's stats API.
 """
 
@@ -1331,12 +1384,14 @@ K8S_NODE_FILESYSTEM_USAGE: Final = "k8s.node.filesystem.usage"
 Node filesystem usage
 Instrument: updowncounter
 Unit: By
-Note: This may not equal capacity - available.
-
-This metric is derived from the
-[FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats)
+Note: This metric is derived from the
+[FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [NodeStats.Fs](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats)
 of the Kubelet's stats API.
+
+Capacity and available are reported for the backing filesystem,
+which may be shared with other workloads; therefore,
+usage may not equal `capacity - available`.
 """
 
 
@@ -1443,7 +1498,7 @@ K8S_NODE_MEMORY_WORKING_SET: Final = "k8s.node.memory.working_set"
 Node memory working set
 Instrument: updowncounter
 Unit: By
-Note: The amount of working set memory. This includes recently accessed memory, dirty memory, and kernel memory. WorkingSetBytes is <= UsageBytes.
+Note: The amount of working set memory. This includes recently accessed memory, dirty memory, and kernel memory. On Linux, the working set is calculated by excluding inactive file-backed memory from memory usage (`inactive_file` on cgroup v2, `total_inactive_file` on cgroup v1), so active file-backed memory remains included. On Linux, the kubelet uses the node working set when determining memory availability for the `memory.available` eviction signal. `WorkingSetBytes` is less than or equal to `UsageBytes`.
 This metric is derived from the [MemoryStats.WorkingSetBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [NodeStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats) of the Kubelet's stats API.
 """
 
@@ -1496,8 +1551,9 @@ K8S_NODE_PAGING_FAULTS: Final = "k8s.node.paging.faults"
 Node memory paging faults
 Instrument: counter
 Unit: {fault}
-Note: Cumulative number of major/minor page faults.
-This metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) fields of the [NodeStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats) of the Kubelet's stats API.
+Note: Cumulative number of major and minor page faults.
+The [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [NodeStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#NodeStats) of the Kubelet's stats API maps directly to `system.paging.fault.type=major`.
+The [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field reports the total number of page faults (equivalent to `pgfault` in the cgroup `memory.stat`), with minor and major combined. The minor page faults MUST therefore be derived as `MemoryStats.PageFaults - MemoryStats.MajorPageFaults`, so that summing the metric over `system.paging.fault.type` yields the total number of page faults.
 """
 
 
@@ -1507,6 +1563,48 @@ def create_k8s_node_paging_faults(meter: Meter) -> Counter:
         name=K8S_NODE_PAGING_FAULTS,
         description="Node memory paging faults.",
         unit="{fault}",
+    )
+
+
+K8S_NODE_PID_LIMIT: Final = "k8s.node.pid.limit"
+"""
+Total number of processes/threads allowed by the operating system on the node
+Instrument: updowncounter
+Unit: {thread}
+Note: Derived from the Kubelet Summary API
+([RlimitStats.MaxPID](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#RlimitStats))
+field of the [NodeStats.Rlimit](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats),
+representing the system-wide task limit (the lower of `kernel.pid_max` and `kernel.threads-max`).
+"""
+
+
+def create_k8s_node_pid_limit(meter: Meter) -> UpDownCounter:
+    """Total number of processes/threads allowed by the operating system on the node"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_PID_LIMIT,
+        description="Total number of processes/threads allowed by the operating system on the node.",
+        unit="{thread}",
+    )
+
+
+K8S_NODE_PID_USAGE: Final = "k8s.node.pid.usage"
+"""
+Total number of existing processes and threads on the node
+Instrument: updowncounter
+Unit: {thread}
+Note: Derived from the Kubelet Summary API
+([RlimitStats.NumOfRunningProcesses](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#RlimitStats))
+field of the [NodeStats.Rlimit](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#NodeStats),
+which reads the total count of scheduling entities (threads/processes across all states) from `/proc/loadavg`.
+"""
+
+
+def create_k8s_node_pid_usage(meter: Meter) -> UpDownCounter:
+    """Total number of existing processes and threads on the node"""
+    return meter.create_up_down_counter(
+        name=K8S_NODE_PID_USAGE,
+        description="Total number of existing processes and threads on the node.",
+        unit="{thread}",
     )
 
 
@@ -1605,8 +1703,8 @@ K8S_NODE_UPTIME: Final = "k8s.node.uptime"
 The time the Node has been running
 Instrument: gauge
 Unit: s
-Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
-The actual accuracy would depend on the instrumentation and operating system.
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available. The actual accuracy would depend on the instrumentation and operating system.
+This metric is derived from the [NodeStats.StartTime](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L42) field of Kubelet's stats API, which is set to the [system boot time](https://github.com/kubernetes/kubernetes/blob/v1.36.3/pkg/kubelet/server/stats/summary.go#L113). This value resets when the node reboots.
 """
 
 
@@ -1716,6 +1814,145 @@ def create_k8s_persistentvolumeclaim_storage_request(meter: Meter) -> UpDownCoun
     )
 
 
+K8S_POD_CPU_LIMIT_CURRENT: Final = "k8s.pod.cpu.limit.current"
+"""
+Maximum CPU resource limit currently configured for a running Pod
+Instrument: updowncounter
+Unit: {cpu}
+Note: This metric aligns with the limit in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core) field of
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podstatus-v1-core)
+(status.resources). Also see `Actual Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_pod_cpu_limit_current(meter: Meter) -> UpDownCounter:
+    """Maximum CPU resource limit currently configured for a running Pod"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_CPU_LIMIT_CURRENT,
+        description="Maximum CPU resource limit currently configured for a running Pod.",
+        unit="{cpu}",
+    )
+
+
+K8S_POD_CPU_LIMIT_DESIRED: Final = "k8s.pod.cpu.limit.desired"
+"""
+Maximum CPU resource limit as defined by the Pod spec
+Instrument: updowncounter
+Unit: {cpu}
+Note: This metric aligns with the limit in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core) field of
+[K8s PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podspec-v1-core)
+(spec.resources). See
+<https://kubernetes.io/docs/tasks/configure-pod-container/assign-pod-level-resources/>
+for more details on Pod level resources. Note that Kubernetes can default unset Pod level limits
+based on the aggregated limits of the Pod's containers. Also see `Desired Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/>.
+"""
+
+
+def create_k8s_pod_cpu_limit_desired(meter: Meter) -> UpDownCounter:
+    """Maximum CPU resource limit as defined by the Pod spec"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_CPU_LIMIT_DESIRED,
+        description="Maximum CPU resource limit as defined by the Pod spec.",
+        unit="{cpu}",
+    )
+
+
+K8S_POD_CPU_LIMIT_UTILIZATION: Final = "k8s.pod.cpu.limit.utilization"
+"""
+The ratio of Pod CPU usage to its current CPU limit
+Instrument: gauge
+Unit: 1
+Note: The current CPU limit reflects the actual resources applied at the Pod level, as reported by
+[PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podstatus-v1-core).
+The value range is [0.0,1.0]. A value of 1.0 means the Pod is using 100% of its actual CPU limit.
+If the CPU limit is not set, this metric SHOULD NOT be emitted for that Pod.
+"""
+
+
+def create_k8s_pod_cpu_limit_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
+    """The ratio of Pod CPU usage to its current CPU limit"""
+    return meter.create_observable_gauge(
+        name=K8S_POD_CPU_LIMIT_UTILIZATION,
+        callbacks=callbacks,
+        description="The ratio of Pod CPU usage to its current CPU limit.",
+        unit="1",
+    )
+
+
+K8S_POD_CPU_REQUEST_CURRENT: Final = "k8s.pod.cpu.request.current"
+"""
+CPU resource requested currently configured for a running Pod
+Instrument: updowncounter
+Unit: {cpu}
+Note: This metric aligns with the request in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core) field of
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podstatus-v1-core)
+(status.resources). Also see `Actual Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_pod_cpu_request_current(meter: Meter) -> UpDownCounter:
+    """CPU resource requested currently configured for a running Pod"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_CPU_REQUEST_CURRENT,
+        description="CPU resource requested currently configured for a running Pod.",
+        unit="{cpu}",
+    )
+
+
+K8S_POD_CPU_REQUEST_DESIRED: Final = "k8s.pod.cpu.request.desired"
+"""
+CPU resource requested as defined by the Pod spec
+Instrument: updowncounter
+Unit: {cpu}
+Note: This metric aligns with the request in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core) field of
+[K8s PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podspec-v1-core)
+(spec.resources). See
+<https://kubernetes.io/docs/tasks/configure-pod-container/assign-pod-level-resources/>
+for more details on Pod level resources. Note that Kubernetes can default unset Pod level requests
+based on the aggregated requests of the Pod's containers. Also see `Desired Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/>.
+"""
+
+
+def create_k8s_pod_cpu_request_desired(meter: Meter) -> UpDownCounter:
+    """CPU resource requested as defined by the Pod spec"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_CPU_REQUEST_DESIRED,
+        description="CPU resource requested as defined by the Pod spec.",
+        unit="{cpu}",
+    )
+
+
+K8S_POD_CPU_REQUEST_UTILIZATION: Final = "k8s.pod.cpu.request.utilization"
+"""
+The ratio of Pod CPU usage to its current CPU request
+Instrument: gauge
+Unit: 1
+Note: The current CPU request reflects the request applied at the Pod level, as reported by
+[PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podstatus-v1-core).
+A value of 1.0 means the Pod is using exactly its CPU request. Since a CPU request is a scheduling
+reservation and not a hard cap, values above 1.0 are possible and indicate the Pod is using more CPU
+than requested. If the CPU request is not set, this metric SHOULD NOT be emitted for that Pod.
+"""
+
+
+def create_k8s_pod_cpu_request_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
+    """The ratio of Pod CPU usage to its current CPU request"""
+    return meter.create_observable_gauge(
+        name=K8S_POD_CPU_REQUEST_UTILIZATION,
+        callbacks=callbacks,
+        description="The ratio of Pod CPU usage to its current CPU request.",
+        unit="1",
+    )
+
+
 K8S_POD_CPU_TIME: Final = "k8s.pod.cpu.time"
 """
 Total CPU time consumed
@@ -1759,8 +1996,8 @@ Pod filesystem available bytes
 Instrument: updowncounter
 Unit: By
 Note: This metric is derived from the
-[FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats)
+[FsStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats)
 of the Kubelet's stats API.
 """
 
@@ -1780,8 +2017,8 @@ Pod filesystem capacity
 Instrument: updowncounter
 Unit: By
 Note: This metric is derived from the
-[FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats)
+[FsStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats)
 of the Kubelet's stats API.
 """
 
@@ -1800,12 +2037,13 @@ K8S_POD_FILESYSTEM_USAGE: Final = "k8s.pod.filesystem.usage"
 Pod filesystem usage
 Instrument: updowncounter
 Unit: By
-Note: This may not equal capacity - available.
-
-This metric is derived from the
-[FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#FsStats) field
-of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats)
+Note: This metric is derived from the
+[FsStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#FsStats) field
+of the [PodStats.EphemeralStorage](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats)
 of the Kubelet's stats API.
+
+Capacity and available are reported for the backing filesystem, which may be shared
+with other workloads; therefore, usage may not equal `capacity - available`.
 """
 
 
@@ -1837,6 +2075,76 @@ def create_k8s_pod_memory_available(meter: Meter) -> UpDownCounter:
     )
 
 
+K8S_POD_MEMORY_LIMIT_CURRENT: Final = "k8s.pod.memory.limit.current"
+"""
+Maximum memory resource limit currently configured for a running Pod
+Instrument: updowncounter
+Unit: By
+Note: This metric aligns with the limit in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core) field of
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podstatus-v1-core)
+(status.resources). Also see `Actual Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_pod_memory_limit_current(meter: Meter) -> UpDownCounter:
+    """Maximum memory resource limit currently configured for a running Pod"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_MEMORY_LIMIT_CURRENT,
+        description="Maximum memory resource limit currently configured for a running Pod.",
+        unit="By",
+    )
+
+
+K8S_POD_MEMORY_LIMIT_DESIRED: Final = "k8s.pod.memory.limit.desired"
+"""
+Maximum memory resource limit as defined by the Pod spec
+Instrument: updowncounter
+Unit: By
+Note: This metric aligns with the limit in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core) field of
+[K8s PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podspec-v1-core)
+(spec.resources). See
+<https://kubernetes.io/docs/tasks/configure-pod-container/assign-pod-level-resources/>
+for more details on Pod level resources. Note that Kubernetes can default unset Pod level limits
+based on the aggregated limits of the Pod's containers. Also see `Desired Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/>.
+"""
+
+
+def create_k8s_pod_memory_limit_desired(meter: Meter) -> UpDownCounter:
+    """Maximum memory resource limit as defined by the Pod spec"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_MEMORY_LIMIT_DESIRED,
+        description="Maximum memory resource limit as defined by the Pod spec.",
+        unit="By",
+    )
+
+
+K8S_POD_MEMORY_LIMIT_UTILIZATION: Final = "k8s.pod.memory.limit.utilization"
+"""
+The ratio of Pod memory working set to its current memory limit
+Instrument: gauge
+Unit: 1
+Note: The numerator is the Pod memory working set, as reported by `k8s.pod.memory.working_set`. The current memory limit
+reflects the actual resources applied at the Pod level, as reported by
+[PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podstatus-v1-core).
+A value of 1.0 means the Pod is using 100% of its actual memory limit. Values above 1.0 can occur transiently, since memory usage can briefly exceed the limit.
+If the memory limit is not set, this metric SHOULD NOT be emitted for that Pod.
+"""
+
+
+def create_k8s_pod_memory_limit_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
+    """The ratio of Pod memory working set to its current memory limit"""
+    return meter.create_observable_gauge(
+        name=K8S_POD_MEMORY_LIMIT_UTILIZATION,
+        callbacks=callbacks,
+        description="The ratio of Pod memory working set to its current memory limit.",
+        unit="1",
+    )
+
+
 K8S_POD_MEMORY_PAGING_FAULTS: Final = "k8s.pod.memory.paging.faults"
 """
 Deprecated: Replaced by `k8s.pod.paging.faults`.
@@ -1849,6 +2157,77 @@ def create_k8s_pod_memory_paging_faults(meter: Meter) -> Counter:
         name=K8S_POD_MEMORY_PAGING_FAULTS,
         description="Deprecated, use `k8s.pod.paging.faults` instead.",
         unit="{fault}",
+    )
+
+
+K8S_POD_MEMORY_REQUEST_CURRENT: Final = "k8s.pod.memory.request.current"
+"""
+Memory resource request currently configured for a running Pod
+Instrument: updowncounter
+Unit: By
+Note: This metric aligns with the request in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core) field of
+[K8s PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podstatus-v1-core)
+(status.resources). Also see `Actual Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/> for more details.
+"""
+
+
+def create_k8s_pod_memory_request_current(meter: Meter) -> UpDownCounter:
+    """Memory resource request currently configured for a running Pod"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_MEMORY_REQUEST_CURRENT,
+        description="Memory resource request currently configured for a running Pod.",
+        unit="By",
+    )
+
+
+K8S_POD_MEMORY_REQUEST_DESIRED: Final = "k8s.pod.memory.request.desired"
+"""
+Memory resource requested as defined by the Pod spec
+Instrument: updowncounter
+Unit: By
+Note: This metric aligns with the request in the
+[`resources`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#resourcerequirements-v1-core) field of
+[K8s PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podspec-v1-core)
+(spec.resources). See
+<https://kubernetes.io/docs/tasks/configure-pod-container/assign-pod-level-resources/>
+for more details on Pod level resources. Note that Kubernetes can default unset Pod level requests
+based on the aggregated requests of the Pod's containers. Also see `Desired Resources` in
+<https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/>.
+"""
+
+
+def create_k8s_pod_memory_request_desired(meter: Meter) -> UpDownCounter:
+    """Memory resource requested as defined by the Pod spec"""
+    return meter.create_up_down_counter(
+        name=K8S_POD_MEMORY_REQUEST_DESIRED,
+        description="Memory resource requested as defined by the Pod spec.",
+        unit="By",
+    )
+
+
+K8S_POD_MEMORY_REQUEST_UTILIZATION: Final = "k8s.pod.memory.request.utilization"
+"""
+The ratio of Pod memory working set to its current memory request
+Instrument: gauge
+Unit: 1
+Note: The numerator is the Pod memory working set, as reported by `k8s.pod.memory.working_set`. The current memory request
+reflects the request applied at the Pod level, as reported by
+[PodStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.35/#podstatus-v1-core).
+A value of 1.0 means the Pod is using exactly its memory request. Since a memory request is a
+scheduling reservation and not a hard cap, values above 1.0 are possible and indicate the Pod is using
+more memory than requested. If the memory request is not set, this metric SHOULD NOT be emitted for that Pod.
+"""
+
+
+def create_k8s_pod_memory_request_utilization(meter: Meter, callbacks: Sequence[CallbackT] | None) -> ObservableGauge:
+    """The ratio of Pod memory working set to its current memory request"""
+    return meter.create_observable_gauge(
+        name=K8S_POD_MEMORY_REQUEST_UTILIZATION,
+        callbacks=callbacks,
+        description="The ratio of Pod memory working set to its current memory request.",
+        unit="1",
     )
 
 
@@ -1895,7 +2274,7 @@ K8S_POD_MEMORY_WORKING_SET: Final = "k8s.pod.memory.working_set"
 Pod memory working set
 Instrument: updowncounter
 Unit: By
-Note: The amount of working set memory. This includes recently accessed memory, dirty memory, and kernel memory. WorkingSetBytes is <= UsageBytes.
+Note: The amount of working set memory. This includes recently accessed memory, dirty memory, and kernel memory. On Linux, the working set is calculated by excluding inactive file-backed memory from memory usage (`inactive_file` on cgroup v2, `total_inactive_file` on cgroup v1), so active file-backed memory remains included. The kubelet uses the Pod working set when ranking Pods for eviction under memory pressure. `WorkingSetBytes` is less than or equal to `UsageBytes`.
 This metric is derived from the [MemoryStats.WorkingSetBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
 """
 
@@ -1948,8 +2327,9 @@ K8S_POD_PAGING_FAULTS: Final = "k8s.pod.paging.faults"
 Pod memory paging faults
 Instrument: counter
 Unit: {fault}
-Note: Cumulative number of major/minor page faults.
-This metric is derived from the [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) and [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API.
+Note: Cumulative number of major and minor page faults.
+The [MemoryStats.MajorPageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field of the [PodStats.Memory](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the Kubelet's stats API maps directly to `system.paging.fault.type=major`.
+The [MemoryStats.PageFaults](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#MemoryStats) field reports the total number of page faults (equivalent to `pgfault` in the cgroup `memory.stat`), with minor and major combined. The minor page faults MUST therefore be derived as `MemoryStats.PageFaults - MemoryStats.MajorPageFaults`, so that summing the metric over `system.paging.fault.type` yields the total number of page faults.
 """
 
 
@@ -2005,8 +2385,8 @@ K8S_POD_UPTIME: Final = "k8s.pod.uptime"
 The time the Pod has been running
 Instrument: gauge
 Unit: s
-Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available.
-The actual accuracy would depend on the instrumentation and operating system.
+Note: Instrumentations SHOULD use a gauge with type `double` and measure uptime in seconds as a floating point number with the highest precision available. The actual accuracy would depend on the instrumentation and operating system.
+This metric is derived from the [PodStats.StartTime](https://github.com/kubernetes/kubelet/blob/v0.35.2/pkg/apis/stats/v1alpha1/types.go#L122) field of Kubelet's stats API, where `StartTime` represents the pod sandbox creation time as [noted in the Kubelet source](https://github.com/kubernetes/kubernetes/blob/v1.36.3/pkg/kubelet/stats/cri_stats_provider.go#L299). This value resets when the node restarts, as the pod sandbox is recreated.
 """
 
 
@@ -2026,8 +2406,8 @@ Pod volume storage space available
 Instrument: updowncounter
 Unit: By
 Note: This metric is derived from the
-[VolumeStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
-of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+[VolumeStats.AvailableBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the
 Kubelet's stats API.
 """
 
@@ -2047,8 +2427,8 @@ Pod volume total capacity
 Instrument: updowncounter
 Unit: By
 Note: This metric is derived from the
-[VolumeStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
-of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+[VolumeStats.CapacityBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the
 Kubelet's stats API.
 """
 
@@ -2068,8 +2448,8 @@ The total inodes in the filesystem of the Pod's volume
 Instrument: updowncounter
 Unit: {inode}
 Note: This metric is derived from the
-[VolumeStats.Inodes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
-of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+[VolumeStats.Inodes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the
 Kubelet's stats API.
 """
 
@@ -2089,8 +2469,8 @@ The free inodes in the filesystem of the Pod's volume
 Instrument: updowncounter
 Unit: {inode}
 Note: This metric is derived from the
-[VolumeStats.InodesFree](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
-of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+[VolumeStats.InodesFree](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the
 Kubelet's stats API.
 """
 
@@ -2110,8 +2490,8 @@ The inodes used by the filesystem of the Pod's volume
 Instrument: updowncounter
 Unit: {inode}
 Note: This metric is derived from the
-[VolumeStats.InodesUsed](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
-of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+[VolumeStats.InodesUsed](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the
 Kubelet's stats API.
 
 This may not be equal to `inodes - free` because filesystem may share inodes with other filesystems.
@@ -2135,8 +2515,8 @@ Unit: By
 Note: This may not equal capacity - available.
 
 This metric is derived from the
-[VolumeStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#VolumeStats) field
-of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.33.0/pkg/apis/stats/v1alpha1#PodStats) of the
+[VolumeStats.UsedBytes](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#VolumeStats) field
+of the [PodStats](https://pkg.go.dev/k8s.io/kubelet@v0.34.0/pkg/apis/stats/v1alpha1#PodStats) of the
 Kubelet's stats API.
 """
 
@@ -2764,6 +3144,7 @@ An endpoint may be reported under multiple conditions simultaneously (e.g., both
 See [K8s EndpointConditions](https://kubernetes.io/docs/reference/kubernetes-api/service-resources/endpoint-slice-v1/) for more details.
 
 The conditions represent:
+
 - `ready`: Endpoints capable of receiving new connections.
 - `serving`: Endpoints currently handling traffic.
 - `terminating`: Endpoints that are being phased out but may still be handling existing connections.
@@ -2842,6 +3223,25 @@ def create_k8s_statefulset_desired_pods(meter: Meter) -> UpDownCounter:
     return meter.create_up_down_counter(
         name=K8S_STATEFULSET_DESIRED_PODS,
         description="Deprecated, use `k8s.statefulset.pod.desired` instead.",
+        unit="{pod}",
+    )
+
+
+K8S_STATEFULSET_POD_AVAILABLE: Final = "k8s.statefulset.pod.available"
+"""
+Total number of available replica pods (ready for at least minReadySeconds) targeted by this statefulset
+Instrument: updowncounter
+Unit: {pod}
+Note: This metric aligns with the `availableReplicas` field of the
+[K8s StatefulSetStatus](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.34/#statefulsetstatus-v1-apps).
+"""
+
+
+def create_k8s_statefulset_pod_available(meter: Meter) -> UpDownCounter:
+    """Total number of available replica pods (ready for at least minReadySeconds) targeted by this statefulset"""
+    return meter.create_up_down_counter(
+        name=K8S_STATEFULSET_POD_AVAILABLE,
+        description="Total number of available replica pods (ready for at least minReadySeconds) targeted by this statefulset.",
         unit="{pod}",
     )
 

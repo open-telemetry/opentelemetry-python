@@ -754,6 +754,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             queue_capacity_data_point.attributes["otel.component.name"].startswith("batching_log_processor/")
         )
         self.assertEqual(metrics[2].name, "otel.sdk.processor.log.queue.size")
+        self.assertEqual(metrics[2].unit, "{log_record}")
+        self.assertEqual(
+            metrics[2].description,
+            "The number of log records in the queue of a given instance of an SDK log processor.",
+        )
         queue_size_data_point = metrics[2].data.data_points[0]
         self.assertEqual(queue_size_data_point.value, 1)
         self.assertEqual(
@@ -811,6 +816,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             queue_capacity_data_point.attributes["otel.component.name"].startswith("batching_log_processor/")
         )
         self.assertEqual(metrics[2].name, "otel.sdk.processor.log.queue.size")
+        self.assertEqual(metrics[2].unit, "{log_record}")
+        self.assertEqual(
+            metrics[2].description,
+            "The number of log records in the queue of a given instance of an SDK log processor.",
+        )
         queue_size_data_point = metrics[2].data.data_points[0]
         self.assertEqual(queue_size_data_point.value, 0)
         self.assertEqual(
