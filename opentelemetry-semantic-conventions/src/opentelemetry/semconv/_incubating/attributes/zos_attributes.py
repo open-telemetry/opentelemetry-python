@@ -5,10 +5,10 @@ from typing import Final
 
 ZOS_SMF_ID: Final = "zos.smf.id"
 """
-The System Management Facility (SMF) Identifier uniquely identified a z/OS system within a SYSPLEX or mainframe environment and is used for system and performance analysis.
+Deprecated: Moved to the [OpenTelemetry Mainframe semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-mainframe).
 """
 
 ZOS_SYSPLEX_NAME: Final = "zos.sysplex.name"
 """
-The name of the SYSPLEX to which the z/OS system belongs too.
+Deprecated: Moved to the [OpenTelemetry Mainframe semantic conventions repository](https://github.com/open-telemetry/semantic-conventions-mainframe).
 """
