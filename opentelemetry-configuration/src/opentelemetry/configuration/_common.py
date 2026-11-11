@@ -9,7 +9,7 @@ import logging
 import math
 from collections.abc import Callable
 from fnmatch import fnmatchcase
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar
 from urllib.parse import urlparse
 
 from opentelemetry.configuration._exceptions import ConfigurationError
@@ -25,6 +25,10 @@ if TYPE_CHECKING:
 _logger = logging.getLogger(__name__)
 
 _CompressionT = TypeVar("_CompressionT")
+
+_DEFAULT_OTLP_HTTP_ENDPOINT = "http://localhost:4318"
+_DEFAULT_OTLP_GRPC_ENDPOINT = "http://localhost:4317"
+_DEFAULT_OTLP_EXPORT_TIMEOUT_MILLIS = 10000
 
 
 def _matches_glob(value: str, pattern: str) -> bool:
@@ -161,15 +165,28 @@ def _resolve_component(
     raise ConfigurationError(f"No {component_type} type specified in config.")
 
 
-def _resolve_export_timeout(timeout: int | None) -> float | None:
+def _resolve_otlp_http_endpoint(
+    endpoint: str | None,
+    signal: Literal["traces", "metrics", "logs"],
+) -> str:
+    """Return the configured OTLP HTTP endpoint, or the schema default for the signal."""
+    return endpoint if endpoint is not None else f"{_DEFAULT_OTLP_HTTP_ENDPOINT}/v1/{signal}"
+
+
+def _resolve_otlp_grpc_endpoint(endpoint: str | None) -> str:
+    """Return the configured OTLP gRPC endpoint, or the schema default."""
+    return endpoint if endpoint is not None else _DEFAULT_OTLP_GRPC_ENDPOINT
+
+
+def _resolve_export_timeout(timeout: int | None) -> float:
     """Convert a config export timeout in milliseconds to seconds.
 
-    Returns None if unset, letting the exporter read env vars. A value of 0
-    means no limit and maps to ``math.inf``.
+    Unset maps to the schema default of 10000 ms. A value of 0 means no limit
+    and maps to ``math.inf``.
     """
     match timeout:
         case None:
-            return None
+            return _DEFAULT_OTLP_EXPORT_TIMEOUT_MILLIS / 1000.0
         case 0:
             return math.inf
         case _:
@@ -213,16 +230,18 @@ def _map_compression(
     compression_enum: type[_CompressionT],
     *,
     allow_deflate: bool = False,
-) -> _CompressionT | None:
-    """Map a compression string to the given Compression enum value."""
-    if value is None:
-        return None
+) -> _CompressionT:
+    """Map a compression string to the given Compression enum value.
 
-    value_lower = value.lower()
+    Unset and ``"none"`` map to the enum's no-compression member.
+    """
+    value_lower = "none" if value is None else value.lower()
     supports_deflate = hasattr(compression_enum, "Deflate") or hasattr(compression_enum, "DEFLATE")
 
     if value_lower == "none":
-        return None
+        for member_name in ("NoCompression", "NONE"):
+            if (member := getattr(compression_enum, member_name, None)) is not None:
+                return member
     if value_lower == "gzip":
         for member_name in ("Gzip", "GZIP"):
             if member := getattr(compression_enum, member_name, None):

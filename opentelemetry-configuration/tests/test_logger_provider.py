@@ -565,7 +565,9 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             with open(ca_file, "wb") as file:
                 file.write(b"ca-bytes")
             config = LogRecordExporterConfig(
-                otlp_grpc=OtlpGrpcExporterConfig(tls=GrpcTlsConfig(ca_file=ca_file, insecure=False))
+                otlp_grpc=OtlpGrpcExporterConfig(
+                    endpoint="https://collector:4317", tls=GrpcTlsConfig(ca_file=ca_file, insecure=False)
+                )
             )
             _create_log_record_exporter(config)
 

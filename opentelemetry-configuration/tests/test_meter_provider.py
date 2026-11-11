@@ -333,8 +333,8 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
         _, kwargs = mock_exporter_cls.call_args
         self.assertEqual(kwargs["endpoint"], "http://localhost:4318")
         self.assertIsNone(kwargs["headers"])
-        self.assertIsNone(kwargs["timeout"])
-        self.assertIsNone(kwargs["compression"])
+        self.assertEqual(kwargs["timeout"], 10.0)
+        self.assertEqual(kwargs["compression"], mock_compression_cls.NoCompression)
 
     def test_otlp_http_zero_timeout_is_unlimited(self):
         mock_exporter_cls = MagicMock()
@@ -526,7 +526,9 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
                 file.write(b"ca-bytes")
             config = self._make_periodic_config(
                 PushMetricExporterConfig(
-                    otlp_grpc=OtlpGrpcMetricExporterConfig(tls=GrpcTlsConfig(ca_file=ca_file, insecure=False))
+                    otlp_grpc=OtlpGrpcMetricExporterConfig(
+                        endpoint="https://collector:4317", tls=GrpcTlsConfig(ca_file=ca_file, insecure=False)
+                    )
                 )
             )
             create_meter_provider(config)

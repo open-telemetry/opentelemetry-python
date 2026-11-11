@@ -13,6 +13,8 @@ from opentelemetry.configuration._common import (
     _parse_headers,
     _parse_otlp_file_output_stream,
     _resolve_export_timeout,
+    _resolve_otlp_grpc_endpoint,
+    _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
     _validate_mtls_pair,
     load_entry_point,
@@ -116,7 +118,7 @@ def _create_otlp_http_log_exporter(
 
             compression = _map_compression(config.compression, Compression, allow_deflate=True)
             return OTLPLogExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "logs"),
                 certificate_file=tls.ca_file if tls is not None else None,
                 client_key_file=tls.key_file if tls is not None else None,
                 client_certificate_file=tls.cert_file if tls is not None else None,
@@ -141,7 +143,7 @@ def _create_otlp_http_log_exporter(
 
             compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
             return JsonOTLPLogExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "logs"),
                 certificate_file=tls.ca_file if tls is not None else None,
                 client_key_file=tls.key_file if tls is not None else None,
                 client_certificate_file=tls.cert_file if tls is not None else None,
@@ -174,11 +176,12 @@ def _create_otlp_grpc_log_exporter(
 
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
+    endpoint = _resolve_otlp_grpc_endpoint(config.endpoint)
     timeout = _resolve_export_timeout(config.timeout)
 
     return OTLPLogExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
-        insecure=_grpc_insecure_from_tls(config.endpoint, config.tls),
+        endpoint=endpoint,
+        insecure=_grpc_insecure_from_tls(endpoint, config.tls),
         credentials=_grpc_credentials_from_tls(config.tls),
         headers=headers,
         timeout=timeout,

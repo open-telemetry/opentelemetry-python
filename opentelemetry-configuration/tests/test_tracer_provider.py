@@ -652,8 +652,8 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             client_key_file=None,
             client_certificate_file=None,
             headers=None,
-            timeout=None,
-            compression=None,
+            timeout=10.0,
+            compression=mock_compression_cls.NoCompression,
         )
 
     def test_otlp_http_zero_timeout_is_unlimited(self):
@@ -1022,7 +1022,11 @@ class TestCreateSpanExporterTls(unittest.TestCase):
             with open(ca_file, "wb") as file:
                 file.write(b"ca-bytes")
             config = self._make_batch_config(
-                SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(tls=GrpcTlsConfig(ca_file=ca_file)))
+                SpanExporterConfig(
+                    otlp_grpc=OtlpGrpcExporterConfig(
+                        endpoint="https://collector:4317", tls=GrpcTlsConfig(ca_file=ca_file)
+                    )
+                )
             )
             create_tracer_provider(config)
 
@@ -1034,6 +1038,81 @@ class TestCreateSpanExporterTls(unittest.TestCase):
         _, kwargs = mock_exporter_cls.call_args
         self.assertIs(kwargs["credentials"], mock_grpc.ssl_channel_credentials.return_value)
         self.assertIsNone(kwargs["insecure"])
+
+
+class TestSpanExporterAndProcessorSchemaDefaults(unittest.TestCase):
+    """Absent fields resolve to schema defaults."""
+
+    _make_batch_config = staticmethod(TestCreateSpanExporterAndProcessor._make_batch_config)
+
+    @patch.dict(
+        os.environ,
+        {
+            "OTEL_BSP_SCHEDULE_DELAY": "1",
+            "OTEL_BSP_EXPORT_TIMEOUT": "2",
+            "OTEL_BSP_MAX_QUEUE_SIZE": "3",
+            "OTEL_BSP_MAX_EXPORT_BATCH_SIZE": "3",
+        },
+    )
+    def test_batch_processor_absent_fields_do_not_read_env_vars(self):
+        provider = create_tracer_provider(self._make_batch_config(SpanExporterConfig(console={})))
+        batch_processor = provider._active_span_processor._span_processors[0]._batch_processor
+        self.assertEqual(batch_processor._schedule_delay_millis, 5000)
+        self.assertEqual(batch_processor._export_timeout_millis, 30000)
+        self.assertEqual(batch_processor._max_queue_size, 2048)
+        self.assertEqual(batch_processor._max_export_batch_size, 512)
+        provider.shutdown()
+
+    def test_otlp_http_absent_fields_use_schema_defaults(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+        mock_http_module = MagicMock()
+        mock_http_module.Compression = mock_compression_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            create_tracer_provider(self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig())))
+
+        mock_exporter_cls.assert_called_once_with(
+            endpoint="http://localhost:4318/v1/traces",
+            certificate_file=None,
+            client_key_file=None,
+            client_certificate_file=None,
+            headers=None,
+            timeout=10.0,
+            compression=mock_compression_cls.NoCompression,
+        )
+
+    def test_otlp_grpc_absent_fields_use_schema_defaults(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc_module = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "grpc": mock_grpc_module,
+                "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module,
+            },
+        ):
+            create_tracer_provider(self._make_batch_config(SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig())))
+
+        mock_exporter_cls.assert_called_once_with(
+            endpoint="http://localhost:4317",
+            insecure=True,
+            credentials=None,
+            headers=None,
+            timeout=10.0,
+            compression=mock_grpc_module.Compression.NoCompression,
+        )
 
 
 class TestCreateSpanLimits(unittest.TestCase):
@@ -1284,6 +1363,12 @@ class TestGlobalAttributeLimitsFallback(unittest.TestCase):
             provider = create_tracer_provider(
                 TracerProviderConfig(processors=[]),
             )
+        self.assertEqual(provider._span_limits.max_attributes, 128)
         self.assertEqual(provider._span_limits.max_span_attributes, 128)
         self.assertIsNone(provider._span_limits.max_attribute_length)
         self.assertIsNone(provider._span_limits.max_span_attribute_length)
+
+    @patch.dict(os.environ, {"OTEL_ATTRIBUTE_COUNT_LIMIT": "not-a-number"})
+    def test_global_limits_absent_ignores_invalid_env_var(self):
+        provider = create_tracer_provider(TracerProviderConfig(processors=[]))
+        self.assertEqual(provider._span_limits.max_attributes, 128)
