@@ -14,7 +14,7 @@ from collections.abc import (
 )
 from typing import Any, TypeVar, overload
 
-from typing_extensions import deprecated
+from typing_extensions import Self, deprecated
 
 _T = TypeVar("_T")
 _KT = TypeVar("_KT")
@@ -29,14 +29,14 @@ def ns_to_iso_str(nanoseconds: int) -> str:
 
 def get_dict_as_key(labels: Mapping[str, Any]) -> tuple[tuple[str, Any], ...]:
     """Converts a dict to be used as a unique key"""
-    return tuple(
-        sorted(
-            map(
-                lambda kv: (kv[0], tuple(kv[1])) if isinstance(kv[1], list) else kv,
-                labels.items(),
-            )
-        )
-    )
+    items: list[tuple[str, Any]] = []
+    for key, value in labels.items():
+        raw_value: Any = value
+        if isinstance(value, list):
+            items.append((key, tuple(raw_value)))
+        else:
+            items.append((key, value))
+    return tuple(sorted(items))
 
 
 class BoundedList(Sequence[_T]):
@@ -46,15 +46,13 @@ class BoundedList(Sequence[_T]):
     not enough room.
     """
 
-    dropped: int
-
     def __init__(self, maxlen: int | None):
         self.dropped: int = 0
         self._dq: deque[_T] = deque(maxlen=maxlen)
-        self._lock: threading.Lock = threading.Lock()
+        self._lock = threading.Lock()
 
     def __deepcopy__(self, memo: dict[int, Any]) -> "BoundedList[_T]":
-        copy_ = BoundedList(0)
+        copy_: BoundedList[_T] = BoundedList(0)
         memo[id(self)] = copy_
         with self._lock:
             copy_.dropped = self.dropped
@@ -112,19 +110,16 @@ class BoundedDict(MutableMapping[_KT, _VT]):
     added.
     """
 
-    dropped: int
-    maxlen: int | None
-
     def __init__(self, maxlen: int | None):
-        if maxlen is not None:
-            if not isinstance(maxlen, int):
+        if not isinstance(maxlen, int):
+            if maxlen is not None:
                 raise ValueError
-            if maxlen < 0:
-                raise ValueError
+        elif maxlen < 0:
+            raise ValueError
         self.maxlen: int | None = maxlen
         self.dropped: int = 0
         self._dict: dict[_KT, _VT] = {}
-        self._lock: threading.Lock = threading.Lock()
+        self._lock = threading.Lock()
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
@@ -157,10 +152,10 @@ class BoundedDict(MutableMapping[_KT, _VT]):
 
     @classmethod
     def from_map(
-        cls: type["BoundedDict[_KT, _VT]"],
+        cls,
         maxlen: int | None,
         mapping: Mapping[_KT, _VT],
-    ) -> "BoundedDict[_KT, _VT]":
+    ) -> Self:
         mapping = dict(mapping)
         bounded_dict = cls(maxlen)
         for key, value in mapping.items():
