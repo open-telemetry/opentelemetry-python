@@ -905,6 +905,30 @@ class TestCreateSpanExporterTls(unittest.TestCase):
             processors=[SpanProcessorConfig(batch=BatchSpanProcessorConfig(exporter=exporter_config))]
         )
 
+    @patch.dict(os.environ, {"OTEL_EXPORTER_OTLP_INSECURE": "true", "OTEL_EXPORTER_OTLP_TRACES_INSECURE": "true"})
+    def test_otlp_grpc_secure_default_ignores_insecure_env(self):
+        for tls in (None, GrpcTlsConfig()):
+            mock_module = MagicMock()
+            with (
+                self.subTest(tls=tls),
+                patch.dict(
+                    sys.modules,
+                    {
+                        "grpc": MagicMock(),
+                        "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module,
+                    },
+                ),
+            ):
+                mock_exporter_cls = mock_module.OTLPSpanExporter
+                config = self._make_batch_config(
+                    SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(endpoint="collector:4317", tls=tls))
+                )
+                provider = create_tracer_provider(config)
+                try:
+                    self.assertIs(mock_exporter_cls.call_args.kwargs["insecure"], False)
+                finally:
+                    provider.shutdown()
+
     def test_otlp_http_tls_files_passed(self):
         for encoding in (None, OtlpHttpEncoding.protobuf, OtlpHttpEncoding.json):
             with self.subTest(encoding=encoding):
@@ -1037,7 +1061,7 @@ class TestCreateSpanExporterTls(unittest.TestCase):
         )
         _, kwargs = mock_exporter_cls.call_args
         self.assertIs(kwargs["credentials"], mock_grpc.ssl_channel_credentials.return_value)
-        self.assertIsNone(kwargs["insecure"])
+        self.assertFalse(kwargs["insecure"])
 
 
 class TestSpanExporterAndProcessorSchemaDefaults(unittest.TestCase):

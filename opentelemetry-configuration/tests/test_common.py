@@ -558,12 +558,16 @@ class TestGrpcInsecureFromTls(unittest.TestCase):
             ("http://collector:4317", None, True),
             ("collector:4317", GrpcTls(insecure=False), False),
             ("collector:4317", GrpcTls(insecure=True), True),
-            ("collector:4317", GrpcTls(), None),
-            ("collector:4317", None, None),
-            ("https://collector:4317", GrpcTls(insecure=True), True),
+            ("collector:4317", GrpcTls(), False),
+            ("collector:4317", None, False),
+            ("https://collector:4317", GrpcTls(insecure=True), False),
             ("https://collector:4317", GrpcTls(insecure=False), False),
+            ("https://collector:4317", GrpcTls(), False),
+            ("https://collector:4317", None, False),
             (None, GrpcTls(insecure=False), False),
-            (None, None, None),
+            (None, GrpcTls(insecure=True), True),
+            (None, GrpcTls(), False),
+            (None, None, False),
         ]
         for endpoint, tls, expected in cases:
             with self.subTest(endpoint=endpoint, tls=tls):

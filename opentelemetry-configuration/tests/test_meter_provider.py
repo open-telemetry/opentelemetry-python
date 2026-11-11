@@ -505,6 +505,30 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
         _, kwargs = mock_exporter_cls.call_args
         self.assertTrue(kwargs["insecure"])
 
+    @patch.dict(os.environ, {"OTEL_EXPORTER_OTLP_INSECURE": "true", "OTEL_EXPORTER_OTLP_METRICS_INSECURE": "true"})
+    def test_otlp_grpc_secure_default_ignores_insecure_env(self):
+        for tls in (None, GrpcTlsConfig()):
+            mock_module = MagicMock()
+            with (
+                self.subTest(tls=tls),
+                patch.dict(
+                    sys.modules,
+                    {
+                        "grpc": MagicMock(),
+                        "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": mock_module,
+                    },
+                ),
+            ):
+                mock_exporter_cls = mock_module.OTLPMetricExporter
+                config = self._make_periodic_config(
+                    PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(endpoint="collector:4317", tls=tls))
+                )
+                provider = create_meter_provider(config)
+                try:
+                    self.assertIs(mock_exporter_cls.call_args.kwargs["insecure"], False)
+                finally:
+                    provider.shutdown()
+
     def test_otlp_grpc_tls_files_build_credentials(self):
         mock_exporter_cls = MagicMock()
         mock_grpc = MagicMock()

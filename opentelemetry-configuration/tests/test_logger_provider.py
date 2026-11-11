@@ -210,7 +210,7 @@ class TestCreateLogRecordProcessors(unittest.TestCase):
         )
 
 
-class TestCreateLogRecordExporters(unittest.TestCase):
+class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-many-public-methods
     def test_console_exporter(self):
         config = LogRecordExporterConfig(console={})
         exporter = _create_log_record_exporter(config)
@@ -544,6 +544,28 @@ class TestCreateLogRecordExporters(unittest.TestCase):
             _create_log_record_exporter(config)
 
         self.assertTrue(mock_exporter_cls.call_args.kwargs["insecure"])
+
+    @patch.dict(os.environ, {"OTEL_EXPORTER_OTLP_INSECURE": "true", "OTEL_EXPORTER_OTLP_LOGS_INSECURE": "true"})
+    def test_otlp_grpc_secure_default_ignores_insecure_env(self):
+        for tls in (None, GrpcTlsConfig()):
+            mock_module = MagicMock()
+            with (
+                self.subTest(tls=tls),
+                patch.dict(
+                    sys.modules,
+                    {
+                        "grpc": MagicMock(),
+                        "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_module,
+                    },
+                ),
+            ):
+                mock_exporter_cls = mock_module.OTLPLogExporter
+                config = LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(endpoint="collector:4317", tls=tls))
+                exporter = _create_log_record_exporter(config)
+                try:
+                    self.assertIs(mock_exporter_cls.call_args.kwargs["insecure"], False)
+                finally:
+                    exporter.shutdown()
 
     def test_otlp_grpc_exporter_tls(self):
         mock_exporter_cls = MagicMock()
