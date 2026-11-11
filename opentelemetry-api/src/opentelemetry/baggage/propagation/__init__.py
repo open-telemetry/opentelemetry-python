@@ -20,9 +20,16 @@ _logger = getLogger(__name__)
 
 def _filter_valid_entries(
     entries: Iterable[str],
+    max_pair_length: int,
 ) -> Iterator[str]:
     for entry in entries:
         if not entry:
+            continue
+        if len(entry) > max_pair_length:
+            _logger.warning(
+                "Baggage pair exceeded the maximum allowed length (%s) and will be dropped.",
+                max_pair_length,
+            )
             continue
         if not entry.isascii():
             _logger.warning(
@@ -44,7 +51,9 @@ def _apply_baggage_limits(
     Logs warnings when entries are dropped.
     """
     length = 0
-    for index, entry in enumerate(_filter_valid_entries(entries)):
+    for index, entry in enumerate(
+        _filter_valid_entries(entries, max_pair_length=max_header_length)
+    ):
         if index >= max_pairs:
             _logger.warning("Baggage exceeded the maximum number of list-members")
             return

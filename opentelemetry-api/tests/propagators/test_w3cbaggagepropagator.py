@@ -183,7 +183,7 @@ class TestW3CBaggagePropagator(TestCase):
 
     def test_extract_large_member(self):
         """Extract should preserve individual entries larger than 4096 bytes if total limit allows."""
-        long_value = "s" * 4096
+        long_value = "s" * 8000
         header = f"key1=value1,key2={long_value},key3=value3"
         expected = {"key1": "value1", "key2": long_value, "key3": "value3"}
         self.assertEqual(self._extract(header), expected)
@@ -311,7 +311,7 @@ class TestW3CBaggagePropagator(TestCase):
 
     def test_inject_large_member(self):
         """Inject should preserve individual entries larger than 4096 bytes."""
-        long_value = "x" * 4096
+        long_value = "x" * 8000
         values = {"key1": "val1", "big": long_value, "key3": "val3"}
         ctx = get_current()
         for key, val in values.items():
@@ -343,7 +343,7 @@ class TestW3CBaggagePropagator(TestCase):
         self.assertLessEqual(len(baggage_str), self.propagator._MAX_HEADER_LENGTH)
 
     def test_inject_empty_after_first_exceeds_total(self):
-        """If the first entry exceeds the total max length, nothing should be injected."""
+        """If the first entry exceeds the total max length, it should be dropped."""
         long_value = "x" * self.propagator._MAX_HEADER_LENGTH
         values = {"big1": long_value}
         ctx = get_current()
@@ -353,10 +353,22 @@ class TestW3CBaggagePropagator(TestCase):
         with self.assertLogs(level=WARNING) as warning:
             self.propagator.inject(output, context=ctx)
             self.assertIn(
-                "exceeded the maximum number of bytes per baggage-string",
+                "Baggage pair exceeded the maximum allowed length (8192) and will be dropped.",
                 warning.output[0],
             )
         self.assertNotIn("baggage", output)
+
+    def test_extract_pair_exceeds_max_pair_length(self):
+        """Extract should drop individual entries that exceed the maximum pair length (8192)."""
+        long_value = "s" * self.propagator._MAX_HEADER_LENGTH
+        header = f"key1=value1,key2={long_value},key3=value3"
+        expected = {"key1": "value1", "key3": "value3"}
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(self._extract(header), expected)
+            self.assertIn(
+                "Baggage pair exceeded the maximum allowed length (8192) and will be dropped.",
+                warning.output[0],
+            )
 
     @patch("opentelemetry.baggage._BAGGAGE_KEY", new="abc")
     def test_inject_extract(self):
