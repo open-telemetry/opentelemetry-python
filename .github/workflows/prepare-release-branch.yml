@@ -52,9 +52,8 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
-      - name: Create release branch
+      - name: Set environment variables
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
           if [[ -z $PRERELEASE_VERSION ]]; then
@@ -79,12 +78,16 @@ jobs:
             exit 1
           fi
 
-          gh auth setup-git
-          git push origin HEAD:$release_branch_name
-
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
+
+      - name: Create release branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh auth setup-git
+          git push origin HEAD:$RELEASE_BRANCH_NAME
 
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
