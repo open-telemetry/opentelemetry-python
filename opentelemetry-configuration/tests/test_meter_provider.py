@@ -46,9 +46,7 @@ from opentelemetry.configuration.models import (
     ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
 )
 from opentelemetry.configuration.models import (
-    ExplicitBucketHistogramAggregation as ExplicitBucketConfig,
-)
-from opentelemetry.configuration.models import (
+    ExperimentalViewMatchingMode,
     ExporterDefaultHistogramAggregation,
     ExporterTemporalityPreference,
     IncludeExclude,
@@ -56,6 +54,9 @@ from opentelemetry.configuration.models import (
     OtlpHttpEncoding,
     ViewSelector,
     ViewStream,
+)
+from opentelemetry.configuration.models import (
+    ExplicitBucketHistogramAggregation as ExplicitBucketConfig,
 )
 from opentelemetry.configuration.models import (
     GrpcTls as GrpcTlsConfig,
@@ -165,6 +166,12 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
         reader = provider._metric_readers[0]
         self.assertIsInstance(reader, PeriodicExportingMetricReader)
         self.assertEqual(reader._export_interval_millis, 60000.0)
+
+    def test_view_matching_mode_warns(self):
+        config = MeterProviderConfig(readers=[], view_matching_mode_development=ExperimentalViewMatchingMode.composable)
+        with self.assertLogs("opentelemetry.configuration._meter_provider", level="WARNING") as logs:
+            create_meter_provider(config)
+        self.assertIn("view_matching_mode/development is not yet supported", logs.output[0])
 
     def test_configure_none_does_not_set_global(self):
         original = __import__("opentelemetry.metrics", fromlist=["get_meter_provider"]).get_meter_provider()
@@ -661,6 +668,66 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
                 create_meter_provider(config)
         self.assertIn("output_stream", str(ctx.exception))
         mock_exporter_cls.assert_not_called()
+
+    def test_otlp_http_max_request_size_passed_through(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter": mock_module,
+            },
+        ):
+            create_meter_provider(
+                self._make_periodic_config(
+                    PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(max_request_size=1024))
+                )
+            )
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["max_request_size"], 1024)
+
+    def test_otlp_unsupported_size_limits_warn(self):
+        modules = {
+            "grpc": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http.metric_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+            "opentelemetry.exporter.otlp.json.http.metric_exporter": MagicMock(),
+        }
+        cases = [
+            (
+                "grpc max_request_size",
+                PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(max_request_size=1024)),
+                "max_request_size is not yet supported for otlp_grpc metric exporter",
+            ),
+            (
+                "grpc max_response_size",
+                PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_grpc metric exporter",
+            ),
+            (
+                "http max_response_size",
+                PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_http metric exporter",
+            ),
+            (
+                "http json max_request_size",
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
+                ),
+                "max_request_size is not yet supported for otlp_http JSON metric exporter",
+            ),
+        ]
+        for name, exporter_config, expected in cases:
+            with (
+                self.subTest(name),
+                patch.dict(sys.modules, modules),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                create_meter_provider(self._make_periodic_config(exporter_config))
+                self.assertTrue(any(expected in message for message in logs.output), logs.output)
 
 
 class TestCreatePullMetricReaders(unittest.TestCase):
