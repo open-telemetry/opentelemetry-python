@@ -14,6 +14,7 @@ from opentelemetry.exporter.otlp.common._exporter_metrics import (
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
 )
+from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
 from opentelemetry.semconv.attributes.server_attributes import (
     SERVER_ADDRESS,
     SERVER_PORT,
@@ -120,3 +121,123 @@ class TestExporterMetrics(unittest.TestCase):
                 self.assertEqual(metrics._standard_attrs[SERVER_ADDRESS], "otlp.example.com")
                 # pylint: disable-next=protected-access
                 self.assertEqual(metrics._standard_attrs[SERVER_PORT], expected_port)
+
+    def test_rejected_items_are_counted_as_failed(self):
+        meter_provider = Mock()
+        meter_provider.get_meter.return_value = Mock()
+        metrics = ExporterMetrics(
+            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+            "traces",
+            "http://localhost:4318/v1/traces",
+            meter_provider,
+        )
+        # pylint: disable-next=protected-access
+        metrics._exported = Mock()
+        # pylint: disable-next=protected-access
+        standard_attrs = metrics._standard_attrs
+
+        with metrics.export_operation(10) as result:
+            result.rejected = 4
+
+        # pylint: disable-next=protected-access
+        self.assertEqual(
+            # pylint: disable-next=protected-access
+            [call.args for call in metrics._exported.add.call_args_list],
+            [
+                (6, standard_attrs),
+                (4, {**standard_attrs, ERROR_TYPE: "rejected"}),
+            ],
+        )
+
+    def test_an_export_with_nothing_rejected_is_counted_once(self):
+        meter_provider = Mock()
+        meter_provider.get_meter.return_value = Mock()
+        metrics = ExporterMetrics(
+            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+            "traces",
+            "http://localhost:4318/v1/traces",
+            meter_provider,
+        )
+        # pylint: disable-next=protected-access
+        metrics._exported = Mock()
+
+        with metrics.export_operation(10):
+            pass
+
+        self.assertEqual(
+            # pylint: disable-next=protected-access
+            [call.args for call in metrics._exported.add.call_args_list],
+            # pylint: disable-next=protected-access
+            [(10, metrics._standard_attrs)],
+        )
+
+    def test_a_failed_export_counts_every_item_as_failed(self):
+        meter_provider = Mock()
+        meter_provider.get_meter.return_value = Mock()
+        metrics = ExporterMetrics(
+            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+            "traces",
+            "http://localhost:4318/v1/traces",
+            meter_provider,
+        )
+        # pylint: disable-next=protected-access
+        metrics._exported = Mock()
+
+        with metrics.export_operation(10) as result:
+            result.rejected = 4
+            result.error = RuntimeError("boom")
+
+        self.assertEqual(
+            # pylint: disable-next=protected-access
+            [call.args for call in metrics._exported.add.call_args_list],
+            # pylint: disable-next=protected-access
+            [(10, {**metrics._standard_attrs, ERROR_TYPE: "RuntimeError"})],
+        )
+
+    def test_a_rejected_count_above_the_batch_size_is_clamped(self):
+        meter_provider = Mock()
+        meter_provider.get_meter.return_value = Mock()
+        metrics = ExporterMetrics(
+            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+            "traces",
+            "http://localhost:4318/v1/traces",
+            meter_provider,
+        )
+        # pylint: disable-next=protected-access
+        metrics._exported = Mock()
+        # pylint: disable-next=protected-access
+        standard_attrs = metrics._standard_attrs
+
+        with metrics.export_operation(3) as result:
+            result.rejected = 99
+
+        self.assertEqual(
+            # pylint: disable-next=protected-access
+            [call.args for call in metrics._exported.add.call_args_list],
+            [
+                (0, standard_attrs),
+                (3, {**standard_attrs, ERROR_TYPE: "rejected"}),
+            ],
+        )
+
+    def test_a_negative_rejected_count_is_ignored(self):
+        meter_provider = Mock()
+        meter_provider.get_meter.return_value = Mock()
+        metrics = ExporterMetrics(
+            OtelComponentTypeValues.OTLP_HTTP_SPAN_EXPORTER,
+            "traces",
+            "http://localhost:4318/v1/traces",
+            meter_provider,
+        )
+        # pylint: disable-next=protected-access
+        metrics._exported = Mock()
+
+        with metrics.export_operation(5) as result:
+            result.rejected = -1
+
+        self.assertEqual(
+            # pylint: disable-next=protected-access
+            [call.args for call in metrics._exported.add.call_args_list],
+            # pylint: disable-next=protected-access
+            [(5, metrics._standard_attrs)],
+        )
