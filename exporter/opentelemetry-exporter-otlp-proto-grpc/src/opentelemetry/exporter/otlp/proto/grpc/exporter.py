@@ -47,12 +47,11 @@ from grpc import (
 from opentelemetry.exporter.otlp.common._exporter_metrics import (
     create_exporter_metrics,
 )
+from opentelemetry.exporter.otlp.common._partial_success import (
+    _report_partial_success,
+)
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
-)
-from opentelemetry.exporter.otlp.proto.common._internal._partial_success import (
-    _partial_success_detail,
-    _warning_format,
 )
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_CHANNEL_OPTIONS,
@@ -417,6 +416,16 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
     ) -> int:
         pass
 
+    # pylint: disable-next=no-self-use
+    def _rejected_and_error_message(self, response: Any) -> tuple[int, str]:
+        """Read the partial success an export response reports.
+
+        :param response: The response the export service returned.
+        :returns: The rejected count and the error message, which are zero and
+            empty for a service whose response carries no partial success.
+        """
+        return 0, ""
+
     def _export(
         self,
         data: SDKDataT,
@@ -440,13 +449,14 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                         timeout=deadline_sec - time(),
                     )
                     try:
-                        detail = _partial_success_detail(response)
+                        rejected, error_message = self._rejected_and_error_message(response)
                     # pylint: disable-next=broad-exception-caught
                     except Exception as error:
                         logger.debug("Failed to read the OTLP export response: %s", error)
-                        detail = None
-                    if detail is not None:
-                        logger.warning(_warning_format(self._exporting), self._endpoint, detail)
+                        rejected, error_message = 0, ""
+                    result.rejected = _report_partial_success(
+                        logger, self._exporting, self._endpoint, rejected, error_message
+                    )
                     return self._result.SUCCESS  # type: ignore [reportReturnType]
                 except RpcError as error:
                     retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]

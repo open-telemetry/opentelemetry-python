@@ -27,9 +27,12 @@ def get_tracer_with_processor(span_processor_class):
     return tracer
 
 
+_RESPONSE = ExportTraceServiceResponse()
+
+
 class MockTraceServiceStub:
     def __init__(self, channel):
-        self.Export = lambda *args, **kwargs: ExportTraceServiceResponse()
+        self.Export = lambda *args, **kwargs: _RESPONSE
 
 
 @patch(

@@ -22,6 +22,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
+    ExportTraceServiceResponse,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceStub,
@@ -133,6 +134,17 @@ class OTLPSpanExporter(
 
     def _count_data(self, data: Sequence[ReadableSpan]):
         return len(data)
+
+    def _rejected_and_error_message(self, response: ExportTraceServiceResponse | None) -> tuple[int, str]:
+        """Read the partial success an export response reports.
+
+        :param response: The response the trace service returned.
+        :returns: The number of rejected spans and the error message the server
+            sent.
+        """
+        if response is None:
+            return 0, ""
+        return response.partial_success.rejected_spans, response.partial_success.error_message
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)

@@ -45,7 +45,7 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceStub,
     add_TraceServiceServicer_to_server,
 )
-from opentelemetry.sdk import _shared_internal
+from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_GRPC_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -94,6 +94,11 @@ class OTLPSpanExporterForTesting(
 
     def _count_data(self, data: Sequence[ReadableSpan]) -> int:
         return len(data)
+
+    def _rejected_and_error_message(self, response: ExportTraceServiceResponse | None) -> tuple[int, str]:
+        if response is None:
+            return 0, ""
+        return response.partial_success.rejected_spans, response.partial_success.error_message
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
@@ -194,7 +199,7 @@ class TestOTLPExporterMixin(TestCase):
             ),
         )
         for log_filter in _exporter_logger.filters:
-            if isinstance(log_filter, _shared_internal.DuplicateFilter):
+            if isinstance(log_filter, DuplicateFilter):
                 log_filter.__dict__.pop("last_log", None)
 
     def tearDown(self):
@@ -440,7 +445,7 @@ class TestOTLPExporterMixin(TestCase):
 
         self.assertEqual(
             warning.records[0].getMessage(),
-            "OTLP partial success exporting traces to localhost:4317: the server rejected 2 spans: quota exceeded",
+            "OTLP partial success exporting traces to localhost:4317 (rejected=2): quota exceeded",
         )
 
     def test_partial_success_warning_without_rejected_spans_is_logged(self):
@@ -457,59 +462,30 @@ class TestOTLPExporterMixin(TestCase):
 
         self.assertEqual(
             warning.records[0].getMessage(),
-            "OTLP partial success exporting traces to localhost:4317: deprecated attribute in use",
+            "OTLP partial success exporting traces to localhost:4317 (rejected=0): deprecated attribute in use",
         )
 
-    def test_partial_success_of_a_second_signal_survives_the_duplicate_filter(self):
+    def test_a_negative_rejected_count_is_not_reported(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(
                 StatusCode.OK,
-                optional_partial_success_message="quota exceeded",
+                optional_rejected_spans=-1,
             ),
             self.server,
         )
 
-        with patch.object(_shared_internal, "time", Mock(time=lambda: 0.0)):
-            with self.assertLogs(level=WARNING) as warning:
-                self.assertEqual(self.exporter.export([self.span]), SpanExportResult.SUCCESS)
-                with patch.object(OTLPSpanExporterForTesting, "_exporting", property(lambda _: "metrics")):
-                    self.assertEqual(self.exporter.export([self.span]), SpanExportResult.SUCCESS)
+        with self.assertNoLogs(level=WARNING):
+            self.assertEqual(self.exporter.export([self.span]), SpanExportResult.SUCCESS)
 
-        self.assertEqual(
-            [record.getMessage() for record in warning.records],
-            [
-                "OTLP partial success exporting traces to localhost:4317: quota exceeded",
-                "OTLP partial success exporting metrics to localhost:4317: quota exceeded",
-            ],
-        )
-
-    def test_repeated_partial_success_of_one_signal_is_filtered_as_a_duplicate(self):
-        add_TraceServiceServicer_to_server(
-            TraceServiceServicerWithExportParams(
-                StatusCode.OK,
-                optional_rejected_spans=2,
-            ),
-            self.server,
-        )
-
-        with patch.object(_shared_internal, "time", Mock(time=lambda: 0.0)):
-            with self.assertLogs(level=WARNING) as warning:
-                self.assertEqual(self.exporter.export([self.span]), SpanExportResult.SUCCESS)
-                self.assertEqual(self.exporter.export([self.span]), SpanExportResult.SUCCESS)
-
-        self.assertEqual(
-            [record.getMessage() for record in warning.records],
-            ["OTLP partial success exporting traces to localhost:4317: the server rejected 2 spans"],
-        )
-
-    def test_a_response_the_helper_cannot_read_does_not_fail_the_export(self):
+    def test_a_response_the_exporter_cannot_read_does_not_fail_the_export(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerWithExportParams(StatusCode.OK),
             self.server,
         )
 
-        with patch(
-            "opentelemetry.exporter.otlp.proto.grpc.exporter._partial_success_detail",
+        with patch.object(
+            OTLPSpanExporterForTesting,
+            "_rejected_and_error_message",
             side_effect=AttributeError("error_message"),
         ):
             with self.assertLogs(_exporter_logger, DEBUG) as logs:
@@ -517,6 +493,45 @@ class TestOTLPExporterMixin(TestCase):
 
         self.assertEqual([record.levelno for record in logs.records], [DEBUG])
         self.assertIn("Failed to read the OTLP export response", logs.records[0].getMessage())
+
+    def test_a_subclass_that_reads_no_partial_success_reports_nothing(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerWithExportParams(
+                StatusCode.OK,
+                optional_rejected_spans=2,
+                optional_partial_success_message="quota exceeded",
+            ),
+            self.server,
+        )
+
+        with patch.object(
+            OTLPSpanExporterForTesting,
+            "_rejected_and_error_message",
+            OTLPExporterMixin._rejected_and_error_message,
+        ):
+            with self.assertNoLogs(level=WARNING):
+                self.assertEqual(self.exporter.export([self.span]), SpanExportResult.SUCCESS)
+
+    def test_rejected_spans_are_counted_as_failed(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerWithExportParams(
+                StatusCode.OK,
+                optional_rejected_spans=2,
+            ),
+            self.server,
+        )
+        # pylint: disable-next=protected-access
+        self.exporter._metrics = Mock()
+        export_result = Mock(rejected=0)
+        # pylint: disable-next=protected-access
+        self.exporter._metrics.export_operation.return_value.__enter__ = Mock(return_value=export_result)
+        # pylint: disable-next=protected-access
+        self.exporter._metrics.export_operation.return_value.__exit__ = Mock(return_value=False)
+
+        with self.assertLogs(level=WARNING):
+            self.assertEqual(self.exporter.export([self.span]), SpanExportResult.SUCCESS)
+
+        self.assertEqual(export_result.rejected, 2)
 
     def test_a_stub_returning_a_test_double_does_not_fail_the_export(self):
         # pylint: disable=protected-access
