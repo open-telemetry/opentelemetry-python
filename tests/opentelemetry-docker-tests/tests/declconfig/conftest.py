@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 from collections.abc import Iterator
 from functools import cache
 from pathlib import Path
@@ -19,11 +20,15 @@ from testcontainers.core.wait_strategies import HttpWaitStrategy
 
 from opentelemetry.test._otlp_test_server import OtlpProtoTestServer
 
+from ._certs import write_tls_certs
+
 collect_ignore_glob = ["scenarios/*"]
 
 _DOCKER_COMPOSE_FILE = Path(__file__).parent / "docker-compose.yml"
 _DEFAULT_COLLECTOR_CONFIG = Path(__file__).parent / "collector-config.yaml"
 _COLLECTOR_CONFIG_PATH = "/etc/otelcol/collector-config.yaml"
+_CERTS_DIR = Path(__file__).parent / "certs"
+_COLLECTOR_CERTS_PATH = "/etc/otelcol/certs"
 _HEALTH_CHECK_PORT = 13133
 _ENDPOINT_PORT_RE = re.compile(r":(\d+)$")
 _ROUTING_PROBE_TIMEOUT = 2.0
@@ -57,8 +62,8 @@ def _get_receiver_ports(collector_config: Path) -> list[int]:
     return sorted(ports)
 
 
-def _make_collector(collector_config: Path, sink_endpoint: str) -> DockerContainer:
-    return (
+def _make_collector(collector_config: Path, sink_endpoint: str, certs_dir: Path | None = None) -> DockerContainer:
+    container = (
         DockerContainer(_get_collector_image())
         .with_volume_mapping(collector_config, _COLLECTOR_CONFIG_PATH)
         .with_command(f"--config={_COLLECTOR_CONFIG_PATH}")
@@ -67,6 +72,9 @@ def _make_collector(collector_config: Path, sink_endpoint: str) -> DockerContain
         .with_exposed_ports(_HEALTH_CHECK_PORT)
         .waiting_for(HttpWaitStrategy(_HEALTH_CHECK_PORT).for_status_code(200))
     )
+    if certs_dir is not None:
+        container.with_volume_mapping(str(certs_dir), _COLLECTOR_CERTS_PATH, "ro")
+    return container
 
 
 def _get_container_ip(container: DockerContainer) -> str:
@@ -109,6 +117,20 @@ def collector_ips_routable() -> bool:
     return routable
 
 
+@pytest.fixture(scope="session")
+def tls_certs_dir(worker_id: str) -> Path:
+    """Generate a CA, a server and a client certificate for this worker's TLS scenarios.
+
+    The collector sees them under ``/etc/otelcol/certs``, the app under
+    ``${TLS_CERTS_DIR}``. Each xdist worker gets its own directory.
+    """
+    certs_dir = _CERTS_DIR / worker_id
+    shutil.rmtree(certs_dir, ignore_errors=True)
+    certs_dir.mkdir(parents=True)
+    write_tls_certs(certs_dir)
+    return certs_dir
+
+
 @pytest.fixture
 def otlp_sink() -> Iterator[OtlpProtoTestServer]:
     """Host side OTLP receiver the scenario's collector forwards to."""
@@ -117,7 +139,12 @@ def otlp_sink() -> Iterator[OtlpProtoTestServer]:
 
 
 @pytest.fixture
-def collector(scenario: Path, otlp_sink: OtlpProtoTestServer, collector_ips_routable: bool) -> Iterator[str]:
+def collector(
+    scenario: Path,
+    otlp_sink: OtlpProtoTestServer,
+    collector_ips_routable: bool,
+    tls_certs_dir: Path,
+) -> Iterator[str]:
     """Start a collector with the scenario's config, or the default one, and yield its host.
 
     Scenario configs reach its receivers as
@@ -129,7 +156,7 @@ def collector(scenario: Path, otlp_sink: OtlpProtoTestServer, collector_ips_rout
     collector_config = scenario / "collector-config.yaml"
     if not collector_config.exists():
         collector_config = _DEFAULT_COLLECTOR_CONFIG
-    container = _make_collector(collector_config, f"http://host.docker.internal:{otlp_sink.port}")
+    container = _make_collector(collector_config, f"http://host.docker.internal:{otlp_sink.port}", tls_certs_dir)
     if not collector_ips_routable:
         for port in _get_receiver_ports(collector_config):
             container.with_bind_ports(port, port)
