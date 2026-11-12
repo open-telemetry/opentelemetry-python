@@ -216,7 +216,6 @@ class TestLastValueAggregation(TestCase):
             _default_reservoir_factory(_LastValueAggregation),
             instrument_is_synchronous=True,
         )
-        self.assertIsNone(last_value_aggregation._start_time_unix_nano)
 
         last_value_aggregation.aggregate(measurement(1))
         self.assertEqual(last_value_aggregation._value, 1)
@@ -285,15 +284,22 @@ class TestLastValueAggregation(TestCase):
             Mock(),
             _default_reservoir_factory(_LastValueAggregation),
             instrument_is_synchronous=True,
+            start_time_unix_nano=1000,
         )
-        self.assertIsNone(last_value_aggregation._start_time_unix_nano)
 
         last_value_aggregation.aggregate(measurement(1))
 
         number_data_point = last_value_aggregation.collect(AggregationTemporality.DELTA, 1)
         self.assertEqual(number_data_point.value, 1)
+        self.assertEqual(number_data_point.start_time_unix_nano, 1000)
 
         self.assertIsNone(last_value_aggregation.collect(AggregationTemporality.DELTA, 2))
+
+        last_value_aggregation.aggregate(measurement(2))
+
+        second_number_data_point = last_value_aggregation.collect(AggregationTemporality.DELTA, 3)
+        self.assertEqual(second_number_data_point.value, 2)
+        self.assertEqual(second_number_data_point.start_time_unix_nano, 2)
 
     def test_collect_asynchronous_resets_value(self):
         last_value_aggregation = _LastValueAggregation(

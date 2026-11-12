@@ -370,7 +370,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         attributes: Attributes,
         reservoir_builder: ExemplarReservoirBuilder,
         instrument_is_synchronous: bool,
-        start_time_unix_nano: int | None = None,
+        start_time_unix_nano: int = 0,
     ):
         super().__init__(attributes, reservoir_builder)
         self._instrument_is_synchronous = instrument_is_synchronous
@@ -392,6 +392,9 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         Atomically return a point for the current value of the metric.
         """
         with self._lock:
+            start_time_unix_nano = self._start_time_unix_nano
+            if collection_aggregation_temporality is AggregationTemporality.DELTA:
+                self._start_time_unix_nano = collection_start_nano
             if self._value is None:
                 return None
             value = self._value
@@ -406,7 +409,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         return NumberDataPoint(
             attributes=self._attributes,
             exemplars=exemplars,
-            start_time_unix_nano=self._start_time_unix_nano,
+            start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=collection_start_nano,
             value=value,
         )
