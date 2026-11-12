@@ -174,8 +174,7 @@ jobs:
           STABLE_VERSION: ${{ needs.build.outputs.stable_version }}
           UNSTABLE_VERSION: ${{ needs.build.outputs.unstable_version }}
         run: |
-          release_target=$(git rev-parse HEAD)
-          gh release create --target "$release_target" \
+          gh release create --target "$GITHUB_SHA" \
                             --title "Version ${STABLE_VERSION}/${UNSTABLE_VERSION}" \
                             --notes-file /tmp/release-notes.txt \
                             --discussion-category announcements \
