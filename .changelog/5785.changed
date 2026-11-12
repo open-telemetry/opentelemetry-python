@@ -1,1 +1,0 @@
-[BREAKING] opentelemetry-api: make `SeverityNumber` an `IntEnum` so it compares directly against ints and other severities
