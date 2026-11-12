@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: support `scope_info_enabled` and `resource_constant_labels` for the Prometheus pull exporter
