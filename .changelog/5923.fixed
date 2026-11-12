@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: pass custom sampler plugin configuration to the `opentelemetry_sampler` entry point factory as keyword arguments
