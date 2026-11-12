@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     # pylint: disable-next=import-error
     import grpc
 
-    from opentelemetry.configuration.models import GrpcTls
+    from opentelemetry.configuration.models import AttributeLimits, GrpcTls
 
 _logger = logging.getLogger(__name__)
 
@@ -176,6 +176,30 @@ def _resolve_otlp_http_endpoint(
 def _resolve_otlp_grpc_endpoint(endpoint: str | None) -> str:
     """Return the configured OTLP gRPC endpoint, or the schema default."""
     return endpoint if endpoint is not None else _DEFAULT_OTLP_GRPC_ENDPOINT
+
+
+def _warn_unsupported_otlp_size_limits(
+    exporter_name: str,
+    max_request_size: int | None,
+    max_response_size: int | None,
+    max_request_size_supported: bool,
+) -> None:
+    """Warn about OTLP size limits that are configured but not applied by the exporter."""
+    if max_request_size is not None and not max_request_size_supported:
+        _logger.warning("max_request_size is not yet supported for %s exporter and will be ignored.", exporter_name)
+    if max_response_size is not None:
+        _logger.warning("max_response_size is not yet supported for %s exporter and will be ignored.", exporter_name)
+
+
+def _warn_unsupported_attribute_value_depth_limit(
+    attribute_value_depth_limit: int | None,
+    global_limits: AttributeLimits | None,
+) -> None:
+    """Warn when attribute_value_depth_limit is configured, as the SDK does not support it."""
+    if attribute_value_depth_limit is None and global_limits is not None:
+        attribute_value_depth_limit = global_limits.attribute_value_depth_limit
+    if attribute_value_depth_limit is not None:
+        _logger.warning("attribute_value_depth_limit is not yet supported and will be ignored.")
 
 
 def _resolve_export_timeout(timeout: int | None) -> float:

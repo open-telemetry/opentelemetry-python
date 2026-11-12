@@ -21,6 +21,9 @@ from opentelemetry.configuration._tracer_provider import (
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
 from opentelemetry.configuration.models import (
+    AlwaysRecordSampler as AlwaysRecordSamplerConfig,
+)
+from opentelemetry.configuration.models import (
     AttributeLimits,
     OtlpHttpEncoding,
 )
@@ -113,6 +116,7 @@ from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
+    AlwaysRecordSampler,
     Decision,
     ParentBased,
     Sampler,
@@ -207,6 +211,15 @@ class TestCreateSampler(unittest.TestCase):
     def test_always_off(self):
         provider = self._make_provider(SamplerConfig(always_off={}))
         self.assertIs(provider.sampler, ALWAYS_OFF)
+
+    def test_always_record_wraps_root_sampler(self):
+        provider = self._make_provider(
+            SamplerConfig(always_record=AlwaysRecordSamplerConfig(root=SamplerConfig(always_off={})))
+        )
+        self.assertIsInstance(provider.sampler, AlwaysRecordSampler)
+        self.assertEqual(provider.sampler.get_description(), f"AlwaysRecordSampler{{{ALWAYS_OFF.get_description()}}}")
+        result = provider.sampler.should_sample(None, TRACE_ID, "span")
+        self.assertEqual(result.decision, Decision.RECORD_ONLY)
 
     def test_trace_id_ratio_based(self):
         provider = self._make_provider(SamplerConfig(trace_id_ratio_based=TraceIdRatioBasedConfig(ratio=0.5)))
@@ -562,7 +575,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         )
 
 
-class TestCreateSpanExporterAndProcessor(unittest.TestCase):
+class TestCreateSpanExporterAndProcessor(unittest.TestCase):  # pylint: disable=too-many-public-methods
     # pylint: disable=no-self-use
 
     @staticmethod
@@ -654,7 +667,68 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             headers=None,
             timeout=10.0,
             compression=mock_compression_cls.NoCompression,
+            max_request_size=None,
         )
+
+    def test_otlp_http_max_request_size_passed_through(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            },
+        ):
+            create_tracer_provider(
+                self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(max_request_size=1024)))
+            )
+
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["max_request_size"], 1024)
+
+    def test_otlp_unsupported_size_limits_warn(self):
+        modules = {
+            "grpc": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http.trace_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+            "opentelemetry.exporter.otlp.json.http.trace_exporter": MagicMock(),
+        }
+        cases = [
+            (
+                "grpc max_request_size",
+                SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_request_size=1024)),
+                "max_request_size is not yet supported for otlp_grpc span exporter",
+            ),
+            (
+                "grpc max_response_size",
+                SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_grpc span exporter",
+            ),
+            (
+                "http max_response_size",
+                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_http span exporter",
+            ),
+            (
+                "http json max_request_size",
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
+                ),
+                "max_request_size is not yet supported for otlp_http JSON span exporter",
+            ),
+        ]
+        for name, exporter_config, expected in cases:
+            with (
+                self.subTest(name),
+                patch.dict(sys.modules, modules),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                create_tracer_provider(self._make_batch_config(exporter_config))
+                self.assertTrue(any(expected in message for message in logs.output), logs.output)
 
     def test_otlp_http_zero_timeout_is_unlimited(self):
         mock_exporter_cls = MagicMock()
@@ -1112,6 +1186,7 @@ class TestSpanExporterAndProcessorSchemaDefaults(unittest.TestCase):
             headers=None,
             timeout=10.0,
             compression=mock_compression_cls.NoCompression,
+            max_request_size=None,
         )
 
     def test_otlp_grpc_absent_fields_use_schema_defaults(self):
@@ -1161,6 +1236,21 @@ class TestCreateSpanLimits(unittest.TestCase):
     def test_explicit_attribute_value_length_limit(self):
         provider = self._create_with_limits(SpanLimitsConfig(attribute_value_length_limit=64))
         self.assertEqual(provider._span_limits.max_attribute_length, 64)
+
+    def test_attribute_value_depth_limit_warns(self):
+        for name, limits, global_limits in (
+            ("per-signal", SpanLimitsConfig(attribute_value_depth_limit=3), None),
+            ("global", None, AttributeLimits(attribute_value_depth_limit=3)),
+        ):
+            with (
+                self.subTest(name),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                create_tracer_provider(
+                    TracerProviderConfig(processors=[], limits=limits),
+                    global_attribute_limits=global_limits,
+                )
+                self.assertIn("attribute_value_depth_limit is not yet supported", logs.output[0])
 
     def test_absent_limits_use_spec_defaults(self):
         provider = self._create_with_limits(SpanLimitsConfig())

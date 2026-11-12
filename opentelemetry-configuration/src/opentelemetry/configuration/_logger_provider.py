@@ -17,6 +17,8 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
     _validate_mtls_pair,
+    _warn_unsupported_attribute_value_depth_limit,
+    _warn_unsupported_otlp_size_limits,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -102,6 +104,9 @@ def _create_otlp_http_log_exporter(
 
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
+            _warn_unsupported_otlp_size_limits(
+                "otlp_http log", config.max_request_size, config.max_response_size, max_request_size_supported=True
+            )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415
@@ -125,8 +130,15 @@ def _create_otlp_http_log_exporter(
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
+                max_request_size=config.max_request_size,
             )
         case OtlpHttpEncoding.json:
+            _warn_unsupported_otlp_size_limits(
+                "otlp_http JSON log",
+                config.max_request_size,
+                config.max_response_size,
+                max_request_size_supported=False,
+            )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.exporter.otlp.common.http import (  # noqa: PLC0415
@@ -174,6 +186,9 @@ def _create_otlp_grpc_log_exporter(
             feature="otlp_grpc log exporter",
         ) from exc
 
+    _warn_unsupported_otlp_size_limits(
+        "otlp_grpc log", config.max_request_size, config.max_response_size, max_request_size_supported=False
+    )
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
     endpoint = _resolve_otlp_grpc_endpoint(config.endpoint)
@@ -343,6 +358,8 @@ def _create_log_record_limits(
     attribute_value_length_limit = config.attribute_value_length_limit
     if attribute_value_length_limit is None and global_limits is not None:
         attribute_value_length_limit = global_limits.attribute_value_length_limit
+
+    _warn_unsupported_attribute_value_depth_limit(config.attribute_value_depth_limit, global_limits)
 
     max_attributes = (
         attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_LOG_ATTRIBUTE_COUNT_LIMIT

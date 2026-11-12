@@ -628,6 +628,64 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 _create_log_record_exporter(config)
                 self.assertEqual(mock_exporter_cls.call_args.kwargs["timeout"], math.inf)
 
+    def test_otlp_http_max_request_size_passed_through(self):
+        mock_exporter_cls = MagicMock()
+        mock_exporter_module = MagicMock()
+        mock_exporter_module.OTLPLogExporter = mock_exporter_cls
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_exporter_module,
+            },
+        ):
+            _create_log_record_exporter(
+                LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(max_request_size=1024))
+            )
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["max_request_size"], 1024)
+
+    def test_otlp_unsupported_size_limits_warn(self):
+        modules = {
+            "grpc": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.grpc._log_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http._log_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+            "opentelemetry.exporter.otlp.json.http._log_exporter": MagicMock(),
+        }
+        cases = [
+            (
+                "grpc max_request_size",
+                LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_request_size=1024)),
+                "max_request_size is not yet supported for otlp_grpc log exporter",
+            ),
+            (
+                "grpc max_response_size",
+                LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_grpc log exporter",
+            ),
+            (
+                "http max_response_size",
+                LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_http log exporter",
+            ),
+            (
+                "http json max_request_size",
+                LogRecordExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
+                ),
+                "max_request_size is not yet supported for otlp_http JSON log exporter",
+            ),
+        ]
+        for name, exporter_config, expected in cases:
+            with (
+                self.subTest(name),
+                patch.dict(sys.modules, modules),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                _create_log_record_exporter(exporter_config)
+                self.assertTrue(any(expected in message for message in logs.output), logs.output)
+
 
 class TestLogRecordLimits(unittest.TestCase):
     def test_default_limits(self):
@@ -702,6 +760,22 @@ class TestLogRecordLimits(unittest.TestCase):
         with patch("opentelemetry.configuration._logger_provider._logger") as mock_logger:
             create_logger_provider(config)
             mock_logger.warning.assert_not_called()
+
+    def test_attribute_value_depth_limit_warns(self):
+        for name, config, global_limits in (
+            (
+                "per-signal",
+                LoggerProviderConfig(processors=[], limits=LogRecordLimitsConfig(attribute_value_depth_limit=3)),
+                None,
+            ),
+            ("global", None, AttributeLimits(attribute_value_depth_limit=3)),
+        ):
+            with (
+                self.subTest(name),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                create_logger_provider(config, global_attribute_limits=global_limits)
+                self.assertIn("attribute_value_depth_limit is not yet supported", logs.output[0])
 
     def test_global_attribute_count_limit_used_when_no_per_signal_limits(self):
         global_limits = AttributeLimits(attribute_count_limit=42)
