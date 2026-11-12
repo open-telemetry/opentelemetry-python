@@ -10,6 +10,9 @@ from opentelemetry.exporter.otlp.common._aggregation import (
     _get_aggregation,
     _get_temporality,
 )
+from opentelemetry.exporter.otlp.common._partial_success import (
+    _report_partial_success,
+)
 from opentelemetry.exporter.otlp.common.http import (
     Compression,
     _OTLPHTTPClient,
@@ -20,10 +23,14 @@ from opentelemetry.exporter.otlp.json.common._internal.metrics_encoder import (
 )
 from opentelemetry.exporter.otlp.json.http._internal import (
     _build_transport,
+    _parse_export_response,
     _resolve_compression,
     _resolve_endpoint,
     _resolve_headers,
     _resolve_timeout,
+)
+from opentelemetry.proto_json.collector.metrics.v1.metrics_service import (
+    ExportMetricsServiceResponse,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
@@ -115,13 +122,13 @@ class OTLPMetricExporter(MetricExporter):
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE,
         )
+        self._endpoint = endpoint or _resolve_endpoint(
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+            _DEFAULT_METRICS_EXPORT_PATH,
+        )
         self._client = _OTLPHTTPClient(
             transport=transport,
-            endpoint=endpoint
-            or _resolve_endpoint(
-                OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
-                _DEFAULT_METRICS_EXPORT_PATH,
-            ),
+            endpoint=self._endpoint,
             kind="metrics",
             timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_METRICS_TIMEOUT),
             compression=compression
@@ -152,6 +159,16 @@ class OTLPMetricExporter(MetricExporter):
             export_result = self._client.export(request.to_json().encode())
             if not export_result.success:
                 return MetricExportResult.FAILURE
+
+            response = _parse_export_response(export_result.content, ExportMetricsServiceResponse, _logger)
+            if response is not None and response.partial_success is not None:
+                _report_partial_success(
+                    _logger,
+                    "metrics",
+                    self._endpoint,
+                    response.partial_success.rejected_data_points or 0,
+                    response.partial_success.error_message or "",
+                )
         return MetricExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
