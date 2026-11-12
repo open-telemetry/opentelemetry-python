@@ -16,6 +16,7 @@ from opentelemetry.configuration._common import (
     _additional_properties,
     _grpc_credentials_from_tls,
     _grpc_insecure_from_tls,
+    _include_exclude_predicate,
     _map_compression,
     _matches_glob,
     _parse_headers,
@@ -32,6 +33,7 @@ from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
     GrpcTls,
+    IncludeExclude,
     LogRecordExporter,
     OpenTelemetryConfiguration,
     PushMetricExporter,
@@ -661,3 +663,27 @@ class TestMatchesGlob(unittest.TestCase):
         for value, pattern, expected in cases:
             with self.subTest(value=value, pattern=pattern):
                 self.assertEqual(_matches_glob(value, pattern), expected)
+
+
+class TestIncludeExcludePredicate(unittest.TestCase):
+    def test_include_exclude_predicate(self):
+        cases = [
+            (IncludeExclude(), "anything", True),
+            (IncludeExclude(), "", True),
+            (IncludeExclude(included=["service.*"]), "service.name", True),
+            (IncludeExclude(included=["service.*"]), "host.name", False),
+            (IncludeExclude(included=["service.name"]), "service.name", True),
+            (IncludeExclude(included=["service.name"]), "Service.name", False),
+            (IncludeExclude(included=["host.?d"]), "host.id", True),
+            (IncludeExclude(included=["host.?d"]), "host.uuid", False),
+            (IncludeExclude(included=["a", "b"]), "b", True),
+            (IncludeExclude(excluded=["host.*"]), "host.name", False),
+            (IncludeExclude(excluded=["host.*"]), "service.name", True),
+            (IncludeExclude(included=["service.*"], excluded=["service.namespace"]), "service.name", True),
+            (IncludeExclude(included=["service.*"], excluded=["service.namespace"]), "service.namespace", False),
+            (IncludeExclude(included=["service.name"], excluded=["service.*"]), "service.name", False),
+            (IncludeExclude(included=["service.*"], excluded=["host.*"]), "host.name", False),
+        ]
+        for config, value, expected in cases:
+            with self.subTest(config=config, value=value):
+                self.assertEqual(_include_exclude_predicate(config)(value), expected)

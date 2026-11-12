@@ -10,6 +10,7 @@ from opentelemetry import metrics
 from opentelemetry.configuration._common import (
     _grpc_credentials_from_tls,
     _grpc_insecure_from_tls,
+    _include_exclude_predicate,
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
@@ -522,15 +523,17 @@ def _create_prometheus_metric_reader(
         config.target_info_enabled_development is not None and not config.target_info_enabled_development
     )
 
-    if config.scope_info_enabled is not None:
-        _logger.warning("scope_info_enabled is not yet supported for Prometheus metric exporter and will be ignored.")
-    if config.resource_constant_labels is not None:
-        _logger.warning(
-            "resource_constant_labels is not yet supported for Prometheus metric exporter and will be ignored."
-        )
+    scope_info_enabled = config.scope_info_enabled is None or config.scope_info_enabled
+    resource_attribute_filter = (
+        _include_exclude_predicate(config.resource_constant_labels)
+        if config.resource_constant_labels is not None
+        else None
+    )
 
     reader = PrometheusMetricReader(
         disable_target_info=disable_target_info,
+        scope_info_enabled=scope_info_enabled,
+        resource_attribute_filter=resource_attribute_filter,
         cardinality_limits=cardinality_limits,
     )
 
