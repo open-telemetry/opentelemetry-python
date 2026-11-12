@@ -58,6 +58,9 @@ from opentelemetry.configuration.models import (
     MeterProvider as MeterProviderConfig,
 )
 from opentelemetry.configuration.models import (
+    MetricProducer as MetricProducerConfig,
+)
+from opentelemetry.configuration.models import (
     MetricReader as MetricReaderConfig,
 )
 from opentelemetry.configuration.models import (
@@ -103,6 +106,7 @@ from opentelemetry.sdk.metrics.export import (
     CardinalityLimits,
     ConsoleMetricExporter,
     MetricExporter,
+    MetricProducer,
     MetricReader,
     PeriodicExportingMetricReader,
 )
@@ -476,6 +480,28 @@ def _create_cardinality_limits(config: CardinalityLimitsConfig | None) -> Cardin
     return limits
 
 
+def _create_metric_producer(config: MetricProducerConfig) -> MetricProducer | None:
+    """Create a MetricProducer from config.
+
+    Plugin producers are loaded via the ``opentelemetry_metrics_producer``
+    entry point group. The deprecated ``opencensus`` producer is not supported
+    and is skipped with a warning, so ``None`` is returned for it.
+    """
+    if config.opencensus is not None:
+        _logger.warning("The opencensus metric producer is not supported and will be ignored.")
+        return None
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_metrics_producer", name)(**(plugin_config or {}))
+    raise ConfigurationError("No producer type specified in metric producer config.")
+
+
+def _create_metric_producers(configs: list[MetricProducerConfig] | None) -> list[MetricProducer]:
+    """Create the MetricProducers for a reader, skipping unsupported producers."""
+    producers = (_create_metric_producer(config) for config in configs or ())
+    return [producer for producer in producers if producer is not None]
+
+
 def _create_periodic_metric_reader(
     config: PeriodicMetricReaderConfig,
 ) -> PeriodicExportingMetricReader:
@@ -493,6 +519,7 @@ def _create_periodic_metric_reader(
         export_interval_millis=float(interval),
         export_timeout_millis=export_timeout_millis,
         cardinality_limits=_create_cardinality_limits(config.cardinality_limits),
+        metric_producers=_create_metric_producers(config.producers),
     )
 
 
