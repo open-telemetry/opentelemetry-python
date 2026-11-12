@@ -192,6 +192,10 @@ nitpick_ignore = [
         "py:class",
         "opentelemetry.exporter.http.transport._base.BaseHTTPTransport",
     ),
+    (
+        "py:class",
+        "opentelemetry.util._compat.SignatureCompatABC",
+    ),
 ]
 
 # Add any paths that contain templates here, relative to this directory.

@@ -1,0 +1,8 @@
+`opentelemetry-api`: tolerate future unknown keyword parameters in methods of the `Tracer`, `Meter`,
+`Logger`, `TracerProvider`, `MeterProvider` and `LoggerProvider` base classes without breaking existing
+implementations.
+
+These ABCs now derive from `SignatureCompatABC`, which wraps overrides that don't accept `**kwargs` at
+class-definition time so that keyword arguments they don't declare are dropped instead of being passed
+through. Performance-sensitive implementations can add `**_kwargs` to their overrides to avoid the extra
+wrapper layer.
