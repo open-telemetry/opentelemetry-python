@@ -72,11 +72,11 @@ sdk_tracer_provider = "opentelemetry.sdk.trace:TracerProvider"
 [project.entry-points.opentelemetry_traces_exporter]
 console = "opentelemetry.sdk.trace.export:ConsoleSpanExporter"
 
-[project.entry-points.opentelemetry_span_processor]
+[project.entry-points.opentelemetry_traces_processor]
 batch = "opentelemetry.sdk.trace.export:BatchSpanProcessor"
 simple = "opentelemetry.sdk.trace.export:SimpleSpanProcessor"
 
-[project.entry-points.opentelemetry_log_record_processor]
+[project.entry-points.opentelemetry_logs_processor]
 batch = "opentelemetry.sdk._logs.export:BatchLogRecordProcessor"
 simple = "opentelemetry.sdk._logs.export:SimpleLogRecordProcessor"
 

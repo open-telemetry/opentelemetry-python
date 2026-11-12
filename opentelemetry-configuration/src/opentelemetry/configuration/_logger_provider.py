@@ -278,7 +278,7 @@ def _create_log_record_processor(
         return _create_simple_log_record_processor(config.simple)
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_log_record_processor", name)(**(plugin_config or {}))
+        return load_entry_point("opentelemetry_logs_processor", name)(**(plugin_config or {}))
     raise ConfigurationError(
         "No processor type specified in log record processor config. Supported types: batch, simple."
     )

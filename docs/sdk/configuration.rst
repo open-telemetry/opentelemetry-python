@@ -126,8 +126,8 @@ Span and log record processors other than the built-in ``batch`` and
 ``simple`` types are loaded from entry points, by the name used in the
 configuration file:
 
-* span processors: the ``opentelemetry_span_processor`` group
-* log record processors: the ``opentelemetry_log_record_processor`` group
+* span processors: the ``opentelemetry_traces_processor`` group
+* log record processors: the ``opentelemetry_logs_processor`` group
 
 .. code-block:: yaml
 
@@ -138,7 +138,7 @@ configuration file:
 
 .. code-block:: toml
 
-    [project.entry-points.opentelemetry_span_processor]
+    [project.entry-points.opentelemetry_traces_processor]
     my_processor = "my_package.processors:MyProcessor"
 
 The entry point is called with the processor's configuration mapping as

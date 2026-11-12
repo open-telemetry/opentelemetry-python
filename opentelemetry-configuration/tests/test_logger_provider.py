@@ -904,9 +904,7 @@ class TestCreateLogRecordProcessorPlugin(unittest.TestCase):
                             processors=[LogRecordProcessorConfig(my_processor=plugin_config)]
                         )
                     )
-                mock_entry_points.assert_called_once_with(
-                    group="opentelemetry_log_record_processor", name="my_processor"
-                )
+                mock_entry_points.assert_called_once_with(group="opentelemetry_logs_processor", name="my_processor")
                 mock_class.assert_called_once_with(**expected_kwargs)
                 self.assertEqual(self._processors(provider), (mock_processor,))
 

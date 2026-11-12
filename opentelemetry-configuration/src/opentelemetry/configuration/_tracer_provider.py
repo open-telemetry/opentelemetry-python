@@ -302,7 +302,7 @@ def _create_span_processor(
         return SimpleSpanProcessor(_create_span_exporter(config.simple.exporter))
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
-        return load_entry_point("opentelemetry_span_processor", name)(**(plugin_config or {}))
+        return load_entry_point("opentelemetry_traces_processor", name)(**(plugin_config or {}))
     raise ConfigurationError("No processor type specified in span processor config. Supported types: batch, simple.")
 
 

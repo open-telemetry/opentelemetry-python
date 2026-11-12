@@ -1418,7 +1418,7 @@ class TestCreateSpanProcessorPlugin(unittest.TestCase):
                             processors=[SpanProcessorConfig(my_processor=plugin_config)]
                         )
                     )
-                mock_entry_points.assert_called_once_with(group="opentelemetry_span_processor", name="my_processor")
+                mock_entry_points.assert_called_once_with(group="opentelemetry_traces_processor", name="my_processor")
                 mock_class.assert_called_once_with(**expected_kwargs)
                 self.assertEqual(
                     provider._active_span_processor._span_processors,
