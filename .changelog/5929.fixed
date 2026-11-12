@@ -1,0 +1,1 @@
+Validate that configured TLS and mTLS files exist and are readable at startup for OTLP HTTP exporters.

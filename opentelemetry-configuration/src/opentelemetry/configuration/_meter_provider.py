@@ -18,7 +18,7 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
-    _validate_mtls_pair,
+    _validate_http_tls,
     _warn_unsupported_otlp_size_limits,
     load_entry_point,
 )
@@ -288,9 +288,8 @@ def _create_otlp_http_metric_exporter(
     config: OtlpHttpMetricExporterConfig,
 ) -> MetricExporter:
     """Create an OTLP HTTP metric exporter from config."""
+    _validate_http_tls(config.tls, "otlp_http")
     tls = config.tls
-    if tls is not None:
-        _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
