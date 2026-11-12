@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, cast
 
 from typing_extensions import assert_never
 
-from opentelemetry.metrics import Asynchronous, Synchronous
+from opentelemetry.metrics import Asynchronous
 from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
@@ -178,7 +178,9 @@ class _ViewInstrumentMatch:
                 return aggregation
 
         start_time_unix_nano = self._previous_collection_start_nanos
-        if start_time_unix_nano is None or (isinstance(self._instrument, Synchronous) and not self._reset_on_collect):
+        if start_time_unix_nano is None or (
+            not isinstance(self._instrument, Asynchronous) and not self._reset_on_collect
+        ):
             start_time_unix_nano = time_ns()
         # pylint: disable=protected-access
         if not isinstance(self._view._aggregation, DefaultAggregation):
@@ -209,8 +211,7 @@ class _ViewInstrumentMatch:
             if self._reset_on_collect and collection_aggregation_temporality is AggregationTemporality.DELTA:
                 self._attributes_aggregation = {}
 
-            if self._reset_on_collect or isinstance(self._instrument, Asynchronous):
-                self._previous_collection_start_nanos = collection_start_nanos
+            self._previous_collection_start_nanos = collection_start_nanos
 
             for aggregation in aggregations.values():
                 data_point = aggregation.collect(collection_aggregation_temporality, collection_start_nanos)
