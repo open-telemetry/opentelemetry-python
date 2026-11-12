@@ -225,8 +225,7 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(result, MetricExportResult.SUCCESS)
         self.assertEqual(
             logs.records[0].getMessage(),
-            "OTLP partial success exporting metrics to "
-            f"{_TEST_ENDPOINT}: the server rejected 4 data points: quota exceeded",
+            f"OTLP partial success exporting metrics to {_TEST_ENDPOINT} (rejected=4): quota exceeded",
         )
 
     @mocketize

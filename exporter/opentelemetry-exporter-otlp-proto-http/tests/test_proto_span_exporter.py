@@ -294,7 +294,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(result, SpanExportResult.SUCCESS)
         self.assertEqual(
             logs.records[0].getMessage(),
-            f"OTLP partial success exporting spans to {_TEST_ENDPOINT}: the server rejected 2 spans: quota exceeded",
+            f"OTLP partial success exporting spans to {_TEST_ENDPOINT} (rejected=2): quota exceeded",
         )
 
     @mocketize

@@ -253,8 +253,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(result, LogRecordExportResult.SUCCESS)
         self.assertEqual(
             logs.records[0].getMessage(),
-            "OTLP partial success exporting logs to "
-            f"{_TEST_ENDPOINT}: the server rejected 3 log records: quota exceeded",
+            f"OTLP partial success exporting logs to {_TEST_ENDPOINT} (rejected=3): quota exceeded",
         )
 
     @mocketize
