@@ -937,22 +937,31 @@ class TestCreateSpanExporterTls(unittest.TestCase):
                 mock_module = MagicMock()
                 mock_module.OTLPSpanExporter = mock_exporter_cls
 
-                with patch.dict(
-                    sys.modules,
-                    {
-                        f"opentelemetry.exporter.otlp.{protocol}.http.trace_exporter": mock_module,
-                        "opentelemetry.exporter.otlp.proto.http": MagicMock(),
-                        "opentelemetry.exporter.otlp.common.http": MagicMock(),
-                    },
+                with (
+                    tempfile.TemporaryDirectory() as tmp_dir,
+                    patch.dict(
+                        sys.modules,
+                        {
+                            f"opentelemetry.exporter.otlp.{protocol}.http.trace_exporter": mock_module,
+                            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+                        },
+                    ),
                 ):
+                    paths = {}
+                    for name in ("ca", "client", "client_key"):
+                        paths[name] = os.path.join(tmp_dir, f"{name}.pem")
+                        with open(paths[name], "wb") as file:
+                            file.write(b"data")
+
                     config = self._make_batch_config(
                         SpanExporterConfig(
                             otlp_http=OtlpHttpExporterConfig(
                                 encoding=encoding,
                                 tls=HttpTlsConfig(
-                                    ca_file="/certs/ca.pem",
-                                    key_file="/certs/client.key",
-                                    cert_file="/certs/client.pem",
+                                    ca_file=paths["ca"],
+                                    key_file=paths["client_key"],
+                                    cert_file=paths["client"],
                                 ),
                             )
                         )
@@ -960,9 +969,31 @@ class TestCreateSpanExporterTls(unittest.TestCase):
                     create_tracer_provider(config)
 
                 _, kwargs = mock_exporter_cls.call_args
-                self.assertEqual(kwargs["certificate_file"], "/certs/ca.pem")
-                self.assertEqual(kwargs["client_key_file"], "/certs/client.key")
-                self.assertEqual(kwargs["client_certificate_file"], "/certs/client.pem")
+                self.assertEqual(kwargs["certificate_file"], paths["ca"])
+                self.assertEqual(kwargs["client_key_file"], paths["client_key"])
+                self.assertEqual(kwargs["client_certificate_file"], paths["client"])
+
+    def test_otlp_http_tls_missing_file_raises(self):
+        mock_module = MagicMock()
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                    "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(tls=HttpTlsConfig(ca_file=os.path.join(tmp_dir, "missing.pem")))
+                )
+            )
+            create_tracer_provider(config)
+        self.assertIn("tls.ca_file", str(ctx.exception))
+        mock_module.OTLPSpanExporter.assert_not_called()
 
     def test_otlp_http_tls_key_without_cert_raises(self):
         mock_module = MagicMock()

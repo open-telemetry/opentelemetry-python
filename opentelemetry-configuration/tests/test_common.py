@@ -25,6 +25,7 @@ from opentelemetry.configuration._common import (
     _resolve_export_timeout,
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
+    _validate_http_tls,
     _validate_mtls_pair,
     load_entry_point,
 )
@@ -32,6 +33,7 @@ from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
     GrpcTls,
+    HttpTls,
     LogRecordExporter,
     OpenTelemetryConfiguration,
     PushMetricExporter,
@@ -530,6 +532,43 @@ class TestValidateMtlsPair(unittest.TestCase):
                 with self.assertRaises(ConfigurationError) as ctx:
                     _validate_mtls_pair(key_file, cert_file, "otlp_http")
                 self.assertIn("otlp_http", str(ctx.exception))
+
+
+class TestValidateHttpTls(unittest.TestCase):
+    def test_none_tls_noop(self):
+        self.assertIsNone(_validate_http_tls(None))
+
+    def test_valid_files_pass(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ca_file = os.path.join(tmp_dir, "ca.pem")
+            cert_file = os.path.join(tmp_dir, "cert.pem")
+            key_file = os.path.join(tmp_dir, "key.pem")
+            for path in (ca_file, cert_file, key_file):
+                with open(path, "wb") as file:
+                    file.write(b"data")
+            self.assertIsNone(_validate_http_tls(HttpTls(ca_file=ca_file, cert_file=cert_file, key_file=key_file)))
+
+    def test_missing_ca_file_raises(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ca_file = os.path.join(tmp_dir, "nonexistent.pem")
+            with self.assertRaises(ConfigurationError) as ctx:
+                _validate_http_tls(HttpTls(ca_file=ca_file))
+            self.assertIn("tls.ca_file", str(ctx.exception))
+
+    def test_missing_cert_file_raises(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            key_file = os.path.join(tmp_dir, "key.pem")
+            with open(key_file, "wb") as file:
+                file.write(b"data")
+            cert_file = os.path.join(tmp_dir, "nonexistent.pem")
+            with self.assertRaises(ConfigurationError) as ctx:
+                _validate_http_tls(HttpTls(key_file=key_file, cert_file=cert_file))
+            self.assertIn("tls.cert_file", str(ctx.exception))
+
+    def test_mismatched_mtls_pair_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _validate_http_tls(HttpTls(key_file="/path/to/key.pem"))
+        self.assertIn("otlp_http", str(ctx.exception))
 
 
 class TestReadTlsFile(unittest.TestCase):

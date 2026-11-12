@@ -281,6 +281,24 @@ def _read_tls_file(path: str, field: str) -> bytes:
         raise ConfigurationError(f"Failed to read tls.{field} '{path}': {exc}") from exc
 
 
+def _validate_http_tls(tls: Any, exporter: str = "otlp_http") -> None:
+    """Validate mTLS pair and verify that configured TLS files exist and are readable.
+
+    HTTP exporters take file paths rather than loaded bytes/credentials, but missing
+    or unreadable certificate files should fail fast at startup with ConfigurationError
+    rather than causing delayed export failures in background threads.
+    """
+    if tls is None:
+        return
+    _validate_mtls_pair(tls.key_file, tls.cert_file, exporter)
+    if tls.ca_file is not None:
+        _read_tls_file(tls.ca_file, "ca_file")
+    if tls.cert_file is not None:
+        _read_tls_file(tls.cert_file, "cert_file")
+    if tls.key_file is not None:
+        _read_tls_file(tls.key_file, "key_file")
+
+
 def _grpc_credentials_from_tls(tls: GrpcTls | None) -> grpc.ChannelCredentials | None:
     """Build gRPC channel credentials from a GrpcTls config.
 
