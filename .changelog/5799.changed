@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: inline util type annotations and delete stale `.pyi` stub file
