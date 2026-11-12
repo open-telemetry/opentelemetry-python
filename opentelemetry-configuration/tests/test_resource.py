@@ -8,7 +8,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry.configuration._conversion import _dict_to_dataclass
-from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration._resource import create_resource
 from opentelemetry.configuration.models import (
     AttributeNameValue,
@@ -22,6 +21,8 @@ from opentelemetry.sdk.resources import (
     CONTAINER_ID,
     HOST_ARCH,
     HOST_NAME,
+    OS_TYPE,
+    OS_VERSION,
     PROCESS_PID,
     PROCESS_RUNTIME_NAME,
     SERVICE_INSTANCE_ID,
@@ -404,6 +405,11 @@ class TestHostResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes[HOST_NAME], socket.gethostname())
         self.assertIn(HOST_ARCH, resource.attributes)
 
+    def test_host_detector_adds_os_attributes(self):
+        resource = create_resource(self._config_with_host())
+        self.assertIn(OS_TYPE, resource.attributes)
+        self.assertIn(OS_VERSION, resource.attributes)
+
     def test_host_detector_also_includes_sdk_defaults(self):
         resource = create_resource(self._config_with_host())
         self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
@@ -476,16 +482,59 @@ class TestContainerResourceDetector(unittest.TestCase):
         resource = create_resource(config)
         self.assertNotIn(CONTAINER_ID, resource.attributes)
 
-    def test_container_detector_raises_when_package_missing(self):
-        """ConfigurationError is raised when the contrib entry point is not found."""
+    def test_container_detector_skipped_with_warning_when_package_missing(self):
+        """A missing contrib entry point is skipped with a warning; other detectors still run."""
+        config = ResourceConfig(
+            detection_development=ExperimentalResourceDetection(
+                detectors=[
+                    ExperimentalResourceDetector(container={}),
+                    ExperimentalResourceDetector(host={}),
+                ]
+            )
+        )
         with (
             patch(
                 "opentelemetry.configuration._common.entry_points",
                 return_value=[],
             ),
-            self.assertRaises(ConfigurationError),
+            self.assertLogs("opentelemetry.configuration._resource", level="WARNING") as logs,
         ):
+            resource = create_resource(config)
+
+        self.assertIn("container", logs.output[0])
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+        self.assertIn(HOST_NAME, resource.attributes)
+
+    def test_container_detector_skipped_with_warning_when_load_fails(self):
+        mock_ep = MagicMock()
+        mock_ep.load.side_effect = ImportError("broken")
+
+        with (
+            patch(
+                "opentelemetry.configuration._common.entry_points",
+                return_value=[mock_ep],
+            ),
+            self.assertLogs("opentelemetry.configuration._resource", level="WARNING") as logs,
+        ):
+            resource = create_resource(self._config_with_container())
+
+        self.assertIn("broken", logs.output[0])
+        self.assertNotIn(CONTAINER_ID, resource.attributes)
+
+    def test_container_detector_loads_containerid_entry_point(self):
+        """The schema's container detector maps to contrib's containerid entry point."""
+        mock_detector = MagicMock()
+        mock_detector.return_value.detect.return_value = Resource({CONTAINER_ID: "abc123"})
+        mock_ep = MagicMock()
+        mock_ep.load.return_value = mock_detector
+
+        with patch(
+            "opentelemetry.configuration._common.entry_points",
+            return_value=[mock_ep],
+        ) as mock_entry_points:
             create_resource(self._config_with_container())
+
+        mock_entry_points.assert_called_once_with(group="opentelemetry_resource_detector", name="containerid")
 
     def test_container_detector_uses_contrib_when_available(self):
         """When the contrib entry point is registered, container.id is detected."""
@@ -603,7 +652,7 @@ class TestPluginResourceDetector(unittest.TestCase):
 
         self.assertEqual(resource.attributes["custom.attr"], "value")
 
-    def test_unknown_detector_raises_configuration_error(self):
+    def test_unknown_detector_skipped_with_warning(self):
         config = ResourceConfig(
             detection_development=ExperimentalResourceDetection(
                 # pylint: disable=unexpected-keyword-arg
@@ -615,6 +664,9 @@ class TestPluginResourceDetector(unittest.TestCase):
                 "opentelemetry.configuration._common.entry_points",
                 return_value=[],
             ),
-            self.assertRaises(ConfigurationError),
+            self.assertLogs("opentelemetry.configuration._resource", level="WARNING") as logs,
         ):
-            create_resource(config)
+            resource = create_resource(config)
+
+        self.assertIn("no_such_detector", logs.output[0])
+        self.assertEqual(resource.attributes[TELEMETRY_SDK_LANGUAGE], "python")
