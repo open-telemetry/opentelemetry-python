@@ -9,7 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      built_sha: ${{ steps.build_commit.outputs.sha }}
       stable_version: ${{ steps.versions.outputs.stable_version }}
       unstable_version: ${{ steps.versions.outputs.unstable_version }}
       prior_version_when_patch: ${{ steps.versions.outputs.prior_version_when_patch }}
@@ -24,11 +23,6 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-
-      - name: Record build commit SHA
-        id: build_commit
-        run: |
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Install toml
         run: pip install toml
@@ -113,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.build.outputs.built_sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
