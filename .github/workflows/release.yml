@@ -104,6 +104,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # required for creating GitHub releases
+    env:
+      STABLE_VERSION: ${{ needs.build.outputs.stable_version }}
+      UNSTABLE_VERSION: ${{ needs.build.outputs.unstable_version }}
+      PRIOR_VERSION_WHEN_PATCH: ${{ needs.build.outputs.prior_version_when_patch }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -144,11 +148,6 @@ jobs:
           twine upload --skip-existing --verbose dist/*
 
       - name: Generate release notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          STABLE_VERSION: ${{ needs.build.outputs.stable_version }}
-          UNSTABLE_VERSION: ${{ needs.build.outputs.unstable_version }}
-          PRIOR_VERSION_WHEN_PATCH: ${{ needs.build.outputs.prior_version_when_patch }}
         run: |
           # conditional block not indented because of the heredoc
           if [[ ! -z $PRIOR_VERSION_WHEN_PATCH ]]; then
@@ -171,8 +170,6 @@ jobs:
       - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          STABLE_VERSION: ${{ needs.build.outputs.stable_version }}
-          UNSTABLE_VERSION: ${{ needs.build.outputs.unstable_version }}
         run: |
           gh release create --target "$GITHUB_SHA" \
                             --title "Version ${STABLE_VERSION}/${UNSTABLE_VERSION}" \
