@@ -4,6 +4,8 @@
 # pylint: disable=W0212,W0222,W0221
 import unittest
 
+from typing_extensions import Never
+
 from opentelemetry import trace
 from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.trace.span import (
@@ -22,6 +24,7 @@ class TestProvider(trace.NoOpTracerProvider):
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> trace.Tracer:
         return TestTracer()
 

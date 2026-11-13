@@ -27,7 +27,7 @@ from typing import (  # noqa
 )
 from weakref import WeakMethod, WeakSet
 
-from typing_extensions import deprecated
+from typing_extensions import Never, deprecated
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -767,6 +767,7 @@ class Logger(APILogger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
+        **_kwargs: Never,
     ) -> bool:
         if not self._logger_config.is_enabled:
             return False
@@ -791,7 +792,7 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    # pylint: disable=arguments-differ
+    # pylint: disable=arguments-differ,too-many-locals
     def emit(
         self,
         record: LogRecord | None = None,
@@ -805,6 +806,7 @@ class Logger(APILogger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **_kwargs: Never,
     ) -> None:
         """Emits the :class:`ReadWriteLogRecord` by setting instrumentation scope
         and forwarding to the processor.
@@ -983,6 +985,7 @@ class LoggerProvider(APILoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> APILogger:
         if self._disabled:
             return NoOpLogger(

@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# pyright: reportIncompatibleMethodOverride=false, reportMissingTypeStubs=false
+# pyright: reportIncompatibleMethodOverride=false, reportMissingTypeStubs=false, reportPrivateUsage=false
 # pylint: disable=arguments-differ
 
 """Out-of-date API implementations keep working as the API grows.
@@ -14,11 +14,13 @@ API change breaks existing implementations.
 """
 
 import contextlib
+import unittest
 from collections.abc import Callable, Iterator, Sequence
 from typing import Any
 
 from opentelemetry import _logs, metrics, trace
 from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry._logs._internal import ProxyLogger, ProxyLoggerProvider
 from opentelemetry.context import Context
 from opentelemetry.metrics import (
     Counter,
@@ -26,7 +28,9 @@ from opentelemetry.metrics import (
     NoOpCounter,
     NoOpHistogram,
     NoOpMeter,
+    NoOpMeterProvider,
 )
+from opentelemetry.metrics._internal import _ProxyMeter, _ProxyMeterProvider
 from opentelemetry.test.globals_test import (
     LoggingGlobalsTest,
     MetricsGlobalsTest,
@@ -212,3 +216,38 @@ class TestFrozenLogger(LoggingGlobalsTest):
         logger.emit(body="disk full", severity_number=SeverityNumber.WARN, exception=OSError("disk full"))
 
         self.assertEqual(provider.logger.records, [record, None])
+
+
+_TRACER_METHODS = ("start_span", "start_as_current_span")
+_METER_METHODS = (
+    "create_counter",
+    "create_up_down_counter",
+    "create_observable_counter",
+    "create_histogram",
+    "create_gauge",
+    "create_observable_gauge",
+    "create_observable_up_down_counter",
+)
+_LOGGER_METHODS = ("emit", "enabled")
+
+
+class TestApiImplementationsNotWrapped(unittest.TestCase):
+    """The API's own implementations accept ``**_kwargs`` and so skip the compat wrapper."""
+
+    def test_not_wrapped(self) -> None:
+        cases: list[tuple[type, str]] = [
+            (trace.NoOpTracerProvider, "get_tracer"),
+            (trace.ProxyTracerProvider, "get_tracer"),
+            *((trace.NoOpTracer, name) for name in _TRACER_METHODS),
+            (NoOpMeterProvider, "get_meter"),
+            (_ProxyMeterProvider, "get_meter"),
+            *((NoOpMeter, name) for name in _METER_METHODS),
+            *((_ProxyMeter, name) for name in _METER_METHODS),
+            (_logs.NoOpLoggerProvider, "get_logger"),
+            (ProxyLoggerProvider, "get_logger"),
+            *((_logs.NoOpLogger, name) for name in _LOGGER_METHODS),
+            *((ProxyLogger, name) for name in _LOGGER_METHODS),
+        ]
+        for cls, name in cases:
+            with self.subTest(cls=cls.__qualname__, method=name):
+                self.assertFalse(getattr(cls, name).__code__.co_filename.startswith("<compat "))

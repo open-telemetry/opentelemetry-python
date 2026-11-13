@@ -38,6 +38,8 @@ from os import environ
 from threading import Lock
 from typing import cast
 
+from typing_extensions import Never
+
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
     CallbackT,
@@ -98,6 +100,7 @@ class MeterProvider(SignatureCompatABC):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> "Meter":
         """Returns a `Meter` for use by the given instrumentation library.
 
@@ -137,6 +140,7 @@ class NoOpMeterProvider(MeterProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> "Meter":
         """Returns a NoOpMeter."""
         return NoOpMeter(name, version=version, schema_url=schema_url)
@@ -154,6 +158,7 @@ class _ProxyMeterProvider(MeterProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> "Meter":
         with self._lock:
             if self._real_meter_provider is not None:
@@ -286,6 +291,7 @@ class Meter(SignatureCompatABC):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> Counter:
         """Creates a `Counter` instrument
 
@@ -302,6 +308,7 @@ class Meter(SignatureCompatABC):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> UpDownCounter:
         """Creates an `UpDownCounter` instrument
 
@@ -319,6 +326,7 @@ class Meter(SignatureCompatABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableCounter:
         """Creates an `ObservableCounter` instrument
 
@@ -464,6 +472,7 @@ class Meter(SignatureCompatABC):
         description: str = "",
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        **_kwargs: Never,
     ) -> Histogram:
         """Creates a :class:`~opentelemetry.metrics.Histogram` instrument
 
@@ -479,6 +488,7 @@ class Meter(SignatureCompatABC):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> Gauge:  # pyright: ignore[reportReturnType]
         """Creates a ``Gauge`` instrument
 
@@ -497,6 +507,7 @@ class Meter(SignatureCompatABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableGauge:
         """Creates an `ObservableGauge` instrument
 
@@ -517,6 +528,7 @@ class Meter(SignatureCompatABC):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableUpDownCounter:
         """Creates an `ObservableUpDownCounter` instrument
 
@@ -563,6 +575,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> Counter:
         with self._lock:
             if self._real_meter:
@@ -576,6 +589,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> UpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -590,6 +604,7 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableCounter:
         with self._lock:
             if self._real_meter:
@@ -605,6 +620,7 @@ class _ProxyMeter(Meter):
         description: str = "",
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        **_kwargs: Never,
     ) -> Histogram:
         with self._lock:
             if self._real_meter:
@@ -623,6 +639,7 @@ class _ProxyMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> Gauge:
         with self._lock:
             if self._real_meter:
@@ -637,6 +654,7 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableGauge:
         with self._lock:
             if self._real_meter:
@@ -651,6 +669,7 @@ class _ProxyMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableUpDownCounter:
         with self._lock:
             if self._real_meter:
@@ -676,6 +695,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> Counter:
         """Returns a no-op Counter."""
         status = self._register_instrument(name, NoOpCounter, unit, description)
@@ -695,6 +715,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> Gauge:
         """Returns a no-op Gauge."""
         status = self._register_instrument(name, NoOpGauge, unit, description)
@@ -713,6 +734,7 @@ class NoOpMeter(Meter):
         name: str,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> UpDownCounter:
         """Returns a no-op UpDownCounter."""
         status = self._register_instrument(name, NoOpUpDownCounter, unit, description)
@@ -732,6 +754,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableCounter:
         """Returns a no-op ObservableCounter."""
         status = self._register_instrument(name, NoOpObservableCounter, unit, description)
@@ -757,6 +780,7 @@ class NoOpMeter(Meter):
         description: str = "",
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        **_kwargs: Never,
     ) -> Histogram:
         """Returns a no-op Histogram."""
         status = self._register_instrument(
@@ -787,6 +811,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableGauge:
         """Returns a no-op ObservableGauge."""
         status = self._register_instrument(name, NoOpObservableGauge, unit, description)
@@ -811,6 +836,7 @@ class NoOpMeter(Meter):
         callbacks: Sequence[CallbackT] | None = None,
         unit: str = "",
         description: str = "",
+        **_kwargs: Never,
     ) -> ObservableUpDownCounter:
         """Returns a no-op ObservableUpDownCounter."""
         status = self._register_instrument(name, NoOpObservableUpDownCounter, unit, description)

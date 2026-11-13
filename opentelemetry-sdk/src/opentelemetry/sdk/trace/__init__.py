@@ -28,7 +28,7 @@ from typing import (
 )
 from warnings import filterwarnings
 
-from typing_extensions import deprecated
+from typing_extensions import Never, deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry import metrics as metrics_api
@@ -1169,6 +1169,7 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        **_kwargs: Never,
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(
             name=name,
@@ -1198,6 +1199,7 @@ class Tracer(trace_api.Tracer):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        **_kwargs: Never,
     ) -> trace_api.Span:
         links = links or ()
         parent_span_context = trace_api.get_current_span(context).get_span_context()
@@ -1391,6 +1393,7 @@ class TracerProvider(trace_api.TracerProvider):
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
         attributes: types.Attributes = None,
+        **_kwargs: Never,
     ) -> "trace_api.Tracer":
         if self._disabled:
             return NoOpTracer()

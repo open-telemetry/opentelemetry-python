@@ -1,0 +1,1 @@
+`opentelemetry-api`, `opentelemetry-sdk`: methods of the `Tracer`, `Meter`, `Logger`, `TracerProvider`, `MeterProvider` and `LoggerProvider` base classes and their implementations now accept `**_kwargs: Never`. Type checkers flag overrides that do not accept `**kwargs`; add `**_kwargs` to them to stay forward compatible and avoid the extra wrapper layer.
