@@ -819,7 +819,7 @@ class TestOTLPMetricExporter(TestCase):
                 self.assertEqual(len(Mocket.request_list()), 2)
 
     def test_export_non_retryable_status_codes(self):
-        for status_code in (400, 401, 403, 404, 408, 500, 501):
+        for status_code in (302, 308, 400, 401, 403, 404, 408, 500, 501):
             with self.subTest(status_code=status_code), Mocketizer():
                 Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=status_code)
                 exporter = OTLPMetricExporter(endpoint=_TEST_ENDPOINT)
