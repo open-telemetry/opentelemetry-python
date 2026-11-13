@@ -1,0 +1,20 @@
+description: >
+  The `prometheus/development` exporter adds the resource attributes selected by
+  `resource_constant_labels` as labels and omits scope labels when `scope_info_enabled` is false.
+until:
+  - metric:
+      name: prom_labeled_requests_total
+      min: 1
+expect:
+  - metric:
+      name: prom_labeled_requests_total
+      type: sum
+      monotonic: true
+      # Without otel_scope_* labels the receiver can't restore the `__main__` meter scope.
+      scope: {name: {pattern: prometheusreceiver}}
+      data_point:
+        attributes:
+          values:
+            service_name: declconfig-metric-prometheus-resource-labels
+            service_version: 1.2.3
+          strict: true

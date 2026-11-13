@@ -692,7 +692,12 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             )
             provider = create_meter_provider(config)
 
-        mock_reader_cls.assert_called_once_with(disable_target_info=True, cardinality_limits=None)
+        mock_reader_cls.assert_called_once_with(
+            disable_target_info=True,
+            scope_info_enabled=True,
+            resource_attribute_filter=None,
+            cardinality_limits=None,
+        )
         mock_start_server.assert_called_once_with(port=9090, addr="0.0.0.0")
         self.assertEqual(len(provider._metric_readers), 1)
 
@@ -718,9 +723,70 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             )
             provider = create_meter_provider(config)
 
-        mock_reader_cls.assert_called_once_with(disable_target_info=False, cardinality_limits=None)
+        mock_reader_cls.assert_called_once_with(
+            disable_target_info=False,
+            scope_info_enabled=True,
+            resource_attribute_filter=None,
+            cardinality_limits=None,
+        )
         mock_start_server.assert_called_once_with(port=9464, addr="localhost")
         self.assertEqual(len(provider._metric_readers), 1)
+
+    @staticmethod
+    def _create_prometheus_reader_kwargs(exporter_config):
+        mock_module = MagicMock()
+        with patch.dict(
+            sys.modules,
+            {"opentelemetry.exporter.prometheus": mock_module},
+        ):
+            create_meter_provider(
+                MeterProviderConfig(
+                    readers=[
+                        MetricReaderConfig(
+                            pull=PullMetricReaderConfig(
+                                exporter=PullMetricExporterConfig(prometheus_development=exporter_config)
+                            )
+                        )
+                    ]
+                )
+            )
+        mock_module.PrometheusMetricReader.assert_called_once()
+        return mock_module.PrometheusMetricReader.call_args.kwargs
+
+    def test_pull_prometheus_scope_info_enabled(self):
+        for configured, expected in ((None, True), (True, True), (False, False)):
+            with self.subTest(configured=configured):
+                with self.assertNoLogs("opentelemetry.configuration._meter_provider", level="WARNING"):
+                    kwargs = self._create_prometheus_reader_kwargs(
+                        PrometheusMetricExporterConfig(scope_info_enabled=configured)
+                    )
+                self.assertIs(kwargs["scope_info_enabled"], expected)
+
+    def test_pull_prometheus_resource_constant_labels(self):
+        with self.assertNoLogs("opentelemetry.configuration._meter_provider", level="WARNING"):
+            kwargs = self._create_prometheus_reader_kwargs(
+                PrometheusMetricExporterConfig(
+                    resource_constant_labels=IncludeExclude(
+                        included=["service.*"],
+                        excluded=["service.namespace"],
+                    )
+                )
+            )
+        resource_attribute_filter = kwargs["resource_attribute_filter"]
+        for key, expected in (
+            ("service.name", True),
+            ("service.version", True),
+            ("service.namespace", False),
+            ("host.name", False),
+        ):
+            with self.subTest(key=key):
+                self.assertIs(resource_attribute_filter(key), expected)
+
+    def test_pull_prometheus_resource_constant_labels_empty_includes_all(self):
+        kwargs = self._create_prometheus_reader_kwargs(
+            PrometheusMetricExporterConfig(resource_constant_labels=IncludeExclude())
+        )
+        self.assertTrue(kwargs["resource_attribute_filter"]("host.name"))
 
     def test_pull_prometheus_missing_package_raises(self):
         with patch.dict(
