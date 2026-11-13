@@ -24,6 +24,9 @@ from opentelemetry.sdk.metrics import (
     MetricsTimeoutError,
 )
 from opentelemetry.sdk.metrics._internal import _Counter
+from opentelemetry.sdk.metrics._internal.export._metric_reader_metrics import (
+    _component_counter,
+)
 from opentelemetry.sdk.metrics._internal.point import (
     HistogramDataPoint,
     MetricsData,
@@ -381,7 +384,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_metric_reader_metrics(self):
         exporter = FakeMetricsExporter()
         pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=100000)
+        self.addCleanup(pmr.shutdown)
         mp = MeterProvider(metric_readers=[pmr])
+        self.addCleanup(mp.shutdown)
 
         counter = mp.get_meter("test").create_counter("test_counter")
         counter.add(1)
@@ -412,4 +417,48 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         assert isinstance(name, str)
         self.assertTrue(name.startswith("periodic_metric_reader/"))
 
-        mp.shutdown()
+    @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
+    def test_metric_reader_component_id_allocation(self):
+        initial_count = _component_counter["periodic_metric_reader"]
+
+        pmr1 = PeriodicExportingMetricReader(FakeMetricsExporter(), export_interval_millis=100000)
+        self.addCleanup(pmr1.shutdown)
+        self.assertIsNone(pmr1._otel_component_id)
+
+        mp1 = MeterProvider(metric_readers=[pmr1])
+        self.addCleanup(mp1.shutdown)
+        self.assertEqual(pmr1._otel_component_id, initial_count)
+        self.assertEqual(
+            pmr1._metrics._standard_attrs["otel.component.name"],
+            f"periodic_metric_reader/{initial_count}",
+        )
+        self.assertEqual(
+            _component_counter["periodic_metric_reader"],
+            initial_count + 1,
+        )
+
+        # Re-binding does not increment component ID
+        pmr1._set_meter_provider(mp1)
+        self.assertEqual(pmr1._otel_component_id, initial_count)
+        self.assertEqual(
+            pmr1._metrics._standard_attrs["otel.component.name"],
+            f"periodic_metric_reader/{initial_count}",
+        )
+        self.assertEqual(
+            _component_counter["periodic_metric_reader"],
+            initial_count + 1,
+        )
+
+        pmr2 = PeriodicExportingMetricReader(FakeMetricsExporter(), export_interval_millis=100000)
+        self.addCleanup(pmr2.shutdown)
+        mp2 = MeterProvider(metric_readers=[pmr2])
+        self.addCleanup(mp2.shutdown)
+        self.assertEqual(pmr2._otel_component_id, initial_count + 1)
+        self.assertEqual(
+            pmr2._metrics._standard_attrs["otel.component.name"],
+            f"periodic_metric_reader/{initial_count + 1}",
+        )
+        self.assertEqual(
+            _component_counter["periodic_metric_reader"],
+            initial_count + 2,
+        )
