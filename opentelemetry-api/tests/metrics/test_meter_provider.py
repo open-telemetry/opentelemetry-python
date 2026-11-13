@@ -232,9 +232,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_meter: Mock = real_meter_provider.get_meter()
         real_meter.create_counter.assert_called_once_with(name, unit, description)
         real_meter.create_up_down_counter.assert_called_once_with(name, unit, description)
-        real_meter.create_histogram.assert_called_once_with(
-            name, unit, description, explicit_bucket_boundaries_advisory=None
-        )
+        real_meter.create_histogram.assert_called_once_with(name, unit, description)
         real_meter.create_gauge.assert_called_once_with(name, unit, description)
         real_meter.create_observable_counter.assert_called_once_with(name, [callback], unit, description)
         real_meter.create_observable_up_down_counter.assert_called_once_with(name, [callback], unit, description)
@@ -299,3 +297,71 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             real_meter.create_observable_up_down_counter(),
         )
         self.assertIs(observable_gauge, real_meter.create_observable_gauge())
+
+    def test_proxy_meter_forwards_attributes_advisory(self) -> None:
+        name = "foo"
+        unit = "s"
+        description = "Foobar"
+        callback = Mock()
+        attributes_advisory = ["a"]
+        sync_args = (name, unit, description)
+        async_args = (name, [callback], unit, description)
+
+        cases = [
+            ("create_counter", sync_args, {}),
+            ("create_up_down_counter", sync_args, {}),
+            ("create_gauge", sync_args, {}),
+            (
+                "create_histogram",
+                sync_args,
+                {"explicit_bucket_boundaries_advisory": [1.0]},
+            ),
+            ("create_observable_counter", async_args, {}),
+            ("create_observable_up_down_counter", async_args, {}),
+            ("create_observable_gauge", async_args, {}),
+        ]
+
+        for method_name, args, kwargs in cases:
+            with self.subTest(method_name, real_meter_set="before"):
+                proxy_meter = _ProxyMeterProvider().get_meter("foo")
+                real_meter_provider = Mock()
+                proxy_meter.on_set_meter_provider(real_meter_provider)
+
+                getattr(proxy_meter, method_name)(*args, _attributes_advisory=attributes_advisory, **kwargs)
+
+                real_meter = real_meter_provider.get_meter()
+                getattr(real_meter, method_name).assert_called_once_with(
+                    *args, _attributes_advisory=attributes_advisory, **kwargs
+                )
+
+            with self.subTest(method_name, real_meter_set="after"):
+                proxy_meter = _ProxyMeterProvider().get_meter("foo")
+                getattr(proxy_meter, method_name)(*args, _attributes_advisory=attributes_advisory, **kwargs)
+
+                real_meter_provider = Mock()
+                proxy_meter.on_set_meter_provider(real_meter_provider)
+
+                real_meter = real_meter_provider.get_meter()
+                getattr(real_meter, method_name).assert_called_once_with(
+                    *args, _attributes_advisory=attributes_advisory, **kwargs
+                )
+
+            with self.subTest(method_name, unknown_kwarg=True, real_meter_set="before"):
+                proxy_meter = _ProxyMeterProvider().get_meter("foo")
+                real_meter_provider = Mock()
+                proxy_meter.on_set_meter_provider(real_meter_provider)
+
+                getattr(proxy_meter, method_name)(*args, unknown=1)
+
+                real_meter = real_meter_provider.get_meter()
+                getattr(real_meter, method_name).assert_called_once_with(*args)
+
+            with self.subTest(method_name, unknown_kwarg=True, real_meter_set="after"):
+                proxy_meter = _ProxyMeterProvider().get_meter("foo")
+                getattr(proxy_meter, method_name)(*args, unknown=1)
+
+                real_meter_provider = Mock()
+                proxy_meter.on_set_meter_provider(real_meter_provider)
+
+                real_meter = real_meter_provider.get_meter()
+                getattr(real_meter, method_name).assert_called_once_with(*args)

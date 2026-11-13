@@ -1,0 +1,1 @@
+`opentelemetry-api`, `opentelemetry-sdk`: add experimental support for advisory attributes on metric instruments via the private `_attributes_advisory` keyword argument of `Meter.create_*` methods.
