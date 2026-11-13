@@ -43,6 +43,53 @@ class TestSamplingResult(unittest.TestCase):
 
 
 class TestSampler(unittest.TestCase):
+    def test_shutdown_does_not_require_custom_sampler_override(self):
+        class LegacySampler(sampling.Sampler):
+            def should_sample(
+                self,
+                parent_context,
+                trace_id,
+                name,
+                kind=None,
+                attributes=None,
+                links=None,
+                trace_state=None,
+            ):
+                return sampling.ALWAYS_OFF.should_sample(
+                    parent_context, trace_id, name, kind, attributes, links, trace_state
+                )
+
+            def get_description(self):
+                return type(self).__name__
+
+        # pylint: disable=protected-access
+        self.assertIsNone(LegacySampler()._shutdown())
+
+    def test_parent_based_shutdown_calls_each_delegate_once(self):
+        delegates = [unittest.mock.Mock(spec=sampling.Sampler) for _ in range(5)]
+        parent = sampling.ParentBased(*delegates)
+
+        parent._shutdown()  # pylint: disable=protected-access
+
+        for delegate in delegates:
+            self.assertEqual(delegate._shutdown.call_count, 1)  # pylint: disable=protected-access
+
+    def test_parent_based_shutdown_deduplicates_shared_delegate(self):
+        delegate = unittest.mock.Mock(spec=sampling.Sampler)
+        parent = sampling.ParentBased(delegate, delegate, delegate, delegate, delegate)
+
+        parent._shutdown()  # pylint: disable=protected-access
+
+        self.assertEqual(delegate._shutdown.call_count, 1)  # pylint: disable=protected-access
+
+    def test_always_record_shutdown_calls_root(self):
+        delegate = unittest.mock.Mock(spec=sampling.Sampler)
+        sampler = sampling.AlwaysRecordSampler(delegate)
+
+        sampler._shutdown()  # pylint: disable=protected-access
+
+        self.assertEqual(delegate._shutdown.call_count, 1)  # pylint: disable=protected-access
+
     def _create_parent(
         self, trace_flags: trace.TraceFlags, is_remote=False, trace_state=None
     ) -> context_api.Context | None:
