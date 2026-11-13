@@ -124,9 +124,6 @@ class SignatureCompatABC(ABC):
     objects or methods implemented in C) are not adapted.
     """
 
-    # TODO(#5877): The SDK's methods don't accept **kwargs yet, so they are wrapped
-    # too (a small per-call cost) even though the SDK pins the same API version.
-
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
 
