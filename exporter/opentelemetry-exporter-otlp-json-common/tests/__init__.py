@@ -248,6 +248,7 @@ def make_gauge(
     attributes=None,
     description="desc",
     unit="1",
+    start_time_unix_nano=START_TIME,
 ):
     return Metric(
         name=name,
@@ -257,7 +258,7 @@ def make_gauge(
             data_points=[
                 NumberDataPoint(
                     attributes=attributes or {"a": 1},
-                    start_time_unix_nano=None,
+                    start_time_unix_nano=start_time_unix_nano,
                     time_unix_nano=TIME,
                     value=value,
                 )
