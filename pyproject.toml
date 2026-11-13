@@ -84,6 +84,8 @@ force-exclude = true
 extend-exclude = [
   "*_pb2*.py*",
   "opentelemetry-proto-json/src/*",
+  "opentelemetry-configuration/src/opentelemetry/configuration/_generated_validator.py",
+  "opentelemetry-configuration/src/opentelemetry/configuration/_validation_exceptions.py",
 ]
 output-format = "concise"
 extension = { added = "markdown", changed = "markdown", deprecated = "markdown", removed = "markdown", fixed = "markdown" }
@@ -161,6 +163,7 @@ include = [
 exclude = [
   "opentelemetry-sdk/tests",
   "opentelemetry-configuration/tests",
+  "opentelemetry-configuration/src/opentelemetry/configuration/_validation_exceptions.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/__init__.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/aggregation.py",
   "opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/exemplar/exemplar_reservoir.py",
