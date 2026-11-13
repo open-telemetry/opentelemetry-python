@@ -9,6 +9,7 @@ import os
 import sys
 import weakref
 from logging import WARNING
+from threading import Event, Thread
 from time import sleep, time_ns
 from typing import cast
 from unittest.mock import Mock, patch
@@ -376,6 +377,42 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         os.close(r_fd)
 
         self.assertNotIn("TypeError", child_stderr)
+
+    @pytest.mark.skipif(
+        not hasattr(os, "register_at_fork"),
+        reason="needs register_at_fork",
+    )
+    def test_export_after_fork_with_export_lock_held(self):
+        timeout = 1
+        exporter = FakeMetricsExporter()
+        with patch("os.register_at_fork") as register_at_fork:
+            reader = PeriodicExportingMetricReader(exporter, export_interval_millis=100_000)
+        self.addCleanup(reader.shutdown)
+        lock_held = Event()
+        release_lock = Event()
+
+        def hold_lock():
+            # pylint: disable=protected-access
+            with reader._export_lock:
+                lock_held.set()
+                release_lock.wait()
+
+        holder = Thread(target=hold_lock)
+        holder.start()
+        self.addCleanup(holder.join)
+        self.addCleanup(release_lock.set)
+        self.assertTrue(lock_held.wait(timeout))
+
+        # The child process has no holder thread, so nothing will release the lock.
+        for hook in register_at_fork.call_args_list:
+            hook.kwargs["after_in_child"]()
+
+        # pylint: disable=protected-access
+        exporting = Thread(target=reader._receive_metrics, args=(metrics_list,))
+        exporting.start()
+        exporting.join(timeout)
+        self.assertFalse(exporting.is_alive(), "export blocked on a lock held at fork time")
+        self.assertEqual(exporter.metrics, [metrics_list])
 
     @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     def test_metric_reader_metrics(self):

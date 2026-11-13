@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: reinitialize the metrics locks (measurement consumer, reader storage, view instrument matches, aggregations, exemplar reservoirs and the periodic reader's export lock) in the child process after `fork()` to prevent deadlocks
