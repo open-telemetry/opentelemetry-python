@@ -51,6 +51,19 @@ As a result, when preparing a release branch that contains a different set of in
 
 * Optionally update the contrib.yml workflow to point to the corresponding release branch before running CI.
 
+### Note on `public-symbols-check` for patch releases
+
+The `public-symbols-check` job compares public symbols against `main`, not the
+target release branch. Differences between `main` and the release branch can
+therefore cause this check to fail even when the patch does not change the public
+API.
+
+Review the reported changes against the pull request's target release branch. If
+the failure is caused by existing differences between branches, ask a maintainer
+to add the `Approve Public API check` label to skip the job. Close and reopen the
+pull request after the label is added so CI takes it into account. Public API
+changes introduced by the patch still require the usual review.
+
 ## Making the release
 
 * Run the [Release workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/release.yml).
