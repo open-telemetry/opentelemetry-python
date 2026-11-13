@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: support custom span and log record processors via entry points

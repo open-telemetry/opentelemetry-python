@@ -81,6 +81,7 @@ from opentelemetry.sdk.trace import (
     _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT,
     _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
     SpanLimits,
+    SpanProcessor,
     TracerProvider,
     _RuleBasedTracerConfigurator,
     _TracerConfig,
@@ -277,7 +278,7 @@ def _create_span_exporter(config: SpanExporterConfig) -> SpanExporter:
 
 def _create_span_processor(
     config: SpanProcessorConfig,
-) -> BatchSpanProcessor | SimpleSpanProcessor:
+) -> SpanProcessor:
     """Create a span processor from config, applying schema defaults to absent fields."""
     if config.batch is not None:
         batch = config.batch
@@ -299,6 +300,9 @@ def _create_span_processor(
         )
     if config.simple is not None:
         return SimpleSpanProcessor(_create_span_exporter(config.simple.exporter))
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_traces_processor", name)(**(plugin_config or {}))
     raise ConfigurationError("No processor type specified in span processor config. Supported types: batch, simple.")
 
 

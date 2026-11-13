@@ -1396,3 +1396,82 @@ class TestGlobalAttributeLimitsFallback(unittest.TestCase):
     def test_global_limits_absent_ignores_invalid_env_var(self):
         provider = create_tracer_provider(TracerProviderConfig(processors=[]))
         self.assertEqual(provider._span_limits.max_attributes, 128)
+
+
+class TestCreateSpanProcessorPlugin(unittest.TestCase):
+    @staticmethod
+    def _patch_entry_points(plugin_class):
+        return patch(
+            "opentelemetry.configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": plugin_class})],
+        )
+
+    def test_plugin_processor_loaded_via_entry_point(self):
+        for plugin_config, expected_kwargs in (({"x": 1}, {"x": 1}), (None, {}), ({}, {})):
+            with self.subTest(plugin_config=plugin_config):
+                mock_processor = MagicMock()
+                mock_class = MagicMock(return_value=mock_processor)
+                with self._patch_entry_points(mock_class) as mock_entry_points:
+                    provider = create_tracer_provider(
+                        TracerProviderConfig(
+                            # pylint: disable=unexpected-keyword-arg
+                            processors=[SpanProcessorConfig(my_processor=plugin_config)]
+                        )
+                    )
+                mock_entry_points.assert_called_once_with(group="opentelemetry_traces_processor", name="my_processor")
+                mock_class.assert_called_once_with(**expected_kwargs)
+                self.assertEqual(
+                    provider._active_span_processor._span_processors,
+                    (mock_processor,),
+                )
+
+    def test_plugin_processor_from_parsed_dict(self):
+        mock_processor = MagicMock()
+        mock_class = MagicMock(return_value=mock_processor)
+        config = _dict_to_dataclass(
+            {"processors": [{"my_processor": {"x": 1}}]},
+            TracerProviderConfig,
+        )
+        with self._patch_entry_points(mock_class):
+            provider = create_tracer_provider(config)
+        mock_class.assert_called_once_with(x=1)
+        self.assertEqual(provider._active_span_processor._span_processors, (mock_processor,))
+
+    def test_plugin_processor_order_preserved_with_builtin(self):
+        mock_processor = MagicMock()
+        with self._patch_entry_points(MagicMock(return_value=mock_processor)):
+            provider = create_tracer_provider(
+                TracerProviderConfig(
+                    processors=[
+                        SpanProcessorConfig(simple=SimpleSpanProcessorConfig(exporter=SpanExporterConfig(console={}))),
+                        # pylint: disable=unexpected-keyword-arg
+                        SpanProcessorConfig(my_processor={}),
+                    ]
+                )
+            )
+        procs = provider._active_span_processor._span_processors
+        self.assertEqual(len(procs), 2)
+        self.assertIsInstance(procs[0], SimpleSpanProcessor)
+        self.assertIs(procs[1], mock_processor)
+
+    def test_unknown_plugin_processor_raises_configuration_error(self):
+        with patch("opentelemetry.configuration._common.entry_points", return_value=[]):
+            with self.assertRaises(ConfigurationError):
+                create_tracer_provider(
+                    TracerProviderConfig(
+                        # pylint: disable=unexpected-keyword-arg
+                        processors=[SpanProcessorConfig(no_such_processor={})]
+                    )
+                )
+
+    def test_plugin_processor_init_error_propagates(self):
+        error = RuntimeError("boom")
+        with self._patch_entry_points(MagicMock(side_effect=error)):
+            with self.assertRaises(RuntimeError) as ctx:
+                create_tracer_provider(
+                    TracerProviderConfig(
+                        # pylint: disable=unexpected-keyword-arg
+                        processors=[SpanProcessorConfig(my_processor={})]
+                    )
+                )
+        self.assertIs(ctx.exception, error)

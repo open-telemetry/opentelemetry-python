@@ -60,7 +60,7 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     SimpleLogRecordProcessor as SimpleLogRecordProcessorConfig,
 )
-from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs import LoggerProvider, LogRecordProcessor
 from opentelemetry.sdk._logs._internal import (
     LogRecordLimits,
     _LoggerConfig,
@@ -270,12 +270,15 @@ def _create_simple_log_record_processor(
 
 def _create_log_record_processor(
     config: LogRecordProcessorConfig,
-) -> BatchLogRecordProcessor | SimpleLogRecordProcessor:
+) -> LogRecordProcessor:
     """Create a log record processor from config."""
     if config.batch is not None:
         return _create_batch_log_record_processor(config.batch)
     if config.simple is not None:
         return _create_simple_log_record_processor(config.simple)
+    if config.additional_properties:
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_logs_processor", name)(**(plugin_config or {}))
     raise ConfigurationError(
         "No processor type specified in log record processor config. Supported types: batch, simple."
     )
