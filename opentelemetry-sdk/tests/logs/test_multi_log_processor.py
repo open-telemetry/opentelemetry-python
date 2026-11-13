@@ -10,7 +10,7 @@ import unittest
 from abc import ABC, abstractmethod
 from unittest.mock import Mock
 
-from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.sdk._logs._internal import (
     ConcurrentMultiLogRecordProcessor,
     LoggerProvider,

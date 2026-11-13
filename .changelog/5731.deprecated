@@ -1,0 +1,1 @@
+`opentelemetry-api`: deprecate `opentelemetry._logs` in favor of `opentelemetry.logs`

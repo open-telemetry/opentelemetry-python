@@ -6,7 +6,7 @@ import os
 import urllib3.util.connection
 
 from opentelemetry import metrics, trace
-from opentelemetry._logs import SeverityNumber, get_logger
+from opentelemetry.logs import SeverityNumber, get_logger
 
 # The collector's certificate is issued for otel-collector.test, so connect
 # that name to the collector while TLS still verifies against it.
