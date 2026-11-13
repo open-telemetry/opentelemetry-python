@@ -46,8 +46,13 @@ jobs:
             false
           fi
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
       - name: Install towncrier
-        run: pip install towncrier==25.8.0
+        run: |
+          uv sync --locked --only-group towncrier
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Check for changelog fragment
         env:
