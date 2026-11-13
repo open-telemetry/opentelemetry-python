@@ -17,11 +17,18 @@ from opentelemetry.util import types
 _logger = logging.getLogger(__name__)
 
 
-# Calling str(x) will use an object's `__str__` method if it exists, otherwise it will use it's `__repr__` method.
-# If neither is defined it uses the base class's `object.__repr__` method, which returns a string that is hard to understand.
-# So in that case we drop the key/value pair.
-def _is_non_custom_str(key: Any) -> bool:
-    return type(key).__str__ is not object.__str__ or type(key).__repr__ is not object.__repr__
+# Calling str(x) will use an object's `__str__` method if it exists, otherwise it will use its `__repr__` method.
+# If neither is defined it uses the base class's `object.__repr__` method, which returns a string that is hard to
+# understand, so in that case we drop the value. A custom `__str__`/`__repr__` may also raise, which must not be
+# allowed to propagate into the caller's application, so we swallow that too.
+def _best_effort_str(value: object) -> str | None:
+    if type(value).__str__ is object.__str__ and type(value).__repr__ is object.__repr__:
+        return None
+    try:
+        return str(value)
+    except Exception:  # pylint: disable=broad-exception-caught
+        _logger.warning("Failed to stringify object of type `%s`.", type(value))
+        return None
 
 
 @overload
@@ -38,7 +45,7 @@ def _clean_attribute_value(
 ) -> types.AnyValue: ...
 
 
-def _clean_attribute_value(  # pylint: disable=too-many-return-statements,too-many-branches
+def _clean_attribute_value(
     value: types.AnyValue,
     max_value_length: int | None,
 ) -> types.AnyValue:
@@ -80,17 +87,10 @@ def _clean_attribute_value(  # pylint: disable=too-many-return-statements,too-ma
                     "Invalid type `%s` for attribute key, must be a str. Key's `__str__/__repr__` method will be called if it exists, otherwise the key/value pair will be dropped.",
                     type(key),
                 )
-                if _is_non_custom_str(key):
-                    try:
-                        key = str(key)
-                    except Exception:  # pylint: disable=broad-exception-caught
-                        _logger.warning(
-                            "Failed to stringify attribute key of type `%s`. Dropping key from attributes.",
-                            type(key),
-                        )
-                        continue
-                else:
+                str_key = _best_effort_str(key)
+                if str_key is None:
                     continue
+                key = str_key
             cleaned_mapping[key] = _clean_attribute_value(val, max_value_length)
         return cleaned_mapping
     if TYPE_CHECKING:
@@ -100,16 +100,7 @@ def _clean_attribute_value(  # pylint: disable=too-many-return-statements,too-ma
         "Mapping or Sequence of those types. Value's __str__ method will be called if it exists, otherwise the value will be replaced with None.",
         type(value),
     )
-    if _is_non_custom_str(value):
-        try:
-            return str(value)
-        except Exception:  # pylint: disable=broad-exception-caught
-            _logger.warning(
-                "Failed to stringify attribute value of type `%s`. Replacing with None.",
-                type(value),
-            )
-            return None
-    return None
+    return _best_effort_str(value)
 
 
 class BoundedAttributes(MutableMapping[str, types.AnyValue]):
