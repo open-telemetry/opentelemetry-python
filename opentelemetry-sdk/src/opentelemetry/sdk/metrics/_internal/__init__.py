@@ -190,6 +190,8 @@ class Meter(APIMeter):
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
+            if status.already_registered and not status.conflict:
+                instrument._add_callbacks(callbacks)
 
         if not status.already_registered:
             self._measurement_consumer.register_asynchronous_instrument(instrument)
@@ -305,6 +307,8 @@ class Meter(APIMeter):
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
+            if status.already_registered and not status.conflict:
+                instrument._add_callbacks(callbacks)
 
         if not status.already_registered:
             self._measurement_consumer.register_asynchronous_instrument(instrument)
@@ -338,6 +342,8 @@ class Meter(APIMeter):
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
+            if status.already_registered and not status.conflict:
+                instrument._add_callbacks(callbacks)
 
         if not status.already_registered:
             self._measurement_consumer.register_asynchronous_instrument(instrument)

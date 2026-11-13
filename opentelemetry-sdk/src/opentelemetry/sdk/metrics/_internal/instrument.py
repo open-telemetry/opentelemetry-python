@@ -133,25 +133,29 @@ class _Asynchronous(_Instrument, Asynchronous):
         super().__init__(name, callbacks, unit=unit, description=description)
 
         self._callbacks: list[CallbackT] = []
+        self._add_callbacks(callbacks)
 
-        if callbacks is not None:
-            for callback in callbacks:
-                if isinstance(callback, Generator):
-                    # advance generator to it's first yield
-                    next(callback)
+    def _add_callbacks(self, callbacks: Sequence[CallbackT] | None) -> None:
+        if callbacks is None:
+            return
 
-                    def inner(
-                        options: CallbackOptions,
-                        callback=callback,
-                    ) -> Iterable[Measurement]:
-                        try:
-                            return callback.send(options)
-                        except StopIteration:
-                            return []
+        for callback in callbacks:
+            if isinstance(callback, Generator):
+                # advance generator to it's first yield
+                next(callback)
 
-                    self._callbacks.append(inner)
-                else:
-                    self._callbacks.append(callback)
+                def inner(
+                    options: CallbackOptions,
+                    callback=callback,
+                ) -> Iterable[Measurement]:
+                    try:
+                        return callback.send(options)
+                    except StopIteration:
+                        return []
+
+                self._callbacks.append(inner)
+            else:
+                self._callbacks.append(callback)
 
     def _is_enabled(self) -> bool:
         return self._meter_config is None or self._meter_config.is_enabled
