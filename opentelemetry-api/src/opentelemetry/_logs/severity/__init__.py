@@ -4,7 +4,7 @@
 import enum
 
 
-class SeverityNumber(enum.Enum):
+class SeverityNumber(enum.IntEnum):
     """Numerical value of severity.
 
     Smaller numerical values correspond to less severe events
