@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: make metric reader `force_flush` return meaningful results
