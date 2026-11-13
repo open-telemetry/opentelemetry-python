@@ -65,9 +65,10 @@ either implicit or explicit context propagation consistently throughout.
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
 from enum import Enum
 from logging import getLogger
-from typing import cast
+from typing import Any, cast
 
 from typing_extensions import deprecated
 
@@ -147,6 +148,15 @@ class Link(_LinkBase):
 
 
 _Links = Sequence[Link] | None
+
+
+@dataclass(frozen=True, kw_only=True)
+class _SpanOptions:
+    """Experimental options for span creation.
+
+    New options must have defaults. Implementations ignore fields they do not
+    support, allowing the options to grow without changing method signatures.
+    """
 
 
 class SpanKind(Enum):
@@ -401,6 +411,107 @@ class Tracer(SignatureCompatABC):
             The newly-created span.
         """
 
+    # Experimental. Becomes public as start_span_with_options once span type is stable.
+    def _start_span_with_options(
+        self,
+        name: str,
+        context: Context | None = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: int | None = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+        *,
+        type_: str | None = None,
+        options: _SpanOptions | None = None,
+    ) -> "Span":
+        """Experimental: create a span with extensible options.
+
+        Args:
+            type_: Identifies the class of spans, for example ``"http.client.request"``.
+                Immutable after creation. Must be a case-sensitive ASCII string of
+                at most 255 characters starting with a letter, followed by letters,
+                digits, ``_``, ``.``, ``-`` or ``/``. Validated by the SDK.
+            options: Additional span creation options. Unsupported fields are
+                ignored. Omitting options preserves :meth:`start_span` behavior.
+
+        See :meth:`start_span` for the other arguments. The default
+        implementation calls :meth:`start_span` and ignores ``type_`` and ``options``.
+        Implementations supporting these options should override this method.
+
+        Example::
+
+            with tracer._start_span_with_options("GET", type_="http.client.request"):
+                ...
+        """
+        return self.start_span(
+            name,
+            **_non_default_start_args(
+                context, kind, attributes, links, start_time, record_exception, set_status_on_exception
+            ),
+        )
+
+    # Experimental. Becomes public as start_as_current_span_with_options once span type is stable.
+    @_agnosticcontextmanager
+    def _start_as_current_span_with_options(
+        self,
+        name: str,
+        context: Context | None = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: int | None = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
+        *,
+        type_: str | None = None,
+        options: _SpanOptions | None = None,
+    ) -> Iterator["Span"]:
+        """Experimental: create a current span with extensible options.
+
+        See :meth:`_start_span_with_options` for ``type_`` and ``options``. The default
+        implementation calls :meth:`start_as_current_span` and ignores
+        ``type_`` and ``options``.
+        """
+        args = _non_default_start_args(
+            context, kind, attributes, links, start_time, record_exception, set_status_on_exception
+        )
+        if not end_on_exit:
+            args["end_on_exit"] = end_on_exit
+        with self.start_as_current_span(name, **args) as span:
+            yield span
+
+
+def _non_default_start_args(
+    context: Context | None,
+    kind: SpanKind,
+    attributes: types.Attributes,
+    links: _Links,
+    start_time: int | None,
+    record_exception: bool,
+    set_status_on_exception: bool,
+) -> dict[str, Any]:
+    # Forward only what the caller set. Overrides of start_span may not
+    # accept every parameter.
+    args: dict[str, Any] = {}
+    if context is not None:
+        args["context"] = context
+    if kind is not SpanKind.INTERNAL:
+        args["kind"] = kind
+    if attributes is not None:
+        args["attributes"] = attributes
+    if links is not None:
+        args["links"] = links
+    if start_time is not None:
+        args["start_time"] = start_time
+    if record_exception is not True:
+        args["record_exception"] = record_exception
+    if set_status_on_exception is not True:
+        args["set_status_on_exception"] = set_status_on_exception
+    return args
+
 
 class ProxyTracer(Tracer):
     # pylint: disable=W0222,signature-differs
@@ -439,6 +550,64 @@ class ProxyTracer(Tracer):
     @_agnosticcontextmanager  # type: ignore
     def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:
         with self._tracer.start_as_current_span(*args, **kwargs) as span:  # type: ignore
+            yield span
+
+    def _start_span_with_options(
+        self,
+        name: str,
+        context: Context | None = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: int | None = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+        *,
+        type_: str | None = None,
+        options: _SpanOptions | None = None,
+    ) -> Span:
+        return self._tracer._start_span_with_options(  # pylint: disable=protected-access
+            name,
+            context,
+            kind,
+            attributes,
+            links,
+            start_time,
+            record_exception,
+            set_status_on_exception,
+            type_=type_,
+            options=options,
+        )
+
+    @_agnosticcontextmanager
+    def _start_as_current_span_with_options(
+        self,
+        name: str,
+        context: Context | None = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: int | None = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
+        *,
+        type_: str | None = None,
+        options: _SpanOptions | None = None,
+    ) -> Iterator[Span]:
+        with self._tracer._start_as_current_span_with_options(  # pylint: disable=protected-access
+            name,
+            context,
+            kind,
+            attributes,
+            links,
+            start_time,
+            record_exception,
+            set_status_on_exception,
+            end_on_exit,
+            type_=type_,
+            options=options,
+        ) as span:
             yield span
 
 
