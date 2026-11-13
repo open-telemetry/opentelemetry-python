@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (

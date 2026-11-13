@@ -38,7 +38,7 @@ otlp_json_file = "opentelemetry.exporter.otlp.json.file.trace_exporter:FileSpanE
 otlp_json_file = "opentelemetry.exporter.otlp.json.file.metric_exporter:FileMetricExporter"
 
 [project.entry-points.opentelemetry_logs_exporter]
-otlp_json_file = "opentelemetry.exporter.otlp.json.file._log_exporter:FileLogExporter"
+otlp_json_file = "opentelemetry.exporter.otlp.json.file.log_exporter:FileLogExporter"
 
 [project.urls]
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-otlp-json-file"

@@ -23,7 +23,7 @@ opentelemetry.exporter.otlp.proto.http
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.otlp.proto.http._log_exporter
+.. automodule:: opentelemetry.exporter.otlp.proto.http.log_exporter
     :members:
     :undoc-members:
     :show-inheritance:
@@ -46,7 +46,7 @@ opentelemetry.exporter.otlp.proto.grpc
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.otlp.proto.grpc._log_exporter
+.. automodule:: opentelemetry.exporter.otlp.proto.grpc.log_exporter
     :members:
     :undoc-members:
     :show-inheritance:
@@ -68,7 +68,7 @@ opentelemetry.exporter.otlp.json.file
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.otlp.json.file._log_exporter
+.. automodule:: opentelemetry.exporter.otlp.json.file.log_exporter
     :members:
     :undoc-members:
     :show-inheritance:
@@ -90,7 +90,7 @@ opentelemetry.exporter.otlp.json.http
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.otlp.json.http._log_exporter
+.. automodule:: opentelemetry.exporter.otlp.json.http.log_exporter
     :members:
     :undoc-members:
     :show-inheritance:
