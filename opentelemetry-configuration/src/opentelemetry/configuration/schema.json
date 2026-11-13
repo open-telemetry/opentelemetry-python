@@ -102,6 +102,21 @@
       ],
       "additionalProperties": false
     },
+    "AlwaysRecordSampler": {
+      "type": [
+        "object"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/Sampler",
+          "description": "Configure the wrapped sampler which provides the original sampling\ndecision that AlwaysRecord modifies. DROP decisions are converted\nto RECORD_ONLY, allowing processors to see all spans without sending them to exporters.\nProperty is required and must be non-null.\n"
+        }
+      },
+      "required": [
+        "root"
+      ]
+    },
     "AttributeLimits": {
       "type": "object",
       "additionalProperties": false,
@@ -113,6 +128,14 @@
           ],
           "minimum": 0,
           "description": "Configure max attribute value size. \nValue must be non-negative.\nIf omitted or null, there is no limit.\n"
+        },
+        "attribute_value_depth_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Configure the maximum attribute value depth for nested array and map values.\nDepth starts at 1 for the top-level attribute value and increments when descending into array elements or map values.\nArray or map values deeper than the limit are replaced with an empty value.\nValue must be positive.\nIf omitted or null, 64 is used.\n"
         },
         "attribute_count_limit": {
           "type": [
@@ -828,7 +851,7 @@
       "properties": {
         "general": {
           "$ref": "#/$defs/ExperimentalGeneralInstrumentation",
-          "description": "Configure general SemConv options that may apply to multiple languages and instrumentations.\nInstrumenation may merge general config options with the language specific configuration at .instrumentation.<language>.\nIf omitted, default values as described in ExperimentalGeneralInstrumentation are used.\n"
+          "description": "Configure general SemConv options that may apply to multiple languages and instrumentations.\nInstrumentation may merge general config options with the language specific configuration at .instrumentation.<language>.\nIf omitted, default values as described in ExperimentalGeneralInstrumentation are used.\n"
         },
         "cpp": {
           "$ref": "#/$defs/ExperimentalLanguageSpecificInstrumentation",
@@ -1352,6 +1375,16 @@
         }
       }
     },
+    "ExperimentalViewMatchingMode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "independent",
+        "composable"
+      ]
+    },
     "ExplicitBucketHistogramAggregation": {
       "type": [
         "object",
@@ -1591,6 +1624,14 @@
           "minimum": 0,
           "description": "Configure max attribute value size. Overrides .attribute_limits.attribute_value_length_limit. \nValue must be non-negative.\nIf omitted or null, there is no limit.\n"
         },
+        "attribute_value_depth_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Configure the maximum attribute value depth for nested array and map values. Overrides .attribute_limits.attribute_value_depth_limit.\nDepth starts at 1 for the top-level attribute value and increments when descending into array elements or map values.\nArray or map values deeper than the limit are replaced with an empty value.\nValue must be positive.\nIf omitted or null, 64 is used.\n"
+        },
         "attribute_count_limit": {
           "type": [
             "integer",
@@ -1653,6 +1694,10 @@
         "meter_configurator/development": {
           "$ref": "#/$defs/ExperimentalMeterConfigurator",
           "description": "Configure meters.\nIf omitted, all meters use default values as described in ExperimentalMeterConfig.\n"
+        },
+        "view_matching_mode/development": {
+          "$ref": "#/$defs/ExperimentalViewMatchingMode",
+          "description": "Controls how multiple matching Views are applied to an Instrument.\nValues include:\n* composable: Combines (merges) matching Views into unified metric streams unless distinct stream names are configured.\n* independent: Creates separate metric streams independently for each matching View.\nIf omitted, independent is used.\n"
         }
       },
       "required": [
@@ -1672,7 +1717,8 @@
       "properties": {
         "opencensus": {
           "$ref": "#/$defs/OpenCensusMetricProducer",
-          "description": "Configure metric producer to be opencensus.\nIf omitted, ignore.\n"
+          "deprecated": true,
+          "description": "Configure metric producer to be opencensus.\n\n**Deprecated** as of v1.2.0, may be removed in v2.0.0. The OpenCensus\ncompatibility specification it relies on was deprecated in\nhttps://github.com/open-telemetry/opentelemetry-specification/pull/5138.\nSDKs MAY continue to support this entry for backwards compatibility;\nnew configurations SHOULD NOT use it.\nIf omitted, ignore.\n"
         }
       }
     },
@@ -1718,7 +1764,9 @@
         "object",
         "null"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "deprecated": true,
+      "description": "**Deprecated** as of v1.2.0, may be removed in v2.0.0. The OpenCensus\ncompatibility specification it relies on was deprecated in\nhttps://github.com/open-telemetry/opentelemetry-specification/pull/5138.\nSee also the\n[OpenCensus sunset announcement](https://opentelemetry.io/blog/2023/sunsetting-opencensus/).\n"
     },
     "OtlpGrpcExporter": {
       "type": [
@@ -1759,6 +1807,22 @@
             "null"
           ],
           "description": "Configure compression.\nKnown values include: gzip, none. Implementations may support other compression algorithms.\nIf omitted or null, none is used.\n"
+        },
+        "max_request_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Configure the maximum size of each export request message in bytes, before compression.\nValue must be non-negative. A value of 0 indicates no limit (infinity) and is not recommended.\nIf omitted or null, 67108864 (64 MiB) is used.\n"
+        },
+        "max_response_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Configure the maximum size of each export response in bytes, after decompression.\nValue must be positive.\nIf omitted or null, 4194304 (4 MiB) is used.\n"
         },
         "timeout": {
           "type": [
@@ -1809,6 +1873,22 @@
             "null"
           ],
           "description": "Configure compression.\nKnown values include: gzip, none. Implementations may support other compression algorithms.\nIf omitted or null, none is used.\n"
+        },
+        "max_request_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Configure the maximum size of each export request message in bytes, before compression.\nValue must be non-negative. A value of 0 indicates no limit (infinity) and is not recommended.\nIf omitted or null, 67108864 (64 MiB) is used.\n"
+        },
+        "max_response_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Configure the maximum size of each export response in bytes, after decompression.\nValue must be positive.\nIf omitted or null, 4194304 (4 MiB) is used.\n"
         },
         "timeout": {
           "type": [
@@ -1878,6 +1958,22 @@
           ],
           "description": "Configure compression.\nKnown values include: gzip, none. Implementations may support other compression algorithms.\nIf omitted or null, none is used.\n"
         },
+        "max_request_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Configure the maximum size of each export request body in bytes, before compression.\nValue must be non-negative. A value of 0 indicates no limit (infinity) and is not recommended.\nIf omitted or null, 67108864 (64 MiB) is used.\n"
+        },
+        "max_response_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Configure the maximum size of each export response in bytes, after decompression.\nValue must be positive.\nIf omitted or null, 4194304 (4 MiB) is used.\n"
+        },
         "timeout": {
           "type": [
             "integer",
@@ -1931,6 +2027,22 @@
             "null"
           ],
           "description": "Configure compression.\nKnown values include: gzip, none. Implementations may support other compression algorithms.\nIf omitted or null, none is used.\n"
+        },
+        "max_request_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Configure the maximum size of each export request body in bytes, before compression.\nValue must be non-negative. A value of 0 indicates no limit (infinity) and is not recommended.\nIf omitted or null, 67108864 (64 MiB) is used.\n"
+        },
+        "max_response_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Configure the maximum size of each export response in bytes, after decompression.\nValue must be positive.\nIf omitted or null, 4194304 (4 MiB) is used.\n"
         },
         "timeout": {
           "type": [
@@ -2182,6 +2294,10 @@
           "$ref": "#/$defs/AlwaysOnSampler",
           "description": "Configure sampler to be always_on.\nIf omitted, ignore.\n"
         },
+        "always_record": {
+          "$ref": "#/$defs/AlwaysRecordSampler",
+          "description": "Configure sampler to be always_record.\nIf omitted, ignore.\n"
+        },
         "composite/development": {
           "$ref": "#/$defs/ExperimentalComposableSampler",
           "description": "Configure sampler to be composite.\nIf omitted, ignore.\n"
@@ -2315,6 +2431,14 @@
           ],
           "minimum": 0,
           "description": "Configure max attribute value size. Overrides .attribute_limits.attribute_value_length_limit. \nValue must be non-negative.\nIf omitted or null, there is no limit.\n"
+        },
+        "attribute_value_depth_limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Configure the maximum attribute value depth for nested array and map values. Overrides .attribute_limits.attribute_value_depth_limit.\nDepth starts at 1 for the top-level attribute value and increments when descending into array elements or map values.\nArray or map values deeper than the limit are replaced with an empty value.\nValue must be positive.\nIf omitted or null, 64 is used.\n"
         },
         "attribute_count_limit": {
           "type": [

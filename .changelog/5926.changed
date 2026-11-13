@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: bump declarative configuration schema to v1.2.0 and support the `always_record` sampler

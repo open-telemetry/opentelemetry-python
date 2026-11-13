@@ -18,6 +18,7 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
     _validate_mtls_pair,
+    _warn_unsupported_otlp_size_limits,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -296,6 +297,9 @@ def _create_otlp_http_metric_exporter(
 
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
+            _warn_unsupported_otlp_size_limits(
+                "otlp_http metric", config.max_request_size, config.max_response_size, max_request_size_supported=True
+            )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415
@@ -321,8 +325,15 @@ def _create_otlp_http_metric_exporter(
                 compression=compression,
                 preferred_temporality=preferred_temporality,
                 preferred_aggregation=preferred_aggregation,
+                max_request_size=config.max_request_size,
             )
         case OtlpHttpEncoding.json:
+            _warn_unsupported_otlp_size_limits(
+                "otlp_http JSON metric",
+                config.max_request_size,
+                config.max_response_size,
+                max_request_size_supported=False,
+            )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.exporter.otlp.common.http import (  # noqa: PLC0415
@@ -372,6 +383,9 @@ def _create_otlp_grpc_metric_exporter(
             feature="otlp_grpc metric exporter",
         ) from exc
 
+    _warn_unsupported_otlp_size_limits(
+        "otlp_grpc metric", config.max_request_size, config.max_response_size, max_request_size_supported=False
+    )
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
     endpoint = _resolve_otlp_grpc_endpoint(config.endpoint)
@@ -672,6 +686,8 @@ def create_meter_provider(
         if config.views:
             for view_config in config.views:
                 views.append(_create_view(view_config))
+        if config.view_matching_mode_development is not None:
+            _logger.warning("view_matching_mode/development is not yet supported and will be ignored.")
 
     meter_configurator = (
         _create_meter_configurator(config.meter_configurator_development)
