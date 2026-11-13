@@ -3,8 +3,11 @@
 
 import abc
 import gc
+import io
+import logging
 import multiprocessing
 import os
+import sys
 import time
 import unittest
 import weakref
@@ -717,6 +720,246 @@ class TestConcurrentMultiSpanProcessor(MultiSpanProcessorTestBase, unittest.Test
             weak_ref(),
             "The ConcurrentMultiSpanProcessor object created by this test wasn't garbage collected",
         )
+
+    # pylint: disable=no-self-use
+    def test_shutdown_runs_inline_after_executor_shutdown(self):
+        # Simulate the atexit scenario: CPython runs threading._shutdown()
+        # before the atexit queue, so the ThreadPoolExecutor is closed by the
+        # time TracerProvider.shutdown() runs. The underlying processors must
+        # still be shut down inline so buffered work is not dropped.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        mock_processor = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(mock_processor)
+
+        # pylint: disable=protected-access
+        multi_processor._executor.shutdown(wait=True)
+
+        multi_processor.shutdown()
+        mock_processor.shutdown.assert_called_once_with()
+
+    def test_on_end_runs_inline_after_executor_shutdown(self):
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        mock_processor = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(mock_processor)
+
+        # pylint: disable=protected-access
+        multi_processor._executor.shutdown(wait=True)
+
+        span = self.create_default_span()
+        multi_processor.on_end(span)
+        mock_processor.on_end.assert_called_once_with(span)
+
+    def test_callback_exception_does_not_block_siblings(self):
+        # Per OTel error-handling spec, a processor callback must not raise out
+        # of shutdown() and must not prevent healthy siblings from running.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        raising_processor = mock.Mock(spec=trace.SpanProcessor)
+        raising_processor.shutdown.side_effect = RuntimeError("processor boom")
+        healthy_processor = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(raising_processor)
+        multi_processor.add_span_processor(healthy_processor)
+
+        with self.assertLogs("opentelemetry.sdk.trace", level="ERROR"):
+            multi_processor.shutdown()
+
+        raising_processor.shutdown.assert_called_once_with()
+        healthy_processor.shutdown.assert_called_once_with()
+
+    def test_submit_runtime_error_does_not_double_invoke(self):
+        # If Thread.start fails AFTER the work item was enqueued, the inline
+        # fallback must not run the callback a second time: the queue worker
+        # will pick up the enqueued item. A shared claim per dispatch ensures
+        # at-most-once.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        processor_a = mock.Mock(spec=trace.SpanProcessor)
+        processor_b = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(processor_a)
+        multi_processor.add_span_processor(processor_b)
+
+        real_start = Thread.start
+        calls = {"n": 0}
+
+        def first_start_fails(target):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise RuntimeError("cannot start new thread")
+            return real_start(target)
+
+        with mock.patch.object(Thread, "start", first_start_fails):
+            multi_processor.shutdown()
+
+        self.assertEqual(processor_a.shutdown.call_count, 1)
+        self.assertEqual(processor_b.shutdown.call_count, 1)
+
+    def test_callback_exception_preserves_application_exception(self):
+        # A processor callback failure must not replace the caller's own
+        # exception when on_end runs on the caller's thread.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        faulty = mock.Mock(spec=trace.SpanProcessor)
+        faulty.on_end.side_effect = RuntimeError("telemetry fault")
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(faulty)
+        multi_processor.add_span_processor(healthy)
+
+        provider = trace.TracerProvider(active_span_processor=multi_processor, shutdown_on_exit=False)
+        app_error = ValueError("business fault")
+        try:
+            with self.assertRaises(ValueError) as caught:
+                with provider.get_tracer("test").start_as_current_span("x"):
+                    raise app_error
+            self.assertIs(caught.exception, app_error)
+        finally:
+            # Tear down through the public contract instead of reaching into
+            # the executor's protected member; the processor was never shut down.
+            multi_processor.shutdown()
+
+    def test_callback_logger_handler_raise_does_not_crash(self):
+        # A logging handler attached to the OTel logger that raises must not
+        # escape out of shutdown() nor deadlock; the reentry guard routes
+        # diagnostics to stderr and healthy siblings still run.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        raising_processor = mock.Mock(spec=trace.SpanProcessor)
+        raising_processor.shutdown.side_effect = RuntimeError("processor boom")
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(raising_processor)
+        multi_processor.add_span_processor(healthy)
+
+        class _BoomHandler(logging.Handler):
+            def emit(self, record):
+                # Raises OUTWARD (no self-catch, raiseExceptions left default).
+                # The safe diagnostic wrapper must contain it and fall back to stderr.
+                raise RuntimeError("handler boom")
+
+        handler = _BoomHandler(level=logging.ERROR)
+        otel_logger = logging.getLogger("opentelemetry.sdk.trace")
+        otel_logger.addHandler(handler)
+        try:
+            # Normal-executor path: faulty callback raises -> future.result() ->
+            # safe_log_exception -> outward handler raise must not escape.
+            multi_processor.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+
+        healthy.shutdown.assert_called_once_with()
+
+    def test_logging_handler_raise_during_callback_resolution_is_isolated(self):
+        # If resolving a callback (attribute lookup) raises AND an attached
+        # handler raises on the resulting exception log, dispatch must continue
+        # to healthy siblings.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+
+        class _ResolveBoom:
+            @property
+            def shutdown(self):
+                raise RuntimeError("resolve boom")
+
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(_ResolveBoom())
+        multi_processor.add_span_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk.trace")
+        old_level = otel_logger.level
+        otel_logger.setLevel(logging.ERROR)
+        handler = _OutwardBoom(level=logging.ERROR)
+        otel_logger.addHandler(handler)
+        try:
+            multi_processor.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
+
+        healthy.shutdown.assert_called_once_with()
+
+    def test_logging_handler_outward_raise_inline_fallback_is_isolated(self):
+        # A user logging handler that raises OUTWARD (no self-catch, with
+        # raiseExceptions left at its default) must not abort the inline
+        # fallback when the executor is already shut down (the atexit path).
+        # The executor-shutdown DEBUG diagnostic and the per-callback exception
+        # log are wrapped so a handler error falls back to stderr instead of
+        # escaping; both the faulty and the healthy processor still shut down.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        faulty = mock.Mock(spec=trace.SpanProcessor)
+        faulty.shutdown.side_effect = RuntimeError("processor fault")
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(faulty)
+        multi_processor.add_span_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk.trace")
+        old_level = otel_logger.level
+        handler = _OutwardBoom(level=logging.DEBUG)
+        otel_logger.setLevel(logging.DEBUG)
+        otel_logger.addHandler(handler)
+        # pylint: disable=protected-access
+        multi_processor._executor.shutdown(wait=True)
+        try:
+            # Must not raise despite the outward handler raise on the
+            # "Executor is shut down" DEBUG diagnostic.
+            multi_processor.shutdown()
+        finally:
+            otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
+
+        healthy.shutdown.assert_called_once_with()
+        faulty.shutdown.assert_called_once_with()
+
+    def test_submit_runtime_error_after_enqueue_does_not_double_invoke(self):
+        # submit raises RuntimeError after enqueue: inline fallback must not
+        # double-invoke; outward DEBUG handler must not escape; stderr fallback
+        # must still record the diagnostic.
+        multi_processor = trace.ConcurrentMultiSpanProcessor(2)
+        faulty = mock.Mock(spec=trace.SpanProcessor)
+        faulty.shutdown.side_effect = RuntimeError("processor fault")
+        healthy = mock.Mock(spec=trace.SpanProcessor)
+        multi_processor.add_span_processor(faulty)
+        multi_processor.add_span_processor(healthy)
+
+        class _OutwardBoom(logging.Handler):
+            def emit(self, record):
+                raise RuntimeError("handler boom outward")
+
+        otel_logger = logging.getLogger("opentelemetry.sdk.trace")
+        old_level = otel_logger.level
+        otel_logger.setLevel(logging.DEBUG)
+        handler = _OutwardBoom(level=logging.DEBUG)
+        otel_logger.addHandler(handler)
+
+        # pylint: disable=protected-access
+        orig_submit = multi_processor._executor.submit
+        enqueued_futures = []
+
+        def patched(fn, *a, **kw):
+            fut = orig_submit(fn, *a, **kw)  # actually enqueue
+            enqueued_futures.append(fut)
+            raise RuntimeError("cannot start new thread")  # then raise
+
+        multi_processor._executor.submit = patched
+        stderr_buf = io.StringIO()
+        old_stderr = sys.stderr
+        sys.stderr = stderr_buf
+        try:
+            multi_processor.shutdown()
+            # Wait for all enqueued workers to finish before asserting.
+            for fut in enqueued_futures:
+                fut.result()
+        finally:
+            sys.stderr = old_stderr
+            otel_logger.removeHandler(handler)
+            otel_logger.setLevel(old_level)
+            multi_processor._executor.shutdown(wait=True)
+
+        assert len(enqueued_futures) == 2  # one per processor, both enqueued
+        healthy.shutdown.assert_called_once_with()
+        faulty.shutdown.assert_called_once_with()
+        # Diagnostic stderr fallback must have recorded the shutdown message.
+        assert "Executor is shut down" in stderr_buf.getvalue()
 
     @unittest.skipUnless(hasattr(os, "fork"), "needs *nix")
     def test_batch_span_processor_fork(self):
