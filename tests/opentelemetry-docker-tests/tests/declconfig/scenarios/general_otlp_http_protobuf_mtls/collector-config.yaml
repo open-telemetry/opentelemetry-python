@@ -1,0 +1,32 @@
+# The default collector config, with mTLS on the OTLP/HTTP receiver: clients must
+# present a certificate signed by the test CA.
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        tls:
+          cert_file: /etc/otelcol/certs/server.crt
+          key_file: /etc/otelcol/certs/server.key
+          client_ca_file: /etc/otelcol/certs/ca.crt
+
+exporters:
+  otlphttp:
+    endpoint: ${env:OTLP_SINK_ENDPOINT}
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlphttp]
+    metrics:
+      receivers: [otlp]
+      exporters: [otlphttp]
+    logs:
+      receivers: [otlp]
+      exporters: [otlphttp]
