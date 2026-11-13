@@ -6,7 +6,11 @@ import unittest
 from unittest.mock import Mock, patch
 
 import opentelemetry._logs._internal as logs_internal
-from opentelemetry._logs import get_logger_provider, set_logger_provider
+from opentelemetry._logs import (
+    get_logger,
+    get_logger_provider,
+    set_logger_provider,
+)
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.test.globals_test import reset_logging_globals
 
@@ -27,6 +31,32 @@ class TestGlobals(unittest.TestCase):
         set_logger_provider(lp_mock)
         self.assertIs(logs_internal._LOGGER_PROVIDER, lp_mock)
         self.assertIs(get_logger_provider(), lp_mock)
+
+    def test_get_logger_params_and_defaults(self):
+        lp_mock = Mock()
+        logger = get_logger("test-logger", logger_provider=lp_mock)
+        self.assertIs(logger, lp_mock.get_logger.return_value)
+        lp_mock.get_logger.assert_called_once_with(
+            "test-logger",
+            None,
+            None,
+            None,
+        )
+        lp_mock.reset_mock()
+        logger = get_logger(
+            name="test-logger",
+            version="1.0.0",
+            logger_provider=lp_mock,
+            schema_url="https://opentelemetry.io/schemas/1.11.0",
+            attributes={"key": "val"},
+        )
+        self.assertIs(logger, lp_mock.get_logger.return_value)
+        lp_mock.get_logger.assert_called_once_with(
+            "test-logger",
+            "1.0.0",
+            "https://opentelemetry.io/schemas/1.11.0",
+            {"key": "val"},
+        )
 
     def test_get_logger_provider(self):
         # pylint: disable=protected-access

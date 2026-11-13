@@ -253,7 +253,9 @@ class ReadableLogRecord:
                 "timestamp": ns_to_iso_str(self.log_record.timestamp)
                 if self.log_record.timestamp is not None
                 else None,
-                "observed_timestamp": ns_to_iso_str(self.log_record.observed_timestamp),
+                "observed_timestamp": ns_to_iso_str(self.log_record.observed_timestamp)
+                if self.log_record.observed_timestamp is not None
+                else None,
                 "trace_id": (
                     f"0x{format_trace_id(self.log_record.trace_id)}" if self.log_record.trace_id is not None else ""
                 ),
@@ -262,6 +264,9 @@ class ReadableLogRecord:
                 ),
                 "trace_flags": self.log_record.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
+                "instrumentation_scope": json.loads(self.instrumentation_scope.to_json())
+                if self.instrumentation_scope is not None
+                else None,
                 "event_name": self.log_record.event_name if self.log_record.event_name else "",
             },
             indent=indent,
@@ -540,6 +545,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
 
     def shutdown(self) -> None:
         self._submit_and_wait(lambda lp: lp.shutdown)
+        self._executor.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors in parallel.

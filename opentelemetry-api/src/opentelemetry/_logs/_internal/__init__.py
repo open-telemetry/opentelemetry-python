@@ -24,7 +24,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
@@ -46,7 +46,7 @@ from opentelemetry.util.types import AnyValue, Attributes
 _logger = getLogger(__name__)
 
 
-class LogRecord(ABC):
+class LogRecord:
     """A LogRecord instance represents an event being logged.
 
     LogRecord instances are created and emitted via `Logger`
@@ -477,8 +477,8 @@ def set_logger_provider(logger_provider: LoggerProvider) -> None:
 
 
 def get_logger(
-    instrumenting_module_name: str,
-    instrumenting_library_version: str = "",
+    name: str,
+    version: str | None = None,
     logger_provider: LoggerProvider | None = None,
     schema_url: str | None = None,
     attributes: Attributes = None,
@@ -493,8 +493,8 @@ def get_logger(
     if logger_provider is None:
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
-        instrumenting_module_name,
-        instrumenting_library_version,
+        name,
+        version,
         schema_url,
         attributes,
     )

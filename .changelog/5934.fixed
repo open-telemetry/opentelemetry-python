@@ -1,0 +1,1 @@
+`opentelemetry-sdk`, `opentelemetry-test-utils`: include `instrumentation_scope` and guard `None` `observed_timestamp` in `ReadableLogRecord.to_json()`, shut down executor in `ConcurrentMultiLogRecordProcessor.shutdown()`, clear `exception` reference on copied `LogRecord` in `BatchLogRecordProcessor.on_emit()`, and add logs helpers to `TestBase`

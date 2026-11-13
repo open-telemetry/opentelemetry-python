@@ -312,9 +312,10 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         # Note: resource should not be None at this point as it's set during Logger.emit()
         resource = log_record.resource if log_record.resource is not None else Resource.create({})
         # Shallow copy the API log record to break the reference to the potentially large context
-        # while keeping the original context intact for other processors.
+        # and exception traceback frames while keeping the original intact for other processors.
         api_log_record = copy.copy(log_record.log_record)
         api_log_record.context = Context()
+        api_log_record.exception = None
 
         readable_log_record = ReadableLogRecord(
             log_record=api_log_record,

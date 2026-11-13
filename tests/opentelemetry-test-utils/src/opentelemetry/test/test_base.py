@@ -6,8 +6,14 @@ import unittest
 from collections.abc import Sequence
 from contextlib import contextmanager
 
+from opentelemetry import _logs as logs_api
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
+from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs.export import (
+    InMemoryLogRecordExporter,
+    SimpleLogRecordProcessor,
+)
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.aggregation import (
     _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES,
@@ -25,6 +31,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 from opentelemetry.test.globals_test import (
+    reset_logging_globals,
     reset_metrics_globals,
     reset_trace_globals,
 )
@@ -52,10 +59,24 @@ class TestBase(unittest.TestCase):
         ) = self.create_meter_provider()
         metrics_api.set_meter_provider(self.meter_provider)
 
+        # This is done because set_logger_provider cannot override the
+        # current logger provider.
+        reset_logging_globals()
+        (
+            self.logger_provider,
+            self.memory_log_exporter,
+        ) = self.create_logger_provider()
+        logs_api.set_logger_provider(self.logger_provider)
+        self.memory_log_exporter.clear()
+
     def tearDown(self):
         super().tearDown()
         reset_trace_globals()
         reset_metrics_globals()
+        reset_logging_globals()
+
+    def get_finished_logs(self):
+        return self.memory_log_exporter.get_finished_logs()
 
     def get_finished_spans(self):
         return FinishedTestSpans(self, self.memory_exporter.get_finished_spans())
@@ -116,6 +137,26 @@ class TestBase(unittest.TestCase):
         kwargs["metric_readers"] = metric_readers
         meter_provider = MeterProvider(**kwargs)
         return meter_provider, memory_reader
+
+    @staticmethod
+    def create_logger_provider(**kwargs) -> tuple[LoggerProvider, InMemoryLogRecordExporter]:
+        """Helper to create a configured logger provider.
+
+        Creates and configures a `LoggerProvider` with a
+        `SimpleLogRecordProcessor` and an `InMemoryLogRecordExporter`.
+        All the parameters passed are forwarded to the LoggerProvider
+        constructor.
+
+        Returns:
+            A tuple with the logger provider in the first element and the
+            in-memory log exporter in the second.
+        """
+        logger_provider = LoggerProvider(**kwargs)
+        memory_exporter = InMemoryLogRecordExporter()
+        log_record_processor = SimpleLogRecordProcessor(memory_exporter)
+        logger_provider.add_log_record_processor(log_record_processor)
+
+        return logger_provider, memory_exporter
 
     @staticmethod
     @contextmanager

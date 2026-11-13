@@ -251,3 +251,9 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         for mock in mocks:
             self.assertEqual(1, mock.force_flush.call_count)
         multi_log_record_processor.shutdown()
+
+    def test_shutdown_shuts_down_executor(self):
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor()
+        multi_log_record_processor.shutdown()
+        with self.assertRaises(RuntimeError):
+            multi_log_record_processor._executor.submit(lambda: None)
