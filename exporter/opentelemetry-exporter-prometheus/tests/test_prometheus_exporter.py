@@ -1088,3 +1088,121 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         self.assertIn("5.0", bucket_bounds)
         self.assertIn("10.0", bucket_bounds)
         reader.shutdown()
+
+    def test_multiple_instruments_with_different_label_sets(self):
+        for reverse_order in (False, True):
+            registry = CollectorRegistry()
+            reader = PrometheusMetricReader(disable_target_info=True, registry=registry)
+            provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
+            try:
+                first = provider.get_meter("scope.first").create_histogram(
+                    "request.duration", unit="ms", description="Duration."
+                )
+                second = provider.get_meter("scope.second").create_histogram(
+                    "request.duration", unit="ms", description="Duration."
+                )
+
+                if reverse_order:
+                    second.record(1, {"host": "example.com", "method": "POST", "status": "500"})
+                    first.record(1, {"method": "GET", "status": "200"})
+                else:
+                    first.record(1, {"method": "GET", "status": "200"})
+                    second.record(1, {"host": "example.com", "method": "POST", "status": "500"})
+
+                text = generate_latest(registry).decode("utf-8")
+                self.assertEqual(text.count("# HELP request_duration_milliseconds Duration."), 1)
+                self.assertEqual(text.count("# TYPE request_duration_milliseconds histogram"), 1)
+                self.assertIn(
+                    'request_duration_milliseconds_count{host="",method="GET",'
+                    'otel_scope_name="scope.first",otel_scope_schema_url="",'
+                    'otel_scope_version="",status="200"} 1.0',
+                    text,
+                )
+                self.assertIn(
+                    'request_duration_milliseconds_count{host="example.com",method="POST",'
+                    'otel_scope_name="scope.second",otel_scope_schema_url="",'
+                    'otel_scope_version="",status="500"} 1.0',
+                    text,
+                )
+            finally:
+                reader.shutdown()
+
+    def test_multiple_counters_and_gauges_with_different_label_sets(self):
+        registry = CollectorRegistry()
+        reader = PrometheusMetricReader(disable_target_info=True, registry=registry)
+        provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
+        try:
+            meter_a = provider.get_meter("scope.a")
+            meter_b = provider.get_meter("scope.b")
+
+            counter_a = meter_a.create_counter("jobs.total", unit="1", description="Jobs")
+            counter_b = meter_b.create_counter("jobs.total", unit="1", description="Jobs")
+            counter_a.add(2, {"queue": "fast"})
+            counter_b.add(5, {"queue": "slow", "region": "us-east"})
+
+            gauge_a = meter_a.create_up_down_counter("queue.depth", description="Depth")
+            gauge_b = meter_b.create_up_down_counter("queue.depth", description="Depth")
+            gauge_a.add(3, {"worker": "w1"})
+            gauge_b.add(7, {"worker": "w2", "zone": "z1"})
+
+            text = generate_latest(registry).decode("utf-8")
+            self.assertEqual(text.count("# TYPE jobs_total counter"), 1)
+            self.assertIn(
+                'jobs_total{otel_scope_name="scope.a",otel_scope_schema_url="",'
+                'otel_scope_version="",queue="fast",region=""} 2.0',
+                text,
+            )
+            self.assertIn(
+                'jobs_total{otel_scope_name="scope.b",otel_scope_schema_url="",'
+                'otel_scope_version="",queue="slow",region="us-east"} 5.0',
+                text,
+            )
+            self.assertEqual(text.count("# TYPE queue_depth gauge"), 1)
+            self.assertIn(
+                'queue_depth{otel_scope_name="scope.a",otel_scope_schema_url="",'
+                'otel_scope_version="",worker="w1",zone=""} 3.0',
+                text,
+            )
+            self.assertIn(
+                'queue_depth{otel_scope_name="scope.b",otel_scope_schema_url="",'
+                'otel_scope_version="",worker="w2",zone="z1"} 7.0',
+                text,
+            )
+        finally:
+            reader.shutdown()
+
+    def test_queued_metrics_datas_merge_labels(self):
+        collector = _CustomCollector(disable_target_info=True, scope_info_enabled=False)
+        metric_a = _generate_sum("queued_requests", 1, attributes={"method": "GET"}, unit="")
+        metric_b = _generate_sum("queued_requests", 2, attributes={"host": "api", "method": "POST"}, unit="")
+        collector.add_metrics_data(
+            MetricsData(
+                resource_metrics=[
+                    ResourceMetrics(
+                        resource=Resource.get_empty(),
+                        scope_metrics=[
+                            ScopeMetrics(scope=InstrumentationScope("s1"), metrics=[metric_a], schema_url="")
+                        ],
+                        schema_url="",
+                    )
+                ]
+            )
+        )
+        collector.add_metrics_data(
+            MetricsData(
+                resource_metrics=[
+                    ResourceMetrics(
+                        resource=Resource.get_empty(),
+                        scope_metrics=[
+                            ScopeMetrics(scope=InstrumentationScope("s2"), metrics=[metric_b], schema_url="")
+                        ],
+                        schema_url="",
+                    )
+                ]
+            )
+        )
+
+        text = generate_latest(collector).decode("utf-8")
+        self.assertEqual(text.count("# TYPE queued_requests_total counter"), 1)
+        self.assertIn('queued_requests_total{host="",method="GET"} 1.0', text)
+        self.assertIn('queued_requests_total{host="api",method="POST"} 2.0', text)
