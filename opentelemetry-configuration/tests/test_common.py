@@ -33,6 +33,7 @@ from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
     GrpcTls,
     LogRecordExporter,
+    NameStringValuePair,
     OpenTelemetryConfiguration,
     PushMetricExporter,
     Sampler,
@@ -88,9 +89,30 @@ class TestParseHeaders(unittest.TestCase):
             {"x-api-key": "secret", "env": "prod"},
         )
 
-    def test_struct_header_none_value_becomes_empty_string(self):
-        headers = [SimpleNamespace(name="x-key", value=None)]
-        self.assertEqual(_parse_headers(headers, None), {"x-key": ""})
+    def test_struct_header_null_value_is_ignored(self):
+        for null_pair in (
+            NameStringValuePair(name="auth", value=None),
+            {"name": "auth", "value": None},
+            {"name": "auth"},
+        ):
+            with self.subTest(null_pair=null_pair):
+                self.assertEqual(_parse_headers([null_pair], None), {})
+                self.assertEqual(
+                    _parse_headers([null_pair], "auth=keep"),
+                    {"auth": "keep"},
+                )
+
+    def test_struct_header_empty_string_value_is_kept(self):
+        for empty_pair in (
+            NameStringValuePair(name="auth", value=""),
+            {"name": "auth", "value": ""},
+        ):
+            with self.subTest(empty_pair=empty_pair):
+                self.assertEqual(_parse_headers([empty_pair], None), {"auth": ""})
+                self.assertEqual(
+                    _parse_headers([empty_pair], "auth=keep"),
+                    {"auth": ""},
+                )
 
     def test_struct_headers_override_headers_list(self):
         # struct takes priority over headers_list for same key
