@@ -11,7 +11,6 @@ from unittest.mock import MagicMock, patch
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration._propagator import (
-    configure_propagator,
     create_propagator,
 )
 from opentelemetry.configuration.models import (
@@ -250,32 +249,11 @@ class TestCreatePropagator(unittest.TestCase):
                 create_propagator(config)
 
 
-class TestConfigurePropagator(unittest.TestCase):
-    def test_configure_propagator_calls_set_global_textmap(self):
-        with patch("opentelemetry.configuration._propagator.set_global_textmap") as mock_set:
-            configure_propagator(None)
-            mock_set.assert_called_once()
-            arg = mock_set.call_args[0][0]
-            self.assertIsInstance(arg, CompositePropagator)
-
-    def test_configure_propagator_with_config(self):
-        config = PropagatorConfig(composite=[TextMapPropagatorConfig(tracecontext={})])
-        with patch("opentelemetry.configuration._propagator.set_global_textmap") as mock_set:
-            configure_propagator(config)
-            mock_set.assert_called_once()
-            propagator = mock_set.call_args[0][0]
-            self.assertIsInstance(propagator, CompositePropagator)
-            self.assertEqual(len(propagator._propagators), 1)  # type: ignore[attr-defined]
-
+class TestCreatePropagatorIgnoresEnv(unittest.TestCase):
     @patch.dict(environ, {OTEL_PROPAGATORS: "baggage"})
     def test_otel_propagators_env_var_ignored(self):
-        """OTEL_PROPAGATORS env var must not influence configure_propagator output."""
+        """OTEL_PROPAGATORS env var must not influence create_propagator output."""
         config = PropagatorConfig(composite=[TextMapPropagatorConfig(tracecontext={})])
-        with patch("opentelemetry.configuration._propagator.set_global_textmap") as mock_set:
-            configure_propagator(config)
-            propagator = mock_set.call_args[0][0]
-            self.assertEqual(len(propagator._propagators), 1)  # type: ignore[attr-defined]
-            self.assertIsInstance(
-                propagator._propagators[0],
-                TraceContextTextMapPropagator,  # type: ignore[attr-defined]
-            )
+        propagator = create_propagator(config)
+        self.assertEqual(len(propagator._propagators), 1)
+        self.assertIsInstance(propagator._propagators[0], TraceContextTextMapPropagator)

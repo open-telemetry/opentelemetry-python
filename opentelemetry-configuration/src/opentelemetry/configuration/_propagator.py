@@ -11,7 +11,6 @@ from opentelemetry.configuration.models import (
 from opentelemetry.configuration.models import (
     TextMapPropagator as TextMapPropagatorConfig,
 )
-from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.propagators.textmap import TextMapPropagator
 from opentelemetry.trace.propagation.tracecontext import (
@@ -88,15 +87,3 @@ def create_propagator(
             propagators.setdefault(type(propagator), propagator)
 
     return CompositePropagator(list(propagators.values()))
-
-
-def configure_propagator(config: PropagatorConfig | None) -> None:
-    """Configure the global text map propagator from declarative config.
-
-    Always calls set_global_textmap to override any defaults (including the
-    env-var-based tracecontext+baggage default set by the SDK).
-
-    Args:
-        config: Propagator config from the parsed config file, or None.
-    """
-    set_global_textmap(create_propagator(config))

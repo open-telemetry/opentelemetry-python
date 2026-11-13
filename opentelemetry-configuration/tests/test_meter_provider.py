@@ -14,7 +14,6 @@ from unittest.mock import MagicMock, patch
 
 from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._meter_provider import (
-    configure_meter_provider,
     create_meter_provider,
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
@@ -166,20 +165,6 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
         self.assertIsInstance(reader, PeriodicExportingMetricReader)
         self.assertEqual(reader._export_interval_millis, 60000.0)
 
-    def test_configure_none_does_not_set_global(self):
-        original = __import__("opentelemetry.metrics", fromlist=["get_meter_provider"]).get_meter_provider()
-        configure_meter_provider(None)
-        after = __import__("opentelemetry.metrics", fromlist=["get_meter_provider"]).get_meter_provider()
-        self.assertIs(original, after)
-
-    def test_configure_with_config_sets_global(self):
-        config = MeterProviderConfig(readers=[])
-        with patch("opentelemetry.configuration._meter_provider.metrics.set_meter_provider") as mock_set:
-            configure_meter_provider(config)
-            mock_set.assert_called_once()
-            arg = mock_set.call_args[0][0]
-            self.assertIsInstance(arg, MeterProvider)
-
 
 class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-public-methods
     @staticmethod
@@ -233,6 +218,73 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
         reader = provider._metric_readers[0]
         self.assertIsInstance(reader, PeriodicExportingMetricReader)
         self.assertIsInstance(reader._exporter, ConsoleMetricExporter)
+
+    def test_readers_are_registered_with_provider(self):
+        config = self._make_periodic_config(PushMetricExporterConfig(console=ConsoleMetricExporterConfig()))
+        provider = create_meter_provider(config)
+        reader = provider._metric_readers[0]
+        with patch.object(reader, "force_flush") as mock_force_flush:
+            provider.force_flush()
+        mock_force_flush.assert_called_once()
+
+    def test_failed_reader_shuts_down_created_readers(self):
+        config = MeterProviderConfig(
+            readers=[
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
+                    )
+                ),
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig())
+                    )
+                ),
+            ]
+        )
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.metric_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            patch.object(PeriodicExportingMetricReader, "shutdown") as mock_shutdown,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_meter_provider(config)
+        mock_shutdown.assert_called_once()
+
+    def test_failed_cleanup_does_not_mask_configuration_error(self):
+        config = MeterProviderConfig(
+            readers=[
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=PushMetricExporterConfig(console=ConsoleMetricExporterConfig())
+                    )
+                ),
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig())
+                    )
+                ),
+            ]
+        )
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.metric_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            patch.object(PeriodicExportingMetricReader, "shutdown", side_effect=RuntimeError("shutdown failed")),
+            self.assertLogs("opentelemetry.configuration._common", level="ERROR") as logs,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_meter_provider(config)
+        self.assertIn("Failed to shut down MeterProvider", logs.output[0])
 
     def test_null_valued_console_exporter_from_parsed_config(self):
         # Regression test for #5451: a dataclass-typed exporter written as
@@ -328,9 +380,10 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
                     )
                 )
             )
-            create_meter_provider(config)
+            provider = create_meter_provider(config)
 
         _, kwargs = mock_exporter_cls.call_args
+        self.assertIs(kwargs["meter_provider"], provider)
         self.assertEqual(kwargs["endpoint"], "http://localhost:4318")
         self.assertIsNone(kwargs["headers"])
         self.assertEqual(kwargs["timeout"], 10.0)
@@ -449,6 +502,27 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
         ):
             create_meter_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
+
+    def test_otlp_grpc_created_with_meter_provider(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": mock_module,
+                "grpc": MagicMock(),
+            },
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(endpoint="http://localhost:4317"))
+            )
+            provider = create_meter_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertIs(kwargs["meter_provider"], provider)
+        self.assertEqual(kwargs["endpoint"], "http://localhost:4317")
 
     def test_otlp_http_tls_files_passed(self):
         for encoding in (None, OtlpHttpEncoding.protobuf, OtlpHttpEncoding.json):
@@ -740,11 +814,8 @@ class TestCreatePullMetricReaders(unittest.TestCase):
                 create_meter_provider(config)
 
     def test_pull_no_exporter_raises(self):
-        config = MeterProviderConfig(
-            readers=[MetricReaderConfig(pull=PullMetricReaderConfig(exporter=PullMetricExporterConfig()))]
-        )
-        with self.assertRaises(ConfigurationError):
-            create_meter_provider(config)
+        with self.assertRaises(ValueError):
+            PullMetricExporterConfig()
 
     def test_pull_plugin_loads_via_entry_point(self):
         mock_reader = MagicMock()
@@ -892,14 +963,12 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
         )
 
     def test_no_reader_type_raises(self):
-        config = MeterProviderConfig(readers=[MetricReaderConfig()])
-        with self.assertRaises(ConfigurationError):
-            create_meter_provider(config)
+        with self.assertRaises(ValueError):
+            MetricReaderConfig()
 
     def test_no_exporter_type_raises(self):
-        config = self._make_periodic_config(PushMetricExporterConfig())
-        with self.assertRaises(ConfigurationError):
-            create_meter_provider(config)
+        with self.assertRaises(ValueError):
+            PushMetricExporterConfig()
 
     def test_plugin_metric_exporter_loaded_via_entry_point(self):
         mock_exporter = MagicMock()

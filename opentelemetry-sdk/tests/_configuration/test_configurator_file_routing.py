@@ -23,12 +23,12 @@ class _FakeConfigurationModule(types.ModuleType):
     """
 
     configure_sdk: MagicMock
-    load_config_file: MagicMock
+    load_config: MagicMock
 
     def __init__(self) -> None:
         super().__init__("opentelemetry.configuration")
         self.configure_sdk = MagicMock()
-        self.load_config_file = MagicMock()
+        self.load_config = MagicMock()
 
 
 class TestConfiguratorFileRouting(unittest.TestCase):
@@ -49,12 +49,12 @@ class TestConfiguratorFileRouting(unittest.TestCase):
     def test_env_var_set_routes_to_declarative_path(self, mock_init_components):
         fake = _FakeConfigurationModule()
         sentinel_config = object()
-        fake.load_config_file.return_value = sentinel_config
+        fake.load_config.return_value = sentinel_config
 
         with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
             _OTelSDKConfigurator()._configure()
 
-        fake.load_config_file.assert_called_once_with("/tmp/otel.yaml")
+        fake.load_config.assert_called_once_with("/tmp/otel.yaml")
         fake.configure_sdk.assert_called_once_with(sentinel_config)
         mock_init_components.assert_not_called()
 
@@ -73,7 +73,6 @@ class TestConfiguratorFileRouting(unittest.TestCase):
     @patch.dict("os.environ", {OTEL_CONFIG_FILE: "/tmp/otel.yaml"})
     def test_env_var_set_with_kwargs_warns_and_ignores(self):
         fake = _FakeConfigurationModule()
-        fake.load_config_file.return_value = object()
 
         with patch.dict("sys.modules", {"opentelemetry.configuration": fake}):
             with self.assertLogs("opentelemetry.sdk._configuration", level="WARNING") as captured:

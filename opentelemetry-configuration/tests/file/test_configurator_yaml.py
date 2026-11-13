@@ -16,7 +16,7 @@ from opentelemetry.configuration._meter_provider import (
 from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
 )
-from opentelemetry.configuration.file import load_config_file
+from opentelemetry.configuration.file import load_config
 from opentelemetry.configuration.models import (
     ExperimentalLoggerConfig,
     ExperimentalLoggerConfigurator,
@@ -38,7 +38,7 @@ class TestConfiguratorYaml(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         config_path = Path(__file__).parent / "data" / "configurator_config.yaml"
-        cls.config = load_config_file(str(config_path))
+        cls.config = load_config(str(config_path))
 
     def test_tracer_configurator_parsed_from_yaml(self):
         self.assertEqual(

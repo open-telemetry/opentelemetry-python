@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 import math
 
-from opentelemetry import metrics
 from opentelemetry.configuration._common import (
     _grpc_credentials_from_tls,
     _grpc_insecure_from_tls,
@@ -17,6 +16,7 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
+    _shutdown_quietly,
     _validate_mtls_pair,
     load_entry_point,
 )
@@ -284,8 +284,13 @@ def _create_console_metric_exporter(
 
 def _create_otlp_http_metric_exporter(
     config: OtlpHttpMetricExporterConfig,
+    meter_provider: MeterProvider,
 ) -> MetricExporter:
-    """Create an OTLP HTTP metric exporter from config."""
+    """Create an OTLP HTTP metric exporter from config.
+
+    ``meter_provider`` receives the protobuf exporter's own metrics; the JSON
+    exporter does not record any.
+    """
     tls = config.tls
     if tls is not None:
         _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
@@ -321,6 +326,7 @@ def _create_otlp_http_metric_exporter(
                 compression=compression,
                 preferred_temporality=preferred_temporality,
                 preferred_aggregation=preferred_aggregation,
+                meter_provider=meter_provider,
             )
         case OtlpHttpEncoding.json:
             try:
@@ -357,6 +363,7 @@ def _create_otlp_http_metric_exporter(
 
 def _create_otlp_grpc_metric_exporter(
     config: OtlpGrpcMetricExporterConfig,
+    meter_provider: MeterProvider,
 ) -> MetricExporter:
     """Create an OTLP gRPC metric exporter from config."""
     try:
@@ -388,6 +395,7 @@ def _create_otlp_grpc_metric_exporter(
         compression=compression,  # type: ignore[arg-type]
         preferred_temporality=preferred_temporality,
         preferred_aggregation=preferred_aggregation,
+        meter_provider=meter_provider,
     )
 
 
@@ -425,6 +433,7 @@ def _create_otlp_file_development_metric_exporter(
 
 def _create_push_metric_exporter(
     config: PushMetricExporterConfig,
+    meter_provider: MeterProvider,
 ) -> MetricExporter:
     """Create a push metric exporter from config.
 
@@ -435,9 +444,9 @@ def _create_push_metric_exporter(
     """
     match config:
         case PushMetricExporterConfig(otlp_http=exporter_config) if exporter_config is not None:
-            return _create_otlp_http_metric_exporter(exporter_config)
+            return _create_otlp_http_metric_exporter(exporter_config, meter_provider)
         case PushMetricExporterConfig(otlp_grpc=exporter_config) if exporter_config is not None:
-            return _create_otlp_grpc_metric_exporter(exporter_config)
+            return _create_otlp_grpc_metric_exporter(exporter_config, meter_provider)
         case PushMetricExporterConfig(console=exporter_config) if exporter_config is not None:
             return _create_console_metric_exporter(exporter_config)
         case PushMetricExporterConfig(otlp_file_development=exporter_config) if exporter_config is not None:
@@ -478,12 +487,13 @@ def _create_cardinality_limits(config: CardinalityLimitsConfig | None) -> Cardin
 
 def _create_periodic_metric_reader(
     config: PeriodicMetricReaderConfig,
+    meter_provider: MeterProvider,
 ) -> PeriodicExportingMetricReader:
     """Create a PeriodicExportingMetricReader from config.
 
     Passes explicit interval/timeout defaults to suppress env var reading.
     """
-    exporter = _create_push_metric_exporter(config.exporter)
+    exporter = _create_push_metric_exporter(config.exporter, meter_provider)
     interval = config.interval if config.interval is not None else _DEFAULT_EXPORT_INTERVAL_MILLIS
     timeout = config.timeout if config.timeout is not None else _DEFAULT_EXPORT_TIMEOUT_MILLIS
     # A timeout of 0 means no limit.
@@ -583,10 +593,13 @@ def _create_pull_metric_reader(
     return _create_pull_metric_exporter(config.exporter, _create_cardinality_limits(config.cardinality_limits))
 
 
-def _create_metric_reader(config: MetricReaderConfig) -> MetricReader:
-    """Create a MetricReader from config."""
+def _create_metric_reader(config: MetricReaderConfig, meter_provider: MeterProvider) -> MetricReader:
+    """Create a MetricReader from config.
+
+    ``meter_provider`` receives the exporter's own metrics.
+    """
     if config.periodic is not None:
-        return _create_periodic_metric_reader(config.periodic)
+        return _create_periodic_metric_reader(config.periodic, meter_provider)
     if config.pull is not None:
         return _create_pull_metric_reader(config.pull)
     raise ConfigurationError("No reader type specified in metric reader config. Supported types: periodic, pull.")
@@ -650,6 +663,9 @@ def create_meter_provider(
     or any other env vars for values explicitly controlled by the config.
     Absent config values use OTel spec defaults, matching Java SDK behavior.
 
+    Readers are added after the provider is created so that their exporters
+    record the SDK's own metrics through it.
+
     Args:
         config: MeterProvider config from the parsed config file, or None.
         resource: Resource to attach to the provider.
@@ -663,15 +679,10 @@ def create_meter_provider(
     if config is not None and config.exemplar_filter is not None:
         exemplar_filter = _create_exemplar_filter(config.exemplar_filter)
 
-    readers: list[MetricReader] = []
     views: list[View] = []
-
-    if config is not None:
-        for reader_config in config.readers:
-            readers.append(_create_metric_reader(reader_config))
-        if config.views:
-            for view_config in config.views:
-                views.append(_create_view(view_config))
+    if config is not None and config.views:
+        for view_config in config.views:
+            views.append(_create_view(view_config))
 
     meter_configurator = (
         _create_meter_configurator(config.meter_configurator_development)
@@ -679,28 +690,19 @@ def create_meter_provider(
         else None
     )
 
-    return MeterProvider(
+    provider = MeterProvider(
         resource=resource,
-        metric_readers=readers,
         exemplar_filter=exemplar_filter,  # type: ignore[arg-type]
         views=views,
         _meter_configurator=meter_configurator,
     )
 
+    if config is not None:
+        try:
+            for reader_config in config.readers:
+                provider.add_metric_reader(_create_metric_reader(reader_config, provider))
+        except Exception:
+            _shutdown_quietly(provider)
+            raise
 
-def configure_meter_provider(
-    config: MeterProviderConfig | None,
-    resource: Resource | None = None,
-) -> None:
-    """Configure the global MeterProvider from declarative config.
-
-    When config is None (meter_provider section absent from config file),
-    the global is not set — matching Java/JS SDK behavior.
-
-    Args:
-        config: MeterProvider config from the parsed config file, or None.
-        resource: Resource to attach to the provider.
-    """
-    if config is None:
-        return
-    metrics.set_meter_provider(create_meter_provider(config, resource))
+    return provider

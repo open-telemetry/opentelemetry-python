@@ -16,7 +16,6 @@ from unittest.mock import MagicMock, patch
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration._conversion import _dict_to_dataclass
 from opentelemetry.configuration._tracer_provider import (
-    configure_tracer_provider,
     create_tracer_provider,
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
@@ -155,20 +154,6 @@ class TestCreateTracerProviderBasic(unittest.TestCase):
             provider = create_tracer_provider(None)
         self.assertEqual(provider._span_limits.max_span_attributes, 128)
 
-    def test_configure_none_does_not_set_global(self):
-        original = __import__("opentelemetry.trace", fromlist=["get_tracer_provider"]).get_tracer_provider()
-        configure_tracer_provider(None)
-        after = __import__("opentelemetry.trace", fromlist=["get_tracer_provider"]).get_tracer_provider()
-        self.assertIs(original, after)
-
-    def test_configure_with_config_sets_global(self):
-        config = TracerProviderConfig(processors=[])
-        with patch("opentelemetry.configuration._tracer_provider.trace.set_tracer_provider") as mock_set:
-            configure_tracer_provider(config)
-            mock_set.assert_called_once()
-            arg = mock_set.call_args[0][0]
-            self.assertIsInstance(arg, TracerProvider)
-
     def test_processors_added_in_order(self):
         mock_proc_a = MagicMock()
         mock_proc_b = MagicMock()
@@ -248,9 +233,13 @@ class TestCreateSampler(unittest.TestCase):
         self.assertIs(sampler._local_parent_sampled, ALWAYS_ON)
         self.assertIs(sampler._local_parent_not_sampled, ALWAYS_OFF)
 
-    def test_no_sampler_raises_configuration_error(self):
-        with self.assertRaises(ConfigurationError):
-            self._make_provider(SamplerConfig())
+    def test_no_sampler_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            SamplerConfig()
+
+    def test_multiple_samplers_raise_value_error(self):
+        with self.assertRaises(ValueError):
+            SamplerConfig(always_on={}, always_off={})
 
     def test_null_valued_always_on_from_parsed_config(self):
         # Regression test for #5451: a leaf sampler written as ``always_on:``
@@ -562,7 +551,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         )
 
 
-class TestCreateSpanExporterAndProcessor(unittest.TestCase):
+class TestCreateSpanExporterAndProcessor(unittest.TestCase):  # pylint: disable=too-many-public-methods
     # pylint: disable=no-self-use
 
     @staticmethod
@@ -620,6 +609,48 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             create_tracer_provider(config)
         self.assertIn("otlp-proto-http", str(ctx.exception))
 
+    @staticmethod
+    def _make_partial_failure_config():
+        return TracerProviderConfig(
+            processors=[
+                SpanProcessorConfig(batch=BatchSpanProcessorConfig(exporter=SpanExporterConfig(console={}))),
+                SpanProcessorConfig(
+                    batch=BatchSpanProcessorConfig(exporter=SpanExporterConfig(otlp_http=OtlpHttpExporterConfig()))
+                ),
+            ]
+        )
+
+    def test_failed_processor_shuts_down_created_processors(self):
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            patch.object(BatchSpanProcessor, "shutdown") as mock_shutdown,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_tracer_provider(self._make_partial_failure_config())
+        mock_shutdown.assert_called_once()
+
+    def test_failed_cleanup_does_not_mask_configuration_error(self):
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http": None,
+                },
+            ),
+            patch.object(BatchSpanProcessor, "shutdown", side_effect=RuntimeError("shutdown failed")),
+            self.assertLogs("opentelemetry.configuration._common", level="ERROR") as logs,
+            self.assertRaises(ConfigurationError),
+        ):
+            create_tracer_provider(self._make_partial_failure_config())
+        self.assertIn("Failed to shut down TracerProvider", logs.output[0])
+
     def test_otlp_http_created_with_endpoint(self):
         mock_exporter_cls = MagicMock()
         mock_compression_cls = MagicMock()
@@ -644,7 +675,8 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
                     )
                 )
             )
-            create_tracer_provider(config)
+            meter_provider = MagicMock()
+            create_tracer_provider(config, meter_provider=meter_provider)
 
         mock_exporter_cls.assert_called_once_with(
             endpoint="http://localhost:4318",
@@ -654,6 +686,7 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
             headers=None,
             timeout=10.0,
             compression=mock_compression_cls.NoCompression,
+            meter_provider=meter_provider,
         )
 
     def test_otlp_http_zero_timeout_is_unlimited(self):
@@ -862,14 +895,12 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
     def test_no_processor_type_raises(self):
-        config = TracerProviderConfig(processors=[SpanProcessorConfig()])
-        with self.assertRaises(ConfigurationError):
-            create_tracer_provider(config)
+        with self.assertRaises(ValueError):
+            SpanProcessorConfig()
 
     def test_no_exporter_type_raises(self):
-        config = self._make_batch_config(SpanExporterConfig())
-        with self.assertRaises(ConfigurationError):
-            create_tracer_provider(config)
+        with self.assertRaises(ValueError):
+            SpanExporterConfig()
 
     def test_plugin_span_exporter_loaded_via_entry_point(self):
         mock_exporter = MagicMock()
@@ -1112,6 +1143,7 @@ class TestSpanExporterAndProcessorSchemaDefaults(unittest.TestCase):
             headers=None,
             timeout=10.0,
             compression=mock_compression_cls.NoCompression,
+            meter_provider=None,
         )
 
     def test_otlp_grpc_absent_fields_use_schema_defaults(self):
@@ -1136,6 +1168,7 @@ class TestSpanExporterAndProcessorSchemaDefaults(unittest.TestCase):
             headers=None,
             timeout=10.0,
             compression=mock_grpc_module.Compression.NoCompression,
+            meter_provider=None,
         )
 
 
@@ -1226,10 +1259,10 @@ class TestCreateIdGenerator(unittest.TestCase):
             # pylint: disable=unexpected-keyword-arg
             self._make_provider(IdGeneratorConfig(no_such_generator={}))
 
-    def test_empty_id_generator_raises_configuration_error(self):
-        """Empty IdGenerator config (no type specified) raises ConfigurationError."""
-        with self.assertRaises(ConfigurationError):
-            self._make_provider(IdGeneratorConfig())
+    def test_empty_id_generator_raises_value_error(self):
+        """Empty IdGenerator config (no type specified) raises ValueError."""
+        with self.assertRaises(ValueError):
+            IdGeneratorConfig()
 
 
 # Configurator tests access the SDK TracerProvider private

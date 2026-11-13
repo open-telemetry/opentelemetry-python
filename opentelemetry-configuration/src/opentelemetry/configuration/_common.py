@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 import inspect
 import logging
 import math
@@ -21,6 +22,9 @@ if TYPE_CHECKING:
     import grpc
 
     from opentelemetry.configuration.models import GrpcTls
+    from opentelemetry.sdk._logs import LoggerProvider
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.trace import TracerProvider
 
 _logger = logging.getLogger(__name__)
 
@@ -86,6 +90,35 @@ def _additional_properties(cls):
     return cls
 
 
+def _exactly_one_property(cls):
+    """Decorator for dataclasses whose JSON Schema allows exactly one property.
+
+    The configuration schema models mutually exclusive component choices
+    (e.g. a ``Sampler`` is one of ``always_on``, ``always_off``, ...) with
+    ``minProperties: 1, maxProperties: 1``. Wraps ``__init__`` so that
+    constructing such a model with zero or several choices raises
+    ``ValueError``. Only ``__init__`` fields count as choices (non-init
+    fields such as ``additional_properties`` are ignored), and each captured
+    plugin key counts as one choice.
+    """
+    original_init = cls.__init__
+    field_names = tuple(f.name for f in dataclasses.fields(cls) if f.init)
+
+    @functools.wraps(original_init)
+    def _init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        chosen = [name for name in field_names if getattr(self, name) is not None]
+        chosen.extend(getattr(self, "additional_properties", {}))
+        if len(chosen) != 1:
+            raise ValueError(
+                f"{cls.__name__} requires exactly one of {sorted(field_names)} "
+                f"or a plugin component; got {len(chosen)}: {chosen}"
+            )
+
+    cls.__init__ = _init
+    return cls
+
+
 def load_entry_point(group: str, name: str) -> type:
     """Load a plugin class from an entry point group by name.
 
@@ -136,9 +169,8 @@ def _resolve_component(
     for plugin components found in ``config.additional_properties``.
 
     The JSON schema enforces exactly one component per config block
-    (``minProperties: 1, maxProperties: 1``). If multiple typed fields or
-    ``additional_properties`` entries are set (e.g. when schema validation
-    is bypassed), the first registry match wins.
+    (``minProperties: 1, maxProperties: 1``), and the generated models
+    enforce it at construction via ``@_exactly_one_property``.
 
     Args:
         config: A dataclass with ``additional_properties`` (from the
@@ -314,6 +346,14 @@ def _grpc_insecure_from_tls(endpoint: str | None, tls: GrpcTls | None) -> bool:
         if scheme in ("http", "https"):
             return scheme == "http"
     return tls.insecure if tls is not None and tls.insecure is not None else False
+
+
+def _shutdown_quietly(provider: TracerProvider | MeterProvider | LoggerProvider) -> None:
+    """Shut down an SDK provider, logging rather than raising on failure."""
+    try:
+        provider.shutdown()
+    except Exception:  # pylint: disable=broad-except
+        _logger.exception("Failed to shut down %s", type(provider).__name__)
 
 
 def _parse_otlp_file_output_stream(output_stream: str | None) -> str | None:
