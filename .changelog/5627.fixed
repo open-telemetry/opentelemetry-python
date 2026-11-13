@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix same-instrument view identity conflict detection and exclude drop aggregations from conflict warnings
