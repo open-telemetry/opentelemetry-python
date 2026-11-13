@@ -251,3 +251,34 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         for mock in mocks:
             self.assertEqual(1, mock.force_flush.call_count)
         multi_log_record_processor.shutdown()
+
+    def test_shutdown_shuts_down_executor(self):
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor()
+        mock_processor = Mock(spec=LogRecordProcessor)
+        multi_log_record_processor.add_log_record_processor(mock_processor)
+
+        multi_log_record_processor.shutdown()
+        self.assertEqual(mock_processor.shutdown.call_count, 1)
+        with self.assertRaises(RuntimeError):
+            multi_log_record_processor._executor.submit(lambda: None)
+
+        # Calls after shutdown do not submit to the closed executor
+        multi_log_record_processor.on_emit(Mock(spec=ReadWriteLogRecord))
+        self.assertFalse(multi_log_record_processor.force_flush())
+        self.assertFalse(multi_log_record_processor.enabled())
+        multi_log_record_processor.shutdown()
+        self.assertEqual(mock_processor.on_emit.call_count, 0)
+        self.assertEqual(mock_processor.force_flush.call_count, 0)
+        self.assertEqual(mock_processor.shutdown.call_count, 1)
+
+    def test_shutdown_shuts_down_executor_when_processor_raises(self):
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor()
+        failing_processor = Mock(spec=LogRecordProcessor)
+        failing_processor.shutdown.side_effect = RuntimeError("shutdown boom")
+        multi_log_record_processor.add_log_record_processor(failing_processor)
+
+        with self.assertRaises(RuntimeError):
+            multi_log_record_processor.shutdown()
+
+        with self.assertRaises(RuntimeError):
+            multi_log_record_processor._executor.submit(lambda: None)
