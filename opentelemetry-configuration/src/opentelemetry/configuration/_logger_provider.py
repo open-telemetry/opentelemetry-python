@@ -16,7 +16,7 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
-    _validate_mtls_pair,
+    _validate_http_tls,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -94,9 +94,8 @@ def _create_otlp_http_log_exporter(
     config: OtlpHttpExporterConfig,
 ) -> LogRecordExporter:
     """Create an OTLP HTTP log exporter from config."""
+    _validate_http_tls(config.tls, "otlp_http")
     tls = config.tls
-    if tls is not None:
-        _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = _resolve_export_timeout(config.timeout)
 
