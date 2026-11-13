@@ -254,6 +254,19 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
 
     def test_shutdown_shuts_down_executor(self):
         multi_log_record_processor = ConcurrentMultiLogRecordProcessor()
+        mock_processor = Mock(spec=LogRecordProcessor)
+        multi_log_record_processor.add_log_record_processor(mock_processor)
+
         multi_log_record_processor.shutdown()
+        self.assertEqual(mock_processor.shutdown.call_count, 1)
         with self.assertRaises(RuntimeError):
             multi_log_record_processor._executor.submit(lambda: None)
+
+        # Calls after shutdown do not submit to the closed executor
+        multi_log_record_processor.on_emit(Mock(spec=ReadWriteLogRecord))
+        self.assertFalse(multi_log_record_processor.force_flush())
+        self.assertFalse(multi_log_record_processor.enabled())
+        multi_log_record_processor.shutdown()
+        self.assertEqual(mock_processor.on_emit.call_count, 0)
+        self.assertEqual(mock_processor.force_flush.call_count, 0)
+        self.assertEqual(mock_processor.shutdown.call_count, 1)

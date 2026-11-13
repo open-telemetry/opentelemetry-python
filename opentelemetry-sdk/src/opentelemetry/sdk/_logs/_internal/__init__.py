@@ -253,9 +253,7 @@ class ReadableLogRecord:
                 "timestamp": ns_to_iso_str(self.log_record.timestamp)
                 if self.log_record.timestamp is not None
                 else None,
-                "observed_timestamp": ns_to_iso_str(self.log_record.observed_timestamp)
-                if self.log_record.observed_timestamp is not None
-                else None,
+                "observed_timestamp": ns_to_iso_str(self.log_record.observed_timestamp),
                 "trace_id": (
                     f"0x{format_trace_id(self.log_record.trace_id)}" if self.log_record.trace_id is not None else ""
                 ),
@@ -504,6 +502,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+        self._shutdown = False
 
     def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:
         with self._lock:
@@ -515,10 +514,10 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         *args: Any,
         **kwargs: Any,
     ):
-        futures = []
-        for lp in self._log_record_processors:
-            future = self._executor.submit(func(lp), *args, **kwargs)
-            futures.append(future)
+        with self._lock:
+            if self._shutdown:
+                return
+            futures = [self._executor.submit(func(lp), *args, **kwargs) for lp in self._log_record_processors]
         for future in futures:
             future.result()
 
@@ -533,6 +532,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
     ) -> bool:
+        if self._shutdown:
+            return False
         for lp in self._log_record_processors:
             if lp.enabled(
                 context=context,
@@ -544,7 +545,13 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         return False
 
     def shutdown(self) -> None:
-        self._submit_and_wait(lambda lp: lp.shutdown)
+        with self._lock:
+            if self._shutdown:
+                return
+            self._shutdown = True
+            futures = [self._executor.submit(lp.shutdown) for lp in self._log_record_processors]
+        for future in futures:
+            future.result()
         self._executor.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
@@ -558,10 +565,10 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             True if all the log processors flushes the logs within timeout,
             False otherwise.
         """
-        futures = []
-        for lp in self._log_record_processors:
-            future = self._executor.submit(lp.force_flush, timeout_millis)
-            futures.append(future)
+        with self._lock:
+            if self._shutdown:
+                return False
+            futures = [self._executor.submit(lp.force_flush, timeout_millis) for lp in self._log_record_processors]
 
         done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_millis / 1e3)
 
