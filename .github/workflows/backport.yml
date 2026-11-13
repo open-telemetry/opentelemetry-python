@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # required for pushing changes
+      pull-requests: write # required for adding labels to PRs
     steps:
       - run: |
           if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x-0\.[0-9]+bx$ ]]; then
@@ -25,8 +26,7 @@ jobs:
         with:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -42,8 +42,9 @@ jobs:
         id: create_pr
         env:
           NUMBER: ${{ github.event.inputs.number }}
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # not using secrets.GITHUB_TOKEN for pr create since pull requests from that token do not run workflows
+          PR_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
           title=$(gh pr view $NUMBER --json title --jq .title)
@@ -51,8 +52,9 @@ jobs:
           branch="otelbot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
           git cherry-pick $commit
+          gh auth setup-git
           git push origin HEAD:$branch
-          pr_url=$(gh pr create --title "[$GITHUB_REF_NAME] $title" \
+          pr_url=$(GH_TOKEN="${PR_TOKEN}" gh pr create --title "[$GITHUB_REF_NAME] $title" \
                                 --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
                                 --head $branch \
                                 --base $GITHUB_REF_NAME)
