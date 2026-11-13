@@ -172,8 +172,8 @@ class TestLoggerProvider(unittest.TestCase):
 
     def test_default_logger_configurator(self):
         provider = LoggerProvider()
-        logger = provider.get_logger("module_name", "1.0", "schema_url")
-        other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
+        logger = provider.get_logger("module_name", version="1.0", schema_url="schema_url")
+        other_logger = provider.get_logger("other_module_name", version="1.0", schema_url="schema_url")
         self.assertTrue(logger._logger_config.is_enabled)
         self.assertTrue(other_logger._logger_config.is_enabled)
 
@@ -232,8 +232,8 @@ class TestLoggerProvider(unittest.TestCase):
         configurator = _RuleBasedLoggerConfigurator(rules=rules, default_config=_LoggerConfig(is_enabled=True))
 
         provider = LoggerProvider()
-        logger = provider.get_logger("module_name", "1.0", "schema_url")
-        other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
+        logger = provider.get_logger("module_name", version="1.0", schema_url="schema_url")
+        other_logger = provider.get_logger("other_module_name", version="1.0", schema_url="schema_url")
 
         self.assertTrue(logger._logger_config.is_enabled)
         self.assertTrue(other_logger._logger_config.is_enabled)
@@ -255,8 +255,8 @@ class TestLoggerProvider(unittest.TestCase):
         configurator = _RuleBasedLoggerConfigurator(rules=rules, default_config=_LoggerConfig(is_enabled=True))
 
         provider = LoggerProvider()
-        logger = provider.get_logger("module_name", "1.0", "schema_url")
-        other_logger = provider.get_logger("other_module_name", "1.0", "schema_url")
+        logger = provider.get_logger("module_name", version="1.0", schema_url="schema_url")
+        other_logger = provider.get_logger("other_module_name", version="1.0", schema_url="schema_url")
 
         self.assertTrue(logger._logger_config.is_enabled)
         self.assertTrue(other_logger._logger_config.is_enabled)

@@ -285,9 +285,9 @@ class ProxyLogger(Logger):
         if _LOGGER_PROVIDER:
             self._real_logger = _LOGGER_PROVIDER.get_logger(
                 self._name,
-                self._version,
-                self._schema_url,
-                self._attributes,
+                version=self._version,
+                schema_url=self._schema_url,
+                attributes=self._attributes,
             )
             return self._real_logger
         return self._noop_logger
@@ -365,6 +365,7 @@ class LoggerProvider(SignatureCompatABC):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -404,6 +405,7 @@ class NoOpLoggerProvider(LoggerProvider):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -416,6 +418,7 @@ class ProxyLoggerProvider(LoggerProvider):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -478,10 +481,11 @@ def set_logger_provider(logger_provider: LoggerProvider) -> None:
 
 def get_logger(
     name: str,
+    *,
     version: str | None = None,
-    logger_provider: LoggerProvider | None = None,
     schema_url: str | None = None,
     attributes: Attributes = None,
+    logger_provider: LoggerProvider | None = None,
 ) -> Logger:
     """Returns a `Logger` for use within a python process.
 
@@ -494,7 +498,7 @@ def get_logger(
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
         name,
-        version,
-        schema_url,
-        attributes,
+        version=version,
+        schema_url=schema_url,
+        attributes=attributes,
     )

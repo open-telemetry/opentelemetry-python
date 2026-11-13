@@ -38,24 +38,24 @@ class TestGlobals(unittest.TestCase):
         self.assertIs(logger, lp_mock.get_logger.return_value)
         lp_mock.get_logger.assert_called_once_with(
             "test-logger",
-            None,
-            None,
-            None,
+            version=None,
+            schema_url=None,
+            attributes=None,
         )
         lp_mock.reset_mock()
         logger = get_logger(
             name="test-logger",
             version="1.0.0",
-            logger_provider=lp_mock,
             schema_url="https://opentelemetry.io/schemas/1.11.0",
             attributes={"key": "val"},
+            logger_provider=lp_mock,
         )
         self.assertIs(logger, lp_mock.get_logger.return_value)
         lp_mock.get_logger.assert_called_once_with(
             "test-logger",
-            "1.0.0",
-            "https://opentelemetry.io/schemas/1.11.0",
-            {"key": "val"},
+            version="1.0.0",
+            schema_url="https://opentelemetry.io/schemas/1.11.0",
+            attributes={"key": "val"},
         )
 
     def test_get_logger_provider(self):
