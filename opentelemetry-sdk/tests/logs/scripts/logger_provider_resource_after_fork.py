@@ -5,8 +5,8 @@ import json
 import os
 
 from opentelemetry.logs import LogRecord
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import (
+from opentelemetry.sdk.logs import LoggerProvider
+from opentelemetry.sdk.logs.export import (
     InMemoryLogRecordExporter,
     SimpleLogRecordProcessor,
 )

@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: stabilize the logs SDK as `opentelemetry.sdk.logs`

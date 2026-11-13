@@ -20,11 +20,6 @@ from opentelemetry.exporter.otlp.json.http._internal import (
     _resolve_headers,
     _resolve_timeout,
 )
-from opentelemetry.sdk._logs import ReadableLogRecord
-from opentelemetry.sdk._logs.export import (
-    LogRecordExporter,
-    LogRecordExportResult,
-)
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
@@ -34,6 +29,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+)
+from opentelemetry.sdk.logs import ReadableLogRecord
+from opentelemetry.sdk.logs.export import (
+    LogRecordExporter,
+    LogRecordExportResult,
 )
 
 _DEFAULT_LOGS_EXPORT_PATH = "v1/logs"

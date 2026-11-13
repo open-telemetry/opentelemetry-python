@@ -11,8 +11,6 @@ from collections.abc import Callable, Sequence
 from os import environ, linesep
 from typing import IO
 
-from typing_extensions import deprecated
-
 from opentelemetry.context import (
     _ON_EMIT_RECURSION_COUNT_KEY,
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -23,11 +21,6 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.metrics import MeterProvider, get_meter_provider
-from opentelemetry.sdk._logs import (
-    LogRecordProcessor,
-    ReadableLogRecord,
-    ReadWriteLogRecord,
-)
 from opentelemetry.sdk._shared_internal import (
     BatchProcessor,
     DuplicateFilter,
@@ -44,6 +37,11 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.environment_variables._internal import (
     parse_boolean_environment_variable,
+)
+from opentelemetry.sdk.logs import (
+    LogRecordProcessor,
+    ReadableLogRecord,
+    ReadWriteLogRecord,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
@@ -67,19 +65,13 @@ class LogRecordExportResult(enum.Enum):
     FAILURE = 1
 
 
-@deprecated("Use LogRecordExportResult. Since logs are not stable yet this WILL be removed in future releases.")
-class LogExportResult(enum.Enum):
-    SUCCESS = 0
-    FAILURE = 1
-
-
 class LogRecordExporter(abc.ABC):
     """Interface for exporting logs.
 
     Interface to be implemented by services that want to export logs received
     in their own format.
 
-    To export data this MUST be registered to the :class:`opentelemetry.sdk._logs.Logger`
+    To export data this MUST be registered to the :class:`opentelemetry.sdk.logs.Logger`
     using a log processor.
 
     Important
@@ -131,11 +123,6 @@ class LogRecordExporter(abc.ABC):
         """
 
 
-@deprecated("Use LogRecordExporter. Since logs are not stable yet this WILL be removed in future releases.")
-class LogExporter(LogRecordExporter):
-    pass
-
-
 class ConsoleLogRecordExporter(LogRecordExporter):
     """Implementation of :class:`LogRecordExporter` that prints log records to the
     console.
@@ -163,11 +150,6 @@ class ConsoleLogRecordExporter(LogRecordExporter):
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
-
-
-@deprecated("Use ConsoleLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases.")
-class ConsoleLogExporter(ConsoleLogRecordExporter):
-    pass
 
 
 class SimpleLogRecordProcessor(LogRecordProcessor):

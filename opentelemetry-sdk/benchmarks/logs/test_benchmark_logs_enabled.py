@@ -10,9 +10,9 @@ import pytest
 
 from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.logs._internal import ProxyLogger
-from opentelemetry.sdk._logs import LoggerProvider, LogRecordProcessor
-from opentelemetry.sdk._logs._internal import _disable_logger_configurator
 from opentelemetry.sdk.environment_variables import OTEL_SDK_DISABLED
+from opentelemetry.sdk.logs import LoggerProvider, LogRecordProcessor
+from opentelemetry.sdk.logs._internal import _disable_logger_configurator
 
 
 class _SeverityFilteringProcessor(LogRecordProcessor):

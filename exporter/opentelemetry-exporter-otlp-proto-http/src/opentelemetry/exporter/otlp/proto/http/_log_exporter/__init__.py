@@ -27,11 +27,6 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _resolve_timeout,
 )
 from opentelemetry.metrics import MeterProvider
-from opentelemetry.sdk._logs import ReadableLogRecord
-from opentelemetry.sdk._logs.export import (
-    LogRecordExporter,
-    LogRecordExportResult,
-)
 from opentelemetry.sdk._shared_internal import DuplicateFilter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_LOGS_CREDENTIAL_PROVIDER,
@@ -43,6 +38,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED,
+)
+from opentelemetry.sdk.logs import ReadableLogRecord
+from opentelemetry.sdk.logs.export import (
+    LogRecordExporter,
+    LogRecordExportResult,
 )
 from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OtelComponentTypeValues,
