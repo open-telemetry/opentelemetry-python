@@ -67,6 +67,9 @@ from opentelemetry.configuration.models import (
     MeterProvider as MeterProviderConfig,
 )
 from opentelemetry.configuration.models import (
+    MetricProducer as MetricProducerConfig,
+)
+from opentelemetry.configuration.models import (
     MetricReader as MetricReaderConfig,
 )
 from opentelemetry.configuration.models import (
@@ -112,7 +115,14 @@ from opentelemetry.sdk.metrics._internal.instrument import (
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     ConsoleMetricExporter,
+    Metric,
+    MetricExporter,
+    MetricExportResult,
+    MetricProducer,
+    NumberDataPoint,
     PeriodicExportingMetricReader,
+    ScopeMetrics,
+    Sum,
 )
 from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
@@ -940,6 +950,209 @@ class TestCreateMetricReadersGeneral(unittest.TestCase):
         )
         provider = create_meter_provider(config)
         self.assertEqual(len(provider._metric_readers), 2)
+
+
+_PRODUCER_SCOPE = InstrumentationScope("my.producer")
+
+
+class _StaticMetricProducer(MetricProducer):
+    """Producer that returns one fixed counter under ``_PRODUCER_SCOPE``."""
+
+    def produce(self, timeout_millis: float = 10_000):
+        return [
+            ScopeMetrics(
+                scope=_PRODUCER_SCOPE,
+                metrics=[
+                    Metric(
+                        name="produced",
+                        description="",
+                        unit="1",
+                        data=Sum(
+                            data_points=[
+                                NumberDataPoint(attributes={}, start_time_unix_nano=0, time_unix_nano=1, value=7)
+                            ],
+                            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                            is_monotonic=True,
+                        ),
+                    )
+                ],
+                schema_url="",
+            )
+        ]
+
+
+class _FailingMetricProducer(MetricProducer):
+    def produce(self, timeout_millis: float = 10_000):
+        raise RuntimeError("boom")
+
+
+class _CapturingMetricExporter(MetricExporter):
+    def __init__(self):
+        super().__init__()
+        self.exported = []
+
+    def export(self, metrics_data, timeout_millis: float = 10_000, **kwargs):
+        self.exported.append(metrics_data)
+        return MetricExportResult.SUCCESS
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
+
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        pass
+
+
+class TestCreateMetricProducers(unittest.TestCase):
+    @staticmethod
+    def _patch_entry_points(plugins):
+        """Patch entry point lookup to load ``plugins[(group, name)]``."""
+
+        def _entry_points(group, name):
+            plugin = plugins.get((group, name))
+            return [] if plugin is None else [MagicMock(**{"load.return_value": plugin})]
+
+        return patch("opentelemetry.configuration._common.entry_points", side_effect=_entry_points)
+
+    @staticmethod
+    def _make_config(producers, exporter=None):
+        return MeterProviderConfig(
+            readers=[
+                MetricReaderConfig(
+                    periodic=PeriodicMetricReaderConfig(
+                        exporter=exporter or PushMetricExporterConfig(console=ConsoleMetricExporterConfig()),
+                        producers=producers,
+                    )
+                )
+            ]
+        )
+
+    def test_no_producers(self):
+        for producers in (None, []):
+            with self.subTest(producers=producers):
+                provider = create_meter_provider(self._make_config(producers))
+                self.assertEqual(provider._metric_readers[0]._metric_producers, ())
+
+    def test_plugin_producer_loaded_via_entry_point(self):
+        for plugin_config, expected_kwargs in (({"x": 1}, {"x": 1}), (None, {}), ({}, {})):
+            with self.subTest(plugin_config=plugin_config):
+                mock_producer = MagicMock()
+                mock_class = MagicMock(return_value=mock_producer)
+                with self._patch_entry_points({("opentelemetry_metrics_producer", "my_producer"): mock_class}):
+                    provider = create_meter_provider(
+                        # pylint: disable=unexpected-keyword-arg
+                        self._make_config([MetricProducerConfig(my_producer=plugin_config)])
+                    )
+                mock_class.assert_called_once_with(**expected_kwargs)
+                self.assertEqual(provider._metric_readers[0]._metric_producers, (mock_producer,))
+
+    def test_plugin_producer_from_parsed_dict(self):
+        mock_producer = MagicMock()
+        mock_class = MagicMock(return_value=mock_producer)
+        config = _dict_to_dataclass(
+            {
+                "readers": [
+                    {
+                        "periodic": {
+                            "exporter": {"console": {}},
+                            "producers": [{"my_producer": {"x": 1}}],
+                        }
+                    }
+                ]
+            },
+            MeterProviderConfig,
+        )
+        with self._patch_entry_points({("opentelemetry_metrics_producer", "my_producer"): mock_class}):
+            provider = create_meter_provider(config)
+        mock_class.assert_called_once_with(x=1)
+        self.assertEqual(provider._metric_readers[0]._metric_producers, (mock_producer,))
+
+    def test_multiple_producers_preserve_order(self):
+        first, second = MagicMock(), MagicMock()
+        with self._patch_entry_points(
+            {
+                ("opentelemetry_metrics_producer", "first"): MagicMock(return_value=first),
+                ("opentelemetry_metrics_producer", "second"): MagicMock(return_value=second),
+            }
+        ):
+            provider = create_meter_provider(
+                # pylint: disable=unexpected-keyword-arg
+                self._make_config([MetricProducerConfig(first={}), MetricProducerConfig(second={})])
+            )
+        self.assertEqual(provider._metric_readers[0]._metric_producers, (first, second))
+
+    def test_opencensus_producer_warns_and_is_skipped(self):
+        mock_producer = MagicMock()
+        with self._patch_entry_points(
+            {("opentelemetry_metrics_producer", "my_producer"): MagicMock(return_value=mock_producer)}
+        ):
+            with self.assertLogs("opentelemetry.configuration._meter_provider", level="WARNING") as cm:
+                provider = create_meter_provider(
+                    self._make_config(
+                        [
+                            MetricProducerConfig(opencensus={}),
+                            # pylint: disable=unexpected-keyword-arg
+                            MetricProducerConfig(my_producer={}),
+                        ]
+                    )
+                )
+        self.assertTrue(any("opencensus" in msg for msg in cm.output))
+        self.assertEqual(provider._metric_readers[0]._metric_producers, (mock_producer,))
+
+    def test_unknown_plugin_producer_raises_configuration_error(self):
+        with self._patch_entry_points({}):
+            with self.assertRaises(ConfigurationError):
+                # pylint: disable=unexpected-keyword-arg
+                create_meter_provider(self._make_config([MetricProducerConfig(no_such_producer={})]))
+
+    def test_plugin_producer_init_error_propagates(self):
+        error = RuntimeError("boom")
+        with self._patch_entry_points(
+            {("opentelemetry_metrics_producer", "my_producer"): MagicMock(side_effect=error)}
+        ):
+            with self.assertRaises(RuntimeError) as ctx:
+                # pylint: disable=unexpected-keyword-arg
+                create_meter_provider(self._make_config([MetricProducerConfig(my_producer={})]))
+        self.assertIs(ctx.exception, error)
+
+    def test_empty_producer_raises_configuration_error(self):
+        with self.assertRaises(ConfigurationError):
+            create_meter_provider(self._make_config([MetricProducerConfig()]))
+
+    def _export_once(self, producer_class):
+        exporter = _CapturingMetricExporter()
+        resource = Resource.create({"service.name": "producer-test"})
+        with self._patch_entry_points(
+            {
+                ("opentelemetry_metrics_producer", "my_producer"): producer_class,
+                ("opentelemetry_metrics_exporter", "capture"): MagicMock(return_value=exporter),
+            }
+        ):
+            provider = create_meter_provider(
+                self._make_config(
+                    # pylint: disable=unexpected-keyword-arg
+                    [MetricProducerConfig(my_producer={})],
+                    exporter=PushMetricExporterConfig(capture={}),
+                ),
+                resource=resource,
+            )
+        try:
+            provider.get_meter("sdk.meter").create_counter("sdk_counter").add(1)
+            provider.force_flush()
+        finally:
+            provider.shutdown()
+        self.assertTrue(exporter.exported)
+        resource_metrics = exporter.exported[0].resource_metrics
+        self.assertEqual(len(resource_metrics), 1)
+        self.assertIs(resource_metrics[0].resource, resource)
+        return {scope_metrics.scope.name for scope_metrics in resource_metrics[0].scope_metrics}
+
+    def test_producer_metrics_exported_with_provider_resource(self):
+        self.assertEqual(self._export_once(_StaticMetricProducer), {"sdk.meter", _PRODUCER_SCOPE.name})
+
+    def test_failing_producer_does_not_drop_sdk_metrics(self):
+        with self.assertLogs("opentelemetry.sdk.metrics", level="ERROR"):
+            scopes = self._export_once(_FailingMetricProducer)
+        self.assertEqual(scopes, {"sdk.meter"})
 
 
 class TestTemporalityAndAggregation(unittest.TestCase):
