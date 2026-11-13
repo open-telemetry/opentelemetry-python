@@ -1,0 +1,1 @@
+Delegate `force_flush` to the exporter in `SimpleSpanProcessor` and `SimpleLogRecordProcessor`
