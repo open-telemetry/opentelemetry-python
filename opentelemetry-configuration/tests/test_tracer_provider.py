@@ -295,6 +295,41 @@ class TestCreateSampler(unittest.TestCase):
             # pylint: disable=unexpected-keyword-arg
             provider = self._make_provider(SamplerConfig(my_custom_sampler={}))
         self.assertIs(provider.sampler, mock_sampler)
+        mock_class.assert_called_once_with()
+
+    def test_user_defined_sampler_receives_plugin_config(self):
+        cases = [
+            ({"my_custom_sampler": {"ratio": 0.25, "label": "x"}}, {"ratio": 0.25, "label": "x"}),
+            ({"my_custom_sampler": {}}, {}),
+            ({"my_custom_sampler": None}, {}),
+        ]
+        for config_dict, expected_kwargs in cases:
+            with self.subTest(config=config_dict):
+                mock_sampler = MagicMock(spec=Sampler)
+                mock_class = MagicMock(return_value=mock_sampler)
+                with patch(
+                    "opentelemetry.configuration._common.entry_points",
+                    return_value=[MagicMock(**{"load.return_value": mock_class})],
+                ):
+                    provider = self._make_provider(_dict_to_dataclass(config_dict, SamplerConfig))
+                self.assertIs(provider.sampler, mock_sampler)
+                mock_class.assert_called_once_with(**expected_kwargs)
+
+    def test_user_defined_parent_based_root_receives_plugin_config(self):
+        mock_sampler = MagicMock(spec=Sampler)
+        mock_class = MagicMock(return_value=mock_sampler)
+        sampler_config = _dict_to_dataclass(
+            {"parent_based": {"root": {"my_custom_sampler": {"ratio": 0.25}}}},
+            SamplerConfig,
+        )
+        with patch(
+            "opentelemetry.configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            provider = self._make_provider(sampler_config)
+        self.assertIsInstance(provider.sampler, ParentBased)
+        self.assertIs(provider.sampler._root, mock_sampler)
+        mock_class.assert_called_once_with(ratio=0.25)
 
     def test_user_defined_sampler_not_found_raises_configuration_error(self):
         with (
