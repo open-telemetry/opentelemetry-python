@@ -683,6 +683,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(len(metrics), 3)
         self.assertEqual(metrics[0].name, "otel.sdk.exporter.operation.duration")
+        self.assertEqual(metrics[0].data.data_points[0].explicit_bounds, ())
         self.assert_standard_metric_attrs(metrics[0].data.data_points[0].attributes)
         self.assertEqual(
             metrics[0].data.data_points[0].attributes["http.response.status_code"],
@@ -716,6 +717,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         scope_metrics = metrics_data.resource_metrics[0].scope_metrics[0]
         metrics = sorted(scope_metrics.metrics, key=lambda m: m.name)
         self.assertEqual(metrics[0].name, "otel.sdk.exporter.operation.duration")
+        self.assertEqual(metrics[0].data.data_points[0].explicit_bounds, ())
         self.assertIn("error.type", metrics[0].data.data_points[0].attributes)
         self.assertNotIn(
             "http.response.status_code",

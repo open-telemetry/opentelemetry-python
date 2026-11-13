@@ -51,6 +51,13 @@ class TestExporterMetrics(unittest.TestCase):
 
         self.assertIsInstance(metrics, ExporterMetrics)
         meter_provider.get_meter.assert_called_once_with("opentelemetry-sdk")
+        meter = meter_provider.get_meter.return_value
+        meter.create_histogram.assert_called_once_with(
+            name="otel.sdk.exporter.operation.duration",
+            description="The duration of exporting a batch of telemetry records.",
+            unit="s",
+            explicit_bucket_boundaries_advisory=[],
+        )
 
     def test_noop_export_operation_yields_result(self):
         metrics = NoOpExporterMetrics()
