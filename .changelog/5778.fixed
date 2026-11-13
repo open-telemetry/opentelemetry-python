@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: set `error.type` on failed metric reader collections instead of recording only the duration

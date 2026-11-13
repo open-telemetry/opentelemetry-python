@@ -12,16 +12,17 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
 from opentelemetry.semconv._incubating.metrics.otel_metrics import (
     create_otel_sdk_metric_reader_collection_duration,
 )
+from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
 
 _component_counter = Counter()
 
 
 class MetricReaderMetricsT(Protocol):
-    def record_collection(self, duration: float) -> None: ...
+    def record_collection(self, duration: float, error_type: str | None = None) -> None: ...
 
 
 class NoOpMetricReaderMetrics:
-    def record_collection(self, duration: float) -> None:
+    def record_collection(self, duration: float, error_type: str | None = None) -> None:
         pass
 
 
@@ -39,8 +40,11 @@ class MetricReaderMetrics:
 
         self._collection_duration = create_otel_sdk_metric_reader_collection_duration(meter)
 
-    def record_collection(self, duration: float) -> None:
-        self._collection_duration.record(duration, self._standard_attrs)
+    def record_collection(self, duration: float, error_type: str | None = None) -> None:
+        attributes = self._standard_attrs
+        if error_type is not None:
+            attributes = {**self._standard_attrs, ERROR_TYPE: error_type}
+        self._collection_duration.record(duration, attributes)
 
 
 def create_metric_reader_metrics(
