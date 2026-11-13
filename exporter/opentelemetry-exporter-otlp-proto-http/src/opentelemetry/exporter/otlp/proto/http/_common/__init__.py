@@ -7,7 +7,7 @@ import logging
 import os
 from collections.abc import Mapping
 from os import environ
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 from opentelemetry.exporter.http.transport._requests import (
     RequestsHTTPTransport,
@@ -31,7 +31,10 @@ from opentelemetry.util._importlib_metadata import entry_points
 from opentelemetry.util.re import parse_env_headers
 
 if TYPE_CHECKING:
+    from logging import Logger
+
     import requests
+    from google.protobuf.message import Message
 
     from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
 
@@ -48,6 +51,36 @@ _DEFAULT_TIMEOUT = 10
 
 # 64 MiB, in bytes.
 _DEFAULT_MAX_REQUEST_SIZE = 64 * 1024 * 1024
+
+_ResponseT = TypeVar("_ResponseT", bound="Message")
+
+
+def _parse_export_response(
+    serialized_response: bytes,
+    response_type: type[_ResponseT],
+    logger: Logger,
+) -> _ResponseT | None:
+    """Parse the body a successful OTLP/HTTP export returned.
+
+    :param serialized_response: The raw response body.
+    :param response_type: The ``Export<signal>ServiceResponse`` class to parse
+        ``serialized_response`` with.
+    :param logger: The logger that receives the debug message when the body
+        cannot be parsed.
+    :returns: The parsed response, or ``None`` when the body is empty or cannot
+        be parsed.
+    """
+    if not serialized_response:
+        return None
+
+    response = response_type()
+    try:
+        response.ParseFromString(serialized_response)
+    # pylint: disable-next=broad-exception-caught
+    except Exception as error:
+        logger.debug("Failed to parse the OTLP export response: %s", error)
+        return None
+    return response
 
 
 class RequestPayloadTooLargeError(Exception):

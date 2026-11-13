@@ -8,6 +8,9 @@ from unittest.mock import patch
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
+from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    ExportTraceServiceResponse,
+)
 from opentelemetry.sdk.trace import TracerProvider, sampling
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
@@ -24,9 +27,12 @@ def get_tracer_with_processor(span_processor_class):
     return tracer
 
 
+_RESPONSE = ExportTraceServiceResponse()
+
+
 class MockTraceServiceStub:
     def __init__(self, channel):
-        self.Export = lambda *args, **kwargs: None
+        self.Export = lambda *args, **kwargs: _RESPONSE
 
 
 @patch(

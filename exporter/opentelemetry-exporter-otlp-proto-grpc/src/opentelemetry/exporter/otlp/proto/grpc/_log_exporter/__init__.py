@@ -17,6 +17,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
+    ExportLogsServiceResponse,
 )
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
@@ -105,6 +106,17 @@ class OTLPLogExporter(
 
     def _count_data(self, data: Sequence[ReadableLogRecord]):
         return len(data)
+
+    def _rejected_and_error_message(self, response: ExportLogsServiceResponse | None) -> tuple[int, str]:
+        """Read the partial success an export response reports.
+
+        :param response: The response the logs service returned.
+        :returns: The number of rejected log records and the error message the
+            server sent.
+        """
+        if response is None:
+            return 0, ""
+        return response.partial_success.rejected_log_records, response.partial_success.error_message
 
     def export(  # type: ignore [reportIncompatibleMethodOverride]
         self,

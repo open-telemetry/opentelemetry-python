@@ -3,10 +3,11 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 from opentelemetry.exporter.http.transport._urllib3 import Urllib3HTTPTransport
 from opentelemetry.exporter.otlp.common.http import Compression
@@ -25,11 +26,40 @@ from opentelemetry.util.re import parse_env_headers
 if TYPE_CHECKING:
     from opentelemetry.exporter.http.transport import BaseHTTPTransportFactory
     from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
+    from opentelemetry.proto_json._json_codec import JsonMessage
 
 _DEFAULT_ENDPOINT = "http://localhost:4318"
 _DEFAULT_TIMEOUT = 10
 
 _logger = logging.getLogger(__name__)
+
+_ResponseT = TypeVar("_ResponseT", bound="JsonMessage")
+
+
+def _parse_export_response(
+    serialized_response: bytes,
+    response_type: type[_ResponseT],
+    logger: logging.Logger,
+) -> _ResponseT | None:
+    """Parse the body a successful OTLP/HTTP JSON export returned.
+
+    :param serialized_response: The raw response body.
+    :param response_type: The ``Export<signal>ServiceResponse`` class to parse
+        ``serialized_response`` with.
+    :param logger: The logger that receives the debug message when the body
+        cannot be parsed.
+    :returns: The parsed response, or ``None`` when the body is empty or cannot
+        be parsed.
+    """
+    if not serialized_response:
+        return None
+
+    try:
+        return response_type.from_dict(json.loads(serialized_response))
+    # pylint: disable-next=broad-exception-caught
+    except Exception as error:
+        logger.debug("Failed to parse the OTLP export response: %s", error)
+        return None
 
 
 def _resolve_endpoint(

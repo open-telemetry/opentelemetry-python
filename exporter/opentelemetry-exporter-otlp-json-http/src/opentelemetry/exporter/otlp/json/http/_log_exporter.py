@@ -6,6 +6,9 @@ from collections.abc import Mapping, Sequence
 from typing import overload
 
 from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
+from opentelemetry.exporter.otlp.common._partial_success import (
+    _report_partial_success,
+)
 from opentelemetry.exporter.otlp.common.http import (
     Compression,
     _OTLPHTTPClient,
@@ -15,10 +18,14 @@ from opentelemetry.exporter.otlp.json.common._internal._log_encoder import (
 )
 from opentelemetry.exporter.otlp.json.http._internal import (
     _build_transport,
+    _parse_export_response,
     _resolve_compression,
     _resolve_endpoint,
     _resolve_headers,
     _resolve_timeout,
+)
+from opentelemetry.proto_json.collector.logs.v1.logs_service import (
+    ExportLogsServiceResponse,
 )
 from opentelemetry.sdk._logs import ReadableLogRecord
 from opentelemetry.sdk._logs.export import (
@@ -96,9 +103,10 @@ class OTLPLogExporter(LogRecordExporter):
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_LOGS_CLIENT_CERTIFICATE,
         )
+        self._endpoint = endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, _DEFAULT_LOGS_EXPORT_PATH)
         self._client = _OTLPHTTPClient(
             transport=transport,
-            endpoint=endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, _DEFAULT_LOGS_EXPORT_PATH),
+            endpoint=self._endpoint,
             kind="logs",
             timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT),
             compression=compression
@@ -120,7 +128,19 @@ class OTLPLogExporter(LogRecordExporter):
             _logger.error("Failed to encode logs: %s", error)
             return LogRecordExportResult.FAILURE
         export_result = self._client.export(body)
-        return LogRecordExportResult.SUCCESS if export_result.success else LogRecordExportResult.FAILURE
+        if not export_result.success:
+            return LogRecordExportResult.FAILURE
+
+        response = _parse_export_response(export_result.content, ExportLogsServiceResponse, _logger)
+        if response is not None and response.partial_success is not None:
+            _report_partial_success(
+                _logger,
+                "logs",
+                self._endpoint,
+                response.partial_success.rejected_log_records or 0,
+                response.partial_success.error_message or "",
+            )
+        return LogRecordExportResult.SUCCESS
 
     def shutdown(self) -> None:
         if self._shutdown:
