@@ -1,0 +1,1 @@
+`opentelemetry-api`: make `CompositePropagator.extract` return a root context
