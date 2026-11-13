@@ -245,7 +245,14 @@ class MetricReaderStorage:
 
             new_view_instrument_match = self._new_view_instrument_match(view, instrument)
 
-            for existing_view_instrument_matches in self._instrument_view_instrument_matches.values():
+            # view_instrument_matches is included because matches for this
+            # instrument are only added to the dict after every view has been
+            # processed; without it, conflicts between views matching the same
+            # instrument would go unreported.
+            for existing_view_instrument_matches in (
+                *self._instrument_view_instrument_matches.values(),
+                view_instrument_matches,
+            ):
                 for existing_view_instrument_match in existing_view_instrument_matches:
                     if existing_view_instrument_match.conflicts(new_view_instrument_match):
                         _logger.warning(

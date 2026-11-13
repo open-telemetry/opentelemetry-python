@@ -74,11 +74,11 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
         # instrument1 matches view1 and view2, so should create two
         # ViewInstrumentMatch objects
-        storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
+        with self.assertLogs(level=WARNING):
+            storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
         matches = storage._instrument_view_instrument_matches[instrument1]
         self.assertEqual(len(matches), 2, matches)
         self.assertNotEqual(matches[0], matches[1])
-
         # they should only be created the first time the instrument is seen
         storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
         self.assertIs(storage._instrument_view_instrument_matches[instrument1], matches)
@@ -117,7 +117,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # Measurements from an instrument should be passed on to each
         # ViewInstrumentMatch objects created for that instrument
         measurement = Measurement(1, time_ns(), instrument1, Context())
-        storage.consume_measurement(measurement)
+        with self.assertLogs(level=WARNING):
+            storage.consume_measurement(measurement)
         (
             view_instrument_match1,
             view_instrument_match2,
@@ -755,3 +756,97 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             "will cause conflicting metrics",
             log.records[0].message,
         )
+
+    def test_view_instrument_match_conflict_9(self):
+        # There is a conflict between two views matching the same instrument
+        # and producing the same metric stream identity.
+
+        observable_counter = _ObservableCounter(
+            "observable_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                views=(
+                    View(
+                        instrument_name="observable_counter",
+                        attribute_keys={"a"},
+                    ),
+                    View(
+                        instrument_name="observable_counter",
+                        attribute_keys={"b"},
+                    ),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
+        )
+
+    def test_view_instrument_match_conflict_10(self):
+        # There is no conflict between two views matching the same instrument
+        # because they produce different metric stream names.
+
+        observable_counter = _ObservableCounter(
+            "observable_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                views=(
+                    View(instrument_name="observable_counter", name="foo"),
+                    View(instrument_name="observable_counter", name="bar"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
+
+    def test_view_instrument_match_conflict_11(self):
+        # There is no conflict between two drop views matching the same
+        # instrument because dropped streams are never exported.
+
+        observable_counter = _ObservableCounter(
+            "observable_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                exemplar_filter=Mock(),
+                resource=Mock(),
+                views=(
+                    View(instrument_name="observable_*", aggregation=DropAggregation()),
+                    View(instrument_name="*", aggregation=DropAggregation()),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(Measurement(1, time_ns(), observable_counter, Context()))
