@@ -550,9 +550,11 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
                 return
             self._shutdown = True
             futures = [self._executor.submit(lp.shutdown) for lp in self._log_record_processors]
-        for future in futures:
-            future.result()
-        self._executor.shutdown()
+        try:
+            for future in futures:
+                future.result()
+        finally:
+            self._executor.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors in parallel.

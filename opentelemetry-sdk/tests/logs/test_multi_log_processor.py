@@ -270,3 +270,15 @@ class TestConcurrentMultiLogRecordProcessor(MultiLogRecordProcessorTestBase, uni
         self.assertEqual(mock_processor.on_emit.call_count, 0)
         self.assertEqual(mock_processor.force_flush.call_count, 0)
         self.assertEqual(mock_processor.shutdown.call_count, 1)
+
+    def test_shutdown_shuts_down_executor_when_processor_raises(self):
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor()
+        failing_processor = Mock(spec=LogRecordProcessor)
+        failing_processor.shutdown.side_effect = RuntimeError("shutdown boom")
+        multi_log_record_processor.add_log_record_processor(failing_processor)
+
+        with self.assertRaises(RuntimeError):
+            multi_log_record_processor.shutdown()
+
+        with self.assertRaises(RuntimeError):
+            multi_log_record_processor._executor.submit(lambda: None)
