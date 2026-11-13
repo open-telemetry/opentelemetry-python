@@ -92,6 +92,15 @@ pip install -e ./opentelemetry-api -e ./opentelemetry-sdk -e ./opentelemetry-sem
 For additional exporter and instrumentation packages, see the
 [`opentelemetry-python-contrib`](https://github.com/open-telemetry/opentelemetry-python-contrib) repository.
 
+Release artifacts can be verified using [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations):
+
+```sh
+gh attestation verify <wheel-or-sdist-file> \
+  --repo open-telemetry/opentelemetry-python \
+  --signer-workflow open-telemetry/opentelemetry-python/.github/workflows/release.yml \
+  --source-digest "$(git rev-parse v<version>^{commit})"
+```
+
 ## Contributing
 
 For information about contributing to OpenTelemetry Python, see [CONTRIBUTING.md](CONTRIBUTING.md).
