@@ -1,0 +1,25 @@
+// W3C Trace Context tracestate header field value
+// https://www.w3.org/TR/trace-context/#tracestate-header-field-values
+//
+// At most 32 list members hold a key. Empty (OWS only) list members may appear
+// anywhere and do not count towards that limit.
+start: _OWS? _comma* (_member (_comma+ _member)~0..31 _comma*)?
+_member: MEMBER _OWS?
+_comma: "," _OWS?
+
+MEMBER: KEY "=" VALUE
+KEY: SIMPLE_KEY | MULTI_TENANT_KEY
+SIMPLE_KEY: LCALPHA KEY_CHAR~0..255
+MULTI_TENANT_KEY: TENANT_ID "@" SYSTEM_ID
+TENANT_ID: (LCALPHA | DIGIT) KEY_CHAR~0..240
+SYSTEM_ID: LCALPHA KEY_CHAR~0..13
+KEY_CHAR: LCALPHA | DIGIT | "_" | "-" | "*" | "/"
+LCALPHA: "a".."z"
+DIGIT: "0".."9"
+
+VALUE: CHR~0..255 NBLK_CHR
+CHR: " " | NBLK_CHR
+NBLK_CHR: /[\x21-\x2b\--\x3c\x3e-\x7e]/
+
+// Whitespace allowed around list members (RFC 9110 section 5.6.3)
+_OWS: /[ \t]+/
