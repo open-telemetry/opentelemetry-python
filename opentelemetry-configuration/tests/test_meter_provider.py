@@ -1117,11 +1117,75 @@ class TestCreateViews(unittest.TestCase):
         )
         self.assertEqual(view._attribute_keys, {"key1", "key2"})
 
-    def test_stream_attribute_keys_excluded_logs_warning(self):
+    def test_stream_attribute_keys_excluded_is_applied(self):
         config = self._make_view_config(stream_kwargs={"attribute_keys": IncludeExclude(excluded=["key1"])})
-        with self.assertLogs("opentelemetry.configuration._meter_provider", level="WARNING") as log:
-            create_meter_provider(config)
-        self.assertTrue(any("excluded" in msg for msg in log.output))
+        meter_provider = create_meter_provider(config)
+        views = meter_provider._sdk_config.views
+        self.assertEqual(len(views), 1)
+        view = views[0]
+        self.assertEqual(view._exclude_attribute_keys, frozenset({"key1"}))
+        self.assertIsNone(view._attribute_keys)
+
+        def test_stream_attribute_keys_exact_overlap_is_allowed(self):
+            view = self._get_view(
+                self._make_view_config(
+                    stream_kwargs={
+                        "attribute_keys": IncludeExclude(
+                            included=["region"],
+                            excluded=["region"],
+                        )
+                    }
+                )
+            )
+    
+            self.assertEqual(
+                view._attribute_keys,
+                frozenset({"region"}),
+            )
+            self.assertEqual(
+                view._exclude_attribute_keys,
+                frozenset({"region"}),
+            )
+
+    def test_stream_attribute_key_pattern_intersection_is_allowed(
+        self,
+    ):
+        view = self._get_view(
+            self._make_view_config(
+                stream_kwargs={
+                    "attribute_keys": IncludeExclude(
+                        included=["http.*"],
+                        excluded=["*.status"],
+                    )
+                }
+            )
+        )
+
+        self.assertEqual(
+            view._attribute_keys,
+            frozenset({"http.*"}),
+        )
+        self.assertEqual(
+            view._exclude_attribute_keys,
+            frozenset({"*.status"}),
+        )
+
+    def test_stream_empty_exclusion_list_is_allowed(self):
+        view = self._get_view(
+            self._make_view_config(
+                stream_kwargs={
+                    "attribute_keys": IncludeExclude(
+                        excluded=[],
+                    )
+                }
+            )
+        )
+
+        self.assertIsNone(view._attribute_keys)
+        self.assertEqual(
+            view._exclude_attribute_keys,
+            frozenset(),
+        )
 
     def test_stream_aggregation_drop(self):
         view = self._get_view(self._make_view_config(stream_kwargs={"aggregation": AggregationConfig(drop={})}))
