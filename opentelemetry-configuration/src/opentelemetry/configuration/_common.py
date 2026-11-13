@@ -201,6 +201,7 @@ def _parse_headers(
 
     Returns None if neither is set, letting the exporter read env vars.
     headers struct takes priority over headers_list for the same key.
+    headers struct entries with a null value are ignored.
     """
     if headers is None and headers_list is None:
         return None
@@ -219,9 +220,12 @@ def _parse_headers(
     if headers:
         for pair in headers:
             if isinstance(pair, dict):
-                result[pair["name"]] = pair.get("value") or ""
+                name, value = pair["name"], pair.get("value")
             else:
-                result[pair.name] = pair.value or ""
+                name, value = pair.name, pair.value
+            if value is None:
+                continue
+            result[name] = value
     return result
 
 
