@@ -408,6 +408,23 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             self.assertNotIn("os", prometheus_metric.samples[0].labels)
             self.assertNotIn("version", prometheus_metric.samples[0].labels)
 
+    def test_target_info_omitted_when_resource_empty(self):
+        metric_reader = PrometheusMetricReader(disable_target_info=False)
+        provider = MeterProvider(
+            metric_readers=[metric_reader],
+            resource=Resource.get_empty(),
+        )
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        result = list(metric_reader._collector.collect())
+
+        self.assertEqual(len(result), 1)
+        for prometheus_metric in result:
+            self.assertNotEqual(type(prometheus_metric), InfoMetricFamily)
+            self.assertNotEqual(prometheus_metric.name, "target")
+            self.assertNotEqual(prometheus_metric.documentation, "Target metadata")
+
     def test_target_info_sanitize(self):
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(
