@@ -12,12 +12,32 @@ from opentelemetry import trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
+from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
 
 
 class TestPropagators(TestCase):
+    """Loading tests restore the previous global propagator.
+
+    Each test reloads ``opentelemetry.propagate``. ``tearDown`` puts the
+    previous propagator instance back instead of reloading again, so a random
+    test order cannot observe this class's environment.
+    """
+
+    def setUp(self):
+        # pylint: disable=import-outside-toplevel
+        from opentelemetry import propagate  # noqa: PLC0415
+
+        self._propagate = propagate
+        # pylint: disable=protected-access
+        self._previous_textmap = propagate._HTTP_TEXT_FORMAT
+
+    def tearDown(self):
+        # pylint: disable=protected-access
+        self._propagate._HTTP_TEXT_FORMAT = self._previous_textmap
+
     @patch("opentelemetry.propagators.composite.CompositePropagator")
     def test_default_composite_propagators(self, mock_compositehttppropagator):
         def test_propagators(propagators):
@@ -35,6 +55,7 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
+        opentelemetry.propagate.get_global_textmap()
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "None"})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
@@ -54,6 +75,7 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
+        opentelemetry.propagate.get_global_textmap()
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "tracecontext, None"})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
@@ -73,6 +95,7 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
+        opentelemetry.propagate.get_global_textmap()
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
@@ -97,6 +120,7 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate  # noqa: PLC0415
 
         reload(opentelemetry.propagate)
+        opentelemetry.propagate.get_global_textmap()
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "tracecontext , unknown , baggage"})
     def test_composite_propagators_error(self):
@@ -105,11 +129,167 @@ class TestPropagators(TestCase):
             import opentelemetry.propagate  # noqa: PLC0415
 
             reload(opentelemetry.propagate)
+            opentelemetry.propagate.get_global_textmap()
 
         self.assertEqual(
             str(cm.exception),
             "Propagator unknown not found. It is either misspelled or not installed.",
         )
+
+
+class TestGlobalTextMapInitializedOnFirstUse(TestCase):
+    """``OTEL_PROPAGATORS`` is applied on the first ``get_global_textmap()`` call.
+
+    Distros import ``opentelemetry.propagate`` and only then set
+    ``OTEL_PROPAGATORS`` inside ``configure()``. A previous global propagator
+    and the previous environment value are restored in ``tearDown`` so these
+    tests do not depend on, or disturb, execution order. ``tearDown`` does not
+    reload the module.
+    """
+
+    def setUp(self):
+        # pylint: disable=import-outside-toplevel
+        from opentelemetry import propagate  # noqa: PLC0415
+
+        self._propagate = propagate
+        # pylint: disable=protected-access
+        self._previous_textmap = propagate._HTTP_TEXT_FORMAT
+        self._previous_env = environ.get(OTEL_PROPAGATORS)
+
+    def tearDown(self):
+        if self._previous_env is None:
+            environ.pop(OTEL_PROPAGATORS, None)
+        else:
+            environ[OTEL_PROPAGATORS] = self._previous_env
+        # Restore the exact instance captured before this test, including when
+        # the test reloaded the module. Reloading here would replace the global
+        # for every later test.
+        # pylint: disable=protected-access
+        self._propagate._HTTP_TEXT_FORMAT = self._previous_textmap
+
+    def _reload_with_env_unset(self):
+        """Reload as a fresh import that has not seen ``OTEL_PROPAGATORS``."""
+        environ.pop(OTEL_PROPAGATORS, None)
+        reload(self._propagate)
+
+    @staticmethod
+    def _propagator_types(propagator):
+        # pylint: disable=protected-access
+        return [type(item) for item in propagator._propagators]
+
+    def test_otel_propagators_set_after_import_is_used(self):
+        """Distros set ``OTEL_PROPAGATORS`` after this module is imported."""
+        self._reload_with_env_unset()
+        environ[OTEL_PROPAGATORS] = "baggage,tracecontext"
+
+        propagator = self._propagate.get_global_textmap()
+
+        self.assertEqual(
+            self._propagator_types(propagator),
+            [W3CBaggagePropagator, TraceContextTextMapPropagator],
+        )
+        self.assertEqual(propagator.fields, {"baggage", "traceparent", "tracestate"})
+
+    def test_bound_get_global_textmap_sees_env_set_after_import(self):
+        """Callers that bound ``get_global_textmap`` at import see the same load."""
+        self._reload_with_env_unset()
+        early_get = self._propagate.get_global_textmap
+        environ[OTEL_PROPAGATORS] = "baggage"
+
+        self.assertEqual(self._propagator_types(early_get()), [W3CBaggagePropagator])
+
+    def test_module_inject_uses_propagators_set_after_import(self):
+        """``inject`` resolves the global propagator when it is called."""
+        self._reload_with_env_unset()
+        environ[OTEL_PROPAGATORS] = "baggage"
+
+        self.assertEqual(self._propagate.get_global_textmap().fields, {"baggage"})
+        carrier: dict[str, str] = {}
+        self._propagate.inject(carrier)
+        self.assertNotIn("traceparent", carrier)
+
+    def test_set_global_textmap_before_load_wins_over_env(self):
+        self._reload_with_env_unset()
+        # On a lazy global, this call happens before the first read of the env.
+        # On an import-time global, reload already loaded the default and this
+        # still replaces it. Either way the explicit propagator must stick.
+        custom = CompositePropagator([])
+        self._propagate.set_global_textmap(custom)
+        environ[OTEL_PROPAGATORS] = "tracecontext"
+
+        self.assertIs(self._propagate.get_global_textmap(), custom)
+
+    def test_first_resolution_is_cached_if_env_changes_later(self):
+        self._reload_with_env_unset()
+        first = self._propagate.get_global_textmap()
+        environ[OTEL_PROPAGATORS] = "baggage"
+        second = self._propagate.get_global_textmap()
+
+        self.assertIs(first, second)
+        self.assertEqual(
+            self._propagator_types(first),
+            [TraceContextTextMapPropagator, W3CBaggagePropagator],
+        )
+
+    def test_default_propagators_when_env_unset(self):
+        self._reload_with_env_unset()
+
+        self.assertEqual(
+            self._propagator_types(self._propagate.get_global_textmap()),
+            [TraceContextTextMapPropagator, W3CBaggagePropagator],
+        )
+
+    def test_reload_after_env_is_set_still_honors_it(self):
+        """``importlib.reload`` after configure, as some distros do, still works."""
+        environ[OTEL_PROPAGATORS] = "baggage"
+        reload(self._propagate)
+
+        self.assertEqual(
+            self._propagator_types(self._propagate.get_global_textmap()),
+            [W3CBaggagePropagator],
+        )
+
+    def test_set_global_textmap_replaces_an_already_loaded_propagator(self):
+        self._reload_with_env_unset()
+        self._propagate.get_global_textmap()
+        custom = CompositePropagator([])
+        self._propagate.set_global_textmap(custom)
+
+        self.assertIs(self._propagate.get_global_textmap(), custom)
+
+    def test_failed_load_is_not_cached(self):
+        """A misspelled propagator does not stick; a later valid value is read."""
+        self._reload_with_env_unset()
+        environ[OTEL_PROPAGATORS] = "unknown"
+        with self.assertRaises(ValueError):
+            self._propagate.get_global_textmap()
+
+        environ[OTEL_PROPAGATORS] = "baggage"
+        self.assertEqual(
+            self._propagator_types(self._propagate.get_global_textmap()),
+            [W3CBaggagePropagator],
+        )
+
+    def test_concurrent_first_get_resolves_once(self):
+        # pylint: disable=import-outside-toplevel
+        from threading import Barrier, Thread  # noqa: PLC0415
+
+        self._reload_with_env_unset()
+        barrier = Barrier(8)
+        resolved = []
+
+        def _resolve():
+            barrier.wait()
+            resolved.append(self._propagate.get_global_textmap())
+
+        workers = [Thread(target=_resolve) for _ in range(8)]
+        for worker in workers:
+            worker.start()
+        for worker in workers:
+            worker.join()
+
+        self.assertEqual(len(resolved), 8)
+        self.assertTrue(all(item is resolved[0] for item in resolved))
 
 
 class TestTraceContextTextMapPropagator(TestCase):
