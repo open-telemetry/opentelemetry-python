@@ -19,6 +19,7 @@ from opentelemetry.configuration._exceptions import (
 from opentelemetry.configuration.file._env_substitution import (
     substitute_env_vars,
 )
+from opentelemetry.configuration.file._yaml import _YAML12CoreLoader
 from opentelemetry.configuration.models import OpenTelemetryConfiguration
 
 try:
@@ -74,7 +75,7 @@ _STANDALONE_ENV_REF = re.compile(r"\A\$\{(?:env:)?[A-Za-z_][A-Za-z0-9_]*(?::-[^}
 
 def _substitute_env_in_yaml_node(
     node: yaml.Node,
-    loader: yaml.SafeLoader,
+    loader: _YAML12CoreLoader,
     visited: set[int] | None = None,
 ):
     """Apply env-var substitution to string configuration values in a node tree.
@@ -87,7 +88,10 @@ def _substitute_env_in_yaml_node(
 
     Args:
         node: Root of the node tree to walk. Substitution happens in place.
-        loader: The loader that composed ``node``; used to re-resolve tags.
+        loader: The Core schema loader that composed ``node``. Its resolver
+            re-tags a substituted plain scalar with YAML 1.2 rules, so
+            ``${FLAG}`` is ``true`` when ``FLAG=true`` and the string ``on``
+            when ``FLAG=on``.
         visited: Ids of nodes already processed in this traversal. Callers pass
             nothing; the walker creates and threads one set through the whole
             tree.
@@ -160,9 +164,9 @@ def _substitute_env_in_yaml_node(
             _substitute_env_in_yaml_node(item, loader, visited)
     elif isinstance(node, yaml.MappingNode):
         # A mapping (dict): recurse into values only; keys are not
-        # substitution candidates per the spec. A merge key (``<<: *base``)
-        # appears here as an ordinary pair whose value node is the anchored
-        # mapping itself, so ``visited`` also covers the merged-in values.
+        # substitution candidates per the spec. YAML 1.2 does not treat
+        # ``<<`` as a merge, but an alias still shares the anchored node, so
+        # ``visited`` covers that node however many values point at it.
         for _key_node, value_node in node.value:
             _substitute_env_in_yaml_node(value_node, loader, visited)
 
@@ -197,7 +201,10 @@ def _parse_config_content(content: str, suffix: str, file_path: str | os.PathLik
     try:
         if suffix == ".json":
             return _substitute_env_in_json_value(json.loads(content))
-        yaml_loader = yaml.SafeLoader(content)
+        # Pure-Python Core schema loader, not ``yaml.SafeLoader``. The latter
+        # is YAML 1.1 and may be the libyaml C loader, which would ignore a
+        # Python resolver subclass.
+        yaml_loader = _YAML12CoreLoader(content)
         try:
             root_node = yaml_loader.get_single_node()
             if root_node is None:

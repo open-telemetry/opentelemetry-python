@@ -7,8 +7,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import yaml
-
 from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
 )
@@ -21,7 +19,6 @@ from opentelemetry.configuration.file._loader import (
     _SUPPORTED_SCHEMA_MINOR,
     _parse_config_content,
     _substitute_env_in_json_value,
-    _substitute_env_in_yaml_node,
 )
 from opentelemetry.configuration.models import (
     BatchSpanProcessor as BatchSpanProcessorConfig,
@@ -410,18 +407,14 @@ class TestFileFormatValidation(unittest.TestCase):
 
 
 def _substitute_yaml(text: str):
-    """Parse ``text``, run the node walker over it, and build the document.
+    """Parse ``text`` the way configuration files are parsed.
 
-    This is what ``_parse_config_content`` does for YAML, without the schema
-    validation, so walker behavior can be asserted on any document shape.
+    This is ``_parse_config_content`` for YAML, without schema validation, so
+    walker behavior can be asserted on any document shape. The Core schema
+    loader is the one production uses, including YAML 1.2 tag resolution after
+    ``${VAR}`` substitution.
     """
-    loader = yaml.SafeLoader(text)
-    try:
-        node = loader.get_single_node()
-        _substitute_env_in_yaml_node(node, loader)
-        return loader.construct_document(node)
-    finally:
-        loader.dispose()
+    return _parse_config_content(text, ".yaml", "config.yaml")
 
 
 class TestEnvVarSubstitutionScope(unittest.TestCase):
@@ -518,18 +511,25 @@ class TestEnvVarSubstitutionWithAliases(unittest.TestCase):
         self.assertEqual(result["b"], 42)
 
     def test_merge_key_escape_stays_literal(self):
-        # A merge key's value node is the anchored mapping itself, so the
-        # merged-in values are reached twice as well.
+        # YAML 1.2 Core schema does not merge ``<<``. The key is literal, but
+        # its value is still the anchored mapping, so that node is reached
+        # twice and must be substituted only once.
         text = "base: &base\n  x: $${TOKEN}\nderived:\n  <<: *base\n  y: 1\n"
         with patch.dict(os.environ, {"TOKEN": "leaked"}):
             result = _substitute_yaml(text)
-        self.assertEqual(result, {"base": {"x": "${TOKEN}"}, "derived": {"x": "${TOKEN}", "y": 1}})
+        self.assertEqual(
+            result,
+            {"base": {"x": "${TOKEN}"}, "derived": {"<<": {"x": "${TOKEN}"}, "y": 1}},
+        )
 
     def test_merge_key_resolves_reference(self):
         text = "base: &base\n  x: ${TOKEN}\nderived:\n  <<: *base\n  y: 1\n"
         with patch.dict(os.environ, {"TOKEN": "resolved"}):
             result = _substitute_yaml(text)
-        self.assertEqual(result, {"base": {"x": "resolved"}, "derived": {"x": "resolved", "y": 1}})
+        self.assertEqual(
+            result,
+            {"base": {"x": "resolved"}, "derived": {"<<": {"x": "resolved"}, "y": 1}},
+        )
 
     def test_cyclic_alias_terminates(self):
         # A mapping that aliases itself makes the node tree a graph with a
