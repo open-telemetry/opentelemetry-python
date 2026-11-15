@@ -146,7 +146,7 @@ def _create_otlp_http_span_exporter(
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
             _warn_unsupported_otlp_size_limits(
-                "otlp_http span", config.max_request_size, config.max_response_size, max_request_size_supported=True
+                "otlp_http", "spans", config.max_request_size, config.max_response_size, max_request_size_supported=True
             )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
@@ -175,7 +175,8 @@ def _create_otlp_http_span_exporter(
             )
         case OtlpHttpEncoding.json:
             _warn_unsupported_otlp_size_limits(
-                "otlp_http JSON span",
+                "otlp_http JSON",
+                "spans",
                 config.max_request_size,
                 config.max_response_size,
                 max_request_size_supported=False,
@@ -228,7 +229,7 @@ def _create_otlp_grpc_span_exporter(
         ) from exc
 
     _warn_unsupported_otlp_size_limits(
-        "otlp_grpc span", config.max_request_size, config.max_response_size, max_request_size_supported=False
+        "otlp_grpc", "spans", config.max_request_size, config.max_response_size, max_request_size_supported=False
     )
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)

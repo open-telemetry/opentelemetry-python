@@ -700,24 +700,24 @@ class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-pu
             (
                 "grpc max_request_size",
                 PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(max_request_size=1024)),
-                "max_request_size is not yet supported for otlp_grpc metric exporter",
+                "max_request_size is not yet supported for otlp_grpc exporter for metrics",
             ),
             (
                 "grpc max_response_size",
                 PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(max_response_size=1024)),
-                "max_response_size is not yet supported for otlp_grpc metric exporter",
+                "max_response_size is not yet supported for otlp_grpc exporter for metrics",
             ),
             (
                 "http max_response_size",
                 PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(max_response_size=1024)),
-                "max_response_size is not yet supported for otlp_http metric exporter",
+                "max_response_size is not yet supported for otlp_http exporter for metrics",
             ),
             (
                 "http json max_request_size",
                 PushMetricExporterConfig(
                     otlp_http=OtlpHttpMetricExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
                 ),
-                "max_request_size is not yet supported for otlp_http JSON metric exporter",
+                "max_request_size is not yet supported for otlp_http JSON exporter for metrics",
             ),
         ]
         for name, exporter_config, expected in cases:

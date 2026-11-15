@@ -657,24 +657,24 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
             (
                 "grpc max_request_size",
                 LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_request_size=1024)),
-                "max_request_size is not yet supported for otlp_grpc log exporter",
+                "max_request_size is not yet supported for otlp_grpc exporter for logs",
             ),
             (
                 "grpc max_response_size",
                 LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_response_size=1024)),
-                "max_response_size is not yet supported for otlp_grpc log exporter",
+                "max_response_size is not yet supported for otlp_grpc exporter for logs",
             ),
             (
                 "http max_response_size",
                 LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(max_response_size=1024)),
-                "max_response_size is not yet supported for otlp_http log exporter",
+                "max_response_size is not yet supported for otlp_http exporter for logs",
             ),
             (
                 "http json max_request_size",
                 LogRecordExporterConfig(
                     otlp_http=OtlpHttpExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
                 ),
-                "max_request_size is not yet supported for otlp_http JSON log exporter",
+                "max_request_size is not yet supported for otlp_http JSON exporter for logs",
             ),
         ]
         for name, exporter_config, expected in cases:

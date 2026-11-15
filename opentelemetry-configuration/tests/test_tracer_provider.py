@@ -736,24 +736,24 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):  # pylint: disable=
             (
                 "grpc max_request_size",
                 SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_request_size=1024)),
-                "max_request_size is not yet supported for otlp_grpc span exporter",
+                "max_request_size is not yet supported for otlp_grpc exporter for spans",
             ),
             (
                 "grpc max_response_size",
                 SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_response_size=1024)),
-                "max_response_size is not yet supported for otlp_grpc span exporter",
+                "max_response_size is not yet supported for otlp_grpc exporter for spans",
             ),
             (
                 "http max_response_size",
                 SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(max_response_size=1024)),
-                "max_response_size is not yet supported for otlp_http span exporter",
+                "max_response_size is not yet supported for otlp_http exporter for spans",
             ),
             (
                 "http json max_request_size",
                 SpanExporterConfig(
                     otlp_http=OtlpHttpExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
                 ),
-                "max_request_size is not yet supported for otlp_http JSON span exporter",
+                "max_request_size is not yet supported for otlp_http JSON exporter for spans",
             ),
         ]
         for name, exporter_config, expected in cases:

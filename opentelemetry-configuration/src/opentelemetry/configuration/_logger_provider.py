@@ -105,7 +105,7 @@ def _create_otlp_http_log_exporter(
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
             _warn_unsupported_otlp_size_limits(
-                "otlp_http log", config.max_request_size, config.max_response_size, max_request_size_supported=True
+                "otlp_http", "logs", config.max_request_size, config.max_response_size, max_request_size_supported=True
             )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
@@ -134,7 +134,8 @@ def _create_otlp_http_log_exporter(
             )
         case OtlpHttpEncoding.json:
             _warn_unsupported_otlp_size_limits(
-                "otlp_http JSON log",
+                "otlp_http JSON",
+                "logs",
                 config.max_request_size,
                 config.max_response_size,
                 max_request_size_supported=False,
@@ -187,7 +188,7 @@ def _create_otlp_grpc_log_exporter(
         ) from exc
 
     _warn_unsupported_otlp_size_limits(
-        "otlp_grpc log", config.max_request_size, config.max_response_size, max_request_size_supported=False
+        "otlp_grpc", "logs", config.max_request_size, config.max_response_size, max_request_size_supported=False
     )
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
