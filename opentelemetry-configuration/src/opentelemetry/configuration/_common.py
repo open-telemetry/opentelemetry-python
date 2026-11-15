@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     # pylint: disable-next=import-error
     import grpc
 
-    from opentelemetry.configuration.models import GrpcTls
+    from opentelemetry.configuration.models import GrpcTls, IncludeExclude
 
 _logger = logging.getLogger(__name__)
 
@@ -41,6 +41,24 @@ def _matches_glob(value: str, pattern: str) -> bool:
     # Escape opening brackets to disable fnmatch's character classes while
     # retaining its wildcard implementation and compiled-pattern cache.
     return value == pattern or fnmatchcase(value, pattern.replace("[", "[[]"))
+
+
+def _include_exclude_predicate(config: IncludeExclude) -> Callable[[str], bool]:
+    """Build a predicate matching values against include/exclude glob patterns.
+
+    Values must match one of the ``included`` patterns when present (an
+    omitted ``included`` list matches everything) and must not match any
+    ``excluded`` pattern, which takes priority over ``included``.
+    """
+    included = config.included
+    excluded = config.excluded
+
+    def matches(value: str) -> bool:
+        if included and not any(_matches_glob(value, pattern) for pattern in included):
+            return False
+        return not (excluded and any(_matches_glob(value, pattern) for pattern in excluded))
+
+    return matches
 
 
 def _scope_name_matches_glob(pattern: str) -> Callable[[InstrumentationScope], bool]:
