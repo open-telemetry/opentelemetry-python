@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import functools
 import json
+import os
+import weakref
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -112,6 +114,22 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         self._pool = urllib3.PoolManager(**pool_kwargs)  # type: ignore
         self._proxy_managers: dict[str, PoolManager] = {}
         self._get_proxy = functools.lru_cache(maxsize=32)(_get_environ_proxy)
+        if hasattr(os, "register_at_fork"):
+            weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+
+            def _after_in_child() -> None:
+                if reinit := weak_reinit():
+                    reinit()
+
+            os.register_at_fork(after_in_child=_after_in_child)
+
+    def _at_fork_reinit(self) -> None:
+        # Connections pooled before fork() share their sockets with the parent.
+        # Drop them in the child so it opens its own connections; the pool
+        # managers are kept and stay usable.
+        self._pool.clear()
+        for manager in self._proxy_managers.values():
+            manager.clear()
 
     def _get_pool_manager(self, url: str) -> PoolManager:
         proxy = self._get_proxy(url)

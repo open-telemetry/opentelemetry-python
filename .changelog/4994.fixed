@@ -1,0 +1,1 @@
+`opentelemetry-exporter-http-transport`: drop pooled connections in forked child processes

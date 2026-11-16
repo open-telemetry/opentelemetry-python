@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import functools
+import os
+import weakref
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -77,6 +79,20 @@ class RequestsHTTPTransport(BaseHTTPTransport):
         self._session.verify = verify
         if cert is not None:
             self._session.cert = cert
+        if hasattr(os, "register_at_fork"):
+            weak_reinit = weakref.WeakMethod(self._at_fork_reinit)
+
+            def _after_in_child() -> None:
+                if reinit := weak_reinit():
+                    reinit()
+
+            os.register_at_fork(after_in_child=_after_in_child)
+
+    def _at_fork_reinit(self) -> None:
+        # Connections pooled before fork() share their sockets with the parent.
+        # Drop them in the child so it opens its own connections; the session
+        # and its configuration are kept and stay usable.
+        self._session.close()
 
     def request(
         self,
