@@ -376,7 +376,8 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     Built-in sampler types are checked via typed fields on the Sampler
     dataclass. User-defined sampler names captured in additional_properties
     by the @_additional_properties decorator are loaded via the
-    ``opentelemetry_sampler`` entry point group.
+    ``opentelemetry_sampler`` entry point group, and the plugin's
+    configuration mapping is passed to the factory as keyword arguments.
     """
     if config.always_on is not None:
         return ALWAYS_ON
@@ -390,8 +391,8 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     if config.parent_based is not None:
         return _create_parent_based_sampler(config.parent_based)
     if config.additional_properties:
-        name = next(iter(config.additional_properties))
-        return load_entry_point("opentelemetry_sampler", name)()
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_sampler", name)(**(plugin_config or {}))
     raise ConfigurationError(
         f"Unsupported sampler type in config: {config!r}. "
         "Supported types: always_on, always_off, composite_development, "
