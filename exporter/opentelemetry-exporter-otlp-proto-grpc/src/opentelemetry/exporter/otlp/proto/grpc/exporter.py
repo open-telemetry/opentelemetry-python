@@ -9,6 +9,7 @@ logic to handle transient collector outages.
 
 """
 
+import math
 import os
 import random
 import threading
@@ -259,7 +260,7 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         headers: Headers to send when exporting
-        timeout: Backend request timeout in seconds
+        timeout: Backend request timeout in seconds; ``math.inf`` disables the deadline
         compression: gRPC compression method to use
         channel_options: gRPC channel options
     """
@@ -433,7 +434,8 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                     self._client.Export(
                         request=self._translate_data(data),
                         metadata=self._headers,
-                        timeout=deadline_sec - time(),
+                        # An infinite deadline means no limit, which gRPC expresses as None.
+                        timeout=None if math.isinf(deadline_sec) else deadline_sec - time(),
                     )
                     return self._result.SUCCESS  # type: ignore [reportReturnType]
                 except RpcError as error:

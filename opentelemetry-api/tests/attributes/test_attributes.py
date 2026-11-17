@@ -47,7 +47,23 @@ class TestBoundedAttributes(unittest.TestCase):
         for valid_primitive in valid_primitive_sequence:
             self.assertEqual(_clean_attribute_value(valid_primitive, None), valid_primitive)
 
-        self.assertEqual(_clean_attribute_value(b"hello", 4), b"hello")
+        # Byte array is not truncated when length <= limit.
+        self.assertEqual(_clean_attribute_value(b"hello", 5), b"hello")
+        self.assertEqual(_clean_attribute_value(b"hello", None), b"hello")
+
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            # Byte array is truncated.
+            self.assertEqual(_clean_attribute_value(b"hello", 4), b"hell")
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("Byte array attribute value exceeds max length", cm.output[0])
+
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            # Mutable bytearray is truncated and converted to immutable bytes.
+            cleaned_bytearray = _clean_attribute_value(bytearray(b"hello"), 4)
+            self.assertEqual(cleaned_bytearray, b"hell")
+            self.assertIsInstance(cleaned_bytearray, bytes)
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("Byte array attribute value exceeds max length", cm.output[0])
 
         with self.assertLogs("opentelemetry", level="WARNING") as cm:
             # String is truncated.
@@ -285,3 +301,30 @@ class TestBoundedAttributes(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             bdict_copy["invalid"] = "invalid"
+
+    def test_byte_array_truncation_in_bounded_attributes(self):
+        bdict = BoundedAttributes(immutable=False, max_value_len=4)
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            bdict["bytes_val"] = b"1234567"
+        self.assertEqual(bdict["bytes_val"], b"1234")
+        self.assertEqual(len(cm.output), 1)
+        self.assertIn("Byte array attribute value exceeds max length of 4, truncating.", cm.output[0])
+
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            bdict["bytearray_val"] = bytearray(b"abcdefg")
+        self.assertEqual(bdict["bytearray_val"], b"abcd")
+        self.assertIsInstance(bdict["bytearray_val"], bytes)
+
+    def test_byte_array_in_nested_structures_truncated(self):
+        # In sequences
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            cleaned_seq = _clean_attribute_value([b"abcdef", b"xy", bytearray(b"123456")], 3)
+            self.assertEqual(cleaned_seq, (b"abc", b"xy", b"123"))
+            self.assertIsInstance(cleaned_seq[2], bytes)
+        self.assertEqual(len(cm.output), 2)
+
+        # In mappings
+        with self.assertLogs("opentelemetry", level="WARNING") as cm:
+            cleaned_map = _clean_attribute_value({"payload": b"abcdef", "ok": b"12"}, 3)
+            self.assertEqual(cleaned_map, {"payload": b"abc", "ok": b"12"})
+        self.assertEqual(len(cm.output), 1)

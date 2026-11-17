@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: apply schema defaults to absent BatchSpanProcessor and OTLP exporter fields (endpoint, timeout, compression) instead of falling back to `OTEL_*` environment variables

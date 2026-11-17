@@ -1,0 +1,1 @@
+`opentelemetry-api`: truncate byte array attribute values when attribute value length limit is set

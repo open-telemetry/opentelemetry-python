@@ -91,7 +91,7 @@ class Output:
         p(
             Input(
                 sampler=composable_parent_threshold(composable_always_on()),
-                sampled=False,
+                sampled=True,
                 threshold=0x7F99AA40C02744,
                 random_value=0x7F99AA40C02744,
             ),

@@ -1,0 +1,23 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-metric-prometheus-resource-labels
+    - name: service.version
+      value: 1.2.3
+    - name: service.namespace
+      value: declconfig
+    - name: deployment.environment.name
+      value: test
+meter_provider:
+  readers:
+    - pull:
+        exporter:
+          prometheus/development:
+            host: 0.0.0.0
+            port: 9465
+            target_info_enabled/development: false
+            scope_info_enabled: false
+            resource_constant_labels:
+              included: ["service.*"]
+              excluded: [service.namespace]

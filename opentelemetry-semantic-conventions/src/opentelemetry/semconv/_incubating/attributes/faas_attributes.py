@@ -40,9 +40,14 @@ The execution environment ID as a string, that will be potentially reused for ot
 Note: - **AWS Lambda:** Use the (full) log stream name.
 """
 
-FAAS_INVOCATION_ID: Final = "faas.invocation_id"
+FAAS_INVOCATION_ID: Final = "faas.invocation.id"
 """
 The invocation ID of the current function invocation.
+"""
+
+FAAS_INVOCATION_START_TIME: Final = "faas.invocation.start_time"
+"""
+A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
 """
 
 FAAS_INVOKED_NAME: Final = "faas.invoked_name"
@@ -92,7 +97,7 @@ definition of function name MUST be used for this attribute
 
 FAAS_TIME: Final = "faas.time"
 """
-A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
+Deprecated: Replaced by `faas.invocation.start_time`.
 """
 
 FAAS_TRIGGER: Final = "faas.trigger"
