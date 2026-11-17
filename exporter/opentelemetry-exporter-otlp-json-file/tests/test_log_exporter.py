@@ -10,9 +10,10 @@ import tempfile
 import unittest
 from unittest.mock import Mock
 
-from opentelemetry.exporter.otlp.json.common._log_encoder import encode_logs
+from opentelemetry.exporter.otlp.json import file as otlp_json_file
+from opentelemetry.exporter.otlp.json.common.log_encoder import encode_logs
 from opentelemetry.exporter.otlp.json.file._internal import _format_line
-from opentelemetry.exporter.otlp.json.file._log_exporter import (
+from opentelemetry.exporter.otlp.json.file.log_exporter import (
     FileLogExporter,
 )
 from opentelemetry.logs import LogRecord, SeverityNumber
@@ -29,7 +30,7 @@ from opentelemetry.sdk.logs.export import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
-_LOGGER_NAME = "opentelemetry.exporter.otlp.json.file._log_exporter"
+_LOGGER_NAME = "opentelemetry.exporter.otlp.json.file.log_exporter"
 
 
 def _make_log_record(
@@ -51,6 +52,10 @@ class TestFileLogExporter(unittest.TestCase):
     def setUp(self):
         self._stream = io.StringIO()
         self._exporter = FileLogExporter(stream=self._stream)
+
+    def test_exported_at_package_level(self):
+        self.assertIs(otlp_json_file.FileLogExporter, FileLogExporter)
+        self.assertIn("FileLogExporter", otlp_json_file.__all__)
 
     def test_export_empty_sequence(self):
         result = self._exporter.export([])

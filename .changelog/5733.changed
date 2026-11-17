@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-grpc`, `opentelemetry-exporter-otlp-proto-http`, `opentelemetry-exporter-otlp-json-http`, `opentelemetry-exporter-otlp-json-file`: stabilize the log exporter as the public `log_exporter` module

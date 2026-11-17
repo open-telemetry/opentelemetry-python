@@ -12,7 +12,7 @@ from google.protobuf.json_format import MessageToDict
 from grpc import ChannelCredentials, Compression
 
 from opentelemetry.exporter.otlp.proto.common._internal import _encode_value
-from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.log_exporter import (
     OTLPLogExporter,
 )
 from opentelemetry.logs import LogRecord, SeverityNumber

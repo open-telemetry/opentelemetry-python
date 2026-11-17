@@ -19,19 +19,19 @@ from opentelemetry.exporter.http.transport._urllib3 import (
 from opentelemetry.exporter.otlp.common.http import (
     Compression as JSONCompression,
 )
-from opentelemetry.exporter.otlp.json.file._log_exporter import (
+from opentelemetry.exporter.otlp.json.file.log_exporter import (
     FileLogExporter,
 )
-from opentelemetry.exporter.otlp.json.http._log_exporter import (
+from opentelemetry.exporter.otlp.json.http.log_exporter import (
     OTLPLogExporter as JSONLogExporter,
 )
-from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.log_exporter import (
     OTLPLogExporter as GRPCLogExporter,
 )
 from opentelemetry.exporter.otlp.proto.http import (
     Compression as HTTPCompression,
 )
-from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+from opentelemetry.exporter.otlp.proto.http.log_exporter import (
     OTLPLogExporter as HTTPLogExporter,
 )
 from opentelemetry.logs import Logger, SeverityNumber
