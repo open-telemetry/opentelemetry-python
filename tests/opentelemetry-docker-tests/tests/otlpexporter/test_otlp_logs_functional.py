@@ -35,8 +35,8 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter as HTTPLogExporter,
 )
 from opentelemetry.logs import Logger, SeverityNumber
-from opentelemetry.sdk._logs import LoggerProvider
-from opentelemetry.sdk._logs.export import (
+from opentelemetry.sdk.logs import LoggerProvider
+from opentelemetry.sdk.logs.export import (
     LogRecordExporter,
     SimpleLogRecordProcessor,
 )

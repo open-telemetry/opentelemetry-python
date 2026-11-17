@@ -5,7 +5,7 @@ import dataclasses
 import unittest
 
 from opentelemetry.logs import LogRecord, SeverityNumber
-from opentelemetry.sdk._logs import ReadableLogRecord
+from opentelemetry.sdk.logs import ReadableLogRecord
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Buckets,

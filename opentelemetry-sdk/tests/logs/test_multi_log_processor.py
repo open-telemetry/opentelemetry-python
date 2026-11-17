@@ -3,7 +3,6 @@
 
 # pylint:disable=protected-access,no-self-use,no-member
 
-import logging
 import threading
 import time
 import unittest
@@ -11,10 +10,9 @@ from abc import ABC, abstractmethod
 from unittest.mock import Mock
 
 from opentelemetry.logs import LogRecord, SeverityNumber
-from opentelemetry.sdk._logs._internal import (
+from opentelemetry.sdk.logs._internal import (
     ConcurrentMultiLogRecordProcessor,
     LoggerProvider,
-    LoggingHandler,
     LogRecordProcessor,
     ReadWriteLogRecord,
     SynchronousMultiLogRecordProcessor,
@@ -49,29 +47,36 @@ class AnotherLogRecordProcessor(LogRecordProcessor):
 class TestLogRecordProcessor(unittest.TestCase):
     def test_log_record_processor(self):
         provider = LoggerProvider()
-        handler = LoggingHandler(logger_provider=provider)
 
         logs_list_1 = []
         processor1 = AnotherLogRecordProcessor(Mock(), logs_list_1)
         logs_list_2 = []
         processor2 = AnotherLogRecordProcessor(Mock(), logs_list_2)
 
-        logger = logging.getLogger("test.span.processor")
-        logger.addHandler(handler)
+        logger = provider.get_logger("test.span.processor")
 
         # Test no proessor added
-        with self.assertLogs(level=logging.CRITICAL):
-            logger.critical("Odisha, we have another major cyclone")
+        logger.emit(
+            body="Odisha, we have another major cyclone",
+            severity_number=SeverityNumber.FATAL,
+            severity_text="FATAL",
+        )
 
         self.assertEqual(len(logs_list_1), 0)
         self.assertEqual(len(logs_list_2), 0)
 
         # Add one processor
         provider.add_log_record_processor(processor1)
-        with self.assertLogs(level=logging.WARNING):
-            logger.warning("Brace yourself")
-        with self.assertLogs(level=logging.ERROR):
-            logger.error("Some error message")
+        logger.emit(
+            body="Brace yourself",
+            severity_number=SeverityNumber.WARN,
+            severity_text="WARN",
+        )
+        logger.emit(
+            body="Some error message",
+            severity_number=SeverityNumber.ERROR,
+            severity_text="ERROR",
+        )
 
         expected_list_1 = [
             ("Brace yourself", "WARN"),
@@ -81,8 +86,11 @@ class TestLogRecordProcessor(unittest.TestCase):
 
         # Add another processor
         provider.add_log_record_processor(processor2)
-        with self.assertLogs(level=logging.CRITICAL):
-            logger.critical("Something disastrous")
+        logger.emit(
+            body="Something disastrous",
+            severity_number=SeverityNumber.FATAL,
+            severity_text="FATAL",
+        )
         expected_list_1.append(("Something disastrous", "FATAL"))
 
         expected_list_2 = [("Something disastrous", "FATAL")]
