@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from opentelemetry import trace
-from opentelemetry._logs import SeverityNumber, get_logger
+from opentelemetry.logs import SeverityNumber, get_logger
 
 tracer = trace.get_tracer(__name__)
 logger = get_logger(__name__)

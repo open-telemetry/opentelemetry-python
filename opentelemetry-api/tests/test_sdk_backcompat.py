@@ -17,9 +17,9 @@ import contextlib
 from collections.abc import Callable, Iterator, Sequence
 from typing import Any
 
-from opentelemetry import _logs, metrics, trace
-from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry import logs, metrics, trace
 from opentelemetry.context import Context
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.metrics import (
     Counter,
     Histogram,
@@ -119,7 +119,7 @@ class FrozenMeterProvider(metrics.MeterProvider):
         return self.meter
 
 
-class FrozenLogger(_logs.Logger):
+class FrozenLogger(logs.Logger):
     def __init__(self) -> None:
         super().__init__("frozen")
         self.records: list[LogRecord | None] = []
@@ -131,7 +131,7 @@ class FrozenLogger(_logs.Logger):
         return True
 
 
-class FrozenLoggerProvider(_logs.LoggerProvider):
+class FrozenLoggerProvider(logs.LoggerProvider):
     def __init__(self) -> None:
         self.logger = FrozenLogger()
 
@@ -141,7 +141,7 @@ class FrozenLoggerProvider(_logs.LoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
-    ) -> _logs.Logger:
+    ) -> logs.Logger:
         return self.logger
 
 
@@ -201,9 +201,9 @@ class TestFrozenMeter(MetricsGlobalsTest):
 
 class TestFrozenLogger(LoggingGlobalsTest):
     def test_emit_and_enabled(self) -> None:
-        logger = _logs.get_logger("my.library")
+        logger = logs.get_logger("my.library")
         provider = FrozenLoggerProvider()
-        _logs.set_logger_provider(provider)
+        logs.set_logger_provider(provider)
 
         self.assertTrue(logger.enabled(severity_number=SeverityNumber.WARN, event_name="disk.full"))
         record = LogRecord(body="disk full", severity_number=SeverityNumber.WARN)
