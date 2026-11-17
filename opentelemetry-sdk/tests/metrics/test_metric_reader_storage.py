@@ -55,6 +55,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
     def test_creates_view_instrument_matches(self, MockViewInstrumentMatch: Mock):
         """It should create a MockViewInstrumentMatch when an instrument
         matches a view"""
+        MockViewInstrumentMatch.side_effect = lambda *args, **kwargs: Mock()
+
         instrument1 = Mock(name="instrument1")
         instrument2 = Mock(name="instrument2")
 
@@ -75,6 +77,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
         matches = storage._instrument_view_instrument_matches[instrument1]
         self.assertEqual(len(matches), 2, matches)
+        self.assertNotEqual(matches[0], matches[1])
 
         # they should only be created the first time the instrument is seen
         storage.consume_measurement(Measurement(1, time_ns(), instrument1, Context()))
