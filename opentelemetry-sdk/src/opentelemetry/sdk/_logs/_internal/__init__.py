@@ -9,6 +9,7 @@ import concurrent.futures
 import json
 import logging
 import os
+import sys
 import threading
 import traceback
 import warnings
@@ -87,6 +88,49 @@ _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
 _logger = logging.getLogger(__name__)
+_callback_log_reentry = threading.local()
+
+
+def _safe_log_exception(logger, msg):  # pylint: disable=redefined-outer-name
+    """Log an exception safely against recursive logging handlers.
+
+    If we are already inside a diagnostic log dispatch on this thread, write
+    the record to stderr directly instead of going through the logging module
+    to prevent infinite feedback loops. Any exception raised by a user logging
+    handler during the outer dispatch is contained here.
+    """
+    if getattr(_callback_log_reentry, "in_diag", False):
+        print(msg, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        return
+    _callback_log_reentry.in_diag = True
+    try:
+        logger.exception(msg)
+    except Exception:  # pylint: disable=broad-exception-caught
+        print(msg, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+    finally:
+        _callback_log_reentry.in_diag = False
+
+
+def _safe_log_debug(logger, msg):  # pylint: disable=redefined-outer-name
+    """Emit a DEBUG diagnostic without letting a user logging handler error escape.
+
+    The inline fallback path must run even when an attached logging handler
+    raises; the DEBUG record is still attempted through the standard handler,
+    and any handler error falls back to stderr instead of aborting the
+    callback dispatch.
+    """
+    if getattr(_callback_log_reentry, "in_diag", False):
+        print(msg, file=sys.stderr)
+        return
+    _callback_log_reentry.in_diag = True
+    try:
+        logger.debug(msg)  # noqa: SHADOW
+    except Exception:  # pylint: disable=broad-exception-caught
+        print(msg, file=sys.stderr)
+    finally:
+        _callback_log_reentry.in_diag = False
 
 
 class BytesEncoder(json.JSONEncoder):
@@ -480,6 +524,49 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         return all_flushed
 
 
+class _CallbackAttempt:
+    """Per-dispatch at-most-once wrapper for a log record processor callback.
+
+    See :class:`opentelemetry.sdk.trace._CallbackAttempt` for the rationale.
+    """
+
+    __slots__ = ("_callback", "_args", "_kwargs", "_lock", "_started", "_finished")
+
+    def __init__(self, callback: Callable[..., None], args: tuple[Any, ...], kwargs: dict[str, Any]):
+        self._callback = callback
+        self._args = args
+        self._kwargs = kwargs
+        self._lock = threading.Lock()
+        self._started = False
+        self._finished = threading.Event()
+
+    def run(self) -> None:
+        with self._lock:
+            if self._started:
+                return
+            self._started = True
+        # Mark that we are executing a processor callback on this thread. If a
+        # logging handler (e.g. LoggingHandler) synchronously calls back into
+        # on_emit, _submit_and_wait sees this flag and runs callbacks inline
+        # instead of submitting to the executor (whose workers are blocked
+        # inside the outer callback, which would deadlock).
+        reentry = getattr(_callback_log_reentry, "active", False)
+        _callback_log_reentry.active = True
+        try:
+            self._callback(*self._args, **self._kwargs)
+        except Exception:  # pylint: disable=broad-exception-caught
+            _safe_log_exception(_logger, "Exception while calling LogRecordProcessor callback.")
+        finally:
+            _callback_log_reentry.active = reentry
+            self._finished.set()
+
+    def wait_if_started(self) -> None:
+        with self._lock:
+            started = self._started
+        if started:
+            self._finished.wait()
+
+
 class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
     """Implementation of :class:`LogRecordProcessor` that forwards all received
     events to a list of log processors in parallel.
@@ -510,12 +597,57 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         *args: Any,
         **kwargs: Any,
     ):
+        # Reentry guard: if we are already running a callback on this thread, or
+        # we were dispatched from inside a real logging handler that holds its own
+        # lock across emit(), run the callbacks inline instead of through the
+        # executor. Submitting would either queue work no worker can pick up
+        # (workers blocked inside the outer callback) or block a re-entrant
+        # worker on the logging handler lock the dispatching thread still holds,
+        # and future.result() would deadlock in both cases.
+        if getattr(_callback_log_reentry, "active", False) or getattr(_callback_log_reentry, "in_bridge", False):
+            for lp in self._log_record_processors:
+                try:
+                    callback = func(lp)
+                    callback(*args, **kwargs)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _safe_log_exception(
+                        _logger,
+                        "Exception while re-entering LogRecordProcessor callback inline.",
+                    )
+            return
+        attempts = []
         futures = []
         for lp in self._log_record_processors:
-            future = self._executor.submit(func(lp), *args, **kwargs)
-            futures.append(future)
+            try:
+                callback = func(lp)
+            except Exception:  # pylint: disable=broad-exception-caught
+                _safe_log_exception(_logger, "Exception while resolving LogRecordProcessor callback.")
+                continue
+            attempt = _CallbackAttempt(callback, args, kwargs)
+            attempts.append(attempt)
+            try:
+                futures.append(self._executor.submit(attempt.run))
+            except RuntimeError:
+                # The executor may already be shut down when this runs from an
+                # atexit handler: CPython runs threading._shutdown() before the
+                # atexit queue, so the LoggerProvider.shutdown() runs. Run
+                # inline through the SAME attempt; the shared lock prevents
+                # double invocation even if the work item was already enqueued
+                # before Thread.start failed.
+                _safe_log_debug(
+                    _logger,
+                    "Executor is shut down; running LogRecordProcessor callback inline.",
+                )
+                attempt.run()
+            except Exception:  # pylint: disable=broad-exception-caught
+                _safe_log_exception(_logger, "Exception while submitting LogRecordProcessor callback.")
         for future in futures:
-            future.result()
+            try:
+                future.result()
+            except Exception:  # pylint: disable=broad-exception-caught
+                _safe_log_exception(_logger, "Exception in LogRecordProcessor worker.")
+        for attempt in attempts:
+            attempt.wait_if_started()
 
     def on_emit(self, log_record: ReadWriteLogRecord) -> None:
         self._submit_and_wait(lambda lp: lp.on_emit, log_record)
@@ -713,7 +845,17 @@ class LoggingHandler(logging.Handler):
         """
         logger = get_logger(record.name, logger_provider=self._logger_provider)
         if not isinstance(logger, NoOpLogger):
-            logger.emit(self._translate(record))
+            # A real logging handler holds its own lock across emit(). If the
+            # concurrent multi-processor submits work to its executor and then
+            # blocks waiting on it, a worker that re-enters logging through this
+            # same handler would deadlock on that lock. Mark the bridge boundary
+            # so the multi-processor dispatches inline while we hold the handler
+            # lock, matching the re-entry guard for callbacks.
+            _callback_log_reentry.in_bridge = True
+            try:
+                logger.emit(self._translate(record))
+            finally:
+                _callback_log_reentry.in_bridge = False
 
     def flush(self) -> None:
         """

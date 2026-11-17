@@ -1,0 +1,1 @@
+Fix concurrent span/log processor shutdown at exit so that a failing processor callback no longer blocks healthy sibling processors and a Thread.start RuntimeError no longer double-invokes a callback.
