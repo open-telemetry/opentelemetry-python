@@ -172,15 +172,37 @@ _FACTORY_TO_PROMETHEUS_TYPE: dict[_MetricFamilyFactory, str] = {
     HistogramMetricFamily: "histogram",
 }
 
+_RESERVED_FAMILY_SUFFIXES: dict[_MetricFamilyFactory, tuple[str, ...]] = {
+    CounterMetricFamily: ("_total", "_created"),
+    GaugeMetricFamily: (),
+    HistogramMetricFamily: ("_bucket", "_sum", "_count", "_created"),
+}
 
-def _resolve_prometheus_name(
+
+def _resolve_metric_names(
     metric_name: str,
     unit: str,
     factory: _MetricFamilyFactory,
-) -> str:
-    base_name = metric_name[:-6] if factory is CounterMetricFamily and metric_name.endswith("_total") else metric_name
+) -> tuple[str, tuple[str, ...]]:
+    base_name = (
+        metric_name[:-6]
+        if factory is CounterMetricFamily and len(metric_name) > 6 and metric_name.endswith("_total")
+        else metric_name
+    )
     family_name = f"{base_name}_{unit}" if unit and not base_name.endswith(f"_{unit}") else base_name
-    return f"{family_name}_total" if factory is CounterMetricFamily else family_name
+    prometheus_name = f"{family_name}_total" if factory is CounterMetricFamily else family_name
+    reserved_names = (
+        prometheus_name,
+        *(
+            candidate
+            for candidate in (
+                family_name,
+                *(f"{family_name}{suffix}" for suffix in _RESERVED_FAMILY_SUFFIXES[factory]),
+            )
+            if candidate != prometheus_name
+        ),
+    )
+    return prometheus_name, reserved_names
 
 
 class _PendingMetricFamily:
@@ -237,6 +259,70 @@ class _PendingMetricFamily:
                         value=value,
                     )
         return family
+
+
+_PendingFamilyEntry = _PendingMetricFamily | InfoMetricFamily
+
+
+def _get_or_create_pending_family(
+    pending_families: dict[str, _PendingFamilyEntry],
+    factory: _MetricFamilyFactory,
+    metric_name: str,
+    description: str,
+    unit: str,
+) -> _PendingMetricFamily | None:
+    prometheus_name, reserved_names = _resolve_metric_names(metric_name, unit, factory)
+    conflict_name = next((name for name in reserved_names if name in pending_families), None)
+    if conflict_name is None:
+        pending = _PendingMetricFamily(
+            factory=factory,
+            name=prometheus_name,
+            description=description,
+            unit=unit,
+        )
+        for name in reserved_names:
+            pending_families[name] = pending
+        return pending
+
+    existing = pending_families[conflict_name]
+    if isinstance(existing, InfoMetricFamily):
+        _logger.warning(
+            "Metric type conflict for %s: keeping info, dropping %s",
+            conflict_name,
+            _FACTORY_TO_PROMETHEUS_TYPE[factory],
+        )
+        return None
+    if existing.factory is not factory:
+        _logger.warning(
+            "Metric type conflict for %s: keeping %s, dropping %s",
+            conflict_name,
+            _FACTORY_TO_PROMETHEUS_TYPE[existing.factory],
+            _FACTORY_TO_PROMETHEUS_TYPE[factory],
+        )
+        return None
+    if existing.name != prometheus_name:
+        _logger.warning(
+            "Metric name conflict for %s: keeping %s, dropping %s",
+            conflict_name,
+            existing.name,
+            prometheus_name,
+        )
+        return None
+    if existing.description != description:
+        _logger.warning(
+            "Metric description conflict for %s: keeping %r, dropping %r",
+            prometheus_name,
+            existing.description,
+            description,
+        )
+    if existing.unit != unit:
+        _logger.warning(
+            "Metric unit conflict for %s: keeping %r, dropping %r",
+            prometheus_name,
+            existing.unit,
+            unit,
+        )
+    return existing
 
 
 class PrometheusMetricReader(MetricReader):
@@ -347,7 +433,7 @@ class _CustomCollector:
         if self._callback is not None:
             self._callback()
 
-        pending_families: dict[str, _PendingMetricFamily] = {}
+        pending_families: dict[str, _PendingFamilyEntry] = {}
 
         if len(self._metrics_datas):
             if not self._disable_target_info:
@@ -359,18 +445,21 @@ class _CustomCollector:
                     self._target_info = self._create_info_metric(
                         _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                     )
+                pending_families[_TARGET_INFO_NAME] = self._target_info
+                pending_families[f"{_TARGET_INFO_NAME}_info"] = self._target_info
                 yield self._target_info
 
         while self._metrics_datas:
             self._translate_to_prometheus(self._metrics_datas.popleft(), pending_families)
 
-        for pending in pending_families.values():
-            yield pending.build()
+        for name, pending in pending_families.items():
+            if isinstance(pending, _PendingMetricFamily) and name == pending.name:
+                yield pending.build()
 
     def _translate_to_prometheus(
         self,
         metrics_data: MetricsData,
-        pending_families: dict[str, _PendingMetricFamily],
+        pending_families: dict[str, _PendingFamilyEntry],
     ) -> None:
         for rm in metrics_data.resource_metrics:
             resource_attrs = self._build_resource_attrs(rm.resource)
@@ -389,7 +478,7 @@ class _CustomCollector:
         metric: Metric,
         scope_attrs: dict[str, AnyValue],
         resource_attrs: dict[str, AnyValue],
-        pending_families: dict[str, _PendingMetricFamily],
+        pending_families: dict[str, _PendingFamilyEntry],
     ) -> None:
         convert_sum_to_gauge = _should_convert_sum_to_gauge(metric)
 
@@ -407,40 +496,16 @@ class _CustomCollector:
         metric_name = self._resolve_metric_name(metric.name)
         description = metric.description or ""
         unit = map_unit(metric.unit or "")
-        prometheus_name = _resolve_prometheus_name(metric_name, unit, factory)
 
-        pending = pending_families.get(prometheus_name)
+        pending = _get_or_create_pending_family(
+            pending_families=pending_families,
+            factory=factory,
+            metric_name=metric_name,
+            description=description,
+            unit=unit,
+        )
         if pending is None:
-            pending = _PendingMetricFamily(
-                factory=factory,
-                name=prometheus_name,
-                description=description,
-                unit=unit,
-            )
-            pending_families[prometheus_name] = pending
-        else:
-            if pending.factory is not factory:
-                _logger.warning(
-                    "Metric type conflict for %s: keeping %s, dropping %s",
-                    prometheus_name,
-                    _FACTORY_TO_PROMETHEUS_TYPE[pending.factory],
-                    _FACTORY_TO_PROMETHEUS_TYPE[factory],
-                )
-                return
-            if pending.description != description:
-                _logger.warning(
-                    "Metric description conflict for %s: keeping %r, dropping %r",
-                    prometheus_name,
-                    pending.description,
-                    description,
-                )
-            if pending.unit != unit:
-                _logger.warning(
-                    "Metric unit conflict for %s: keeping %r, dropping %r",
-                    prometheus_name,
-                    pending.unit,
-                    unit,
-                )
+            return
 
         keys, rows, values = self._collect_data_points(metric.data, scope_attrs, resource_attrs)
         pending.add_points(keys, rows, values)

@@ -15,6 +15,9 @@ from prometheus_client.core import (
 from prometheus_client.openmetrics.exposition import (
     generate_latest as generate_latest_openmetrics,
 )
+from prometheus_client.openmetrics.parser import (
+    text_string_to_metric_families as parse_openmetrics,
+)
 
 from opentelemetry.exporter.prometheus import (
     _OTEL_SCOPE_ATTR_PREFIX,
@@ -1267,6 +1270,201 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                     self.assertNotIn("100.0", text)
             finally:
                 reader.shutdown()
+
+    def test_conflict_type_counter_and_gauge_openmetrics_family_drops_conflicting_metric(self):
+        for counter_first in (True, False):
+            registry = CollectorRegistry()
+            reader = PrometheusMetricReader(disable_target_info=True, registry=registry)
+            provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
+            try:
+                meter_1 = provider.get_meter("scope1")
+                meter_2 = provider.get_meter("scope2")
+
+                if counter_first:
+                    counter = meter_1.create_counter("foo", description="meter foo")
+                    gauge = meter_2.create_up_down_counter("foo", description="meter foo")
+                    counter.add(100, {"type": "foo"})
+                    gauge.add(200, {"type": "foo"})
+                else:
+                    gauge = meter_1.create_up_down_counter("foo", description="meter foo")
+                    counter = meter_2.create_counter("foo", description="meter foo")
+                    gauge.add(200, {"type": "foo"})
+                    counter.add(100, {"type": "foo"})
+
+                with self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING") as cm:
+                    openmetrics_text = generate_latest_openmetrics(registry).decode("utf-8")
+
+                self.assertTrue(any("Metric type conflict for foo:" in msg for msg in cm.output))
+                parsed_families = list(parse_openmetrics(openmetrics_text))
+                self.assertEqual(len(parsed_families), 1)
+                if counter_first:
+                    self.assertEqual(openmetrics_text.count("# TYPE foo counter"), 1)
+                    self.assertEqual(openmetrics_text.count("# TYPE foo gauge"), 0)
+                    self.assertIn("foo_total{", openmetrics_text)
+                    self.assertNotIn("200.0", openmetrics_text)
+                else:
+                    self.assertEqual(openmetrics_text.count("# TYPE foo gauge"), 1)
+                    self.assertEqual(openmetrics_text.count("# TYPE foo counter"), 0)
+                    self.assertIn("foo{", openmetrics_text)
+                    self.assertNotIn("100.0", openmetrics_text)
+            finally:
+                reader.shutdown()
+
+    def test_conflict_name_counter_and_double_total_counter_drops_conflicting_metric(self):
+        for first_plain in (True, False):
+            registry = CollectorRegistry()
+            reader = PrometheusMetricReader(disable_target_info=True, registry=registry)
+            provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
+            try:
+                meter_1 = provider.get_meter("scope1")
+                meter_2 = provider.get_meter("scope2")
+
+                if first_plain:
+                    first = meter_1.create_counter("foo", description="meter foo")
+                    second = meter_2.create_counter("foo_total_total", description="meter foo")
+                    first.add(100, {"type": "foo"})
+                    second.add(200, {"type": "foo"})
+                else:
+                    first = meter_1.create_counter("foo_total_total", description="meter foo")
+                    second = meter_2.create_counter("foo", description="meter foo")
+                    first.add(200, {"type": "foo"})
+                    second.add(100, {"type": "foo"})
+
+                with self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING") as cm:
+                    openmetrics_text = generate_latest_openmetrics(registry).decode("utf-8")
+
+                self.assertTrue(any("Metric name conflict for foo_total:" in msg for msg in cm.output))
+                parsed_families = list(parse_openmetrics(openmetrics_text))
+                self.assertEqual(len(parsed_families), 1)
+                if first_plain:
+                    self.assertIn("foo_total{", openmetrics_text)
+                    self.assertNotIn("foo_total_total{", openmetrics_text)
+                else:
+                    self.assertIn("foo_total_total{", openmetrics_text)
+                    self.assertNotIn("\nfoo_total{", openmetrics_text)
+            finally:
+                reader.shutdown()
+
+    def test_gauges_foo_and_foo_total_coexist(self):
+        registry = CollectorRegistry()
+        reader = PrometheusMetricReader(disable_target_info=True, registry=registry)
+        provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
+        try:
+            meter = provider.get_meter("scope1")
+            gauge_foo = meter.create_up_down_counter("foo", description="gauge foo")
+            gauge_foo_total = meter.create_up_down_counter("foo_total", description="gauge foo total")
+            gauge_foo.add(10)
+            gauge_foo_total.add(20)
+
+            prom_text = generate_latest(registry).decode("utf-8")
+            openmetrics_text = generate_latest_openmetrics(registry).decode("utf-8")
+
+            self.assertEqual(prom_text.count("# TYPE foo gauge"), 1)
+            self.assertEqual(prom_text.count("# TYPE foo_total gauge"), 1)
+            parsed_families = list(parse_openmetrics(openmetrics_text))
+            self.assertEqual([family.name for family in parsed_families], ["foo", "foo_total"])
+        finally:
+            reader.shutdown()
+
+    def test_conflict_target_info_drops_conflicting_user_metrics(self):
+        for metric_name, is_counter in (
+            ("target", False),
+            ("target_info", False),
+            ("target", True),
+            ("target_info", True),
+        ):
+            registry = CollectorRegistry()
+            reader = PrometheusMetricReader(disable_target_info=False, registry=registry)
+            provider = MeterProvider(
+                metric_readers=[reader],
+                resource=Resource({"service.name": "demo"}),
+                shutdown_on_exit=False,
+            )
+            try:
+                # Avoid SDK internal metrics cluttering assertions
+                reader._set_meter_provider(NoOpMeterProvider())
+                meter = provider.get_meter("scope1")
+                instrument = (
+                    meter.create_counter(metric_name, description="user metric")
+                    if is_counter
+                    else meter.create_up_down_counter(metric_name, description="user metric")
+                )
+                instrument.add(42)
+
+                with self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING") as cm:
+                    prom_text = generate_latest(registry).decode("utf-8")
+
+                self.assertTrue(any(f"Metric type conflict for {metric_name}:" in msg for msg in cm.output))
+                self.assertEqual(prom_text.count("# TYPE target_info gauge"), 1)
+                self.assertNotIn("user metric", prom_text)
+
+                openmetrics_text = generate_latest_openmetrics(registry).decode("utf-8")
+                parsed_families = list(parse_openmetrics(openmetrics_text))
+                self.assertEqual([family.name for family in parsed_families], ["target"])
+            finally:
+                reader.shutdown()
+
+    def test_conflict_openmetrics_reserved_suffixes_drops_conflicting_metric(self):
+        for suffix in ("_bucket", "_count", "_sum"):
+            for hist_first in (True, False):
+                registry = CollectorRegistry()
+                reader = PrometheusMetricReader(disable_target_info=True, registry=registry)
+                provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
+                try:
+                    meter_1 = provider.get_meter("scope1")
+                    meter_2 = provider.get_meter("scope2")
+                    if hist_first:
+                        meter_1.create_histogram("foo", description="hist foo").record(5)
+                        meter_2.create_up_down_counter(f"foo{suffix}", description="gauge suffix").add(9)
+                    else:
+                        meter_1.create_up_down_counter(f"foo{suffix}", description="gauge suffix").add(9)
+                        meter_2.create_histogram("foo", description="hist foo").record(5)
+
+                    with self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING") as cm:
+                        openmetrics_text = generate_latest_openmetrics(registry).decode("utf-8")
+
+                    self.assertTrue(any(f"Metric type conflict for foo{suffix}:" in msg for msg in cm.output))
+                    parsed_families = list(parse_openmetrics(openmetrics_text))
+                    expected_name = "foo" if hist_first else f"foo{suffix}"
+                    self.assertEqual([family.name for family in parsed_families], [expected_name])
+                finally:
+                    reader.shutdown()
+
+        registry = CollectorRegistry()
+        reader = PrometheusMetricReader(disable_target_info=True, registry=registry)
+        provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
+        try:
+            meter_1 = provider.get_meter("scope1")
+            meter_2 = provider.get_meter("scope2")
+            meter_1.create_histogram("foo", description="hist foo").record(5)
+            meter_2.create_histogram("foo_bucket", description="hist foo bucket").record(7)
+
+            with self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING") as cm:
+                openmetrics_text = generate_latest_openmetrics(registry).decode("utf-8")
+
+            self.assertTrue(any("Metric name conflict for foo_bucket:" in msg for msg in cm.output))
+            parsed_families = list(parse_openmetrics(openmetrics_text))
+            self.assertEqual([family.name for family in parsed_families], ["foo"])
+        finally:
+            reader.shutdown()
+
+        registry = CollectorRegistry()
+        reader = PrometheusMetricReader(disable_target_info=True, registry=registry)
+        provider = MeterProvider(metric_readers=[reader], shutdown_on_exit=False)
+        try:
+            meter_1 = provider.get_meter("scope1")
+            meter_2 = provider.get_meter("scope2")
+            meter_1.create_counter("foo", description="counter foo").add(5)
+            meter_2.create_up_down_counter("foo_created", description="gauge foo created").add(7)
+
+            with self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING") as cm:
+                openmetrics_text = generate_latest_openmetrics(registry).decode("utf-8")
+
+            self.assertTrue(any("Metric type conflict for foo_created:" in msg for msg in cm.output))
+            parsed_families = list(parse_openmetrics(openmetrics_text))
+            self.assertEqual([family.name for family in parsed_families], ["foo"])
+        finally:
+            reader.shutdown()
 
     def test_conflict_type_gauge_and_histogram_drops_conflicting_metric(self):
         for gauge_first in (True, False):
