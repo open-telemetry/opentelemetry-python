@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fail any test that leaves a `PeriodicExportingMetricReader` ticker thread running, and shut down the four readers that were leaking one into the rest of the test session

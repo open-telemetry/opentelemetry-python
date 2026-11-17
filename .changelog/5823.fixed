@@ -1,0 +1,1 @@
+`opentelemetry-api`: make `W3CBaggagePropagator` compliant with the W3C Baggage spec

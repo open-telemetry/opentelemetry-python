@@ -1,0 +1,25 @@
+file_format: "1.0"
+resource:
+  attributes:
+    - name: service.name
+      value: declconfig-metric-cardinality-limits-view
+meter_provider:
+  readers:
+    - periodic:
+        interval: 60000
+        exporter:
+          otlp_http:
+            endpoint: http://${OTEL_COLLECTOR_ENDPOINT}:4318/v1/metrics
+        cardinality_limits:
+          default: 2
+  views:
+    - selector:
+        instrument_name: requests
+      stream:
+        aggregation_cardinality_limit: 4
+    - selector:
+        instrument_name: filtered
+      stream:
+        attribute_keys:
+          included: [route]
+        aggregation_cardinality_limit: 3

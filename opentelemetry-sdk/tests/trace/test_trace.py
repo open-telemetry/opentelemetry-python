@@ -2115,6 +2115,16 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(2, span.events[0].dropped_attributes)
         self.assertEqual(2, span.links[0].dropped_attributes)
 
+    def test_span_attribute_limit_keeps_first_attributes(self):
+        tracer = new_tracer(span_limits=trace.SpanLimits(max_span_attributes=2))
+        with tracer.start_as_current_span("root") as root:
+            root.set_attribute("first", 1)
+            root.set_attribute("second", 2)
+            root.set_attribute("third", 3)
+
+        self.assertEqual(dict(root.attributes), {"first": 1, "second": 2})
+        self.assertEqual(root.dropped_attributes, 1)
+
     def _test_span_limits(
         self,
         tracer,

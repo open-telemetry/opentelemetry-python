@@ -1,0 +1,1 @@
+`opentelemetry-sdk`, `opentelemetry-configuration`, `opentelemetry-exporter-prometheus`: enforce metric cardinality limits (default 2000) with the `otel.metric.overflow` attribute, configurable through `View(aggregation_cardinality_limit=...)`, reader `cardinality_limits` and declarative configuration

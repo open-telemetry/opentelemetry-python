@@ -18,7 +18,7 @@
     # via
     #   -r exporter/opentelemetry-exporter-otlp-common/test-requirements.in
     #   opentelemetry-sdk
-certifi==2026.5.20
+certifi==2026.10.19
     # via requests
 chardet==3.0.4
     # via requests

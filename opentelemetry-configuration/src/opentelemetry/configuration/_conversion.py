@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import MISSING, fields, is_dataclass
 from enum import Enum
-from types import UnionType
+from types import NoneType, UnionType
 from typing import Any, TypeVar, Union, get_args, get_origin, get_type_hints
 
 _T = TypeVar("_T")
@@ -27,7 +27,7 @@ def _unwrap_optional(type_hint: Any) -> Any:
     """
     origin = get_origin(type_hint)
     if origin is UnionType or origin is Union:
-        non_none = [t for t in get_args(type_hint) if t is not type(None)]
+        non_none = [t for t in get_args(type_hint) if t is not NoneType]
         if len(non_none) == 1:
             return non_none[0]
     return type_hint
@@ -102,7 +102,7 @@ def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
       ``@_additional_properties`` will capture them on the instance's
       ``additional_properties`` attribute.
 
-    ``ClassVar`` fields (e.g. the ``additional_properties`` annotation on
+    Non-init fields (e.g. the generated ``additional_properties`` field on
     decorated dataclasses) are ignored as expected.
 
     Raises:
@@ -115,7 +115,7 @@ def _dict_to_dataclass(data: Mapping[str, Any], cls: type[_T]) -> _T:
     # ``get_type_hints`` — under pylint 3.x that path leads into
     # Python 3.14's ``annotationlib`` (which uses t-strings) and crashes.
     hints: dict[str, Any] = dict(get_type_hints(cls, include_extras=False))
-    known_fields = {f.name for f in fields(cls)}
+    known_fields = {f.name for f in fields(cls) if f.init}
     kwargs: dict[str, Any] = {}
 
     for key, value in data.items():

@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: ignore structured `headers` entries with a null value instead of overriding `headers_list` with an empty header.

@@ -31,6 +31,33 @@ HTTP_METHOD: Final = "http.method"
 Deprecated: Replaced by `http.request.method`.
 """
 
+HTTP_REQUEST_BODY_CONTENT: Final = "http.request.body.content"
+"""
+The content of the HTTP request body, with any content coding indicated by [Content-Encoding](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-encoding) removed, captured as a string when the request content is textual or as byte array otherwise.
+Note: Captured value MAY be limited in size and thus value is expected to be truncated in many cases.
+When an instrumentation applies a byte-based limit while capturing the body as a string, it SHOULD truncate on a character
+boundary so that the recorded value remains valid text.
+
+Instrumentations MUST NOT capture this attribute by default and MAY provide an option to enable it.
+
+> [!WARNING]
+> This attribute may contain sensitive information.
+
+When instrumentations record body, they SHOULD capture the body as string whenever possible as it makes it easier to use in human-readable form,
+also it allows to implement sanitization if needed.
+
+Textual content is typically detected based on the [Content-Type](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-type) header using heuristics
+such as checking if the type/subtype (compared case-insensitively, ignoring any parameters) starts with `text/`, ends with `/json`, `+json`, `/xml`, `+xml`, `/yaml` or `+yaml`,
+is `application/x-www-form-urlencoded`, or if the header declares a `charset` parameter.
+
+Instrumentations that implement request body recording MUST NOT intentionally introduce side effects such as changing stream position or closing body stream independently from the
+application.
+
+When body is recorded, the instrumentation SHOULD record part of the body that was sent or received at the time HTTP call has ended.
+The value MUST be either a string or a byte array. Instrumentations MUST NOT record a parsed or otherwise structured representation of the body,
+and MUST NOT base64-encode binary content into a string value.
+"""
+
 HTTP_REQUEST_BODY_SIZE: Final = "http.request.body.size"
 """
 The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
@@ -69,6 +96,36 @@ Deprecated: Replaced by `http.request.header.content-length`.
 HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED: Final = "http.request_content_length_uncompressed"
 """
 Deprecated: Replaced by `http.request.body.size`.
+"""
+
+HTTP_RESPONSE_BODY_CONTENT: Final = "http.response.body.content"
+"""
+The content of the HTTP response body, with any content coding indicated by [Content-Encoding](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-encoding) removed, captured as a string when the response content is textual or as byte array otherwise.
+Note: Captured value MAY be limited in size and thus value is expected to be truncated in many cases.
+When an instrumentation applies a byte-based limit while capturing the body as a string, it SHOULD truncate on a character
+boundary so that the recorded value remains valid text.
+
+Instrumentations MUST NOT capture this attribute by default and MAY provide an option to enable it.
+
+> [!WARNING]
+> This attribute may contain sensitive information.
+
+When instrumentations record body, they SHOULD capture the body as string whenever possible as it makes it easier to use in human-readable form,
+also it allows to implement sanitization if needed.
+
+Textual content is typically detected based on the [Content-Type](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-type) header using heuristics
+such as checking if the type/subtype (compared case-insensitively, ignoring any parameters) starts with `text/`, ends with `/json`, `+json`, `/xml`, `+xml`, `/yaml` or `+yaml`,
+is `application/x-www-form-urlencoded`, or if the header declares a `charset` parameter.
+
+Instrumentations that implement response body recording MUST NOT intentionally introduce side effects such as changing stream position or closing body stream independently from the
+application.
+
+When body is recorded, the instrumentation SHOULD record part of the body that was sent or received at the time HTTP call has ended.
+Note that HTTP client spans [SHOULD end sometime after the response headers are fully read](/docs/http/http-spans.md#http-client-span-duration),
+which may or may not include reading the response body, so on client spans this attribute is often absent or holds only part of the body.
+
+The value MUST be either a string or a byte array. Instrumentations MUST NOT record a parsed or otherwise structured representation of the body,
+and MUST NOT base64-encode binary content into a string value.
 """
 
 HTTP_RESPONSE_BODY_SIZE: Final = "http.response.body.size"

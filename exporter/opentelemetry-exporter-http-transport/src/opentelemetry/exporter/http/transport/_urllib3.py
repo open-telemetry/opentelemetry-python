@@ -14,11 +14,17 @@ from opentelemetry.exporter.http.transport._base import (
     BaseHTTPTransport,
 )
 
+# pylint: disable-next=import-error
+from opentelemetry.exporter.http.transport._proxy import (
+    _get_environ_proxy,
+    _get_proxy_auth,
+)
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from typing import Any
 
-    from urllib3 import BaseHTTPResponse
+    from urllib3 import BaseHTTPResponse, PoolManager
 
 
 @functools.cache
@@ -32,6 +38,8 @@ def _get_connection_error_types() -> tuple[type[Exception], ...]:
         urllib3.exceptions.ConnectTimeoutError,
         urllib3.exceptions.MaxRetryError,
         urllib3.exceptions.ProtocolError,
+        urllib3.exceptions.ProxyError,
+        urllib3.exceptions.ReadTimeoutError,
     ]
 
     # NameResolutionError was added in urllib3 2.0
@@ -73,8 +81,10 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         # pylint: disable-next=import-outside-toplevel
         import urllib3  # noqa: PLC0415
 
-        pool_kwargs: dict[str, object] = {
+        pool_kwargs: dict[str, Any] = {
             "retries": urllib3.Retry(0, redirect=False),
+            # Match the connection pool size of requests
+            "maxsize": 10,
         }
         if verify is False:
             pool_kwargs["cert_reqs"] = "CERT_NONE"
@@ -82,13 +92,63 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
             pool_kwargs["cert_reqs"] = "CERT_REQUIRED"
             if isinstance(verify, str):
                 pool_kwargs["ca_certs"] = verify
+            else:
+                # Prefer certifi's CA bundle, as requests does, falling back
+                # to the system trust store when certifi is not installed.
+                try:
+                    # pylint: disable-next=import-outside-toplevel
+                    import certifi  # noqa: PLC0415
+                except ImportError:
+                    pass
+                else:
+                    pool_kwargs["ca_certs"] = certifi.where()
         if isinstance(cert, tuple):
             pool_kwargs["cert_file"] = cert[0]
             pool_kwargs["key_file"] = cert[1]
         elif isinstance(cert, str):
             pool_kwargs["cert_file"] = cert
 
+        self._pool_kwargs = pool_kwargs
         self._pool = urllib3.PoolManager(**pool_kwargs)  # type: ignore
+        self._proxy_managers: dict[str, PoolManager] = {}
+        self._get_proxy = functools.lru_cache(maxsize=32)(_get_environ_proxy)
+
+    def _get_pool_manager(self, url: str) -> PoolManager:
+        proxy = self._get_proxy(url)
+        if proxy is None:
+            return self._pool
+        manager = self._proxy_managers.get(proxy)
+        if manager is None:
+            manager = self._proxy_managers.setdefault(proxy, self._new_proxy_manager(proxy))
+        return manager
+
+    def _new_proxy_manager(self, proxy: str) -> PoolManager:
+        # pylint: disable-next=import-outside-toplevel
+        import urllib3  # noqa: PLC0415
+
+        username, password = _get_proxy_auth(proxy)
+        if proxy.lower().startswith("socks"):
+            try:
+                # pylint: disable-next=import-outside-toplevel
+                from urllib3.contrib.socks import (  # noqa: PLC0415
+                    SOCKSProxyManager,
+                )
+            except ImportError as error:
+                raise ImportError(
+                    "SOCKS proxy support requires PySocks, install it with 'pip install urllib3[socks]'."
+                ) from error
+            return SOCKSProxyManager(
+                proxy,
+                username=username,
+                password=password,
+                **self._pool_kwargs,
+            )
+        proxy_headers = urllib3.make_headers(proxy_basic_auth=f"{username}:{password}") if username else None
+        return urllib3.proxy_from_url(
+            proxy,
+            proxy_headers=proxy_headers,
+            **self._pool_kwargs,
+        )
 
     def request(
         self,
@@ -103,7 +163,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
         import urllib3  # noqa: PLC0415
 
         try:
-            response = self._pool.request(
+            response = self._get_pool_manager(url).request(
                 method=method,
                 url=url,
                 headers=headers,
@@ -129,3 +189,7 @@ class Urllib3HTTPTransport(BaseHTTPTransport):
 
     def close(self) -> None:
         self._pool.clear()
+        for manager in self._proxy_managers.values():
+            manager.clear()
+        self._proxy_managers.clear()
+        self._get_proxy.cache_clear()

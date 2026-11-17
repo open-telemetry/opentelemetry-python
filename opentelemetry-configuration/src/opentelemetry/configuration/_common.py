@@ -6,16 +6,68 @@ from __future__ import annotations
 import dataclasses
 import inspect
 import logging
+import math
 from collections.abc import Callable
-from typing import Any, Protocol, TypeVar
+from fnmatch import fnmatchcase
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar
 from urllib.parse import urlparse
 
 from opentelemetry.configuration._exceptions import ConfigurationError
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._importlib_metadata import entry_points
+
+if TYPE_CHECKING:
+    # pylint: disable-next=import-error
+    import grpc
+
+    from opentelemetry.configuration.models import GrpcTls, IncludeExclude
 
 _logger = logging.getLogger(__name__)
 
 _CompressionT = TypeVar("_CompressionT")
+
+_DEFAULT_OTLP_HTTP_ENDPOINT = "http://localhost:4318"
+_DEFAULT_OTLP_GRPC_ENDPOINT = "http://localhost:4317"
+_DEFAULT_OTLP_EXPORT_TIMEOUT_MILLIS = 10000
+
+
+def _matches_glob(value: str, pattern: str) -> bool:
+    """Match exactly or using the configuration schema's case-sensitive wildcards.
+
+    Only ``*`` (zero or more characters) and ``?`` (one character) are
+    wildcards. All other characters, including brackets and backslashes,
+    are literal.
+    """
+    # Escape opening brackets to disable fnmatch's character classes while
+    # retaining its wildcard implementation and compiled-pattern cache.
+    return value == pattern or fnmatchcase(value, pattern.replace("[", "[[]"))
+
+
+def _include_exclude_predicate(config: IncludeExclude) -> Callable[[str], bool]:
+    """Build a predicate matching values against include/exclude glob patterns.
+
+    Values must match one of the ``included`` patterns when present (an
+    omitted ``included`` list matches everything) and must not match any
+    ``excluded`` pattern, which takes priority over ``included``.
+    """
+    included = config.included
+    excluded = config.excluded
+
+    def matches(value: str) -> bool:
+        if included and not any(_matches_glob(value, pattern) for pattern in included):
+            return False
+        return not (excluded and any(_matches_glob(value, pattern) for pattern in excluded))
+
+    return matches
+
+
+def _scope_name_matches_glob(pattern: str) -> Callable[[InstrumentationScope], bool]:
+    """Match scope names using the configuration schema's wildcard semantics."""
+
+    def matches(scope: InstrumentationScope) -> bool:
+        return _matches_glob(scope.name, pattern)
+
+    return matches
 
 
 def _additional_properties(cls):
@@ -33,7 +85,7 @@ def _additional_properties(cls):
     """
     original_init = cls.__init__
     original_sig = inspect.signature(original_init)
-    known_fields = frozenset(f.name for f in dataclasses.fields(cls))
+    known_fields = frozenset(f.name for f in dataclasses.fields(cls) if f.init)
 
     def _init(self, **kwargs):
         known = {k: v for k, v in kwargs.items() if k in known_fields}
@@ -82,10 +134,8 @@ class _ComponentConfig(Protocol):
     for ``**kwargs`` splatting to the user-defined component class) or
     ``None`` (when the YAML uses ``my_plugin:`` or ``my_plugin: null``).
 
-    Note: the generated models declare ``additional_properties`` as a
-    ``ClassVar`` even though the decorator assigns it as an instance
-    attribute at runtime. This is tolerated by pyright in ``standard``
-    mode but flagged in ``strict`` mode. See #5268.
+    The generated models declare ``additional_properties`` as an instance
+    field to match the decorator's runtime assignment.
     """
 
     additional_properties: dict[str, dict[str, Any] | None]
@@ -133,6 +183,34 @@ def _resolve_component(
     raise ConfigurationError(f"No {component_type} type specified in config.")
 
 
+def _resolve_otlp_http_endpoint(
+    endpoint: str | None,
+    signal: Literal["traces", "metrics", "logs"],
+) -> str:
+    """Return the configured OTLP HTTP endpoint, or the schema default for the signal."""
+    return endpoint if endpoint is not None else f"{_DEFAULT_OTLP_HTTP_ENDPOINT}/v1/{signal}"
+
+
+def _resolve_otlp_grpc_endpoint(endpoint: str | None) -> str:
+    """Return the configured OTLP gRPC endpoint, or the schema default."""
+    return endpoint if endpoint is not None else _DEFAULT_OTLP_GRPC_ENDPOINT
+
+
+def _resolve_export_timeout(timeout: int | None) -> float:
+    """Convert a config export timeout in milliseconds to seconds.
+
+    Unset maps to the schema default of 10000 ms. A value of 0 means no limit
+    and maps to ``math.inf``.
+    """
+    match timeout:
+        case None:
+            return _DEFAULT_OTLP_EXPORT_TIMEOUT_MILLIS / 1000.0
+        case 0:
+            return math.inf
+        case _:
+            return timeout / 1000.0
+
+
 def _parse_headers(
     headers: list | None,
     headers_list: str | None,
@@ -141,6 +219,7 @@ def _parse_headers(
 
     Returns None if neither is set, letting the exporter read env vars.
     headers struct takes priority over headers_list for the same key.
+    headers struct entries with a null value are ignored.
     """
     if headers is None and headers_list is None:
         return None
@@ -159,9 +238,12 @@ def _parse_headers(
     if headers:
         for pair in headers:
             if isinstance(pair, dict):
-                result[pair["name"]] = pair.get("value") or ""
+                name, value = pair["name"], pair.get("value")
             else:
-                result[pair.name] = pair.value or ""
+                name, value = pair.name, pair.value
+            if value is None:
+                continue
+            result[name] = value
     return result
 
 
@@ -170,16 +252,18 @@ def _map_compression(
     compression_enum: type[_CompressionT],
     *,
     allow_deflate: bool = False,
-) -> _CompressionT | None:
-    """Map a compression string to the given Compression enum value."""
-    if value is None:
-        return None
+) -> _CompressionT:
+    """Map a compression string to the given Compression enum value.
 
-    value_lower = value.lower()
+    Unset and ``"none"`` map to the enum's no-compression member.
+    """
+    value_lower = "none" if value is None else value.lower()
     supports_deflate = hasattr(compression_enum, "Deflate") or hasattr(compression_enum, "DEFLATE")
 
     if value_lower == "none":
-        return None
+        for member_name in ("NoCompression", "NONE"):
+            if (member := getattr(compression_enum, member_name, None)) is not None:
+                return member
     if value_lower == "gzip":
         for member_name in ("Gzip", "GZIP"):
             if member := getattr(compression_enum, member_name, None):
@@ -196,6 +280,62 @@ def _map_compression(
     raise ConfigurationError(
         f"Unsupported compression value '{value}'. Supported values: {', '.join(supported_values)}."
     )
+
+
+def _validate_mtls_pair(
+    key_file: str | None,
+    cert_file: str | None,
+    exporter: str,
+) -> None:
+    """Ensure mTLS key_file and cert_file are either both set or both unset."""
+    if (key_file is None) != (cert_file is None):
+        raise ConfigurationError(
+            f"Invalid tls config for {exporter} exporter: key_file and cert_file must be set together."
+        )
+
+
+def _read_tls_file(path: str, field: str) -> bytes:
+    """Read a PEM file referenced by a tls config field."""
+    try:
+        with open(path, "rb") as file:
+            return file.read()
+    except OSError as exc:
+        raise ConfigurationError(f"Failed to read tls.{field} '{path}': {exc}") from exc
+
+
+def _grpc_credentials_from_tls(tls: GrpcTls | None) -> grpc.ChannelCredentials | None:
+    """Build gRPC channel credentials from a GrpcTls config.
+
+    Returns None if no certificate files are configured, letting the
+    exporter fall back to its default credentials.
+    """
+    if tls is None or (tls.ca_file is None and tls.key_file is None and tls.cert_file is None):
+        return None
+    _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_grpc")
+
+    # pylint: disable-next=import-outside-toplevel,import-error
+    import grpc  # noqa: PLC0415
+
+    return grpc.ssl_channel_credentials(
+        root_certificates=_read_tls_file(tls.ca_file, "ca_file") if tls.ca_file is not None else None,
+        private_key=_read_tls_file(tls.key_file, "key_file") if tls.key_file is not None else None,
+        certificate_chain=_read_tls_file(tls.cert_file, "cert_file") if tls.cert_file is not None else None,
+    )
+
+
+def _grpc_insecure_from_tls(endpoint: str | None, tls: GrpcTls | None) -> bool:
+    """Resolve the ``insecure`` flag for a gRPC exporter.
+
+    ``tls.insecure`` only applies to endpoints without an ``http``/``https``
+    scheme. Explicit ``http://`` and ``https://`` endpoints select plaintext
+    and TLS respectively. Otherwise, an unset ``tls.insecure`` defaults to
+    false.
+    """
+    if endpoint is not None:
+        scheme = urlparse(endpoint).scheme
+        if scheme in ("http", "https"):
+            return scheme == "http"
+    return tls.insecure if tls is not None and tls.insecure is not None else False
 
 
 def _parse_otlp_file_output_stream(output_stream: str | None) -> str | None:

@@ -3,14 +3,17 @@
 #
 from collections.abc import Iterable, Iterator, Mapping
 from logging import getLogger
-from re import split
-from urllib.parse import quote_plus, unquote_plus
+from urllib.parse import quote, unquote
 
-from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
+from opentelemetry.baggage import (
+    _is_valid_key,
+    _is_valid_pair,
+    get_all,
+    set_baggage,
+)
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
-from opentelemetry.util.re import _DELIMITER_PATTERN
 
 _logger = getLogger(__name__)
 
@@ -85,22 +88,13 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         if context is None:
             context = get_current()
 
-        header = _extract_first_element(getter.get(carrier, self._BAGGAGE_HEADER_NAME))
+        headers = getter.get(carrier, self._BAGGAGE_HEADER_NAME)
 
-        if not header:
+        if not headers:
             return context
-
-        if len(header.encode()) > self._MAX_HEADER_LENGTH:
-            _logger.warning(
-                "Baggage header `%s` exceeded the maximum number of bytes per baggage-string",
-                header,
-            )
-            return context
-
-        baggage_entries = split(_DELIMITER_PATTERN, header)
 
         for entry in _apply_baggage_limits(
-            baggage_entries,
+            _split_baggage_entries(headers),
             max_pairs=self._MAX_PAIRS,
             max_pair_length=self._MAX_PAIR_LENGTH,
             max_header_length=self._MAX_HEADER_LENGTH,
@@ -119,12 +113,12 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 _logger.warning("Invalid baggage entry: `%s`", entry)
                 continue
 
-            name = unquote_plus(name).strip()
-            value = unquote_plus(value).strip()
+            # Properties are validated but not stored, as the API has no metadata support
+            value = value.split(";", 1)[0].rstrip(" \t")
 
             context = set_baggage(
                 name,
-                value,
+                unquote(value),
                 context=context,
             )
 
@@ -163,17 +157,25 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         return {self._BAGGAGE_HEADER_NAME}
 
 
+def _split_baggage_entries(headers: Iterable[str]) -> Iterator[str]:
+    """Yield the list-members of all baggage headers, combined as a single baggage string."""
+    for header in headers:
+        start = 0
+        while True:
+            end = header.find(",", start)
+            if end == -1:
+                yield header[start:].strip(" \t")
+                break
+            yield header[start:end].strip(" \t")
+            start = end + 1
+
+
 def _encode_baggage_pairs(
     baggage_entries: Mapping[str, object],
 ) -> Iterator[str]:
-    """Yield URL-encoded 'key=value' pairs from baggage entries."""
+    """Yield 'key=value' pairs with percent-encoded values from baggage entries."""
     for key, value in baggage_entries.items():
-        yield quote_plus(str(key)) + "=" + quote_plus(str(value))
-
-
-def _extract_first_element(
-    items: Iterable[textmap.CarrierT] | None,
-) -> textmap.CarrierT | None:
-    if items is None:
-        return None
-    return next(iter(items), None)
+        if not _is_valid_key(key):
+            _logger.warning("Baggage key `%s` is not a valid token", key)
+            continue
+        yield str(key) + "=" + quote(str(value), safe="")

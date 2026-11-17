@@ -3,9 +3,13 @@
 
 # type: ignore
 
+from re import fullmatch
 from unittest import TestCase
 
 from opentelemetry.baggage import (
+    _KEY_CHARS,
+    _VALUE_CHARS,
+    _is_valid_key,
     _is_valid_value,
     clear,
     get_all,
@@ -14,6 +18,7 @@ from opentelemetry.baggage import (
     set_baggage,
 )
 from opentelemetry.context import attach, detach
+from opentelemetry.util.re import _KEY_FORMAT, _VALUE_FORMAT
 
 
 class TestBaggageManager(TestCase):
@@ -68,12 +73,42 @@ class TestBaggageManager(TestCase):
         ctx = clear(context=ctx)
         self.assertEqual(get_all(context=ctx), {})
 
-    def test__is_valid_value(self):
+    def test_is_valid_value(self):
         for value, expected in (
             ("GET%20%2Fapi%2F%2Freport", True),
             ("val1 ;prop=1", True),
             ("val1\t; p1 = 1 ; p2", True),
             ("val 1;prop", False),
+            ("", True),
+            ("val1;", False),
+            ("val1; ", False),
+            ("val1;prop=a=b", True),
+            ("val1;prop=", True),
+            ("val1;=1", False),
+            ("val1;pr op=1", False),
+            ("val1;prop=a b", False),
+            ('val"1', False),
+            ("val\\1", False),
+            ("val,1", False),
+            ("val\x7f1", False),
+            ("val\u00e91", False),
         ):
             with self.subTest(value=value):
                 self.assertEqual(_is_valid_value(value), expected)
+
+    def test_is_valid_key(self):
+        for key, expected in (
+            ("key1", True),
+            ("!#$%&'*+-.^_`|~", True),
+            ("", False),
+            ("key 1", False),
+            ("key=1", False),
+            ("key\u00e9", False),
+        ):
+            with self.subTest(key=key):
+                self.assertEqual(_is_valid_key(key), expected)
+
+    def test_valid_characters_match_formats(self):
+        chars = [chr(code_point) for code_point in range(0x100)]
+        self.assertEqual(_KEY_CHARS, {char for char in chars if fullmatch(_KEY_FORMAT, char)})
+        self.assertEqual(_VALUE_CHARS, {char for char in chars if fullmatch(_VALUE_FORMAT, char)})
