@@ -27,6 +27,7 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
     _validate_mtls_pair,
+    _warn_unsupported_otlp_size_limits,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import ConfigurationError
@@ -157,6 +158,46 @@ class TestResolveOtlpEndpoint(unittest.TestCase):
         ):
             with self.subTest(endpoint=endpoint):
                 self.assertEqual(_resolve_otlp_grpc_endpoint(endpoint), expected)
+
+
+class TestWarnUnsupportedOtlpSizeLimits(unittest.TestCase):
+    def test_unset_or_supported_limits_do_not_warn(self):
+        cases = [(None, False), (None, True), (0, True), (1024, True)]
+        for max_request_size, supported in cases:
+            with (
+                self.subTest(max_request_size=max_request_size, supported=supported),
+                self.assertNoLogs("opentelemetry.configuration._common", level="WARNING"),
+            ):
+                _warn_unsupported_otlp_size_limits(
+                    "otlp_http", "metrics", max_request_size, None, max_request_size_supported=supported
+                )
+
+    def test_unsupported_limits_warn(self):
+        cases = [
+            (1024, None, False, ["max_request_size"]),
+            (0, None, False, ["max_request_size"]),
+            (None, 1024, False, ["max_response_size"]),
+            (None, 0, False, ["max_response_size"]),
+            (1024, 1024, False, ["max_request_size", "max_response_size"]),
+            (1024, 1024, True, ["max_response_size"]),
+        ]
+        for max_request_size, max_response_size, supported, expected_limits in cases:
+            with (
+                self.subTest(
+                    max_request_size=max_request_size, max_response_size=max_response_size, supported=supported
+                ),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                _warn_unsupported_otlp_size_limits(
+                    "otlp_http", "metrics", max_request_size, max_response_size, max_request_size_supported=supported
+                )
+            self.assertEqual(
+                [record.getMessage() for record in logs.records],
+                [
+                    f"{limit} is not yet supported for otlp_http exporter for metrics and will be ignored."
+                    for limit in expected_limits
+                ],
+            )
 
 
 class TestLoadEntryPoint(unittest.TestCase):
