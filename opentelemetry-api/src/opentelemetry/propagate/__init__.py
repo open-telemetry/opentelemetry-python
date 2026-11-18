@@ -62,7 +62,7 @@ Example::
 
 from logging import getLogger
 from os import environ
-from threading import Lock
+from threading import RLock
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
@@ -162,7 +162,8 @@ def _load_propagators() -> textmap.TextMapPropagator:
 # set_global_textmap() stores a real propagator and therefore wins over a later
 # read of the environment variable. Reloading this module clears the cache.
 _HTTP_TEXT_FORMAT: textmap.TextMapPropagator | None = None
-_HTTP_TEXT_FORMAT_LOCK = Lock()
+# Reentrant so propagator initialization can call set_global_textmap() on this thread.
+_HTTP_TEXT_FORMAT_LOCK = RLock()
 
 # Deprecated: propagators, environ_propagators and propagator names were never intendended to be part of the public API.
 propagators: list[textmap.TextMapPropagator] = []
@@ -180,9 +181,9 @@ def get_global_textmap() -> textmap.TextMapPropagator:
     instance until ``set_global_textmap()`` replaces it or this module is
     reloaded. A load that raises does not fill the cache.
 
-    Propagators are constructed outside the lock so a propagator ``__init__``
-    that calls back into this function cannot deadlock. ``set_global_textmap()``
-    during that construction still wins.
+    Initialization runs under a reentrant lock, so ``set_global_textmap()``
+    during propagator initialization does not deadlock and still takes
+    precedence over the loaded propagator.
     """
     current = _HTTP_TEXT_FORMAT
     if current is not None:
@@ -192,16 +193,13 @@ def get_global_textmap() -> textmap.TextMapPropagator:
         current = _HTTP_TEXT_FORMAT
         if current is not None:
             return current
-
-    loaded = _load_propagators()
-    with _HTTP_TEXT_FORMAT_LOCK:
-        # set_global_textmap() may have stored an explicit propagator while the
-        # entry points were loading. Keep that one.
+        loaded = _load_propagators()
+        # set_global_textmap() during initialization takes precedence.
         current = _HTTP_TEXT_FORMAT
-        if current is None:
-            _set_global_textmap(loaded)
-            return loaded
-        return current
+        if current is not None:
+            return current
+        set_global_textmap(loaded)
+        return loaded
 
 
 def set_global_textmap(
@@ -212,10 +210,6 @@ def set_global_textmap(
     Takes precedence over ``OTEL_PROPAGATORS``, whether or not that variable
     has already been read.
     """
-    with _HTTP_TEXT_FORMAT_LOCK:
-        _set_global_textmap(http_text_format)
-
-
-def _set_global_textmap(http_text_format: textmap.TextMapPropagator) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
-    _HTTP_TEXT_FORMAT = http_text_format
+    with _HTTP_TEXT_FORMAT_LOCK:
+        _HTTP_TEXT_FORMAT = http_text_format

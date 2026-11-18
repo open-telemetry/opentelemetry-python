@@ -270,24 +270,89 @@ class TestGlobalTextMapInitializedOnFirstUse(TestCase):
             [W3CBaggagePropagator],
         )
 
-    def test_concurrent_first_get_resolves_once(self):
+    def test_set_global_textmap_during_propagator_init_wins(self):
+        """``set_global_textmap`` from a propagator ``__init__`` wins without deadlocking."""
         # pylint: disable=import-outside-toplevel
-        from threading import Barrier, Thread  # noqa: PLC0415
+        from threading import Thread  # noqa: PLC0415
 
         self._reload_with_env_unset()
-        barrier = Barrier(8)
-        resolved = []
+        environ[OTEL_PROPAGATORS] = "reenter"
+        override = CompositePropagator([])
+        propagate = self._propagate
+
+        class _ReenteringPropagator:
+            def __init__(self) -> None:
+                propagate.set_global_textmap(override)
+
+        class _EntryPoint:
+            @staticmethod
+            def load() -> type:
+                return _ReenteringPropagator
+
+        outcome: dict[str, object] = {}
+
+        def _resolve() -> None:
+            try:
+                outcome["propagator"] = propagate.get_global_textmap()
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                outcome["error"] = exc
+
+        with patch(
+            "opentelemetry.util._importlib_metadata.entry_points",
+            return_value=[_EntryPoint()],
+        ):
+            worker = Thread(target=_resolve, daemon=True)
+            worker.start()
+            worker.join(timeout=2)
+
+        self.assertFalse(worker.is_alive())
+        self.assertIsNone(outcome.get("error"))
+        self.assertIs(outcome.get("propagator"), override)
+        self.assertIs(propagate.get_global_textmap(), override)
+
+    def test_concurrent_first_get_resolves_once(self):
+        """Concurrent first use shares one propagator and loads entry points once."""
+        # pylint: disable=import-outside-toplevel,protected-access
+        from threading import Barrier, BrokenBarrierError, Thread  # noqa: PLC0415
+
+        self._reload_with_env_unset()
+        start = Barrier(8)
+        # Everyone who enters ``_load_propagators`` waits here. The init lock admits
+        # one caller; a load outside that lock would let all eight arrive.
+        load_gate = Barrier(8)
+        loads: list[None] = []
+        resolved: list[object] = []
+        errors: list[BaseException] = []
+        original = self._propagate._load_propagators
+
+        def _counting_load():
+            loads.append(None)
+            try:
+                load_gate.wait(timeout=0.3)
+            except BrokenBarrierError:
+                pass
+            return original()
 
         def _resolve():
-            barrier.wait()
-            resolved.append(self._propagate.get_global_textmap())
+            try:
+                start.wait()
+                resolved.append(self._propagate.get_global_textmap())
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                errors.append(exc)
 
-        workers = [Thread(target=_resolve) for _ in range(8)]
-        for worker in workers:
-            worker.start()
-        for worker in workers:
-            worker.join()
+        self._propagate._load_propagators = _counting_load
+        try:
+            workers = [Thread(target=_resolve) for _ in range(8)]
+            for worker in workers:
+                worker.start()
+            for worker in workers:
+                worker.join(timeout=5)
+            self.assertFalse(any(worker.is_alive() for worker in workers))
+        finally:
+            self._propagate._load_propagators = original
 
+        self.assertEqual(errors, [])
+        self.assertEqual(len(loads), 1)
         self.assertEqual(len(resolved), 8)
         self.assertTrue(all(item is resolved[0] for item in resolved))
 
