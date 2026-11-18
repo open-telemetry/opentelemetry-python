@@ -34,6 +34,7 @@ from typing import (  # noqa: F401
 from urllib.parse import urlparse
 
 from google.rpc.error_details_pb2 import RetryInfo
+from google.rpc.status_pb2 import Status
 from typing_extensions import deprecated
 
 from grpc import (
@@ -246,6 +247,24 @@ def _get_credentials(
     return ssl_channel_credentials()
 
 
+def _get_retry_delay(error: RpcError) -> float | None:
+    trailers = dict(error.trailing_metadata())  # type: ignore [reportAttributeAccessIssue]
+    retry_info = RetryInfo()
+    status_bin = trailers.get("grpc-status-details-bin")  # type: ignore [reportArgumentType]
+    if status_bin is not None:
+        status = Status()
+        status.ParseFromString(status_bin)
+        for detail in status.details:
+            # Unpack returns False when the detail is not a RetryInfo.
+            if detail.Unpack(retry_info):
+                return retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
+    retry_info_bin = trailers.get("google.rpc.retryinfo-bin")  # type: ignore [reportArgumentType]
+    if retry_info_bin is not None:
+        retry_info.ParseFromString(retry_info_bin)
+        return retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
+    return None
+
+
 # pylint: disable=no-member
 class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT, ExportStubT]):
     """OTLP gRPC exporter mixin.
@@ -439,15 +458,12 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                     )
                     return self._result.SUCCESS  # type: ignore [reportReturnType]
                 except RpcError as error:
-                    retry_info_bin = dict(error.trailing_metadata()).get(  # type: ignore [reportAttributeAccessIssue]
-                        "google.rpc.retryinfo-bin"  # type: ignore [reportArgumentType]
-                    )
+                    retry_delay = _get_retry_delay(error)
+                    # use the server's RetryInfo delay if it sent one, else
                     # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
-                    backoff_seconds = 2**retry_num * random.uniform(0.8, 1.2)
-                    if retry_info_bin is not None:
-                        retry_info = RetryInfo()
-                        retry_info.ParseFromString(retry_info_bin)
-                        backoff_seconds = retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
+                    backoff_seconds = (
+                        retry_delay if retry_delay is not None else 2**retry_num * random.uniform(0.8, 1.2)
+                    )
 
                     # For UNAVAILABLE errors, reinitialize the channel to force reconnection
                     if error.code() == StatusCode.UNAVAILABLE and retry_num == 0:  # type: ignore
