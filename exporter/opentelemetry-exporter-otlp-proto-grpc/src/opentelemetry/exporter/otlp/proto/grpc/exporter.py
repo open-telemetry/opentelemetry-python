@@ -33,6 +33,7 @@ from typing import (  # noqa: F401
 )
 from urllib.parse import urlparse
 
+from google.protobuf.message import DecodeError
 from google.rpc.error_details_pb2 import RetryInfo
 from google.rpc.status_pb2 import Status
 from typing_extensions import deprecated
@@ -248,21 +249,25 @@ def _get_credentials(
 
 
 def _get_retry_delay(error: RpcError) -> float | None:
-    trailers = dict(error.trailing_metadata())  # type: ignore [reportAttributeAccessIssue]
-    retry_info = RetryInfo()
-    status_bin = trailers.get("grpc-status-details-bin")  # type: ignore [reportArgumentType]
-    if status_bin is not None:
-        status = Status()
-        status.ParseFromString(status_bin)
-        for detail in status.details:
-            # Unpack returns False when the detail is not a RetryInfo.
-            if detail.Unpack(retry_info):
-                return retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
-    retry_info_bin = trailers.get("google.rpc.retryinfo-bin")  # type: ignore [reportArgumentType]
-    if retry_info_bin is not None:
-        retry_info.ParseFromString(retry_info_bin)
-        return retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
-    return None
+    try:
+        trailers = dict(error.trailing_metadata() or ())  # type: ignore [reportAttributeAccessIssue]
+        retry_info = RetryInfo()
+        status_bin = trailers.get("grpc-status-details-bin")  # type: ignore [reportArgumentType]
+        if status_bin is not None:
+            status = Status()
+            status.ParseFromString(status_bin)
+            for detail in status.details:
+                # Unpack returns False when the detail is not a RetryInfo.
+                if detail.Unpack(retry_info):
+                    return retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
+        retry_info_bin = trailers.get("google.rpc.retryinfo-bin")  # type: ignore [reportArgumentType]
+        if retry_info_bin is not None:
+            retry_info.ParseFromString(retry_info_bin)
+            return retry_info.retry_delay.seconds + retry_info.retry_delay.nanos / 1.0e9
+        return None
+    except DecodeError:
+        # force the use of the exponential backoff
+        return None
 
 
 # pylint: disable=no-member
@@ -459,10 +464,12 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResu
                     return self._result.SUCCESS  # type: ignore [reportReturnType]
                 except RpcError as error:
                     retry_delay = _get_retry_delay(error)
-                    # use the server's RetryInfo delay if it sent one, else
+                    # use the server's RetryInfo delay if it sent one and is positive
                     # multiplying by a random number between .8 and 1.2 introduces a +/20% jitter to each backoff.
                     backoff_seconds = (
-                        retry_delay if retry_delay is not None else 2**retry_num * random.uniform(0.8, 1.2)
+                        retry_delay
+                        if retry_delay is not None and retry_delay > 0
+                        else 2**retry_num * random.uniform(0.8, 1.2)
                     )
 
                     # For UNAVAILABLE errors, reinitialize the channel to force reconnection
