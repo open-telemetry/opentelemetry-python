@@ -11,7 +11,7 @@ from collections.abc import Callable
 from typing import Any
 from urllib import parse
 
-from opentelemetry.configuration._common import _matches_glob, load_entry_point
+from opentelemetry.configuration._common import _include_exclude_predicate, load_entry_point
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration.models import (
     AttributeNameValue,
@@ -238,11 +238,5 @@ def _filter_attributes(attrs: dict[str, object], filter_config: IncludeExclude |
     if not included and not excluded:
         return attrs
 
-    result: dict[str, object] = {}
-    for key, value in attrs.items():
-        if included and not any(_matches_glob(key, pat) for pat in included):
-            continue
-        if excluded and any(_matches_glob(key, pat) for pat in excluded):
-            continue
-        result[key] = value
-    return result
+    matches = _include_exclude_predicate(filter_config)
+    return {key: value for key, value in attrs.items() if matches(key)}
