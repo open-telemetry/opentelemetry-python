@@ -1,0 +1,16 @@
+description: >
+  `always_record` turns the wrapped sampler's drop decisions into record-only spans, which are
+  not exported and leaves sampled decisions unchanged.
+until:
+  - spans: {name: sampled-remote-child}
+  - exited: {}
+expect:
+  - output:
+      stream: stdout
+      pattern: record-only-root recording=True sampled=False
+  - spans:
+      name: record-only-root
+      count: 0
+  - spans:
+      name: sampled-remote-child
+      count: 1
