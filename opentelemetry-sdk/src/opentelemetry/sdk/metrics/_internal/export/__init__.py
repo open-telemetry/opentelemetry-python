@@ -12,7 +12,7 @@ from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
-from time import perf_counter, time_ns
+from time import monotonic, perf_counter, time_ns
 from typing import IO
 
 from typing_extensions import final
@@ -596,15 +596,20 @@ class PeriodicExportingMetricReader(MetricReader):
 
     def _ticker(self) -> None:
         interval_secs = self._export_interval_millis / 1e3
-        while not self._shutdown_event.wait(interval_secs):
+        next_tick = monotonic() + interval_secs
+        while not self._shutdown_event.wait(max(0.0, next_tick - monotonic())):
             try:
                 self.collect(timeout_millis=self._export_timeout_millis)
             except MetricsTimeoutError:
                 _logger.warning(
-                    "Metric collection timed out. Will try again after %s seconds",
-                    interval_secs,
+                    "Metric collection timed out. Will try again at the next scheduled collection.",
                     exc_info=True,
                 )
+            next_tick += interval_secs
+            now = monotonic()
+            if next_tick <= now:
+                # Skip missed deadlines instead of exporting in a burst.
+                next_tick += (1 + (now - next_tick) // interval_secs) * interval_secs
         # one last collection below before shutting down completely
         try:
             self.collect(timeout_millis=self._export_interval_millis)
