@@ -27,11 +27,14 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
+    SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK,
+    SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK,
+)
+from opentelemetry.proto.trace.v1.trace_pb2 import (
     ResourceSpans as PB2ResourceSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import ScopeSpans as PB2ScopeSpans
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PB2SPan
-from opentelemetry.proto.trace.v1.trace_pb2 import SpanFlags as PB2SpanFlags
 from opentelemetry.proto.trace.v1.trace_pb2 import Status as PB2Status
 from opentelemetry.sdk.trace import Event as SDKEvent
 from opentelemetry.sdk.trace import Resource as SDKResource
@@ -438,11 +441,33 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                     trace_flags=SDKTraceFlags.SAMPLED,
                 ),
                 SDKSpanContext(trace_id, 0x1111, is_remote=True),
-                (
-                    PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
-                    | PB2SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
-                    | SDKTraceFlags.SAMPLED
+                (SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK | SDKTraceFlags.SAMPLED),
+            ),
+            (
+                "random_trace_id_remote_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x1110,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.RANDOM_TRACE_ID,
                 ),
+                SDKSpanContext(trace_id, 0x1111, is_remote=True),
+                (
+                    SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+                    | SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+                    | SDKTraceFlags.RANDOM_TRACE_ID
+                ),
+            ),
+            (
+                "sampled_random_trace_id_local_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x2220,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.SAMPLED | SDKTraceFlags.RANDOM_TRACE_ID,
+                ),
+                SDKSpanContext(trace_id, 0x2222, is_remote=False),
+                (SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | SDKTraceFlags.SAMPLED | SDKTraceFlags.RANDOM_TRACE_ID),
             ),
             (
                 "unsampled_local_parent",
@@ -453,7 +478,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                     trace_flags=SDKTraceFlags.DEFAULT,
                 ),
                 SDKSpanContext(trace_id, 0x2222, is_remote=False),
-                PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK,
+                SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK,
             ),
             (
                 "no_parent",
@@ -464,7 +489,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                     trace_flags=SDKTraceFlags.SAMPLED,
                 ),
                 None,
-                (PB2SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | SDKTraceFlags.SAMPLED),
+                (SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | SDKTraceFlags.SAMPLED),
             ),
         ]
         for name, span_context, parent_context, expected_flags in cases:

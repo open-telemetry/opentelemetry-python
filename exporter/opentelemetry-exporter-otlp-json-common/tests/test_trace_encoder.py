@@ -272,6 +272,36 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                 ),
             ),
             (
+                "random_trace_id_remote_parent",
+                SpanContext(
+                    TRACE_ID,
+                    0x1110,
+                    is_remote=False,
+                    trace_flags=TraceFlags.RANDOM_TRACE_ID,
+                ),
+                SpanContext(TRACE_ID, 0x1111, is_remote=True),
+                int(
+                    JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+                    | JSONSpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+                    | TraceFlags.RANDOM_TRACE_ID
+                ),
+            ),
+            (
+                "sampled_random_trace_id_local_parent",
+                SpanContext(
+                    TRACE_ID,
+                    0x2220,
+                    is_remote=False,
+                    trace_flags=TraceFlags.SAMPLED | TraceFlags.RANDOM_TRACE_ID,
+                ),
+                SpanContext(TRACE_ID, 0x2222, is_remote=False),
+                int(
+                    JSONSpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+                    | TraceFlags.SAMPLED
+                    | TraceFlags.RANDOM_TRACE_ID
+                ),
+            ),
+            (
                 "unsampled_local_parent",
                 SpanContext(
                     TRACE_ID,
