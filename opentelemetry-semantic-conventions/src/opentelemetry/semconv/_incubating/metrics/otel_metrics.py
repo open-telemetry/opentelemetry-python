@@ -187,17 +187,22 @@ def create_otel_sdk_exporter_span_inflight_count(meter: Meter) -> UpDownCounter:
 
 OTEL_SDK_LOG_CREATED: Final = "otel.sdk.log.created"
 """
-The number of logs submitted to enabled SDK Loggers
+The number of log records submitted to an enabled `Logger`
 Instrument: counter
 Unit: {log_record}
+Note: In OpenTelemetry SDKs a `Logger` is enabled by default, and can be disabled via configuration i.e. `LoggerConfig.enabled` = `false` when supported;
+a disabled `Logger` is a No-op: emitting to it has no effect, so its records are not counted.
+Every log record submitted to an enabled `Logger` is counted, even if it is later filtered or dropped within the SDK
+(e.g. by minimum severity or trace-based rules, or by a processor or the export pipeline), making this metric the top of the log delivery funnel.
+Records not submitted to the SDK are not counted (e.g. a caller that skips calling `Emit()` based on an `Enabled()` check, or an upstream logging library that filters first).
 """
 
 
 def create_otel_sdk_log_created(meter: Meter) -> Counter:
-    """The number of logs submitted to enabled SDK Loggers"""
+    """The number of log records submitted to an enabled `Logger`"""
     return meter.create_counter(
         name=OTEL_SDK_LOG_CREATED,
-        description="The number of logs submitted to enabled SDK Loggers.",
+        description="The number of log records submitted to an enabled `Logger`.",
         unit="{log_record}",
     )
 

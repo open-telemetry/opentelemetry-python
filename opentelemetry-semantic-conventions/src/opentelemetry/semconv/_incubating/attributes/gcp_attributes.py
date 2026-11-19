@@ -145,6 +145,26 @@ GCP_GCE_INSTANCE_GROUP_MANAGER_ZONE: Final = "gcp.gce.instance_group_manager.zon
 The zone of a **zonal** Instance Group Manager (e.g., `us-central1-a`). Set this **only** when the IGM is zonal.
 """
 
+GCP_PUBSUB_MESSAGE_ACK_DEADLINE: Final = "gcp.pubsub.message.ack_deadline"
+"""
+The ack deadline in seconds set for the modify ack deadline request.
+"""
+
+GCP_PUBSUB_MESSAGE_ACK_ID: Final = "gcp.pubsub.message.ack_id"
+"""
+The ack ID for a given message.
+"""
+
+GCP_PUBSUB_MESSAGE_DELIVERY_ATTEMPT: Final = "gcp.pubsub.message.delivery_attempt"
+"""
+The delivery attempt for a given message.
+"""
+
+GCP_PUBSUB_MESSAGE_ORDERING_KEY: Final = "gcp.pubsub.message.ordering_key"
+"""
+The ordering key for a given message. If the attribute is not present, the message does not have an ordering key.
+"""
+
 
 class GcpApphubServiceCriticalityTypeValues(Enum):
     MISSION_CRITICAL = "MISSION_CRITICAL"

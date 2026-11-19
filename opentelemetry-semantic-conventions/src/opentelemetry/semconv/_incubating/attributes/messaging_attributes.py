@@ -4,6 +4,8 @@
 from enum import Enum
 from typing import Final
 
+from typing_extensions import deprecated
+
 MESSAGING_BATCH_MESSAGE_COUNT: Final = "messaging.batch.message_count"
 """
 The number of messages sent, received, or processed in the scope of the batching operation.
@@ -72,33 +74,32 @@ Deprecated: Replaced by `messaging.consumer.group.name`.
 
 MESSAGING_EVENTHUBS_MESSAGE_ENQUEUED_TIME: Final = "messaging.eventhubs.message.enqueued_time"
 """
-The UTC epoch seconds at which the message has been accepted and stored in the entity.
+Deprecated: Replaced by `azure.eventhubs.message.enqueued_time`.
 """
 
 MESSAGING_GCP_PUBSUB_MESSAGE_ACK_DEADLINE: Final = "messaging.gcp_pubsub.message.ack_deadline"
 """
-The ack deadline in seconds set for the modify ack deadline request.
+Deprecated: Replaced by `gcp.pubsub.message.ack_deadline`.
 """
 
 MESSAGING_GCP_PUBSUB_MESSAGE_ACK_ID: Final = "messaging.gcp_pubsub.message.ack_id"
 """
-The ack ID for a given message.
+Deprecated: Replaced by `gcp.pubsub.message.ack_id`.
 """
 
 MESSAGING_GCP_PUBSUB_MESSAGE_DELIVERY_ATTEMPT: Final = "messaging.gcp_pubsub.message.delivery_attempt"
 """
-The delivery attempt for a given message.
+Deprecated: Replaced by `gcp.pubsub.message.delivery_attempt`.
 """
 
 MESSAGING_GCP_PUBSUB_MESSAGE_ORDERING_KEY: Final = "messaging.gcp_pubsub.message.ordering_key"
 """
-The ordering key for a given message. If the attribute is not present, the message does not have an ordering key.
+Deprecated: Replaced by `gcp.pubsub.message.ordering_key`.
 """
 
 MESSAGING_KAFKA_CLUSTER_ID: Final = "messaging.kafka.cluster.id"
 """
-The Kafka cluster ID, obtained from the broker metadata exposed through the Kafka client (or AdminClient) API.
-Note: The cluster ID is a unique identifier reported by the Kafka broker. It identifies the cluster independently of the individual brokers the client is configured to connect to, and remains stable even if broker hostnames, IP addresses, or ports change.
+Deprecated: Replaced by `kafka.cluster.id`.
 """
 
 MESSAGING_KAFKA_CONSUMER_GROUP: Final = "messaging.kafka.consumer.group"
@@ -113,23 +114,22 @@ Deprecated: Record string representation of the partition ID in `messaging.desti
 
 MESSAGING_KAFKA_MESSAGE_KEY: Final = "messaging.kafka.message.key"
 """
-Message keys in Kafka are used for grouping alike messages to ensure they're processed on the same partition. They differ from `messaging.message.id` in that they're not unique. If the key is `null`, the attribute MUST NOT be set.
-Note: If the key type is not string, it's string representation has to be supplied for the attribute. If the key has no unambiguous, canonical string form, don't include its value.
+Deprecated: Replaced by `kafka.message.key`.
 """
 
 MESSAGING_KAFKA_MESSAGE_OFFSET: Final = "messaging.kafka.message.offset"
 """
-Deprecated: Replaced by `messaging.kafka.offset`.
+Deprecated: Replaced by `kafka.offset`.
 """
 
 MESSAGING_KAFKA_MESSAGE_TOMBSTONE: Final = "messaging.kafka.message.tombstone"
 """
-A boolean that is true if the message is a tombstone.
+Deprecated: Replaced by `kafka.message.tombstone`.
 """
 
 MESSAGING_KAFKA_OFFSET: Final = "messaging.kafka.offset"
 """
-The offset of a record in the corresponding Kafka partition.
+Deprecated: Replaced by `kafka.offset`.
 """
 
 MESSAGING_MESSAGE_BODY_SIZE: Final = "messaging.message.body.size"
@@ -174,12 +174,12 @@ Note: If a custom value is used, it MUST be of low cardinality.
 
 MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY: Final = "messaging.rabbitmq.destination.routing_key"
 """
-RabbitMQ message routing key.
+Deprecated: Replaced by `rabbitmq.destination.routing_key`.
 """
 
 MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG: Final = "messaging.rabbitmq.message.delivery_tag"
 """
-RabbitMQ message delivery tag.
+Deprecated: Replaced by `rabbitmq.message.delivery_tag`.
 """
 
 MESSAGING_ROCKETMQ_CLIENT_GROUP: Final = "messaging.rocketmq.client_group"
@@ -189,42 +189,42 @@ Deprecated: Replaced by `messaging.consumer.group.name` on the consumer spans. N
 
 MESSAGING_ROCKETMQ_CONSUMPTION_MODEL: Final = "messaging.rocketmq.consumption_model"
 """
-Model of message consumption. This only applies to consumer spans.
+Deprecated: Replaced by `rocketmq.consumption_model`.
 """
 
 MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL: Final = "messaging.rocketmq.message.delay_time_level"
 """
-The delay time level for delay message, which determines the message delay time.
+Deprecated: Replaced by `rocketmq.message.delay_time_level`.
 """
 
 MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP: Final = "messaging.rocketmq.message.delivery_timestamp"
 """
-The timestamp in milliseconds that the delay message is expected to be delivered to consumer.
+Deprecated: Replaced by `rocketmq.message.delivery_timestamp`.
 """
 
 MESSAGING_ROCKETMQ_MESSAGE_GROUP: Final = "messaging.rocketmq.message.group"
 """
-It is essential for FIFO message. Messages that belong to the same message group are always processed one by one within the same consumer group.
+Deprecated: Replaced by `rocketmq.message.group`.
 """
 
 MESSAGING_ROCKETMQ_MESSAGE_KEYS: Final = "messaging.rocketmq.message.keys"
 """
-Key(s) of message, another way to mark message besides message ID.
+Deprecated: Replaced by `rocketmq.message.keys`.
 """
 
 MESSAGING_ROCKETMQ_MESSAGE_TAG: Final = "messaging.rocketmq.message.tag"
 """
-The secondary classifier of message besides topic.
+Deprecated: Replaced by `rocketmq.message.tag`.
 """
 
 MESSAGING_ROCKETMQ_MESSAGE_TYPE: Final = "messaging.rocketmq.message.type"
 """
-Type of message.
+Deprecated: Replaced by `rocketmq.message.type`.
 """
 
 MESSAGING_ROCKETMQ_NAMESPACE: Final = "messaging.rocketmq.namespace"
 """
-Namespace of RocketMQ resources, resources in different namespaces are individual.
+Deprecated: Replaced by `rocketmq.namespace`.
 """
 
 MESSAGING_SERVICEBUS_DESTINATION_SUBSCRIPTION_NAME: Final = "messaging.servicebus.destination.subscription_name"
@@ -234,23 +234,28 @@ Deprecated: Replaced by `messaging.destination.subscription.name`.
 
 MESSAGING_SERVICEBUS_DISPOSITION_STATUS: Final = "messaging.servicebus.disposition_status"
 """
-Describes the [settlement type](https://learn.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock).
+Deprecated: Replaced by `azure.servicebus.disposition_status`.
 """
 
 MESSAGING_SERVICEBUS_MESSAGE_DELIVERY_COUNT: Final = "messaging.servicebus.message.delivery_count"
 """
-Number of deliveries that have been attempted for this message.
+Deprecated: Replaced by `azure.servicebus.message.delivery_count`.
 """
 
 MESSAGING_SERVICEBUS_MESSAGE_ENQUEUED_TIME: Final = "messaging.servicebus.message.enqueued_time"
 """
-The UTC epoch seconds at which the message has been accepted and stored in the entity.
+Deprecated: Replaced by `azure.servicebus.message.enqueued_time`.
 """
 
 MESSAGING_SYSTEM: Final = "messaging.system"
 """
+Deprecated: Replaced by `messaging.system.name`.
+"""
+
+MESSAGING_SYSTEM_NAME: Final = "messaging.system.name"
+"""
 The messaging system as identified by the client instrumentation.
-Note: The actual messaging system may differ from the one known by the client. For example, when using Kafka client libraries to communicate with Azure Event Hubs, the `messaging.system` is set to `kafka` based on the instrumentation's best knowledge.
+Note: The actual messaging system may differ from the one known by the client. For example, when using Kafka client libraries to communicate with Azure Event Hubs, the `messaging.system.name` is set to `kafka` based on the instrumentation's best knowledge.
 """
 
 
@@ -271,6 +276,9 @@ class MessagingOperationTypeValues(Enum):
     """Deprecated: Replaced by `send`."""
 
 
+@deprecated(
+    "The attribute messaging.rocketmq.consumption_model is deprecated - Replaced by `rocketmq.consumption_model`"
+)
 class MessagingRocketmqConsumptionModelValues(Enum):
     CLUSTERING = "clustering"
     """Clustering consumption model."""
@@ -278,6 +286,7 @@ class MessagingRocketmqConsumptionModelValues(Enum):
     """Broadcasting consumption model."""
 
 
+@deprecated("The attribute messaging.rocketmq.message.type is deprecated - Replaced by `rocketmq.message.type`")
 class MessagingRocketmqMessageTypeValues(Enum):
     NORMAL = "normal"
     """Normal message."""
@@ -289,6 +298,9 @@ class MessagingRocketmqMessageTypeValues(Enum):
     """Transaction message."""
 
 
+@deprecated(
+    "The attribute messaging.servicebus.disposition_status is deprecated - Replaced by `azure.servicebus.disposition_status`"
+)
 class MessagingServicebusDispositionStatusValues(Enum):
     COMPLETE = "complete"
     """Message is completed."""
@@ -300,6 +312,7 @@ class MessagingServicebusDispositionStatusValues(Enum):
     """Message is deferred."""
 
 
+@deprecated("The attribute messaging.system is deprecated - Replaced by `messaging.system.name`")
 class MessagingSystemValues(Enum):
     ACTIVEMQ = "activemq"
     """Apache ActiveMQ."""
@@ -314,6 +327,33 @@ class MessagingSystemValues(Enum):
     SERVICEBUS = "servicebus"
     """Azure Service Bus."""
     GCP_PUBSUB = "gcp_pubsub"
+    """Google Cloud Pub/Sub."""
+    JMS = "jms"
+    """Java Message Service."""
+    KAFKA = "kafka"
+    """Apache Kafka."""
+    RABBITMQ = "rabbitmq"
+    """RabbitMQ."""
+    ROCKETMQ = "rocketmq"
+    """Apache RocketMQ."""
+    PULSAR = "pulsar"
+    """Apache Pulsar."""
+
+
+class MessagingSystemNameValues(Enum):
+    ACTIVEMQ = "activemq"
+    """Apache ActiveMQ."""
+    AWS_SNS = "aws.sns"
+    """Amazon Simple Notification Service (SNS)."""
+    AWS_SQS = "aws.sqs"
+    """Amazon Simple Queue Service (SQS)."""
+    AZURE_EVENTGRID = "azure.eventgrid"
+    """Azure Event Grid."""
+    AZURE_EVENTHUBS = "azure.eventhubs"
+    """Azure Event Hubs."""
+    AZURE_SERVICEBUS = "azure.servicebus"
+    """Azure Service Bus."""
+    GCP_PUBSUB = "gcp.pubsub"
     """Google Cloud Pub/Sub."""
     JMS = "jms"
     """Java Message Service."""
