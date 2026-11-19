@@ -36,14 +36,14 @@ from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans as proto_encode_spans,
 )
-from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
-    ExportLogsServiceRequest as PB2ExportLogsServiceRequest,
+from opentelemetry.proto._test.collector.logs.v1.logs_service_pb2 import (
+    ExportLogsServiceRequest as RealExportLogsServiceRequest,
 )
-from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
-    ExportMetricsServiceRequest as PB2ExportMetricsServiceRequest,
+from opentelemetry.proto._test.collector.metrics.v1.metrics_service_pb2 import (
+    ExportMetricsServiceRequest as RealExportMetricsServiceRequest,
 )
-from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
-    ExportTraceServiceRequest as PB2ExportTraceServiceRequest,
+from opentelemetry.proto._test.collector.trace.v1.trace_service_pb2 import (
+    ExportTraceServiceRequest as RealExportTraceServiceRequest,
 )
 from opentelemetry.sdk.metrics import Exemplar
 from opentelemetry.sdk.resources import Resource
@@ -227,7 +227,7 @@ class TestProtoJsonDictCompatibility(unittest.TestCase):
         spans = _make_spans()
         json_dict = json_encode_spans(spans).to_dict()
         proto_dict = MessageToDict(
-            proto_encode_spans(spans),
+            RealExportTraceServiceRequest.FromString(proto_encode_spans(spans).SerializeToString()),
             preserving_proto_field_name=False,
             use_integers_for_enums=True,
         )
@@ -237,7 +237,7 @@ class TestProtoJsonDictCompatibility(unittest.TestCase):
         data = _make_test_metrics_data()
         json_dict = json_encode_metrics(data).to_dict()
         proto_dict = MessageToDict(
-            proto_encode_metrics(data),
+            RealExportMetricsServiceRequest.FromString(proto_encode_metrics(data).SerializeToString()),
             preserving_proto_field_name=False,
             use_integers_for_enums=True,
         )
@@ -247,7 +247,7 @@ class TestProtoJsonDictCompatibility(unittest.TestCase):
         logs = _make_logs()
         json_dict = json_encode_logs(logs).to_dict()
         proto_dict = MessageToDict(
-            proto_encode_logs(logs),
+            RealExportLogsServiceRequest.FromString(proto_encode_logs(logs).SerializeToString()),
             preserving_proto_field_name=False,
             use_integers_for_enums=True,
         )
@@ -264,8 +264,11 @@ class TestProtoJsonParseCompatibility(unittest.TestCase):
         proto_expected = proto_encode_spans(spans)
 
         denormalized = _denormalize_otlp_json(json_dict)
-        proto_parsed = ParseDict(denormalized, PB2ExportTraceServiceRequest())
-        self.assertEqual(proto_parsed, proto_expected)
+        proto_parsed = ParseDict(denormalized, RealExportTraceServiceRequest())
+        self.assertEqual(
+            proto_parsed,
+            RealExportTraceServiceRequest.FromString(proto_expected.SerializeToString()),
+        )
 
     def test_metrics_parse_compatibility(self):
         data = _make_test_metrics_data()
@@ -273,8 +276,11 @@ class TestProtoJsonParseCompatibility(unittest.TestCase):
         proto_expected = proto_encode_metrics(data)
 
         denormalized = _denormalize_otlp_json(json_dict)
-        proto_parsed = ParseDict(denormalized, PB2ExportMetricsServiceRequest())
-        self.assertEqual(proto_parsed, proto_expected)
+        proto_parsed = ParseDict(denormalized, RealExportMetricsServiceRequest())
+        self.assertEqual(
+            proto_parsed,
+            RealExportMetricsServiceRequest.FromString(proto_expected.SerializeToString()),
+        )
 
     def test_log_parse_compatibility(self):
         logs = _make_logs()
@@ -282,5 +288,8 @@ class TestProtoJsonParseCompatibility(unittest.TestCase):
         proto_expected = proto_encode_logs(logs)
 
         denormalized = _denormalize_otlp_json(json_dict)
-        proto_parsed = ParseDict(denormalized, PB2ExportLogsServiceRequest())
-        self.assertEqual(proto_parsed, proto_expected)
+        proto_parsed = ParseDict(denormalized, RealExportLogsServiceRequest())
+        self.assertEqual(
+            proto_parsed,
+            RealExportLogsServiceRequest.FromString(proto_expected.SerializeToString()),
+        )
