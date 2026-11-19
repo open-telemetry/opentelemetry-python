@@ -69,7 +69,7 @@ from enum import Enum
 from logging import getLogger
 from typing import cast
 
-from typing_extensions import deprecated
+from typing_extensions import Never, deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry.attributes import BoundedAttributes
@@ -186,6 +186,7 @@ class TracerProvider(SignatureCompatABC):
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
         attributes: types.Attributes = None,
+        **_kwargs: Never,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -229,6 +230,7 @@ class NoOpTracerProvider(TracerProvider):
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
         attributes: types.Attributes = None,
+        **_kwargs: Never,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
         return NoOpTracer()
@@ -249,6 +251,7 @@ class ProxyTracerProvider(TracerProvider):
         instrumenting_library_version: str | None = None,
         schema_url: str | None = None,
         attributes: types.Attributes = None,
+        **_kwargs: Never,
     ) -> "Tracer":
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
@@ -283,6 +286,7 @@ class Tracer(SignatureCompatABC):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        **_kwargs: Never,
     ) -> "Span":
         """Starts a span.
 
@@ -339,6 +343,7 @@ class Tracer(SignatureCompatABC):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        **_kwargs: Never,
     ) -> Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -458,6 +463,7 @@ class NoOpTracer(Tracer):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        **_kwargs: Never,
     ) -> "Span":
         current_span = get_current_span(context)
         if isinstance(current_span, NonRecordingSpan):
@@ -485,6 +491,7 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        **_kwargs: Never,
     ) -> Iterator["Span"]:
         span = self.start_span(
             name=name,

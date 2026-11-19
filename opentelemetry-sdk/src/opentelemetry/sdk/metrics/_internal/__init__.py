@@ -11,6 +11,8 @@ from os import environ
 from threading import Lock
 from time import time_ns
 
+from typing_extensions import Never
+
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
 from opentelemetry.metrics import Counter as APICounter
@@ -116,7 +118,7 @@ class Meter(APIMeter):
     def _set_meter_config(self, meter_config: _MeterConfig) -> None:
         self._meter_config.update(meter_config)
 
-    def create_counter(self, name, unit="", description="") -> APICounter:
+    def create_counter(self, name, unit="", description="", **_kwargs: Never) -> APICounter:
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Counter, unit, description)
             if not status.already_registered:
@@ -143,7 +145,7 @@ class Meter(APIMeter):
             )
         return instrument
 
-    def create_up_down_counter(self, name, unit="", description="") -> APIUpDownCounter:
+    def create_up_down_counter(self, name, unit="", description="", **_kwargs: Never) -> APIUpDownCounter:
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _UpDownCounter, unit, description)
             if not status.already_registered:
@@ -176,6 +178,7 @@ class Meter(APIMeter):
         callbacks=None,
         unit="",
         description="",
+        **_kwargs: Never,
     ) -> APIObservableCounter:
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableCounter, unit, description)
@@ -214,6 +217,7 @@ class Meter(APIMeter):
         description: str = "",
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
+        **_kwargs: Never,
     ) -> APIHistogram:
         if explicit_bucket_boundaries_advisory is not None:
             invalid_advisory = False
@@ -264,7 +268,7 @@ class Meter(APIMeter):
             )
         return instrument
 
-    def create_gauge(self, name, unit="", description="") -> APIGauge:
+    def create_gauge(self, name, unit="", description="", **_kwargs: Never) -> APIGauge:
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Gauge, unit, description)
             if not status.already_registered:
@@ -291,7 +295,9 @@ class Meter(APIMeter):
             )
         return instrument
 
-    def create_observable_gauge(self, name, callbacks=None, unit="", description="") -> APIObservableGauge:
+    def create_observable_gauge(
+        self, name, callbacks=None, unit="", description="", **_kwargs: Never
+    ) -> APIObservableGauge:
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableGauge, unit, description)
             if not status.already_registered:
@@ -323,7 +329,12 @@ class Meter(APIMeter):
         return instrument
 
     def create_observable_up_down_counter(
-        self, name, callbacks=None, unit="", description=""
+        self,
+        name,
+        callbacks=None,
+        unit="",
+        description="",
+        **_kwargs: Never,
     ) -> APIObservableUpDownCounter:
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableUpDownCounter, unit, description)
@@ -607,6 +618,7 @@ class MeterProvider(APIMeterProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> APIMeter:
         if self._disabled:
             return NoOpMeter(name, version=version, schema_url=schema_url)

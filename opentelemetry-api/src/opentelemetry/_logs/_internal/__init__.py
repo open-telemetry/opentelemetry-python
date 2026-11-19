@@ -30,7 +30,7 @@ from os import environ
 from time import time_ns
 from typing import cast, overload
 
-from typing_extensions import deprecated
+from typing_extensions import Never, deprecated
 
 from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.context import get_current
@@ -166,12 +166,14 @@ class Logger(SignatureCompatABC):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **_kwargs: Never,
     ) -> None: ...
 
     @overload
     def emit(
         self,
         record: LogRecord,
+        **_kwargs: Never,
     ) -> None: ...
 
     @abstractmethod
@@ -188,6 +190,7 @@ class Logger(SignatureCompatABC):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **_kwargs: Never,
     ) -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
@@ -198,6 +201,7 @@ class Logger(SignatureCompatABC):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
+        **_kwargs: Never,
     ) -> bool:
         """Returns whether the logger is enabled for the given arguments.
 
@@ -228,12 +232,14 @@ class NoOpLogger(Logger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **_kwargs: Never,
     ) -> None: ...
 
     @overload
     def emit(  # pylint:disable=arguments-differ
         self,
         record: LogRecord,
+        **_kwargs: Never,
     ) -> None: ...
 
     def emit(
@@ -249,6 +255,7 @@ class NoOpLogger(Logger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **_kwargs: Never,
     ) -> None:
         pass
 
@@ -258,6 +265,7 @@ class NoOpLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
+        **_kwargs: Never,
     ) -> bool:
         return False
 
@@ -305,12 +313,14 @@ class ProxyLogger(Logger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **_kwargs: Never,
     ) -> None: ...
 
     @overload
     def emit(  # pylint:disable=arguments-differ
         self,
         record: LogRecord,
+        **_kwargs: Never,
     ) -> None: ...
 
     def emit(
@@ -326,6 +336,7 @@ class ProxyLogger(Logger):
         attributes: Attributes = None,
         event_name: str | None = None,
         exception: BaseException | None = None,
+        **_kwargs: Never,
     ) -> None:
         if record:
             self._logger.emit(record)
@@ -348,6 +359,7 @@ class ProxyLogger(Logger):
         context: Context | None = None,
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
+        **_kwargs: Never,
     ) -> bool:
         return self._logger.enabled(
             context=context,
@@ -368,6 +380,7 @@ class LoggerProvider(SignatureCompatABC):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> Logger:
         """Returns a `Logger` for use by the given instrumentation library.
 
@@ -407,6 +420,7 @@ class NoOpLoggerProvider(LoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> Logger:
         """Returns a NoOpLogger."""
         return NoOpLogger(name, version=version, schema_url=schema_url, attributes=attributes)
@@ -419,6 +433,7 @@ class ProxyLoggerProvider(LoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> Logger:
         if _LOGGER_PROVIDER:
             return _LOGGER_PROVIDER.get_logger(

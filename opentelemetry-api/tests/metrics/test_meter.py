@@ -13,13 +13,13 @@ from opentelemetry.metrics import Meter, NoOpMeter
 
 class ChildMeter(Meter):
     # pylint: disable=signature-differs
-    def create_counter(self, name, unit="", description=""):
+    def create_counter(self, name, unit="", description="", **_kwargs):
         super().create_counter(name, unit=unit, description=description)
 
-    def create_up_down_counter(self, name, unit="", description=""):
+    def create_up_down_counter(self, name, unit="", description="", **_kwargs):
         super().create_up_down_counter(name, unit=unit, description=description)
 
-    def create_observable_counter(self, name, callbacks, unit="", description=""):
+    def create_observable_counter(self, name, callbacks, unit="", description="", **_kwargs):
         super().create_observable_counter(
             name,
             callbacks,
@@ -34,6 +34,7 @@ class ChildMeter(Meter):
         description="",
         *,
         explicit_bucket_boundaries_advisory=None,
+        **_kwargs,
     ):
         super().create_histogram(
             name,
@@ -42,10 +43,10 @@ class ChildMeter(Meter):
             explicit_bucket_boundaries_advisory=explicit_bucket_boundaries_advisory,
         )
 
-    def create_gauge(self, name, unit="", description=""):
+    def create_gauge(self, name, unit="", description="", **_kwargs):
         super().create_gauge(name, unit=unit, description=description)
 
-    def create_observable_gauge(self, name, callbacks, unit="", description=""):
+    def create_observable_gauge(self, name, callbacks, unit="", description="", **_kwargs):
         super().create_observable_gauge(
             name,
             callbacks,
@@ -53,7 +54,7 @@ class ChildMeter(Meter):
             description=description,
         )
 
-    def create_observable_up_down_counter(self, name, callbacks, unit="", description=""):
+    def create_observable_up_down_counter(self, name, callbacks, unit="", description="", **_kwargs):
         super().create_observable_up_down_counter(
             name,
             callbacks,

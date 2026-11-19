@@ -5,6 +5,8 @@
 import unittest
 from unittest.mock import Mock
 
+from typing_extensions import Never
+
 import opentelemetry._logs._internal as _logs_internal
 from opentelemetry import _logs
 from opentelemetry.test.globals_test import LoggingGlobalsTest
@@ -18,6 +20,7 @@ class TestProvider(_logs.NoOpLoggerProvider):
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
+        **_kwargs: Never,
     ) -> _logs.Logger:
         return LoggerTest(name)
 
@@ -36,6 +39,7 @@ class LoggerTest(_logs.NoOpLogger):
         attributes=None,
         event_name=None,
         exception: BaseException | None = None,
+        **_kwargs: Never,
     ) -> None:
         pass
 
