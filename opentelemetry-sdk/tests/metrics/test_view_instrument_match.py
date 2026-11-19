@@ -73,6 +73,332 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             views=[],
         )
 
+    def test_consume_measurement_with_exclude_attribute_keys(self):
+        test_cases = [
+            {
+                "name": "excluded attribute removed",
+                "exclude_attribute_keys": {"f"},
+                "measurement_attributes": {"c": "d", "f": "g"},
+                "expected_attributes": {"c": "d"},
+            },
+            {
+                "name": "wildcard exclusion",
+                "exclude_attribute_keys": {"k8s.*"},
+                "measurement_attributes": {
+                    "k8s.node": "node1",
+                    "k8s.cluster": "cluster1",
+                    "service.name": "svc",
+                },
+                "expected_attributes": {
+                    "service.name": "svc",
+                },
+            },
+            {
+                "name": "question mark exclusion",
+                "exclude_attribute_keys": {"node?"},
+                "measurement_attributes": {
+                    "node1": "a",
+                    "node2": "b",
+                    "node12": "c",
+                },
+                "expected_attributes": {
+                    "node12": "c",
+                },
+            },
+            {
+                "name": "wildcard exact exclusion",
+                "exclude_attribute_keys": {"*.node"},
+                "measurement_attributes": {
+                    "k8s.node": "node1",
+                    "k8s.cluster": "cluster1",
+                },
+                "expected_attributes": {
+                    "k8s.cluster": "cluster1",
+                },
+            },
+            {
+                "name": "empty exclusion preserves attributes",
+                "exclude_attribute_keys": set(),
+                "measurement_attributes": {
+                    "region": "us",
+                    "service.name": "svc",
+                },
+                "expected_attributes": {
+                    "region": "us",
+                    "service.name": "svc",
+                },
+            },
+            {
+                "name": "bracketed exclusion is literal",
+                "exclude_attribute_keys": {"header[0]"},
+                "measurement_attributes": {
+                    "header[0]": "remove",
+                    "header0": "keep",
+                },
+                "expected_attributes": {
+                    "header0": "keep",
+                },
+            },
+            {
+                "name": "backslash exclusion is literal",
+                "exclude_attribute_keys": {r"header\0"},
+                "measurement_attributes": {
+                    r"header\0": "remove",
+                    "header0": "keep",
+                },
+                "expected_attributes": {
+                    "header0": "keep",
+                },
+            },
+            {
+                "name": "none attributes become empty attributes",
+                "exclude_attribute_keys": {"f"},
+                "measurement_attributes": None,
+                "expected_attributes": {},
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                instrument1 = Mock(name="instrument1")
+                instrument1.instrumentation_scope = self.mock_instrumentation_scope
+
+                view_instrument_match = _ViewInstrumentMatch(
+                    view=View(
+                        instrument_name="instrument1",
+                        name="name",
+                        aggregation=self.mock_aggregation_factory,
+                        exclude_attribute_keys=case["exclude_attribute_keys"],
+                    ),
+                    instrument=instrument1,
+                    instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+                )
+
+                view_instrument_match.consume_measurement(
+                    Measurement(
+                        value=0,
+                        time_unix_nano=time_ns(),
+                        instrument=instrument1,
+                        context=Context(),
+                        attributes=case["measurement_attributes"],
+                    )
+                )
+
+                self.assertEqual(
+                    view_instrument_match._attributes_aggregation,
+                    {
+                        _hash_attributes(case["expected_attributes"]): (self.mock_created_aggregation),
+                    },
+                )
+        def test_consume_measurement_without_filter_preserves_attributes(self):
+            instrument = Mock(name="instrument1")
+            instrument.instrumentation_scope = (
+                self.mock_instrumentation_scope
+            )
+            view_instrument_match = _ViewInstrumentMatch(
+                view=View(
+                    instrument_name="instrument1",
+                    name="name",
+                    aggregation=self.mock_aggregation_factory,
+                ),
+                instrument=instrument,
+                instrument_class_aggregation=MagicMock(
+                    **{"__getitem__.return_value": DefaultAggregation()}
+                ),
+            )
+    
+            for region in ("us", "eu"):
+                view_instrument_match.consume_measurement(
+                    Measurement(
+                        value=1,
+                        time_unix_nano=time_ns(),
+                        instrument=instrument,
+                        context=Context(),
+                        attributes={"region": region},
+                    )
+                )
+    
+            self.assertEqual(
+                set(view_instrument_match._attributes_aggregation),
+                {
+                    _hash_attributes({"region": "us"}),
+                    _hash_attributes({"region": "eu"}),
+                },
+            )
+
+    def test_consume_measurement_applies_exclusion_after_inclusion(
+        self,
+    ):
+        instrument = Mock(name="instrument1")
+        instrument.instrumentation_scope = (
+            self.mock_instrumentation_scope
+        )
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                attribute_keys={"http.*"},
+                exclude_attribute_keys={"*.status"},
+            ),
+            instrument=instrument,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                context=Context(),
+                attributes={
+                    "http.method": "GET",
+                    "http.status": "200",
+                    "region": "us",
+                },
+            )
+        )
+
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                _hash_attributes(
+                    {"http.method": "GET"}
+                ): self.mock_created_aggregation,
+            },
+        )
+
+    def test_consume_measurement_exclusion_wins_exact_overlap(
+        self,
+    ):
+        instrument = Mock(name="instrument1")
+        instrument.instrumentation_scope = (
+            self.mock_instrumentation_scope
+        )
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                attribute_keys={"region"},
+                exclude_attribute_keys={"region"},
+            ),
+            instrument=instrument,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                context=Context(),
+                attributes={
+                    "region": "us",
+                    "host": "server1",
+                },
+            )
+        )
+
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                _hash_attributes(
+                    {}
+                ): self.mock_created_aggregation,
+            },
+        )
+
+    def test_consume_measurement_bracketed_inclusion_is_literal(
+        self,
+    ):
+        instrument = Mock(name="instrument1")
+        instrument.instrumentation_scope = (
+            self.mock_instrumentation_scope
+        )
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                attribute_keys={"header[0]"},
+            ),
+            instrument=instrument,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                context=Context(),
+                attributes={
+                    "header[0]": "literal",
+                    "header0": "lookalike",
+                },
+            )
+        )
+
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                _hash_attributes(
+                    {"header[0]": "literal"}
+                ): self.mock_created_aggregation,
+            },
+        )
+
+    def test_consume_measurement_question_mark_pattern_overlap(
+        self,
+    ):
+        instrument = Mock(name="instrument1")
+        instrument.instrumentation_scope = (
+            self.mock_instrumentation_scope
+        )
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                attribute_keys={"a?"},
+                exclude_attribute_keys={"?b"},
+            ),
+            instrument=instrument,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=1,
+                time_unix_nano=time_ns(),
+                instrument=instrument,
+                context=Context(),
+                attributes={
+                    "ab": "exclude",
+                    "ac": "keep",
+                    "abc": "not-included",
+                },
+            )
+        )
+
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                _hash_attributes(
+                    {"ac": "keep"}
+                ): self.mock_created_aggregation,
+            },
+        )
+
     def test_consume_measurement(self):
         instrument1 = Mock(name="instrument1")
         instrument1.instrumentation_scope = self.mock_instrumentation_scope
@@ -116,6 +442,44 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
             {
                 _hash_attributes({}): self.mock_created_aggregation,
                 _hash_attributes({"c": "d"}): self.mock_created_aggregation,
+            },
+        )
+
+        # wildcard attribute_keys should match multiple attributes
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=self.mock_aggregation_factory,
+                attribute_keys={"k8s.*"},
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                time_unix_nano=time_ns(),
+                instrument=instrument1,
+                context=Context(),
+                attributes={
+                    "k8s.node": "node1",
+                    "k8s.cluster": "cluster1",
+                    "service.name": "svc",
+                },
+            )
+        )
+
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                _hash_attributes(
+                    {
+                        "k8s.node": "node1",
+                        "k8s.cluster": "cluster1",
+                    }
+                ): self.mock_created_aggregation,
             },
         )
 

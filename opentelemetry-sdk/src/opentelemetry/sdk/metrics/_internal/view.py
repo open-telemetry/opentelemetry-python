@@ -1,8 +1,8 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-
-from collections.abc import Callable
+import re
+from collections.abc import Callable, Iterable
 from fnmatch import fnmatchcase
 from logging import getLogger
 
@@ -22,6 +22,26 @@ from opentelemetry.sdk.metrics._internal.exemplar import (
 from opentelemetry.sdk.metrics._internal.instrument import _Instrument
 
 _logger = getLogger(__name__)
+
+
+def _normalize_attribute_keys(keys: Iterable[str] | None) -> frozenset[str] | None:
+    """Normalize attribute-key iterables to immutable sets for internal use."""
+    if keys is None:
+        return None
+    if isinstance(keys, str):
+        return frozenset({keys})
+    return frozenset(keys)
+
+
+def _attribute_key_matches(key: str, pattern: str) -> bool:
+    """Match attribute keys using only ``*`` and ``?`` as wildcards."""
+    if pattern == key:
+        return True
+
+    expression = "".join(
+        ".*" if char == "*" else "." if char == "?" else re.escape(char) for char in pattern
+    )
+    return re.fullmatch(expression, key) is not None
 
 
 def _default_reservoir_factory(
@@ -75,9 +95,13 @@ class View:
             description of the metric stream. If `None`, the description of the instrument will
             be used.
 
-        attribute_keys: This is a metric stream customizing attribute: this is
-            a set of attribute keys. If not `None` then only the measurement attributes that
-            are in ``attribute_keys`` will be used to identify the metric stream.
+        attribute_keys: This is a metric stream customizing attribute: a set-like
+            collection of attribute keys to keep. If not `None`, only the measurement
+            attributes whose keys are in ``attribute_keys`` are used to identify the
+            metric stream.
+
+        exclude_attribute_keys: This is a metric stream customizing attribute: a set-like
+            collection of attribute keys to drop after any include list is applied.
 
         aggregation: This is a metric stream customizing attribute: the
             aggregation instance to use when data is aggregated for the
@@ -112,10 +136,11 @@ class View:
         meter_schema_url: str | None = None,
         name: str | None = None,
         description: str | None = None,
-        attribute_keys: set[str] | None = None,
+        attribute_keys: Iterable[str] | None = None,
         aggregation: Aggregation | None = None,
         exemplar_reservoir_factory: Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None = None,
         instrument_unit: str | None = None,
+        exclude_attribute_keys: Iterable[str] | None = None,
         aggregation_cardinality_limit: int | None = None,
     ):
         if aggregation_cardinality_limit is not None and (
@@ -150,8 +175,8 @@ class View:
                 raise Exception(f"View {name} declared with wildcard characters in instrument_name")
 
         # _name, _description, _aggregation, _exemplar_reservoir_factory,
-        # _attribute_keys and _aggregation_cardinality_limit will be accessed
-        # when instantiating a _ViewInstrumentMatch.
+        # _attribute_keys, _exclude_attribute_keys and _aggregation_cardinality_limit
+        # will be accessed when instantiating a _ViewInstrumentMatch.
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
@@ -161,7 +186,8 @@ class View:
         self._meter_schema_url = meter_schema_url
 
         self._description = description
-        self._attribute_keys = attribute_keys
+        self._attribute_keys = _normalize_attribute_keys(attribute_keys)
+        self._exclude_attribute_keys = _normalize_attribute_keys(exclude_attribute_keys)
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
         self._aggregation_cardinality_limit = aggregation_cardinality_limit

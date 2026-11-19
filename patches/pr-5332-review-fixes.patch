@@ -1,0 +1,87 @@
+diff --git a/opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py b/opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py
+index d95fc380895..e5a06000000 100644
+--- a/opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py
++++ b/opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/view.py
+@@ -1,7 +1,6 @@
+ # Copyright The OpenTelemetry Authors
+ # SPDX-License-Identifier: Apache-2.0
+ 
+-import re
+ from collections.abc import Callable, Iterable
+ from fnmatch import fnmatchcase
+ from logging import getLogger
+@@ -34,15 +33,6 @@ def _normalize_attribute_keys(keys: Iterable[str] | None) -> frozenset[str] | None:
+     return frozenset(keys)
+ 
+ 
+-def _attribute_key_matches(key: str, pattern: str) -> bool:
+-    """Match attribute keys using only ``*`` and ``?`` as wildcards."""
+-    if pattern == key:
+-        return True
+-
+-    expression = "".join(
+-        ".*" if char == "*" else "." if char == "?" else re.escape(char) for char in pattern
+-    )
+-    return re.fullmatch(expression, key) is not None
+-
+-
+ def _default_reservoir_factory(
+     aggregation_type: type[_Aggregation],
+ ) -> ExemplarReservoirBuilder:
+@@ -98,10 +88,11 @@ class View:
+             be used.
+ 
+         attribute_keys: This is a metric stream customizing attribute: a set-like
+-            collection of attribute keys to keep. If not `None`, only the measurement
+-            attributes whose keys are in ``attribute_keys`` are used to identify the
+-            metric stream.
++            collection of exact attribute keys to keep. If not `None`, only
++            measurement attributes whose keys are in ``attribute_keys`` are used
++            to identify the metric stream. An empty collection keeps no attributes.
+ 
+         exclude_attribute_keys: This is a metric stream customizing attribute: a set-like
+-            collection of attribute keys to drop after any include list is applied.
++            collection of exact attribute keys to drop after any include list is
++            applied. If a key appears in both collections, exclusion takes precedence.
+@@ -186,6 +177,10 @@ class View:
+         self._meter_schema_url = meter_schema_url
+ 
+         self._description = description
++        # Keep None distinct from an explicitly empty collection: None means no
++        # include filter, while an empty include filter keeps no attributes.
+         self._attribute_keys = _normalize_attribute_keys(attribute_keys)
+         self._exclude_attribute_keys = _normalize_attribute_keys(exclude_attribute_keys)
+         self._aggregation = aggregation or self._default_aggregation
+ diff --git a/opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/_view_instrument_match.py b/opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/_view_instrument_match.py
+index 7ec6f71ca4e..a1aa0000000 100644
+--- a/opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/_view_instrument_match.py
++++ b/opentelemetry-sdk/src/opentelemetry/sdk/metrics/_internal/_view_instrument_match.py
+@@ -20,10 +20,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
+ from opentelemetry.sdk.metrics._internal.instrument import _Instrument
+ from opentelemetry.sdk.metrics._internal.measurement import Measurement
+ from opentelemetry.sdk.metrics._internal.point import DataPointT
+-from opentelemetry.sdk.metrics._internal.view import (
+-    View,
+-    _attribute_key_matches,
+-)
++from opentelemetry.sdk.metrics._internal.view import View
+ from opentelemetry.util.types import AnyValue, Attributes
+@@ -145,18 +142,18 @@ class _ViewInstrumentMatch:
+             attributes = dict(measurement.attributes)
+ 
+         if self._view._attribute_keys is not None:
+             attributes = {
+                 key: value
+                 for key, value in attributes.items()
+-                if any(_attribute_key_matches(key, pattern) for pattern in self._view._attribute_keys)
++                if key in self._view._attribute_keys
+             }
+ 
+         if self._view._exclude_attribute_keys is not None:
+             attributes = {
+                 key: value
+                 for key, value in attributes.items()
+-                if not any(_attribute_key_matches(key, pattern) for pattern in self._view._exclude_attribute_keys)
++                if key not in self._view._exclude_attribute_keys
+             }
+*** End Patch
