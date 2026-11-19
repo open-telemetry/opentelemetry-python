@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+import math
 import os
 import weakref
 from atexit import register, unregister
@@ -224,12 +225,23 @@ class Meter(APIMeter):
                     )
                 except (KeyError, TypeError):
                     invalid_advisory = True
+                if not invalid_advisory:
+                    # Mirrors the check _ExplicitBucketHistogramAggregation.__init__ raises on.
+                    # Catching it here means a bad advisory is dropped with a warning when the
+                    # histogram is created, instead of raising uncaught out of every record()
+                    # call once the aggregation is actually built.
+                    for idx, bound in enumerate(explicit_bucket_boundaries_advisory):
+                        if not math.isfinite(bound) or (idx and explicit_bucket_boundaries_advisory[idx - 1] >= bound):
+                            invalid_advisory = True
+                            break
             else:
                 invalid_advisory = True
 
             if invalid_advisory:
                 explicit_bucket_boundaries_advisory = None
-                _logger.warning("explicit_bucket_boundaries_advisory must be a sequence of numbers")
+                _logger.warning(
+                    "explicit_bucket_boundaries_advisory must be a sequence of finite, strictly increasing numbers"
+                )
 
         with self._instrument_registration_lock:
             status = self._register_instrument(

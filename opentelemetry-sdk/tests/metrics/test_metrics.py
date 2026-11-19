@@ -690,16 +690,42 @@ class TestMeter(TestCase):
         advisories = [
             {"explicit_bucket_boundaries_advisory": "hello"},
             {"explicit_bucket_boundaries_advisory": ["1"]},
+            # Right type, but not strictly increasing / not finite: these pass the
+            # type check but previously weren't caught until the first record() call.
+            {"explicit_bucket_boundaries_advisory": [100, 10, 50]},
+            {"explicit_bucket_boundaries_advisory": [1, 1]},
+            {"explicit_bucket_boundaries_advisory": [1.0, float("nan")]},
         ]
-        for advisory in advisories:
+        for idx, advisory in enumerate(advisories):
             with self.subTest(advisory=advisory):
-                with self.assertLogs(level=WARNING):
+                # A distinct name per case, so the assertion below can't accidentally
+                # be satisfied by the SDK's unrelated "duplicate instrument name"
+                # warning instead of the advisory-validation warning under test.
+                with self.assertLogs(level=WARNING) as cm:
                     self.meter.create_histogram(
-                        "name",
+                        f"histogram-{idx}",
                         unit="unit",
                         description="description",
                         **advisory,
                     )
+                self.assertTrue(any("explicit_bucket_boundaries_advisory" in line for line in cm.output))
+
+    def test_histogram_bad_advisory_does_not_crash_record(self):
+        # create_histogram only type-checked the advisory, so an unsorted (but
+        # correctly-typed) advisory used to sail through with no warning and then
+        # raise ValueError out of every single record() call once the real
+        # aggregation was built on first use. self.meter's measurement_consumer is
+        # a Mock, so this needs a real MeterProvider + reader to actually reach
+        # the aggregation construction that record() triggers.
+        reader = InMemoryMetricReader()
+        meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")
+        with self.assertLogs(level=WARNING):
+            histogram = meter.create_histogram(
+                "name",
+                explicit_bucket_boundaries_advisory=[100, 10, 50],
+            )
+        histogram.record(5)
+        histogram.record(5)
 
     def test_create_observable_gauge(self):
         observable_gauge = self.meter.create_observable_gauge(
