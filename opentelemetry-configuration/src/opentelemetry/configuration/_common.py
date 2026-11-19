@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     # pylint: disable-next=import-error
     import grpc
 
-    from opentelemetry.configuration.models import GrpcTls
+    from opentelemetry.configuration.models import AttributeLimits, GrpcTls, IncludeExclude
 
 _logger = logging.getLogger(__name__)
 
@@ -41,6 +41,24 @@ def _matches_glob(value: str, pattern: str) -> bool:
     # Escape opening brackets to disable fnmatch's character classes while
     # retaining its wildcard implementation and compiled-pattern cache.
     return value == pattern or fnmatchcase(value, pattern.replace("[", "[[]"))
+
+
+def _include_exclude_predicate(config: IncludeExclude) -> Callable[[str], bool]:
+    """Build a predicate matching values against include/exclude glob patterns.
+
+    Values must match one of the ``included`` patterns when present (an
+    omitted ``included`` list matches everything) and must not match any
+    ``excluded`` pattern, which takes priority over ``included``.
+    """
+    included = config.included
+    excluded = config.excluded
+
+    def matches(value: str) -> bool:
+        if included and not any(_matches_glob(value, pattern) for pattern in included):
+            return False
+        return not (excluded and any(_matches_glob(value, pattern) for pattern in excluded))
+
+    return matches
 
 
 def _scope_name_matches_glob(pattern: str) -> Callable[[InstrumentationScope], bool]:
@@ -176,6 +194,35 @@ def _resolve_otlp_http_endpoint(
 def _resolve_otlp_grpc_endpoint(endpoint: str | None) -> str:
     """Return the configured OTLP gRPC endpoint, or the schema default."""
     return endpoint if endpoint is not None else _DEFAULT_OTLP_GRPC_ENDPOINT
+
+
+def _warn_unsupported_otlp_size_limits(
+    exporter_name: str,
+    signal: Literal["spans", "logs", "metrics"],
+    max_request_size: int | None,
+    max_response_size: int | None,
+    max_request_size_supported: bool,
+) -> None:
+    """Warn about OTLP size limits that are configured but not applied by the exporter."""
+    if max_request_size is not None and not max_request_size_supported:
+        _logger.warning(
+            "max_request_size is not yet supported for %s exporter for %s and will be ignored.", exporter_name, signal
+        )
+    if max_response_size is not None:
+        _logger.warning(
+            "max_response_size is not yet supported for %s exporter for %s and will be ignored.", exporter_name, signal
+        )
+
+
+def _warn_unsupported_attribute_value_depth_limit(
+    attribute_value_depth_limit: int | None,
+    global_limits: AttributeLimits | None,
+) -> None:
+    """Warn when attribute_value_depth_limit is configured, as the SDK does not support it."""
+    if attribute_value_depth_limit is None and global_limits is not None:
+        attribute_value_depth_limit = global_limits.attribute_value_depth_limit
+    if attribute_value_depth_limit is not None:
+        _logger.warning("attribute_value_depth_limit is not yet supported and will be ignored.")
 
 
 def _resolve_export_timeout(timeout: int | None) -> float:
